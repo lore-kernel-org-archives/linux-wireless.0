@@ -1,46 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35546 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871AbbIVJfo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:44 -0400
-Received: by pacfv12 with SMTP id fv12so4731811pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:43 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 13/16] staging: wilc1000: host_int_init: remove commented code
-Date: Tue, 22 Sep 2015 18:34:58 +0900
-Message-Id: <1442914501-2315-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_114654_187941_2240BF8B)
-In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mail.us.es ([193.147.175.20]:37927 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753968AbbIJN4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2015 09:56:53 -0400
+Date: Thu, 10 Sep 2015 16:03:24 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: lwn@lwn.net
+Subject: [ANNOUNCE] Netdev 1.1 conference
+Message-ID: <20150910140324.GA4280@salvia> (sfid-20150910_155715_014464_2C58C561)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes commented code in host_int_init function.
+Following the lastest successful Netdev 0.1 in Ottawa, Canada. We are
+happy to announce a new round of the Netdev conference series: Netdev 1.1
+(year 1, conference 1) from 10th to 12th February 2016 in Seville,
+Spain (http://www.netdevconf.org/1.1/).
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-v2: rebase latest staging-testing
+Netdev 1.1 is a community-driven conference geared towards Linux
+netheads. Linux kernel networking and user space utilization of the
+interfaces to the Linux kernel networking subsystem are the focus.  If
+you are using Linux as a boot system for proprietary networking, then
+this conference _may not be for you_.
 
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
+Current topics include
+- wireless
+- performance analysis and improvement
+- networking hardware and offload
+- netfilter
+- traffic control
+- different networking layers (L2/3, etc)
+- internet of things
+- security
+- additional topics can be suggested
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 43062c5..ce7bb0f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6431,7 +6431,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 	down(&(pstrWFIDrv->gtOsCfgValuesSem));
- 
- 	pstrWFIDrv->enuHostIFstate = HOST_IF_IDLE;
--	/* gWFiDrvHandle->bPendingConnRequest = false; */
- 
- 	/*Initialize CFG WIDS Defualt Values*/
- 
--- 
-2.5.1
+We expect about 2-3 parallel tracks both during tutorials and main
+talks.
 
+Session submissions
+-------------------
+We encourage submission of paper and tutorial proposals, though we
+*highly discourage* submission of recycled talks. Your proposals will
+be evaluated by the technical committee in first place, that will
+provide prompt feedback to you. If your proposal is approved, you will
+be requested to submit your Camera-ready paper. Unlike other
+conferences, accepted proposals will be regularly announced on our
+website.
+
+Please stay within the relevant topic focus and tie to FOSS Linux
+networking to make it easier for the technical committee to provide
+quick feedback. In order to give a talk you must be registered. If
+your proposal is accepted you will not be charged a conference fee or
+your conference fee will be refunded to you when your talk gets
+accepted.  We will be posting more updates on how to submit in the
+near future.
+
+Why you should register
+-----------------------
+If you yearn for the old community tech driven conferences where you
+mingle with fellow geeks (only these would be Linux networking geeks)
+then this would be it. There will be no marketing flashy openings.
+There will just be a pure feed of Linux networking.
+
+Netdev 1.1 will be held back to back with netconf 2016, the by-invite
+Linux kernel networking workshop (http://vger.kernel.org/netconf2016.html).
+So gurus of all sorts will be there mingling and giving talks.  While
+there will be heavy Linux kernel influence we expect a lot of user
+space presence as well.
+
+Location:
+---------
+Sevilla, Spain. Exact location to be announced.
+
+Important Dates:
+----------------
+October 13, 2015                Call for proposals opens
+November 10, 2015               Registration opens
+December 1, 2015                Call for proposals deadline
+January 12, 2016                Conference schedule announced
+February 10-12, 2016            Conference days
+
+Please register as soon as registration opens up on November 10.
+Registering helps us plan properly for numbers of attendees, ensuring
+venue sizes and supplies are appropriate without wasting resources.
+
+We are looking for sponsors
+---------------------------
+If you feel like you can help us organize this event by sponsoring,
+please drop us a line to: sponsor@netdevconf.org and we'll send you
+our sponsorship policy.
+
+Contact
+-------
+For any other general information, please contact: info@netdevconf.org.
+
+If you're missing relevant information on our website, we kindly ask
+you to be patient, we're working hard to get everything fully
+organized. Stay tuned to our website and twitter, we'll be announcing
+important information updates progressively.
+
+-EOF-
