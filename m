@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35499 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbbIPUSz (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33361 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbbIJTO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 16:18:55 -0400
-Date: Wed, 16 Sep 2015 23:18:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Aparna Karuthodi <kdasaparna@gmail.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Removed unwanted curly braces
-Message-ID: <20150916201847.GA4953@mwanda> (sfid-20150916_221919_257818_55F31463)
-References: <1442420450-5760-1-git-send-email-kdasaparna@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442420450-5760-1-git-send-email-kdasaparna@gmail.com>
+	Thu, 10 Sep 2015 15:14:57 -0400
+Received: by pacex6 with SMTP id ex6so51103216pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:14:57 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 06/31] staging: wilc1000: rename WILC_WFI_del_key
+Date: Fri, 11 Sep 2015 04:14:05 +0900
+Message-Id: <1441912470-3371-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211500_548666_DEE139DD)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 16, 2015 at 09:50:50PM +0530, Aparna Karuthodi wrote:
-> Removed unwanted curly braces of a single statement if-else block to
-> remove a coding style warning detected by checkpatch. The warning is
-> given below:
-> 
-> 58: WARNING: braces {} are not necessary for any arm of this statement
-> 
-> Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
-> ---
->  drivers/staging/wilc1000/fifo_buffer.c |    5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
-> index b6c07cf..4fbac3d 100644
-> --- a/drivers/staging/wilc1000/fifo_buffer.c
-> +++ b/drivers/staging/wilc1000/fifo_buffer.c
-> @@ -52,11 +52,10 @@ u32 FIFO_ReadBytes(tHANDLE hFifo, u8 *pu8Buffer, u32 u32BytesToRead, u32 *pu32By
->  		if (pstrFifoHandler->u32TotalBytes) {
->  			down(&pstrFifoHandler->SemBuffer);
->  
-> -			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes) {
-> +			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes)
->  				*pu32BytesRead = pstrFifoHandler->u32TotalBytes;
-> -			} else {
-> +			 else
+This patch replaces WILC_WFI_del_key with wilc_del_key to avoid
+CamelCase.
 
-The indenting is wrong here.  There is an extra space char.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: to make function name simple
 
-regards,
-dan carpenter
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index db327f7..ba5d790 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1403,7 +1403,7 @@ static int wilc_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_i
+ }
+ 
+ /**
+- *  @brief      WILC_WFI_del_key
++ *  @brief      wilc_del_key
+  *  @details    Remove a key given the @mac_addr (%NULL for a group key)
+  *                      and @key_index, return -ENOENT if the key doesn't exist.
+  *  @param[in]
+@@ -1412,10 +1412,10 @@ static int wilc_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_i
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_del_key(struct wiphy *wiphy, struct net_device *netdev,
+-			    u8 key_index,
+-			    bool pairwise,
+-			    const u8 *mac_addr)
++static int wilc_del_key(struct wiphy *wiphy, struct net_device *netdev,
++			u8 key_index,
++			bool pairwise,
++			const u8 *mac_addr)
+ {
+ 	struct WILC_WFI_priv *priv;
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3563,7 +3563,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.connect = wilc_connect,
+ 	.disconnect = wilc_disconnect,
+ 	.add_key = wilc_add_key,
+-	.del_key = WILC_WFI_del_key,
++	.del_key = wilc_del_key,
+ 	.get_key = WILC_WFI_get_key,
+ 	.set_default_key = WILC_WFI_set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+-- 
+2.5.1
 
