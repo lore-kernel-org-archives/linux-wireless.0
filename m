@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43850 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbbIIJzv (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34033 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbbIJTPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 05:55:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath: use PRI value given by spec for fixed PRI
-References: <f9db7f54d12e2589bcbb39215049d51a762d5d75.1441731619.git.poh@qca.qualcomm.com>
-Date: Wed, 9 Sep 2015 12:55:39 +0300
-In-Reply-To: <f9db7f54d12e2589bcbb39215049d51a762d5d75.1441731619.git.poh@qca.qualcomm.com>
-	(Peter Oh's message of "Tue, 8 Sep 2015 10:04:41 -0700")
-Message-ID: <87h9n39ask.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_115554_804196_D114BEF9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 10 Sep 2015 15:15:07 -0400
+Received: by padhy16 with SMTP id hy16so50953437pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:07 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 09/31] staging: wilc1000: rename WILC_WFI_add_virt_intf
+Date: Fri, 11 Sep 2015 04:14:08 +0900
+Message-Id: <1441912470-3371-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211512_129887_80933964)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+This patch replaces WILC_WFI_add_virt_intf with wilc_add_virt_intf to
+avoid CamelCase.
 
-> PRI value is used as divider when DFS detector analyzes candidate
-> radar pulses.
-> If PRI deviation is big from its origin PRI, DFS detector could miss
-> valid radar reports since HW often misses detecting radar pulses and
-> causes long interval value of pulses.
->
-> For instance from practical results, if runtime PRI is calculated as
-> 1431 for fixed PRI value of 1428 and delta timestamp logs 15719,
-> the modular remainder will be 1409 and the delta between the remainder
-> and runtime PRI is 22 that is bigger than PRI tolerance which is 16.
-> As a result this radar report will be ignored even though it's valid.
->
-> By using spec defined PRI for fixed PRI, we can correct this error.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: to make function name simple
 
-A changelog would be good to have. What changed in v2?
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ca7a36f..01d6e4d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3498,7 +3498,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_add_virt_intf
++ *  @brief      wilc_add_virt_intf
+  *  @details
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3506,10 +3506,10 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 JUL 2012
+  *  @version	1.0
+  */
+-struct wireless_dev *WILC_WFI_add_virt_intf(struct wiphy *wiphy, const char *name,
+-						unsigned char name_assign_type,
+-						enum nl80211_iftype type, u32 *flags,
+-						struct vif_params *params)
++struct wireless_dev *wilc_add_virt_intf(struct wiphy *wiphy, const char *name,
++					unsigned char name_assign_type,
++					enum nl80211_iftype type, u32 *flags,
++					struct vif_params *params)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct WILC_WFI_priv *priv;
+@@ -3567,7 +3567,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.get_key = wilc_get_key,
+ 	.set_default_key = wilc_set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+-	.add_virtual_intf = WILC_WFI_add_virt_intf,
++	.add_virtual_intf = wilc_add_virt_intf,
+ 	.del_virtual_intf = WILC_WFI_del_virt_intf,
+ 	.change_virtual_intf = WILC_WFI_change_virt_intf,
+ 
 -- 
-Kalle Valo
+2.5.1
+
