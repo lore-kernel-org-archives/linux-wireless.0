@@ -1,91 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34190 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839AbbIQHtG (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41226 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753094AbbIKNnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 03:49:06 -0400
-Received: by padhy16 with SMTP id hy16so13429776pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 00:49:06 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 4/8] staging: wilc1000: linux_wlan_spi.c: fix kzalloc error check
-Date: Thu, 17 Sep 2015 16:48:45 +0900
-Message-Id: <1442476129-14908-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150917_094909_870453_3EB0502C)
-In-Reply-To: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 11 Sep 2015 09:43:43 -0400
+From: Chor Teck Law <ctlaw@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: David Lin <dlin@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v5] Add new mac80211 driver mwlwifi.
+Date: Fri, 11 Sep 2015 13:43:37 +0000
+Message-ID: <5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com> (sfid-20150911_154349_291103_FFE6824A)
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+	<1436455659.36587.131.camel@sakura.staff.proxad.net>
+	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
+	<20150804220956.GA28583@sakura.staff.proxad.net>
+	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
+ <87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes error check of kzalloc.
-If kzalloc is failed, return type is used as -ENOMEM.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2 : rebase latest staging-testing
-
- drivers/staging/wilc1000/linux_wlan_spi.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 3e24256..51bbd96 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -125,10 +125,8 @@ int linux_spi_write(u8 *b, u32 len)
- 		int remainder = len % TXRX_PHASE_SIZE;
- 
- 		char *r_buffer = kzalloc(TXRX_PHASE_SIZE, GFP_KERNEL);
--
--		if (!r_buffer) {
--			PRINT_ER("Failed to allocate memory for r_buffer\n");
--		}
-+		if (!r_buffer)
-+			return -ENOMEM;
- 
- 		if (blk) {
- 			while (i < blk)	{
-@@ -208,10 +206,9 @@ int linux_spi_write(u8 *b, u32 len)
- 			.delay_usecs = 0,
- 		};
- 		char *r_buffer = kzalloc(len, GFP_KERNEL);
-+		if (!r_buffer)
-+			return -ENOMEM;
- 
--		if (!r_buffer) {
--			PRINT_ER("Failed to allocate memory for r_buffer\n");
--		}
- 		tr.rx_buf = r_buffer;
- 		PRINT_D(BUS_DBG, "Request writing %d bytes\n", len);
- 
-@@ -257,10 +254,8 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
- 		int remainder = rlen % TXRX_PHASE_SIZE;
- 
- 		char *t_buffer = kzalloc(TXRX_PHASE_SIZE, GFP_KERNEL);
--
--		if (!t_buffer) {
--			PRINT_ER("Failed to allocate memory for t_buffer\n");
--		}
-+		if (!t_buffer)
-+			return -ENOMEM;
- 
- 		if (blk) {
- 			while (i < blk)	{
-@@ -337,10 +332,9 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
- 
- 		};
- 		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
-+		if (!t_buffer)
-+			return -ENOMEM;
- 
--		if (!t_buffer) {
--			PRINT_ER("Failed to allocate memory for t_buffer\n");
--		}
- 		tr.tx_buf = t_buffer;
- 
- 		memset(&msg, 0, sizeof(msg));
--- 
-2.5.1
-
+SGkgS2FsbGUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUg
+VmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiBNb25kYXksIFNlcHRl
+bWJlciAwNywgMjAxNSA0OjIwIEFNDQo+IA0KPiA+IENob3IgVGVjayBMYXcgPGN0bGF3QG1hcnZl
+bGwuY29tPiB3cml0ZXM6DQo+IA0KPiA+PiBPbiBUdWVzZGF5IDA0IEF1ZyAyMDE1IMOgIDIwOjAy
+OjIzICgrMDMwMCksIEthbGxlIFZhbG8gd3JvdGU6DQo+ID4+DQo+ID4+ID4gSSBoYXZlbid0IGxv
+b2tlZCBhdCB0aGUgZHJpdmVyIG15c2VsZiB5ZXQuIERvIHlvdSBoYXZlIGFueQ0KPiA+PiA+IGVz
+dGltYXRlcyBob3cgbXVjaCBkdXBsaWNhdGlvbiB0aGVyZSBpcz8NCj4gPj4NCj4gPg0KPiA+IEkg
+ZG8gdGhpbmsgdGhhdCBzb21lb25lIGludGVyZXN0ZWQgaW4gdGhpcyB0aHJlYWQgc2hvdWxkIGNv
+bXBhcmUgdGhlDQo+ID4gdHdvIGRyaXZlcnMgdG8gZGVjaWRlIGlmIHRoZXkgd2FudCB0byBhY2Nl
+cHQgbXdsd2lmaSAob3Igd2UgbGV0IGl0DQo+ID4gZGV2ZWxvcCBjbG9zZWQgZG9vcikuDQo+ID4N
+Cj4gPiBZb3Ugd2lsbCBmaW5kIHRoZSBkaWZmZXJlbmNlcyB3aXRoIHNvbWUgbGV2ZXJhZ2UuIFRv
+IG1ha2UgeW91cg0KPiA+IGNvbXBhcmlzb24gZWFzaWVyLCBoZXJlIGlzIHRoZSBzdW1tYXJ5IChl
+eGNsdWRpbmcgdGhlIHBhdGNoMS1wYXRjaDYNCj4gPiBpbXByb3ZlbWVudHMgYXMgcGVyIHJldmll
+dyBmZWVkYmFja3MgZnJvbSBKb2hhbm5lcyBhbmQgY29tbXVuaXR5KToNCj4gPg0KPiA+IG13bHdp
+ZmkgZnVuY3Rpb25zIGxldmVyYWdlZCBmcm9tIG13bDhrOg0KPiA+IC0gODAyLjExbiBzZXR0aW5n
+IGZvciBtYWM4MDIxMQ0KPiA+IC0gRnVuY3Rpb25zIG5lZWRlZCB0byBob29rIHVwIHRvIG1hYzgw
+MjExDQo+ID4gLSBJbnRlcmFjdGlvbnMgd2l0aCBtYWM4MDIxMSB0byBlc3RhYmxpc2ggQkEgc3Ry
+ZWFtcw0KPiA+IC0gUGFydGlhbCBmaXJtd2FyZSBBUElzLCBzb21lIGRhdGEgZmllbGRzDQo+ID4g
+LSBNZXRob2QgdG8gcGFzcyByeCBwYWNrZXRzIHRvIG1hYzgwMjExIChidXQgYWRkZWQgd2l0aCAx
+MWFjIHJhdGUNCj4gPiBtYXAvcmVwb3J0cykNCj4gPg0KPiA+IEFsbCBvdGhlcnMgYXJlIGRpZmZl
+cmVudC9uZXcuIEluY2x1ZGluZyBzb21lIGxpc3RlZCBiZWxvdzoNCj4gPiAtIERpZmZlcmVudC9u
+ZXcgMTFhYyBjaGlwc2V0cywgaW5jbHVkaW5nIGNvbWJvIEJUIGRldmljZXMNCj4gPiAtIEFkZGVk
+IHN1cHBvcnQgZm9yIDExYWMgcmVsYXRlZCBzZXR0aW5ncyBhbmQgZnVuY3Rpb25zDQo+ID4gLSBB
+ZGRlZCBzdXBwb3J0IGZvciBjb25jdXJyZW50IEFQK1NUQSBmdW5jdGlvbmFsaXRpZXMgd2l0aCBz
+aW5nbGUNCj4gPiBmaXJtd2FyZSBwZXIgY2hpcA0KPiA+IC0gQWRkaXRpb25hbCBmaXJtd2FyZSBB
+UElzDQo+ID4gLSBBZGRlZCBmdW5jdGlvbnMgdG8gY29udmVydCBuZXdseSBzdXBwb3J0ZWQgc2V0
+dGluZ3MgZnJvbSBtYWM4MDIxMQ0KPiB0bw0KPiA+IGZpcm13YXJlDQo+ID4gLSBEaWZmZXJlbnQg
+VHggZGF0YXBhdGgNCj4gPiAtIERpZmZlcmVudCBSeCBsb3cgbGV2ZWwgZGF0YXBhdGggKHRob3Vn
+aCBkYXRhIHN0cnVjdHVyZSBmb3INCj4gcmVjZWl2aW5nDQo+ID4gaXMgc2FtZSkNCj4gPiAtIFJl
+b3JnYW5pemVkIHRoZSBmaWxlcyBmb3IgZnV0dXJlIHNjYWxhYmlsaXR5IGFuZCBmZWF0dXJlcyBh
+ZGRpdGlvbg0KPiA+IChtb3JlIHRvIGNvbWUpDQo+ID4gLSBBZGRyZXNzZWQgYWxsIChzb3J0IG9m
+KSByZXZpZXcgZmVlZGJhY2tzIGZyb20gcGF0Y2gxLXBhdGNoNiBvZiB0aGlzDQo+ID4gc3VibWlz
+c2lvbg0KPiANCj4gWW91IGhhdmUgbmFtZWQgdGhlIG5ldyBkcml2ZXIgYXMgbXdsd2lmaSwgd2hp
+Y2ggaXMgYSByZWFsbHkgZ2VuZXJpYw0KPiBuYW1lLiBEb2VzIHRoYXQgaW1wbHkgdGhhdCBtd2x3
+aWZpIHdpbGwgc3RhcnQgc3VwcG9ydGluZyBtb3JlIE1hcnZlbGwNCj4gZGV2aWNlcyBpbiB0aGUg
+ZnV0dXJlPyANCg0KWWVzLCB0aGF0IGlzIHRoZSBwbGFuIG9uIHNhbWUgZ2VuZXJhdGlvbiBvZiAx
+MWFjIGNoaXBzZXQgdGhhdCBzdXBwb3J0IGhvc3QtYmFzZWQgbWFjODAyMTEuDQoNCj4gT3Igd2ls
+bCBiZSBpbiB0aGUgc2l0dWF0aW9uIHRoYXQgeW91IGZvcmsgdGhlDQo+IGRyaXZlciBhZ2FpbiBh
+bmQgd2UgZW5kIHVwIGhhdmluZyBtd2x3aWZpMiwgbXdsd2lmaTMgYW5kIHNvIG9uPw0KPiANCg0K
+V2UgZG8gaW50ZW5kIHRvIGFkZCBpbnRlcmZhY2UgSEFMIHNwZWMgdmVyc2lvbiB0byBtd2x3aWZp
+IGluIGNhc2UgdGhlIGxvd2VyIEhBTCBiZWNvbWVzIHVuYXZvaWRhYmx5IGNoYW5nZWQgaW4gZnV0
+dXJlLCBzbyB0aGF0IHdlIGNhbiBjb250aW51ZSB0byBtYWludGFpbiBtd2x3aWZpLiBCdXQgZm9y
+IGRpZmZlcmVudCBnZW5lcmF0aW9uIG9mIGZ1dHVyZSBjaGlwc2V0cy9uZXcgdGVjaG5vbG9neSwg
+d2hlbiB0aGUgaGFyZHdhcmUgbm8gbG9uZ2VyIHBlcm1pdCB1cyB0byB1c2Ugc2FtZSBkcml2ZXIs
+IHdlIHdpbGwgaGF2ZSB0byByZS1ldmFsdWF0ZSBvdXIgb3B0aW9ucy4gV2UgY2Fubm90IGd1YXJh
+bnRlZSBzb21ldGhpbmcgd2F5IG91dCBpbnRvIHRoZSBmdXR1cmUuDQoNClRoYW5rcw0KQ2hvci1U
+ZWNrDQo=
