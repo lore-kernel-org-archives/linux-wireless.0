@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:37298 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932764AbbIYSMH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 14:12:07 -0400
-Received: by wicfx3 with SMTP id fx3so29892696wic.0
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 11:12:05 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: firmware refresh for BCM43602 PCIE devices
-To: Kyle McMartin <kyle@infradead.org>,
-	Arend van Spriel <arend@broadcom.com>
-References: <1443120304-11153-1-git-send-email-arend@broadcom.com>
- <20150925000004.GF26918@merlin.infradead.org>
-Cc: linux-wireless@vger.kernel.org, Rafal Milecki <zajec5@gmail.com>
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <56058E74.3060503@gmail.com> (sfid-20150925_201211_757065_F00F115A)
-Date: Fri, 25 Sep 2015 20:12:04 +0200
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12298 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752167AbbIKODV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2015 10:03:21 -0400
+From: Chor Teck Law <ctlaw@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: David Lin <dlin@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH] Add new mac80211 driver mwlwifi.
+Date: Fri, 11 Sep 2015 14:03:08 +0000
+Message-ID: <9fcd82c278ea47cb915798ffc7bdcb0b@SC-EXCH03.marvell.com> (sfid-20150911_160325_310013_5D15C26D)
+References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>
+	<1433598191.2467.65.camel@sipsolutions.net>
+ <877fo3he8y.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877fo3he8y.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20150925000004.GF26918@merlin.infradead.org>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 25-09-15 02:00, Kyle McMartin wrote:
-> On Thu, Sep 24, 2015 at 08:45:04PM +0200, Arend van Spriel wrote:
->> A number of end-users reported issues with BCM43602 on the 2015
->> MacBook Pro. It turned out the previously released firmware did
->> not properly support that device [1]. Hence an update of the STA
->> firmware and while at it refresh the AP firmware as well. The
->> latter has been tested using Netgear R8000. The STA firmware has
->> been tested on MacBook Pro.
->>
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Sunday, September 06, 2015 6:25 AM
 > 
-> Are there version numbers we could update in WHENCE to make this
-> easier to track?
-
-For brcmfmac firmware we don't have version numbers in WHENCE. To be
-honest it feels a bit redundant as the firmware file itself contains the
-version number, ie. by doing 'hexdump -C /firmware/ | tail -30'.
-
-Regards,
-Arend
-
-> regards, --jkkm
+> Johannes Berg <johannes@sipsolutions.net> writes:
 > 
->> [1] https://bugzilla.kernel.org/show_bug.cgi?id=100201
->>
->> Cc: Rafal Milecki <zajec5@gmail.com>
->> Tested-by: Knuth Posern <knuth@posern.org>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> ---
->> This patch fixes a couple of issues mentioned in kernel bugzilla
->> #100201 with 2015 MacBook Pro machines using this wifi chipset.
->>
->> The patch applies to master branch of the linux-firmware repository
->> on top of commit f88e5c2e2ff5 ("Merge 'c11384c' of
->> git://people.freedesktop.org/~vivijim/linux-firmware...").
+> > On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
+> >
+> >>  drivers/net/wireless/mwlwifi/Kconfig        |   17 +
+> >
+> > Does this driver has any relation to mwifiex? Perhaps the same
+> > maintainer team, etc.? 
+
+The mwlwifi driver is hostmac supporting mac80211. The mwifiex driver is device/hw mac, that does not work with mac80211. They are both maintained by Marvell. Yes, their respective maintainers are connected under same teams.
+
+> > Could consider moving all the Marvell drivers
+> > into one directory, but not really necessary I guess.
+> 
+> Actually I would want to start adding vendor directories for wireless
+> drivers, just like drivers/net/ethernet has, to cleanup the directory
+> structure. So for example this driver we would have
+> drivers/net/wireless/marvell/mwlwifi and later we would start moving
+> existing drivers to vendor drivers as well. Thoughts?
+> 
+
+Yes, we are ok with this folder hierarchy change. Let us know how we can help. Should we start with this new folder now or wait for more feedbacks?
+
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Kalle Valo
