@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:32820 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbbIHHuc (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51773 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751270AbbIKDE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 03:50:32 -0400
-Received: by lamp12 with SMTP id p12so62032869lam.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 00:50:31 -0700 (PDT)
+	Thu, 10 Sep 2015 23:04:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 1/2] staging: wilc1000: remove unused enum
+Date: Fri, 11 Sep 2015 12:04:19 +0900
+Message-ID: <1441940660-5925-2-git-send-email-tony.cho@atmel.com> (sfid-20150911_050430_587407_C8FCE862)
+In-Reply-To: <1441940660-5925-1-git-send-email-tony.cho@atmel.com>
+References: <1441940660-5925-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <55EDFB26.8000708@broadcom.com>
-References: <CANfLQrbXn2pLjVY8DVC=xs9oWZC2nX3VcEZQMLh1zQa7i4EHCg@mail.gmail.com>
-	<55DAD0FD.3070807@broadcom.com>
-	<CANfLQrYQnk6bUjPEKxucxBhLvsRsqpfydvAkvsvKdg0nnte3iA@mail.gmail.com>
-	<CAG8K7gRdXqpfA3_HPoaM+ivgxH4eiPRWkD238QwMMbNigYHDBw@mail.gmail.com>
-	<CANfLQraZAkw0Eqt-Mog5t4ZfGFx3xm_8-6nJoJ68Mim18bW3Tg@mail.gmail.com>
-	<CANfLQrYVq_eMa-CLJhqVthbm_h7yLBhZN5nm0_f70eEob+rUdw@mail.gmail.com>
-	<55EDFB26.8000708@broadcom.com>
-Date: Tue, 8 Sep 2015 10:50:31 +0300
-Message-ID: <CANfLQrbX4GmTbEuvnm+25bwCknB6DR2aQZN=0ZrHqdjCKXYYcw@mail.gmail.com> (sfid-20150908_095050_371939_B51AFE58)
-Subject: Re: Fwd: bcmdhd: Concurrent use of wlan0 and virtual interface in
- managed mode
-From: Gucea Doru <gucea.doru@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 8, 2015 at 12:01 AM, Arend van Spriel <arend@broadcom.com> wrote:
+From: Glen Lee <glen.lee@atmel.com>
 
-> The BCM4339 chip does not rely on mac80211. Instead, there is an
-> 802.11 stack running on the device, ie. in firmware. The driver creates the
-> primary interface, ie. wlan0. Additional P2P interfaces are created by
-> wpa_supplicant.
->
+This patch removes a unused enum tenuFrameClass.
 
-Hm, BCM4339 uses the bcmdhd driver.
-So the bcmdhd driver is not a softmac[1] driver and the the 802.11
-processing is not done in software, right?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-[1] https://wireless.wiki.kernel.org/en/developers/documentation/glossary#softmac
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 58e6108..450c3ff 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -88,14 +88,6 @@ typedef enum {
+ 	FRAME_SUBTYPE_FORCE_32BIT  = 0xFFFFFFFF
+ } tenuFrmSubtype;
+ 
+-/* Basic Frame Classes */
+-typedef enum {
+-	CLASS1_FRAME_TYPE      = 0x00,
+-	CLASS2_FRAME_TYPE      = 0x01,
+-	CLASS3_FRAME_TYPE      = 0x02,
+-	FRAME_CLASS_FORCE_32BIT  = 0xFFFFFFFF
+-} tenuFrameClass;
+-
+ /* Element ID  of various Information Elements */
+ typedef enum {
+ 	ISSID               = 0,   /* Service Set Identifier         */
+-- 
+1.9.1
 
-Regards,
-Doru
