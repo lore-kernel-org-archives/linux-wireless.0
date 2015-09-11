@@ -1,263 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3155 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbbI3DMk convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34537 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752816AbbIKQcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 23:12:40 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"lkp@intel.com" <lkp@intel.com>
-Subject: RE: [PATCH] ath9k: feeding entropy in kernel from ADC capture
-Date: Wed, 30 Sep 2015 03:12:26 +0000
-Message-ID: <f1bd170ef9fa433ab95052e0ad7057a8@aptaiexm02f.ap.qualcomm.com> (sfid-20150930_051244_144967_458F0071)
-References: <1443582474-1144-1-git-send-email-miaoqing@codeaurora.org>
-In-Reply-To: <1443582474-1144-1-git-send-email-miaoqing@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 11 Sep 2015 12:32:13 -0400
+Received: by wicfx3 with SMTP id fx3so70534037wic.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2015 09:32:12 -0700 (PDT)
+Subject: Re: [linuxwifi] iwlwifi: FW error in SYNC CMD MAC_CONTEXT_CMD
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
+References: <55ED93D0.4070509@gmail.com> <1441690676.27148.11.camel@coelho.fi>
+ <1441693888.27148.20.camel@coelho.fi> <55F03D91.6020802@gmail.com>
+ <1441915203.27148.191.camel@coelho.fi>
+Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	linuxwifi <linuxwifi@intel.com>
+From: Andreas Reis <andreas.reis@gmail.com>
+Message-ID: <55F3020B.8040906@gmail.com> (sfid-20150911_183218_135181_DF0B03A3)
+Date: Fri, 11 Sep 2015 18:32:11 +0200
 MIME-Version: 1.0
+In-Reply-To: <1441915203.27148.191.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please drop this patch, miss adding 'v2' prefix.
+Sorry for another day delay, I've only got so much time for this and 
+yesterday it ended in a bit of confusion.
 
-Thanks,
-Miaoqing
+ > Okay, there's probably something else.
 
------Original Message-----
-From: miaoqing@codeaurora.org [mailto:miaoqing@codeaurora.org] 
-Sent: Wednesday, September 30, 2015 11:08 AM
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org; ath9k-devel; Valo, Kalle; lkp@intel.com; Miaoqing Pan
-Subject: [PATCH] ath9k: feeding entropy in kernel from ADC capture
+I started by using a fresh wpa_supplicant configuration – and could 
+connect. Which is just weird, as the old ones worked fine previously.
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Anyway, what appears to happen is that something accumulates during 
+(repeated) failed connection/authentication attempts, which then 
+proceeds to cause kernel warnings and FW resets.
 
-This patch is derived from
-commit 6301566e0b2d ("ath9k: export HW random number generator"),
+Hardly any of either occurs on 4.2, but then again I mostly messed with 
+net.git. I did not find a difference between "its" for-kalle-2015-08-23 
+and iwl-next HEAD, either.
 
-We evaluated the entropy of the ADC data on QCA9531, QCA9561, QCA955x, and AR9340, and it has sufficient quality random data (at least 10 bits and up to 22 bits of min-entropy for a 32-bit value). We conservatively assume the min-entropy is 10 bits out of 32 bits. Thus, ATH9K_RNG_BUF_SIZE is set to 320 (u32) i.e., 1.25 kilobytes of data is inserted to fill up the pool as soon as the entropy counter becomes 896/4096 (set by random.c).
-Since ADC was not designed to be a dedicated HW RNG, we do not want to bind it to /dev/hwrng framework directly. This patch feeds the entropy directly from the WiFi driver to the input pool. The ADC register output is only used as a seed for the Linux entropy pool. No conditioning is needed, since all the conditioning is performed by the pool itself.
+(Also, I couldn't connect with the fresh configuration after using the 
+"broken" old one for a few dozen attempts. Dunno for certain, but seems 
+the local APs block my laptop for a while, when I moved 500m it worked 
+again. IOW, prob not a iwl issue either.)
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/Kconfig  |  11 ++++
- drivers/net/wireless/ath/ath9k/Makefile |   1 +
- drivers/net/wireless/ath/ath9k/ath9k.h  |  22 +++++++
- drivers/net/wireless/ath/ath9k/main.c   |   4 ++
- drivers/net/wireless/ath/ath9k/rng.c    | 106 ++++++++++++++++++++++++++++++++
- 5 files changed, 144 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
+ > I added a small comment to address that.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index fee0cad..40fa915 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -176,3 +176,14 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_HWRNG
-+	bool "Random number generator support"
-+	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-+	default y
-+	---help---
-+	  This option incorporates the ADC register output as a source of
-+	  randomness into Linux entropy pool (/dev/urandom and /dev/random)
-+
-+	  Say Y, feeds the entropy directly from the WiFi driver to the input
-+	  pool.
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index ecda613..76f9dc3 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
- ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
- ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
- ath9k-$(CONFIG_ATH9K_WOW) += wow.o
-+ath9k-$(CONFIG_ATH9K_HWRNG) += rng.o
- 
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c85c479..cd74f68 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -23,6 +23,7 @@
- #include <linux/leds.h>
- #include <linux/completion.h>
- #include <linux/time.h>
-+#include <linux/hw_random.h>
- 
- #include "common.h"
- #include "debug.h"
-@@ -1039,6 +1040,11 @@ struct ath_softc {
- 	u32 wow_intr_before_sleep;
- 	bool force_wow;
- #endif
-+
-+#ifdef CONFIG_ATH9K_HWRNG
-+	u32 rng_last;
-+	struct task_struct *rng_task;
-+#endif
- };
- 
- /********/
-@@ -1061,6 +1067,22 @@ static inline int ath9k_tx99_send(struct ath_softc *sc,  }  #endif /* CONFIG_ATH9K_TX99 */
- 
-+/***************************/
-+/* Random Number Generator */
-+/***************************/
-+#ifdef CONFIG_ATH9K_HWRNG
-+void ath9k_rng_start(struct ath_softc *sc); void ath9k_rng_stop(struct 
-+ath_softc *sc); #else static inline void ath9k_rng_start(struct 
-+ath_softc *sc) { }
-+
-+static inline void ath9k_rng_stop(struct ath_softc *sc) { } #endif
-+
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)  {
- 	common->bus_ops->read_cachesize(common, csz); diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 323eb33..39ba17f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -739,6 +739,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	ath9k_ps_restore(sc);
- 
-+	ath9k_rng_start(sc);
-+
- 	return 0;
- }
- 
-@@ -828,6 +830,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_deinit_channel_context(sc);
- 
-+	ath9k_rng_stop(sc);
-+
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-new file mode 100644
-index 0000000..93a7485
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -0,0 +1,106 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for 
-+any
-+ * purpose with or without fee is hereby granted, provided that the 
-+above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
-+WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE 
-+FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY 
-+DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN 
-+AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT 
-+OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/hw_random.h>
-+#include <linux/kthread.h>
-+
-+#include "ath9k.h"
-+#include "hw.h"
-+#include "ar9003_phy.h"
-+
-+#define ATH9K_RNG_BUF_SIZE	320
-+#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
-+
-+static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 
-+buf_size) {
-+	int i, j;
-+	u32  v1, v2, rng_last = sc->rng_last;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	ath9k_ps_wakeup(sc);
-+
-+	REG_RMW_FIELD(ah, AR_PHY_TEST, AR_PHY_TEST_BBB_OBS_SEL, 1);
-+	REG_CLR_BIT(ah, AR_PHY_TEST, AR_PHY_TEST_RX_OBS_SEL_BIT5);
-+	REG_RMW_FIELD(ah, AR_PHY_TEST_CTL_STATUS, AR_PHY_TEST_CTL_RX_OBS_SEL, 
-+0);
-+
-+	for (i = 0, j = 0; i < buf_size; i++) {
-+		v1 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+		v2 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+
-+		/* wait for data ready */
-+		if (v1 && v2 && rng_last != v1 && v1 != v2 && v1 != 0xffff &&
-+		    v2 != 0xffff)
-+			buf[j++] = (v1 << 16) | v2;
-+
-+		rng_last = v2;
-+	}
-+
-+	ath9k_ps_restore(sc);
-+
-+	sc->rng_last = rng_last;
-+
-+	return j << 2;
-+}
-+
-+static int ath9k_rng_kthread(void *data) {
-+	int bytes_read;
-+	struct ath_softc *sc = data;
-+	u32 *rng_buf;
-+
-+	rng_buf = kmalloc_array(ATH9K_RNG_BUF_SIZE, sizeof(u32), GFP_KERNEL);
-+	if (!rng_buf)
-+		goto out;
-+
-+	while (!kthread_should_stop()) {
-+		bytes_read = ath9k_rng_data_read(sc, rng_buf,
-+						 ATH9K_RNG_BUF_SIZE);
-+		if (!bytes_read) {
-+			msleep_interruptible(10);
-+			continue;
-+		}
-+
-+		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
-+					   ATH9K_RNG_ENTROPY(bytes_read));
-+	}
-+
-+	kfree(rng_buf);
-+out:
-+	sc->rng_task = NULL;
-+
-+	return 0;
-+}
-+
-+void ath9k_rng_start(struct ath_softc *sc) {
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (sc->rng_task)
-+		return;
-+
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		return;
-+
-+	sc->rng_task = kthread_run(ath9k_rng_kthread, sc, "ath9k-hwrng");
-+	if (IS_ERR(sc->rng_task))
-+		sc->rng_task = NULL;
-+}
-+
-+void ath9k_rng_stop(struct ath_softc *sc) {
-+	if (sc->rng_task)
-+		kthread_stop(sc->rng_task);
-+}
---
-1.9.1
+There's more: journalctl (systemd 226) still showed the iwlfwdump.sh 
+script rejected by systemd-udev with "Exec format error". That's caused 
+by the #!/bin/sh shebang missing. The "filename" variable also needs to 
+be stripped of the duplicated /var/log/ prefix.
+
+ > All major distros package it (including, apparently, ArchLinux).
+
+Actually Arch does not. Still, there's a buildscript in the unofficial 
+user repositories, which I used to get v2.6 when I had internet access 
+again.
+
+Also, it's curious how "trace-cmd record -e iwlwifi -e mac80211 -e 
+cfg80211 -e iwlwifi_msg" tends to include eg. snd and drm events regardless.
+
+ > What shell are you using?
+
+zsh. Seems it requires the use of >>, unlike agnostic bash.
+
+ > I think what happens is that the system is already stuck somehow
+
+I did it repeatedly yesterday and got the "trigger 1 fired" message, 
+both with (as in the case of the trace I'll send) and without the dmesg 
+warning immediately afterwards.
+
+ > wpa_supplicant seems to be using WEXT which is deprecated and 
+certainly not as well maintained as the nl80211 API.
+
+Huh. Wicd defaults to Wext, guess that's badly outdated behavior then. 
+OTOH, the project has been on life support for a while now, but I still 
+find it the most straightforward manager.
+
+ > I don't think this has any relation with the wifi problems you're having.
+
+Yeah. I actually know which commit to the r8169 driver causes it, but 
+found it notable enough as it both appears also triggerable by wifi 
+activity and stops once either (wifi/eth) link becomes ready.
+
+ > Just out of curiosity, why are you using iwlwifi-next.git?
+
+I use net.git + iwl + fixes from vanilla. That started back when 
+(compared to my previous 7yo laptop) the 7260's Linux QoS was frankly 
+abysmal, at least on certain 11g connections. That way I would instantly 
+get any improvements. Now it's just curiosity and habit.
+
+Anyhow, I got a trace (net.git 519f526 + iwl-next) with a reset that 
+followed repeated connection/authentication failure. I got the resets 
+both with Wext and nl80211, this one with the latter. I'll send it to 
+you directly via mail once I figure out how to set up my PGP.
+
+Should I still open a bugzilla entry?
+
+-- Andreas
+
+On 09/10/2015 10:00 PM, Luca Coelho wrote:
+> On Wed, 2015-09-09 at 16:09 +0200, Andreas Reis wrote:
+>> Hi,
+>>
+>>   > seems that your system is trying to connect to two different APs
+>> forth and back
+>>
+>> Yes, this is a major network with multiple APs for each of its SSIDs
+>> always available. Unlike my single AP home network, unsurprisingly.
+>>
+>>   > whether you have more than wpa_supplicant instance running
+>>
+>> I disabled wicd, invoked wpa_supplicant manually and checked with
+>> pidof,
+>> there isn't. I also checked for changes with wpa_supplicant 2.3 vs
+>> git,
+>> none.
+>
+> Okay, there's probably something else.  Checking for two "competing"
+> instances of wpa_supplicant is low hanging fruit and the symptom is the
+> same you saw.
+>
+>
+>>   > was this working before you upgraded to iwlwifi-next 5bff6536f742
+>>
+>> That's the weird part, IIRC it and the 16er firmware actually were
+>> working fine *with* it (I had 4.2-RCs running with available
+>> iwlwifi-next commits for weeks), which is why I was inclined to blame
+>> net.git until I found out that it currently doesn't work with the
+>> vanilla Arch 4.2-3 kernel either. Honestly no idea why.
+>>
+>> But I'll check with iwlwifi-next-for-kalle-2015-08-23 tomorrow.
+>
+> Okay, please let us now if it makes any difference.
+>
+>
+>>   > directions in our debugging wiki page
+>>
+>> Two remarks on that page:
+>> iwlfwdump.sh should probably get a note about chmod +x
+>
+> Right, even though making scripts executable is a pretty standard
+> practice, people may forget it and then it's too late (i.e. the capture
+> was already lost).  I added a small comment to address that.
+>
+>
+>
+>> trace-cmd is not part of standard kernel packages and thus should get
+>> a
+>> note that it may need to be installed separately
+>>
+>>> Since I wasn't aware of the latter, I'll only be able to post a
+>>> trace in
+>> a bugzilla report tomorrow–
+>
+> trace-cmd is not part of the kernel, it's just a userspace helper.  It
+> is pretty standard, though.  All major distros package it (including,
+> apparently, ArchLinux).
+>
+>
+>> – if that isn't bugged as well: "echo 1 >
+>> /sys/kernel/debug/iwlwifi/0000\:02\:00.0/iwlmvm/fw_dbg_collect"
+>> currently yields a "file exists", cat'ing it an invalid argument
+>> error,
+>> "echo 1 >>" ostensibly works but shows in dmesg as (1), see
+>> "excerpts"
+>> attachment.
+>
+> That's weird.  This debugfs entry accepts anything as input... What
+> shell are you using? The (1) error seems to be totally unrelated.  I
+> think what happens is that the system is already stuck somehow, that's
+> why neither of the commands work.  Could you try the same command
+> cleanly (i.e. before you start experiencing any problems)? You should
+> see something like this in dmesg:
+>
+> iwlwifi 0000:02:00.0: Collecting data: trigger 1 fired.
+>
+>
+>
+>> (2) shows an example of what wpa_supplicant currently prints. This
+>> continues ad inf, and at some non-predictable point the driver
+>> bug(s?)
+>> and/or FW reset appear in dmesg.
+>
+> Hmmm... wpa_supplicant seems to be using WEXT which is deprecated and
+> certainly not as well maintained as the nl80211 API.  Could you try to
+> make sure that wpa_supplicant is using the nl80211 API instead? It
+> needs to be started with -Dnl80211 in the command line.
+>
+>
+>>   (3) shows two more variants I got with
+>> net.git (now at 7845989) and Arch's 4.2-3 kernel.
+>
+> There's some different stuff there... For some reason the system seems
+> to be quite unstable, probably the firmware is stuck or something.
+>
+>
+>> dmesg is also spammed with "r8169 0000:03:00.1 enp3s0f1:
+>> rtl_counters_cond == 1 (loop: 1000, delay: 10).", but that's prob an
+>> unrelated bug which has been there (but far) less frequent since
+>> early 4.2.
+>
+> I don't think this has any relation with the wifi problems you're
+> having.
+>
+>
+>> As for net.git kernel config, "grep IWLWIFI":
+>> CONFIG_IWLWIFI=m
+>> CONFIG_IWLWIFI_LEDS=y
+>> CONFIG_IWLWIFI_OPMODE_MODULAR=y
+>> CONFIG_IWLWIFI_BCAST_FILTERING=y
+>> CONFIG_IWLWIFI_UAPSD=y
+>> CONFIG_IWLWIFI_DEBUG=y
+>> CONFIG_IWLWIFI_DEBUGFS=y
+>> # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE is not set
+>> CONFIG_IWLWIFI_DEVICE_TRACING=y
+>
+> This looks fine.  Just out of curiosity, why are you using iwlwifi
+> -next.git? That is just a feeding tree for wireless-drivers-next.git.
+>   It usually is prepared to send a pull request, but due to the merge
+> window (and to the temporary transition from Emmanuel to me as the
+> maintainer of that tree), the pull request is delayed.
+>
+> To conclude, we don't really have much information here.  It will be
+> very helpful if you can provide trace-cmd logs and the firmware dump at
+> some point.
+>
+> --
+> Luca.
+>
 
