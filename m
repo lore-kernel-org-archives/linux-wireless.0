@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57935 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101AbbIJHWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 03:22:48 -0400
-Message-ID: <1441869764.2108.1.camel@sipsolutions.net> (sfid-20150910_092251_568918_2A7419FC)
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Thu, 10 Sep 2015 09:22:44 +0200
-In-Reply-To: <20150909164945.GA4062@localhost> (sfid-20150909_184950_812635_9318273F)
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
-	 <1440673024-13696-4-git-send-email-me@bobcopeland.com>
-	 <87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
-	 <87fv2o9cvl.fsf@kamboji.qca.qualcomm.com> <20150909164945.GA4062@localhost>
-	 (sfid-20150909_184950_812635_9318273F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37591 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbbIKHxD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2015 03:53:03 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/7] staging: wilc1000: remove PANDA_BOARD
+Date: Fri, 11 Sep 2015 16:52:56 +0900
+Message-ID: <1441957983-17726-1-git-send-email-tony.cho@atmel.com> (sfid-20150911_095307_121404_5021B1D4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-09 at 12:49 -0400, Bob Copeland wrote:
-> On Wed, Sep 09, 2015 at 12:10:38PM +0300, Kalle Valo wrote:
-> > > I did a quick smoke test and saw the splat below. It's this 
-> > > warning from
-> > > cfg80211:
-> > > 
-> > > 			/*
-> > > 			 * Don't advertise an unsupported type
-> > > 			 * in a combination.
-> > > 			 */
-> > > 			if (WARN_ON((wiphy->interface_modes & 
-> > > types) != types))
-> > > 				return -EINVAL;
-> 
-> OK, this happens when mesh is configured out (we mask off the mesh
-> interface_modes internally but not the types).  Sent an updated 
-> version with appropriate ifdefs added.
+This patch removes one of the platform dependencies, PANDA_BOARD from the
+driver codes. The device tree will provide the platform dependencies in
+the future commits.
 
-Yeah this is an unfortunate quirk in the APIs ... I think adding the
-ifdefs to the driver is the best thing to do.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 4 ----
+ drivers/staging/wilc1000/linux_wlan_common.h  | 3 ---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ----
+ 3 files changed, 11 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 63f44f8..9be0282 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -438,10 +438,6 @@ static int init_irq(linux_wlan_t *p_nic)
+  *
+  * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+  */
+-#elif defined(PANDA_BOARD)
+-		gpio_export(GPIO_NUM, 1);
+-		nic->dev_irq_num = OMAP_GPIO_IRQ(GPIO_NUM);
+-		irq_set_irq_type(nic->dev_irq_num, IRQ_TYPE_LEVEL_LOW);
+ #else
+ 		nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+ #endif
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index ea121f9..5d13c15 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -145,9 +145,6 @@ extern atomic_t DEBUG_LEVEL;
+ 		#define MODALIAS	"wilc_spi3"
+ 		#define GPIO_NUM	133
+ 	#endif
+-#elif defined(PANDA_BOARD)
+-	#define MODALIAS	"WILC_SPI"
+-	#define GPIO_NUM	139
+ #elif defined(PLAT_WMS8304)             /* rachel */
+ 	#define MODALIAS	"wilc_spi"
+ 	#define GPIO_NUM	139
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index e1caea9..f8064f0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -80,11 +80,7 @@ struct WILC_WFI_stats {
+  * LPC3131 which is important to get the MAC start status when you are blocked
+  * inside linux_wlan_firmware_download() which blocks mac_open().
+  */
+-#if defined(PANDA_BOARD)
+- #define RX_BH_TYPE  RX_BH_THREADED_IRQ
+-#else
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+-#endif
+ 
+ struct wilc_wfi_key {
+ 	u8 *key;
+-- 
+1.9.1
+
