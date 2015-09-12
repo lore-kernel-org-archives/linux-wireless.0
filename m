@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34159 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932918AbbIYSw6 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34843 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441AbbILSLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 14:52:58 -0400
-Received: by padhy16 with SMTP id hy16so113193253pad.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 11:52:58 -0700 (PDT)
-Date: Fri, 25 Sep 2015 11:52:56 -0700
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-Message-ID: <20150925185256.GG5951@linux> (sfid-20150925_205332_801611_BE906F32)
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
- <1443202945.2161.8.camel@sipsolutions.net>
- <20150925184741.GF5951@linux>
- <1443206945.2161.9.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443206945.2161.9.camel@sipsolutions.net>
+	Sat, 12 Sep 2015 14:11:08 -0400
+Received: by wicge5 with SMTP id ge5so96622552wic.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:07 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/11] staging: vt6655: remove unused multicast_limit.
+Date: Sat, 12 Sep 2015 19:10:31 +0100
+Message-Id: <1442081438-3485-4-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201652_127455_41E67400)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-09-15, 20:49, Johannes Berg wrote:
-> Ok, then, but that means Rafael is completely wrong ...
-> debugfs_create_bool() takes a *pointer* and it needs to be long-lived,
-> it can't be on the stack. You also don't get a call when it changes.
+multicast_limit is assigned a vale that is never used.
 
-Ahh, ofcourse. My bad as well...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h      | 1 -
+ drivers/staging/vt6655/device_main.c | 1 -
+ 2 files changed, 2 deletions(-)
 
-I think we can change structure definition but will wait for Rafael's
-comment before that.
-
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index be42e44..f020bb1 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -256,7 +256,6 @@ struct vnt_private {
+ 
+ 	u32                         rx_buf_sz;
+ 	u8 rx_rate;
+-	int                         multicast_limit;
+ 
+ 	u32                         rx_bytes;
+ 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 4bc9ba0..fcc4510 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -442,7 +442,6 @@ static void vt6655_init_info(struct pci_dev *pcid,
+ 	memset(*ppDevice, 0, sizeof(**ppDevice));
+ 
+ 	(*ppDevice)->pcid = pcid;
+-	(*ppDevice)->multicast_limit = 32;
+ 
+ 	spin_lock_init(&((*ppDevice)->lock));
+ }
 -- 
-viresh
+2.5.0
+
