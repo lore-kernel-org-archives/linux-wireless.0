@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.188]:53592 "EHLO
-	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756284AbbI1I7p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 04:59:45 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>
-CC: Viresh Kumar <viresh.kumar@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	"QCA ath9k Development" <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Subject: RE: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-Date: Mon, 28 Sep 2015 08:58:17 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com> (sfid-20150928_110010_330171_CBD26BFA)
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
- <2524822.pQu4UKMrlb@vostro.rjw.lan>
- <1443297128.2181.11.camel@HansenPartnership.com>
- <3461169.v5xKdGLGjP@vostro.rjw.lan>
-In-Reply-To: <3461169.v5xKdGLGjP@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Received: from max.feld.cvut.cz ([147.32.192.36]:50620 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751046AbbILQWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2015 12:22:38 -0400
+Received: from localhost (unknown [192.168.200.7])
+	by max.feld.cvut.cz (Postfix) with ESMTP id 7E86D19F46FF
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 18:22:36 +0200 (CEST)
+Received: from max.feld.cvut.cz ([192.168.200.1])
+	by localhost (styx.feld.cvut.cz [192.168.200.7]) (amavisd-new, port 10044)
+	with ESMTP id CONWaiWtkBDI for <linux-wireless@vger.kernel.org>;
+	Sat, 12 Sep 2015 18:22:34 +0200 (CEST)
+Received: from imap.feld.cvut.cz (imap.feld.cvut.cz [147.32.192.34])
+	by max.feld.cvut.cz (Postfix) with ESMTP id 9D76619F32FF
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 18:22:34 +0200 (CEST)
+Received: by lagj9 with SMTP id j9so65106191lag.2
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 09:22:34 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <55F033EE.7030605@openwrt.org>
+References: <1441803324-4503-1-git-send-email-kaisrja1@fel.cvut.cz>
+	<55F033EE.7030605@openwrt.org>
+Date: Sat, 12 Sep 2015 18:22:33 +0200
+Message-ID: <CAPnxhu4WigfkUUvhnb8mj5TezM86twW+e=2+BTyYNnYY8OkS8Q@mail.gmail.com> (sfid-20150912_182241_777381_9DEAF5A6)
+Subject: Re: [PATCH] ath9k: Add support for OCB mode
+From: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org,
+	bernd.lehmann@volkswagen.de, jan-niklas.meier@volkswagen.de,
+	s.sander@nordsys.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogUmFmYWVsIEouIFd5c29ja2kNCj4gU2VudDogMjcgU2VwdGVtYmVyIDIwMTUgMTU6MDkN
-Ci4uLg0KPiA+ID4gU2F5IHlvdSBoYXZlIHRocmVlIGFkamFjZW50IGZpZWxkcyBpbiBhIHN0cnVj
-dHVyZSwgeCwgeSwgeiwgZWFjaCBvbmUgYnl0ZSBsb25nLg0KPiA+ID4gSW5pdGlhbGx5LCBhbGwg
-b2YgdGhlbSBhcmUgZXF1YWwgdG8gMC4NCj4gPiA+DQo+ID4gPiBDUFUgQSB3cml0ZXMgMSB0byB4
-IGFuZCBDUFUgQiB3cml0ZXMgMiB0byB5IGF0IHRoZSBzYW1lIHRpbWUuDQo+ID4gPg0KPiA+ID4g
-V2hhdCdzIHRoZSByZXN1bHQ/DQo+ID4NCj4gPiBJIHRoaW5rIGV2ZXJ5IENQVSdzICBjYWNoZSBh
-cmNoaXRlY3VyZSBndWFyYW50ZWVzIGFkamFjZW50IHN0b3JlDQo+ID4gaW50ZWdyaXR5LCBldmVu
-IGluIHRoZSBmYWNlIG9mIFNNUCwgc28gaXQncyB4PT0xIGFuZCB5PT0yLiAgSWYgeW91J3JlDQo+
-ID4gdGhpbmtpbmcgb2Ygb2xkIGFscGhhIFNNUCBzeXN0ZW0gd2hlcmUgdGhlIGxvd2VzdCBzdG9y
-ZSB3aWR0aCBpcyAzMiBiaXRzDQo+ID4gYW5kIHRodXMgeW91IGhhdmUgdG8gZG8gUk1XIHRvIHVw
-ZGF0ZSBhIGJ5dGUsIHRoaXMgd2FzIHVzdWFsbHkgZml4ZWQgYnkNCj4gPiBwYWRkaW5nIChhc3N1
-bWluZyB0aGUgc3RydWN0dXJlIGlzIG5vdCBwYWNrZWQpLiAgSG93ZXZlciwgaXQgd2FzIHN1Y2gg
-YQ0KPiA+IHByb2JsZW0gdGhhdCBldmVuIHRoZSBsYXRlciBhbHBoYSBjaGlwcyBoYWQgYnl0ZSBl
-eHRlbnNpb25zLg0KDQpEb2VzIGxpbnV4IHN0aWxsIHN1cHBvcnQgdGhvc2Ugb2xkIEFscGhhcz8N
-Cg0KVGhlIHg4NiBjcHVzIHdpbGwgYWxzbyBkbyAzMmJpdCB3aWRlIHJtdyBjeWNsZXMgZm9yIHRo
-ZSAnYml0JyBvcGVyYXRpb25zLg0KDQo+IE9LLCB0aGFua3MhDQoNCllvdSBzdGlsbCBoYXZlIHRv
-IGVuc3VyZSB0aGUgY29tcGlsZXIgZG9lc24ndCBkbyB3aWRlciBybXcgY3ljbGVzLg0KSSBiZWxp
-ZXZlIHRoZSByZWNlbnQgdmVyc2lvbnMgb2YgZ2NjIHdvbid0IGRvIHdpZGVyIGFjY2Vzc2VzIGZv
-ciB2b2xhdGlsZSBkYXRhLg0KDQoJRGF2aWQNCg0K
+Hello Felix,
+
+Thank you for the thorough review!
+I redesigned this patch based on your idea and it looks good.
+I am going to make some additional tests and I'll send new patch.
+
+2015-09-09 15:28 GMT+02:00 Felix Fietkau <nbd@openwrt.org>:
+> On 2015-09-09 14:55, Jan Kaisrlik wrote:
+>> The patch adds support for "outside the context of a BSS"(OCB) mode
+>> to ath9k driver and extends debugfs files by OCB ralated information.
+>>
+>> This patch was tested on AR9380-AL1A cards.
+>>
+>> Signed-off-by: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+>> Cc: Michal Sojka <sojkam1@fel.cvut.cz>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ani.c          |  1 +
+>>  drivers/net/wireless/ath/ath9k/ath9k.h        |  1 +
+>>  drivers/net/wireless/ath/ath9k/debug.c        |  4 ++--
+>>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 ++-
+>>  drivers/net/wireless/ath/ath9k/hw.c           |  1 +
+>>  drivers/net/wireless/ath/ath9k/init.c         |  3 ++-
+>>  drivers/net/wireless/ath/ath9k/main.c         | 11 +++++++++--
+>>  drivers/net/wireless/ath/ath9k/recv.c         |  2 +-
+>>  drivers/net/wireless/ath/debug.c              |  2 ++
+>>  9 files changed, 21 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+>> index 25e45e4..0ec2c0b 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ani.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+>> @@ -342,6 +342,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+>>
+>>       if (is_scanning ||
+>>           (ah->opmode != NL80211_IFTYPE_STATION &&
+>> +          ah->opmode != NL80211_IFTYPE_OCB &&
+>>            ah->opmode != NL80211_IFTYPE_ADHOC)) {
+>>               /*
+>>                * If we're scanning or in AP mode, the defaults (ini)
+> I don't think OCB should be treated like STA/Ad-Hoc for ANI purposes.
+> In fact, I think most places inside ath9k_hw should treat OCB the same
+> as AP - maybe even by leaving ah->opmode at NL80211_IFTYPE_AP for OCB.
+>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>> index 1dd0339..2144362 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -1234,6 +1234,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+>>
+>>       ENABLE_REG_RMW_BUFFER(ah);
+>>       switch (opmode) {
+>> +     case NL80211_IFTYPE_OCB:
+>>       case NL80211_IFTYPE_ADHOC:
+>>               if (!AR_SREV_9340_13(ah)) {
+>>                       set |= AR_STA_ID1_ADHOC;
+> Why treat OCB like Ad-hoc for STA_ID1?
+>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index c27143b..f121ec0 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>
+>> @@ -1122,7 +1127,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+>>       ath9k_hw_setopmode(ah);
+>>
+>>       ctx->switch_after_beacon = false;
+>> -     if ((iter_data.nstations + iter_data.nadhocs + iter_data.nmeshes) > 0)
+>> +     if ((iter_data.nstations + iter_data.nadhocs +
+>> +          iter_data.nmeshes + iter_data.nocbs) > 0)
+>>               ah->imask |= ATH9K_INT_TSFOOR;
+>>       else {
+>>               ah->imask &= ~ATH9K_INT_TSFOOR;
+> Enabling the TSFOOR interrupt for OCB seems completely wrong to me. If I
+> understand this mode correctly, there are no beacons, hence no TSF
+> synchronization.
+>
+> - Felix
