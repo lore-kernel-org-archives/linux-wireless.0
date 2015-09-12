@@ -1,93 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45153 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbbIRJMt (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34887 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbbILSLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:12:49 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/34] staging: wilc1000: remove typedef from the struct tstrRcvdNetworkInfo
-Date: Fri, 18 Sep 2015 18:11:11 +0900
-Message-ID: <1442567496-29331-9-git-send-email-tony.cho@atmel.com> (sfid-20150918_111252_390781_2A9AFFC9)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 12 Sep 2015 14:11:14 -0400
+Received: by wicge5 with SMTP id ge5so96624170wic.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:13 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/11] staging: vt6655: device_get_pci_info remove call to set master.
+Date: Sat, 12 Sep 2015 19:10:36 +0100
+Message-Id: <1442081438-3485-9-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201132_999762_EA386257)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrRcvdNetworkInfo and
-renames it to rcvd_net_info in order to comply with the Linux coding
-style.
+a call to PCI_COMMAND is used to set master.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+However, a call to pci_set_master earlier in function which
+does the same thing.
+
+So remove the calls and variable b.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 7 ++++---
- drivers/staging/wilc1000/host_interface.h | 6 +++---
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/vt6655/device_main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7f1b801..803c36d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -420,7 +420,7 @@ typedef struct {
- union message_body {
- 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
- 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
--	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
-+	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
- 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
- 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
- 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
-@@ -2262,13 +2262,14 @@ static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
- /**
-  *  @brief Handle_RcvdNtwrkInfo
-  *  @details       Handling received network information
-- *  @param[in]    tstrRcvdNetworkInfo* pstrRcvdNetworkInfo
-+ *  @param[in]    struct rcvd_net_info *pstrRcvdNetworkInfo
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdNetworkInfo *pstrRcvdNetworkInfo)
-+static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler,
-+				struct rcvd_net_info *pstrRcvdNetworkInfo)
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 17fa6aa..edda836 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -433,8 +433,6 @@ static void device_print_info(struct vnt_private *pDevice)
+ static bool device_get_pci_info(struct vnt_private *pDevice,
+ 				struct pci_dev *pcid)
  {
- 	u32 i;
- 	bool bNewNtwrkFound;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index fd5fa19..e069a08 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -202,7 +202,7 @@ typedef struct {
- } *WILC_WFIDrvHandle;
+-	u8  b;
+-
+ 	pci_set_master(pcid);
  
- /*!
-- *  @struct             tstrRcvdNetworkInfo
-+ *  @struct             rcvd_net_info
-  *  @brief		Structure to hold Received Asynchronous Network info
-  *  @details
-  *  @todo
-@@ -211,10 +211,10 @@ typedef struct {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrRcvdNetworkInfo {
-+struct rcvd_net_info {
- 	u8 *pu8Buffer;
- 	u32 u32Length;
--} tstrRcvdNetworkInfo;
-+};
+ 	pDevice->memaddr = pci_resource_start(pcid, 0);
+@@ -442,9 +440,6 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
  
- /*BugID_4156*/
- typedef struct _tstrHiddenNetworkInfo {
+ 	pDevice->pcid = pcid;
+ 
+-	pci_read_config_byte(pcid, PCI_COMMAND, &b);
+-	pci_write_config_byte(pcid, PCI_COMMAND, (b|PCI_COMMAND_MASTER));
+-
+ 	return true;
+ }
+ 
 -- 
-1.9.1
+2.5.0
 
