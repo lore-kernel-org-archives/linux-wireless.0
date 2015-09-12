@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56513 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139AbbIFQsS (ORCPT
+Received: from mx1.polytechnique.org ([129.104.30.34]:55502 "EHLO
+	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345AbbILKM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 12:48:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Lin <dlin@marvell.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
-References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>
-	<1433598191.2467.65.camel@sipsolutions.net>
-	<877fo3he8y.fsf@kamboji.qca.qualcomm.com>
-	<55EC6453.3000601@broadcom.com> <55EC6676.9050906@broadcom.com>
-Date: Sun, 06 Sep 2015 19:48:11 +0300
-In-Reply-To: <55EC6676.9050906@broadcom.com> (Arend van Spriel's message of
-	"Sun, 6 Sep 2015 18:14:46 +0200")
-Message-ID: <87lhcjfq9g.fsf@kamboji.qca.qualcomm.com> (sfid-20150906_184821_151847_7218B16E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 12 Sep 2015 06:12:29 -0400
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: [PATCH] iwlwifi: mvm: fix tof.h header guard
+Date: Sat, 12 Sep 2015 12:04:51 +0200
+Message-Id: <1442052291-2328-1-git-send-email-nicolas.iooss_linux@m4x.org> (sfid-20150912_121249_388301_136F5B59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+Commit ce7929186a39 ("iwlwifi: mvm: add basic Time of Flight (802.11mc
+FTM) support") created drivers/net/wireless/iwlwifi/mvm/tof.h with a
+broken header guard:
 
-> On 09/06/2015 06:05 PM, Arend van Spriel wrote:
->> On 09/06/2015 03:24 PM, Kalle Valo wrote:
->>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>
->>>> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
->>>>
->>>>>   drivers/net/wireless/mwlwifi/Kconfig        |   17 +
->>>>
->>>> Does this driver has any relation to mwifiex? Perhaps the same
->>>> maintainer team, etc.? Could consider moving all the Marvell drivers
->>>> into one directory, but not really necessary I guess.
->>>
->>> Actually I would want to start adding vendor directories for wireless
->>> drivers, just like drivers/net/ethernet has, to cleanup the directory
->>> structure. So for example this driver we would have
->>> drivers/net/wireless/marvell/mwlwifi and later we would start moving
->>> existing drivers to vendor drivers as well. Thoughts?
->
-> Another remark on this. Do you propose to add a vendor Kconfig level
-> as well?
+    #ifndef __tof
+    #define __tof_h__
 
-I haven't thought about Kconfig yet, expect that I think it needs
-cleanup :)
+    ...
 
+    #endif /* __tof_h__ */
+
+Use __tof_h__ in the first line.
+
+Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+---
+ drivers/net/wireless/iwlwifi/mvm/tof.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tof.h b/drivers/net/wireless/iwlwifi/mvm/tof.h
+index 50ae8adaaa6e..9beebc33cb8d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tof.h
++++ b/drivers/net/wireless/iwlwifi/mvm/tof.h
+@@ -60,7 +60,7 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  *****************************************************************************/
+-#ifndef __tof
++#ifndef __tof_h__
+ #define __tof_h__
+ 
+ #include "fw-api-tof.h"
 -- 
-Kalle Valo
+2.5.1
+
