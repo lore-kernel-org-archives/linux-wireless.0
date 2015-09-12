@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33937 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbbIPSlV (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:38675 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753303AbbILSLL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 14:41:21 -0400
-From: Aparna Karuthodi <kdasaparna@gmail.com>
+	Sat, 12 Sep 2015 14:11:11 -0400
+Received: by wiclk2 with SMTP id lk2so89648402wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:10 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, johnny.kim@atmel.com,
-	Aparna Karuthodi <kdasaparna@gmail.com>
-Subject: [PATCH] staging: wilc1000: Added spaces
-Date: Thu, 17 Sep 2015 00:12:50 +0530
-Message-Id: <1442428970-9091-1-git-send-email-kdasaparna@gmail.com> (sfid-20150916_204137_780246_12321739)
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/11] staging: vt6655: remove and move vt6655_init_info
+Date: Sat, 12 Sep 2015 19:10:33 +0100
+Message-Id: <1442081438-3485-6-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201139_494140_7D755453)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added spaces around '=' to remove coding style errors detected by
-checkpatch.The errors are given below:
-drivers/staging/wilc1000/host_interface.c:7951: ERROR: spaces required
-around that '=' (ctx:VxV)
-drivers/staging/wilc1000/host_interface.c:7952: ERROR: spaces required
-around that '=' (ctx:VxW)
+move code to vt6655_probe.
 
-Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/vt6655/device_main.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6b10bbb..d1fe73d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -7945,8 +7945,8 @@ s32 host_int_get_ipaddress(WILC_WFIDrvHandle hWFIDrv, u8 *u16ipadd, u8 idx)
- 	strHostIFmsg.u16MsgId = HOST_IF_MSG_GET_IPADDRESS;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 03cc52e..ce2df37 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -28,7 +28,6 @@
+  *
+  *   vt6655_probe - module initial (insmod) driver entry
+  *   vt6655_remove - module remove entry
+- *   vt6655_init_info - device structure resource allocation function
+  *   device_free_info - device structure resource free function
+  *   device_get_pci_info - get allocated pci io/mem resource
+  *   device_print_info - print out resource
+@@ -136,8 +135,6 @@ static const struct pci_device_id vt6655_pci_id_table[] = {
+ /*---------------------  Static Functions  --------------------------*/
  
- 	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.au8IPAddr = u16ipadd;
--	strHostIFmsg.drvHandler=hWFIDrv;
--	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx= idx;
-+	strHostIFmsg.drvHandler = hWFIDrv;
-+	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx = idx;
+ static int  vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent);
+-static void vt6655_init_info(struct pci_dev *pcid,
+-			     struct vnt_private **ppDevice);
+ static void device_free_info(struct vnt_private *pDevice);
+ static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
+ static void device_print_info(struct vnt_private *pDevice);
+@@ -436,14 +433,6 @@ static void device_print_info(struct vnt_private *pDevice)
+ 		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
+ }
  
- 	s32Error = WILC_MsgQueueSend(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), NULL);
- 	if (s32Error) {
+-static void vt6655_init_info(struct pci_dev *pcid,
+-			     struct vnt_private **ppDevice)
+-{
+-	(*ppDevice)->pcid = pcid;
+-
+-	spin_lock_init(&((*ppDevice)->lock));
+-}
+-
+ static bool device_get_pci_info(struct vnt_private *pDevice,
+ 				struct pci_dev *pcid)
+ {
+@@ -1643,8 +1632,9 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 	}
+ 
+ 	priv = hw->priv;
++	priv->pcid = pcid;
+ 
+-	vt6655_init_info(pcid, &priv);
++	spin_lock_init(&priv->lock);
+ 
+ 	priv->hw = hw;
+ 
 -- 
-1.7.9.5
+2.5.0
 
