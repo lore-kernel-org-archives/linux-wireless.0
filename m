@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35891 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbbIPLLy (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36748 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbbILOCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:11:54 -0400
-Received: by padhk3 with SMTP id hk3so206659757pad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:11:54 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/10] staging: wilc1000: replace int8_t with int
-Date: Wed, 16 Sep 2015 20:11:30 +0900
-Message-Id: <1442401895-7463-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131157_520727_AB220D06)
-In-Reply-To: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+	Sat, 12 Sep 2015 10:02:18 -0400
+Received: by padhk3 with SMTP id hk3so100470346pad.3
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 07:02:17 -0700 (PDT)
+Message-ID: <1442066532.7214.1.camel@ingics.com> (sfid-20150912_160239_908892_9352F08C)
+Subject: [PATCH] staging: wilc1000: Add terminating entry for wilc_sdio_ids
+From: Axel Lin <axel.lin@ingics.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Date: Sat, 12 Sep 2015 22:02:12 +0800
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces int8_t with int. just use return type as int.
+The sdio_device_id table is supposed to be zero-terminated.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Axel Lin <axel.lin@ingics.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3ecf5b1..e04d97e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -275,9 +275,9 @@ static void clear_duringIP(unsigned long arg)
- }
- #endif
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 37f31f4..5f0e6cd 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -40,6 +40,7 @@ static unsigned int sdio_default_speed;
  
--int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-+int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
- {
--	int8_t state = -1;
-+	int state = -1;
- 	int i;
+ static const struct sdio_device_id wilc_sdio_ids[] = {
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
++	{ },
+ };
  
- 	if (u32LastScannedNtwrksCountShadow == 0) {
-@@ -300,7 +300,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
- 
- void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
- {
--	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-+	int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
- 	u32 ap_index = 0;
- 	u8 rssi_index = 0;
  
 -- 
-2.5.1
+2.1.0
+
+
 
