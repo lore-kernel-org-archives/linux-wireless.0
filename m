@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21127 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755888AbbIUDSS (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:33559 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767AbbILSLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:18:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 08/34] staging: wilc1000: remove typedef from the struct tstrHostIFconnectAttr
-Date: Mon, 21 Sep 2015 12:16:37 +0900
-Message-ID: <1442805423-3711-9-git-send-email-tony.cho@atmel.com> (sfid-20150921_051820_781751_85885F85)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 12 Sep 2015 14:11:13 -0400
+Received: by wiclk2 with SMTP id lk2so96488711wic.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:12 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/11] staging: vt6655: device_get_pci_info remove variable cis_addr.
+Date: Sat, 12 Sep 2015 19:10:35 +0100
+Message-Id: <1442081438-3485-8-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201129_048994_36B80A67)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFconnectAttr and
-renames it to connect_attr to comply with the Linux coding style.
+cis_addr is never used remove its call to pci_resource_start.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/vt6655/device_main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ef9b3ce..a3015b1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -177,7 +177,7 @@ struct scan_attr {
- };
- 
- /*!
-- *  @struct             tstrHostIFconnectAttr
-+ *  @struct             connect_attr
-  *  @brief		Structure to hold Host IF Connect Attributes
-  *  @details
-  *  @todo
-@@ -186,7 +186,7 @@ struct scan_attr {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFconnectAttr {
-+struct connect_attr {
- 	u8 *pu8bssid;
- 	u8 *pu8ssid;
- 	size_t ssidLen;
-@@ -198,7 +198,7 @@ typedef struct _tstrHostIFconnectAttr {
- 	AUTHTYPE_T tenuAuth_type;
- 	u8 u8channel;
- 	void *pJoinParams;
--} tstrHostIFconnectAttr;
-+};
- 
- /*!
-  *  @struct             tstrRcvdGnrlAsyncInfo
-@@ -418,7 +418,7 @@ typedef struct {
-  */
- union message_body {
- 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
--	tstrHostIFconnectAttr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
-+	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
- 	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
- 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
- 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
-@@ -1507,14 +1507,15 @@ static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent)
- /**
-  *  @brief Handle_Connect
-  *  @details       Sending config packet to firmware to starting connection
-- *  @param[in]    tstrHostIFconnectAttr* pstrHostIFconnectAttr
-+ *  @param[in]    struct connect_attr *pstrHostIFconnectAttr
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
- u8 u8ConnectedSSID[6] = {0};
--static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *pstrHostIFconnectAttr)
-+static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
-+			  struct connect_attr *pstrHostIFconnectAttr)
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 1e660cc..17fa6aa 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -434,15 +434,12 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
+ 				struct pci_dev *pcid)
  {
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
- 	s32 s32Error = 0;
+ 	u8  b;
+-	unsigned int cis_addr;
+ 
+ 	pci_set_master(pcid);
+ 
+ 	pDevice->memaddr = pci_resource_start(pcid, 0);
+ 	pDevice->ioaddr = pci_resource_start(pcid, 1);
+ 
+-	cis_addr = pci_resource_start(pcid, 2);
+-
+ 	pDevice->pcid = pcid;
+ 
+ 	pci_read_config_byte(pcid, PCI_COMMAND, &b);
 -- 
-1.9.1
+2.5.0
 
