@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40285 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbbIPJyN (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57804 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754031AbbILEfO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 05:54:13 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 7/8] staging: wicl1000: remove function pointer wlan_handle_rx_que
-Date: Wed, 16 Sep 2015 18:53:26 +0900
-Message-ID: <1442397207-20491-7-git-send-email-tony.cho@atmel.com> (sfid-20150916_115417_123004_FC877142)
-In-Reply-To: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
-References: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
+	Sat, 12 Sep 2015 00:35:14 -0400
+Date: Fri, 11 Sep 2015 19:36:47 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH V2 01/31] staging: wilc1000: rename WILC_WFI_CfgSetChannel
+Message-ID: <20150912023647.GA5330@kroah.com> (sfid-20150912_063707_632580_7E405A54)
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On Fri, Sep 11, 2015 at 04:14:00AM +0900, Chaehyun Lim wrote:
+> This patch replaces WILC_WFI_CfgSetChannel with
+> wilc_set_channel to avoid CamelCase.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+> V2: to make function name simple
+> 
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index cf76a33..3149fd8 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -677,7 +677,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+>  
+>  
+>  /**
+> - *  @brief      WILC_WFI_CfgSetChannel
+> + *  @brief      wilc_set_channel
+>   *  @details    Set channel for a given wireless interface. Some devices
+>   *                      may support multi-channel operation (by channel hopping) so cfg80211
+>   *                      doesn't verify much. Note, however, that the passed netdev may be
+> @@ -689,8 +689,8 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+>   *  @date	01 MAR 2012
+>   *  @version	1.0
+>   */
+> -static int WILC_WFI_CfgSetChannel(struct wiphy *wiphy,
+> -				  struct cfg80211_chan_def *chandef)
+> +static int wilc_set_channel(struct wiphy *wiphy,
+> +			    struct cfg80211_chan_def *chandef)
 
-The function pointer wlan_handle_rx_que is not called anywhere. Delete
-wlan_handle_rx_que and it's assignment code.
-But the function wilc_wlan_handle_rxq in assignment code is used. So leave it.
+static functions do not need a "wilc_" prefix.  Just name it
+"set_channel()"
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 1 -
- drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
- 2 files changed, 2 deletions(-)
+Can you redo this series based on that, rebase on my staging-testing git
+branch as things are changing fast in this driver, and then resend?
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 22310cc..17f66e7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -2126,7 +2126,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
- 	oup->wlan_stop = wilc_wlan_stop;
- 	oup->wlan_add_to_tx_que = wilc_wlan_txq_add_net_pkt;
- 	oup->wlan_handle_tx_que = wilc_wlan_handle_txq;
--	oup->wlan_handle_rx_que = wilc_wlan_handle_rxq;
- 	oup->wlan_handle_rx_isr = wilc_handle_isr;
- 	oup->wlan_cleanup = wilc_wlan_cleanup;
- 	oup->wlan_cfg_set = wilc_wlan_cfg_set;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index bccfcf9..cc92dc9 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -167,7 +167,6 @@ typedef struct {
- 	int (*wlan_stop)(void);
- 	int (*wlan_add_to_tx_que)(void *, u8 *, u32, wilc_tx_complete_func_t);
- 	int (*wlan_handle_tx_que)(u32 *);
--	void (*wlan_handle_rx_que)(void);
- 	void (*wlan_handle_rx_isr)(void);
- 	void (*wlan_cleanup)(void);
- 	int (*wlan_cfg_set)(int, u32, u8 *, u32, int, u32);
--- 
-1.9.1
+thanks,
 
+greg k-h
