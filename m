@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38193 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932836AbbI2IWX (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:34852 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377AbbILSLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 04:22:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: use ether_addr_copy() instead of memcpy()
-References: <87lhbylifx.fsf@kamboji.qca.qualcomm.com>
-	<1442931866-17115-1-git-send-email-linux@rempel-privat.de>
-	<22018.42528.871404.504088@gargle.gargle.HOWL>
-	<5602D690.7000806@rempel-privat.de>
-Date: Tue, 29 Sep 2015 11:22:17 +0300
-In-Reply-To: <5602D690.7000806@rempel-privat.de> (Oleksij Rempel's message of
-	"Wed, 23 Sep 2015 18:42:56 +0200")
-Message-ID: <87vbat7hza.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_102228_920007_22A25BAE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 12 Sep 2015 14:11:10 -0400
+Received: by wicge5 with SMTP id ge5so96622906wic.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:08 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/11] staging: vt6655: vt6655_init_info remove memset.
+Date: Sat, 12 Sep 2015 19:10:32 +0100
+Message-Id: <1442081438-3485-5-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201128_298489_132AD72D)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+vnt_private is allocated with kzalloc so is already zero.
 
-> Am 23.09.2015 um 15:16 schrieb Sujith Manoharan:
->> Oleksij Rempel wrote:
->>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  2 +-
->>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 24 ++++++++++++------------
->>>  2 files changed, 13 insertions(+), 13 deletions(-)
->> 
->> Both the arguments for ether_addr_copy() need to be
->> aligned. Is this the case for all the replacements in
->> this patch ?
->
-> hm... you right. Kvalo, please drop this patch.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Dropped.
-
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index fcc4510..03cc52e 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -439,8 +439,6 @@ static void device_print_info(struct vnt_private *pDevice)
+ static void vt6655_init_info(struct pci_dev *pcid,
+ 			     struct vnt_private **ppDevice)
+ {
+-	memset(*ppDevice, 0, sizeof(**ppDevice));
+-
+ 	(*ppDevice)->pcid = pcid;
+ 
+ 	spin_lock_init(&((*ppDevice)->lock));
 -- 
-Kalle Valo
+2.5.0
+
