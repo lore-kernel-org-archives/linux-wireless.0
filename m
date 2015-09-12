@@ -1,84 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58598 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752800AbbIZTwL (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:34895 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbbILPsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2015 15:52:11 -0400
-Message-ID: <1443297128.2181.11.camel@HansenPartnership.com> (sfid-20150926_215230_956226_26213537)
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Viresh Kumar <viresh.kumar@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Date: Sat, 26 Sep 2015 12:52:08 -0700
-In-Reply-To: <2524822.pQu4UKMrlb@vostro.rjw.lan>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	 <4357538.Wlf88yQie6@vostro.rjw.lan>
-	 <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
-	 <2524822.pQu4UKMrlb@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 12 Sep 2015 11:48:42 -0400
+Date: Sat, 12 Sep 2015 08:48:41 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Shraddha Barke <shraddha.6596@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Staging: wilc1000: wilc_wfi_cfgoperations.c: replace
+ memset(x,0,ETH_ALEN)
+Message-ID: <20150912154841.GB29944@kroah.com> (sfid-20150912_174904_167960_DD2EC714)
+References: <1442036259-2693-1-git-send-email-shraddha.6596@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442036259-2693-1-git-send-email-shraddha.6596@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-25 at 22:58 +0200, Rafael J. Wysocki wrote:
-> On Friday, September 25, 2015 01:25:49 PM Viresh Kumar wrote:
-> > On 25 September 2015 at 13:33, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > You're going to change that into bool in the next patch, right?
-> > 
-> > Yeah.
-> > 
-> > > So what if bool is a byte and the field is not word-aligned
-> > 
-> > Its between two 'unsigned long' variables today, and the struct isn't packed.
-> > So, it will be aligned, isn't it?
-> > 
-> > > and changing
-> > > that byte requires a read-modify-write.  How do we ensure that things remain
-> > > consistent in that case?
-> > 
-> > I didn't understood why a read-modify-write is special here? That's
-> > what will happen
-> > to most of the non-word-sized fields anyway?
-> > 
-> > Probably I didn't understood what you meant..
+On Sat, Sep 12, 2015 at 11:07:39AM +0530, Shraddha Barke wrote:
+> eth_zero_addr() is a wrapper function for memset if 0 is going to
+> be assigned to a mac address. The aforementioned function replaces
+> memset.
 > 
-> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
-> Initially, all of them are equal to 0.
+> Changes were done using Coccinelle
 > 
-> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
+> @eth_zero_addr@
+> expression e;
+> @@
 > 
-> What's the result?
+> -memset(e,0x00,\(6\|ETH_ALEN\));
+> +eth_zero_addr(e);
+> 
+> Build tested it.
 
-I think every CPU's  cache architecure guarantees adjacent store
-integrity, even in the face of SMP, so it's x==1 and y==2.  If you're
-thinking of old alpha SMP system where the lowest store width is 32 bits
-and thus you have to do RMW to update a byte, this was usually fixed by
-padding (assuming the structure is not packed).  However, it was such a
-problem that even the later alpha chips had byte extensions.
-
-James
-
-
+You need to do much more to prove that this is a safe change than just
+test build it, sorry.
