@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35522 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbIUM6k (ORCPT
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:37783 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754201AbbILH21 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:58:40 -0400
-Received: by pacfv12 with SMTP id fv12so118696982pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:58:40 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 03/16] staging: wilc1000: rename WILC_WFI_set_cqm_rssi_config
-Date: Mon, 21 Sep 2015 21:58:13 +0900
-Message-Id: <1442840306-9657-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145843_608655_789AAD80)
-In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+	Sat, 12 Sep 2015 03:28:27 -0400
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>
+Subject: [[linux-nfc] PATCH v1.0 0/3] Add support for ST95HF
+Date: Sat, 12 Sep 2015 03:21:32 -0400
+Message-ID: <1442042495-2407-1-git-send-email-shikha.singh@st.com> (sfid-20150912_092831_804793_50E6ABA1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_cqm_rssi_config with
-set_cqm_rssi_config to avoid CamelCase.
+Hello All,
+	This series of patch provide support of STMicroelectronics
+NFC Transceiver "ST95HF".
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+This series include below 3 patches:
+1. Modification in file of NFC digital layer to provide support of
+ISO14443 Type4A tags.
+2. Patch includes all ST95HF driver related files.
+This release of driver supports ST95HF in initiator mode to support
+read/write mode for IS014443 Type A and ISO14443 Type B tags.
+3. Patch to provide binding doc of ST95HF to guide how to make node
+entry of ST95HF in DT file.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 58b1481..40fd3ca 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2589,7 +2589,7 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- }
- 
- /**
-- *  @brief      WILC_WFI_set_cqm_rssi_config
-+ *  @brief      set_cqm_rssi_config
-  *  @details    Configure connection quality monitor RSSI threshold.
-  *  @param[in]   struct wiphy *wiphy:
-  *  @param[in]	struct net_device *dev:
-@@ -2600,8 +2600,8 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
--					   struct net_device *dev,  s32 rssi_thold, u32 rssi_hyst)
-+static int set_cqm_rssi_config(struct wiphy *wiphy, struct net_device *dev,
-+			       s32 rssi_thold, u32 rssi_hyst)
- {
- 	PRINT_D(CFG80211_DBG, "Setting CQM RSSi Function\n");
- 	return 0;
-@@ -3402,7 +3402,7 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
- 	.mgmt_tx = mgmt_tx,
- 	.mgmt_frame_register = wilc_mgmt_frame_register,
- 	.set_power_mgmt = set_power_mgmt,
--	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
-+	.set_cqm_rssi_config = set_cqm_rssi_config,
- 
- };
- 
+To Do: ISO15693 tags read/write will be supported in upcoming release of driver.
+
+This series of patch is based on Linux kernel 4.1.
+
+Any feedbacks are most welcome.
+
+Thanks & Regards,
+Shikha
+
+Shikha Singh (3):
+  NFC: digital: Type4A tags support
+  driver: nfc: st95hf: ST NFC Transceiver support
+  DT: bindings: net: nfc: ST95HF binding doc
+
+ .../devicetree/bindings/net/nfc/st95hf.txt         |   55 +
+ drivers/nfc/Kconfig                                |    1 +
+ drivers/nfc/Makefile                               |    1 +
+ drivers/nfc/st95hf/Kconfig                         |   11 +
+ drivers/nfc/st95hf/Makefile                        |    6 +
+ drivers/nfc/st95hf/spi.c                           |  159 +++
+ drivers/nfc/st95hf/spi.h                           |   45 +
+ drivers/nfc/st95hf/st95hf.c                        | 1134 ++++++++++++++++++++
+ net/nfc/digital_core.c                             |    3 +-
+ 9 files changed, 1414 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+ create mode 100644 drivers/nfc/st95hf/Kconfig
+ create mode 100644 drivers/nfc/st95hf/Makefile
+ create mode 100644 drivers/nfc/st95hf/spi.c
+ create mode 100644 drivers/nfc/st95hf/spi.h
+ create mode 100644 drivers/nfc/st95hf/st95hf.c
+
 -- 
-2.5.1
+1.8.2.1
 
