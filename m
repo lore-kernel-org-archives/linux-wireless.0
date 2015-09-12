@@ -1,65 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36708 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752351AbbHaXn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 19:43:58 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
-	<55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
-	<55E476A0.4080601@lwfinger.net>
-Date: Mon, 31 Aug 2015 19:43:57 -0400
-In-Reply-To: <55E476A0.4080601@lwfinger.net> (Larry Finger's message of "Mon,
-	31 Aug 2015 10:45:36 -0500")
-Message-ID: <wrfjio7v3txe.fsf@redhat.com> (sfid-20150901_014401_816613_A4A68566)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:33584 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965AbbILSLR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2015 14:11:17 -0400
+Received: by wiclk2 with SMTP id lk2so96489556wic.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:15 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/11] staging: vt6655: Move code in device_get_pci_info
+Date: Sat, 12 Sep 2015 19:10:38 +0100
+Message-Id: <1442081438-3485-11-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201135_302347_4343D176)
+In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 08/30/2015 09:39 PM, Jes Sorensen wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
->>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
->>>>> 0xff, 0xff),
->>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
->>>>>
->>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
->>>>
->>>> Were you happy with the results, or did it cause problems? Ie. did you
->>>> try on x86 or on PPC32?
->>>
->>> As covered in the other mail, it works very well at G rates.
->>
->> I see - I am a little confused, it works well on G rates but not on N
->> rates, or was this due to the AP used?
->
-> The AP is AC1200. It supports full N rates on other devices.
+Function always returns true and now only a few lines move
+to vt6655_probe.
 
-You only manage to make it work on G rates against this AP? Urgh, I
-don't like that at all.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 21 +++------------------
+ 1 file changed, 3 insertions(+), 18 deletions(-)
 
-I thought you reported 30+Mbps performances though?, thats more than you
-get on G.
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index add9cdf..326bce3 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -29,7 +29,6 @@
+  *   vt6655_probe - module initial (insmod) driver entry
+  *   vt6655_remove - module remove entry
+  *   device_free_info - device structure resource free function
+- *   device_get_pci_info - get allocated pci io/mem resource
+  *   device_print_info - print out resource
+  *   device_rx_srv - rx service function
+  *   device_alloc_rx_buf - rx buffer pre-allocated function
+@@ -136,7 +135,6 @@ static const struct pci_device_id vt6655_pci_id_table[] = {
+ 
+ static int  vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent);
+ static void device_free_info(struct vnt_private *pDevice);
+-static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
+ static void device_print_info(struct vnt_private *pDevice);
+ 
+ static void device_init_rd0_ring(struct vnt_private *pDevice);
+@@ -430,17 +428,6 @@ static void device_print_info(struct vnt_private *pDevice)
+ 		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
+ }
+ 
+-static bool device_get_pci_info(struct vnt_private *pDevice,
+-				struct pci_dev *pcid)
+-{
+-	pci_set_master(pcid);
+-
+-	pDevice->memaddr = pci_resource_start(pcid, 0);
+-	pDevice->ioaddr = pci_resource_start(pcid, 1);
+-
+-	return true;
+-}
+-
+ static void device_free_info(struct vnt_private *pDevice)
+ {
+ 	if (!pDevice)
+@@ -1629,12 +1616,10 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 	dev_dbg(&pcid->dev,
+ 		"Before get pci_info memaddr is %x\n", priv->memaddr);
+ 
+-	if (!device_get_pci_info(priv, pcid)) {
+-		dev_err(&pcid->dev, ": Failed to find PCI device.\n");
+-		device_free_info(priv);
+-		return -ENODEV;
+-	}
++	pci_set_master(pcid);
+ 
++	priv->memaddr = pci_resource_start(pcid, 0);
++	priv->ioaddr = pci_resource_start(pcid, 1);
+ 	priv->PortOffset = ioremap(priv->memaddr & PCI_BASE_ADDRESS_MEM_MASK,
+ 				   256);
+ 	if (!priv->PortOffset) {
+-- 
+2.5.0
 
->>>> I don't think any of this is showstopper material for inclusion right
->>>> now, albeit I do want to address them.
->>>
->>> The scheduling while atomic problems do need to be fixed, and I am
->>> still working on the failure to get a wifi device on PPC.
->>
->> It's already fixed :)
->
-> A full debug=0x3fff showed me one problem on the PPC. I will be
-> testing a patch later today.
-
-Interesting, let me know what you find.
-
-Cheers,
-Jes
