@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:28681 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755117AbbIAOzT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 10:55:19 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v2 6/9] nfc: nci: Introduce nci_core_cmd
-Date: Tue,  1 Sep 2015 17:54:25 +0300
-Message-Id: <1441119268-30654-7-git-send-email-robert.dolca@intel.com> (sfid-20150901_165744_698885_9CF45770)
-In-Reply-To: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
-References: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35285 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753868AbbINDZu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Sep 2015 23:25:50 -0400
+Received: by pacfv12 with SMTP id fv12so132608073pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:50 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 24/31] staging: wilc1000: rename WILC_WFI_flush_pmksa
+Date: Mon, 14 Sep 2015 12:24:24 +0900
+Message-Id: <1442201071-16155-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054653_075713_9405AE5E)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows sending core commands from the driver. The driver should be
-able to send NCI core commands like CORE_GET_CONFIG_CMD.
+This patch replaces WILC_WFI_flush_pmksa with flush_pmksa to avoid
+CamelCase.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/core.c         | 24 +++++++++++++++++++-----
- 2 files changed, 20 insertions(+), 5 deletions(-)
+V3: remove "wilc_" prefix
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 30c1b21..d28b7a3 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -281,6 +281,7 @@ int nci_request(struct nci_dev *ndev,
- 			    unsigned long opt),
- 		unsigned long opt, __u32 timeout);
- int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload);
-+int nci_core_cmd(struct nci_dev *ndev, __u16 opcode, size_t len, __u8 *payload);
- int nci_core_reset(struct nci_dev *ndev);
- int nci_core_init(struct nci_dev *ndev);
- 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 29607f9..6f173cd 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -325,32 +325,46 @@ static void nci_rf_deactivate_req(struct nci_dev *ndev, unsigned long opt)
- 		     sizeof(struct nci_rf_deactivate_cmd), &cmd);
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 93d0c2a..c425037 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1981,7 +1981,7 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
  }
  
--struct nci_prop_cmd_param {
-+struct nci_cmd_param {
- 	__u16 opcode;
- 	size_t len;
- 	__u8 *payload;
- };
- 
--static void nci_prop_cmd_req(struct nci_dev *ndev, unsigned long opt)
-+static void nci_generic_req(struct nci_dev *ndev, unsigned long opt)
+ /**
+- *  @brief      WILC_WFI_flush_pmksa
++ *  @brief      flush_pmksa
+  *  @details    Flush all cached PMKIDs.
+  *  @param[in]
+  *  @return     int : Return 0 on Success
+@@ -1989,7 +1989,7 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int  WILC_WFI_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
++static int flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
  {
--	struct nci_prop_cmd_param *param = (struct nci_prop_cmd_param *)opt;
-+	struct nci_cmd_param *param =
-+		(struct nci_cmd_param *)opt;
+ 	struct WILC_WFI_priv *priv = wiphy_priv(wiphy);
  
- 	nci_send_cmd(ndev, param->opcode, param->len, param->payload);
- }
+@@ -3585,7 +3585,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
  
- int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload)
- {
--	struct nci_prop_cmd_param param;
-+	struct nci_cmd_param param;
- 
- 	param.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY, oid);
- 	param.len = len;
- 	param.payload = payload;
- 
--	return __nci_request(ndev, nci_prop_cmd_req, (unsigned long)&param,
-+	return __nci_request(ndev, nci_generic_req, (unsigned long)&param,
- 			     msecs_to_jiffies(NCI_CMD_TIMEOUT));
- }
- EXPORT_SYMBOL(nci_prop_cmd);
- 
-+int nci_core_cmd(struct nci_dev *ndev, __u16 opcode, size_t len, __u8 *payload)
-+{
-+	struct nci_cmd_param param;
-+
-+	param.opcode = opcode;
-+	param.len = len;
-+	param.payload = payload;
-+
-+	return __nci_request(ndev, nci_generic_req, (unsigned long)&param,
-+			     msecs_to_jiffies(NCI_CMD_TIMEOUT));
-+}
-+EXPORT_SYMBOL(nci_core_cmd);
-+
- int nci_core_reset(struct nci_dev *ndev)
- {
- 	return __nci_request(ndev, nci_reset_req, 0,
+ 	.set_pmksa = set_pmksa,
+ 	.del_pmksa = del_pmksa,
+-	.flush_pmksa = WILC_WFI_flush_pmksa,
++	.flush_pmksa = flush_pmksa,
+ #ifdef WILC_P2P
+ 	.remain_on_channel = WILC_WFI_remain_on_channel,
+ 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
 -- 
-1.9.1
+2.5.1
 
