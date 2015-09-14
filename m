@@ -1,75 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45744 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756525AbbIVK47 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 06:56:59 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andrzej Hajda <a.hajda@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"Kalle Valo" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH 21/38] mwifiex: fix comparison expression
-Date: Tue, 22 Sep 2015 10:56:54 +0000
-Message-ID: <062eac0544f4402f96f63fa104e2afdc@SC-EXCH04.marvell.com> (sfid-20150922_125719_329829_FB4B4570)
-References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
- <1442842450-29769-22-git-send-email-a.hajda@samsung.com>
-In-Reply-To: <1442842450-29769-22-git-send-email-a.hajda@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35723 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754431AbbINDZN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Sep 2015 23:25:13 -0400
+Received: by pacfv12 with SMTP id fv12so132593939pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:12 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 12/31] staging: wilc1000: rename WILC_WFI_start_ap
+Date: Mon, 14 Sep 2015 12:24:12 +0900
+Message-Id: <1442201071-16155-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054654_439600_3C622F43)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrzej,
+This patch replaces WILC_WFI_start_ap with start_ap to avoid CamelCase.
 
-> From: Andrzej Hajda [mailto:a.hajda@samsung.com]
-> Sent: Monday, September 21, 2015 7:04 PM
-> To: linux-kernel@vger.kernel.org
-> Cc: Andrzej Hajda; Bartlomiej Zolnierkiewicz; Marek Szyprowski;
-> Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo; linux-
-> wireless@vger.kernel.org; netdev@vger.kernel.org
-> Subject: [PATCH 21/38] mwifiex: fix comparison expression
-> 
-> To avoid underflows signed variables should be used in expression.
-> 
-> The problem has been detected using proposed semantic patch
-> scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
-> 
-> [1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
-> 
-> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
-> ---
->  drivers/net/wireless/mwifiex/11n_rxreorder.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-> b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-> index 2906cd5..b3970a8 100644
-> --- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-> +++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-> @@ -615,10 +615,10 @@ int mwifiex_11n_rx_reorder_pkt(struct
-> mwifiex_private *priv,
->  	    ((end_win > start_win) && ((seq_num > end_win) ||
->  				       (seq_num < start_win)))) {
->  		end_win = seq_num;
-> -		if (((seq_num - win_size) + 1) >= 0)
-> +		if (((end_win - win_size) + 1) >= 0)
->  			start_win = (end_win - win_size) + 1;
->  		else
-> -			start_win = (MAX_TID_VALUE - (win_size - seq_num)) +
-> 1;
-> +			start_win = (MAX_TID_VALUE - (win_size - end_win)) +
-> 1;
->  		mwifiex_11n_dispatch_pkt_until_start_win(priv, tbl,
-> start_win);
->  	}
-> 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Regards,
-Amitkumar
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 4197d74..3853113 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3206,7 +3206,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+  */
+ 
+ /**
+- *  @brief      WILC_WFI_start_ap
++ *  @brief      start_ap
+  *  @details    Add a beacon with given parameters, @head, @interval
+  *                      and @dtim_period will be valid, @tail is optional.
+  *  @param[in]   wiphy
+@@ -3217,8 +3217,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	23 JUL 2013
+  *  @version	1.0
+  */
+-static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
+-			     struct cfg80211_ap_settings *settings)
++static int start_ap(struct wiphy *wiphy, struct net_device *dev,
++		    struct cfg80211_ap_settings *settings)
+ {
+ 	struct cfg80211_beacon_data *beacon = &(settings->beacon);
+ 	struct WILC_WFI_priv *priv;
+@@ -3571,7 +3571,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.del_virtual_intf = del_virtual_intf,
+ 	.change_virtual_intf = change_virtual_intf,
+ 
+-	.start_ap = WILC_WFI_start_ap,
++	.start_ap = start_ap,
+ 	.change_beacon = WILC_WFI_change_beacon,
+ 	.stop_ap = WILC_WFI_stop_ap,
+ 	.add_station = WILC_WFI_add_station,
+-- 
+2.5.1
+
