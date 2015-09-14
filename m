@@ -1,106 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35624 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbbIAL1G (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33621 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754333AbbINDYs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 07:27:06 -0400
-Received: by wicge5 with SMTP id ge5so3551494wic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2015 04:27:05 -0700 (PDT)
-Subject: Re: RTL8189ETV
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>
-References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
- <55E49415.7090807@lwfinger.net> <55E4B9A2.8060109@gmail.com>
- <55E4C638.7010704@lwfinger.net>
-From: poma <pomidorabelisima@gmail.com>
-Message-ID: <55E58B86.8030708@gmail.com> (sfid-20150901_132724_207053_C8059D20)
-Date: Tue, 1 Sep 2015 13:27:02 +0200
-MIME-Version: 1.0
-In-Reply-To: <55E4C638.7010704@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+	Sun, 13 Sep 2015 23:24:48 -0400
+Received: by pacex6 with SMTP id ex6so130278324pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:24:47 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 04/31] staging: wilc1000: rename WILC_WFI_disconnect
+Date: Mon, 14 Sep 2015 12:24:04 +0900
+Message-Id: <1442201071-16155-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_052453_824510_03937C76)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31.08.2015 23:25, Larry Finger wrote:
-> On 08/31/2015 03:31 PM, poma wrote:
->> On 31.08.2015 19:51, Larry Finger wrote:
->>> On 08/31/2015 12:06 PM, poma wrote:
->>>> On 31.08.2015 18:00, poma wrote:
->>>>>
->>>>> Hi Fi,
->>>>>
->>>>> What is this device, is it supported by
->>>>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
->>>>>
->>>>> $ modinfo rtl8189es
->>>>> modinfo: ERROR: Module rtl8189es not found.
->>>>>
->>>>
->>>> or is it supported by
->>>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
->>>> https://github.com/lwfinger/rtl8188eu
->>>> as RTL8188ETV is
->>>>
->>>> $ modinfo rtl8188eu
->>>> modinfo: ERROR: Module rtl8188eu not found.
->>>>
->>>>
->>>> However RTL8188ETV is USB 2.0 device,
->>>> eeeeeeeeeeeeeeeeeee not again!
->>>
->>> That last comment does not help.
->>>
->>> If rtl8188eu is not available, that is the fault of your distro, not anything
->>> that driver maintainers can help. That driver is in the staging directory, and
->>> some distros do not include any of those drivers in their kernels.
->>>
->>> eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and
->>> they refuse/fail to provide the USB ID. Why, I do not know when the lsusb
->>> command provides this info so easily.
->>>
->>> Larry
->>>
->>>
->>
->>
->> What's the hurry, Larry.
->> Let's see if Hans knows what type of this device is RTL8189ETV.
->>
->> According to what is written here
->> http://linux-sunxi.org/Xunlong_Orange_Pi#Variants
->> http://www.orangepi.org/orangepi2
->> RTL8189ETV, whatever it is, is an integral part of some "O-Pi" variants.
->>
->> About rtl8188etv can be read here
->> http://www.orangepi.org/orangepibbsen/forum.php?mod=viewthread&tid=25&highlight=wifi
->> but there is no mention of RTL8189ETV.
->>
->> WikiDevi also returns nothing
->> https://wikidevi.com/wiki/Main_Page
->>    "Search results
->>    ...
->>    There were no results matching the query.
->>
->>    Create the page "RTL8189ETV" on this wiki!"
->>
->> I'm trying to determine in advance,
->> what components are supported,
->> what components are not supported,
->> what components will never be supported,
->> what components will never be supported in mainline kernel.
->>
->> Therefore, I can not show 'lsusb' output. :)
->>
->> "Distro" is not decisive in this matter, moreover dunno what are you referring with "your distro".
->>
->> eeeeeeeeeeeeeeeeeeeeee not again!
-> 
-> Silly me. I thought you were trying to get help implemetiing that device.
-> 
-> 
+This patch replaces WILC_WFI_disconnect with disconnect to avoid
+CamelCase.
 
-Implemetiing!? :)
-You must have me confused with someone else, man.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7f1ca95..1ebaaef 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1064,7 +1064,7 @@ done:
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_disconnect
++ *  @brief      disconnect
+  *  @details    Disconnect from the BSS/ESS.
+  *  @param[in]
+  *  @return     int : Return 0 on Success
+@@ -1072,7 +1072,7 @@ done:
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_code)
++static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_code)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3561,7 +3561,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.set_monitor_channel = set_channel,
+ 	.scan = scan,
+ 	.connect = connect,
+-	.disconnect = WILC_WFI_disconnect,
++	.disconnect = disconnect,
+ 	.add_key = WILC_WFI_add_key,
+ 	.del_key = WILC_WFI_del_key,
+ 	.get_key = WILC_WFI_get_key,
+-- 
+2.5.1
 
