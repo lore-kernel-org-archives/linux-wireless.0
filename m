@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26958 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbbIPJgv (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35031 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490AbbINDZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 05:36:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 6/6] staging: wilc1000: remove wilc_errorsupport.h
-Date: Wed, 16 Sep 2015 18:36:04 +0900
-Message-ID: <1442396164-18728-7-git-send-email-tony.cho@atmel.com> (sfid-20150916_113653_496804_C188FB8F)
-In-Reply-To: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
-References: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 13 Sep 2015 23:25:34 -0400
+Received: by pacfv12 with SMTP id fv12so132601975pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 19/31] staging: wilc1000: rename WILC_WFI_dump_station
+Date: Mon, 14 Sep 2015 12:24:19 +0900
+Message-Id: <1442201071-16155-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054654_050363_820430F7)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch replaces WILC_WFI_dump_station with dump_station to avoid
+CamelCase.
 
-This patch removes the wilc_errorsupport.h which is not used anymore and
-also deletes #include "wilc_errorsupport.h" from the source code.
-
-In addition, adds linux_wlan_common.h file in the wilc_msgqueue.c file
-in order to use PRINT macros defined in the linux_wlan_common.h file.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_errorsupport.h | 15 ---------------
- drivers/staging/wilc1000/wilc_msgqueue.c     |  1 +
- drivers/staging/wilc1000/wilc_msgqueue.h     |  1 -
- drivers/staging/wilc1000/wilc_oswrapper.h    |  3 ---
- 4 files changed, 1 insertion(+), 19 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_errorsupport.h
+V3: remove "wilc_" prefix
 
-diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
-deleted file mode 100644
-index b0babbd..0000000
---- a/drivers/staging/wilc1000/wilc_errorsupport.h
-+++ /dev/null
-@@ -1,15 +0,0 @@
--#ifndef __WILC_ERRORSUPPORT_H__
--#define __WILC_ERRORSUPPORT_H__
--
--/*!
-- *  @file		wilc_errorsupport.h
-- *  @brief		Error reporting and handling support
-- *  @author		syounan
-- *  @sa			wilc_oswrapper.h top level OS wrapper file
-- *  @date		10 Aug 2010
-- *  @version		1.0
-- */
--
--#include "linux_wlan_common.h"
--
--#endif
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 94a2d3d..225bb99 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -1,6 +1,7 @@
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c15bd7c..e932e64 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2760,7 +2760,7 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
  
- #include "wilc_msgqueue.h"
- #include <linux/spinlock.h>
-+#include "linux_wlan_common.h"
- #include <linux/errno.h>
- 
- /*!
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index fb26463..a3c0bba 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -11,7 +11,6 @@
+ }
+ /**
+- *  @brief      WILC_WFI_dump_station
++ *  @brief      dump_station
+  *  @details    Configure connection quality monitor RSSI threshold.
+  *  @param[in]   struct wiphy *wiphy:
+  *  @param[in]	struct net_device *dev
+@@ -2772,8 +2772,8 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
+  *  @date	01 MAR 2012
+  *  @version	1.0
   */
+-static int WILC_WFI_dump_station(struct wiphy *wiphy, struct net_device *dev,
+-				 int idx, u8 *mac, struct station_info *sinfo)
++static int dump_station(struct wiphy *wiphy, struct net_device *dev,
++			int idx, u8 *mac, struct station_info *sinfo)
+ {
+ 	struct WILC_WFI_priv *priv;
  
- #include "wilc_platform.h"
--#include "wilc_errorsupport.h"
- 
- /*!
-  *  @brief		Creates a new Message queue
-diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-index 68f6efe..9b5c23a 100644
---- a/drivers/staging/wilc1000/wilc_oswrapper.h
-+++ b/drivers/staging/wilc1000/wilc_oswrapper.h
-@@ -16,9 +16,6 @@
- /* Os Configuration File */
- #include "wilc_platform.h"
- 
--/* Error reporting and handling support */
--#include "wilc_errorsupport.h"
--
- /* Message Queue */
- #include "wilc_msgqueue.h"
+@@ -3579,7 +3579,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.change_station = change_station,
+ 	#endif /* WILC_AP_EXTERNAL_MLME*/
+ 	.get_station = get_station,
+-	.dump_station = WILC_WFI_dump_station,
++	.dump_station = dump_station,
+ 	.change_bss = WILC_WFI_change_bss,
+ 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
  
 -- 
-1.9.1
+2.5.1
 
