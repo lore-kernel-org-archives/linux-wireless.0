@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3785 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754177AbbIQIr0 (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35559 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847AbbINM0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 04:47:26 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 0/2] resend version 2 for RX_BH_TYPE patch
-Date: Thu, 17 Sep 2015 17:47:23 +0900
-Message-ID: <1442479645-10656-1-git-send-email-tony.cho@atmel.com> (sfid-20150917_104732_105094_07F9ABBA)
+	Mon, 14 Sep 2015 08:26:53 -0400
+Date: Mon, 14 Sep 2015 17:56:43 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Ronit Halder <ronit.crj@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com,
+	linux-wireless@vger.kernel.org, chris.park@atmel.com,
+	Greg KH <gregkh@linuxfoundation.org>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH] Staging: wilc1000: Use NULL instead of zero
+Message-ID: <20150914122642.GA29502@sudip-pc> (sfid-20150914_142717_196447_64484245)
+References: <1442208814-9001-1-git-send-email-ronit.crj@gmail.com>
+ <20150914083627.GB9715@sudip-pc>
+ <CAAm8cU5jGbPF6yg_RgNzWputvWXe5gsdg+Sm=exA9HBWCd=MNQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAm8cU5jGbPF6yg_RgNzWputvWXe5gsdg+Sm=exA9HBWCd=MNQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patch is the version 2 for the RX_BH_TYPE patch before sent.
+On Mon, Sep 14, 2015 at 05:37:45PM +0530, Ronit Halder wrote:
+> I checked but it didn't show me any warning.
+> Can you please specify the warning?
+try with --strict option of checkpatch.
 
-Glen Lee (2):
-  staging: wilc1000: remove define RX_BH_TYPE
-  staging: wilc1000: remove do-nothing ifdef statement
-
- drivers/staging/wilc1000/linux_wlan.c         | 149 +-------------------------
- drivers/staging/wilc1000/linux_wlan_common.h  |   3 -
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  15 ---
- drivers/staging/wilc1000/wilc_wlan.c          |   3 -
- 4 files changed, 2 insertions(+), 168 deletions(-)
-
--- 
-1.9.1
-
+regards
+sudip
