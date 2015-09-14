@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49757 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756270AbbIDSD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 14:03:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: handle fragmented IEs in splitting
-Date: Fri,  4 Sep 2015 20:03:23 +0200
-Message-Id: <1441389803-26148-1-git-send-email-johannes@sipsolutions.net> (sfid-20150904_200329_633564_8325C993)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35808 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176AbbINQwE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2015 12:52:04 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH] drivers: stating: wilc1000: Add a check for SPI availability
+Date: Mon, 14 Sep 2015 22:21:14 +0530
+Message-Id: <1442249474-3014-1-git-send-email-csgorentla@gmail.com> (sfid-20150914_185226_230732_47287C49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+NULL pointer deference is observed in the wilc1000.ko module
+with bus type SPI and when SPI is not ready.
 
-The IEs "output" can sometimes combine IEs coming from userspace
-with IEs generated in the kernel - in particular mac80211 does
-this for association frames.
-
-Add support in this code for the 802.11 IE fragmentation.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
- include/linux/ieee80211.h |  1 +
- net/wireless/util.c       | 25 ++++++++++++++++++++++---
- 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index cfa906f28b7a..2fe22b44b682 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1919,6 +1919,7 @@ enum ieee80211_eid {
+Following are the steps to reproduce.
+
+$ sudo insmod drivers/staging/wilc1000/wilc1000.ko
+$ sudo ifconfig wlan1 up
+
+wlan1 in the above command is the device controlled by 'wilc1000.ko'.
+
+ drivers/staging/wilc1000/linux_wlan.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 63f44f8..48f063d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1634,6 +1634,12 @@ int mac_open(struct net_device *ndev)
+ 	int i = 0;
+ 	struct WILC_WFI_priv *priv;
  
- 	WLAN_EID_VENDOR_SPECIFIC = 221,
- 	WLAN_EID_QOS_PARAMETER = 222,
-+	WLAN_EID_FRAGMENT = 242,
- };
- 
- /* Action category code */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index baf7218cec15..f52fbda56467 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1301,6 +1301,25 @@ static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
- 	return false;
- }
- 
-+static size_t skip_ie(const u8 *ies, size_t ielen, size_t pos)
-+{
-+	/* we assume a validly formed IEs buffer */
-+	u8 len = ies[pos + 1];
-+
-+	pos += 2 + len;
-+
-+	/* the IE itself must have 255 bytes for fragments to follow */
-+	if (len < 255)
-+		return pos;
-+
-+	while (pos < ielen && ies[pos] == WLAN_EID_FRAGMENT) {
-+		len = ies[pos + 1];
-+		pos += 2 + len;
++#ifdef WILC_SPI
++	if (!g_linux_wlan || !g_linux_wlan->wilc_spidev) {
++		netdev_err(ndev, "wilc1000: SPI device not ready\n");
++		return -ENODEV;
 +	}
-+
-+	return pos;
-+}
-+
- size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
- 			      const u8 *ids, int n_ids,
- 			      const u8 *after_ric, int n_after_ric,
-@@ -1310,14 +1329,14 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
- 
- 	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
- 		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
--			pos += 2 + ies[pos + 1];
-+			pos = skip_ie(ies, ielen, pos);
- 
- 			while (pos < ielen &&
- 			       !ieee80211_id_in_list(after_ric, n_after_ric,
- 						     ies[pos]))
--				pos += 2 + ies[pos + 1];
-+				pos = skip_ie(ies, ielen, pos);
- 		} else {
--			pos += 2 + ies[pos + 1];
-+			pos = skip_ie(ies, ielen, pos);
- 		}
- 	}
- 
++#endif
+ 	nic = netdev_priv(ndev);
+ 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+ 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
 -- 
-2.1.4
+2.5.0
 
