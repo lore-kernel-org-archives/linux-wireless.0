@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33944 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933413AbbI1O0x (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35475 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865AbbINDY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 10:26:53 -0400
-Message-ID: <1443450406.2168.3.camel@HansenPartnership.com> (sfid-20150928_162701_513207_6C44F9E4)
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Date: Mon, 28 Sep 2015 07:26:46 -0700
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	 <2524822.pQu4UKMrlb@vostro.rjw.lan>
-	 <1443297128.2181.11.camel@HansenPartnership.com>
-	 <3461169.v5xKdGLGjP@vostro.rjw.lan>
-	 <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 Sep 2015 23:24:57 -0400
+Received: by pacfv12 with SMTP id fv12so132587952pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:24:57 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 07/31] staging: wilc1000: rename WILC_WFI_get_key
+Date: Mon, 14 Sep 2015 12:24:07 +0900
+Message-Id: <1442201071-16155-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_052500_233092_A8A3F887)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-09-28 at 08:58 +0000, David Laight wrote:
-> From: Rafael J. Wysocki
-> > Sent: 27 September 2015 15:09
-> ...
-> > > > Say you have three adjacent fields in a structure, x, y, z, each one byte long.
-> > > > Initially, all of them are equal to 0.
-> > > >
-> > > > CPU A writes 1 to x and CPU B writes 2 to y at the same time.
-> > > >
-> > > > What's the result?
-> > >
-> > > I think every CPU's  cache architecure guarantees adjacent store
-> > > integrity, even in the face of SMP, so it's x==1 and y==2.  If you're
-> > > thinking of old alpha SMP system where the lowest store width is 32 bits
-> > > and thus you have to do RMW to update a byte, this was usually fixed by
-> > > padding (assuming the structure is not packed).  However, it was such a
-> > > problem that even the later alpha chips had byte extensions.
-> 
-> Does linux still support those old Alphas?
-> 
-> The x86 cpus will also do 32bit wide rmw cycles for the 'bit' operations.
+This patch replaces WILC_WFI_get_key with get_key to avoid CamelCase.
 
-That's different: it's an atomic RMW operation.  The problem with the
-alpha was that the operation wasn't atomic (meaning that it can't be
-interrupted and no intermediate output states are visible).
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
-> > OK, thanks!
-> 
-> You still have to ensure the compiler doesn't do wider rmw cycles.
-> I believe the recent versions of gcc won't do wider accesses for volatile data.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-I don't understand this comment.  You seem to be implying gcc would do a
-64 bit RMW for a 32 bit store ... that would be daft when a single
-instruction exists to perform the operation on all architectures.
-
-James
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index dfa9db3..5794db3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1511,7 +1511,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ }
+ 
+ /**
+- *  @brief      WILC_WFI_get_key
++ *  @brief      get_key
+  *  @details    Get information about the key with the given parameters.
+  *                      @mac_addr will be %NULL when requesting information for a group
+  *                      key. All pointers given to the @callback function need not be valid
+@@ -1523,9 +1523,9 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-			    bool pairwise,
+-			    const u8 *mac_addr, void *cookie, void (*callback)(void *cookie, struct key_params *))
++static int get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
++		   bool pairwise,
++		   const u8 *mac_addr, void *cookie, void (*callback)(void *cookie, struct key_params *))
+ {
+ 
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3564,7 +3564,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.disconnect = disconnect,
+ 	.add_key = add_key,
+ 	.del_key = del_key,
+-	.get_key = WILC_WFI_get_key,
++	.get_key = get_key,
+ 	.set_default_key = WILC_WFI_set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+ 	.add_virtual_intf = WILC_WFI_add_virt_intf,
+-- 
+2.5.1
 
