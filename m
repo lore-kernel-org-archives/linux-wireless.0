@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21341 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755992AbbIUDTb (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36097 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490AbbINDZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:19:31 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 19/34] staging: wilc1000: remove typedef from the struct tstrHostIfPowerMgmtParam
-Date: Mon, 21 Sep 2015 12:16:48 +0900
-Message-ID: <1442805423-3711-20-git-send-email-tony.cho@atmel.com> (sfid-20150921_054654_358389_745D1CF5)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 13 Sep 2015 23:25:25 -0400
+Received: by padhk3 with SMTP id hk3so129792839pad.3
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:25 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 16/31] staging: wilc1000: rename WILC_WFI_del_station
+Date: Mon, 14 Sep 2015 12:24:16 +0900
+Message-Id: <1442201071-16155-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054652_939922_5642FD77)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIfPowerMgmtParam and
-renames it to power_mgmt_param in order to comply with the Linux coding
-style.
+This patch replaces WILC_WFI_del_station with del_station to avoid
+CamelCase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+V3: remove "wilc_" prefix
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 289f6a0..d95bba5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -359,7 +359,7 @@ struct timer_cb {
- };
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 72bcdc9..5bdd111 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3384,7 +3384,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ }
  
- /*!
-- *  @struct     tstrHostIfPowerMgmtParam
-+ *  @struct     power_mgmt_param
-  *  @brief		Power management message body
-  *  @details
-  *  @todo
-@@ -368,11 +368,11 @@ struct timer_cb {
-  *  @date		24 November 2012
-  *  @version		1.0
-  */
--typedef struct {
-+struct power_mgmt_param {
- 
- 	bool bIsEnabled;
- 	u32 u32Timeout;
--} tstrHostIfPowerMgmtParam;
-+};
- 
- /*!
-  *  @struct             tstrHostIFSetIPAddr
-@@ -431,7 +431,7 @@ union message_body {
- 	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
- 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
- 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
--	tstrHostIfPowerMgmtParam strPowerMgmtparam;     /*!< Power Management message body */
-+	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
- 	tstrHostIfStaInactiveT strHostIfStaInactiveT;
- 	tstrHostIFSetIPAddr strHostIfSetIP;
- 	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
-@@ -4002,7 +4002,8 @@ static void ListenTimerCB(unsigned long arg)
-  *  @date
+ /**
+- *  @brief      WILC_WFI_del_station
++ *  @brief      del_station
+  *  @details    Remove a station; @mac may be NULL to remove all stations.
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3392,8 +3392,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 MAR 2012
   *  @version	1.0
   */
--static void Handle_PowerManagement(tstrWILC_WFIDrv *drvHandler, tstrHostIfPowerMgmtParam *strPowerMgmtParam)
-+static void Handle_PowerManagement(tstrWILC_WFIDrv *drvHandler,
-+				   struct power_mgmt_param *strPowerMgmtParam)
+-static int WILC_WFI_del_station(struct wiphy *wiphy, struct net_device *dev,
+-				struct station_del_parameters *params)
++static int del_station(struct wiphy *wiphy, struct net_device *dev,
++		       struct station_del_parameters *params)
  {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -7229,7 +7230,7 @@ s32 host_int_set_power_mgmt(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u32 u32Ti
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	tstrHostIfPowerMgmtParam *pstrPowerMgmtParam = &msg.body.strPowerMgmtparam;
-+	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.strPowerMgmtparam;
- 
- 	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", bIsEnabled);
- 
+ 	const u8 *mac = params->mac;
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3575,7 +3575,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.change_beacon = change_beacon,
+ 	.stop_ap = stop_ap,
+ 	.add_station = add_station,
+-	.del_station = WILC_WFI_del_station,
++	.del_station = del_station,
+ 	.change_station = WILC_WFI_change_station,
+ 	#endif /* WILC_AP_EXTERNAL_MLME*/
+ 	.get_station = WILC_WFI_get_station,
 -- 
-1.9.1
+2.5.1
 
