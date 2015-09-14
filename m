@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45531 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753298AbbIRJOB (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:54241
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751852AbbINIdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:14:01 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 20/34] staging: wilc1000: remove typedef from the struct tstrHostIfStaInactiveT
-Date: Fri, 18 Sep 2015 18:11:22 +0900
-Message-ID: <1442567496-29331-20-git-send-email-tony.cho@atmel.com> (sfid-20150918_111408_314059_D181AF83)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 14 Sep 2015 04:33:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org
+Subject: [PATCH 4.3 RESEND] ath10k: fix DMA related firmware crashes on multiple devices
+Date: Mon, 14 Sep 2015 10:33:27 +0200
+Message-Id: <1442219607-12383-1-git-send-email-nbd@openwrt.org> (sfid-20150914_103346_526121_848E76E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIfStaInactiveT and
-renames it to sta_inactive_t in oder to comply with the Linux coding
-style.
+Some platforms really don't like DMA bursts of 256 bytes, and this
+causes the firmware to crash when sending beacons.
+Also, changing this based on the firmware version does not seem to make
+much sense, so use 128 bytes for all versions.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 12adb03..8fc9186 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -392,7 +392,7 @@ typedef struct {
- } tstrHostIFSetIPAddr;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 23afcda..678d72a 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -337,7 +337,7 @@ enum ath10k_hw_rate_cck {
+ #define TARGET_10X_MAX_FRAG_ENTRIES		0
  
- /*!
-- *  @struct     tstrHostIfStaInactiveT
-+ *  @struct     sta_inactive_t
-  *  @brief		Get station message body
-  *  @details
-  *  @todo
-@@ -401,10 +401,9 @@ typedef struct {
-  *  @date		16 April 2013
-  *  @version		1.0
-  */
--typedef struct {
-+struct sta_inactive_t {
- 	u8 mac[6];
--
--} tstrHostIfStaInactiveT;
-+};
- /**/
- /*!
-  *  @union              message_body
-@@ -433,7 +432,7 @@ union message_body {
- 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
- 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
- 	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
--	tstrHostIfStaInactiveT strHostIfStaInactiveT;
-+	struct sta_inactive_t strHostIfStaInactiveT;
- 	tstrHostIFSetIPAddr strHostIfSetIP;
- 	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
- 	tstrHostIFSetMulti strHostIfSetMulti;
-@@ -3393,7 +3392,8 @@ s32 Handle_GetStatistics(tstrWILC_WFIDrv *drvHandler, tstrStatistics *pstrStatis
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_Get_InActiveTime(tstrWILC_WFIDrv *drvHandler, tstrHostIfStaInactiveT *strHostIfStaInactiveT)
-+static s32 Handle_Get_InActiveTime(tstrWILC_WFIDrv *drvHandler,
-+				   struct sta_inactive_t *strHostIfStaInactiveT)
- {
+ /* 10.2 parameters */
+-#define TARGET_10_2_DMA_BURST_SIZE		1
++#define TARGET_10_2_DMA_BURST_SIZE		0
  
- 	s32 s32Error = 0;
+ /* Target specific defines for WMI-TLV firmware */
+ #define TARGET_TLV_NUM_VDEVS			4
+@@ -391,7 +391,7 @@ enum ath10k_hw_rate_cck {
+ 
+ #define TARGET_10_4_TX_DBG_LOG_SIZE		1024
+ #define TARGET_10_4_NUM_WDS_ENTRIES		32
+-#define TARGET_10_4_DMA_BURST_SIZE		1
++#define TARGET_10_4_DMA_BURST_SIZE		0
+ #define TARGET_10_4_MAC_AGGR_DELIM		0
+ #define TARGET_10_4_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
+ #define TARGET_10_4_VOW_CONFIG			0
 -- 
-1.9.1
+2.2.2
 
