@@ -1,89 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57953 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126AbbI3RYn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 13:24:43 -0400
-Date: Wed, 30 Sep 2015 19:24:40 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bastian Bittorf <bittorf@bluebottle.com>, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: Low latency communication over wifi
-Message-ID: <20150930172440.GA11160@amd> (sfid-20150930_192446_906761_34A699E4)
-References: <20150926102403.GA21555@amd>
- <1443426103.2401.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443426103.2401.1.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57772 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751834AbbINTtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2015 15:49:50 -0400
+Message-ID: <1442260188.2075.21.camel@sipsolutions.net> (sfid-20150914_214953_685804_9B84CAAB)
+Subject: Re: Firmware works only if kernel source drivers are built as
+ modules.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>, rhubarbpieguy@gmail.com,
+	linux-wireless@vger.kernel.org
+Date: Mon, 14 Sep 2015 21:49:48 +0200
+In-Reply-To: <55F6E7B1.3070209@lwfinger.net> (sfid-20150914_172856_237038_D2C7754F)
+References: <55F6E028.9010809@gmail.com> <55F6E7B1.3070209@lwfinger.net>
+	 (sfid-20150914_172856_237038_D2C7754F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2015-09-28 09:41:43, Johannes Berg wrote:
-> On Sat, 2015-09-26 at 12:24 +0200, Pavel Machek wrote:
+On Mon, 2015-09-14 at 10:28 -0500, Larry Finger wrote:
+> On 09/14/2015 09:56 AM, rhubarbpieguy@gmail.com wrote:
 > > 
-> > That would be equivalent to ping -Q, right? It does not seem to have
-> > any effect :-(. I'd expect at least local machine to use shorter waits
-> > for medium, and thus drop packets instead of waiting.
-> 
-> Correct. But it won't *drop* packets, it just increases the chances of
-> getting medium access.
-
-Increases chances of medium access, but limits number of retries, so
-it should drop sooner, no?
-
-> > > # you have to add some magic for matching your data
-> > > e.g. $IPT -t mangle -I OUTPUT -j DSCP --set-dscp-class CS7
+> > I'm attempting to load iwlwifi-3160 firmware.  It works only if I build the
+> > following drivers as modules.
 > > 
-> > Again, this is ping -Q equivalent, right? I was doing
-> 
-> Yes.
-> 
-> > ping -c 300 -i .2 -Q $[56*4] -s 500 amd
-> > 300 packets transmitted, 300 received, 0% packet loss, time 60989ms
-> > rtt min/avg/max/mdev = 2.155/8.599/44.475/5.677 ms
-> > 300 packets transmitted, 300 received, +1 duplicates, 0% packet loss, time 61030ms
-> > rtt min/avg/max/mdev = 2.158/23.809/300.956/49.969 ms, pipe 2
+> >      Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate
 > > 
-> > I would expect packet loss, but got long delays instead.
-> 
-> See above :)
-> 
-> > > also you should consider force the ACK-timing to 450m / Class1
-> > > and forbid retransmission in minstrel
+> >       Intel Wireless WiFi MVM Firmware Support
 > > 
-> > Yes, disabling retransmission would be useful. How would I do that?
-> > 
-> It won't work on Intel devices though since they don't use
-> minstrel(_ht)
+> > If I compile them into the kernel the firmware is not found.  This is my first
+> > experience with firmware.  Does firmware require drivers built as modules?  I
+> > see nothing at https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi stating
+> > modules must be used.
+> 
+> No, having firmware does not require the driver to be a module; however, user 
+> space may cause a problem.
+> 
+> To load firmware, the user-space portions needed to read a file must be running. 
+> If the driver is a module *not in the initrd image*, then one is assured that a 
+> file can be loaded as those routines were used to get the driver file. For the 
+> case where the driver is built-in, it is possible for a synchronous 
+> request_firmware() call to timeout before user space is ready to deliver the 
+> file. The safe way is to request an asynchronous load of at least the first 
+> firmware file using request_firmware_nowait(). When the load completes, the 
+> callback routine will set a completion event with all other operations held 
+> until that event is set.
+> 
+> Note that iwlwifi is correctly coded. It does load a second firmware file 
+> synchronously, but only after the first one is available.
+> 
+> The built-in driver will also fail unless the dependent drivers are also built 
+> in, but the kernel build process should take care of that.
+> 
+> The bottom line is that I do not know why your system is failing. It should 
+> work. (TM) :)
+> 
 
-I'm using ath5k for testing... that should use minstrel AFAICT.
+I have very little to add to this - except note that as far as I know,
+initramfs (or similar) userspace was never actually changed to take the
+async into account to defer loading. My original idea with this had
+been that whatever application was loading firmware would see an async
+request and if the file isn't available, it would check if it's running
+in initramfs, and in that case would simply not respond to the firmware
+load at all but check again after the root filesystem was mounted. This
+was, for all I know, never implemented.
 
-02:02.0 Ethernet controller: Qualcomm Atheros AR5211 Wireless Network
-Adapter [AR5001X 802.11ab] (rev 01)
+Now with the in-kernel loading, that's no longer a possibility. You'll
+probably see a number of messages during boot indicating that firmware
+isn't available.
 
-I'm now trying:
+There are essentially two ways out of this:
+ 1) build the firmware file into initramfs - Debian for example makes 
+    this very easy
+ 2) if you built the kernel yourself, you can also build firmware
+    files into the kernel image
 
-# Background load
-sudo ping -f amd -s 8000
-# Test
-ping -c 30 -i .2 -Q $[0*4] -s 500 amd
-ping -c 30 -i .2 -Q $[40*4] -s 500 amd
-ping -c 30 -i .2 -Q $[56*4] -s 500 amd
-
-This should send the second  ping to the priority queue based on -Q,
-but I don't see an effect against one access point.... and it seems to
-work somehow against second one. Good!
-
-avg/maximum latency goes from 8/24 (-Q $[40*4]) to 80/258 (same
-settings, every second frame is slow?!) to 8/26 to 7/32 to 6/18. But
-this jumps to 92/123, 95/139, 91/128 and 135/678 with (-Q 0). -Q
-$[56*4] produces 6/10, 8/23, 6/14, 5/9, 5/14. Good.
-
-Thanks!
-
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+johannes
