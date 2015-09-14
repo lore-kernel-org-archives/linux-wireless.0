@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56590 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753609AbbI3Pop (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34119 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490AbbINDZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 11:44:45 -0400
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-References: <5605D228.7050609@candelatech.com>
- (sfid-20150926_010105_789618_F93D668E)
- <1443595615.1859.2.camel@sipsolutions.net> <560BFABC.8090504@candelatech.com>
- <1443626224.1859.9.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <560C036C.7000401@candelatech.com> (sfid-20150930_174448_552991_2C7DFFFE)
-Date: Wed, 30 Sep 2015 08:44:44 -0700
-MIME-Version: 1.0
-In-Reply-To: <1443626224.1859.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sun, 13 Sep 2015 23:25:41 -0400
+Received: by padhy16 with SMTP id hy16so129906562pad.1
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:40 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 21/31] staging: wilc1000: rename WILC_WFI_set_wiphy_params
+Date: Mon, 14 Sep 2015 12:24:21 +0900
+Message-Id: <1442201071-16155-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054653_676672_4B9211E8)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2015 08:17 AM, Johannes Berg wrote:
-> On Wed, 2015-09-30 at 08:07 -0700, Ben Greear wrote:
->>
->> On 09/29/2015 11:46 PM, Johannes Berg wrote:
->>> On Fri, 2015-09-25 at 16:00 -0700, Ben Greear wrote:
->>>> It seems that ath10k ar988X hardware has a bug where the BSSID
->>>> for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
->>>> does not seem to use AMSDUs for IBSS, and when I enable it in my CT
->>>> firmware, then I see the breakage.  So, I suspect it is not
->>>> just a simple software/firmware bug.
->>>>
->>>> If I simply ignore the bssid_match check in ieee80211_accept_frame,
->>>> then it seems everything runs fine.
->>>>
->>>> So, I'm curious if anyone knows what sorts of bad things could happen
->>>> if the bssid_match check is ignored?  Maybe bcast/mcast frames could
->>>> be accepted when they shouldn't be in certain cases?
->>>>
->>>
->>> You could end up accepting multicast frames from a different,
->>> overlapping, BSS? Seems like a bad idea.
->>
->> It's definitely not a great idea.
->>
->> In my testing, I always see the first frame of the AMPDU have
->> a proper IBSS BSSID.  Any idea if it would be OK (and even possible)
->> for the driver or stack to detect this and save the BSSID aside
->> for the subsequent frames?
->
-> That seems reasonable.
+This patch replaces WILC_WFI_set_wiphy_params with set_wiphy_params to
+avoid CamelCase.
 
-Any idea how this could be done in the stack instead of the driver?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
-The problem is that this is a receiver-side issue, so even if I manage
-to hack the ath10k firmware or driver rx logic, it would not fix any other
-IBSS peer connected to ath10k peer.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks,
-Ben
-
->
->> Its not clear to me whether the rest of the AMPDU frames could
->> somehow be interleaved with frames from a different BSSID?
->>
->
-> They can't be, at least not without some very strange hacks on the
-> transmitter.
->
-> johannes
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e1514db..51ed89a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1802,7 +1802,7 @@ static int  WILC_WFI_disassoc(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ /**
+- *  @brief      WILC_WFI_set_wiphy_params
++ *  @brief      set_wiphy_params
+  *  @details    Notify that wiphy parameters have changed;
+  *  @param[in]   Changed bitfield (see &enum wiphy_params_flags) describes which values
+  *                      have changed.
+@@ -1811,7 +1811,7 @@ static int  WILC_WFI_disassoc(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_set_wiphy_params(struct wiphy *wiphy, u32 changed)
++static int set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrCfgParamVal pstrCfgParamVal;
+@@ -3581,7 +3581,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.get_station = get_station,
+ 	.dump_station = dump_station,
+ 	.change_bss = change_bss,
+-	.set_wiphy_params = WILC_WFI_set_wiphy_params,
++	.set_wiphy_params = set_wiphy_params,
+ 
+ 	.set_pmksa = WILC_WFI_set_pmksa,
+ 	.del_pmksa = WILC_WFI_del_pmksa,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.5.1
 
