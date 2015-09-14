@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52600 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbbIAPrx (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35674 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753117AbbINDZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 11:47:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH] fixup! wil6210: system power management
-References: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 01 Sep 2015 18:47:47 +0300
-In-Reply-To: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Tue, 1 Sep 2015 18:24:10 +0300")
-Message-ID: <87a8t6nnto.fsf@kamboji.qca.qualcomm.com> (sfid-20150901_174804_977601_BC1CD48A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 13 Sep 2015 23:25:10 -0400
+Received: by pacfv12 with SMTP id fv12so132592786pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:09 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 11/31] staging: wilc1000: rename WILC_WFI_change_virt_intf
+Date: Mon, 14 Sep 2015 12:24:11 +0900
+Message-Id: <1442201071-16155-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054652_122264_412A9FF6)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+This patch replaces WILC_WFI_change_virt_intf with change_virtual_intf
+to avoid CamelCase.
 
-> Fix compilation warning where CONFIG_PM defined while
-> CONFIG_PM_SLEEP is not defined
->
-> Report follows:
->
-> tree:   git://github.com/kvalo/ath pending
-> head:   941145fc5e5afbb120271e5dfaf37213ddb55807
-> commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
-> config: xtensa-allyesconfig (attached as .config)
-> reproduce:
->   wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->   chmod +x ~/bin/make.cross
->   git checkout df596be39294d9712e5d568063a48448031e0a9f
->   # save the attached .config to linux build tree
->   make.cross ARCH=xtensa
->
-> All warnings (new ones prefixed by >>):
->
->>> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
->     static int wil6210_suspend(struct device *dev, bool is_runtime)
->                ^
->>> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
->     static int wil6210_resume(struct device *dev, bool is_runtime)
->                ^
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
-BTW, that "fixup!" line won't work with public trees as I cannot rebase
-them. Actually I didn't know about this git feature before. I'll fix the
-title this time, but in the future don't use it.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e85f91f..4197d74 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2827,7 +2827,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ }
+ #ifdef WILC_AP_EXTERNAL_MLME
+ /**
+- *  @brief      WILC_WFI_change_virt_intf
++ *  @brief      change_virtual_intf
+  *  @details    Change type/configuration of virtual interface,
+  *                      keep the struct wireless_dev's iftype updated.
+  *  @param[in]   NONE
+@@ -2839,8 +2839,8 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ void wilc1000_wlan_deinit(linux_wlan_t *nic);
+ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
+ 
+-static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev,
+-				     enum nl80211_iftype type, u32 *flags, struct vif_params *params)
++static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
++			       enum nl80211_iftype type, u32 *flags, struct vif_params *params)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3569,7 +3569,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+ 	.add_virtual_intf = add_virtual_intf,
+ 	.del_virtual_intf = del_virtual_intf,
+-	.change_virtual_intf = WILC_WFI_change_virt_intf,
++	.change_virtual_intf = change_virtual_intf,
+ 
+ 	.start_ap = WILC_WFI_start_ap,
+ 	.change_beacon = WILC_WFI_change_beacon,
 -- 
-Kalle Valo
+2.5.1
+
