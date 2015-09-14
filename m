@@ -1,119 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:37628 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182AbbIPMdG (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:32838 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753117AbbINDZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 08:33:06 -0400
-Received: by igbni9 with SMTP id ni9so31098700igb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 05:33:04 -0700 (PDT)
-Date: Wed, 16 Sep 2015 08:32:44 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Peter Oh <poh@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-Message-ID: <20150916123244.GA2051@localhost> (sfid-20150916_143310_937173_E4A050AD)
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
- <1440673024-13696-4-git-send-email-me@bobcopeland.com>
- <87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
- <87fv2o9cvl.fsf@kamboji.qca.qualcomm.com>
- <20150909164945.GA4062@localhost>
- <1441869764.2108.1.camel@sipsolutions.net>
- <55F7C6FF.3050802@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F7C6FF.3050802@codeaurora.org>
+	Sun, 13 Sep 2015 23:25:04 -0400
+Received: by pacex6 with SMTP id ex6so130284312pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:03 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 09/31] staging: wilc1000: rename WILC_WFI_add_virt_intf
+Date: Mon, 14 Sep 2015 12:24:09 +0900
+Message-Id: <1442201071-16155-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_052508_428515_C1592989)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 12:21:35AM -0700, Peter Oh wrote:
-> Can we configure mesh point with hostapd or can we use mesh point without
-> neither wpa_supplicant nor hostapd?
-> Currently I'm trying to bring up mesh point, but whenever I run hostpad
-> after creating mesh point (iw phy0 interface add mesh type mp), hostapd
-> change the interface mode to managed.
+This patch replaces WILC_WFI_add_virt_intf with add_virtual_intf to
+avoid CamelCase.
 
-Hostapd can't control the mesh interface, but wpa_supplicant can,
-though I believe there's a little more work needed to support VHT for
-mesh in wpa_supplicant.  If you want to run an unencrypted mesh, you can
-start it with iw and the kernel will run the peering manager.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: remove "wilc_" prefix
 
-If you're asking about a mesh-enabled access point, you can run hostapd
-separately from wpa_supplicant/iw, as in the below script.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-(I've only tested that you can bring this up on ath10k, not actual
-operation, though it should work as far as I know.  I've run similar
-scripts on ath9k.)
-
-#!/bin/bash -x
-#
-# Example of running a mesh-enabled access point with one radio.
-#
-killall hostapd > /dev/null
-killall wpa_supplicant > /dev/null
-
-pubip=`ip route get 8.8.8.8 | awk 'NR==1 {print $NF}'`
-last8=`echo $pubip | awk -F . '{print $4}'`
-meship=10.10.1.$last8
-iface=wlan0
-ap_iface=ap0
-br_iface=br0
-mesh_mac=42:00:00:00:00:`printf "%.2x" $last8`
-channel=36
-freq=5180
-
-brctl delbr $br_iface
-brctl addbr $br_iface
-
-# add a new interface for ap operation
-iw dev $ap_iface del
-iw dev $iface interface add $ap_iface type managed
-ip addr flush $ap_iface
-ip link set $ap_iface down
-
-# create hostapd conf for ath10k
-cat <<__EOM > hostapd.conf
-interface=$ap_iface
-driver=nl80211
-ssid=mesh-ap
-hw_mode=a
-channel=$channel
-auth_algs=3
-own_ip_addr=$meship
-wpa=1
-wpa_passphrase=my_password
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=CCMP
-ht_capab=[HT40+]
-ieee80211n=1
-ieee80211ac=1
-vht_oper_chwidth=1
-vht_oper_centr_freq_seg0_idx=$((channel + 6))
-bridge=$br_iface
-__EOM
-
-# configure main interface to run in mesh mode
-ip addr flush $iface
-ip link set $iface down
-ip link set addr $mesh_mac dev $iface
-iw dev $iface set type mp
-ip link set $iface up
-
-# start the mesh
-# here you might instead run wpa_supplicant for an encrypted mesh
-iw dev $iface set freq $freq 80 $((freq + 30))
-iw dev $iface mesh join mesh-vht
-
-sleep 5
-
-# add mesh to bridge (hostapd adds AP interface to bridge)
-brctl addif $br_iface $iface
-ip addr add $meship/24 dev $br_iface
-ip link set $br_iface up
-
-# run hostapd
-hostapd -dd hostapd.conf >hostapd.log 2>&1 &
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f0065cb..5ff81cf 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3498,7 +3498,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_add_virt_intf
++ *  @brief      add_virtual_intf
+  *  @details
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3506,10 +3506,10 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 JUL 2012
+  *  @version	1.0
+  */
+-struct wireless_dev *WILC_WFI_add_virt_intf(struct wiphy *wiphy, const char *name,
+-						unsigned char name_assign_type,
+-						enum nl80211_iftype type, u32 *flags,
+-						struct vif_params *params)
++struct wireless_dev *add_virtual_intf(struct wiphy *wiphy, const char *name,
++				      unsigned char name_assign_type,
++				      enum nl80211_iftype type, u32 *flags,
++				      struct vif_params *params)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct WILC_WFI_priv *priv;
+@@ -3567,7 +3567,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.get_key = get_key,
+ 	.set_default_key = set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+-	.add_virtual_intf = WILC_WFI_add_virt_intf,
++	.add_virtual_intf = add_virtual_intf,
+ 	.del_virtual_intf = WILC_WFI_del_virt_intf,
+ 	.change_virtual_intf = WILC_WFI_change_virt_intf,
+ 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.5.1
+
