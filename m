@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18605 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754291AbbIAPYr (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33098 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754441AbbINDZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 11:24:47 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] fixup! wil6210: system power management
-Date: Tue,  1 Sep 2015 18:24:10 +0300
-Message-Id: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150901_172452_965491_ECC6E85B)
+	Sun, 13 Sep 2015 23:25:19 -0400
+Received: by pacex6 with SMTP id ex6so130290596pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:19 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 14/31] staging: wilc1000: rename WILC_WFI_stop_ap
+Date: Mon, 14 Sep 2015 12:24:14 +0900
+Message-Id: <1442201071-16155-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054653_804323_1C0BC288)
+In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix compilation warning where CONFIG_PM defined while
-CONFIG_PM_SLEEP is not defined
+This patch replaces WILC_WFI_stop_ap with stop_ap to avoid CamelCase.
 
-Report follows:
-
-tree:   git://github.com/kvalo/ath pending
-head:   941145fc5e5afbb120271e5dfaf37213ddb55807
-commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
-config: xtensa-allyesconfig (attached as .config)
-reproduce:
-  wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-  chmod +x ~/bin/make.cross
-  git checkout df596be39294d9712e5d568063a48448031e0a9f
-  # save the attached .config to linux build tree
-  make.cross ARCH=xtensa
-
-All warnings (new ones prefixed by >>):
-
->> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
-    static int wil6210_suspend(struct device *dev, bool is_runtime)
-               ^
->> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
-    static int wil6210_resume(struct device *dev, bool is_runtime)
-               ^
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+V3: remove "wilc_" prefix
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index feff1ef..1a3142c3 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -260,6 +260,7 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
- 
- #ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- 
- static int wil6210_suspend(struct device *dev, bool is_runtime)
- {
-@@ -307,7 +308,6 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
- 	return rc;
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 936db60..0b5baec 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3278,7 +3278,7 @@ static int change_beacon(struct wiphy *wiphy, struct net_device *dev,
  }
  
--#ifdef CONFIG_PM_SLEEP
- static int wil6210_pm_suspend(struct device *dev)
+ /**
+- *  @brief      WILC_WFI_stop_ap
++ *  @brief      stop_ap
+  *  @details    Remove beacon configuration and stop sending the beacon.
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3286,7 +3286,7 @@ static int change_beacon(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	23 JUL 2013
+  *  @version	1.0
+  */
+-static int  WILC_WFI_stop_ap(struct wiphy *wiphy, struct net_device *dev)
++static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
  {
- 	return wil6210_suspend(dev, false);
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3573,7 +3573,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 
+ 	.start_ap = start_ap,
+ 	.change_beacon = change_beacon,
+-	.stop_ap = WILC_WFI_stop_ap,
++	.stop_ap = stop_ap,
+ 	.add_station = WILC_WFI_add_station,
+ 	.del_station = WILC_WFI_del_station,
+ 	.change_station = WILC_WFI_change_station,
 -- 
-2.1.4
+2.5.1
 
