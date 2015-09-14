@@ -1,83 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57445 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbIPHtR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 03:49:17 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix ldpc param for fixed rate
-Date: Wed, 16 Sep 2015 13:19:00 +0530
-Message-ID: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150916_094920_809115_49CDC5EC)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:53797 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751017AbbINRkh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2015 13:40:37 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZbXk2-00066d-I3
+	for linux-wireless@vger.kernel.org; Mon, 14 Sep 2015 19:40:35 +0200
+Received: from 147.83.206.82 ([147.83.206.82])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 19:40:34 +0200
+Received: from ranker72 by 147.83.206.82 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 19:40:34 +0200
+To: linux-wireless@vger.kernel.org
+From: ferran <ranker72@gmail.com>
+Subject: Re: [question] panic when calling =?utf-8?b?ZHJ2X2dldF90c2Y=?=
+Date: Mon, 14 Sep 2015 17:40:24 +0000 (UTC)
+Message-ID: <loom.20150914T190111-273@post.gmane.org> (sfid-20150914_194041_322327_4F31D78A)
+References: <55E9A07E.8070005@gmail.com> <55EDCD0A.4030503@gmail.com> <CAEKwDSAjkByMFwN71qe8DE08+zshKgmp+hN13vDG=SuF3yPtvw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ldpc is not configured for fixed rates. This blocks auto rate vs fixed
-rate performance comparison. Since firmware is considering ldpc vdev
-param for fixed rate selection, it has to be configured to enable ldpc
-for fixed rates.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 80fe43fa..b347b60 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5936,7 +5936,7 @@ ath10k_mac_bitrate_mask_get_single_rate(struct ath10k *ar,
- }
- 
- static int ath10k_mac_set_fixed_rate_params(struct ath10k_vif *arvif,
--					    u8 rate, u8 nss, u8 sgi)
-+					    u8 rate, u8 nss, u8 sgi, u8 ldpc)
- {
- 	struct ath10k *ar = arvif->ar;
- 	u32 vdev_param;
-@@ -5969,6 +5969,13 @@ static int ath10k_mac_set_fixed_rate_params(struct ath10k_vif *arvif,
- 		return ret;
- 	}
- 
-+	vdev_param = ar->wmi.vdev_param->ldpc;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, ldpc);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set ldpc param %d: %d\n", ldpc, ret);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
-@@ -6032,6 +6039,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
- 	u8 rate;
- 	u8 nss;
- 	u8 sgi;
-+	u8 ldpc;
- 	int single_nss;
- 	int ret;
- 
-@@ -6041,6 +6049,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
- 	band = def.chan->band;
- 	ht_mcs_mask = mask->control[band].ht_mcs;
- 	vht_mcs_mask = mask->control[band].vht_mcs;
-+	ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
- 
- 	sgi = mask->control[band].gi;
- 	if (sgi == NL80211_TXRATE_FORCE_LGI)
-@@ -6079,7 +6088,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&ar->conf_mutex);
- 
--	ret = ath10k_mac_set_fixed_rate_params(arvif, rate, nss, sgi);
-+	ret = ath10k_mac_set_fixed_rate_params(arvif, rate, nss, sgi, ldpc);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to set fixed rate params on vdev %i: %d\n",
- 			    arvif->vdev_id, ret);
--- 
-2.5.2
+Qm9iIENvcGVsYW5kIDxtZUAuLi4+IHdyaXRlczoKCgpIaSBCb2IsCgpUaGFuayB5b3UgZm9yIGNvbnRyaWJ1dGluZyBhbmQgc3VwcG9ydGluZyBzbyBhY3RpdmVseSB0aGUgbWVzaCBkZXZlbG9wbWVudC4KSSB1bmRlcnN0b29kIHRoZSBpc3N1ZXMgd2l0aCBUU0YsIHNvIEkgc3RvcHBlZCB1c2luZyBpdC4KCk15IGFpbSBpcyB0byBhcHByb3hpbWF0ZSBob3cgbXVjaCB0aW1lIHRoZSB3aXJlbGVzcyBjaGFubmVsIHRvIHdoaWNoIHRoZQpjYXJkIGlzIHR1bmVkIGluLCBpcyBidXN5LiBJIHVzZSBpZWVlODAyMTFfZnJhbWVfZHVyYXRpb24gZm9yIGVhY2gKaW4vb3V0Y29taW5nIHBhY2tldC4gSSB1c2UgdGhlIGJlYWNvbiB0cmlnZ2VycyBmb3IgcGVyaW9kaWNhbGx5IGF2ZXJhZ2luZwphbmQgc3RvcmluZyBzYW1wbGVzLgoKSSB3b3JrZWQgYXJvdW5kIHRoYXQgZXJyb3IgYXNzdW1pbmcgYSBmaXhlZCBiZWFjb24gdGltZSBpbnRlcnZhbCBpbnN0ZWFkIG9mCnVzaW5nIFRTRiwgd2hpY2ggaXMgcHJldHR5IHNvbGlkIGluIGEgY29udHJvbGxlZCBlbnZpcm9ubWVudC4gSG93ZXZlciwgdGhlCmFwcHJveGltYXRpb24gd291bGQgaW1wcm92ZSBhIGxvdCBjb3VudGluZyB0aGUgdXNlZCB0aW1lIGluc3RlYWQgb2YKY29tcHV0aW5nIGl0IGFmdGVyd2FyZHMuCgpQdXJzdWluZyBhIHNpbWlsYXIgcHVycG9zZSwgc29tZWJvZHkgaGFzIGFscmVhZHkgaW1wbGVtZW50ZWQgdGhhdCBmb3IKQXRoZXJvcywgdXNpbmcga2VybmVsIHRpbWUgYW5kIHJlYWRpbmcgcmVnaXN0ZXJzLiBIZXJlIGlzIHRoZSBwcmVzZW50YXRpb24KbWFpbCBodHRwczovL2xpc3RzLmF0aDlrLm9yZy9waXBlcm1haWwvYXRoOWstZGV2ZWwvMjAxNS1BdWd1c3QvMDE0MTQxLmh0bWwKYW5kIHRoZSBwcm9qZWN0IGxpbmsgaHR0cHM6Ly9naXRodWIuY29tL3RodWVobi9SZWdNb24gLiBUaGUgYXV0aG9yIGlzCkRyLi1JbmcuIFRob21hcyBIw7xobi4KCkkgcGxhbiB0byB1c2UgaXQgaW4gdGhlIG1pZCBmdXR1cmUuCgpUaGFuayB5b3UsCkZlcnJhbg==
 
