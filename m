@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:32950 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757222AbbI1SOb (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35744 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656AbbIONwD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 14:14:31 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
+	Tue, 15 Sep 2015 09:52:03 -0400
+From: Aparna Karuthodi <kdasaparna@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
-	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove code that no effect
-Date: Mon, 28 Sep 2015 23:43:56 +0530
-Message-Id: <1443464037-3591-2-git-send-email-csgorentla@gmail.com> (sfid-20150928_201509_433801_220887D3)
-In-Reply-To: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
-References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, Aparna Karuthodi <kdasaparna@gmail.com>
+Subject: [PATCH] staging: wilc1000: Removed curly braces
+Date: Tue, 15 Sep 2015 19:24:00 +0530
+Message-Id: <1442325240-3659-1-git-send-email-kdasaparna@gmail.com> (sfid-20150915_155226_591127_4BB459B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 5 -----
- 1 file changed, 5 deletions(-)
+Removed the curly braces of a single statement if block to remove a
+coding style warning detected by checkpatch.
+The warning is given below:
+WARNING: braces {} are not necessary for single statement blocks
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index a01ada4..1a411d3 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -133,11 +133,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	down(&pHandle->hSem);
+Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 0c964c6..5241699 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1944,9 +1944,8 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+ 	gstrConfigPktInfo.bRespRequired = bRespRequired;
  
- 	/* other non-timeout scenarios */
--	if (result) {
--		PRINT_ER("Non-timeout\n");
--		return result;
+ 	s32Error = SendRawPacket(gps8ConfigPacket, s32ConfigPacketLen);
+-	if (s32Error != WILC_SUCCESS) {
++	if (s32Error != WILC_SUCCESS)
+ 		goto End_ConfigPkt;
 -	}
--
- 	if (pHandle->bExiting) {
- 		PRINT_ER("pHandle fail\n");
- 		return -EFAULT;
+ 
+ 	WILC_memset((void *)gps8ConfigPacket, 0, MAX_PACKET_BUFF_SIZE);
+ 
 -- 
-2.1.4
+1.7.9.5
 
