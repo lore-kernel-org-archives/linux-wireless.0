@@ -1,85 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41315 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755720AbbICSE2 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:16663 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbbIOGuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 14:04:28 -0400
-Message-ID: <55E88BA4.7010009@codeaurora.org> (sfid-20150903_200432_195250_855637B8)
-Date: Thu, 03 Sep 2015 11:04:20 -0700
-From: Peter Oh <poh@codeaurora.org>
+	Tue, 15 Sep 2015 02:50:04 -0400
+Subject: Re: [PATCH 0/7] remove wilc_errorsupport.h from the wilc driver
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
+ <20150915062715.GG12611@sudip-pc>
+CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
+	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <55F7BF9A.6070600@atmel.com> (sfid-20150915_085009_578568_38E58759)
+Date: Tue, 15 Sep 2015 15:50:02 +0900
 MIME-Version: 1.0
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath: use PRI value given by spec for fixed PRI
-References: <1427475590-2198-1-git-send-email-poh@qca.qualcomm.com> <55191D89.2000300@neratec.com> <55198EA4.1010101@codeaurora.org> <551BC2B1.3030002@neratec.com>
-In-Reply-To: <551BC2B1.3030002@neratec.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20150915062715.GG12611@sudip-pc>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Zefir,
 
-I believe the patch below is good to be checked in since you've already 
-made change in DFS.
-Can you confirm it?
 
-Thanks,
-Peter
+On 2015년 09월 15일 15:27, Sudip Mukherjee wrote:
+> On Tue, Sep 15, 2015 at 11:53:34AM +0900, Tony Cho wrote:
+>> This patch aims to remove the wilc_errorsupport.h which is unnecessary in the
+>> wilc driver. This patch replaces the error types defined by wilc driver with
+>> kernel generic error types and removes macros which handles the errors.
+> Patch 2/7 and 4/7 are introducing new checkpatch warnings which again
+> some has to fix in a separate patch. Better to fix it while you are
+> sending. And instead of printk it should be pr_err or much better if you
+> can use netev_err. Looks like it can be used in some of the functions.
+>
+> regards
+> sudip
 
-On 04/01/2015 03:04 AM, Zefir Kurtisi wrote:
-> On 03/30/2015 07:57 PM, Peter Oh wrote:
->> On 03/30/2015 02:55 AM, Zefir Kurtisi wrote:
->>> [...]
->>> That's why I believe we need to
->>> be very cautious when changing it to fix / improve minor issues.
->> This patch is not for minor fix.
->> Current DFS detector fails on Japan W53 band which requires at least 50%
-> of data
->> traffic during DFS certificate.
->> So this patch should apply to both of 9k and 10k.
-> That is the core of my concern: you add changes to fix FCC/JP, which at
-> the same
-> time also affects ETSI.
->
-> Our company (and maybe others) got ath9k certified for ETSI, and any
-> potential
-> change to the detector relevant for that domain would essentially require
-> to
-> re-certify.
->
-> There were several patches lately added to the detector that were isolated
-> to
-> specific domains (like the recent updates for FCC pattern 1) which I knew
-> won't
-> affect the ETSI detector performance, since they touched only the FCC
-> configuration but not the algorithm itself. This patch does, and that's
-> why I need
-> to point out that doing so might void certification efforts out there.
->
-> Unfortunately, I have no good idea how to cope with it. Freezing the
-> driver at the
-> certified state is no option, since we all want to evolve. Having multiple
-> copies
-> of the detector for each regulatory domain would be an option (and
-> essentially
-> will happen since FCC/JP can't be covered by PRI detectors only), but
-> gives
-> unacceptable code duplication. Ideally we would fully separate algorithm
-> from
-> configuration and leave the algorithm untouched ever after, not sure how
-> doable,
-> though.
->
->
-> As for your patch at hand, I tested it for ETSI and it does not change
-> detector
-> performance, therefore (please replace 16 with PRI_TOLERANCE in the macro)
->
-> Acked-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+I will check patch warnings and resend v2. I'm designing new debug functions and it will be
+introduced in the next patch.
+
+Thanks for your advice,
+Tony.
+
 
