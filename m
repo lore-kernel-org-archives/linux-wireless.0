@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:34284 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbbI1SiI (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36837 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbbIOHRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 14:38:08 -0400
-Date: Tue, 29 Sep 2015 00:07:43 +0530
-From: Chandra Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
-	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
-Subject: Re: [PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove
- code that no effect
-Message-ID: <20150928183743.GA2879@gcs-HP-Notebook> (sfid-20150928_203825_767826_FC8998C2)
-References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
- <1443464037-3591-2-git-send-email-csgorentla@gmail.com>
+	Tue, 15 Sep 2015 03:17:00 -0400
+Received: by padhk3 with SMTP id hk3so168247152pad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2015 00:16:59 -0700 (PDT)
+Date: Tue, 15 Sep 2015 12:46:52 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 2/4] staging: wilc1000: delete function declaration
+ SendRawPacket
+Message-ID: <20150915071652.GI12611@sudip-pc> (sfid-20150915_091705_866793_1564E671)
+References: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
+ <1442295237-12644-2-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443464037-3591-2-git-send-email-csgorentla@gmail.com>
+In-Reply-To: <1442295237-12644-2-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please do not review this.  This is duplicate to -
-[PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove ineffective code
-
-On Mon, Sep 28, 2015 at 11:43:56PM +0530, Chandra S Gorentla wrote:
-> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+On Tue, Sep 15, 2015 at 02:33:55PM +0900, Tony Cho wrote:
+> From: Glen Lee <glen.lee@atmel.com>
+> 
+> SendRawpacket is declared but not implemented. It is not used also.
+> So just delete it.
+> 
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
 > ---
->  drivers/staging/wilc1000/wilc_msgqueue.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> index a01ada4..1a411d3 100644
-> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> @@ -133,11 +133,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
->  	down(&pHandle->hSem);
->  
->  	/* other non-timeout scenarios */
-> -	if (result) {
-> -		PRINT_ER("Non-timeout\n");
-> -		return result;
-> -	}
-> -
->  	if (pHandle->bExiting) {
->  		PRINT_ER("pHandle fail\n");
->  		return -EFAULT;
-> -- 
-> 2.1.4
-> 
+Still remains in coreconfigurator.c
+
+regards
+sudip
