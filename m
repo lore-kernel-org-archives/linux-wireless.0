@@ -1,86 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21289 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbbIUDTL (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:33279 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbbIOFHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:19:11 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 16/34] staging: wilc1000: remove typedef from the struct tstrHostIFDelBeacon
-Date: Mon, 21 Sep 2015 12:16:45 +0900
-Message-ID: <1442805423-3711-17-git-send-email-tony.cho@atmel.com> (sfid-20150921_054655_621921_AB565549)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 15 Sep 2015 01:07:30 -0400
+Received: by pacex6 with SMTP id ex6so165324206pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:30 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/18] staging: wilc1000: fix alignment of enum
+Date: Tue, 15 Sep 2015 14:06:23 +0900
+Message-Id: <1442293588-15323-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_070739_195542_D317C2C4)
+In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFDelBeacon and
-renames it to del_beacon in order to comply with the Linux coding style.
+This patch fix alignment of enum.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 76 +++++++++++++++----------------
+ 1 file changed, 38 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6f93908..f530e89 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -284,7 +284,7 @@ struct set_beacon {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 64bcd80..e3e4b06 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -77,13 +77,13 @@ typedef struct _tstrStatistics {
  
  
- /*!
-- *  @struct             tstrHostIFDelBeacon
-+ *  @struct             del_beacon
-  *  @brief		Del Beacon  message body
-  *  @details
-  *  @todo
-@@ -293,9 +293,9 @@ struct set_beacon {
-  *  @date		15 July 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFDelBeacon {
-+struct del_beacon {
- 	u8 u8dummy;
--} tstrHostIFDelBeacon;
-+};
+ typedef enum {
+-	HOST_IF_IDLE					= 0,
+-	HOST_IF_SCANNING				= 1,
+-	HOST_IF_CONNECTING				= 2,
+-	HOST_IF_WAITING_CONN_RESP		= 3,
+-	HOST_IF_CONNECTED				= 4,
+-	HOST_IF_P2P_LISTEN				= 5,
+-	HOST_IF_FORCE_32BIT			= 0xFFFFFFFF
++	HOST_IF_IDLE			= 0,
++	HOST_IF_SCANNING		= 1,
++	HOST_IF_CONNECTING		= 2,
++	HOST_IF_WAITING_CONN_RESP	= 3,
++	HOST_IF_CONNECTED		= 4,
++	HOST_IF_P2P_LISTEN		= 5,
++	HOST_IF_FORCE_32BIT		= 0xFFFFFFFF
+ } tenuHostIFstate;
  
- /*!
-  *  @struct             tstrHostIFSetMulti
-@@ -425,7 +425,7 @@ union message_body {
- 	struct set_channel strHostIFSetChan;
- 	struct get_channel strHostIFGetChan;
- 	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
--	tstrHostIFDelBeacon strHostIFDelBeacon;                 /*!< Del beacon message body */
-+	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
- 	tstrWILC_AddStaParam strAddStaParam;                    /*!< Add station message body */
- 	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
- 	tstrWILC_AddStaParam strEditStaParam;                           /*!< Edit station message body */
-@@ -3506,13 +3506,14 @@ ERRORHANDLER:
- /**
-  *  @brief Handle_AddBeacon
-  *  @details       Sending config packet to delete beacon
-- *  @param[in]   tstrHostIFDelBeacon* pstrDelBeacon
-+ *  @param[in]   struct del_beacon *pstrDelBeacon
-  *  @return         NONE
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelBeacon *pstrDelBeacon)
-+static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler,
-+			     struct del_beacon *pstrDelBeacon)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
+ typedef struct _tstrHostIFpmkid {
+@@ -97,19 +97,19 @@ typedef struct _tstrHostIFpmkidAttr {
+ } tstrHostIFpmkidAttr;
+ 
+ typedef enum {
+-	AUTORATE	 = 0,
+-	MBPS_1	     = 1,
+-	MBPS_2	     = 2,
+-	MBPS_5_5	     = 5,
+-	MBPS_11	     = 11,
+-	MBPS_6	     = 6,
+-	MBPS_9	     = 9,
+-	MBPS_12	     = 12,
+-	MBPS_18	     = 18,
+-	MBPS_24	     = 24,
+-	MBPS_36	     = 36,
+-	MBPS_48	     = 48,
+-	MBPS_54	     = 54
++	AUTORATE	= 0,
++	MBPS_1		= 1,
++	MBPS_2		= 2,
++	MBPS_5_5	= 5,
++	MBPS_11		= 11,
++	MBPS_6		= 6,
++	MBPS_9		= 9,
++	MBPS_12		= 12,
++	MBPS_18		= 18,
++	MBPS_24		= 24,
++	MBPS_36		= 36,
++	MBPS_48		= 48,
++	MBPS_54		= 54
+ } CURRENT_TX_RATE_T;
+ 
+ typedef struct {
+@@ -140,23 +140,23 @@ typedef struct {
+ typedef enum {
+ 	RETRY_SHORT		= 1 << 0,
+ 	RETRY_LONG		= 1 << 1,
+-	FRAG_THRESHOLD	= 1 << 2,
+-	RTS_THRESHOLD	= 1 << 3,
+-	BSS_TYPE  = 1 << 4,
+-	AUTH_TYPE = 1 << 5,
+-	AUTHEN_TIMEOUT = 1 << 6,
+-	POWER_MANAGEMENT = 1 << 7,
+-	PREAMBLE = 1 << 8,
+-	SHORT_SLOT_ALLOWED = 1 << 9,
+-	TXOP_PROT_DISABLE = 1 << 10,
+-	BEACON_INTERVAL = 1 << 11,
+-	DTIM_PERIOD = 1 << 12,
+-	SITE_SURVEY = 1 << 13,
+-	SITE_SURVEY_SCAN_TIME = 1 << 14,
+-	ACTIVE_SCANTIME = 1 << 15,
+-	PASSIVE_SCANTIME = 1 << 16,
+-	CURRENT_TX_RATE = 1 << 17,
+-	HT_ENABLE = 1 << 18,
++	FRAG_THRESHOLD		= 1 << 2,
++	RTS_THRESHOLD		= 1 << 3,
++	BSS_TYPE		= 1 << 4,
++	AUTH_TYPE		= 1 << 5,
++	AUTHEN_TIMEOUT		= 1 << 6,
++	POWER_MANAGEMENT	= 1 << 7,
++	PREAMBLE		= 1 << 8,
++	SHORT_SLOT_ALLOWED	= 1 << 9,
++	TXOP_PROT_DISABLE	= 1 << 10,
++	BEACON_INTERVAL		= 1 << 11,
++	DTIM_PERIOD		= 1 << 12,
++	SITE_SURVEY		= 1 << 13,
++	SITE_SURVEY_SCAN_TIME	= 1 << 14,
++	ACTIVE_SCANTIME		= 1 << 15,
++	PASSIVE_SCANTIME	= 1 << 16,
++	CURRENT_TX_RATE		= 1 << 17,
++	HT_ENABLE		= 1 << 18,
+ } tenuCfgParam;
+ 
+ typedef struct {
+@@ -172,7 +172,7 @@ typedef enum {SCAN_EVENT_NETWORK_FOUND  = 0,
+ typedef enum {
+ 	CONN_DISCONN_EVENT_CONN_RESP		= 0,
+ 	CONN_DISCONN_EVENT_DISCONN_NOTIF	= 1,
+-	CONN_DISCONN_EVENT_FORCE_32BIT	 = 0xFFFFFFFF
++	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
+ } tenuConnDisconnEvent;
+ 
+ typedef enum {
 -- 
-1.9.1
+2.5.1
 
