@@ -1,102 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34020 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886AbbITGwU (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35718 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbbIOFH1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:52:20 -0400
-Received: by padhy16 with SMTP id hy16so87437275pad.1
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:19 -0700 (PDT)
+	Tue, 15 Sep 2015 01:07:27 -0400
+Received: by pacfv12 with SMTP id fv12so168235157pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:27 -0700 (PDT)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 14/18] staging: wilc1000: remove useless #if 1
-Date: Sun, 20 Sep 2015 15:51:21 +0900
-Message-Id: <1442731885-4344-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091654_542622_35436140)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 12/18] staging: wilc1000: fix alignment of defines
+Date: Tue, 15 Sep 2015 14:06:22 +0900
+Message-Id: <1442293588-15323-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_070736_834098_5186EED6)
+In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes #if 1, which is encapsulated some codes.
+This patch fix alignment of defines.
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ----
- drivers/staging/wilc1000/wilc_wlan.c              | 2 --
- drivers/staging/wilc1000/wilc_wlan_cfg.c          | 2 --
- 3 files changed, 8 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 42 +++++++++++++++----------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 04d64a8..34df5da 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2947,7 +2947,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(HOSTAPD_DBG, "Downloading P2P_CONCURRENCY_FIRMWARE\n");
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index f15a878..64bcd80 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -20,11 +20,11 @@
+ #define IDLE_MODE	0x00
+ #define AP_MODE		0x01
+ #define STATION_MODE	0x02
+-#define GO_MODE	0x03
++#define GO_MODE		0x03
+ #define CLIENT_MODE	0x04
  
  
--		#if 1
- 		nic->iftype = GO_MODE;
+-#define MAX_NUM_STA                 9
++#define MAX_NUM_STA				9
+ #define ACTIVE_SCAN_TIME			10
+ #define PASSIVE_SCAN_TIME			1200
+ #define MIN_SCAN_TIME				10
+@@ -34,31 +34,31 @@
+ #define OBSS_PERIODIC_SCAN			BIT(1)
+ #define OBSS_ONETIME_SCAN			BIT(2)
+ #define GTK_RX_KEY_BUFF_LEN			24
+-#define ADDKEY						0x1
+-#define REMOVEKEY					0x2
+-#define DEFAULTKEY					0x4
+-#define ADDKEY_AP					0x8
+-#define MAX_NUM_SCANNED_NETWORKS	100 /* 30		// rachel */
+-#define MAX_NUM_SCANNED_NETWORKS_SHADOW	130
+-#define MAX_NUM_PROBED_SSID            10  /*One more than the number of scanned ssids*/
++#define ADDKEY					0x1
++#define REMOVEKEY				0x2
++#define DEFAULTKEY				0x4
++#define ADDKEY_AP				0x8
++#define MAX_NUM_SCANNED_NETWORKS		100 /* 30		// rachel */
++#define MAX_NUM_SCANNED_NETWORKS_SHADOW		130
++#define MAX_NUM_PROBED_SSID			10  /*One more than the number of scanned ssids*/
+ #define CHANNEL_SCAN_TIME			250 /* 250 */
  
- 		/* ensure that the message Q is empty */
-@@ -2987,7 +2986,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				g_key_gtk_params.key[1],
- 				g_key_gtk_params.key[2],
- 				g_key_gtk_params.cipher);
--			#if 1
- 			add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 				g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 				g_add_ptk_key_params.key_idx,
-@@ -3001,9 +2999,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				g_add_gtk_key_params.pairwise,
- 				g_add_gtk_key_params.mac_addr,
- 				(struct key_params *)(&g_key_gtk_params));
--			#endif
- 		}
--		#endif
+ #define TX_MIC_KEY_LEN				8
+ #define RX_MIC_KEY_LEN				8
+-#define PTK_KEY_LEN					16
++#define PTK_KEY_LEN				16
  
- 		if (g_linux_wlan->wilc1000_initialized)	{
- 			for (i = 0; i < num_reg_frame; i++) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index ba502f1..0a930ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1675,7 +1675,6 @@ static int wilc_wlan_stop(void)
- 		}
+ #define TX_MIC_KEY_MSG_LEN			26
+ #define RX_MIC_KEY_MSG_LEN			48
+ #define PTK_KEY_MSG_LEN				39
  
- 	} while (timeout);
--#if 1
- 	reg = ((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 8) | (1 << 9) | (1 << 26) | (1 << 29) | (1 << 30) | (1 << 31)); /**/
- 	/**/
- 	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);                                 /**/
-@@ -1683,7 +1682,6 @@ static int wilc_wlan_stop(void)
- 	/**/
- 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);                                 /**/
- /******************************************************************************/
--#endif
+ #define PMKSA_KEY_LEN				22
+-#define ETH_ALEN  6
+-#define PMKID_LEN					16
+-#define WILC_MAX_NUM_PMKIDS  16
+-#define WILC_SUPP_MCS_SET_SIZE	16
+-#define WILC_ADD_STA_LENGTH	40 /* Not including the rates field cause it has variable length*/
++#define ETH_ALEN				6
++#define PMKID_LEN				16
++#define WILC_MAX_NUM_PMKIDS			16
++#define WILC_SUPP_MCS_SET_SIZE			16
++#define WILC_ADD_STA_LENGTH			40 /* Not including the rates field cause it has variable length*/
+ #define SCAN_EVENT_DONE_ABORTED
+-#define NUM_CONCURRENT_IFC 2
++#define NUM_CONCURRENT_IFC			2
  
- 	release_bus(RELEASE_ALLOW_SLEEP);
+ typedef struct {
+ 	u16 cfg_wid;
+@@ -304,11 +304,11 @@ typedef struct {
+ } tstrHostIfRegisterFrame;
  
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index ce16775..73a1508 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -534,13 +534,11 @@ static int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
- 		GnrlAsyncInfoReceived(frame - 4, size + 4);
- 		break;
  
--#if 1
- 	case 'N':
- 		NetworkInfoReceived(frame - 4, size + 4);
- 		rsp->type = 0;
- 		break;
+-#define   ACTION         0xD0
+-#define   PROBE_REQ   0x40
+-#define   PROBE_RESP  0x50
+-#define   ACTION_FRM_IDX   0
+-#define   PROBE_REQ_IDX     1
++#define ACTION			0xD0
++#define PROBE_REQ		0x40
++#define PROBE_RESP		0x50
++#define ACTION_FRM_IDX		0
++#define PROBE_REQ_IDX		1
  
--#endif
- 	case 'S':
- 		PRINT_INFO(RX_DBG, "Scan Notification Received\n");
- 		host_int_ScanCompleteReceived(frame - 4, size + 4);
+ 
+ enum p2p_listen_state {
 -- 
 2.5.1
 
