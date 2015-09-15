@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53209 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbIPAIY (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59691 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496AbbIOFeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 20:08:24 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Fix CCK rate definitions.
-Date: Tue, 15 Sep 2015 17:08:18 -0700
-Message-Id: <1442362098-24859-1-git-send-email-greearb@candelatech.com> (sfid-20150916_020827_559309_04D3FC21)
+	Tue, 15 Sep 2015 01:34:12 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 3/4] staging: wilc1000: coreconfigurator.h: remove unused defines
+Date: Tue, 15 Sep 2015 14:33:56 +0900
+Message-ID: <1442295237-12644-3-git-send-email-tony.cho@atmel.com> (sfid-20150915_073418_460349_DF0E7464)
+In-Reply-To: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
+References: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Glen Lee <glen.lee@atmel.com>
 
-The old values did NOT match what is found in 10.1.467
-firmware.  I figure it is likely it is wrong for the others
-as well.
+The define MAX_PACKET_BUFF_SIZE and STATUS_MSG_LEN is not used in the driver.
+Delete two defines.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/hw.h | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 4c5eee4..710ca32 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -202,13 +202,13 @@ enum ath10k_hw_rate_ofdm {
- };
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index c2aee05..32e5b31 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -44,14 +44,11 @@
+ /* Operating Mode: GET */
+ #define GET_CFG              1
  
- enum ath10k_hw_rate_cck {
--	ATH10K_HW_RATE_CCK_LP_11M = 0,
--	ATH10K_HW_RATE_CCK_LP_5_5M,
--	ATH10K_HW_RATE_CCK_LP_2M,
--	ATH10K_HW_RATE_CCK_LP_1M,
--	ATH10K_HW_RATE_CCK_SP_11M,
--	ATH10K_HW_RATE_CCK_SP_5_5M,
--	ATH10K_HW_RATE_CCK_SP_2M,
-+	ATH10K_HW_RATE_CCK_LP_11M = 0x40,
-+	ATH10K_HW_RATE_CCK_LP_5_5M = 0x41,
-+	ATH10K_HW_RATE_CCK_LP_2M = 0x42,
-+	ATH10K_HW_RATE_CCK_LP_1M = 0x43,
-+	ATH10K_HW_RATE_CCK_SP_11M = ATH10K_HW_RATE_CCK_LP_11M | 0x4,
-+	ATH10K_HW_RATE_CCK_SP_5_5M = ATH10K_HW_RATE_CCK_LP_5_5M | 0x4,
-+	ATH10K_HW_RATE_CCK_SP_2M = ATH10K_HW_RATE_CCK_LP_2M | 0x4,
- };
+-#define MAX_PACKET_BUFF_SIZE 1596
+-
+ #define MAX_STRING_LEN               256
+ #define MAX_SURVEY_RESULT_FRAG_SIZE  MAX_STRING_LEN
+ #define SURVEY_RESULT_LENGTH         44
+ #define MAX_ASSOC_RESP_FRAME_SIZE    MAX_STRING_LEN
  
- /* Target specific defines for MAIN firmware */
+-#define STATUS_MSG_LEN               12
+ #define MAC_CONNECTED                1
+ #define MAC_DISCONNECTED             0
+ 
 -- 
-2.4.3
+1.9.1
 
