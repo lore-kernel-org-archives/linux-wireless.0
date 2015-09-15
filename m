@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37170 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932820AbbI2ICc convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26664 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbbIOI0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 04:02:32 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH 1/3] ssb: unexport ssb_bus_pcibus_register
-References: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
-Date: Tue, 29 Sep 2015 11:02:25 +0300
-In-Reply-To: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Mon, 21 Sep 2015
- 09:47:18 +0200")
-Message-ID: <874mid8xgu.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_100237_288651_DD412646)
+	Tue, 15 Sep 2015 04:26:38 -0400
+Subject: Re: [PATCH 1/4] staging: wilc1000: remove unused variable
+ g_num_total_switches
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+References: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
+ <20150915071337.GH12611@sudip-pc>
+CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
+	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <55F7D63B.3040502@atmel.com> (sfid-20150915_102642_878737_F1453028)
+Date: Tue, 15 Sep 2015 17:26:35 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150915071337.GH12611@sudip-pc>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
 
-> It isn't used anywhere out of ssb code and we don't (plan to) build
-> pcihost_wrapper.c as a separated module.
+
+On 2015년 09월 15일 16:13, Sudip Mukherjee wrote:
+> On Tue, Sep 15, 2015 at 02:33:54PM +0900, Tony Cho wrote:
+>> From: Glen Lee <glen.lee@atmel.com>
+>>
+>> g_num_total_switches is never used so just delete it.
+>>
+>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+>> ---
+> you only deleted from the .h file but it still remains in
+> coreconfigurator.c
 >
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> regards
+> sudip
 
-Thanks, all three patches manually applied.
+The variable was removed in previous patch (staging: wilc1000: remove unused variables) and the patch was sent
+but it's not accepted yet. So, you can find the variable still in c file.
 
--- 
-Kalle Valo
+Thanks for your advice,
+Tony.
+
+
