@@ -1,259 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49146 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbbI3DIL (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36627 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051AbbIOOGv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 23:08:11 -0400
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, lkp@intel.com,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH] ath9k: feeding entropy in kernel from ADC capture
-Date: Wed, 30 Sep 2015 11:07:54 +0800
-Message-Id: <1443582474-1144-1-git-send-email-miaoqing@codeaurora.org> (sfid-20150930_050815_928526_A625D16F)
+	Tue, 15 Sep 2015 10:06:51 -0400
+Received: by padhk3 with SMTP id hk3so177793364pad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2015 07:06:51 -0700 (PDT)
+Date: Tue, 15 Sep 2015 19:36:43 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Tony Cho <tony.cho@atmel.com>, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 1/4] staging: wilc1000: remove unused variable
+ g_num_total_switches
+Message-ID: <20150915140643.GB7996@sudip-pc> (sfid-20150915_160654_629507_956DFDDD)
+References: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
+ <20150915071337.GH12611@sudip-pc>
+ <55F7D63B.3040502@atmel.com>
+ <20150915134625.GB22620@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150915134625.GB22620@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Tue, Sep 15, 2015 at 06:46:25AM -0700, Greg KH wrote:
+> On Tue, Sep 15, 2015 at 05:26:35PM +0900, Tony Cho wrote:
+> > 
+> > 
+> > On 2015년 09월 15일 16:13, Sudip Mukherjee wrote:
+> > >On Tue, Sep 15, 2015 at 02:33:54PM +0900, Tony Cho wrote:
+> > >>From: Glen Lee <glen.lee@atmel.com>
+> > >>
+> > >>g_num_total_switches is never used so just delete it.
+> > >>
+> > >>Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> > >>Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> > >>---
+> > >you only deleted from the .h file but it still remains in
+> > >coreconfigurator.c
+> > >
+> > >regards
+> > >sudip
+> > 
+> > The variable was removed in previous patch (staging: wilc1000: remove unused variables) and the patch was sent
+> > but it's not accepted yet. So, you can find the variable still in c file.
+> 
+> I don't see that patch here in my queue :(
+> 
+> Please resend all of your outstanding patches, I think we are out of
+> sync somehow.
+This was the series of 7 patches and the first patch was
+"remove PANDA_BOARD".
+And the series is indeed not applied.
 
-This patch is derived from
-commit 6301566e0b2d ("ath9k: export HW random number generator"),
+patch 7/7 was removing g_num_total_switches from the .c file, while
+resending please modify and remove it from the .h file also.
 
-We evaluated the entropy of the ADC data on QCA9531, QCA9561, QCA955x,
-and AR9340, and it has sufficient quality random data (at least 10 bits
-and up to 22 bits of min-entropy for a 32-bit value). We conservatively
-assume the min-entropy is 10 bits out of 32 bits. Thus, ATH9K_RNG_BUF_SIZE
-is set to 320 (u32) i.e., 1.25 kilobytes of data is inserted to fill up
-the pool as soon as the entropy counter becomes 896/4096 (set by random.c).
-Since ADC was not designed to be a dedicated HW RNG, we do not want to bind
-it to /dev/hwrng framework directly. This patch feeds the entropy directly
-from the WiFi driver to the input pool. The ADC register output is only
-used as a seed for the Linux entropy pool. No conditioning is needed,
-since all the conditioning is performed by the pool itself.
+And when your patch depends on some previous unapplied patch it will be
+better if you can mention that in the comments.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/Kconfig  |  11 ++++
- drivers/net/wireless/ath/ath9k/Makefile |   1 +
- drivers/net/wireless/ath/ath9k/ath9k.h  |  22 +++++++
- drivers/net/wireless/ath/ath9k/main.c   |   4 ++
- drivers/net/wireless/ath/ath9k/rng.c    | 106 ++++++++++++++++++++++++++++++++
- 5 files changed, 144 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
-
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index fee0cad..40fa915 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -176,3 +176,14 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_HWRNG
-+	bool "Random number generator support"
-+	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-+	default y
-+	---help---
-+	  This option incorporates the ADC register output as a source of
-+	  randomness into Linux entropy pool (/dev/urandom and /dev/random)
-+
-+	  Say Y, feeds the entropy directly from the WiFi driver to the input
-+	  pool.
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index ecda613..76f9dc3 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
- ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
- ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
- ath9k-$(CONFIG_ATH9K_WOW) += wow.o
-+ath9k-$(CONFIG_ATH9K_HWRNG) += rng.o
- 
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c85c479..cd74f68 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -23,6 +23,7 @@
- #include <linux/leds.h>
- #include <linux/completion.h>
- #include <linux/time.h>
-+#include <linux/hw_random.h>
- 
- #include "common.h"
- #include "debug.h"
-@@ -1039,6 +1040,11 @@ struct ath_softc {
- 	u32 wow_intr_before_sleep;
- 	bool force_wow;
- #endif
-+
-+#ifdef CONFIG_ATH9K_HWRNG
-+	u32 rng_last;
-+	struct task_struct *rng_task;
-+#endif
- };
- 
- /********/
-@@ -1061,6 +1067,22 @@ static inline int ath9k_tx99_send(struct ath_softc *sc,
- }
- #endif /* CONFIG_ATH9K_TX99 */
- 
-+/***************************/
-+/* Random Number Generator */
-+/***************************/
-+#ifdef CONFIG_ATH9K_HWRNG
-+void ath9k_rng_start(struct ath_softc *sc);
-+void ath9k_rng_stop(struct ath_softc *sc);
-+#else
-+static inline void ath9k_rng_start(struct ath_softc *sc)
-+{
-+}
-+
-+static inline void ath9k_rng_stop(struct ath_softc *sc)
-+{
-+}
-+#endif
-+
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- {
- 	common->bus_ops->read_cachesize(common, csz);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 323eb33..39ba17f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -739,6 +739,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	ath9k_ps_restore(sc);
- 
-+	ath9k_rng_start(sc);
-+
- 	return 0;
- }
- 
-@@ -828,6 +830,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_deinit_channel_context(sc);
- 
-+	ath9k_rng_stop(sc);
-+
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-new file mode 100644
-index 0000000..93a7485
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -0,0 +1,106 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/hw_random.h>
-+#include <linux/kthread.h>
-+
-+#include "ath9k.h"
-+#include "hw.h"
-+#include "ar9003_phy.h"
-+
-+#define ATH9K_RNG_BUF_SIZE	320
-+#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
-+
-+static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
-+{
-+	int i, j;
-+	u32  v1, v2, rng_last = sc->rng_last;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	ath9k_ps_wakeup(sc);
-+
-+	REG_RMW_FIELD(ah, AR_PHY_TEST, AR_PHY_TEST_BBB_OBS_SEL, 1);
-+	REG_CLR_BIT(ah, AR_PHY_TEST, AR_PHY_TEST_RX_OBS_SEL_BIT5);
-+	REG_RMW_FIELD(ah, AR_PHY_TEST_CTL_STATUS, AR_PHY_TEST_CTL_RX_OBS_SEL, 0);
-+
-+	for (i = 0, j = 0; i < buf_size; i++) {
-+		v1 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+		v2 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+
-+		/* wait for data ready */
-+		if (v1 && v2 && rng_last != v1 && v1 != v2 && v1 != 0xffff &&
-+		    v2 != 0xffff)
-+			buf[j++] = (v1 << 16) | v2;
-+
-+		rng_last = v2;
-+	}
-+
-+	ath9k_ps_restore(sc);
-+
-+	sc->rng_last = rng_last;
-+
-+	return j << 2;
-+}
-+
-+static int ath9k_rng_kthread(void *data)
-+{
-+	int bytes_read;
-+	struct ath_softc *sc = data;
-+	u32 *rng_buf;
-+
-+	rng_buf = kmalloc_array(ATH9K_RNG_BUF_SIZE, sizeof(u32), GFP_KERNEL);
-+	if (!rng_buf)
-+		goto out;
-+
-+	while (!kthread_should_stop()) {
-+		bytes_read = ath9k_rng_data_read(sc, rng_buf,
-+						 ATH9K_RNG_BUF_SIZE);
-+		if (!bytes_read) {
-+			msleep_interruptible(10);
-+			continue;
-+		}
-+
-+		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
-+					   ATH9K_RNG_ENTROPY(bytes_read));
-+	}
-+
-+	kfree(rng_buf);
-+out:
-+	sc->rng_task = NULL;
-+
-+	return 0;
-+}
-+
-+void ath9k_rng_start(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (sc->rng_task)
-+		return;
-+
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		return;
-+
-+	sc->rng_task = kthread_run(ath9k_rng_kthread, sc, "ath9k-hwrng");
-+	if (IS_ERR(sc->rng_task))
-+		sc->rng_task = NULL;
-+}
-+
-+void ath9k_rng_stop(struct ath_softc *sc)
-+{
-+	if (sc->rng_task)
-+		kthread_stop(sc->rng_task);
-+}
--- 
-1.9.1
-
+regards
+sudip
