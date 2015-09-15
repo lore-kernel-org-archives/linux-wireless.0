@@ -1,61 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39214 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934678AbbI2KmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:42:09 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
-	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
-	<wrfjvbggfhuj.fsf@redhat.com>
-	<8737yrhdm0.fsf@kamboji.qca.qualcomm.com>
-	<wrfjlhcidq9b.fsf@redhat.com>
-	<87io6t7gdt.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 29 Sep 2015 06:42:07 -0400
-In-Reply-To: <87io6t7gdt.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 29 Sep 2015 11:56:46 +0300")
-Message-ID: <wrfjoaglld6o.fsf@redhat.com> (sfid-20150929_124223_400742_4D4DB804)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:56633 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633AbbIOCx4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2015 22:53:56 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 2/7] staging: wilc1000: remove definition WILC_NULLCHECK
+Date: Tue, 15 Sep 2015 11:53:36 +0900
+Message-ID: <1442285621-29457-3-git-send-email-tony.cho@atmel.com> (sfid-20150915_045359_329537_DF8C812D)
+In-Reply-To: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
+References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->
->>>>> I doubt that this will be in active enough development that a separate
->>>>> git tree is needed. wireless-drivers trees should be enough and this
->>>>> line can be removed.
->>>>
->>>> I would like to keep this line, it points to my development tree, which
->>>> allows users to go back and look through my full development logs, as
->>>> well as see ongoing work before it's pushed upstream.
->>>
->>> I prefer that wireless-drivers(-next).git is used as the baseline for
->>> wireless driver patches, so please remove this tag. You can document
->>> your git server in the wiki, commit log and so on.
->>
->> I will insist on keeping my branch listed as long as I maintain the
->> driver. Other drivers do the same thing, like iwlwifi. I'm happy to send
->> you patches against wireless-drivers-next.git though.
->
-> To keep things simple for me I want that the patches are based on
-> wireless-drivers-next.git. iwlwifi is under so active development that
-> an extra tree is justified, but having a dedicated tree for a not so
-> active driver is just extra work for me which I do not want to have.
->
-> With rtlwifi it goes so that Larry acks the patches on the list and
-> patchwork automatically adds the ack to the commit log when I apply the
-> patch, which is easy and fast for everyone. The same should go with
-> rtl8723au.
+From: Leo Kim <leo.kim@atmel.com>
 
-The rtl8xxxu branch is there because that is where I do the active
-development, and work actively on the driver. If people post patches for
-it and it's smaller fixes, sure just take them, if they post larger
-changes, please punt them to me and I will integrate them and send them
-on to you.
+This patch removes the definition WILC_NULLCHECK which is not used anymore.
 
-Jes
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  8 ++++++--
+ drivers/staging/wilc1000/wilc_errorsupport.h      |  6 ------
+ drivers/staging/wilc1000/wilc_msgqueue.c          |  9 +++++++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 ++++++++++++++---------
+ 4 files changed, 28 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 59a1a9d..29491f6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1,5 +1,6 @@
+ #include "host_interface.h"
+ #include "coreconfigurator.h"
++#include <linux/errno.h>
+ 
+ extern s32 TransportInit(void);
+ extern s32 TransportDeInit(void);
+@@ -7291,7 +7292,8 @@ s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSta
+ 	if (pstrAddStationMsg->u8NumRates > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
+ 
+-		WILC_NULLCHECK(s32Error, rates);
++		if (rates == NULL)
++			return -ENOMEM;
+ 
+ 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
+ 		pstrAddStationMsg->pu8Rates = rates;
+@@ -7446,7 +7448,9 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
+ 	if (pstrAddStationMsg->u8NumRates > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
+ 
+-		WILC_NULLCHECK(s32Error, rates);
++		if (rates == NULL)
++			return -ENOMEM;
++
+ 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
+ 		pstrAddStationMsg->pu8Rates = rates;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
+index 8eb8150..42495d9 100644
+--- a/drivers/staging/wilc1000/wilc_errorsupport.h
++++ b/drivers/staging/wilc1000/wilc_errorsupport.h
+@@ -51,12 +51,6 @@
+ 		goto ERRORHANDLER; \
+ } while (0)
+ 
+-#define  WILC_NULLCHECK(__status__, __ptr__)	do { \
+-		if (__ptr__ == NULL) { \
+-			WILC_ERRORREPORT(__status__, WILC_NULL_PTR); \
+-		} \
+-} while (0)
+-
+ #define WILC_CATCH(__status__) \
+ ERRORHANDLER: \
+ 	if (__status__ < WILC_SUCCESS) \
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 41244ce..f3d0d34 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -1,6 +1,7 @@
+ 
+ #include "wilc_msgqueue.h"
+ #include <linux/spinlock.h>
++#include <linux/errno.h>
+ 
+ /*!
+  *  @author		syounan
+@@ -69,11 +70,15 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	/* construct a new message */
+ 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+-	WILC_NULLCHECK(s32RetStatus, pstrMessage);
++	if (pstrMessage == NULL)
++		return -ENOMEM;
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
+-	WILC_NULLCHECK(s32RetStatus, pstrMessage->pvBuffer);
++	if (pstrMessage->pvBuffer == NULL) {
++		s32RetStatus = -ENOMEM;
++		goto ERRORHANDLER;
++	}
+ 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+ 
+ 	/* add it to the message queue */
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 068e648..a182bdb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -15,7 +15,7 @@
+ #ifdef WILC_SDIO
+ #include "linux_wlan_sdio.h"    /* tony : for set_wiphy_dev() */
+ #endif
+-
++#include <linux/errno.h>
+ 
+ #define IS_MANAGMEMENT				0x100
+ #define IS_MANAGMEMENT_CALLBACK			0x080
+@@ -382,7 +382,10 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
+ 	if (priv->bCfgScanning == true) {
+ 		if (enuScanEvent == SCAN_EVENT_NETWORK_FOUND) {
+ 			wiphy = priv->dev->ieee80211_ptr->wiphy;
+-			WILC_NULLCHECK(s32Error, wiphy);
++
++			if (wiphy == NULL)
++				return;
++
+ 			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC
+ 			    &&
+ 			    ((((s32)pstrNetworkInfo->s8rssi) * 100) < 0
+@@ -396,7 +399,8 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
+ 				s32Freq = ieee80211_channel_to_frequency((s32)pstrNetworkInfo->u8channel, IEEE80211_BAND_2GHZ);
+ 				channel = ieee80211_get_channel(wiphy, s32Freq);
+ 
+-				WILC_NULLCHECK(s32Error, channel);
++				if (channel == NULL)
++					return;
+ 
+ 				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
+ 					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)pstrNetworkInfo->s8rssi) * 100),
+@@ -3292,8 +3296,8 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct WILC_WFI_priv *priv;
+ 	u8 NullBssid[ETH_ALEN] = {0};
+ 
+-
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (wiphy == NULL)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+@@ -3329,8 +3333,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	tstrWILC_AddStaParam strStaParams = { {0} };
+ 	perInterface_wlan_t *nic;
+ 
+-
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (wiphy == NULL)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
+@@ -3400,7 +3404,8 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct WILC_WFI_priv *priv;
+ 	perInterface_wlan_t *nic;
+ 
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (wiphy == NULL)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
+@@ -3446,7 +3451,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	PRINT_D(HOSTAPD_DBG, "Change station paramters\n");
+ 
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (wiphy == NULL)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
+-- 
+1.9.1
+
