@@ -1,170 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45788 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756198AbbIUVBn (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35907 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbbIOFHp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 17:01:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 23:58:54 +0300
-Message-Id: <1442869141-31637-14-git-send-email-luca@coelho.fi> (sfid-20150921_230148_533159_30864F3D)
-In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
-References: <1442868938.27148.361.camel@coelho.fi>
-Subject: [PATCH 14/21] iwlwifi: mvm: remove IWL_UCODE_TLV_API_STATS_V10 TLV flag
+	Tue, 15 Sep 2015 01:07:45 -0400
+Received: by padhk3 with SMTP id hk3so164835299pad.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 18/18] staging: wilc1000: wilc_wfi_cfgoperations.h: align defines
+Date: Tue, 15 Sep 2015 14:06:28 +0900
+Message-Id: <1442293588-15323-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_071652_950343_054D7798)
+In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch fix alignment of some defines in wilc_wfi_cfgoperations.h
 
-This flag is set in all supported firmwares.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h      |  2 --
- drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h | 33 -----------------
- drivers/net/wireless/iwlwifi/mvm/rx.c           | 47 ++++++++-----------------
- 3 files changed, 15 insertions(+), 67 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 44 +++++++++++------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 104468b..352d245 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -249,7 +249,6 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
-  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
-  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
-- * @IWL_UCODE_TLV_API_STATS_V10: uCode supports/uses statistics API version 10
-  * @IWL_UCODE_TLV_API_NEW_VERSION: new versioning format
-  * @IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY: scan APIs use 8-level priority
-  *	instead of 3.
-@@ -262,7 +261,6 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
- 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
- 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= (__force iwl_ucode_tlv_api_t)18,
--	IWL_UCODE_TLV_API_STATS_V10		= (__force iwl_ucode_tlv_api_t)19,
- 	IWL_UCODE_TLV_API_NEW_VERSION		= (__force iwl_ucode_tlv_api_t)20,
- 	IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY	= (__force iwl_ucode_tlv_api_t)24,
- 	IWL_UCODE_TLV_API_TX_POWER_CHAIN	= (__force iwl_ucode_tlv_api_t)27,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
-index 4ca4bce..0c321f6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
-@@ -219,32 +219,6 @@ struct mvm_statistics_bt_activity {
- 	__le32 lo_priority_rx_denied_cnt;
- } __packed;  /* STATISTICS_BT_ACTIVITY_API_S_VER_1 */
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 28858da..5fd0757 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -23,34 +23,34 @@
+ #ifdef WILC_P2P
  
--struct mvm_statistics_general_v5 {
--	__le32 radio_temperature;
--	__le32 radio_voltage;
--	struct mvm_statistics_dbg dbg;
--	__le32 sleep_time;
--	__le32 slots_out;
--	__le32 slots_idle;
--	__le32 ttl_timestamp;
--	struct mvm_statistics_div slow_div;
--	__le32 rx_enable_counter;
--	/*
--	 * num_of_sos_states:
--	 *  count the number of times we have to re-tune
--	 *  in order to get out of bad PHY status
--	 */
--	__le32 num_of_sos_states;
--	__le32 beacon_filtered;
--	__le32 missed_beacons;
--	u8 beacon_filter_average_energy;
--	u8 beacon_filter_reason;
--	u8 beacon_filter_current_energy;
--	u8 beacon_filter_reserved;
--	__le32 beacon_filter_delta_time;
--	struct mvm_statistics_bt_activity bt_activity;
--} __packed; /* STATISTICS_GENERAL_API_S_VER_5 */
--
- struct mvm_statistics_general_v8 {
- 	__le32 radio_temperature;
- 	__le32 radio_voltage;
-@@ -293,13 +267,6 @@ struct mvm_statistics_rx {
-  * STATISTICS_CMD (0x9c), below.
-  */
+ /*Public action frame index IDs*/
+-#define		FRAME_TYPE_ID					0
+-#define		ACTION_CAT_ID					24
+-#define		ACTION_SUBTYPE_ID				25
+-#define		P2P_PUB_ACTION_SUBTYPE          30
++#define FRAME_TYPE_ID			0
++#define ACTION_CAT_ID			24
++#define ACTION_SUBTYPE_ID		25
++#define P2P_PUB_ACTION_SUBTYPE		30
  
--struct iwl_notif_statistics_v8 {
--	__le32 flag;
--	struct mvm_statistics_rx rx;
--	struct mvm_statistics_tx tx;
--	struct mvm_statistics_general_v5 general;
--} __packed; /* STATISTICS_NTFY_API_S_VER_8 */
--
- struct iwl_notif_statistics_v10 {
- 	__le32 flag;
- 	struct mvm_statistics_rx rx;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
-index b620142..c203a1b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
-@@ -577,47 +577,30 @@ iwl_mvm_rx_stats_check_trigger(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
- void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
- 				  struct iwl_rx_packet *pkt)
- {
--	size_t v8_len = sizeof(struct iwl_notif_statistics_v8);
--	size_t v10_len = sizeof(struct iwl_notif_statistics_v10);
-+	struct iwl_notif_statistics_v10 *stats = (void *)&pkt->data;
- 	struct iwl_mvm_stat_data data = {
- 		.mvm = mvm,
- 	};
- 	u32 temperature;
+ /*Public action frame Attribute IDs*/
+-#define		ACTION_FRAME					0xd0
+-#define		GO_INTENT_ATTR_ID			0x04
+-#define		CHANLIST_ATTR_ID		0x0b
+-#define		OPERCHAN_ATTR_ID                0x11
+-#define		PUB_ACTION_ATTR_ID			0x04
+-#define		P2PELEM_ATTR_ID                     0xdd
++#define ACTION_FRAME			0xd0
++#define GO_INTENT_ATTR_ID		0x04
++#define CHANLIST_ATTR_ID		0x0b
++#define OPERCHAN_ATTR_ID		0x11
++#define PUB_ACTION_ATTR_ID		0x04
++#define P2PELEM_ATTR_ID			0xdd
  
--	if (fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_STATS_V10)) {
--		struct iwl_notif_statistics_v10 *stats = (void *)&pkt->data;
-+	if (iwl_rx_packet_payload_len(pkt) != sizeof(*stats))
-+		goto invalid;
+ /*Public action subtype values*/
+-#define		GO_NEG_REQ					0x00
+-#define		GO_NEG_RSP					0x01
+-#define		GO_NEG_CONF					0x02
+-#define		P2P_INV_REQ                         0x03
+-#define		P2P_INV_RSP				0x04
+-#define		PUBLIC_ACT_VENDORSPEC		0x09
+-#define		GAS_INTIAL_REQ					0x0a
+-#define		GAS_INTIAL_RSP					0x0b
++#define GO_NEG_REQ			0x00
++#define GO_NEG_RSP			0x01
++#define GO_NEG_CONF			0x02
++#define P2P_INV_REQ			0x03
++#define P2P_INV_RSP			0x04
++#define PUBLIC_ACT_VENDORSPEC		0x09
++#define GAS_INTIAL_REQ			0x0a
++#define GAS_INTIAL_RSP			0x0b
  
--		if (iwl_rx_packet_payload_len(pkt) != v10_len)
--			goto invalid;
-+	temperature = le32_to_cpu(stats->general.radio_temperature);
-+	data.mac_id = stats->rx.general.mac_id;
-+	data.beacon_filter_average_energy =
-+		stats->general.beacon_filter_average_energy;
+-#define		INVALID_CHANNEL					0
++#define INVALID_CHANNEL			0
+ #endif
  
--		temperature = le32_to_cpu(stats->general.radio_temperature);
--		data.mac_id = stats->rx.general.mac_id;
--		data.beacon_filter_average_energy =
--			stats->general.beacon_filter_average_energy;
-+	iwl_mvm_update_rx_statistics(mvm, &stats->rx);
+ #define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
+-#define SCAN_RESULT_EXPIRE				(40 * HZ)
++#define SCAN_RESULT_EXPIRE		(40 * HZ)
  
--		iwl_mvm_update_rx_statistics(mvm, &stats->rx);
-+	mvm->radio_stats.rx_time = le64_to_cpu(stats->general.rx_time);
-+	mvm->radio_stats.tx_time = le64_to_cpu(stats->general.tx_time);
-+	mvm->radio_stats.on_time_rf =
-+		le64_to_cpu(stats->general.on_time_rf);
-+	mvm->radio_stats.on_time_scan =
-+		le64_to_cpu(stats->general.on_time_scan);
+ static const u32 cipher_suites[] = {
+ 	WLAN_CIPHER_SUITE_WEP40,
+@@ -105,8 +105,8 @@ int WILC_WFI_deinit_mon_interface(void);
+ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
  
--		mvm->radio_stats.rx_time = le64_to_cpu(stats->general.rx_time);
--		mvm->radio_stats.tx_time = le64_to_cpu(stats->general.tx_time);
--		mvm->radio_stats.on_time_rf =
--			le64_to_cpu(stats->general.on_time_rf);
--		mvm->radio_stats.on_time_scan =
--			le64_to_cpu(stats->general.on_time_scan);
--
--		data.general = &stats->general;
--	} else {
--		struct iwl_notif_statistics_v8 *stats = (void *)&pkt->data;
--
--		if (iwl_rx_packet_payload_len(pkt) != v8_len)
--			goto invalid;
--
--		temperature = le32_to_cpu(stats->general.radio_temperature);
--		data.mac_id = stats->rx.general.mac_id;
--		data.beacon_filter_average_energy =
--			stats->general.beacon_filter_average_energy;
--
--		iwl_mvm_update_rx_statistics(mvm, &stats->rx);
--	}
-+	data.general = &stats->general;
- 
- 	iwl_mvm_rx_stats_check_trigger(mvm, pkt);
+ #ifdef TCP_ENHANCEMENTS
+-#define TCP_ACK_FILTER_LINK_SPEED_THRESH 54
+-#define DEFAULT_LINK_SPEED 72
++#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
++#define DEFAULT_LINK_SPEED			72
+ void Enable_TCP_ACK_Filter(bool value);
+ #endif
  
 -- 
 2.5.1
