@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33928 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbbIDC6b (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35662 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbbIOFHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 22:58:31 -0400
-Received: by padhy16 with SMTP id hy16so7232638pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 19:58:31 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: fix the setting of center freq segment 2 in VHT oper ie
-Date: Fri,  4 Sep 2015 10:58:05 +0800
-Message-Id: <1441335485-5314-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150904_045835_942326_291C53D5)
+	Tue, 15 Sep 2015 01:07:24 -0400
+Received: by pacfv12 with SMTP id fv12so168233881pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:24 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/18] staging: wilc1000: remove unused defines
+Date: Tue, 15 Sep 2015 14:06:21 +0900
+Message-Id: <1442293588-15323-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_071652_559912_D85FD211)
+In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to avoid the Channel Center Frequency Segment 2
-in broadcasted VHT operation element contains the non-zero
-value for non 80+80 MHz that may failed the comparison of
-cfg80211_chandef_identical.
+The macros are not used anywhere in this driver, so just delete it.
 
-This is tested with Bob's patches related to VHT mesh support.
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/mac80211/util.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/wilc1000/host_interface.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1104421..f167056 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2324,6 +2324,8 @@ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
- 	if (chandef->center_freq2)
- 		vht_oper->center_freq_seg2_idx =
- 			ieee80211_frequency_to_channel(chandef->center_freq2);
-+	else
-+		vht_oper->center_freq_seg2_idx = 0x00;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a4321a4..f15a878 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -14,8 +14,6 @@
+ /*****************************************************************************/
+ /*								Macros                                       */
+ /*****************************************************************************/
+-#define FAIL		0x0000
+-#define SUCCESS		0x0001
  
- 	switch (chandef->width) {
- 	case NL80211_CHAN_WIDTH_160:
+ #define IP_ALEN  4
+ 
 -- 
-2.3.0
+2.5.1
 
