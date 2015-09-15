@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38702 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932836AbbI2Idd (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36820 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbbIOFHj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 04:33:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: RUC_Soft_Sec <zy900702@163.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] [net] orinoco_usb:Fix error handling in ezusb_probe()
-References: <52c0b90f.10cf0.14ff4df0cc4.Coremail.zy900702@163.com>
-Date: Tue, 29 Sep 2015 11:33:26 +0300
-In-Reply-To: <52c0b90f.10cf0.14ff4df0cc4.Coremail.zy900702@163.com> (RUC Soft
-	Sec's message of "Tue, 22 Sep 2015 19:45:02 +0800 (CST)")
-Message-ID: <87mvw57hgp.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_103351_390096_24185112)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 15 Sep 2015 01:07:39 -0400
+Received: by padhk3 with SMTP id hk3so164832667pad.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:39 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 16/18] staging: wilc1000: remove FORCE_P2P_CLIENT
+Date: Tue, 15 Sep 2015 14:06:26 +0900
+Message-Id: <1442293588-15323-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_071653_068945_9AF09FA7)
+In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RUC_Soft_Sec <zy900702@163.com> writes:
+This patch removes FORCE_P2P_CLIENT that is commented.
 
-> Current code assigns 0 to variable 'retval', which makes ezusb_probe() to
-> return success even if alloc_orinocodev() fails.
->
-> The related code snippets in mantis_dma_init() is as following.
->
-> 1573 static int ezusb_probe(struct usb_interface *interface,
-> 1574                        const struct usb_device_id *id)
-> 1575 {
->
->                  ....
->
-> 1583         int retval = 0;
-> 1584         int i;
-> 1585
-> 1586         priv = alloc_orinocodev(sizeof(*upriv), &udev->dev,
-> 1587                                 ezusb_hard_reset, NULL);
-> 1588         if (!priv) {
-> 1589                 err("Couldn't allocate orinocodev");
-> 1590                 goto exit;
-> 1591         }
->                  ...
->
-> 1729  exit:
-> 1730         if (fw_entry) {
-> 1731                 firmware.code = NULL;
-> 1732                 firmware.size = 0;
-> 1733                 release_firmware(fw_entry);
-> 1734         }
-> 1735         usb_set_intfdata(interface, upriv);
-> 1736         return retval;
-> 1737 }
->
->  Fix it by checking the return value from alloc_orinocodev() and assigns
-> '-ENOMEM' to variable 'retval' in the case of error.
->
-> Signed-off-by: Zhang Yan <zy900702@163.com>---
->  orinoco_usb.c |    1 +
->  1 file changed, 1 insertion(+)
-> diff --git a/orinoco_usb.c b/orinoco_usb.c
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-The patch looks corrupted. And the from header doesn't contain a proper
-name.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 15510f2..28858da 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -47,7 +47,6 @@
+ #define		GAS_INTIAL_RSP					0x0b
+ 
+ #define		INVALID_CHANNEL					0
+-/* #define FORCE_P2P_CLIENT */
+ #endif
+ 
+ #define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
 -- 
-Kalle Valo
+2.5.1
+
