@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33724 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924AbbIHP4h (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:56674 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752025AbbIOCyR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:37 -0400
-Received: by pacex6 with SMTP id ex6so127489193pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:36 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/30] staging: wilc1000: rename WILC_WFI_change_virt_intf
-Date: Wed,  9 Sep 2015 00:55:47 +0900
-Message-Id: <1441727767-26026-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175639_552638_7BE7E6C8)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 14 Sep 2015 22:54:17 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 5/7] staging: wilc1000: remove definitions unused
+Date: Tue, 15 Sep 2015 11:53:39 +0900
+Message-ID: <1442285621-29457-6-git-send-email-tony.cho@atmel.com> (sfid-20150915_045420_658565_85F5F744)
+In-Reply-To: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
+References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_change_virt_intf with
-wilc_cfg80211_change_virtual_intf to avoid CamelCase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Remove the definitions which are not used anywhere.
+- WILC_ALREADY_EXSIT
+- WILC_EMPTY
+- WILC_FULL
+- WILC_CANCELED
+- WILC_INVALID_FILE
+- WILC_UNSUPPORTED_VERSION
+- WILC_FILE_EOF
+
+Remove the definition which is not used anymore.
+- WILC_CATCH
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_errorsupport.h | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index cffe4b4..97a7a4b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2826,7 +2826,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- }
- #ifdef WILC_AP_EXTERNAL_MLME
- /**
-- *  @brief      WILC_WFI_change_virt_intf
-+ *  @brief      wilc_cfg80211_change_virtual_intf
-  *  @details    Change type/configuration of virtual interface,
-  *                      keep the struct wireless_dev's iftype updated.
-  *  @param[in]   NONE
-@@ -2838,7 +2838,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- void wilc1000_wlan_deinit(linux_wlan_t *nic);
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
+diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
+index 99ded3d..054ed76 100644
+--- a/drivers/staging/wilc1000/wilc_errorsupport.h
++++ b/drivers/staging/wilc1000/wilc_errorsupport.h
+@@ -12,9 +12,6 @@
  
--static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev,
-+static int wilc_cfg80211_change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				     enum nl80211_iftype type, u32 *flags, struct vif_params *params)
- {
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3614,7 +3614,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	#ifdef WILC_AP_EXTERNAL_MLME
- 	.add_virtual_intf = wilc_cfg80211_add_virtual_intf,
- 	.del_virtual_intf = wilc_cfg80211_del_virtual_intf,
--	.change_virtual_intf = WILC_WFI_change_virt_intf,
-+	.change_virtual_intf = wilc_cfg80211_change_virtual_intf,
+ #include "linux_wlan_common.h"
  
- 	.start_ap = WILC_WFI_start_ap,
- 	.change_beacon = WILC_WFI_change_beacon,
+-/* Psitive Numbers to indicate sucess with special status */
+-#define WILC_ALREADY_EXSIT	(+100)    /** The requested object already exists */
+-
+ /* Generic success will return 0 */
+ #define WILC_SUCCESS	0       /** Generic success */
+ 
+@@ -25,22 +22,8 @@
+ #define WILC_INVALID_STATE		-103 /** An API request would violate the Driver state machine (i.e. to start PID while not camped)*/
+ #define WILC_BUFFER_OVERFLOW		-104 /** In copy operations if the copied data is larger than the allocated buffer*/
+ #define WILC_NULL_PTR			-105 /** null pointer is passed or used */
+-#define WILC_EMPTY			-107
+-#define WILC_FULL			-108
+ #define WILC_TIMEOUT			-109
+-#define WILC_CANCELED			-110 /** The required operation have been canceled by the user*/
+-#define WILC_INVALID_FILE		-112 /** The Loaded file is corruped or having an invalid format */
+ #define WILC_NOT_FOUND			-113 /** Cant find the file to load */
+ #define WILC_NO_MEM			-114
+-#define WILC_UNSUPPORTED_VERSION	-115
+-#define WILC_FILE_EOF			-116
+-
+-
+-
+-
+-
+-#define WILC_CATCH(__status__) \
+-ERRORHANDLER: \
+-	if (__status__ < WILC_SUCCESS) \
+ 
+ #endif
 -- 
-2.5.1
+1.9.1
 
