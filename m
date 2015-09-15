@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34429 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbIUM7M (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34702 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbbIOMkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:59:12 -0400
-Received: by padhy16 with SMTP id hy16so116247613pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:59:12 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
+	Tue, 15 Sep 2015 08:40:06 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 13/16] staging: wilc1000: host_int_init: remove commented code
-Date: Mon, 21 Sep 2015 21:58:23 +0900
-Message-Id: <1442840306-9657-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145916_234020_B8EBD025)
-In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v2] drivers: staging: wilc1000: Add check for SPI availability
+Date: Tue, 15 Sep 2015 18:09:51 +0530
+Message-Id: <1442320791-4155-1-git-send-email-csgorentla@gmail.com> (sfid-20150915_144031_370327_4F020DCD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes commented code in host_int_init function.
+NULL pointer deference is observed in the wilc1000.ko module
+with bus type SPI and when SPI is not ready.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 43062c5..ce7bb0f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6431,7 +6431,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 	down(&(pstrWFIDrv->gtOsCfgValuesSem));
+v2 - Subject corrected 'stating:' -> 'staging:'
+
+Following are the steps to reproduce.
+
+$ sudo insmod drivers/staging/wilc1000/wilc1000.ko
+$ sudo ifconfig wlan1 up
+
+wlan1 in the above command is the device controlled by 'wilc1000.ko'.
+
+ drivers/staging/wilc1000/linux_wlan.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 63f44f8..48f063d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1634,6 +1634,12 @@ int mac_open(struct net_device *ndev)
+ 	int i = 0;
+ 	struct WILC_WFI_priv *priv;
  
- 	pstrWFIDrv->enuHostIFstate = HOST_IF_IDLE;
--	/* gWFiDrvHandle->bPendingConnRequest = false; */
- 
- 	/*Initialize CFG WIDS Defualt Values*/
- 
++#ifdef WILC_SPI
++	if (!g_linux_wlan || !g_linux_wlan->wilc_spidev) {
++		netdev_err(ndev, "wilc1000: SPI device not ready\n");
++		return -ENODEV;
++	}
++#endif
+ 	nic = netdev_priv(ndev);
+ 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+ 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
 -- 
-2.5.1
+2.5.0
 
