@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59691 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbbIOFeM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 01:34:12 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 3/4] staging: wilc1000: coreconfigurator.h: remove unused defines
-Date: Tue, 15 Sep 2015 14:33:56 +0900
-Message-ID: <1442295237-12644-3-git-send-email-tony.cho@atmel.com> (sfid-20150915_073418_460349_DF0E7464)
-In-Reply-To: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
-References: <1442295237-12644-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lists.s-osg.org ([54.187.51.154]:36470 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753387AbbIPJIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2015 05:08:54 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [RESEND PATCH] NFC: trf7970a: Add OF match table
+Date: Wed, 16 Sep 2015 11:08:42 +0200
+Message-Id: <1442394522-12883-1-git-send-email-javier@osg.samsung.com> (sfid-20150916_110925_191660_803797CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+The Documentation/devicetree/bindings/net/nfc/trf7970a.txt DT binding doc
+lists "ti,trf7970a" as a compatible string but the corresponding driver
+does not have an OF match table. Add the table to the driver so the SPI
+core can do an OF style match.
 
-The define MAX_PACKET_BUFF_SIZE and STATUS_MSG_LEN is not used in the driver.
-Delete two defines.
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h | 3 ---
- 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index c2aee05..32e5b31 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -44,14 +44,11 @@
- /* Operating Mode: GET */
- #define GET_CFG              1
+ drivers/nfc/trf7970a.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 70b0707fd9a9..123aa981c9d8 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2211,6 +2211,12 @@ static const struct dev_pm_ops trf7970a_pm_ops = {
+ 			trf7970a_pm_runtime_resume, NULL)
+ };
  
--#define MAX_PACKET_BUFF_SIZE 1596
--
- #define MAX_STRING_LEN               256
- #define MAX_SURVEY_RESULT_FRAG_SIZE  MAX_STRING_LEN
- #define SURVEY_RESULT_LENGTH         44
- #define MAX_ASSOC_RESP_FRAME_SIZE    MAX_STRING_LEN
- 
--#define STATUS_MSG_LEN               12
- #define MAC_CONNECTED                1
- #define MAC_DISCONNECTED             0
- 
++static const struct of_device_id trf7970a_of_match[] = {
++	{ .compatible = "ti,trf7970a", },
++	{ /* sentinel */ },
++};
++MODULE_DEVICE_TABLE(of, trf7970a_of_match);
++
+ static const struct spi_device_id trf7970a_id_table[] = {
+ 	{ "trf7970a", 0 },
+ 	{ }
+@@ -2223,6 +2229,7 @@ static struct spi_driver trf7970a_spi_driver = {
+ 	.id_table	= trf7970a_id_table,
+ 	.driver		= {
+ 		.name	= "trf7970a",
++		.of_match_table = of_match_ptr(trf7970a_of_match),
+ 		.owner	= THIS_MODULE,
+ 		.pm	= &trf7970a_pm_ops,
+ 	},
 -- 
-1.9.1
+2.4.3
 
