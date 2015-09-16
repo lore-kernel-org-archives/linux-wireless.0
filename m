@@ -1,76 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59254 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751428AbbIHFiB (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26916 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbbIPJgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 01:38:01 -0400
-Message-ID: <1441690676.27148.11.camel@coelho.fi> (sfid-20150908_073825_379442_51BED980)
-From: Luca Coelho <luca@coelho.fi>
-To: Andreas Reis <andreas.reis@gmail.com>,
-	linux-wireless@vger.kernel.org
-Cc: ilw@linux.intel.com
-Date: Tue, 08 Sep 2015 08:37:56 +0300
-In-Reply-To: <55ED93D0.4070509@gmail.com>
-References: <55ED93D0.4070509@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi: FW error in SYNC CMD MAC_CONTEXT_CMD
+	Wed, 16 Sep 2015 05:36:35 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 4/6] staging: wilc1000: remove definitions unused
+Date: Wed, 16 Sep 2015 18:36:02 +0900
+Message-ID: <1442396164-18728-5-git-send-email-tony.cho@atmel.com> (sfid-20150916_113638_495859_1B1E6C81)
+In-Reply-To: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
+References: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Anreas,
+From: Leo Kim <leo.kim@atmel.com>
 
-On Mon, 2015-09-07 at 15:40 +0200, Andreas Reis wrote:
-> Updated to
-> net.git: 46cdc9b (ie. with mac80211 2015-09-04)
-> + iwlwifi-next.git commits up to 5bff653
-> iwlwifi firmware: 16.215201.0
-> 
-> now connecting to my WPA-802.1X with a Intel 7260 fails, see dmesg.
-> 
->  From the wifi's wpa_supplicant file (actually wicd somehow
-> accumulated 
-> different ones for this SSID, but the following should be it):
->      proto=RSN
->      key_mgmt=WPA-EAP
->      pairwise=CCMP
->      eap=PEAP
->      phase2="auth=MSCHAPv2"
-> 
-> Meanwhile my WPA2-PSK at home still works.
+Remove the definitions which are not used anywhere.
+- WILC_ALREADY_EXSIT
+- WILC_EMPTY
+- WILC_FULL
+- WILC_CANCELED
+- WILC_INVALID_FILE
+- WILC_UNSUPPORTED_VERSION
+- WILC_FILE_EOF
 
-According to the dmesg you attached, it seems that we're bouncing
-between two APs:
+Remove the definition which is not used anymore.
+- WILC_CATCH
 
-[  214.644607] wlp2s0: authenticate with 9c:1c:12:c1:26:82
-...
-[  214.798595] wlp2s0: deauthenticated from 9c:1c:12:c1:26:82 (Reason: 3=DEAUTH_LEAVING)
-...
-[  218.001901] wlp2s0: authenticate with 18:64:72:26:de:22
-...
-[  218.054498] wlp2s0: deauthenticated from 18:64:72:26:de:22 (Reason: 3=DEAUTH_LEAVING)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_errorsupport.h | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-It seems that your system is trying to connect to two different APs
-forth and back.  After each association succeeds, the userspace seems
-to trigger a deauth (DEAUTH_LEAVING) and goes to the other AP again...
+diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
+index 99ded3d..054ed76 100644
+--- a/drivers/staging/wilc1000/wilc_errorsupport.h
++++ b/drivers/staging/wilc1000/wilc_errorsupport.h
+@@ -12,9 +12,6 @@
+ 
+ #include "linux_wlan_common.h"
+ 
+-/* Psitive Numbers to indicate sucess with special status */
+-#define WILC_ALREADY_EXSIT	(+100)    /** The requested object already exists */
+-
+ /* Generic success will return 0 */
+ #define WILC_SUCCESS	0       /** Generic success */
+ 
+@@ -25,22 +22,8 @@
+ #define WILC_INVALID_STATE		-103 /** An API request would violate the Driver state machine (i.e. to start PID while not camped)*/
+ #define WILC_BUFFER_OVERFLOW		-104 /** In copy operations if the copied data is larger than the allocated buffer*/
+ #define WILC_NULL_PTR			-105 /** null pointer is passed or used */
+-#define WILC_EMPTY			-107
+-#define WILC_FULL			-108
+ #define WILC_TIMEOUT			-109
+-#define WILC_CANCELED			-110 /** The required operation have been canceled by the user*/
+-#define WILC_INVALID_FILE		-112 /** The Loaded file is corruped or having an invalid format */
+ #define WILC_NOT_FOUND			-113 /** Cant find the file to load */
+ #define WILC_NO_MEM			-114
+-#define WILC_UNSUPPORTED_VERSION	-115
+-#define WILC_FILE_EOF			-116
+-
+-
+-
+-
+-
+-#define WILC_CATCH(__status__) \
+-ERRORHANDLER: \
+-	if (__status__ < WILC_SUCCESS) \
+ 
+ #endif
+-- 
+1.9.1
 
-This sometimes indicates that two instances of wpa_supplicant are
-competing with each other.  Can you check whether you have more than
-one wpa_supplicant instance running?
-
-In any case, there seems to be a driver bug at some point, because we
-get a firmware SYSASSERT.  To debug that, could you follow the
-directions in our debugging wiki page [1] and create a bug in bugzilla?
-Please provide trace-cmd logs (as explained in the wiki) so we can try
-to figure out what is going on.
-
-One final question, was this working before you upgraded to iwlwifi
--next 5bff6536f742?
-
-Thanks for reporting!
-
-[1] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
-
---
-Cheers,
-Luca.
