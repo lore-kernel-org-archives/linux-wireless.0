@@ -1,226 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34699 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933528AbbI1NCG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5564 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbbIPBoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 09:02:06 -0400
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Disable PCI PS for QCA988X and QCA99X0
-Date: Mon, 28 Sep 2015 18:31:18 +0530
-Message-ID: <1443445278-11051-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20150928_150214_424683_3410C811)
+	Tue, 15 Sep 2015 21:44:02 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 01/10] staging: wilc1000: remove PANDA_BOARD
+Date: Wed, 16 Sep 2015 10:43:46 +0900
+Message-ID: <1442367835-30733-2-git-send-email-tony.cho@atmel.com> (sfid-20150916_034407_097171_D24E5FC1)
+In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
+References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+This patch removes one of the platform dependencies, PANDA_BOARD from the
+driver codes. The device tree will provide the platform dependencies in
+the future commits.
 
-This patch disables PCI PS for QCA988X and QCA99X0, Since PCI PS is
-validated for QCA6174, let it be enabled only for QCA6174. It would be
-better to execute PCI PS related functions only for the supported devices.
-
-PCI time out issue is observed with QCA99X0 on x86 platform, We will
-disable PCI PS for QCA988X and QCA99X0 until PCI PS is properly implemented.
-
-Taking and releasing ps_lock is causing higher CPU consumption. Michal Kazior
-suggested ps_lock overhead to be reworked so that ath10k_pci_wake/sleep
-functions are called less often, i.e. move the powersave logic up (only during
-irq handling, tx path, submitting fw commands).
-
-Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/linux_wlan.c         | 4 ----
+ drivers/staging/wilc1000/linux_wlan_common.h  | 3 ---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ----
+ 3 files changed, 11 deletions(-)
 
- drivers/net/wireless/ath/ath10k/pci.c | 83 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/pci.h |  6 +++
- 2 files changed, 88 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1046ab6..36b6f34 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -465,12 +465,53 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
- 	return -ETIMEDOUT;
- }
- 
-+static int ath10k_pci_force_wake(struct ath10k *ar)
-+{
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	spin_lock_irqsave(&ar_pci->ps_lock, flags);
-+
-+	if (!ar_pci->ps_awake) {
-+		iowrite32(PCIE_SOC_WAKE_V_MASK,
-+				ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
-+				PCIE_SOC_WAKE_ADDRESS);
-+
-+		ret = ath10k_pci_wake_wait(ar);
-+		if (ret == 0)
-+			ar_pci->ps_awake = true;
-+	}
-+
-+	spin_unlock_irqrestore(&ar_pci->ps_lock, flags);
-+
-+	return ret;
-+}
-+
-+static void ath10k_pci_force_sleep(struct ath10k *ar)
-+{
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ar_pci->ps_lock, flags);
-+
-+	iowrite32(PCIE_SOC_WAKE_RESET,
-+			ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
-+			PCIE_SOC_WAKE_ADDRESS);
-+	ar_pci->ps_awake = false;
-+
-+	spin_unlock_irqrestore(&ar_pci->ps_lock, flags);
-+}
-+
- static int ath10k_pci_wake(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	unsigned long flags;
- 	int ret = 0;
- 
-+	if (ar_pci->pci_ps == 0)
-+		return ret;
-+
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_PCI_PS, "pci ps wake refcount %lu awake %d\n",
-@@ -502,6 +543,9 @@ static void ath10k_pci_sleep(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	unsigned long flags;
- 
-+	if (ar_pci->pci_ps == 0)
-+		return;
-+
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_PCI_PS, "pci ps sleep refcount %lu awake %d\n",
-@@ -544,6 +588,11 @@ static void ath10k_pci_sleep_sync(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	unsigned long flags;
- 
-+	if (ar_pci->pci_ps == 0) {
-+		ath10k_pci_force_sleep(ar);
-+		return;
-+	}
-+
- 	del_timer_sync(&ar_pci->ps_timer);
- 
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
-@@ -2397,6 +2446,15 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct pci_dev *pdev = ar_pci->pdev;
- 	u32 val;
-+	int ret = 0;
-+
-+	if (ar_pci->pci_ps == 0) {
-+		ret = ath10k_pci_force_wake(ar);
-+		if (ret) {
-+			ath10k_err(ar, "failed to wake up target: %d\n", ret);
-+			return ret;
-+		}
-+	}
- 
- 	/* Suspend/Resume resets the PCI configuration space, so we have to
- 	 * re-disable the RETRY_TIMEOUT register (0x41) to keep PCI Tx retries
-@@ -2407,7 +2465,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 	if ((val & 0x0000ff00) != 0)
- 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 
--	return 0;
-+	return ret;
- }
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6ad8cd5..bd77eb3 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -435,10 +435,6 @@ static int init_irq(linux_wlan_t *p_nic)
+  *
+  * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+  */
+-#elif defined(PANDA_BOARD)
+-		gpio_export(GPIO_NUM, 1);
+-		nic->dev_irq_num = OMAP_GPIO_IRQ(GPIO_NUM);
+-		irq_set_irq_type(nic->dev_irq_num, IRQ_TYPE_LEVEL_LOW);
+ #else
+ 		nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
  #endif
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index ea121f9..5d13c15 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -145,9 +145,6 @@ extern atomic_t DEBUG_LEVEL;
+ 		#define MODALIAS	"wilc_spi3"
+ 		#define GPIO_NUM	133
+ 	#endif
+-#elif defined(PANDA_BOARD)
+-	#define MODALIAS	"WILC_SPI"
+-	#define GPIO_NUM	139
+ #elif defined(PLAT_WMS8304)             /* rachel */
+ 	#define MODALIAS	"wilc_spi"
+ 	#define GPIO_NUM	139
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 6ea5c87f..904d9c3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -80,11 +80,7 @@ struct WILC_WFI_stats {
+  * LPC3131 which is important to get the MAC start status when you are blocked
+  * inside linux_wlan_firmware_download() which blocks mac_open().
+  */
+-#if defined(PANDA_BOARD)
+- #define RX_BH_TYPE  RX_BH_THREADED_IRQ
+-#else
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+-#endif
  
-@@ -2501,6 +2559,16 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- {
- 	struct ath10k *ar = arg;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	int ret;
-+
-+	if (ar_pci->pci_ps == 0) {
-+		ret = ath10k_pci_force_wake(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to wake device up on irq: \
-+					%d\n", ret);
-+			return IRQ_NONE;
-+		}
-+	}
- 
- 	if (ar_pci->num_msi_intrs == 0) {
- 		if (!ath10k_pci_irq_pending(ar))
-@@ -2908,17 +2976,21 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	struct ath10k_pci *ar_pci;
- 	enum ath10k_hw_rev hw_rev;
- 	u32 chip_id;
-+	bool pci_ps;
- 
- 	switch (pci_dev->device) {
- 	case QCA988X_2_0_DEVICE_ID:
- 		hw_rev = ATH10K_HW_QCA988X;
-+		pci_ps = false;
- 		break;
- 	case QCA6164_2_1_DEVICE_ID:
- 	case QCA6174_2_1_DEVICE_ID:
- 		hw_rev = ATH10K_HW_QCA6174;
-+		pci_ps = true;
- 		break;
- 	case QCA99X0_2_0_DEVICE_ID:
- 		hw_rev = ATH10K_HW_QCA99X0;
-+		pci_ps = false;
- 		break;
- 	default:
- 		WARN_ON(1);
-@@ -2939,6 +3011,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	ar_pci->dev = &pdev->dev;
- 	ar_pci->ar = ar;
- 	ar->dev_id = pci_dev->device;
-+	ar_pci->pci_ps = pci_ps;
- 
- 	if (pdev->subsystem_vendor || pdev->subsystem_device)
- 		scnprintf(ar->spec_board_id, sizeof(ar->spec_board_id),
-@@ -2970,6 +3043,14 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	ath10k_pci_ce_deinit(ar);
- 	ath10k_pci_irq_disable(ar);
- 
-+	if (ar_pci->pci_ps == 0) {
-+		ret = ath10k_pci_force_wake(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to wake up device : %d\n", ret);
-+			goto err_free_pipes;
-+		}
-+	}
-+
- 	ret = ath10k_pci_init_irq(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to init irqs: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 8d364fb..faba10d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -221,6 +221,12 @@ struct ath10k_pci {
- 	 * powersave register state changes.
- 	 */
- 	bool ps_awake;
-+
-+	/* pci power save, disable for QCA988X and QCA99X0.
-+	 * Writing 'false' to this variable avoids frequent locking
-+	 * on MMIO read/write.
-+	 */
-+	bool pci_ps;
- };
- 
- static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+ struct wilc_wfi_key {
+ 	u8 *key;
 -- 
 1.9.1
 
