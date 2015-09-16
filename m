@@ -1,107 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34126 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932086AbbIVJf3 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26830 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753130AbbIPJgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:29 -0400
-Received: by padhy16 with SMTP id hy16so4754561pad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:28 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 08/16] staging: wilc1000: remove CoreConfiguratorInit
-Date: Tue, 22 Sep 2015 18:34:53 +0900
-Message-Id: <1442914501-2315-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113535_643368_670490D5)
-In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 16 Sep 2015 05:36:13 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 1/6] staging: wilc1000: remove a macro WILC_NULLCHECK
+Date: Wed, 16 Sep 2015 18:35:59 +0900
+Message-ID: <1442396164-18728-2-git-send-email-tony.cho@atmel.com> (sfid-20150916_113620_000924_31B476AC)
+In-Reply-To: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
+References: <1442396164-18728-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes CoreConfiguratorInit function, which is not doing
-anything else except printing a PRINT_D message and returing a s32Error.
-It is also removed the code that is calling this function.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch replaces WILC_NULLCHECK with the plain statements and then removes
+the macro WILC_NULLCHECK in wilc_errorsupport.h which is not used anymore.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-v2: rebase latest staging-testing and remove declaration of function.
+ drivers/staging/wilc1000/host_interface.c         |  7 +++++--
+ drivers/staging/wilc1000/wilc_errorsupport.h      |  6 ------
+ drivers/staging/wilc1000/wilc_msgqueue.c          |  9 +++++++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 ++++++++++++++---------
+ 4 files changed, 27 insertions(+), 19 deletions(-)
 
- drivers/staging/wilc1000/coreconfigurator.c | 19 -------------------
- drivers/staging/wilc1000/coreconfigurator.h |  1 -
- drivers/staging/wilc1000/host_interface.c   | 11 -----------
- 3 files changed, 31 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 14e8efc..e563c9b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -327,25 +327,6 @@ static inline u16 get_asoc_id(u8 *data)
- 	return asoc_id;
- }
- 
--/**
-- *  @brief              initializes the Core Configurator
-- *  @details
-- *  @return     Error code indicating success/failure
-- *  @note
-- *  @author	mabubakr
-- *  @date		1 Mar 2012
-- *  @version		1.0
-- */
--
--s32 CoreConfiguratorInit(void)
--{
--	s32 s32Error = 0;
--
--	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit()\n");
--
--	return s32Error;
--}
--
- u8 *get_tim_elm(u8 *pu8msa, u16 u16RxLen, u16 u16TagParamOffset)
- {
- 	u16 u16index = 0;
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 8439066..88a697b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -156,7 +156,6 @@ typedef struct wid_site_survey_reslts {
- } wid_site_survey_reslts_s;
- #endif
- 
--s32 CoreConfiguratorInit(void);
- s32 CoreConfiguratorDeInit(void);
- 
- s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 62f4a8a..bc0adcd 100644
+index 563063c..827758d 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6465,22 +6465,11 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
+@@ -7289,7 +7289,8 @@ s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSta
+ 	if (pstrAddStationMsg->u8NumRates > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
  
- 	/*TODO Code to setup simulation to be removed later*/
--	/*Intialize configurator module*/
--	s32Error = CoreConfiguratorInit();
--	if (s32Error < 0) {
--		PRINT_ER("Failed to initialize core configurator\n");
--		goto _fail_mem_;
--	}
+-		WILC_NULLCHECK(s32Error, rates);
++		if (!rates)
++			return -ENOMEM;
  
- 	clients_count++; /* increase number of created entities */
+ 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
+ 		pstrAddStationMsg->pu8Rates = rates;
+@@ -7444,7 +7445,9 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
+ 	if (pstrAddStationMsg->u8NumRates > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
  
- 	return s32Error;
+-		WILC_NULLCHECK(s32Error, rates);
++		if (!rates)
++			return -ENOMEM;
++
+ 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
+ 		pstrAddStationMsg->pu8Rates = rates;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
+index 8eb8150..42495d9 100644
+--- a/drivers/staging/wilc1000/wilc_errorsupport.h
++++ b/drivers/staging/wilc1000/wilc_errorsupport.h
+@@ -51,12 +51,6 @@
+ 		goto ERRORHANDLER; \
+ } while (0)
+ 
+-#define  WILC_NULLCHECK(__status__, __ptr__)	do { \
+-		if (__ptr__ == NULL) { \
+-			WILC_ERRORREPORT(__status__, WILC_NULL_PTR); \
+-		} \
+-} while (0)
+-
+ #define WILC_CATCH(__status__) \
+ ERRORHANDLER: \
+ 	if (__status__ < WILC_SUCCESS) \
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 41244ce..ac23736 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -1,6 +1,7 @@
+ 
+ #include "wilc_msgqueue.h"
+ #include <linux/spinlock.h>
++#include <linux/errno.h>
+ 
+ /*!
+  *  @author		syounan
+@@ -69,11 +70,15 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	/* construct a new message */
+ 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+-	WILC_NULLCHECK(s32RetStatus, pstrMessage);
++	if (!pstrMessage)
++		return -ENOMEM;
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
+-	WILC_NULLCHECK(s32RetStatus, pstrMessage->pvBuffer);
++	if (!pstrMessage->pvBuffer) {
++		s32RetStatus = -ENOMEM;
++		goto ERRORHANDLER;
++	}
+ 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+ 
+ 	/* add it to the message queue */
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 4151aae..32fd543 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -15,7 +15,7 @@
+ #ifdef WILC_SDIO
+ #include "linux_wlan_sdio.h"    /* tony : for set_wiphy_dev() */
+ #endif
+-
++#include <linux/errno.h>
+ 
+ #define IS_MANAGMEMENT				0x100
+ #define IS_MANAGMEMENT_CALLBACK			0x080
+@@ -381,7 +381,10 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
+ 	if (priv->bCfgScanning == true) {
+ 		if (enuScanEvent == SCAN_EVENT_NETWORK_FOUND) {
+ 			wiphy = priv->dev->ieee80211_ptr->wiphy;
+-			WILC_NULLCHECK(s32Error, wiphy);
++
++			if (!wiphy)
++				return;
++
+ 			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC
+ 			    &&
+ 			    ((((s32)pstrNetworkInfo->s8rssi) * 100) < 0
+@@ -395,7 +398,8 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
+ 				s32Freq = ieee80211_channel_to_frequency((s32)pstrNetworkInfo->u8channel, IEEE80211_BAND_2GHZ);
+ 				channel = ieee80211_get_channel(wiphy, s32Freq);
+ 
+-				WILC_NULLCHECK(s32Error, channel);
++				if (!channel)
++					return;
+ 
+ 				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
+ 					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)pstrNetworkInfo->s8rssi) * 100),
+@@ -3217,8 +3221,8 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct wilc_priv *priv;
+ 	u8 NullBssid[ETH_ALEN] = {0};
  
 -
--_fail_mem_:
--	if (pstrWFIDrv != NULL)
--		kfree(pstrWFIDrv);
--	del_timer_sync(&pstrWFIDrv->hRemainOnChannel);
- _fail_timer_2:
- 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
- 	del_timer_sync(&pstrWFIDrv->hConnectTimer);
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (!wiphy)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+@@ -3254,8 +3258,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	tstrWILC_AddStaParam strStaParams = { {0} };
+ 	perInterface_wlan_t *nic;
+ 
+-
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (!wiphy)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
+@@ -3325,7 +3329,8 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct wilc_priv *priv;
+ 	perInterface_wlan_t *nic;
+ 
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (!wiphy)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
+@@ -3371,7 +3376,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	PRINT_D(HOSTAPD_DBG, "Change station paramters\n");
+ 
+-	WILC_NULLCHECK(s32Error, wiphy);
++	if (!wiphy)
++		return -EFAULT;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(dev);
 -- 
-2.5.1
+1.9.1
 
