@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34676 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbbIGPgs (ORCPT
+Received: from mail-ig0-f195.google.com ([209.85.213.195]:36122 "EHLO
+	mail-ig0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbbIPVKZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 11:36:48 -0400
-Received: by padhy16 with SMTP id hy16so97498932pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 08:36:48 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/5] staging: wilc1000: linux_wlan.c: use kzalloc instead of WILC_MALLOC
-Date: Tue,  8 Sep 2015 00:36:35 +0900
-Message-Id: <1441640199-1507-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150907_173654_254725_DAF3883A)
+	Wed, 16 Sep 2015 17:10:25 -0400
+Received: by igcxw12 with SMTP id xw12so161649igc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 14:10:25 -0700 (PDT)
+Date: Wed, 16 Sep 2015 17:10:06 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Brady Lyles <lyles.brady@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: lenovo t400 atheros ar242x ath5k bug
+Message-ID: <20150916211006.GB3066@localhost> (sfid-20150916_231028_765922_5603EEA7)
+References: <CANR9swOiEVT6PvKv0V1Ytwm0GsN0_2HXqFpdmGAPzFoQG5T2Cg@mail.gmail.com>
+ <20150806161958.GA20514@localhost>
+ <CANR9swMSvdSOcC+HyYp2JbHBh8m2puZb04NpVafHuKmHkxWSqA@mail.gmail.com>
+ <CANR9swNoQkh6mSkiYncEzqCzcdrD3cFW74Ld=Hj6CkBJ0Zp+CQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANR9swNoQkh6mSkiYncEzqCzcdrD3cFW74Ld=Hj6CkBJ0Zp+CQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_MALLOC with kzalloc.
+(Please don't top-post.  Reordered it somewhat.)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On Wed, Sep 16, 2015 at 02:19:12PM -0600, Brady Lyles wrote:
+> wondering if there are any more questions/suggestions to resolve this issue?
+> Thank you!
+> >
+> >> My wild guess (not being too familiar with qubes) is that passthrough is not
+> >> working properly -- this:
+> >>
+> >>> [    5.401276] BUG: unable to handle kernel paging request at ffffc90000900014
+> >>> [    5.401287] IP: [<ffffffff81268928>] iowrite32+0x38/0x40
+>
+> >> ...looks like a pci write to an unusual address.
+> >>
+> >> What does output of lspci -vnn look like, run as root in the guest?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index afd6702..f7dda75 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2269,8 +2269,7 @@ int wilc_netdev_init(void)
- 	sema_init(&close_exit_sync, 0);
- 
- 	/*create the common structure*/
--	g_linux_wlan = WILC_MALLOC(sizeof(linux_wlan_t));
--	memset(g_linux_wlan, 0, sizeof(linux_wlan_t));
-+	g_linux_wlan = kzalloc(sizeof(linux_wlan_t), GFP_KERNEL);
- 
- 	/*Reset interrupt count debug*/
- 	int_rcvdU = 0;
+> > 00:01.0 Ethernet controller [0200]: Qualcomm Atheros AR242x / AR542x
+> > Wireless Network Adapter (PCI-Express) [168c:001c] (rev 01)
+> >     Subsystem: Qualcomm Atheros Device [168c:0035]
+> >     Flags: bus master, fast devsel, latency 0, IRQ 39
+> >     Memory at f4300000 (64-bit, non-prefetchable) [size=64K]
+
+(Regarding running inside Qubes / Xen...)
+
+Unfortunately the VM / PCI passthrough stuff is outside my small area of
+expertise, perhaps someone else knows?
+
 -- 
-2.5.1
-
+Bob Copeland %% http://bobcopeland.com/
