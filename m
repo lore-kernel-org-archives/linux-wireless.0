@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53051 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756219AbbIUNmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 09:42:35 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
-References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
-To: Andrzej Hajda <a.hajda@samsung.com>
-Cc: dhowells@redhat.com, linux-kernel@vger.kernel.org,
-	linux-api@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-cachefs@redhat.com, linux-clk@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-mm@kvack.org, linux-omap@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, lustre-devel@lists.lustre.org
-Subject: Re: [PATCH 00/38] Fixes related to incorrect usage of unsigned types
+Received: from aserp1040.oracle.com ([141.146.126.69]:35499 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbbIPUSz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2015 16:18:55 -0400
+Date: Wed, 16 Sep 2015 23:18:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Aparna Karuthodi <kdasaparna@gmail.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: Removed unwanted curly braces
+Message-ID: <20150916201847.GA4953@mwanda> (sfid-20150916_221919_257818_55F31463)
+References: <1442420450-5760-1-git-send-email-kdasaparna@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Mon, 21 Sep 2015 14:42:25 +0100
-Message-ID: <17571.1442842945@warthog.procyon.org.uk> (sfid-20150921_154247_052097_51B3FEED)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442420450-5760-1-git-send-email-kdasaparna@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrzej Hajda <a.hajda@samsung.com> wrote:
+On Wed, Sep 16, 2015 at 09:50:50PM +0530, Aparna Karuthodi wrote:
+> Removed unwanted curly braces of a single statement if-else block to
+> remove a coding style warning detected by checkpatch. The warning is
+> given below:
+> 
+> 58: WARNING: braces {} are not necessary for any arm of this statement
+> 
+> Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
+> ---
+>  drivers/staging/wilc1000/fifo_buffer.c |    5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
+> index b6c07cf..4fbac3d 100644
+> --- a/drivers/staging/wilc1000/fifo_buffer.c
+> +++ b/drivers/staging/wilc1000/fifo_buffer.c
+> @@ -52,11 +52,10 @@ u32 FIFO_ReadBytes(tHANDLE hFifo, u8 *pu8Buffer, u32 u32BytesToRead, u32 *pu32By
+>  		if (pstrFifoHandler->u32TotalBytes) {
+>  			down(&pstrFifoHandler->SemBuffer);
+>  
+> -			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes) {
+> +			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes)
+>  				*pu32BytesRead = pstrFifoHandler->u32TotalBytes;
+> -			} else {
+> +			 else
 
-> Semantic patch finds comparisons of types:
->     unsigned < 0
->     unsigned >= 0
-> The former is always false, the latter is always true.
-> Such comparisons are useless, so theoretically they could be
-> safely removed, but their presence quite often indicates bugs.
+The indenting is wrong here.  There is an extra space char.
 
-Or someone has left them in because they don't matter and there's the
-possibility that the type being tested might be or become signed under some
-circumstances.  If the comparison is useless, I'd expect the compiler to just
-discard it - for such cases your patch is pointless.
+regards,
+dan carpenter
 
-If I have, for example:
-
-	unsigned x;
-
-	if (x == 0 || x > 27)
-		give_a_range_error();
-
-I will write this as:
-
-	unsigned x;
-
-	if (x <= 0 || x > 27)
-		give_a_range_error();
-
-because it that gives a way to handle x being changed to signed at some point
-in the future for no cost.  In which case, your changing the <= to an ==
-"because the < part of the case is useless" is arguably wrong.
-
-David
