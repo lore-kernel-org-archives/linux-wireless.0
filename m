@@ -1,67 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f41.google.com ([209.85.213.41]:35635 "EHLO
-	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933168AbbIYUcq (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:37628 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752182AbbIPMdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 16:32:46 -0400
-Received: by vkao3 with SMTP id o3so62989704vka.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 13:32:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4357538.Wlf88yQie6@vostro.rjw.lan>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	<20150925185256.GG5951@linux>
-	<4331507.W3ZDWldbWu@vostro.rjw.lan>
-	<4357538.Wlf88yQie6@vostro.rjw.lan>
-Date: Fri, 25 Sep 2015 13:25:49 -0700
-Message-ID: <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com> (sfid-20150925_223249_536652_812475EC)
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+	Wed, 16 Sep 2015 08:33:06 -0400
+Received: by igbni9 with SMTP id ni9so31098700igb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 05:33:04 -0700 (PDT)
+Date: Wed, 16 Sep 2015 08:32:44 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Peter Oh <poh@codeaurora.org>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset=UTF-8
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/3] ath10k: implement mesh support
+Message-ID: <20150916123244.GA2051@localhost> (sfid-20150916_143310_937173_E4A050AD)
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+ <1440673024-13696-4-git-send-email-me@bobcopeland.com>
+ <87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
+ <87fv2o9cvl.fsf@kamboji.qca.qualcomm.com>
+ <20150909164945.GA4062@localhost>
+ <1441869764.2108.1.camel@sipsolutions.net>
+ <55F7C6FF.3050802@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55F7C6FF.3050802@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2015 at 13:33, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> You're going to change that into bool in the next patch, right?
+On Tue, Sep 15, 2015 at 12:21:35AM -0700, Peter Oh wrote:
+> Can we configure mesh point with hostapd or can we use mesh point without
+> neither wpa_supplicant nor hostapd?
+> Currently I'm trying to bring up mesh point, but whenever I run hostpad
+> after creating mesh point (iw phy0 interface add mesh type mp), hostapd
+> change the interface mode to managed.
 
-Yeah.
+Hostapd can't control the mesh interface, but wpa_supplicant can,
+though I believe there's a little more work needed to support VHT for
+mesh in wpa_supplicant.  If you want to run an unencrypted mesh, you can
+start it with iw and the kernel will run the peering manager.
 
-> So what if bool is a byte and the field is not word-aligned
+If you're asking about a mesh-enabled access point, you can run hostapd
+separately from wpa_supplicant/iw, as in the below script.
 
-Its between two 'unsigned long' variables today, and the struct isn't packed.
-So, it will be aligned, isn't it?
+(I've only tested that you can bring this up on ath10k, not actual
+operation, though it should work as far as I know.  I've run similar
+scripts on ath9k.)
 
-> and changing
-> that byte requires a read-modify-write.  How do we ensure that things remain
-> consistent in that case?
+#!/bin/bash -x
+#
+# Example of running a mesh-enabled access point with one radio.
+#
+killall hostapd > /dev/null
+killall wpa_supplicant > /dev/null
 
-I didn't understood why a read-modify-write is special here? That's
-what will happen
-to most of the non-word-sized fields anyway?
+pubip=`ip route get 8.8.8.8 | awk 'NR==1 {print $NF}'`
+last8=`echo $pubip | awk -F . '{print $4}'`
+meship=10.10.1.$last8
+iface=wlan0
+ap_iface=ap0
+br_iface=br0
+mesh_mac=42:00:00:00:00:`printf "%.2x" $last8`
+channel=36
+freq=5180
 
-Probably I didn't understood what you meant..
+brctl delbr $br_iface
+brctl addbr $br_iface
 
---
-viresh
+# add a new interface for ap operation
+iw dev $ap_iface del
+iw dev $iface interface add $ap_iface type managed
+ip addr flush $ap_iface
+ip link set $ap_iface down
+
+# create hostapd conf for ath10k
+cat <<__EOM > hostapd.conf
+interface=$ap_iface
+driver=nl80211
+ssid=mesh-ap
+hw_mode=a
+channel=$channel
+auth_algs=3
+own_ip_addr=$meship
+wpa=1
+wpa_passphrase=my_password
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=CCMP
+ht_capab=[HT40+]
+ieee80211n=1
+ieee80211ac=1
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=$((channel + 6))
+bridge=$br_iface
+__EOM
+
+# configure main interface to run in mesh mode
+ip addr flush $iface
+ip link set $iface down
+ip link set addr $mesh_mac dev $iface
+iw dev $iface set type mp
+ip link set $iface up
+
+# start the mesh
+# here you might instead run wpa_supplicant for an encrypted mesh
+iw dev $iface set freq $freq 80 $((freq + 30))
+iw dev $iface mesh join mesh-vht
+
+sleep 5
+
+# add mesh to bridge (hostapd adds AP interface to bridge)
+brctl addif $br_iface $iface
+ip addr add $meship/24 dev $br_iface
+ip link set $br_iface up
+
+# run hostapd
+hostapd -dd hostapd.conf >hostapd.log 2>&1 &
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
