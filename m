@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56501 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbbIFQrK (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57445 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbbIPHtR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 12:47:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Lin <dlin@marvell.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
-References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>
-	<1433598191.2467.65.camel@sipsolutions.net>
-	<877fo3he8y.fsf@kamboji.qca.qualcomm.com>
-	<55EC6453.3000601@broadcom.com>
-Date: Sun, 06 Sep 2015 19:46:58 +0300
-In-Reply-To: <55EC6453.3000601@broadcom.com> (Arend van Spriel's message of
-	"Sun, 6 Sep 2015 18:05:39 +0200")
-Message-ID: <87pp1vfqbh.fsf@kamboji.qca.qualcomm.com> (sfid-20150906_184713_785625_CA561B77)
+	Wed, 16 Sep 2015 03:49:17 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix ldpc param for fixed rate
+Date: Wed, 16 Sep 2015 13:19:00 +0530
+Message-ID: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150916_094920_809115_49CDC5EC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+ldpc is not configured for fixed rates. This blocks auto rate vs fixed
+rate performance comparison. Since firmware is considering ldpc vdev
+param for fixed rate selection, it has to be configured to enable ldpc
+for fixed rates.
 
-> On 09/06/2015 03:24 PM, Kalle Valo wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>
->>> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
->>>
->>>>   drivers/net/wireless/mwlwifi/Kconfig        |   17 +
->>>
->>> Does this driver has any relation to mwifiex? Perhaps the same
->>> maintainer team, etc.? Could consider moving all the Marvell drivers
->>> into one directory, but not really necessary I guess.
->>
->> Actually I would want to start adding vendor directories for wireless
->> drivers, just like drivers/net/ethernet has, to cleanup the directory
->> structure. So for example this driver we would have
->> drivers/net/wireless/marvell/mwlwifi and later we would start moving
->> existing drivers to vendor drivers as well. Thoughts?
->
-> Right now our umbrella folder is brcm80211. I am fine changing it to
-> broadcom if explicit vendor names are preferred although brcm80211
-> still has my personal preference.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-In your case I was actually thinking of moving it to broadcom/brcm80211.
-And then we would also have broadcom/b43 and broadcom/b43legacy. So the
-only change is addition of a new directory. How does that sound?
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 80fe43fa..b347b60 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5936,7 +5936,7 @@ ath10k_mac_bitrate_mask_get_single_rate(struct ath10k *ar,
+ }
+ 
+ static int ath10k_mac_set_fixed_rate_params(struct ath10k_vif *arvif,
+-					    u8 rate, u8 nss, u8 sgi)
++					    u8 rate, u8 nss, u8 sgi, u8 ldpc)
+ {
+ 	struct ath10k *ar = arvif->ar;
+ 	u32 vdev_param;
+@@ -5969,6 +5969,13 @@ static int ath10k_mac_set_fixed_rate_params(struct ath10k_vif *arvif,
+ 		return ret;
+ 	}
+ 
++	vdev_param = ar->wmi.vdev_param->ldpc;
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, ldpc);
++	if (ret) {
++		ath10k_warn(ar, "failed to set ldpc param %d: %d\n", ldpc, ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -6032,6 +6039,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	u8 rate;
+ 	u8 nss;
+ 	u8 sgi;
++	u8 ldpc;
+ 	int single_nss;
+ 	int ret;
+ 
+@@ -6041,6 +6049,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	band = def.chan->band;
+ 	ht_mcs_mask = mask->control[band].ht_mcs;
+ 	vht_mcs_mask = mask->control[band].vht_mcs;
++	ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
+ 
+ 	sgi = mask->control[band].gi;
+ 	if (sgi == NL80211_TXRATE_FORCE_LGI)
+@@ -6079,7 +6088,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+-	ret = ath10k_mac_set_fixed_rate_params(arvif, rate, nss, sgi);
++	ret = ath10k_mac_set_fixed_rate_params(arvif, rate, nss, sgi, ldpc);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to set fixed rate params on vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
 -- 
-Kalle Valo
+2.5.2
+
