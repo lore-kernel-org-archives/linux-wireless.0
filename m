@@ -1,103 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33161 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754351AbbITGwF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40253 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbbIPJyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:52:05 -0400
-Received: by pacex6 with SMTP id ex6so87540098pac.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:04 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 09/18] staging: wilc1000: rename WILC_WFI_frame_register
-Date: Sun, 20 Sep 2015 15:51:16 +0900
-Message-Id: <1442731885-4344-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085218_576659_3FFBBC66)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 16 Sep 2015 05:54:07 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 6/8] staging: wilc1000: remove unused semaphore and it's related codes
+Date: Wed, 16 Sep 2015 18:53:25 +0900
+Message-ID: <1442397207-20491-6-git-send-email-tony.cho@atmel.com> (sfid-20150916_115411_311969_20CE76F9)
+In-Reply-To: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
+References: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_frame_register with
-wilc_mgmt_frame_register to avoid CamelCase.
+From: Glen Lee <glen.lee@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Variable rxq_event, rxq_wait_event and rxq_wait have the same pointer.
+
+nwi->os_context.rxq_wait_event = (void *)&g_linux_wlan->rxq_event;
+g_wlan.rxq_wait = inp->os_context.rxq_wait_event;
+
+They are never aquired(down) since down function was only called in
+linux_wlan_rxq_task which was deleted in a previous patch.
+So delete variable rxq_event, rxq_wait_event, rxq_wait and it's related codes.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c             | 8 ++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 ++++-----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 4 ++--
- 3 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 9 ---------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ drivers/staging/wilc1000/wilc_wlan.c          | 3 ---
+ drivers/staging/wilc1000/wilc_wlan_if.h       | 1 -
+ 4 files changed, 14 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index fd5cfd3..d7c28f3 100644
+index f104a23..186e42e 100644
 --- a/drivers/staging/wilc1000/linux_wlan.c
 +++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1461,10 +1461,10 @@ int mac_open(struct net_device *ndev)
- 		goto _err_;
- 	}
+@@ -1088,10 +1088,6 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
+ 		  #endif
+ 		#endif
  
--	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
--				nic->g_struct_frame_reg[0].frame_type, nic->g_struct_frame_reg[0].reg);
--	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
--				nic->g_struct_frame_reg[1].frame_type, nic->g_struct_frame_reg[1].reg);
-+	wilc_mgmt_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
-+				 nic->g_struct_frame_reg[0].frame_type, nic->g_struct_frame_reg[0].reg);
-+	wilc_mgmt_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
-+				 nic->g_struct_frame_reg[1].frame_type, nic->g_struct_frame_reg[1].reg);
- 	netif_wake_queue(ndev);
- 	g_linux_wlan->open_ifcs++;
- 	nic->mac_opened = 1;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index bf9d9ee..c8e286d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2541,7 +2541,7 @@ int mgmt_tx_cancel_wait(struct wiphy *wiphy,
- }
+-		/* not sure if the following unlocks are needed or not*/
+-		if (&g_linux_wlan->rxq_event != NULL)
+-			up(&g_linux_wlan->rxq_event);
+-
+ 		if (&g_linux_wlan->txq_event != NULL)
+ 			up(&g_linux_wlan->txq_event);
  
- /**
-- *  @brief      WILC_WFI_frame_register
-+ *  @brief      wilc_mgmt_frame_register
-  *  @details Notify driver that a management frame type was
-  *              registered. Note that this callback may not sleep, and cannot run
-  *                      concurrently with itself.
-@@ -2551,9 +2551,8 @@ int mgmt_tx_cancel_wait(struct wiphy *wiphy,
-  *  @date	01 JUL 2012
-  *  @version
-  */
--void    WILC_WFI_frame_register(struct wiphy *wiphy,
--				struct wireless_dev *wdev,
--				u16 frame_type, bool reg)
-+void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
-+			      u16 frame_type, bool reg)
- {
+@@ -1156,7 +1152,6 @@ int wlan_init_locks(linux_wlan_t *p_nic)
+ 	sema_init(&g_linux_wlan->txq_add_to_head_cs, 1);
  
- 	struct wilc_priv *priv;
-@@ -3416,7 +3415,7 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
- 	.cancel_remain_on_channel = cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = mgmt_tx_cancel_wait,
- 	.mgmt_tx = mgmt_tx,
--	.mgmt_frame_register = WILC_WFI_frame_register,
-+	.mgmt_frame_register = wilc_mgmt_frame_register,
- 	.set_power_mgmt = WILC_WFI_set_power_mgmt,
- 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
+ 	sema_init(&g_linux_wlan->txq_event, 0);
+-	sema_init(&g_linux_wlan->rxq_event, 0);
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 0bd23b4..4730128 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -100,8 +100,8 @@ int WILC_WFI_InitHostInt(struct net_device *net);
- void WILC_WFI_monitor_rx(u8 *buff, u32 size);
- int WILC_WFI_deinit_mon_interface(void);
- struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
--void WILC_WFI_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
--			     u16 frame_type, bool reg);
-+void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
-+			      u16 frame_type, bool reg);
+ 	sema_init(&g_linux_wlan->cfg_event, 0);
+ 	sema_init(&g_linux_wlan->sync_event, 0);
+@@ -1207,7 +1202,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
+ 	nwi->os_context.rx_buffer_size = LINUX_RX_SIZE;
+ #endif
+ 	nwi->os_context.rxq_critical_section = (void *)&g_linux_wlan->rxq_cs;
+-	nwi->os_context.rxq_wait_event = (void *)&g_linux_wlan->rxq_event;
+ 	nwi->os_context.cfg_wait_event = (void *)&g_linux_wlan->cfg_event;
  
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
- #define DEFAULT_LINK_SPEED			72
+ 	nwi->os_func.os_debug = linux_wlan_dbg;
+@@ -1282,7 +1276,6 @@ int wlan_initialize_threads(perInterface_wlan_t *nic)
+ _fail_2:
+ 	/*De-Initialize 2nd thread*/
+ 	g_linux_wlan->close = 1;
+-	up(&g_linux_wlan->rxq_event);
+ 	kthread_stop(g_linux_wlan->rxq_thread);
+ 
+ 	#if (RX_BH_TYPE == RX_BH_KTHREAD)
+@@ -1301,8 +1294,6 @@ static void wlan_deinitialize_threads(linux_wlan_t *nic)
+ 
+ 	g_linux_wlan->close = 1;
+ 	PRINT_D(INIT_DBG, "Deinitializing Threads\n");
+-	if (&g_linux_wlan->rxq_event != NULL)
+-		up(&g_linux_wlan->rxq_event);
+ 
+ 	if (g_linux_wlan->rxq_thread != NULL) {
+ 		kthread_stop(g_linux_wlan->rxq_thread);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index c68df360..c98eab6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -187,7 +187,6 @@ typedef struct {
+ 	struct mutex rxq_cs;
+ 	struct mutex hif_cs;
+ 
+-	struct semaphore rxq_event;
+ 	struct semaphore cfg_event;
+ 	struct semaphore sync_event;
+ 	struct semaphore txq_event;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 1db4cc8..22310cc 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -90,7 +90,6 @@ typedef struct {
+ 	struct rxq_entry_t *rxq_head;
+ 	struct rxq_entry_t *rxq_tail;
+ 	int rxq_entries;
+-	void *rxq_wait;
+ 	int rxq_exit;
+ 
+ 
+@@ -1398,7 +1397,6 @@ _end_:
+ 				rqe->buffer_size = size;
+ 				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
+ 				wilc_wlan_rxq_add(rqe);
+-				up(p->rxq_wait);
+ 			}
+ 		} else {
+ #ifndef MEMORY_STATIC
+@@ -2049,7 +2047,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
+ 
+ 	g_wlan.rxq_lock = inp->os_context.rxq_critical_section;
+ 	g_wlan.txq_wait = inp->os_context.txq_wait_event;
+-	g_wlan.rxq_wait = inp->os_context.rxq_wait_event;
+ 	g_wlan.cfg_wait = inp->os_context.cfg_wait_event;
+ 	g_wlan.tx_buffer_size = inp->os_context.tx_buffer_size;
+ #if defined (MEMORY_STATIC)
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 3f5aa44..bccfcf9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -137,7 +137,6 @@ typedef struct {
+ 	u32 rx_buffer_size;
+ #endif
+ 	void *rxq_critical_section;
+-	void *rxq_wait_event;
+ 
+ 	struct semaphore *cfg_wait_event;
+ } wilc_wlan_os_context_t;
 -- 
-2.5.1
+1.9.1
 
