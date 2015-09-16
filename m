@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41394 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756013AbbI2JEy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5608 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbbIPBoR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 05:04:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Chor Teck Law <ctlaw@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Lin <dlin@marvell.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
-References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>
-	<1433598191.2467.65.camel@sipsolutions.net>
-	<877fo3he8y.fsf@kamboji.qca.qualcomm.com>
-	<9fcd82c278ea47cb915798ffc7bdcb0b@SC-EXCH03.marvell.com>
-Date: Tue, 29 Sep 2015 12:04:47 +0300
-In-Reply-To: <9fcd82c278ea47cb915798ffc7bdcb0b@SC-EXCH03.marvell.com> (Chor
-	Teck Law's message of "Fri, 11 Sep 2015 14:03:08 +0000")
-Message-ID: <87a8s57g0g.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_110459_381231_3DF2E287)
+	Tue, 15 Sep 2015 21:44:17 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 03/10] staging: wilc1000: remove unnecessary define FIVE_GHZ_BAND
+Date: Wed, 16 Sep 2015 10:43:48 +0900
+Message-ID: <1442367835-30733-4-git-send-email-tony.cho@atmel.com> (sfid-20150916_034419_699395_287710D8)
+In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
+References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chor Teck Law <ctlaw@marvell.com> writes:
+From: Glen Lee <glen.lee@atmel.com>
 
->> > Could consider moving all the Marvell drivers
->> > into one directory, but not really necessary I guess.
->> 
->> Actually I would want to start adding vendor directories for wireless
->> drivers, just like drivers/net/ethernet has, to cleanup the directory
->> structure. So for example this driver we would have
->> drivers/net/wireless/marvell/mwlwifi and later we would start moving
->> existing drivers to vendor drivers as well. Thoughts?
->> 
->
-> Yes, we are ok with this folder hierarchy change. Let us know how we
-> can help. Should we start with this new folder now or wait for more
-> feedbacks?
+wilc1000 driver does not support five Ghz band. Remove FIVE_GHZ_BAND and
+it's related code.
 
-Yeah, in the next version please use the new folder hierarchy for
-mwlwifi.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index c46fe9f..ac3da88 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -550,15 +550,9 @@ u8 get_current_channel_802_11n(u8 *pu8msa, u16 u16RxLen)
+ 
+ u8 get_current_channel(u8 *pu8msa, u16 u16RxLen)
+ {
+-#ifdef FIVE_GHZ_BAND
+-	/* Get the current channel as its not set in */
+-	/* 802.11a beacons/probe response            */
+-	return (get_rf_channel() + 1);
+-#else /* FIVE_GHZ_BAND */
+ 	/* Extract current channel information from */
+ 	/* the beacon/probe response frame          */
+ 	return get_current_channel_802_11n(pu8msa, u16RxLen);
+-#endif /* FIVE_GHZ_BAND */
+ }
+ 
+ /**
 -- 
-Kalle Valo
+1.9.1
+
