@@ -1,40 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:42455
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750855AbbIXO7u (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:32841 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbbIPMLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 10:59:50 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 4.3] ath9k: declare required extra tx headroom
-Date: Thu, 24 Sep 2015 16:59:46 +0200
-Message-Id: <1443106786-67564-1-git-send-email-nbd@openwrt.org> (sfid-20150924_165953_277668_7D834078)
+	Wed, 16 Sep 2015 08:11:10 -0400
+From: Aparna Karuthodi <kdasaparna@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, johnny.kim@atmel.com,
+	Aparna Karuthodi <kdasaparna@gmail.com>
+Subject: [PATCH] staging: wilc1000: Added new lines
+Date: Wed, 16 Sep 2015 17:42:42 +0530
+Message-Id: <1442405562-6115-1-git-send-email-kdasaparna@gmail.com> (sfid-20150916_141140_935145_AFAFE737)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k inserts padding between the 802.11 header and the data area (to
-align it). Since it didn't declare this extra required headroom, this
-led to some nasty issues like randomly dropped packets in some setups.
+Added new lines after declarations for removing coding style warnings
+detected by checkpatch.The warnings are given below:
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+1561: WARNING: Missing a blank line after declarations
+1551: WARNING: Missing a blank line after declarations
+1329: WARNING: Missing a blank line after declarations
+1213: WARNING: Missing a blank line after declarations
+1158: WARNING: Missing a blank line after declarations
+1104: WARNING: Missing a blank line after declarations
+675: WARNING: Missing a blank line after declarations
+
+Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/coreconfigurator.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 57f95f2..90eb750 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -880,6 +880,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->max_rate_tries = 10;
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
-+	hw->extra_tx_headroom = 4;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 5241699..dad03f3 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -669,6 +669,7 @@ INLINE u16 get_asoc_id(u8 *data)
+ s32 CoreConfiguratorInit(void)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
++
+ 	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit()\n");
  
- 	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
- 	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
+ 	sema_init(&SemHandleSendPkt, 1);
+@@ -1098,6 +1099,7 @@ void ProcessCharWid(char *pcPacket, s32 *ps32PktLen,
+ 	u8 *pu8val = (u8 *)ps8WidVal;
+ 	u8 u8val = 0;
+ 	s32 s32PktLen = *ps32PktLen;
++
+ 	if (pstrWID == NULL) {
+ 		PRINT_WRN(CORECONFIG_DBG, "Can't set CHAR val 0x%x ,NULL structure\n", u8val);
+ 		return;
+@@ -1152,6 +1154,7 @@ void ProcessShortWid(char *pcPacket, s32 *ps32PktLen,
+ 	u16 *pu16val = (u16 *)ps8WidVal;
+ 	u16 u16val = 0;
+ 	s32 s32PktLen = *ps32PktLen;
++
+ 	if (pstrWID == NULL) {
+ 		PRINT_WRN(CORECONFIG_DBG, "Can't set SHORT val 0x%x ,NULL structure\n", u16val);
+ 		return;
+@@ -1207,6 +1210,7 @@ void ProcessIntWid(char *pcPacket, s32 *ps32PktLen,
+ 	u32 *pu32val = (u32 *)ps8WidVal;
+ 	u32 u32val = 0;
+ 	s32 s32PktLen = *ps32PktLen;
++
+ 	if (pstrWID == NULL) {
+ 		PRINT_WRN(CORECONFIG_DBG, "Can't set INT val 0x%x , NULL structure\n", u32val);
+ 		return;
+@@ -1323,6 +1327,7 @@ void ProcessStrWid(char *pcPacket, s32 *ps32PktLen,
+ 	u16 u16MsgLen = 0;
+ 	u16 idx    = 0;
+ 	s32 s32PktLen = *ps32PktLen;
++
+ 	if (pstrWID == NULL) {
+ 		PRINT_WRN(CORECONFIG_DBG, "Can't set STR val, NULL structure\n");
+ 		return;
+@@ -1545,6 +1550,7 @@ s32 further_process_response(u8 *resp,
+ 	case WID_SHORT:
+ 	{
+ 		u16 *pu16val = (u16 *)(pstrWIDresult->ps8WidVal);
++
+ 		cfg_sht = MAKE_WORD16(resp[idx], resp[idx + 1]);
+ 		/*Set local copy of WID*/
+ 		/* pstrWIDresult->ps8WidVal = (s8*)(s32)cfg_sht; */
+@@ -1555,6 +1561,7 @@ s32 further_process_response(u8 *resp,
+ 	case WID_INT:
+ 	{
+ 		u32 *pu32val = (u32 *)(pstrWIDresult->ps8WidVal);
++
+ 		cfg_int = MAKE_WORD32(
+ 				MAKE_WORD16(resp[idx], resp[idx + 1]),
+ 				MAKE_WORD16(resp[idx + 2], resp[idx + 3])
 -- 
-2.2.2
+1.7.9.5
 
