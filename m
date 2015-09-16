@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14086 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755106AbbI3Jsy (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33265 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbbIPLLs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:48:54 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/32] staging: wilc1000: rename struct set_beacon
-Date: Wed, 30 Sep 2015 18:44:30 +0900
-Message-ID: <1443606289-25407-13-git-send-email-tony.cho@atmel.com> (sfid-20150930_114857_330604_235BB85A)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Sep 2015 07:11:48 -0400
+Received: by pacex6 with SMTP id ex6so207190545pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:11:48 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/10] staging: wilc1000: remove INLINE macro
+Date: Wed, 16 Sep 2015 20:11:28 +0900
+Message-Id: <1442401895-7463-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131151_446043_D6B11E59)
+In-Reply-To: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames struct set_beacon to beacon_attr to keep the naming
-convention as scan_attr, connect_attr and channel_attr.
+This patch removes INLINE macro that is used anymore.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 1 -
+ drivers/staging/wilc1000/wilc_wlan.c        | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 686402a9..2f211f9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -248,7 +248,7 @@ struct channel_attr {
-  * } tstrScanComplete;*/
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 9605517..f15ca3b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -16,7 +16,6 @@
+ /*****************************************************************************/
+ /* Constants                                                                 */
+ /*****************************************************************************/
+-#define INLINE static __inline
+ #define PHY_802_11n
+ #define MAX_CFG_PKTLEN     1450
+ #define MSG_HEADER_LEN     4
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 4ea7de4..a3e6973 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -9,7 +9,6 @@
  
- /*!
-- *  @struct             set_beacon
-+ *  @struct             beacon_attr
-  *  @brief		Set Beacon  message body
-  *  @details
-  *  @todo
-@@ -257,7 +257,7 @@ struct channel_attr {
-  *  @date		10 July 2012
-  *  @version		1.0
-  */
--struct set_beacon {
-+struct beacon_attr {
- 	u32 u32Interval;                        /*!< Beacon Interval. Period between two successive beacons on air  */
- 	u32 u32DTIMPeriod;              /*!< DTIM Period. Indicates how many Beacon frames
- 											*                              (including the current frame) appear before the next DTIM		*/
-@@ -391,7 +391,7 @@ union message_body {
- 	struct key_attr key_info;
- 	struct cfg_param_attr cfg_info;
- 	struct channel_attr channel_info;
--	struct set_beacon strHostIFSetBeacon;
-+	struct beacon_attr strHostIFSetBeacon;
- 	struct add_sta_param strAddStaParam;
- 	struct del_sta strDelStaParam;
- 	struct add_sta_param strEditStaParam;
-@@ -3158,14 +3158,14 @@ static s32 Handle_Get_InActiveTime(tstrWILC_WFIDrv *drvHandler,
- /**
-  *  @brief Handle_AddBeacon
-  *  @details       Sending config packet to add beacon
-- *  @param[in]    struct set_beacon *pstrSetBeaconParam
-+ *  @param[in]    struct beacon_attr *pstrSetBeaconParam
-  *  @return         NONE
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
- static void Handle_AddBeacon(tstrWILC_WFIDrv *drvHandler,
--			     struct set_beacon *pstrSetBeaconParam)
-+			     struct beacon_attr *pstrSetBeaconParam)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -6548,7 +6548,7 @@ s32 host_int_add_beacon(tstrWILC_WFIDrv *hWFIDrv, u32 u32Interval,
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct set_beacon *pstrSetBeaconParam = &msg.body.strHostIFSetBeacon;
-+	struct beacon_attr *pstrSetBeaconParam = &msg.body.strHostIFSetBeacon;
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+-#define INLINE static __inline
  
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
+ /********************************************
+  *
 -- 
-1.9.1
+2.5.1
 
