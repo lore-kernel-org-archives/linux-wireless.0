@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21353 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5711 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753949AbbIHIHl (ORCPT
+	with ESMTP id S1752465AbbIPBop (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 04:07:41 -0400
+	Tue, 15 Sep 2015 21:44:45 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,51 +12,180 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 1/5] staging: wilc1000: define undefined operation mode
-Date: Tue, 8 Sep 2015 17:07:59 +0900
-Message-ID: <1441699683-31463-1-git-send-email-tony.cho@atmel.com> (sfid-20150908_100747_130542_865375AA)
+Subject: [PATCH v2 07/10] staging: wilc1000: remove unused variables
+Date: Wed, 16 Sep 2015 10:43:52 +0900
+Message-ID: <1442367835-30733-8-git-send-email-tony.cho@atmel.com> (sfid-20150916_034447_835707_1286C0C7)
+In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
+References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johnny Kim <johnny.kim@atmel.com>
+From: Glen Lee <glen.lee@atmel.com>
 
-This patch adds new define, IDLE_MODE to change comparison statement which
-is wrong due to typecasting to null.
+Variable g_num_total_switches is never used so just remove it.
+gastrWIDs is also not used because g_num_total_switches is deleted.
+Remove gastrWIDs also.
 
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 127 ----------------------------
+ drivers/staging/wilc1000/coreconfigurator.h |   2 -
+ 2 files changed, 129 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8458d8d..8033205 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -754,7 +754,7 @@ static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetOpe
- 				 get_id_from_handler(pstrWFIDrv));
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 7936b49..87d32ae 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -139,133 +139,6 @@ typedef struct {
+ /*****************************************************************************/
+ /* Global Variables                                                          */
+ /*****************************************************************************/
+-/* WID Switches */
+-static tstrWID gastrWIDs[] = {
+-	{WID_FIRMWARE_VERSION,          WID_STR},
+-	{WID_PHY_VERSION,               WID_STR},
+-	{WID_HARDWARE_VERSION,          WID_STR},
+-	{WID_BSS_TYPE,                  WID_CHAR},
+-	{WID_QOS_ENABLE,                WID_CHAR},
+-	{WID_11I_MODE,                  WID_CHAR},
+-	{WID_CURRENT_TX_RATE,           WID_CHAR},
+-	{WID_LINKSPEED,                 WID_CHAR},
+-	{WID_RTS_THRESHOLD,             WID_SHORT},
+-	{WID_FRAG_THRESHOLD,            WID_SHORT},
+-	{WID_SSID,                      WID_STR},
+-	{WID_BSSID,                     WID_ADR},
+-	{WID_BEACON_INTERVAL,           WID_SHORT},
+-	{WID_POWER_MANAGEMENT,          WID_CHAR},
+-	{WID_LISTEN_INTERVAL,           WID_CHAR},
+-	{WID_DTIM_PERIOD,               WID_CHAR},
+-	{WID_CURRENT_CHANNEL,           WID_CHAR},
+-	{WID_TX_POWER_LEVEL_11A,        WID_CHAR},
+-	{WID_TX_POWER_LEVEL_11B,        WID_CHAR},
+-	{WID_PREAMBLE,                  WID_CHAR},
+-	{WID_11G_OPERATING_MODE,        WID_CHAR},
+-	{WID_MAC_ADDR,                  WID_ADR},
+-	{WID_IP_ADDRESS,                WID_ADR},
+-	{WID_ACK_POLICY,                WID_CHAR},
+-	{WID_PHY_ACTIVE_REG,            WID_CHAR},
+-	{WID_AUTH_TYPE,                 WID_CHAR},
+-	{WID_REKEY_POLICY,              WID_CHAR},
+-	{WID_REKEY_PERIOD,              WID_INT},
+-	{WID_REKEY_PACKET_COUNT,        WID_INT},
+-	{WID_11I_PSK,                   WID_STR},
+-	{WID_1X_KEY,                    WID_STR},
+-	{WID_1X_SERV_ADDR,              WID_IP},
+-	{WID_SUPP_USERNAME,             WID_STR},
+-	{WID_SUPP_PASSWORD,             WID_STR},
+-	{WID_USER_CONTROL_ON_TX_POWER,  WID_CHAR},
+-	{WID_MEMORY_ADDRESS,            WID_INT},
+-	{WID_MEMORY_ACCESS_32BIT,       WID_INT},
+-	{WID_MEMORY_ACCESS_16BIT,       WID_SHORT},
+-	{WID_MEMORY_ACCESS_8BIT,        WID_CHAR},
+-	{WID_SITE_SURVEY_RESULTS,       WID_STR},
+-	{WID_PMKID_INFO,                WID_STR},
+-	{WID_ASSOC_RES_INFO,            WID_STR},
+-	{WID_MANUFACTURER,              WID_STR}, /* 4 Wids added for the CAPI tool*/
+-	{WID_MODEL_NAME,                WID_STR},
+-	{WID_MODEL_NUM,                 WID_STR},
+-	{WID_DEVICE_NAME,               WID_STR},
+-	{WID_SSID_PROBE_REQ,            WID_STR},
+-
+-#ifdef MAC_802_11N
+-	{WID_11N_ENABLE,                WID_CHAR},
+-	{WID_11N_CURRENT_TX_MCS,        WID_CHAR},
+-	{WID_TX_POWER_LEVEL_11N,        WID_CHAR},
+-	{WID_11N_OPERATING_MODE,        WID_CHAR},
+-	{WID_11N_SMPS_MODE,             WID_CHAR},
+-	{WID_11N_PROT_MECH,             WID_CHAR},
+-	{WID_11N_ERP_PROT_TYPE,         WID_CHAR},
+-	{WID_11N_HT_PROT_TYPE,          WID_CHAR},
+-	{WID_11N_PHY_ACTIVE_REG_VAL,    WID_INT},
+-	{WID_11N_PRINT_STATS,           WID_CHAR},
+-	{WID_11N_AUTORATE_TABLE,        WID_BIN_DATA},
+-	{WID_HOST_CONFIG_IF_TYPE,       WID_CHAR},
+-	{WID_HOST_DATA_IF_TYPE,         WID_CHAR},
+-	{WID_11N_SIG_QUAL_VAL,          WID_SHORT},
+-	{WID_11N_IMMEDIATE_BA_ENABLED,  WID_CHAR},
+-	{WID_11N_TXOP_PROT_DISABLE,     WID_CHAR},
+-	{WID_11N_SHORT_GI_20MHZ_ENABLE, WID_CHAR},
+-	{WID_SHORT_SLOT_ALLOWED,        WID_CHAR},
+-	{WID_11W_ENABLE,                WID_CHAR},
+-	{WID_11W_MGMT_PROT_REQ,         WID_CHAR},
+-	{WID_2040_ENABLE,               WID_CHAR},
+-	{WID_2040_COEXISTENCE,          WID_CHAR},
+-	{WID_USER_SEC_CHANNEL_OFFSET,   WID_CHAR},
+-	{WID_2040_CURR_CHANNEL_OFFSET,  WID_CHAR},
+-	{WID_2040_40MHZ_INTOLERANT,     WID_CHAR},
+-	{WID_HUT_RESTART,               WID_CHAR},
+-	{WID_HUT_NUM_TX_PKTS,           WID_INT},
+-	{WID_HUT_FRAME_LEN,             WID_SHORT},
+-	{WID_HUT_TX_FORMAT,             WID_CHAR},
+-	{WID_HUT_BANDWIDTH,             WID_CHAR},
+-	{WID_HUT_OP_BAND,               WID_CHAR},
+-	{WID_HUT_STBC,                  WID_CHAR},
+-	{WID_HUT_ESS,                   WID_CHAR},
+-	{WID_HUT_ANTSET,                WID_CHAR},
+-	{WID_HUT_HT_OP_MODE,            WID_CHAR},
+-	{WID_HUT_RIFS_MODE,             WID_CHAR},
+-	{WID_HUT_SMOOTHING_REC,         WID_CHAR},
+-	{WID_HUT_SOUNDING_PKT,          WID_CHAR},
+-	{WID_HUT_HT_CODING,             WID_CHAR},
+-	{WID_HUT_TEST_DIR,              WID_CHAR},
+-	{WID_HUT_TXOP_LIMIT,            WID_SHORT},
+-	{WID_HUT_DEST_ADDR,             WID_ADR},
+-	{WID_HUT_TX_PATTERN,            WID_BIN_DATA},
+-	{WID_HUT_TX_TIME_TAKEN,         WID_INT},
+-	{WID_HUT_PHY_TEST_MODE,         WID_CHAR},
+-	{WID_HUT_PHY_TEST_RATE_HI,      WID_CHAR},
+-	{WID_HUT_PHY_TEST_RATE_LO,      WID_CHAR},
+-	{WID_HUT_TX_TEST_TIME,          WID_INT},
+-	{WID_HUT_LOG_INTERVAL,          WID_INT},
+-	{WID_HUT_DISABLE_RXQ_REPLENISH, WID_CHAR},
+-	{WID_HUT_TEST_ID,               WID_STR},
+-	{WID_HUT_KEY_ORIGIN,            WID_CHAR},
+-	{WID_HUT_BCST_PERCENT,          WID_CHAR},
+-	{WID_HUT_GROUP_CIPHER_TYPE,     WID_CHAR},
+-	{WID_HUT_STATS,                 WID_BIN_DATA},
+-	{WID_HUT_TSF_TEST_MODE,         WID_CHAR},
+-	{WID_HUT_SIG_QUAL_AVG,          WID_SHORT},
+-	{WID_HUT_SIG_QUAL_AVG_CNT,      WID_SHORT},
+-	{WID_HUT_TSSI_VALUE,            WID_CHAR},
+-	{WID_HUT_MGMT_PERCENT,          WID_CHAR},
+-	{WID_HUT_MGMT_BCST_PERCENT,     WID_CHAR},
+-	{WID_HUT_MGMT_ALLOW_HT,         WID_CHAR},
+-	{WID_HUT_UC_MGMT_TYPE,          WID_CHAR},
+-	{WID_HUT_BC_MGMT_TYPE,          WID_CHAR},
+-	{WID_HUT_UC_MGMT_FRAME_LEN,     WID_SHORT},
+-	{WID_HUT_BC_MGMT_FRAME_LEN,     WID_SHORT},
+-	{WID_HUT_11W_MFP_REQUIRED_TX,   WID_CHAR},
+-	{WID_HUT_11W_MFP_PEER_CAPABLE,  WID_CHAR},
+-	{WID_HUT_11W_TX_IGTK_ID,        WID_CHAR},
+-	{WID_HUT_FC_TXOP_MOD,           WID_CHAR},
+-	{WID_HUT_FC_PROT_TYPE,          WID_CHAR},
+-	{WID_HUT_SEC_CCA_ASSERT,        WID_CHAR},
+-#endif /* MAC_802_11N */
+-};
+-
+-u16 g_num_total_switches = (sizeof(gastrWIDs) / sizeof(tstrWID));
+ /*****************************************************************************/
+ /* Static Function Declarations                                              */
+ /*****************************************************************************/
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 3af1935..d2a0a0b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -29,8 +29,6 @@
+ #define NUM_11N_HUT_SWITCHES    0
+ #endif /* MAC_802_11N */
  
- 
--	if ((pstrHostIfSetOperationMode->u32Mode) == (u32)NULL)
-+	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
- 		up(&hSemDeinitDrvHandle);
- 
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 349d5f5..a107377 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -23,6 +23,7 @@
- #define BIT1                    ((u32)(1 << 1))
- #define BIT0                    ((u32)(1 << 0))
- 
-+#define IDLE_MODE	0x00
- #define AP_MODE		0x01
- #define STATION_MODE	0x02
- #define GO_MODE	0x03
+-extern u16 g_num_total_switches;
+-
+ #define MAC_HDR_LEN             24          /* No Address4 - non-ESS         */
+ #define MAX_SSID_LEN            33
+ #define FCS_LEN                 4
 -- 
 1.9.1
 
