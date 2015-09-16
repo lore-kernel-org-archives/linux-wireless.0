@@ -1,29 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:53797 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbbINRkh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 13:40:37 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZbXk2-00066d-I3
-	for linux-wireless@vger.kernel.org; Mon, 14 Sep 2015 19:40:35 +0200
-Received: from 147.83.206.82 ([147.83.206.82])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 19:40:34 +0200
-Received: from ranker72 by 147.83.206.82 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 19:40:34 +0200
-To: linux-wireless@vger.kernel.org
-From: ferran <ranker72@gmail.com>
-Subject: Re: [question] panic when calling =?utf-8?b?ZHJ2X2dldF90c2Y=?=
-Date: Mon, 14 Sep 2015 17:40:24 +0000 (UTC)
-Message-ID: <loom.20150914T190111-273@post.gmane.org> (sfid-20150914_194041_322327_4F31D78A)
-References: <55E9A07E.8070005@gmail.com> <55EDCD0A.4030503@gmail.com> <CAEKwDSAjkByMFwN71qe8DE08+zshKgmp+hN13vDG=SuF3yPtvw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54210 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751742AbbIPGkZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2015 02:40:25 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Marty Faltesek <mfaltesek@google.com>,
+	Belisko Marek <marek.belisko@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: kernel log flooded with GET_CMD_NODE: cmd node not available
+Date: Wed, 16 Sep 2015 06:40:21 +0000
+Message-ID: <4410b233bfdf45dc94eba8e913962c00@SC-EXCH04.marvell.com> (sfid-20150916_084029_472787_18C59BB7)
+References: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
+	<26c3f35fd9e74b1d80e80077c19b6717@SC-EXCH04.marvell.com>
+	<CAAfyv36Xf4f33wZvKMeTomyr_T-LKKMYkpYQwWt6B83UthFr8Q@mail.gmail.com>
+ <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
+In-Reply-To: <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Qm9iIENvcGVsYW5kIDxtZUAuLi4+IHdyaXRlczoKCgpIaSBCb2IsCgpUaGFuayB5b3UgZm9yIGNvbnRyaWJ1dGluZyBhbmQgc3VwcG9ydGluZyBzbyBhY3RpdmVseSB0aGUgbWVzaCBkZXZlbG9wbWVudC4KSSB1bmRlcnN0b29kIHRoZSBpc3N1ZXMgd2l0aCBUU0YsIHNvIEkgc3RvcHBlZCB1c2luZyBpdC4KCk15IGFpbSBpcyB0byBhcHByb3hpbWF0ZSBob3cgbXVjaCB0aW1lIHRoZSB3aXJlbGVzcyBjaGFubmVsIHRvIHdoaWNoIHRoZQpjYXJkIGlzIHR1bmVkIGluLCBpcyBidXN5LiBJIHVzZSBpZWVlODAyMTFfZnJhbWVfZHVyYXRpb24gZm9yIGVhY2gKaW4vb3V0Y29taW5nIHBhY2tldC4gSSB1c2UgdGhlIGJlYWNvbiB0cmlnZ2VycyBmb3IgcGVyaW9kaWNhbGx5IGF2ZXJhZ2luZwphbmQgc3RvcmluZyBzYW1wbGVzLgoKSSB3b3JrZWQgYXJvdW5kIHRoYXQgZXJyb3IgYXNzdW1pbmcgYSBmaXhlZCBiZWFjb24gdGltZSBpbnRlcnZhbCBpbnN0ZWFkIG9mCnVzaW5nIFRTRiwgd2hpY2ggaXMgcHJldHR5IHNvbGlkIGluIGEgY29udHJvbGxlZCBlbnZpcm9ubWVudC4gSG93ZXZlciwgdGhlCmFwcHJveGltYXRpb24gd291bGQgaW1wcm92ZSBhIGxvdCBjb3VudGluZyB0aGUgdXNlZCB0aW1lIGluc3RlYWQgb2YKY29tcHV0aW5nIGl0IGFmdGVyd2FyZHMuCgpQdXJzdWluZyBhIHNpbWlsYXIgcHVycG9zZSwgc29tZWJvZHkgaGFzIGFscmVhZHkgaW1wbGVtZW50ZWQgdGhhdCBmb3IKQXRoZXJvcywgdXNpbmcga2VybmVsIHRpbWUgYW5kIHJlYWRpbmcgcmVnaXN0ZXJzLiBIZXJlIGlzIHRoZSBwcmVzZW50YXRpb24KbWFpbCBodHRwczovL2xpc3RzLmF0aDlrLm9yZy9waXBlcm1haWwvYXRoOWstZGV2ZWwvMjAxNS1BdWd1c3QvMDE0MTQxLmh0bWwKYW5kIHRoZSBwcm9qZWN0IGxpbmsgaHR0cHM6Ly9naXRodWIuY29tL3RodWVobi9SZWdNb24gLiBUaGUgYXV0aG9yIGlzCkRyLi1JbmcuIFRob21hcyBIw7xobi4KCkkgcGxhbiB0byB1c2UgaXQgaW4gdGhlIG1pZCBmdXR1cmUuCgpUaGFuayB5b3UsCkZlcnJhbg==
-
+PiBGcm9tOiBNYXJ0eSBGYWx0ZXNlayBbbWFpbHRvOm1mYWx0ZXNla0Bnb29nbGUuY29tXQ0KPiBT
+ZW50OiBGcmlkYXksIFNlcHRlbWJlciAwNCwgMjAxNSAzOjIxIEFNDQo+IFRvOiBCZWxpc2tvIE1h
+cmVrDQo+IENjOiBBbWl0a3VtYXIgS2Fyd2FyOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmcNCj4gU3ViamVjdDogUmU6IGtlcm5lbCBsb2cgZmxvb2RlZCB3aXRoIEdFVF9DTURfTk9ERTog
+Y21kIG5vZGUgbm90DQo+IGF2YWlsYWJsZQ0KPiANCj4gT24gTW9uLCBBdWcgMzEsIDIwMTUgYXQg
+Nzo1NCBBTSwgQmVsaXNrbyBNYXJlayA8bWFyZWsuYmVsaXNrb0BnbWFpbC5jb20+DQo+IHdyb3Rl
+Og0KPiA+IFsgIDE4Mi4wNjkxNDZdIG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogR0VUX0NNRF9O
+T0RFOiBjbWQgbm9kZSBub3QNCj4gPiBhdmFpbGFibGUgWyAgMTgyLjA3NjM1MF0gbXdpZmlleF9z
+ZGlvIG1tYzA6MDAwMToxOiBQUkVQX0NNRDogbm8gZnJlZQ0KPiA+IGNtZCBub2RlIFsgIDE4Mi4w
+ODUxMDJdIG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogR0VUX0NNRF9OT0RFOiBjbWQNCj4gPiBu
+b2RlIG5vdCBhdmFpbGFibGUgWyAgMTgyLjA5MjI5N10gbXdpZmlleF9zZGlvIG1tYzA6MDAwMTox
+OiBQUkVQX0NNRDoNCj4gPiBubyBmcmVlIGNtZCBub2RlIFsgIDE4Mi4xMDMyNzZdIG13aWZpZXhf
+c2RpbyBtbWMwOjAwMDE6MToNCj4gPiBHRVRfQ01EX05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFi
+bGUgWyAgMTgyLjExMDQ3OF0gbXdpZmlleF9zZGlvDQo+ID4gbW1jMDowMDAxOjE6IFBSRVBfQ01E
+OiBubyBmcmVlIGNtZCBub2RlIFsgIDE4Mi4xMjExNTZdIG13aWZpZXhfc2Rpbw0KPiA+IG1tYzA6
+MDAwMToxOiBHRVRfQ01EX05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFibGUgWyAgMTgyLjEyODM2
+MF0NCj4gPiBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IFBSRVBfQ01EOiBubyBmcmVlIGNtZCBu
+b2RlIFsgIDE4Mi4xMzQ3NTBdDQo+ID4gbXdpZmlleF9zZGlvIG1tYzA6MDAwMToxOiBHRVRfQ01E
+X05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFibGUgWw0KPiA+IDE4Mi4xNDE5MjddIG13aWZpZXhf
+c2RpbyBtbWMwOjAwMDE6MTogUFJFUF9DTUQ6IG5vIGZyZWUgY21kIG5vZGUNCj4gDQo+IFdlIGFy
+ZSBhbHNvIHNlZWluZyB0aGVzZSBtZXNzYWdlcyBhZnRlciByZWNlbnRseSBzd2l0Y2hpbmcgdG8g
+bW9yZQ0KPiByZWNlbnQgZHJpdmVycy4NCg0KTWFydHkgY29uZmlybWVkIHRoYXQgdGhpcyBwcm9i
+bGVtIGdvdCByZXNvbHZlZCBhZnRlciBiYWNrcG9ydGluZyBiZWxvdyBjaGFuZ2UgdG8gaGlzIGNv
+ZGViYXNlLg0KDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21z
+ZzEzNzEzNC5odG1sDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
