@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49751 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754613AbbI2BXr (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33937 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbbIPSlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 21:23:47 -0400
-Date: Tue, 29 Sep 2015 02:43:14 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chandra Gorentla <csgorentla@gmail.com>
-Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	sudipm.mukherjee@gmail.com, dan.carpenter@oracle.com
-Subject: Re: [PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove
- code that no effect
-Message-ID: <20150929004314.GA7811@kroah.com> (sfid-20150929_032425_350628_2105C420)
-References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
- <1443464037-3591-2-git-send-email-csgorentla@gmail.com>
- <20150928183743.GA2879@gcs-HP-Notebook>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150928183743.GA2879@gcs-HP-Notebook>
+	Wed, 16 Sep 2015 14:41:21 -0400
+From: Aparna Karuthodi <kdasaparna@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, johnny.kim@atmel.com,
+	Aparna Karuthodi <kdasaparna@gmail.com>
+Subject: [PATCH] staging: wilc1000: Added spaces
+Date: Thu, 17 Sep 2015 00:12:50 +0530
+Message-Id: <1442428970-9091-1-git-send-email-kdasaparna@gmail.com> (sfid-20150916_204137_780246_12321739)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2015 at 12:07:43AM +0530, Chandra Gorentla wrote:
-> Please do not review this.  This is duplicate to -
-> [PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove ineffective code
+Added spaces around '=' to remove coding style errors detected by
+checkpatch.The errors are given below:
+drivers/staging/wilc1000/host_interface.c:7951: ERROR: spaces required
+around that '=' (ctx:VxV)
+drivers/staging/wilc1000/host_interface.c:7952: ERROR: spaces required
+around that '=' (ctx:VxW)
 
-I don't understand, you sent 2 2/2 patches, which one do I look at?
+Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Please just resend the whole series.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6b10bbb..d1fe73d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -7945,8 +7945,8 @@ s32 host_int_get_ipaddress(WILC_WFIDrvHandle hWFIDrv, u8 *u16ipadd, u8 idx)
+ 	strHostIFmsg.u16MsgId = HOST_IF_MSG_GET_IPADDRESS;
+ 
+ 	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.au8IPAddr = u16ipadd;
+-	strHostIFmsg.drvHandler=hWFIDrv;
+-	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx= idx;
++	strHostIFmsg.drvHandler = hWFIDrv;
++	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx = idx;
+ 
+ 	s32Error = WILC_MsgQueueSend(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), NULL);
+ 	if (s32Error) {
+-- 
+1.7.9.5
 
-thanks,
-
-greg k-h
