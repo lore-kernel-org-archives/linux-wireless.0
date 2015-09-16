@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:32476 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40200 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbbIQKCW (ORCPT
+	with ESMTP id S1753641AbbIPJyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 06:02:22 -0400
+	Wed, 16 Sep 2015 05:54:00 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,29 +12,52 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 0/4] v2 of the series including the null check routin
-Date: Thu, 17 Sep 2015 19:02:16 +0900
-Message-ID: <1442484140-13485-1-git-send-email-tony.cho@atmel.com> (sfid-20150917_120227_728554_18403FC0)
+Subject: [PATCH 5/8] staging: wilc1000: remove variable rxq_thread_started
+Date: Wed, 16 Sep 2015 18:53:24 +0900
+Message-ID: <1442397207-20491-5-git-send-email-tony.cho@atmel.com> (sfid-20150916_115405_986211_8ABC7CE2)
+In-Reply-To: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
+References: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous series of 4 patches include a commit message ambiguous and
-not enough to explain why the patch is made and needed. So, this version 2
-includes the modification on the commit message of the patch for a null check
-fix.
+From: Glen Lee <glen.lee@atmel.com>
 
-Leo Kim (4):
-  staging: wilc1000: fix null check routine
-  staging: wilc1000: remove warnings on the multiple blank lines uses
-  staging: wilc1000: remove warnings line over 80 characters
-  staging: wilc1000: wilc_wlan_if.h align defines
+rxq_thread_started is initiallized but never used in the driver. Remove
+the variable and init code line.
 
- drivers/staging/wilc1000/host_interface.c |    4 +-
- drivers/staging/wilc1000/wilc_wlan_if.h   | 1324 +++++++++++++++--------------
- 2 files changed, 708 insertions(+), 620 deletions(-)
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 1 -
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ 2 files changed, 2 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index de04779..f104a23 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1161,7 +1161,6 @@ int wlan_init_locks(linux_wlan_t *p_nic)
+ 	sema_init(&g_linux_wlan->cfg_event, 0);
+ 	sema_init(&g_linux_wlan->sync_event, 0);
+ 
+-	sema_init(&g_linux_wlan->rxq_thread_started, 0);
+ 	sema_init(&g_linux_wlan->txq_thread_started, 0);
+ 
+ 	#if (RX_BH_TYPE == RX_BH_KTHREAD)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 27c9ccf..c68df360 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -198,7 +198,6 @@ typedef struct {
+ 	struct task_struct *rx_bh_thread;
+ 	struct semaphore rx_sem;
+ #endif
+-	struct semaphore rxq_thread_started;
+ 	struct semaphore txq_thread_started;
+ 
+ 	struct task_struct *rxq_thread;
 -- 
 1.9.1
 
