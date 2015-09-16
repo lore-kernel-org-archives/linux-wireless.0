@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:59367 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbbIFLLZ convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5585 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbbIPBoJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 07:11:25 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] ath9k_htc: introduce support for different fw versions
-References: <87oajhvaca.fsf@kamboji.qca.qualcomm.com>
-	<1439529178-3011-1-git-send-email-linux@rempel-privat.de>
-Date: Sun, 06 Sep 2015 13:55:23 +0300
-In-Reply-To: <1439529178-3011-1-git-send-email-linux@rempel-privat.de>
-	(Oleksij Rempel's message of "Fri, 14 Aug 2015 07:12:58 +0200")
-Message-ID: <87si6r3jhg.fsf@purkki.adurom.net> (sfid-20150906_131144_490811_AC10F35B)
+	Tue, 15 Sep 2015 21:44:09 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 02/10] staging: wilc1000: remove useless define PHY_802_11n
+Date: Wed, 16 Sep 2015 10:43:47 +0900
+Message-ID: <1442367835-30733-3-git-send-email-tony.cho@atmel.com> (sfid-20150916_034413_450865_A28F984D)
+In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
+References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+From: Glen Lee <glen.lee@atmel.com>
 
-> Current kernel support only one fw name with theoretically only one
-> fw version located in “firmware/htc_[9271|7010].fw”. Which is ok so
-> far we have only one fw version (1.3). After we realised new fw 1.4,
-> we faced compatibility problem which was decided to solve by firmware
-> name and location:
->
-> - new firmware is located now in firmware/ath9k_htc/htc_[9271|7010]-1.4.0.fw
-> - old version 1.3 should be on old place, so old kernel have no issues with it.
-> - new kernels including this patch should be able to try different supported (min..max) fw version.
-> - new kernel should be able to support old fw location too. At least for now.
+The define PHY_802_11n is useless because wilc1000 support 802.11n as always.
+Remove PHY_802_11n and it related code.
 
-Please word wrap the commit log.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-> At same time this patch will add new module option which should allow
-> user to play with development fw version without replacing stable one.
-> If user will set “ath9k_htc use_dev_fw=1” module will try to find
-> firmware/ath9k_htc/htc_[9271|7010]-1.dev.0.fw first and if it fails,
-> use stable version: for example...1.4.0.fw.
-
-I'm not really sure if this module parameter makes sense and I haven't
-noticed any other wifi driver having a similar parameter. If user wants
-to test a developemnt firmware he can override a stable firmware version
-with a simple cp operation. So why is the module parameter needed?
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 8164a33..c46fe9f 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -17,7 +17,6 @@
+ /* Constants                                                                 */
+ /*****************************************************************************/
+ #define INLINE static __inline
+-#define PHY_802_11n
+ #define MAX_CFG_PKTLEN     1450
+ #define MSG_HEADER_LEN     4
+ #define QUERY_MSG_TYPE     'Q'
+@@ -551,7 +550,6 @@ u8 get_current_channel_802_11n(u8 *pu8msa, u16 u16RxLen)
+ 
+ u8 get_current_channel(u8 *pu8msa, u16 u16RxLen)
+ {
+-#ifdef PHY_802_11n
+ #ifdef FIVE_GHZ_BAND
+ 	/* Get the current channel as its not set in */
+ 	/* 802.11a beacons/probe response            */
+@@ -561,9 +559,6 @@ u8 get_current_channel(u8 *pu8msa, u16 u16RxLen)
+ 	/* the beacon/probe response frame          */
+ 	return get_current_channel_802_11n(pu8msa, u16RxLen);
+ #endif /* FIVE_GHZ_BAND */
+-#else
+-	return 0;
+-#endif /* PHY_802_11n */
+ }
+ 
+ /**
 -- 
-Kalle Valo
+1.9.1
+
