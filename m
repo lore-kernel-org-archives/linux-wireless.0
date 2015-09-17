@@ -1,243 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754032AbbIRUIY (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52166 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636AbbIQCWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:24 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/16] brcmfmac: Fix set and get tx-power functions.
-Date: Fri, 18 Sep 2015 22:08:06 +0200
-Message-ID: <1442606899-31872-4-git-send-email-arend@broadcom.com> (sfid-20150918_220830_433529_2575C6F8)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	Wed, 16 Sep 2015 22:22:09 -0400
+Date: Wed, 16 Sep 2015 19:22:07 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ronit Halder <ronit.crj@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com,
+	linux-wireless@vger.kernel.org, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH v2 1/2] Staging: wilc1000: Use NULL instead of zero
+Message-ID: <20150917022207.GA1753@kroah.com> (sfid-20150917_042251_687836_AAAC22DF)
+References: <1442309698-12393-1-git-send-email-ronit.crj@gmail.com>
+ <20150915135424.GA29308@kroah.com>
+ <CAAm8cU6AvgQ5xYjbxZHd0bZ=sU6zwuqJYFbfC9VUF1YUh3AfxA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAm8cU6AvgQ5xYjbxZHd0bZ=sU6zwuqJYFbfC9VUF1YUh3AfxA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-Implementation of tx-power (get and set) related functions are
-still assuming mW interface. This is wrong as functions use dbm
-(or mbm) nowadays. As a result a tx power configuration could
-result in wrong power configuration.
+A: No.
+Q: Should I include quotations after my reply?
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 137 ++++-----------------
- 1 file changed, 26 insertions(+), 111 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index da24bf0..0a97e61 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -236,89 +236,6 @@ static int brcmf_roamoff;
- module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
- MODULE_PARM_DESC(roamoff, "do not use internal roaming engine");
- 
--/* Quarter dBm units to mW
-- * Table starts at QDBM_OFFSET, so the first entry is mW for qdBm=153
-- * Table is offset so the last entry is largest mW value that fits in
-- * a u16.
-- */
--
--#define QDBM_OFFSET 153		/* Offset for first entry */
--#define QDBM_TABLE_LEN 40	/* Table size */
--
--/* Smallest mW value that will round up to the first table entry, QDBM_OFFSET.
-- * Value is ( mW(QDBM_OFFSET - 1) + mW(QDBM_OFFSET) ) / 2
-- */
--#define QDBM_TABLE_LOW_BOUND 6493	/* Low bound */
--
--/* Largest mW value that will round down to the last table entry,
-- * QDBM_OFFSET + QDBM_TABLE_LEN-1.
-- * Value is ( mW(QDBM_OFFSET + QDBM_TABLE_LEN - 1) +
-- * mW(QDBM_OFFSET + QDBM_TABLE_LEN) ) / 2.
-- */
--#define QDBM_TABLE_HIGH_BOUND 64938	/* High bound */
--
--static const u16 nqdBm_to_mW_map[QDBM_TABLE_LEN] = {
--/* qdBm:	+0	+1	+2	+3	+4	+5	+6	+7 */
--/* 153: */ 6683, 7079, 7499, 7943, 8414, 8913, 9441, 10000,
--/* 161: */ 10593, 11220, 11885, 12589, 13335, 14125, 14962, 15849,
--/* 169: */ 16788, 17783, 18836, 19953, 21135, 22387, 23714, 25119,
--/* 177: */ 26607, 28184, 29854, 31623, 33497, 35481, 37584, 39811,
--/* 185: */ 42170, 44668, 47315, 50119, 53088, 56234, 59566, 63096
--};
--
--static u16 brcmf_qdbm_to_mw(u8 qdbm)
--{
--	uint factor = 1;
--	int idx = qdbm - QDBM_OFFSET;
--
--	if (idx >= QDBM_TABLE_LEN)
--		/* clamp to max u16 mW value */
--		return 0xFFFF;
--
--	/* scale the qdBm index up to the range of the table 0-40
--	 * where an offset of 40 qdBm equals a factor of 10 mW.
--	 */
--	while (idx < 0) {
--		idx += 40;
--		factor *= 10;
--	}
--
--	/* return the mW value scaled down to the correct factor of 10,
--	 * adding in factor/2 to get proper rounding.
--	 */
--	return (nqdBm_to_mW_map[idx] + factor / 2) / factor;
--}
--
--static u8 brcmf_mw_to_qdbm(u16 mw)
--{
--	u8 qdbm;
--	int offset;
--	uint mw_uint = mw;
--	uint boundary;
--
--	/* handle boundary case */
--	if (mw_uint <= 1)
--		return 0;
--
--	offset = QDBM_OFFSET;
--
--	/* move mw into the range of the table */
--	while (mw_uint < QDBM_TABLE_LOW_BOUND) {
--		mw_uint *= 10;
--		offset -= 40;
--	}
--
--	for (qdbm = 0; qdbm < QDBM_TABLE_LEN - 1; qdbm++) {
--		boundary = nqdBm_to_mW_map[qdbm] + (nqdBm_to_mW_map[qdbm + 1] -
--						    nqdBm_to_mW_map[qdbm]) / 2;
--		if (mw_uint < boundary)
--			break;
--	}
--
--	qdbm += (u8) offset;
--
--	return qdbm;
--}
- 
- static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 			       struct cfg80211_chan_def *ch)
-@@ -2017,16 +1934,14 @@ static s32
- brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			    enum nl80211_tx_power_setting type, s32 mbm)
- {
--
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
- 	struct net_device *ndev = cfg_to_ndev(cfg);
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	u16 txpwrmw;
--	s32 err = 0;
--	s32 disable = 0;
--	s32 dbm = MBM_TO_DBM(mbm);
-+	s32 err;
-+	s32 disable;
-+	u32 qdbm = 127;
- 
--	brcmf_dbg(TRACE, "Enter\n");
-+	brcmf_dbg(TRACE, "Enter %d %d\n", type, mbm);
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
- 
-@@ -2035,12 +1950,20 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		break;
- 	case NL80211_TX_POWER_LIMITED:
- 	case NL80211_TX_POWER_FIXED:
--		if (dbm < 0) {
-+		if (mbm < 0) {
- 			brcmf_err("TX_POWER_FIXED - dbm is negative\n");
- 			err = -EINVAL;
- 			goto done;
- 		}
-+		qdbm =  MBM_TO_DBM(4 * mbm);
-+		if (qdbm > 127)
-+			qdbm = 127;
-+		qdbm |= WL_TXPWR_OVERRIDE;
- 		break;
-+	default:
-+		brcmf_err("Unsupported type %d\n", type);
-+		err = -EINVAL;
-+		goto done;
- 	}
- 	/* Make sure radio is off or on as far as software is concerned */
- 	disable = WL_RADIO_SW_DISABLE << 16;
-@@ -2048,52 +1971,44 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	if (err)
- 		brcmf_err("WLC_SET_RADIO error (%d)\n", err);
- 
--	if (dbm > 0xffff)
--		txpwrmw = 0xffff;
--	else
--		txpwrmw = (u16) dbm;
--	err = brcmf_fil_iovar_int_set(ifp, "qtxpower",
--				      (s32)brcmf_mw_to_qdbm(txpwrmw));
-+	err = brcmf_fil_iovar_int_set(ifp, "qtxpower", qdbm);
- 	if (err)
- 		brcmf_err("qtxpower error (%d)\n", err);
--	cfg->conf->tx_power = dbm;
- 
- done:
--	brcmf_dbg(TRACE, "Exit\n");
-+	brcmf_dbg(TRACE, "Exit %d (qdbm)\n", qdbm & ~WL_TXPWR_OVERRIDE);
- 	return err;
- }
- 
--static s32 brcmf_cfg80211_get_tx_power(struct wiphy *wiphy,
--				       struct wireless_dev *wdev,
--				       s32 *dbm)
-+static s32
-+brcmf_cfg80211_get_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
-+			    s32 *dbm)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
--	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
--	s32 txpwrdbm;
--	u8 result;
--	s32 err = 0;
-+	struct net_device *ndev = cfg_to_ndev(cfg);
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+	s32 qdbm = 0;
-+	s32 err;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
- 
--	err = brcmf_fil_iovar_int_get(ifp, "qtxpower", &txpwrdbm);
-+	err = brcmf_fil_iovar_int_get(ifp, "qtxpower", &qdbm);
- 	if (err) {
- 		brcmf_err("error (%d)\n", err);
- 		goto done;
- 	}
--
--	result = (u8) (txpwrdbm & ~WL_TXPWR_OVERRIDE);
--	*dbm = (s32) brcmf_qdbm_to_mw(result);
-+	*dbm = (qdbm & ~WL_TXPWR_OVERRIDE) / 4;
- 
- done:
--	brcmf_dbg(TRACE, "Exit\n");
-+	brcmf_dbg(TRACE, "Exit (0x%x %d)\n", qdbm, *dbm);
- 	return err;
- }
- 
- static s32
- brcmf_cfg80211_config_default_key(struct wiphy *wiphy, struct net_device *ndev,
--			       u8 key_idx, bool unicast, bool multicast)
-+				  u8 key_idx, bool unicast, bool multicast)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	u32 index;
--- 
-1.9.1
+http://daringfireball.net/2007/07/on_top
 
+On Thu, Sep 17, 2015 at 07:13:39AM +0530, Ronit Halder wrote:
+> Why not the second one?
+
+Second what?
+
+> None of the line edited in first patch haven't changed after that.
+
+I don't understand what you are asking here :(
