@@ -1,75 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33963 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751972AbbIHVBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 17:01:33 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
-	<55EC71DB.7060007@lwfinger.net>
-Date: Tue, 08 Sep 2015 17:01:31 -0400
-In-Reply-To: <55EC71DB.7060007@lwfinger.net> (Larry Finger's message of "Sun,
-	6 Sep 2015 12:03:23 -0500")
-Message-ID: <wrfjvbbkaams.fsf@redhat.com> (sfid-20150908_230136_579262_E54F5FA0)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:32514 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762AbbIQKCi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2015 06:02:38 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 2/4] staging: wilc1000: remove warnings on the multiple blank lines uses
+Date: Thu, 17 Sep 2015 19:02:18 +0900
+Message-ID: <1442484140-13485-3-git-send-email-tony.cho@atmel.com> (sfid-20150917_120324_623692_7CC8AD1A)
+In-Reply-To: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 09/06/2015 09:43 AM, Kalle Valo wrote:
->> Jes.Sorensen@redhat.com writes:
->>
->>> Per default only devices I have actually tested will be enabled. If
->>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
->>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
->>> test results back to me.
->>>
->>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
->>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
->>> to which module you load and/or use modprobe blacklists.
->>
->> May clash? So how does this work in practise? Is the clash referring
->> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
->>
->> I think we should only have one driver automatically supporting certain
->> hardware, and not have a driver randomly chosen and forcing users to use
->> a blacklist.
->
-> I agree, in principle, but there will be difficulties in the
-> implementation, at least in the short term.
->
-> At the moment, the only driver that has a conflict with rtl8xxxu is
-> rtl8192cu. Although rtl8xxxu is surprisingly more stable that
-> rtl8192cu, the latter has more features, which is may be the reason
-> for better stability. Driver rtl8xxxu does not handle any 40 MHz
-> channels, nor can it become an AP either with hostapd or with
-> NetworkManager. For those reasons, rtl819cu has to remain the standard
-> driver for RTL81{88,92}CU devices until rtl8xxxu is improved. Anyone
-> that wants to try the new driver will need to use blacklists.
+From: Leo Kim <leo.kim@atmel.com>
 
-I do not fully agree on this. In my testing I found rtl8192cu rather
-unstable, to the point of not being usable. It would lock up for me
-after a short while. I have seen this happen with mulitple different
-adapters. I suspect this is the reason why drivers/staging/rtl8192u is
-still sitting in the kernel tree.
+This patch removes the warnings reported by checkpatch.pl
+for using multiple blank lines.
 
-It is true the rtl8xxxu doesn't support 40MHz channels, but reality is
-few people actually use them since it's almost impossible to get free
-channel access without clashes these days. Now I still intend to add
-support for 40MHz, it has just not been on the top of the priority list
-so far. Finding a place to test it is kinda hard when you live in the
-middle of a city like New York :)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-My take is that the majority of users mostly care about station support
-and for them rtl8xxxu will be much preferred to rtl8192cu.
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index cc92dc9..9111491 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -7,7 +7,6 @@
+ /*  */
+ /* ///////////////////////////////////////////////////////////////////////// */
+ 
+-
+ #ifndef WILC_WLAN_IF_H
+ #define WILC_WLAN_IF_H
+ 
+@@ -15,11 +14,9 @@
+ /* #define MEMORY_STATIC */
+ /* #define USE_OLD_SPI_SW */
+ 
+-
+ #include "wilc_oswrapper.h"
+ #include "linux_wlan_common.h"
+ 
+-
+ /********************************************
+  *
+  *      Debug Flags
+@@ -42,7 +39,6 @@
+ #define HIF_SPI            BIT(0)
+ #define HIF_SDIO_GPIO_IRQ  BIT(2)
+ 
+-
+ /********************************************
+  *
+  *      Tx/Rx Buffer Size Defines
+@@ -156,7 +152,6 @@ struct tx_complete_data {
+ 	struct sk_buff *skb;
+ };
+ 
+-
+ typedef void (*wilc_tx_complete_func_t)(void *, int);
+ 
+ #define WILC_TX_ERR_NO_BUF (-2)
+@@ -392,7 +387,6 @@ typedef enum {
+ typedef enum {
+ 	WID_NIL                            = 0xffff,
+ 
+-
+ 	/*  BSS Type                                                                                                                                                                            */
+ 	/*  --------------------------------------------------------------      */
+ 	/*  Configuration :  Infrastructure    Independent   Access Point                                                                               */
+@@ -753,7 +747,6 @@ typedef enum {
+ 	/*  --------------------------------------------------------------      */
+ 	WID_11N_TXOP_PROT_DISABLE          = 0x00B0,
+ 
+-
+ 	WID_TX_POWER_LEVEL_11N             = 0x00B1,
+ 
+ 	/* Custom Character WID list */
+@@ -827,7 +820,6 @@ typedef enum {
+ 	WID_MEMORY_ACCESS_32BIT            = 0x201F,
+ 	WID_RF_REG_VAL                     = 0x2021,
+ 
+-
+ 	/* NMAC Integer WID list */
+ 	WID_11N_PHY_ACTIVE_REG_VAL         = 0x2080,
+ 
+@@ -883,8 +875,6 @@ typedef enum {
+ 	/* BugID 4951: WID toset IP address in firmware */
+ 	WID_IP_ADDRESS					= 0x3999,
+ 
+-
+-
+ 	/* Custom String WID list */
+ 
+ 	/* EMAC Binary WID list */
+@@ -899,7 +889,6 @@ typedef enum {
+ 	/* NMAC Binary WID list */
+ 	WID_11N_AUTORATE_TABLE             = 0x4080,
+ 
+-
+ 	/*Added here by Amr - BugID 4134*/
+ 	WID_SCAN_CHANNEL_LIST                      = 0x4084,
+ 
+@@ -926,5 +915,4 @@ void wilc_bus_set_max_speed(void);
+ void wilc_bus_set_default_speed(void);
+ u32 wilc_get_chipid(u8 update);
+ 
+-
+ #endif
+-- 
+1.9.1
 
-Basically I don't think there is a one solution fits all to this.
-Whether we like it, we will have to accept that there are going to be
-multiple drivers around for these chips for a while.
-
-Cheers,
-Jes
