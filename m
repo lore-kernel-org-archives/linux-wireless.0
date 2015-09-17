@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47710 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbbINEqm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:32476 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbbIQKCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 00:46:42 -0400
-Date: Sun, 13 Sep 2015 21:46:42 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Aparna Karuthodi <kdasaparna@gmail.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, rachel.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: Added a new line
-Message-ID: <20150914044642.GA2152@kroah.com> (sfid-20150914_064654_845636_1EBD616B)
-References: <1442142093-30207-1-git-send-email-kdasaparna@gmail.com>
+	Thu, 17 Sep 2015 06:02:22 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 0/4] v2 of the series including the null check routin
+Date: Thu, 17 Sep 2015 19:02:16 +0900
+Message-ID: <1442484140-13485-1-git-send-email-tony.cho@atmel.com> (sfid-20150917_120227_728554_18403FC0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442142093-30207-1-git-send-email-kdasaparna@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 13, 2015 at 04:31:33PM +0530, Aparna Karuthodi wrote:
-> Added a new line after declaration to remove a coding style warning
-> detected by checkpatch. The warning is given below
-> WARNING: Missing a blank line after declarations
-> 
-> Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index ed6ac45..0c964c6 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -2101,6 +2101,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
->  			  u32 u32WIDsCount, bool bRespRequired, u32 drvHandler)
->  {
->  	s32 counter = 0, ret = 0;
-> +
->  	if (gpstrWlanOps == NULL) {
->  		PRINT_D(CORECONFIG_DBG, "Net Dev is still not initialized\n");
->  		return 1;
+The previous series of 4 patches include a commit message ambiguous and
+not enough to explain why the patch is made and needed. So, this version 2
+includes the modification on the commit message of the patch for a null check
+fix.
 
-someone already sent in this change before you did, sorry.
+Leo Kim (4):
+  staging: wilc1000: fix null check routine
+  staging: wilc1000: remove warnings on the multiple blank lines uses
+  staging: wilc1000: remove warnings line over 80 characters
+  staging: wilc1000: wilc_wlan_if.h align defines
+
+ drivers/staging/wilc1000/host_interface.c |    4 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h   | 1324 +++++++++++++++--------------
+ 2 files changed, 708 insertions(+), 620 deletions(-)
+
+-- 
+1.9.1
+
