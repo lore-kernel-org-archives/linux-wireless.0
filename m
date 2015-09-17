@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.w1.samsung.com ([210.118.77.14]:16388 "EHLO
-	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339AbbIVJrF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:32498 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbbIQKCa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:47:05 -0400
-Message-id: <56012392.7020807@samsung.com> (sfid-20150922_114754_136889_7AF1E58D)
-Date: Tue, 22 Sep 2015 11:46:58 +0200
-From: Jacek Anaszewski <j.anaszewski@samsung.com>
-MIME-version: 1.0
-To: Andrzej Hajda <a.hajda@samsung.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	linux-kernel@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	devel@driverdev.osuosl.org, dev@openvswitch.org,
-	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-	linux-api@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-cachefs@redhat.com, linux-clk@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-mm@kvack.org, linux-omap@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, lustre-devel@lists.lustre.org,
-	netdev@vger.kernel.org, rtc-linux@googlegroups.com
-Subject: Re: [PATCH 00/38] Fixes related to incorrect usage of unsigned types
-References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
- <17571.1442842945@warthog.procyon.org.uk> <56011BB9.5030004@samsung.com>
-In-reply-to: <56011BB9.5030004@samsung.com>
-Content-type: text/plain; charset=windows-1252; format=flowed
+	Thu, 17 Sep 2015 06:02:30 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 1/4] staging: wilc1000: fix null check routine
+Date: Thu, 17 Sep 2015 19:02:17 +0900
+Message-ID: <1442484140-13485-2-git-send-email-tony.cho@atmel.com> (sfid-20150917_120234_459733_74806694)
+In-Reply-To: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/2015 11:13 AM, Andrzej Hajda wrote:
-> On 09/21/2015 03:42 PM, David Howells wrote:
->> Andrzej Hajda <a.hajda-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> wrote:
->>
->>> Semantic patch finds comparisons of types:
->>>      unsigned < 0
->>>      unsigned >= 0
->>> The former is always false, the latter is always true.
->>> Such comparisons are useless, so theoretically they could be
->>> safely removed, but their presence quite often indicates bugs.
->>
->> Or someone has left them in because they don't matter and there's the
->> possibility that the type being tested might be or become signed under some
->> circumstances.  If the comparison is useless, I'd expect the compiler to just
->> discard it - for such cases your patch is pointless.
->>
->> If I have, for example:
->>
->> 	unsigned x;
->>
->> 	if (x == 0 || x > 27)
->> 		give_a_range_error();
->>
->> I will write this as:
->>
->> 	unsigned x;
->>
->> 	if (x <= 0 || x > 27)
->> 		give_a_range_error();
->>
->> because it that gives a way to handle x being changed to signed at some point
->> in the future for no cost.  In which case, your changing the <= to an ==
->> "because the < part of the case is useless" is arguably wrong.
->
-> This is why I have not checked for such cases - I have skipped checks of type
-> 	unsigned <= 0
-> exactly for the reasons above.
->
-> However I have left two other checks as they seems to me more suspicious - they
-> are always true or false. But as Dmitry and Andrew pointed out Linus have quite
-> strong opinion against removing range checks in such cases as he finds it
-> clearer. I think it applies to patches 29-36. I am not sure about patches 26-28,37.
+From: Leo Kim <leo.kim@atmel.com>
 
-Dropped 30/38 and 31/38 from LED tree then.
+This patch removes the potential faults which may happen when unexpectedly
+getting access to invalid pointer. The pointer of pstrWFIDrv is unlikely
+to be invalid. However, it is safer to return error when the invalid
+memory is unfortunately accessed.
 
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6fdf392..151e8c4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
+ 	s32 s32Err = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
+ 
+-	if (pstrWFIDrv == NULL)
++	if (unlikely(!pstrWFIDrv)) {
+ 		PRINT_ER("Driver handler is NULL\n");
++		return -EFAULT;
++	}
+ 	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
+ 		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
+ 
 -- 
-Best Regards,
-Jacek Anaszewski
+1.9.1
+
