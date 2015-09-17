@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:15244 "EHLO
-	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbbIYGmk (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22242 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbbIQK6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 02:42:40 -0400
-From: Andrzej Hajda <a.hajda@samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v2 18/19] mac80211: make ieee80211_new_mesh_header return
- unsigned
-Date: Fri, 25 Sep 2015 08:42:00 +0200
-Message-id: <1443163320-25593-1-git-send-email-a.hajda@samsung.com> (sfid-20150925_084333_446057_5477277C)
-In-reply-to: <1443103799.1869.6.camel@sipsolutions.net>
-References: <1443103799.1869.6.camel@sipsolutions.net>
+	Thu, 17 Sep 2015 06:58:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v3 1/3] ath10k: enable monitor when OTHER_BSS requested
+References: <1441817256-3997-1-git-send-email-me@bobcopeland.com>
+Date: Thu, 17 Sep 2015 13:57:51 +0300
+In-Reply-To: <1441817256-3997-1-git-send-email-me@bobcopeland.com> (Bob
+	Copeland's message of "Wed, 9 Sep 2015 12:47:34 -0400")
+Message-ID: <87d1xhuxcg.fsf@kamboji.qca.qualcomm.com> (sfid-20150917_125812_555620_1DF36C41)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function returns always non-negative values.
+Bob Copeland <me@bobcopeland.com> writes:
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
+> By default, ath10k restricts received frames to those matching BSSID.
+> When other BSS frames are requested (e.g. in mesh mode), add an internal
+> monitor device so those frames are not filtered.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
+Thanks, all three patches applied. In patch 3 I just changed the
+firmware version in commit log to 10.2.4.70.6-2 as that one has the raw
+mode feature flag enabled.
 
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
----
-v2: added missing declaration change, fixed indentation
----
- net/mac80211/mesh.c | 6 +++---
- net/mac80211/mesh.h | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+I also tested this myself and I was able to join to a mesh network I
+created with ath9k and ping each other. In case someone cherry picks
+these patches please take into account that these patches need quite a
+few recent mac80211 patches from mac80211-next. The patches are also in
+wireless-testing and ath.git master branch. Safest is to test with
+ath.git master branch.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e06a5ca..90567fc 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -540,9 +540,9 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-  *
-  * Return the header length.
-  */
--int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
--			      struct ieee80211s_hdr *meshhdr,
--			      const char *addr4or5, const char *addr6)
-+unsigned int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211s_hdr *meshhdr,
-+				       const char *addr4or5, const char *addr6)
- {
- 	if (WARN_ON(!addr4or5 && addr6))
- 		return 0;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 50c8473..029e41d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -207,9 +207,9 @@ struct mesh_rmc {
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
- 				  const u8 *da, const u8 *sa);
--int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
--			      struct ieee80211s_hdr *meshhdr,
--			      const char *addr4or5, const char *addr6);
-+unsigned int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211s_hdr *meshhdr,
-+				       const char *addr4or5, const char *addr6);
- int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 		   const u8 *addr, struct ieee80211s_hdr *mesh_hdr);
- bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
 -- 
-1.9.1
-
+Kalle Valo
