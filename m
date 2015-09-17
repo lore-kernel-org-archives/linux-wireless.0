@@ -1,315 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6821 "EHLO mga01.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49164 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbbIQOd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 10:33:26 -0400
-From: andrei.otcheretianski@intel.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [RFC 2/7] mac80211: add boilerplate code for start / stop NAN
-Date: Thu, 17 Sep 2015 17:32:26 +0300
-Message-Id: <1442500351-8780-3-git-send-email-andrei.otcheretianski@intel.com> (sfid-20150917_163343_442676_83BFF15D)
-In-Reply-To: <1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com>
-References: <1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com>
+	id S1752259AbbIQQma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2015 12:42:30 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] wil6210: remove MCS radiotap field
+Date: Thu, 17 Sep 2015 18:42:27 +0200
+Message-Id: <1442508147-16657-1-git-send-email-johannes@sipsolutions.net> (sfid-20150917_184233_678014_EA4CC8C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This codes doens't do much besides allowing to start and
-stop the vif.
+The MCS radiotap field was really intended for HT MCS (and the
+radiotap spec does indiciate that) and dissectors treat it as
+meaning the frame was a HT frame. Therefore, inclusion of it
+in a 60GHz device is misleading.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Cf. the thread at
+http://mid.gmane.org/CACyXjPzq-ePB1ux6wi_Rv3onPKXomcJcm15XJwA51u0E4W2txw@mail.gmail.com
+
+Remove the field for now, until a proper 60 GHz PHY information
+field is defined.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h    |  9 ++++++++
- net/mac80211/cfg.c        | 35 +++++++++++++++++++++++++++++++
- net/mac80211/chan.c       |  3 +++
- net/mac80211/driver-ops.h | 29 +++++++++++++++++++++++++-
- net/mac80211/iface.c      |  8 ++++++--
- net/mac80211/main.c       |  4 ++++
- net/mac80211/offchannel.c |  3 ++-
- net/mac80211/trace.h      | 52 +++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/util.c       |  3 ++-
- 9 files changed, 141 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3424ac6..c4d8f4a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3247,6 +3247,9 @@ enum ieee80211_reconfig_type {
-  *	the function call.
-  *
-  * @wake_tx_queue: Called when new packets have been added to the queue.
-+ *
-+ * @start_nan: join an existing nan cluster, or create a new one.
-+ * @stop_nan: leave the nan cluster.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3486,6 +3489,12 @@ struct ieee80211_ops {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 6229110d558a..19bf5d4d3e44 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -270,10 +270,6 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 		/* channel */
+ 		__le16 chnl_freq __aligned(2);
+ 		__le16 chnl_flags;
+-		/* MCS */
+-		u8 mcs_present;
+-		u8 mcs_flags;
+-		u8 mcs_index;
+ 	} __packed;
+ 	struct wil6210_rtap_vendor {
+ 		struct wil6210_rtap rtap;
+@@ -329,18 +325,13 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 	rtap_vendor->rtap.rthdr.it_len = cpu_to_le16(rtap_len);
+ 	rtap_vendor->rtap.rthdr.it_present = cpu_to_le32(
+ 			(1 << IEEE80211_RADIOTAP_FLAGS) |
+-			(1 << IEEE80211_RADIOTAP_CHANNEL) |
+-			(1 << IEEE80211_RADIOTAP_MCS));
++			(1 << IEEE80211_RADIOTAP_CHANNEL));
+ 	if (d->dma.status & RX_DMA_STATUS_ERROR)
+ 		rtap_vendor->rtap.flags |= IEEE80211_RADIOTAP_F_BADFCS;
  
- 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
- 			      struct ieee80211_txq *txq);
-+
-+	int (*start_nan)(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif,
-+			 struct cfg80211_nan_conf *conf);
-+	int (*stop_nan)(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif);
- };
+ 	rtap_vendor->rtap.chnl_freq = cpu_to_le16(ch ? ch->center_freq : 58320);
+ 	rtap_vendor->rtap.chnl_flags = cpu_to_le16(0);
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 326fe0e..e36d542 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -130,6 +130,39 @@ static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
- 	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
- }
- 
-+static int ieee80211_start_nan(struct wiphy *wiphy,
-+			       struct wireless_dev *wdev,
-+			       struct cfg80211_nan_conf *conf)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	int ret;
-+
-+	mutex_lock(&sdata->local->chanctx_mtx);
-+	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
-+	mutex_unlock(&sdata->local->chanctx_mtx);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = ieee80211_do_open(wdev, true);
-+	if (ret)
-+		return ret;
-+
-+	ret = drv_start_nan(sdata->local, sdata, conf);
-+	if (ret)
-+		ieee80211_sdata_stop(sdata);
-+
-+	return ret;
-+}
-+
-+static void ieee80211_stop_nan(struct wiphy *wiphy,
-+			       struct wireless_dev *wdev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+
-+	drv_stop_nan(sdata->local, sdata);
-+	ieee80211_sdata_stop(sdata);
-+}
-+
- static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 				  struct net_device *dev,
- 				  u16 noack_map)
-@@ -3907,4 +3940,6 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-+	.start_nan = ieee80211_start_nan,
-+	.stop_nan = ieee80211_stop_nan,
- };
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 7fdc118..b33a749 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -645,6 +645,9 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_chanctx *curr_ctx = NULL;
- 	int ret = 0;
- 
-+	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_NAN))
-+		return 0;
-+
- 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
- 					 lockdep_is_held(&local->chanctx_mtx));
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 31482e2..2ef2997 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -219,7 +219,8 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- 		return;
- 
- 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
--			 sdata->vif.type == NL80211_IFTYPE_MONITOR))
-+			 sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+			 sdata->vif.type == NL80211_IFTYPE_NAN))
- 		return;
- 
- 	if (!check_sdata_in_driver(sdata))
-@@ -1372,4 +1373,30 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
- 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
- }
- 
-+static inline int drv_start_nan(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				struct cfg80211_nan_conf *conf)
-+{
-+	int ret;
-+
-+	might_sleep();
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_start_nan(local, sdata, conf);
-+	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
-+static inline void drv_stop_nan(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata)
-+{
-+	might_sleep();
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_stop_nan(local, sdata);
-+	local->ops->stop_nan(&local->hw, &sdata->vif);
-+	trace_drv_return_void(local);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b725f1e..37c8221 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -324,6 +324,9 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
- 	int n_queues = sdata->local->hw.queues;
- 	int i;
- 
-+	if (iftype == NL80211_IFTYPE_NAN)
-+		return 0;
-+
- 	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
- 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
-@@ -641,7 +644,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 			local->fif_probe_req++;
- 		}
- 
--		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
-+		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+		    sdata->vif.type != NL80211_IFTYPE_NAN)
- 			changed |= ieee80211_reset_erp_info(sdata);
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 
-@@ -1699,7 +1703,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 	ASSERT_RTNL();
- 
--	if (type == NL80211_IFTYPE_P2P_DEVICE) {
-+	if (type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN) {
- 		struct wireless_dev *wdev;
- 
- 		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ff79a13..0059cad 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -811,6 +811,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	     !local->ops->tdls_recv_channel_switch))
- 		return -EOPNOTSUPP;
- 
-+	if (WARN_ON(local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_NAN) &&
-+		    (!local->ops->start_nan || !local->ops->stop_nan)))
-+		return -EINVAL;
-+
- #ifdef CONFIG_PM
- 	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
- 		return -EINVAL;
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index f2c75cf..a38b52a 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -128,7 +128,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
- 		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 
--		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
-+		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
-+		    sdata->vif.type == NL80211_IFTYPE_NAN)
- 			continue;
- 
- 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 314e3bd..a98c864 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1687,6 +1687,58 @@ TRACE_EVENT(drv_get_expected_throughput,
- 	)
- );
- 
-+TRACE_EVENT(drv_start_nan,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct cfg80211_nan_conf *conf),
-+
-+	TP_ARGS(local, sdata, conf),
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(u8, master_pref)
-+		__field(u16, cluster_id)
-+		__field(u8, dual)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->master_pref = conf->master_pref;
-+		__entry->cluster_id = conf->cluster_id;
-+		__entry->dual = conf->dual;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT
-+		", master preference: %u, cluster_id: %04x, dual: %d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->master_pref,
-+		 __entry->cluster_id, __entry->dual
-+	)
-+);
-+
-+TRACE_EVENT(drv_stop_nan,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+
-+	TP_ARGS(local, sdata),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT,
-+		LOCAL_PR_ARG, VIF_PR_ARG
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8f560cc..2cc5053 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1211,7 +1211,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
--	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE) {
-+	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    sdata->vif.type != NL80211_IFTYPE_NAN) {
- 		sdata->vif.bss_conf.qos = enable_qos;
- 		if (bss_notify)
- 			ieee80211_bss_info_change_notify(sdata,
+-	rtap_vendor->rtap.mcs_present = IEEE80211_RADIOTAP_MCS_HAVE_MCS;
+-	rtap_vendor->rtap.mcs_flags = 0;
+-	rtap_vendor->rtap.mcs_index = wil_rxdesc_mcs(d);
+-
+ 	if (rtap_include_phy_info) {
+ 		rtap_vendor->rtap.rthdr.it_present |= cpu_to_le32(1 <<
+ 				IEEE80211_RADIOTAP_VENDOR_NAMESPACE);
 -- 
-1.8.3
+2.5.1
 
