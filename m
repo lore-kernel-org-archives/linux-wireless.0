@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bluebottle.com ([176.9.67.91]:46800 "EHLO
-	mail.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932908AbbI1MzI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8330 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017AbbIQJHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 08:55:08 -0400
-Date: Mon, 28 Sep 2015 14:52:38 +0200
-From: Bastian Bittorf <bittorf@bluebottle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bastian Bittorf <bittorf@bluebottle.com>,
-	Pavel Machek <pavel@ucw.cz>, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: Low latency communication over wifi
-Message-ID: <20150928125238.GJ22537@medion.lan> (sfid-20150928_145513_470862_575B9397)
-References: <20150926102403.GA21555@amd>
- <1443426103.2401.1.camel@sipsolutions.net>
- <20150928121504.GE22537@medion.lan>
- <1443443851.2401.6.camel@sipsolutions.net>
+	Thu, 17 Sep 2015 05:07:18 -0400
+Subject: Re: [PATCH 1/4] staging: wilc1000: Modify null check routine
+To: <leo.kim@atmel.com>
+References: <1442479806-10737-1-git-send-email-tony.cho@atmel.com>
+CC: Tony Cho <tony.cho@atmel.com>, <gregkh@linuxfoundation.org>,
+	<devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <glen.lee@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
+Message-ID: <55FA8299.5060606@atmel.com> (sfid-20150917_110725_031790_1269C55A)
+Date: Thu, 17 Sep 2015 11:06:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443443851.2401.6.camel@sipsolutions.net>
+In-Reply-To: <1442479806-10737-1-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Johannes Berg <johannes@sipsolutions.net> [28.09.2015 14:38]:
-> Depends what you're measuring, but ping should apply the same DSCP tag
-> on the response I believe.
+Le 17/09/2015 10:50, Tony Cho a écrit :
+> From: Leo Kim <leo.kim@atmel.com>
+> 
+> This patch modify null check routine.
+> - Null check error non return. (Handle_RcvdGnrlAsyncInfo)
 
-your are right, I did not know this till yet 8-)
-(i applied 0xb8 with 'ping -c1 -Q' just for testing)
+It doesn't parse...
 
-14:49:52.491925 IP (tos 0xb8, ttl 64, id 51117, offset 0, flags [+], proto ICMP (1), 
-	length 1500) 192.168.2.1 > 192.168.2.103: ICMP echo reply, id 14925, seq 1, length 1480
-14:49:52.491993 IP (tos 0xb8, ttl 64, id 51117, offset 1480, flags [none], proto ICMP (1),
-	length 48) 192.168.2.1 > 192.168.2.103: icmp
+Is it fixing a bug? What were the consequences without the return?
 
-bye, bastian
+Bye,
+
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 6fdf392..a9eaa8f 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
+>  	s32 s32Err = 0;
+>  	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
+>  
+> -	if (pstrWFIDrv == NULL)
+> +	if (!pstrWFIDrv) {
+>  		PRINT_ER("Driver handler is NULL\n");
+> +		return -EFAULT;
+> +	}
+>  	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
+>  		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
+>  
+> 
+
+
+-- 
+Nicolas Ferre
