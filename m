@@ -1,66 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47128 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754899AbbI3J4Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:56:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 31/32] staging: wilc1000: rename strHostIFDelAllSta
-Date: Wed, 30 Sep 2015 18:55:13 +0900
-Message-ID: <1443606914-25563-9-git-send-email-tony.cho@atmel.com> (sfid-20150930_115631_513970_09DA83D6)
-In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:6821 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbbIQOd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2015 10:33:26 -0400
+From: andrei.otcheretianski@intel.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [RFC 2/7] mac80211: add boilerplate code for start / stop NAN
+Date: Thu, 17 Sep 2015 17:32:26 +0300
+Message-Id: <1442500351-8780-3-git-send-email-andrei.otcheretianski@intel.com> (sfid-20150917_163343_442676_83BFF15D)
+In-Reply-To: <1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com>
+References: <1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFDelAllSta to del_all_sta_info to avoid
-CamelCase naming convention.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+This codes doens't do much besides allowing to start and
+stop the vif.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/net/mac80211.h    |  9 ++++++++
+ net/mac80211/cfg.c        | 35 +++++++++++++++++++++++++++++++
+ net/mac80211/chan.c       |  3 +++
+ net/mac80211/driver-ops.h | 29 +++++++++++++++++++++++++-
+ net/mac80211/iface.c      |  8 ++++++--
+ net/mac80211/main.c       |  4 ++++
+ net/mac80211/offchannel.c |  3 ++-
+ net/mac80211/trace.h      | 52 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/util.c       |  3 ++-
+ 9 files changed, 141 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3769595..aad0f5d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -393,7 +393,7 @@ union message_body {
- 	struct remain_ch remain_on_ch;
- 	struct reg_frame reg_f;
- 	char *data;
--	struct del_all_sta strHostIFDelAllSta;
-+	struct del_all_sta del_all_sta_info;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3424ac6..c4d8f4a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3247,6 +3247,9 @@ enum ieee80211_reconfig_type {
+  *	the function call.
+  *
+  * @wake_tx_queue: Called when new packets have been added to the queue.
++ *
++ * @start_nan: join an existing nan cluster, or create a new one.
++ * @stop_nan: leave the nan cluster.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3486,6 +3489,12 @@ struct ieee80211_ops {
+ 
+ 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
+ 			      struct ieee80211_txq *txq);
++
++	int (*start_nan)(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct cfg80211_nan_conf *conf);
++	int (*stop_nan)(struct ieee80211_hw *hw,
++			struct ieee80211_vif *vif);
  };
  
- /*!
-@@ -4212,7 +4212,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 326fe0e..e36d542 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -130,6 +130,39 @@ static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
+ 	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
+ }
  
- 		case HOST_IF_MSG_DEL_ALL_STA:
--			Handle_DelAllSta(msg.drvHandler, &msg.body.strHostIFDelAllSta);
-+			Handle_DelAllSta(msg.drvHandler, &msg.body.del_all_sta_info);
- 			break;
++static int ieee80211_start_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev,
++			       struct cfg80211_nan_conf *conf)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
++	ret = ieee80211_do_open(wdev, true);
++	if (ret)
++		return ret;
++
++	ret = drv_start_nan(sdata->local, sdata, conf);
++	if (ret)
++		ieee80211_sdata_stop(sdata);
++
++	return ret;
++}
++
++static void ieee80211_stop_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++	drv_stop_nan(sdata->local, sdata);
++	ieee80211_sdata_stop(sdata);
++}
++
+ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  struct net_device *dev,
+ 				  u16 noack_map)
+@@ -3907,4 +3940,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.start_nan = ieee80211_start_nan,
++	.stop_nan = ieee80211_stop_nan,
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 7fdc118..b33a749 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -645,6 +645,9 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_chanctx *curr_ctx = NULL;
+ 	int ret = 0;
  
- 		default:
-@@ -6726,7 +6726,7 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct del_all_sta *pstrDelAllStationMsg = &msg.body.strHostIFDelAllSta;
-+	struct del_all_sta *pstrDelAllStationMsg = &msg.body.del_all_sta_info;
- 	u8 au8Zero_Buff[ETH_ALEN] = {0};
- 	u32 i;
- 	u8 u8AssocNumb = 0;
++	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_NAN))
++		return 0;
++
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					 lockdep_is_held(&local->chanctx_mtx));
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 31482e2..2ef2997 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -219,7 +219,8 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 		return;
+ 
+ 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
+-			 sdata->vif.type == NL80211_IFTYPE_MONITOR))
++			 sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++			 sdata->vif.type == NL80211_IFTYPE_NAN))
+ 		return;
+ 
+ 	if (!check_sdata_in_driver(sdata))
+@@ -1372,4 +1373,30 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
+ 
++static inline int drv_start_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				struct cfg80211_nan_conf *conf)
++{
++	int ret;
++
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_start_nan(local, sdata, conf);
++	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
++static inline void drv_stop_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_stop_nan(local, sdata);
++	local->ops->stop_nan(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b725f1e..37c8221 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -324,6 +324,9 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+ 	int n_queues = sdata->local->hw.queues;
+ 	int i;
+ 
++	if (iftype == NL80211_IFTYPE_NAN)
++		return 0;
++
+ 	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
+ 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
+@@ -641,7 +644,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			local->fif_probe_req++;
+ 		}
+ 
+-		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++		    sdata->vif.type != NL80211_IFTYPE_NAN)
+ 			changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+@@ -1699,7 +1703,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 	ASSERT_RTNL();
+ 
+-	if (type == NL80211_IFTYPE_P2P_DEVICE) {
++	if (type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN) {
+ 		struct wireless_dev *wdev;
+ 
+ 		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ff79a13..0059cad 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -811,6 +811,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	     !local->ops->tdls_recv_channel_switch))
+ 		return -EOPNOTSUPP;
+ 
++	if (WARN_ON(local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_NAN) &&
++		    (!local->ops->start_nan || !local->ops->stop_nan)))
++		return -EINVAL;
++
+ #ifdef CONFIG_PM
+ 	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
+ 		return -EINVAL;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index f2c75cf..a38b52a 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -128,7 +128,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
++		    sdata->vif.type == NL80211_IFTYPE_NAN)
+ 			continue;
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 314e3bd..a98c864 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1687,6 +1687,58 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_start_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct cfg80211_nan_conf *conf),
++
++	TP_ARGS(local, sdata, conf),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u8, master_pref)
++		__field(u16, cluster_id)
++		__field(u8, dual)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->cluster_id = conf->cluster_id;
++		__entry->dual = conf->dual;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT
++		", master preference: %u, cluster_id: %04x, dual: %d",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->master_pref,
++		 __entry->cluster_id, __entry->dual
++	)
++);
++
++TRACE_EVENT(drv_stop_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++
++	TP_ARGS(local, sdata),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT,
++		LOCAL_PR_ARG, VIF_PR_ARG
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8f560cc..2cc5053 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1211,7 +1211,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+-	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE) {
++	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_NAN) {
+ 		sdata->vif.bss_conf.qos = enable_qos;
+ 		if (bss_notify)
+ 			ieee80211_bss_info_change_notify(sdata,
 -- 
-1.9.1
+1.8.3
 
