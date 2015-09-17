@@ -1,89 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38003 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756784AbbIUQUB (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41481 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbbIQEq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 12:20:01 -0400
-Date: Mon, 21 Sep 2015 19:19:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
-Message-ID: <20150921161953.GQ5004@mwanda> (sfid-20150921_182010_027283_33B8F1FE)
+	Thu, 17 Sep 2015 00:46:59 -0400
+Date: Wed, 16 Sep 2015 21:46:47 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 03/10] staging: wilc1000: remove INLINE macro
+Message-ID: <20150917044647.GA10073@kroah.com> (sfid-20150917_064724_422516_9ED0CD1D)
+References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442401895-7463-3-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <1442401895-7463-3-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were several bugs here.
+On Wed, Sep 16, 2015 at 08:11:28PM +0900, Chaehyun Lim wrote:
+> This patch removes INLINE macro that is used anymore.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c | 1 -
+>  drivers/staging/wilc1000/wilc_wlan.c        | 1 -
+>  2 files changed, 2 deletions(-)
 
-1)  The done label was in the wrong place so we didn't copy any
-    information out when there was no command given.
+This doesn't apply to my tree anymore, can you refresh it and resend
+this and the rest of this series?
 
-2)  We were using PAGE_SIZE as the size of the buffer instead of
-    "PAGE_SIZE - pos".
+thanks,
 
-3)  snprintf() returns the number of characters that would have been
-    printed if there were enough space.  If there was not enough space
-    (and we had fixed the memory corruption bug #2) then it would result
-    in an information leak when we do simple_read_from_buffer().  I've
-    changed it to use scnprintf() instead.
-
-I also removed the initialization at the start of the function, because
-I thought it made the code a little more clear.
-
-Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2:  My first part introduced a bug.  :(
-
-Sorry for the delay on this.
-
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 5a0636d4..5583856 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 		(struct mwifiex_private *) file->private_data;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *) addr;
--	int pos = 0, ret = 0, i;
-+	int pos, ret, i;
- 	u8 value[MAX_EEPROM_DATA];
- 
- 	if (!buf)
-@@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 
- 	if (saved_offset == -1) {
- 		/* No command has been given */
--		pos += snprintf(buf, PAGE_SIZE, "0");
-+		pos = snprintf(buf, PAGE_SIZE, "0");
- 		goto done;
- 	}
- 
-@@ -748,17 +748,17 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 				  (u16) saved_bytes, value);
- 	if (ret) {
- 		ret = -EINVAL;
--		goto done;
-+		goto out_free;
- 	}
- 
--	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
-+	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
- 
- 	for (i = 0; i < saved_bytes; i++)
--		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ", value[i]);
--
--	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
-+		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ", value[i]);
- 
- done:
-+	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
-+out_free:
- 	free_page(addr);
- 	return ret;
- }
+greg k-h
