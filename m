@@ -1,81 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36023 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbbIWJEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 05:04:14 -0400
-Received: by pacgz1 with SMTP id gz1so1191521pac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:04:13 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/6] staging: wilc1000: delete wilc_oswrapper.h
-Date: Wed, 23 Sep 2015 18:03:50 +0900
-Message-Id: <1442999030-31934-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110421_926027_0C0007C7)
-In-Reply-To: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from max.feld.cvut.cz ([147.32.192.36]:54687 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751652AbbIQMEB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2015 08:04:01 -0400
+From: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+To: kaisrja1@fel.cvut.cz
+Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
+	jan-niklas.meier@volkswagen.de, s.sander@nordsys.de,
+	nbd@openwrt.org, Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2] ath9k: Add support for OCB mode
+Date: Thu, 17 Sep 2015 14:03:46 +0200
+Message-Id: <1442491426-15233-1-git-send-email-kaisrja1@fel.cvut.cz> (sfid-20150917_140406_450057_04A1163D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch delete wilc_oswrapper.h that has nothing inside.
+The patch adds support for "outside the context of a BSS"(OCB) mode
+to ath9k driver and extends debugfs files by OCB ralated information.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch was tested on AR9380-AL1A cards.
+
+Signed-off-by: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>
 ---
- drivers/staging/wilc1000/wilc_oswrapper.h | 16 ----------------
- drivers/staging/wilc1000/wilc_wlan.h      |  1 -
- drivers/staging/wilc1000/wilc_wlan_if.h   |  1 -
- 3 files changed, 18 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
+changes:
+* OCB mode is treated like AP mode rather than like ad hoc mode.
 
-diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-deleted file mode 100644
-index 10d16e9..0000000
---- a/drivers/staging/wilc1000/wilc_oswrapper.h
-+++ /dev/null
-@@ -1,16 +0,0 @@
--#ifndef __WILC_OSWRAPPER_H__
--#define __WILC_OSWRAPPER_H__
--
--/*!
-- *  @file	wilc_oswrapper.h
-- *  @brief	Top level OS Wrapper, include this file and it will include all
-- *              other files as necessary
-- *  @author	syounan
-- *  @date	10 Aug 2010
-- *  @version	1.0
-- */
--
--
--
--
--#endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 60da18c..ad8de29 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -1,7 +1,6 @@
- #ifndef WILC_WLAN_H
- #define WILC_WLAN_H
+Btw. I couldn't find any reasonable documentation about AR_STA_ID1_ADHOC
+AR_STA_ID1_STA_AP bits. In my tests, OCB communication works in both
+modes, but I'd like to understand the difference. Can somebody point me
+to some information about these bits?
+
+ drivers/net/wireless/ath/ath9k/ath9k.h        | 1 +
+ drivers/net/wireless/ath/ath9k/debug.c        | 4 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 ++-
+ drivers/net/wireless/ath/ath9k/hw.c           | 1 +
+ drivers/net/wireless/ath/ath9k/init.c         | 3 ++-
+ drivers/net/wireless/ath/ath9k/main.c         | 8 +++++++-
+ drivers/net/wireless/ath/ath9k/recv.c         | 2 +-
+ 7 files changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c85c479..b42f4a9 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -635,6 +635,7 @@ struct ath9k_vif_iter_data {
+ 	int nstations; /* number of station vifs */
+ 	int nwds;      /* number of WDS vifs */
+ 	int nadhocs;   /* number of adhoc vifs */
++	int nocbs;     /* number of OCB vifs */
+ 	struct ieee80211_vif *primary_sta;
+ };
  
--#include "wilc_oswrapper.h"
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index da32c8f..6de64cf 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -741,8 +741,8 @@ static int read_file_misc(struct seq_file *file, void *data)
+ 			   i++, (int)(ctx->assigned), iter_data.naps,
+ 			   iter_data.nstations,
+ 			   iter_data.nmeshes, iter_data.nwds);
+-		seq_printf(file, " ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
+-			   iter_data.nadhocs, sc->cur_chan->nvifs,
++		seq_printf(file, " ADHOC: %i OCB: %i TOTAL: %hi BEACON-VIF: %hi\n",
++			   iter_data.nadhocs, iter_data.nocbs, sc->cur_chan->nvifs,
+ 			   sc->nbcnvifs);
+ 	}
  
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 1e84882..5e53040 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -736,7 +736,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_P2P_GO) |
+ 		BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-		BIT(NL80211_IFTYPE_MESH_POINT);
++		BIT(NL80211_IFTYPE_MESH_POINT) |
++		BIT(NL80211_IFTYPE_OCB);
  
- #define ISWILC1000(id)   (((id & 0xfffff000) == 0x100000) ? 1 : 0)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index fd37997..f561eac 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -15,7 +15,6 @@
- /* #define USE_OLD_SPI_SW */
+ 	hw->wiphy->iface_combinations = &if_comb;
+ 	hw->wiphy->n_iface_combinations = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1dd0339..bdfff46 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1241,6 +1241,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 			break;
+ 		}
+ 		/* fall through */
++	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
+ 		set |= AR_STA_ID1_STA_AP;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 57f95f2..5d532c7 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -855,7 +855,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			BIT(NL80211_IFTYPE_STATION) |
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+ 			BIT(NL80211_IFTYPE_MESH_POINT) |
+-			BIT(NL80211_IFTYPE_WDS);
++			BIT(NL80211_IFTYPE_WDS) |
++			BIT(NL80211_IFTYPE_OCB);
  
- #include <linux/semaphore.h>
--#include "wilc_oswrapper.h"
- #include "linux_wlan_common.h"
+ 		if (ath9k_is_chanctx_enabled())
+ 			hw->wiphy->interface_modes |=
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c27143b..56abb9d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -938,6 +938,9 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 		if (avp->assoc && !iter_data->primary_sta)
+ 			iter_data->primary_sta = vif;
+ 		break;
++	case NL80211_IFTYPE_OCB:
++		iter_data->nocbs++;
++		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		iter_data->nadhocs++;
+ 		if (vif->bss_conf.enable_beacon)
+@@ -1111,6 +1114,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
  
+ 		if (iter_data.nmeshes)
+ 			ah->opmode = NL80211_IFTYPE_MESH_POINT;
++		else if (iter_data.nocbs)
++			ah->opmode = NL80211_IFTYPE_OCB;
+ 		else if (iter_data.nwds)
+ 			ah->opmode = NL80211_IFTYPE_AP;
+ 		else if (iter_data.nadhocs)
+@@ -1760,7 +1765,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath9k_calculate_summary_state(sc, avp->chanctx);
+ 	}
  
+-	if (changed & BSS_CHANGED_IBSS) {
++	if ((changed & BSS_CHANGED_IBSS) ||
++	      (changed & BSS_CHANGED_OCB)) {
+ 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 		common->curaid = bss_conf->aid;
+ 		ath9k_hw_write_associd(sc->sc_ah);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d3189da..994daf6 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -403,7 +403,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	    (sc->cur_chan->nvifs <= 1) &&
+ 	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
+ 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
+-	else
++	else if (sc->sc_ah->opmode != NL80211_IFTYPE_OCB)
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
 -- 
-2.5.1
+2.1.4
 
