@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:48944 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbbIYAAG (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:35121 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751915AbbIQRsb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 20:00:06 -0400
-Date: Thu, 24 Sep 2015 20:00:04 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Rafal Milecki <zajec5@gmail.com>
-Subject: Re: [PATCH] brcmfmac: firmware refresh for BCM43602 PCIE devices
-Message-ID: <20150925000004.GF26918@merlin.infradead.org> (sfid-20150925_020011_242720_F30C7F12)
-References: <1443120304-11153-1-git-send-email-arend@broadcom.com>
+	Thu, 17 Sep 2015 13:48:31 -0400
+Received: by obbzf10 with SMTP id zf10so19264387obb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 10:48:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443120304-11153-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <20150916123937.GB2051@localhost>
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
+	<CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
+	<20150829222531.GA8604@localhost>
+	<CAEFj987gvasYnRq8tiFeQitbBmoXAr77hXU2cUW_TsH+viUn8g@mail.gmail.com>
+	<20150916123937.GB2051@localhost>
+Date: Fri, 18 Sep 2015 01:48:30 +0800
+Message-ID: <CAEFj986tjgK-=eBaoR3G8m7wf0m32WLutRypPzMfjj2+MW5ybw@mail.gmail.com> (sfid-20150917_194835_066862_2739B19E)
+Subject: Re: [PATCH 3/3] ath10k: implement mesh support
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jason Andryuk <jandryuk@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2015 at 08:45:04PM +0200, Arend van Spriel wrote:
-> A number of end-users reported issues with BCM43602 on the 2015
-> MacBook Pro. It turned out the previously released firmware did
-> not properly support that device [1]. Hence an update of the STA
-> firmware and while at it refresh the AP firmware as well. The
-> latter has been tested using Netgear R8000. The STA firmware has
-> been tested on MacBook Pro.
-> 
+Hi, Bob
 
-Are there version numbers we could update in WHENCE to make this
-easier to track?
+I have also tested with nwifi mode for non-secured mesh. It seems to
+be worked for me with the following two test scenarios:
 
-regards, --jkkm
+Node 1 [ath10k] <---> Node 2 [ath10k] <---> Node 3 [ath10k]
+Node 1 [ath10k] <---> Node 2 [ath9k]
 
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=100201
-> 
-> Cc: Rafal Milecki <zajec5@gmail.com>
-> Tested-by: Knuth Posern <knuth@posern.org>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> This patch fixes a couple of issues mentioned in kernel bugzilla
-> #100201 with 2015 MacBook Pro machines using this wifi chipset.
-> 
-> The patch applies to master branch of the linux-firmware repository
-> on top of commit f88e5c2e2ff5 ("Merge 'c11384c' of
-> git://people.freedesktop.org/~vivijim/linux-firmware...").
+I am using the following:
+compat-wireless-2015-07-21 from OpenWRT
+firmware-5.bin_10.2.4.70.6-2
+
+I just wondering whether using raw wifi is better for encrypted mesh later?
+
+----
+Chun-Yeow
+
+On Wed, Sep 16, 2015 at 8:39 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Mon, Aug 31, 2015 at 01:43:28AM +0800, Chun-Yeow Yeoh wrote:
+>> Hi, Bob
+>>
+>> > Yes: you don't want to enable raw mode TX / RX decap in the normal
+>> > case because it's fairly inefficient compared to "native" wifi mode,
+>> > according to my understanding.  The latter doesn't support mesh framing
+>> > however.
+>> >
+>>
+>> The native WiFi mode doesn't support mesh framing. Can you elaborate
+>> more on this?
+>
+> Sorry, missed this before -- the 'nwifi' mode which is the normal
+> datapath for ath10k discards the QoS header and following mesh header
+> when transmitting, if I recall correctly.  I also had some issues with the
+> received frames when using nwifi RX decap with raw mode TX, but I don't
+> recall exactly the problem.  I can retest with these modes if you really
+> want the details.
+>
+> --
+> Bob Copeland %% http://bobcopeland.com/
