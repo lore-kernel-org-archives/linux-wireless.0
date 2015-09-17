@@ -1,99 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56887 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751535AbbIAPH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 11:07:29 -0400
-Message-ID: <1441120044.2441.9.camel@sipsolutions.net> (sfid-20150901_170732_966963_3B390A22)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Date: Tue, 01 Sep 2015 17:07:24 +0200
-In-Reply-To: <wrfjmvx73u0l.fsf@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	 <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	 <1441032517.13980.21.camel@sipsolutions.net> <wrfjmvx73u0l.fsf@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34082 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbbIQHtA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2015 03:49:00 -0400
+Received: by padhy16 with SMTP id hy16so13427323pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 00:48:59 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 2/8] staging: wilc1000: replace __inline with inline
+Date: Thu, 17 Sep 2015 16:48:43 +0900
+Message-Id: <1442476129-14908-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150917_094904_126318_B28FF127)
+In-Reply-To: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-08-31 at 19:42 -0400, Jes Sorensen wrote:
-> 
-> Anything related to doing things correctly wrt to the mac80211 API 
-> would be awesome.
+This patch replaces __inline with inline. plain inline is more
+preferred than __inline.
 
-:)
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2 : rebase latest staging-testing
 
-> static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
->                                   struct ieee80211_vif *vif)
-> {
->         struct rtl8xxxu_priv *priv = hw-&gt;priv;
->         int ret;
->         u8 val8;
-> 
->         switch (vif-&gt;type) {    
->         case NL80211_IFTYPE_STATION:
->                 rtl8723a_stop_tx_beacon(priv);
+ drivers/staging/wilc1000/wilc_wlan.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-This seems odd - you shouldn't have any kind of operation before
-add_interface(), so why stop anything?
-(You also don't even support beaconing yet anyway)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 47fa0f3..1fe1ba5 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -316,13 +316,13 @@ u32 Pending_Acks;
+ 
+ 
+ 
+-static __inline int Init_TCP_tracking(void)
++static inline int Init_TCP_tracking(void)
+ {
+ 
+ 	return 0;
+ 
+ }
+-static __inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
++static inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
+ {
+ 	Acks_keep_track_info[Opened_TCP_session].Ack_seq_num = seq;
+ 	Acks_keep_track_info[Opened_TCP_session].Bigger_Ack_num = 0;
+@@ -334,7 +334,7 @@ static __inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
+ 	return 0;
+ }
+ 
+-static __inline int Update_TCP_track_session(u32 index, u32 Ack)
++static inline int Update_TCP_track_session(u32 index, u32 Ack)
+ {
+ 
+ 	if (Ack > Acks_keep_track_info[index].Bigger_Ack_num) {
+@@ -343,7 +343,7 @@ static __inline int Update_TCP_track_session(u32 index, u32 Ack)
+ 	return 0;
+ 
+ }
+-static __inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_entry_t  *txqe)
++static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_entry_t  *txqe)
+ {
+ 	Statisitcs_totalAcks++;
+ 	if (Pending_Acks < MAX_PENDING_ACKS) {
+@@ -358,7 +358,7 @@ static __inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_e
+ 	}
+ 	return 0;
+ }
+-static __inline int remove_TCP_related(void)
++static inline int remove_TCP_related(void)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+@@ -369,7 +369,7 @@ static __inline int remove_TCP_related(void)
+ 	return 0;
+ }
+ 
+-static __inline int tcp_process(struct txq_entry_t *tqe)
++static inline int tcp_process(struct txq_entry_t *tqe)
+ {
+ 	int ret;
+ 	u8 *eth_hdr_ptr;
+-- 
+2.5.1
 
->                 /*
->                  * This is a bit of a hack - the lower bits of the cipher 
->                  * suite selector happens to match the cipher index in the
->                  * CAM
->                  */
-
-That's probably simply intentional - the cipher suite selector is built
-as a OUI : cipher number ...
-
-However - I don't see any code actually using key->cipher here? You
-should move the comment into rtl8xxxu_cam_write() I guess.
-
-> static int
-> rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->                       enum ieee80211_ampdu_mlme_action action,
->                       struct ieee80211_sta *sta, u16 tid, u16 *ssn, u8 buf_size)
-> {
->         struct rtl8xxxu_priv *priv = hw->priv;
->         struct device *dev = &priv->udev->dev;
->         u8 ampdu_factor, ampdu_density;
-> 
->         switch (action) {
-[...]
-
-I'd be extremely surprised if any of this worked - perhaps you're not
-advertising A-MPDU support (yet)?
-
-You're not calling ieee80211_start_tx_ba_cb_irqsafe() or
-ieee80211_stop_tx_ba_cb_irqsafe(), so this can't really work. The
-session might be set up but will never actually start.
-
-That said, the code also looks incomplete. Perhaps better to just
-remove it entirely for now?
-
->         sta_priv->short_preamble = false;
-
-I don't think there's any need to track it, especially since you only
-use it in TX where you have the TX info data about it.
-
-> };
-
-stray semicolons at the end of functions in a few places :)
-
-I guess you can get rid of sta_add/remove entirely. sta_state() is the
-better hook to implement, but you don't really need any of the three.
-
-> static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
->                                    struct ieee80211_vif *vif, const u8 *mac)
-> {
-> }
-
-No need for this ... You'll get stop even without the start, but
-actually I think your start is perhaps missing setting
-BEACON_DISABLE_TSF_UPDATE (which stop clears)
-
-johannes
