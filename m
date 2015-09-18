@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36961 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758850AbbIVXPP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45444 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753268AbbIRJNs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 19:15:15 -0400
-Date: Tue, 22 Sep 2015 16:15:14 -0700 (PDT)
-Message-Id: <20150922.161514.1111134025006072085.davem@davemloft.net> (sfid-20150923_011848_305367_26A566EF)
-To: a.hajda@samsung.com
-Cc: linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com,
-	m.szyprowski@samsung.com, akarwar@marvell.com,
-	nishants@marvell.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 21/38] mwifiex: fix comparison expression
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1442842450-29769-22-git-send-email-a.hajda@samsung.com>
-References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
-	<1442842450-29769-22-git-send-email-a.hajda@samsung.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 18 Sep 2015 05:13:48 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 18/34] staging: wilc1000: remove typedef from the struct tstrTimerCb
+Date: Fri, 18 Sep 2015 18:11:20 +0900
+Message-ID: <1442567496-29331-18-git-send-email-tony.cho@atmel.com> (sfid-20150918_111357_857451_58F367EF)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrzej Hajda <a.hajda@samsung.com>
-Date: Mon, 21 Sep 2015 15:33:53 +0200
+This patch removes typedef from the tstrTimerCb and renames it to
+timer_cb in order to comply with the Linux coding style.
 
-> To avoid underflows signed variables should be used in expression.
-> 
-> The problem has been detected using proposed semantic patch
-> scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
-> 
-> [1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
-> 
-> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Applied.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0308421..5f546e5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -346,7 +346,7 @@ typedef struct {
+ } tstrHostIFDelSta;
+ 
+ /*!
+- *  @struct             tstrTimerCb
++ *  @struct             timer_cb
+  *  @brief		Timer callback message body
+  *  @details
+  *  @todo
+@@ -355,9 +355,9 @@ typedef struct {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrTimerCb {
++struct timer_cb {
+ 	void *pvUsrArg;                 /*!< Private data passed at timer start */
+-} tstrTimerCb;
++};
+ 
+ /*!
+  *  @struct     tstrHostIfPowerMgmtParam
+@@ -431,7 +431,7 @@ union message_body {
+ 	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
+ 	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
+ 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
+-	tstrTimerCb strTimerCb;                                                 /*!< Timer callback message body */
++	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
+ 	tstrHostIfPowerMgmtParam strPowerMgmtparam;     /*!< Power Management message body */
+ 	tstrHostIfStaInactiveT strHostIfStaInactiveT;
+ 	tstrHostIFSetIPAddr strHostIfSetIP;
+-- 
+1.9.1
+
