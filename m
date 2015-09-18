@@ -1,100 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:58381 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546AbbIPK04 convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11450 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752774AbbIRNdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 06:26:56 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Matthias May'" <matthias.may@neratec.com>,
-	<linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@venema.h4ckr.net>, <ath9k-devel@qca.qualcomm.com>
-References: <773DB8A82AB6A046AE0195C68612A31901A720F6@sbs2003.acksys.local> <55F7EB74.30701@neratec.com>
-In-Reply-To: <55F7EB74.30701@neratec.com>
-Subject: RE: [RFC v2] [resend] ath9k: allow up to 8 access point vifs on DFS channels
-Date: Wed, 16 Sep 2015 10:01:57 +0200
-Message-ID: <000901d0f055$f5c46680$e14d3380$@acksys.fr> (sfid-20150916_122659_580201_E5CD6F64)
+	Fri, 18 Sep 2015 09:33:06 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDOkxU030872
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:06 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1wy3qm7eqj-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:06 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Zhaoyang Liu <liuzy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 09/16] mwifiex: correct paused tx data packet counter
+Date: Fri, 18 Sep 2015 06:32:11 -0700
+Message-ID: <1442583138-2979-10-git-send-email-akarwar@marvell.com> (sfid-20150918_153313_101188_3EE26DB5)
+In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
+References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Matthias,
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-The patch is working for me, and I am using it, but I could not test
-Much further since real-life radar situations are hard to produce.
+This patch fixes observed issues while updating counter for
+number of paused data packets in wmm queue when trying to
+delete packet or delete station entry.
 
-Before DFS integration, combinations were less limited. I submitted
-the patch as a RFC only, because I suspected the DFS people had a
-hidden reason for limiting the combinations on radar channels.
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_txrx.c | 10 +++++++---
+ drivers/net/wireless/mwifiex/wmm.c      |  9 +++++++--
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
-However I received no comments.
-
-Maybe I was on the wrong list. I will CC the ath9k maintainer now,
-and try to submit a patch in a week or two.
-
-Best regards
-Jean-Pierre
-
-> -----Message d'origine-----
-> De : Matthias May [mailto:matthias.may@neratec.com]
-> Envoyé : mardi 15 septembre 2015 11:57
-> À : Jean-Pierre TOSONI; linux-wireless@vger.kernel.org
-> Objet : Re: [RFC v2] [resend] ath9k: allow up to 8 access point vifs on
-> DFS channels
-> 
-> On 09/06/15 18:26, Jean-Pierre TOSONI wrote:
-> > Allow the combination of 8 (AP + mesh) interfaces on radar channels
-> >
-> > Tested with hostapd, 2 and 8 BSSIDs, 1 or 2 DFS channels, BW 20 MHz
-> > TODO: test AP+mesh combination
-> > TODO: test 40 MHz BW
-> > ---
-> > This patch was done with quilt on Openwrt against compat-wireless
-> > 2014-11-04
-> >
-> > Any feedback?
-> >
-> > --- a/drivers/net/wireless/ath/ath9k/init.c
-> > +++ b/drivers/net/wireless/ath/ath9k/init.c
-> > @@ -723,6 +723,14 @@ static const struct ieee80211_iface_limi
-> >   				 BIT(NL80211_IFTYPE_ADHOC) },
-> >   };
-> >
-> > +static const struct ieee80211_iface_limit if_dfs_limits_mvap[] = {
-> > +	{ .max = 8,	.types =
-> > +#ifdef CONFIG_MAC80211_MESH
-> > +				 BIT(NL80211_IFTYPE_MESH_POINT) | #endif
-> > +				 BIT(NL80211_IFTYPE_AP) },
-> > +};
-> > +
-> >   static const struct ieee80211_iface_combination if_comb[] = {
-> >   	{
-> >   		.limits = if_limits,
-> > @@ -746,6 +754,16 @@ static const struct ieee80211_iface_comb
-> >   		.num_different_channels = 1,
-> >   		.beacon_int_infra_match = true,
-> >   		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
-> > |
-> > +					BIT(NL80211_CHAN_WIDTH_20) |
-> > +					BIT(NL80211_CHAN_WIDTH_40),
-> > +	},
-> > +	{
-> > +		.limits = if_dfs_limits_mvap,
-> > +		.n_limits = ARRAY_SIZE(if_dfs_limits_mvap),
-> > +		.max_interfaces = 8,
-> > +		.num_different_channels = 1,
-> > +		.beacon_int_infra_match = true,
-> > +		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
-> > |
-> >   					BIT(NL80211_CHAN_WIDTH_20) |
-> >   					BIT(NL80211_CHAN_WIDTH_40),
-> >   	}
-> Hi
-> This mail is in my list of "potentially interesting changes".
-> Do you plan to send this as patch at some point?
-> Or are you still testing something?
-> 
-> Best regards
-> Matthias
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 8766741..74d5d72 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -31,7 +31,8 @@
+  */
+ static bool
+ mwifiex_uap_del_tx_pkts_in_ralist(struct mwifiex_private *priv,
+-				  struct list_head *ra_list_head)
++				  struct list_head *ra_list_head,
++				  int tid)
+ {
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	struct sk_buff *skb, *tmp;
+@@ -49,7 +50,10 @@ mwifiex_uap_del_tx_pkts_in_ralist(struct mwifiex_private *priv,
+ 				__skb_unlink(skb, &ra_list->skb_head);
+ 				mwifiex_write_data_complete(adapter, skb, 0,
+ 							    -1);
+-				atomic_dec(&priv->wmm.tx_pkts_queued);
++				if (ra_list->tx_paused)
++					priv->wmm.pkts_paused[tid]--;
++				else
++					atomic_dec(&priv->wmm.tx_pkts_queued);
+ 				pkt_deleted = true;
+ 			}
+ 			if ((atomic_read(&adapter->pending_bridged_pkts) <=
+@@ -77,7 +81,7 @@ static void mwifiex_uap_cleanup_tx_queues(struct mwifiex_private *priv)
+ 		if (priv->del_list_idx == MAX_NUM_TID)
+ 			priv->del_list_idx = 0;
+ 		ra_list = &priv->wmm.tid_tbl_ptr[priv->del_list_idx].ra_list;
+-		if (mwifiex_uap_del_tx_pkts_in_ralist(priv, ra_list)) {
++		if (mwifiex_uap_del_tx_pkts_in_ralist(priv, ra_list, i)) {
+ 			priv->del_list_idx++;
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 173d366..8e30fb3 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -160,7 +160,6 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
+ 		ra_list->tdls_link = false;
+ 		ra_list->ba_status = BA_SETUP_NONE;
+ 		ra_list->amsdu_in_ampdu = false;
+-		ra_list->tx_paused = false;
+ 		if (!mwifiex_queuing_ra_based(priv)) {
+ 			if (mwifiex_is_tdls_link_setup
+ 				(mwifiex_get_tdls_link_status(priv, ra))) {
+@@ -173,6 +172,8 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
+ 		} else {
+ 			spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+ 			node = mwifiex_get_sta_entry(priv, ra);
++			if (node)
++				ra_list->tx_paused = node->tx_pause;
+ 			ra_list->is_11n_enabled =
+ 				      mwifiex_is_sta_11n_enabled(priv, node);
+ 			if (ra_list->is_11n_enabled)
+@@ -737,7 +738,11 @@ mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv, const u8 *ra_addr)
+ 		if (!ra_list)
+ 			continue;
+ 		mwifiex_wmm_del_pkts_in_ralist_node(priv, ra_list);
+-		atomic_sub(ra_list->total_pkt_count, &priv->wmm.tx_pkts_queued);
++		if (ra_list->tx_paused)
++			priv->wmm.pkts_paused[i] -= ra_list->total_pkt_count;
++		else
++			atomic_sub(ra_list->total_pkt_count,
++				   &priv->wmm.tx_pkts_queued);
+ 		list_del(&ra_list->list);
+ 		kfree(ra_list);
+ 	}
+-- 
+1.8.1.4
 
