@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa09-02.prod.phx3.secureserver.net ([173.201.193.231]:47082
-	"EHLO p3plsmtpa09-02.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755123AbbIRP5F (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49488 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752474AbbIRNcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 11:57:05 -0400
-From: "William Riba" <wriba@wriba.com>
+	Fri, 18 Sep 2015 09:32:48 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDORVj027010
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:48 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1wy3qpfe7k-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:48 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-Subject: ath10k RFKILL hard block
-Date: Fri, 18 Sep 2015 10:49:58 -0500
-Message-ID: <004101d0f229$acc77c80$06567580$@wriba.com> (sfid-20150918_175712_854290_2F3CEFD4)
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Zhaoyang Liu <liuzy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 02/16] mwifiex: update amsdu tx packet time stamp
+Date: Fri, 18 Sep 2015 06:32:04 -0700
+Message-ID: <1442583138-2979-3-git-send-email-akarwar@marvell.com> (sfid-20150918_153252_277242_AF0691C3)
+In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
+References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm currently testing QCA9880/QCA9890 mini-PCIe hardware for an AP
-implementation. I've done initial testing with a couple of cards using a
-Linux 4.0.5 kernel, ath10k driver and the currently posted firmware blobs.
-Everything works fine except for the lack of hardware RFKILL functionality.
-This is a regulatory requirement for the project, so soft RKILL cannot be
-used in its place (which works fine BTW). Both cards would have you ground
-pin 20 of the miniPCIe card to activate the hard block. Doing so however
-does nothing, as the radio continues to operate. Contacting the vendors of
-these cards has them blaming the firmware.
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-On older Atheros AR9300 hardware supported by the ath9k driver there was an
-EEPROM setting (rfSilent) that activated this option. It required an atheros
-config tool to turn it on if turned off by the vendor. My question is how
-does one get hard block RFKILL working on QCA9880/QCA9890 hardware?  Thanks
-for any advice on this subject.
+This patch fixes the issue of delay time in A-MSDU tx packet.
+In generated new A-MSDU packet, the time stamp is initialized to zero.
+Choose the time of first MSDU packet as aggregated packet's time.
 
-Regards,
-W Riba
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index f7c7172..6cb0d33 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -202,6 +202,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+ 	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
+ 	skb_aggr->priority = skb_src->priority;
++	skb_aggr->tstamp = skb_src->tstamp;
+ 
+ 	do_gettimeofday(&tv);
+ 	skb_aggr->tstamp = timeval_to_ktime(tv);
+-- 
+1.8.1.4
 
