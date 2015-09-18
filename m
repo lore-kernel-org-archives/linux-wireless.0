@@ -1,46 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34531 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755696AbbI2H3X (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48501 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754179AbbIRXnb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 03:29:23 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [01/12] brcmfmac: consolidate ifp lookup in driver core
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1440620104-2715-2-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20150929072923.29284140B8B@smtp.codeaurora.org> (sfid-20150929_092939_042914_1B9A6152)
-Date: Tue, 29 Sep 2015 07:29:23 +0000 (UTC)
+	Fri, 18 Sep 2015 19:43:31 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  ensure association req uses configured ratemask.
+Date: Fri, 18 Sep 2015 16:43:26 -0700
+Message-Id: <1442619806-29917-1-git-send-email-greearb@candelatech.com> (sfid-20150919_014336_409915_154F8D93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
-> In rx path the firmware provide an interface index which is used to
-> map to a struct brcmf_if instance. However, this involves some trick
-> that is done in two places. This is changed by having driver core
-> providing brcmf_get_ifp() function.
-> 
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+When sending the association request, pay attention to the
+legacy rates configured by the user, and do not advertise support
+for any that are not configured.
 
-Thanks, 12 patches applied to wireless-drivers-next.git:
+This makes the assoc request packet look more correct when
+making modern hardware act like a /b mode station, for instance.
 
-75effb03ee8e brcmfmac: consolidate ifp lookup in driver core
-796cfb65e3ed brcmfmac: make brcmf_proto_hdrpull() return struct brcmf_if instance
-ee6e3a3414a4 brcmfmac: change parameters for brcmf_remove_interface()
-1c626cf472fc brcmfmac: only call brcmf_cfg80211_detach() when attach was successful
-ddddfed2f9d8 brcmfmac: correct detection of p2pdev interface event
-46f3b6ee4838 brcmfmac: use brcmf_get_ifp() to map ifidx to struct brcmf_if instance
-054e68add659 brcmfmac: pass struct brcmf_if instance in brcmf_txfinalize()
-291da87b6910 brcmfmac: add mapping for interface index to bsscfg index
-9d6c1dc4f913 brcmfmac: add dedicated debug level for firmware console logging
-03cca20a6ee1 brcmfmac: remove ifidx parameter from brcmf_fws_txstatus_suppressed()
-c67d41ba6ff3 brcmfmac: change prototype for brcmf_fws_hdrpull()
-95ef12394a4d brcmfmac: introduce brcmf_net_detach() function
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mlme.c        | 36 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 35 insertions(+), 3 deletions(-)
 
-Kalle Valo
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2c3842e..b6042f2 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -388,7 +388,7 @@ struct ieee80211_mgd_auth_data {
+ 
+ struct ieee80211_mgd_assoc_data {
+ 	struct cfg80211_bss *bss;
+-	const u8 *supp_rates;
++	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
+ 
+ 	unsigned long timeout;
+ 	int tries;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 83c445b4..bce467c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -635,6 +635,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 						     assoc_data->supp_rates_len,
+ 						     &rates);
+ 	} else {
++		u32 msk = sdata->cfg_bitrate_mask.control[chan->band].legacy;
++
+ 		/*
+ 		 * In case AP not provide any supported rates information
+ 		 * before association, we send information element(s) with
+@@ -645,6 +647,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			if ((rate_flags & sband->bitrates[i].flags)
+ 			    != rate_flags)
+ 				continue;
++			if (sdata->cfg_bitrate_mask_set &&
++			    (!(msk & (1 << i))))
++				continue;
+ 			rates |= BIT(i);
+ 			rates_len++;
+ 		}
+@@ -4735,8 +4740,35 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata->smps_mode = ifmgd->req_smps;
+ 
+ 	assoc_data->capability = req->bss->capability;
+-	assoc_data->supp_rates = bss->supp_rates;
+-	assoc_data->supp_rates_len = bss->supp_rates_len;
++	if (sdata->cfg_bitrate_mask_set) {
++		int band = req->bss->channel->band;
++		u32 msk = sdata->cfg_bitrate_mask.control[band].legacy;
++		u8 all_rates[12] = {0x82, 0x84, 0x8b, 0x96,
++				    12, 18, 24, 36, 48, 72, 96, 108};
++		int i;
++		int q = 0;
++
++		for (i = 0; i < 12; i++) {
++			int j;
++
++			if (!(msk & (1 << i)))
++				break;
++
++			for (j = 0; j < bss->supp_rates_len; j++) {
++				if (bss->supp_rates[j] == all_rates[i]) {
++					assoc_data->supp_rates[q] =
++						all_rates[i];
++					q++;
++					break;
++				}
++			}
++		}
++		assoc_data->supp_rates_len = q;
++	} else {
++		memcpy(assoc_data->supp_rates, bss->supp_rates,
++		       bss->supp_rates_len);
++		assoc_data->supp_rates_len = bss->supp_rates_len;
++	}
+ 
+ 	rcu_read_lock();
+ 	ht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
+-- 
+2.4.3
+
