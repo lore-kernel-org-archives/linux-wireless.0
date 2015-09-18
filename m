@@ -1,50 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48778 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933838AbbI2KL3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:11:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Chor Teck Law <ctlaw@marvell.com>
-Cc: David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-	<1436455659.36587.131.camel@sakura.staff.proxad.net>
-	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
-	<20150804220956.GA28583@sakura.staff.proxad.net>
-	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
-	<87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
-	<5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com>
-	<87eghh7g30.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 29 Sep 2015 13:11:21 +0300
-In-Reply-To: <87eghh7g30.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 29 Sep 2015 12:03:14 +0300")
-Message-ID: <87y4fp5yd2.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_121133_256841_BE38014E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:48442 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754044AbbIRNTu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 09:19:50 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] mac80211: Deinline drv_conf_tx()
+Date: Fri, 18 Sep 2015 15:19:34 +0200
+Message-Id: <1442582379-10342-2-git-send-email-dvlasenk@redhat.com> (sfid-20150918_152148_707118_D04DDCE0)
+In-Reply-To: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
+References: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
+after deinlining the function size is 785 bytes and there are
+7 callsites.
 
-> Chor Teck Law <ctlaw@marvell.com> writes:
->
->> But for different generation of future chipsets/new technology, when
->> the hardware no longer permit us to use same driver, we will have to
->> re-evaluate our options. We cannot guarantee something way out into
->> the future.
->
-> Yeah, that's understandable. But the community really dislikes having
-> duplicated code/functionality, so please keep this in mind.
->
-> If you can submit the next version soon we could try to get this driver
-> to 4.4. We have few more weeks.
+Total size reduction is about 3.5 kbytes.
 
-I forgot to ask about the firmware image for this driver. Is that
-available in linux-firmware.git?
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: John Linville <linville@tuxdriver.com>
+CC: Michal Kazior <michal.kazior@tieto.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+ net/mac80211/driver-ops.c | 25 +++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 27 +++------------------------
+ 2 files changed, 28 insertions(+), 24 deletions(-)
 
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index 267c3b1..b28e66ca 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -39,3 +39,28 @@ int drv_sta_state(struct ieee80211_local *local,
+ 	trace_drv_return_int(local, ret);
+ 	return ret;
+ }
++
++int drv_conf_tx(struct ieee80211_local *local,
++		struct ieee80211_sub_if_data *sdata, u16 ac,
++		const struct ieee80211_tx_queue_params *params)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	if (WARN_ONCE(params->cw_min == 0 ||
++		      params->cw_min > params->cw_max,
++		      "%s: invalid CW_min/CW_max: %d/%d\n",
++		      sdata->name, params->cw_min, params->cw_max))
++		return -EINVAL;
++
++	trace_drv_conf_tx(local, sdata, ac, params);
++	if (local->ops->conf_tx)
++		ret = local->ops->conf_tx(&local->hw, &sdata->vif,
++					  ac, params);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 02d9133..bac456b 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -630,30 +630,9 @@ static inline void drv_sta_statistics(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
+-static inline int drv_conf_tx(struct ieee80211_local *local,
+-			      struct ieee80211_sub_if_data *sdata, u16 ac,
+-			      const struct ieee80211_tx_queue_params *params)
+-{
+-	int ret = -EOPNOTSUPP;
+-
+-	might_sleep();
+-
+-	if (!check_sdata_in_driver(sdata))
+-		return -EIO;
+-
+-	if (WARN_ONCE(params->cw_min == 0 ||
+-		      params->cw_min > params->cw_max,
+-		      "%s: invalid CW_min/CW_max: %d/%d\n",
+-		      sdata->name, params->cw_min, params->cw_max))
+-		return -EINVAL;
+-
+-	trace_drv_conf_tx(local, sdata, ac, params);
+-	if (local->ops->conf_tx)
+-		ret = local->ops->conf_tx(&local->hw, &sdata->vif,
+-					  ac, params);
+-	trace_drv_return_int(local, ret);
+-	return ret;
+-}
++int drv_conf_tx(struct ieee80211_local *local,
++		struct ieee80211_sub_if_data *sdata, u16 ac,
++		const struct ieee80211_tx_queue_params *params);
+ 
+ static inline u64 drv_get_tsf(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata)
 -- 
-Kalle Valo
+1.8.1.4
+
