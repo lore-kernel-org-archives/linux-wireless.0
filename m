@@ -1,55 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7092 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbbIFQOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 12:14:48 -0400
-Message-ID: <55EC6676.9050906@broadcom.com> (sfid-20150906_181452_708267_65A4AF3A)
-Date: Sun, 6 Sep 2015 18:14:46 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: David Lin <dlin@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
-References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>	<1433598191.2467.65.camel@sipsolutions.net> <877fo3he8y.fsf@kamboji.qca.qualcomm.com> <55EC6453.3000601@broadcom.com>
-In-Reply-To: <55EC6453.3000601@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:42918 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754044AbbIRNT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 09:19:56 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/6] mac80211: Deinline drv_sta_rc_update()
+Date: Fri, 18 Sep 2015 15:19:35 +0200
+Message-Id: <1442582379-10342-3-git-send-email-dvlasenk@redhat.com> (sfid-20150918_152137_723269_D1479F4D)
+In-Reply-To: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
+References: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2015 06:05 PM, Arend van Spriel wrote:
-> On 09/06/2015 03:24 PM, Kalle Valo wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>
->>> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
->>>
->>>>   drivers/net/wireless/mwlwifi/Kconfig        |   17 +
->>>
->>> Does this driver has any relation to mwifiex? Perhaps the same
->>> maintainer team, etc.? Could consider moving all the Marvell drivers
->>> into one directory, but not really necessary I guess.
->>
->> Actually I would want to start adding vendor directories for wireless
->> drivers, just like drivers/net/ethernet has, to cleanup the directory
->> structure. So for example this driver we would have
->> drivers/net/wireless/marvell/mwlwifi and later we would start moving
->> existing drivers to vendor drivers as well. Thoughts?
+With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
+after deinlining the function size is 706 bytes and there are
+2 callsites, reducing code size by about 700 bytes.
 
-Another remark on this. Do you propose to add a vendor Kconfig level as 
-well?
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: John Linville <linville@tuxdriver.com>
+CC: Michal Kazior <michal.kazior@tieto.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+ net/mac80211/driver-ops.c | 20 ++++++++++++++++++++
+ net/mac80211/driver-ops.h | 22 +++-------------------
+ 2 files changed, 23 insertions(+), 19 deletions(-)
 
-Regards,
-Arend
-
-> Right now our umbrella folder is brcm80211. I am fine changing it to
-> broadcom if explicit vendor names are preferred although brcm80211 still
-> has my personal preference.
->
-> Regards,
-> Arend
->
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index b28e66ca..b85f6ff 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -40,6 +40,26 @@ int drv_sta_state(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++void drv_sta_rc_update(struct ieee80211_local *local,
++		       struct ieee80211_sub_if_data *sdata,
++		       struct ieee80211_sta *sta, u32 changed)
++{
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return;
++
++	WARN_ON(changed & IEEE80211_RC_SUPP_RATES_CHANGED &&
++		(sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		 sdata->vif.type != NL80211_IFTYPE_MESH_POINT));
++
++	trace_drv_sta_rc_update(local, sdata, sta, changed);
++	if (local->ops->sta_rc_update)
++		local->ops->sta_rc_update(&local->hw, &sdata->vif,
++					  sta, changed);
++
++	trace_drv_return_void(local);
++}
++
+ int drv_conf_tx(struct ieee80211_local *local,
+ 		struct ieee80211_sub_if_data *sdata, u16 ac,
+ 		const struct ieee80211_tx_queue_params *params)
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index bac456b..fdde11e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -580,25 +580,9 @@ int drv_sta_state(struct ieee80211_local *local,
+ 		  enum ieee80211_sta_state old_state,
+ 		  enum ieee80211_sta_state new_state);
+ 
+-static inline void drv_sta_rc_update(struct ieee80211_local *local,
+-				     struct ieee80211_sub_if_data *sdata,
+-				     struct ieee80211_sta *sta, u32 changed)
+-{
+-	sdata = get_bss_sdata(sdata);
+-	if (!check_sdata_in_driver(sdata))
+-		return;
+-
+-	WARN_ON(changed & IEEE80211_RC_SUPP_RATES_CHANGED &&
+-		(sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+-		 sdata->vif.type != NL80211_IFTYPE_MESH_POINT));
+-
+-	trace_drv_sta_rc_update(local, sdata, sta, changed);
+-	if (local->ops->sta_rc_update)
+-		local->ops->sta_rc_update(&local->hw, &sdata->vif,
+-					  sta, changed);
+-
+-	trace_drv_return_void(local);
+-}
++void drv_sta_rc_update(struct ieee80211_local *local,
++		       struct ieee80211_sub_if_data *sdata,
++		       struct ieee80211_sta *sta, u32 changed);
+ 
+ static inline void drv_sta_rate_tbl_update(struct ieee80211_local *local,
+ 					   struct ieee80211_sub_if_data *sdata,
+-- 
+1.8.1.4
 
