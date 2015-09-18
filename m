@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:37818 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755124AbbIHOWY (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59604 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbbIRUIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 10:22:24 -0400
-Received: by igbni9 with SMTP id ni9so78165075igb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 07:22:23 -0700 (PDT)
-Date: Tue, 8 Sep 2015 09:22:08 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
-Message-ID: <20150908142208.GB26645@ubuntu-hedt> (sfid-20150908_162228_581487_51C35AE6)
-References: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
- <20150813143154.GA121347@ubuntu-hedt>
- <55EEE9CA.5010309@gmail.com>
+	Fri, 18 Sep 2015 16:08:24 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 00/16] brcmfmac: new device support and P2P fixes
+Date: Fri, 18 Sep 2015 22:08:03 +0200
+Message-ID: <1442606899-31872-1-git-send-email-arend@broadcom.com> (sfid-20150918_220828_739738_9EB906D7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55EEE9CA.5010309@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 08, 2015 at 03:59:38PM +0200, Xose Vazquez Perez wrote:
-> On 08/13/2015 04:31 PM, Seth Forshee wrote:
-> 
-> > On Tue, Aug 11, 2015 at 03:29:55PM +0200, Xose Vazquez Perez wrote:
-> >> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
-> >> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
-> >>
-> >> Cc: Seth Forshee <seth.forshee@canonical.com>
-> >> Cc: linux-wireless@vger.kernel.org
-> >> Cc: wireless-regdb@lists.infradead.org
-> >> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> >> ---
-> >>  db.txt | 7 +++++++
-> >>  1 file changed, 7 insertions(+)
-> >>
-> >> diff --git a/db.txt b/db.txt
-> >> index 982db34..2edbf90 100644
-> >> --- a/db.txt
-> >> +++ b/db.txt
-> >> @@ -275,6 +275,13 @@ country CR: DFS-FCC
-> >>  	(5490 - 5730 @ 20), (24), DFS
-> >>  	(5735 - 5835 @ 20), (30)
-> >>  
-> >> +# http://www.mincom.gob.cu/?q=marcoregulatorio
-> >> +# - Redes Informáticas
-> >> +# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
-> >> +country CU: DFS-FCC
-> >> +	(2400 - 2456 @ 40), (200 mW)
-> >> +	(2456 - 2483.5 @ 40), (200 mW)
-> >> +
-> > 
-> > Based on the Google translation of the document you linked to, I don't
-> > see anything which would prevent merging these rules into one rule. Am I
-> > missing something?
-> 
-> from http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
-> page 7:
-> 
-> Artículo 4: Disposiciones de carácter técnico
-> [..]
-> 4.3.- No obstante lo anterior, los equipos que operen en las frecuencias entre 2456 y
-> 2483,5 MHz pueden emplear valores de p.i.r.e superiores, cuando ello se justifique en
-> beneficio de objetivos de interés nacional [...]
-> 4.4.- Para estos casos es necesario obtener una autorización expresa de la Agencia
-> [...]
-> 
-> If you grant an authorization, for 2456-2483.5 pire can be increased.
+This series is intended for v4.4 containing the following highlights:
 
-Okay, but for the purposes of this database that provision isn't going
-to apply, and it seems you agree since you've listed both as having the
-exact same power limit. So I'd still prefer that we make it a single
-rule.
+* support for BCM4350, BCM4365, and BCM4366 PCIE devices.
+* fixed for legacy P2P and P2P device handling.
+* correct set and get tx-power.
 
-Thanks,
-Seth
+The series should be applied to master branch of the wireless-drivers-next
+repository after the series sent earlier with
+Message-ID: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+and patch "brcmfmac: Reset PCIE devices after recognition." with
+Message-ID: <1440684846-17214-1-git-send-email-arend@broadcom.com>.
+
+Hante Meuleman (16):
+  brcmfmac: Fix exception handling.
+  brcmfmac: Add support for the BCM4350 PCIE device.
+  brcmfmac: Fix set and get tx-power functions.
+  brcmfmac: Only assign primary netdev to if2bss array.
+  brcmfmac: Inform p2p module about p2pon through API
+  brcmfmac: Fix bug in flowring management.
+  brcmfmac: Make p2pon module param always available.
+  brcmfmac: Workaround in change vif for wpa_supplicant support.
+  brcmfmac: Deleting of p2p device is leaking memory.
+  brcmfmac: Only handle p2p_stop_device if vif is valid
+  brcmfmac: Fix p2p bug for older firmwares.
+  brcmfmac: Add module parameter to disable features.
+  brcmfmac: Fix race condition bug when deleting p2p interface.
+  brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices.
+  brcmfmac: Fix TDLS setup by properly handling p2p noif.
+  brcmfmac: Accept events when TDLS is used in combination with p2p.
+
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 186 +++++++--------------
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h |   3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c     | 111 ++++++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     |  34 +++-
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c  |  13 ++
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.h |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  26 ++-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |   3 +
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  92 ++++++----
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.h      |   5 +-
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |  31 ++++
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |  11 ++
+ include/linux/bcma/bcma.h                          |   2 +
+ 13 files changed, 331 insertions(+), 188 deletions(-)
+
+-- 
+1.9.1
+
