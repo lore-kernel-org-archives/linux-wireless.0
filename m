@@ -1,55 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:37352 "EHLO
-	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932311AbbIUNgU (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165AbbIRUI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 09:36:20 -0400
-From: Andrzej Hajda <a.hajda@samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 21/38] mwifiex: fix comparison expression
-Date: Mon, 21 Sep 2015 15:33:53 +0200
-Message-id: <1442842450-29769-22-git-send-email-a.hajda@samsung.com> (sfid-20150921_154606_495799_5EE54EA0)
-In-reply-to: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
-References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
+	Fri, 18 Sep 2015 16:08:26 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 12/16] brcmfmac: Add module parameter to disable features.
+Date: Fri, 18 Sep 2015 22:08:15 +0200
+Message-ID: <1442606899-31872-13-git-send-email-arend@broadcom.com> (sfid-20150918_220841_166472_5984CB17)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To avoid underflows signed variables should be used in expression.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
+For debugging purpose it is very handy to be able to disable
+features. It has happened a few times that new features turned
+out not always being properly detected for all devices/firmwares.
+Making it possible to disable the feature with a module parameter
+will make testing/debugging easier.
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
-
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/11n_rxreorder.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 2906cd5..b3970a8 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -615,10 +615,10 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 	    ((end_win > start_win) && ((seq_num > end_win) ||
- 				       (seq_num < start_win)))) {
- 		end_win = seq_num;
--		if (((seq_num - win_size) + 1) >= 0)
-+		if (((end_win - win_size) + 1) >= 0)
- 			start_win = (end_win - win_size) + 1;
- 		else
--			start_win = (MAX_TID_VALUE - (win_size - seq_num)) + 1;
-+			start_win = (MAX_TID_VALUE - (win_size - end_win)) + 1;
- 		mwifiex_11n_dispatch_pkt_until_start_win(priv, tbl, start_win);
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+index 7c2135f..44bb306 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+@@ -15,6 +15,7 @@
+  */
  
+ #include <linux/netdevice.h>
++#include <linux/module.h>
+ 
+ #include <brcm_hw_ids.h>
+ #include "core.h"
+@@ -23,6 +24,12 @@
+ #include "fwil.h"
+ #include "feature.h"
+ 
++
++/* Module param feature_disable (global for all devices) */
++static int brcmf_feature_disable;
++module_param_named(feature_disable, brcmf_feature_disable, int, 0);
++MODULE_PARM_DESC(feature_disable, "Disable features");
++
+ /*
+  * expand feature list to array of feature strings.
+  */
+@@ -131,6 +138,12 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
+ 
++	if (brcmf_feature_disable) {
++		brcmf_dbg(INFO, "Features: 0x%02x, disable: 0x%02x\n",
++			  ifp->drvr->feat_flags, brcmf_feature_disable);
++		ifp->drvr->feat_flags &= ~brcmf_feature_disable;
++	}
++
+ 	/* set chip related quirks */
+ 	switch (drvr->bus_if->chip) {
+ 	case BRCM_CC_43236_CHIP_ID:
 -- 
 1.9.1
 
