@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33973 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbbIFRG5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45207 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbbIRJNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 13:06:57 -0400
-Received: by oiev17 with SMTP id v17so34213118oie.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2015 10:06:57 -0700 (PDT)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-To: Kalle Valo <kvalo@codeaurora.org>, Jes.Sorensen@redhat.com
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
- <1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
- <87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55EC72AF.2050803@lwfinger.net> (sfid-20150906_190700_990811_980DE298)
-Date: Sun, 6 Sep 2015 12:06:55 -0500
+	Fri, 18 Sep 2015 05:13:01 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/34] staging: wilc1000: remove typedef from the struct tstrHostIFkeyAttr
+Date: Fri, 18 Sep 2015 18:11:13 +0900
+Message-ID: <1442567496-29331-11-git-send-email-tony.cho@atmel.com> (sfid-20150918_111654_110550_488F1313)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2015 09:59 AM, Kalle Valo wrote:
-> Jes.Sorensen@redhat.com writes:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> This is an alternate driver for a number of Realtek WiFi USB devices,
->> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
->> It was written from scratch utilizing the Linux mac80211 stack.
->>
->> After spending months cleaning up the vendor provided rtl8723au
->> driver, which comes with it's own 802.11 stack included, I decided to
->> rewrite this driver from the bottom up.
->>
->> Many thanks to Johannes Berg for 802.11 insights and help and Larry
->> Finger for help with the vendor driver.
->>
->> The full git log for the development of this driver can be found here:
->> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->>      branch rtl8723au-mac80211
->>
->> This driver is still under development, but has proven to be very
->> stable for me. It currently supports station mode only. It has support
->> for OFDM and CCK rates, as well as AMPDU. It does lack certain
->> features found in the staging driver, such as power management and
->> 40MHz channel support. In addition it does not support AD-HOC, AP, and
->> monitor mode support at this point.
->>
->> The driver is known to work with the following devices:
->> Lenovo Yoga (rtl8723au)
->> TP-Link TL-WN823N (rtl8192cu)
->> Etekcity 6R (rtl8188cu)
->> Daffodil LAN03 (rtl8188cu)
->> Alfa AWUS036NHR (rtl8188ru)
+This patch removes typedef from the struct tstrHostIFkeyAttr and renames
+it to key_attr in oder to comply with the Linux coding style.
 
-One other comment is that using lower case such as rtl8723au indicates a driver, 
-whereas RTL8723AU is a device. There are no drivers rtl8188cu or rtl8188ru.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Larry
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c80d00e..1f0c842 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -136,7 +136,7 @@ typedef union _tuniHostIFkeyAttr {
+ } tuniHostIFkeyAttr;
+ 
+ /*!
+- *  @struct             tstrHostIFkeyAttr
++ *  @struct             key_attr
+  *  @brief		Structure to hold Host IF Scan Attributes
+  *  @details
+  *  @todo
+@@ -145,11 +145,11 @@ typedef union _tuniHostIFkeyAttr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFkeyAttr {
++struct key_attr {
+ 	tenuKeyType enuKeyType;
+ 	u8 u8KeyAction;
+ 	tuniHostIFkeyAttr uniHostIFkeyAttr;
+-} tstrHostIFkeyAttr;
++};
+ 
+ 
+ 
+@@ -422,7 +422,7 @@ union message_body {
+ 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+ 	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+-	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
++	struct key_attr strHostIFkeyAttr;                             /*!<>*/
+ 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
+ 	tstrHostIFSetChan strHostIFSetChan;
+ 	tstrHostIFGetChan strHostIFGetChan;
+@@ -2711,13 +2711,14 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
+ /**
+  *  @brief Handle_Key
+  *  @details       Sending config packet to firmware to set key
+- *  @param[in]    tstrHostIFkeyAttr* pstrHostIFkeyAttr
++ *  @param[in]    struct key_attr *pstrHostIFkeyAttr
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static int Handle_Key(tstrWILC_WFIDrv *drvHandler, tstrHostIFkeyAttr *pstrHostIFkeyAttr)
++static int Handle_Key(tstrWILC_WFIDrv *drvHandler,
++		      struct key_attr *pstrHostIFkeyAttr)
+ {
+ 	s32 s32Error = 0;
+ 	tstrWID strWID;
+-- 
+1.9.1
+
