@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:32498 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbbIQKCa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 06:02:30 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 1/4] staging: wilc1000: fix null check routine
-Date: Thu, 17 Sep 2015 19:02:17 +0900
-Message-ID: <1442484140-13485-2-git-send-email-tony.cho@atmel.com> (sfid-20150917_120234_459733_74806694)
-In-Reply-To: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
-References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:57274 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753607AbbIRNTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 09:19:45 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/6] mac80211: Deinline large functions in driver-ops.h
+Date: Fri, 18 Sep 2015 15:19:33 +0200
+Message-Id: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com> (sfid-20150918_152212_883153_32910567)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+After measuring size of inlines, these functions were found to be largest.
+These patches reduce code size by about 21 kbytes.
 
-This patch removes the potential faults which may happen when unexpectedly
-getting access to invalid pointer. The pointer of pstrWFIDrv is unlikely
-to be invalid. However, it is safer to return error when the invalid
-memory is unfortunately accessed.
+CC: John Linville <linville@tuxdriver.com>
+CC: Michal Kazior <michal.kazior@tieto.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Denys Vlasenko (6):
+  mac80211: Deinline drv_conf_tx()
+  mac80211: Deinline drv_sta_rc_update()
+  mac80211: Deinline drv_ampdu_action()
+  mac80211: Deinline drv_get/set/reset_tsf()
+  mac80211: Deinline drv_add/remove/change_interface()
+  mac80211: Deinline drv_switch_vif_chanctx()
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6fdf392..151e8c4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
- 	s32 s32Err = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
- 
--	if (pstrWFIDrv == NULL)
-+	if (unlikely(!pstrWFIDrv)) {
- 		PRINT_ER("Driver handler is NULL\n");
-+		return -EFAULT;
-+	}
- 	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
- 		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
- 
+ net/mac80211/driver-ops.c | 223 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 237 ++++++----------------------------------------
+ 2 files changed, 250 insertions(+), 210 deletions(-)
+
 -- 
-1.9.1
+1.8.1.4
 
