@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33447 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbbIPLMA (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:3119 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbbIRUI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:12:00 -0400
-Received: by pacex6 with SMTP id ex6so207194857pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:12:00 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/10] staging: wilc1000: remove unused defines
-Date: Wed, 16 Sep 2015 20:11:32 +0900
-Message-Id: <1442401895-7463-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131245_944405_582A25CF)
-In-Reply-To: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 16:08:26 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 11/16] brcmfmac: Fix p2p bug for older firmwares.
+Date: Fri, 18 Sep 2015 22:08:14 +0200
+Message-ID: <1442606899-31872-12-git-send-email-arend@broadcom.com> (sfid-20150918_220835_488138_850DC670)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused defines.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Some devices with older firmwares are reporting new p2p device
+interface with the wrong type. Accept this type to get p2p
+working for these devices.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_platform.h | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index 1e56973..5c867ec 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -41,8 +41,4 @@ typedef time_t WILC_Time;
-  *      others
-  ********************************************************************/
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 3330f30..dc34d3a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -186,11 +186,13 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 		  ifevent->action, ifevent->ifidx, ifevent->bssidx,
+ 		  ifevent->flags, ifevent->role);
  
--/* Generic printf function */
--#define __WILC_FILE__		__FILE__
--#define __WILC_FUNCTION__	__func__
--#define __WILC_LINE__		__LINE__
- #endif
+-	/* The P2P Device interface event must not be ignored
+-	 * contrary to what firmware tells us.
++	/* The P2P Device interface event must not be ignored contrary to what
++	 * firmware tells us. Older firmware uses p2p noif, with sta role.
++	 * This should be accepted.
+ 	 */
+-	is_p2pdev = (ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
+-		    ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT;
++	is_p2pdev = ((ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
++		     (ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT ||
++		      ifevent->role == BRCMF_E_IF_ROLE_STA));
+ 	if (!is_p2pdev && (ifevent->flags & BRCMF_E_IF_FLAG_NOIF)) {
+ 		brcmf_dbg(EVENT, "event can be ignored\n");
+ 		return;
 -- 
-2.5.1
+1.9.1
 
