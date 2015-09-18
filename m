@@ -1,73 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:36535 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbbI3RCy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45721 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427AbbIRJOf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 13:02:54 -0400
+	Fri, 18 Sep 2015 05:14:35 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/34] staging: wilc1000: remove typedef from the struct tstrHostIfSetMacAddress
+Date: Fri, 18 Sep 2015 18:11:27 +0900
+Message-ID: <1442567496-29331-25-git-send-email-tony.cho@atmel.com> (sfid-20150918_111438_810485_A0B31A4F)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Date: Wed, 30 Sep 2015 13:02:53 -0400
-Message-ID: <CA+5PVA4yaLG2NtJ_Bg5-BQzR-Wa5ABxPb-cLxF7bjSsf-P1_5Q@mail.gmail.com> (sfid-20150930_190316_251750_D94A662B)
-Subject: Rate limiting AP bandwidth change messages in ieee80211_config_bw?
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+This patch removes typedef from the struct tstrHostIfSetMacAddress and
+renames it set_mac_addr in order to comply with the Linux coding style.
 
-We've seen a handful of reports that seem to have verbose output from
-the ieee80211_config_bw function in net/mac80211/mlme.c.  It looks
-similar to this:
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 5 +++--
+ drivers/staging/wilc1000/host_interface.h | 5 ++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-[   66.578652] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   68.522437] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   69.548353] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   70.568677] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   71.489416] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   72.512917] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   73.535866] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   81.777530] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   82.540576] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   94.513467] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   95.634855] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   97.474767] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[   98.498036] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[   99.520472] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[  100.551344] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
-[  101.571100] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 1 (2437/0 MHz)
-[  102.490708] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
-is 2437 MHz, width 2 (2447/0 MHz)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1433417..756555d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -436,7 +436,7 @@ union message_body {
+ 	struct drv_handler strHostIfSetDrvHandler;
+ 	struct set_multicast strHostIfSetMulti;
+ 	struct op_mode strHostIfSetOperationMode;
+-	tstrHostIfSetMacAddress strHostIfSetMacAddress;
++	struct set_mac_addr strHostIfSetMacAddress;
+ 	tstrHostIfGetMacAddress strHostIfGetMacAddress;
+ 	tstrHostIfBASessionInfo strHostIfBASessionInfo;
+ 	tstrHostIfRemainOnChan strHostIfRemainOnChan;
+@@ -854,7 +854,8 @@ s32 Handle_get_IPAddress(tstrWILC_WFIDrv *drvHandler, u8 *pu8IPAddr, u8 idx)
+  *  @date		November 2013
+  *  @version	7.0
+  */
+-static s32 Handle_SetMacAddress(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetMacAddress *pstrHostIfSetMacAddress)
++static s32 Handle_SetMacAddress(tstrWILC_WFIDrv *drvHandler,
++				struct set_mac_addr *pstrHostIfSetMacAddress)
+ {
+ 
+ 	s32 s32Error = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 078bb54..5ca7734 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -264,10 +264,9 @@ struct op_mode {
+ 	u32 u32Mode;
+ };
+ 
+-/*BugID_5077*/
+-typedef struct {
++struct set_mac_addr {
+ 	u8 u8MacAddress[ETH_ALEN];
+-} tstrHostIfSetMacAddress;
++};
+ 
+ /*BugID_5213*/
+ typedef struct {
+-- 
+1.9.1
 
-Essentially, this looks like the AP is changing the bandwidth (and
-only the width) every second or so.  Why it is doing this, I'm not
-sure.  However, this doesn't seem to actually be an error case yet the
-kernel logs are getting spammed with this message.
-
-I'm wondering if we could either change this message to use sdata_dbg
-instead of sdata_info, or if we could possibly ratelimit it somehow.
-I'd be happy to come up with a patch for either, but I wanted to get
-your feedback on it before I started.  Do you have any objections or
-preference?
-
-josh
