@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35647 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924AbbIHP4m (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3674 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbbIRH6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:42 -0400
-Received: by pacfv12 with SMTP id fv12so130442693pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:41 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 12/30] staging: wilc1000: rename WILC_WFI_change_beacon
-Date: Wed,  9 Sep 2015 00:55:49 +0900
-Message-Id: <1441727767-26026-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_162025_363D0F82)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 03:58:43 -0400
+Subject: [PATCH 1/2] ath10k: add a_sle32_to_cpu()
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 18 Sep 2015 10:58:35 +0300
+Message-ID: <20150918075835.6983.66350.stgit@potku.adurom.net> (sfid-20150918_095846_352005_6BD39088)
+In-Reply-To: <20150918075706.6983.11216.stgit@potku.adurom.net>
+References: <20150918075706.6983.11216.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_change_beacon with
-wilc_cfg80211_change_beacon to avoid CamelCase.
+Copy a_sle32_to_cpu() from ath6kl so that we can easily handle signed __le32
+values. This is needed in struct wmi_pdev_tpc_config_event.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.h |   21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index b5d512e0..8773f16 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3254,7 +3254,7 @@ static int wilc_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 3e5a1591f772..95fdc723a996 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -73,6 +73,25 @@ struct wmi_cmd_hdr {
+ #define HTC_PROTOCOL_VERSION    0x0002
+ #define WMI_PROTOCOL_VERSION    0x0002
  
- /**
-- *  @brief      WILC_WFI_change_beacon
-+ *  @brief      wilc_cfg80211_change_beacon
-  *  @details    Add a beacon with given parameters, @head, @interval
-  *                      and @dtim_period will be valid, @tail is optional.
-  *  @param[in]   wiphy
-@@ -3265,7 +3265,7 @@ static int wilc_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	23 JUL 2013
-  *  @version	1.0
-  */
--static int  WILC_WFI_change_beacon(struct wiphy *wiphy, struct net_device *dev,
-+static int  wilc_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_beacon_data *beacon)
- {
- 	struct WILC_WFI_priv *priv;
-@@ -3617,7 +3617,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_virtual_intf = wilc_cfg80211_change_virtual_intf,
- 
- 	.start_ap = wilc_cfg80211_start_ap,
--	.change_beacon = WILC_WFI_change_beacon,
-+	.change_beacon = wilc_cfg80211_change_beacon,
- 	.stop_ap = WILC_WFI_stop_ap,
- 	.add_station = WILC_WFI_add_station,
- 	.del_station = WILC_WFI_del_station,
--- 
-2.5.1
++/*
++ * There is no signed version of __le32, so for a temporary solution come
++ * up with our own version. The idea is from fs/ntfs/types.h.
++ *
++ * Use a_ prefix so that it doesn't conflict if we get proper support to
++ * linux/types.h.
++ */
++typedef __s32 __bitwise a_sle32;
++
++static inline a_sle32 a_cpu_to_sle32(s32 val)
++{
++	return (__force a_sle32) cpu_to_le32(val);
++}
++
++static inline s32 a_sle32_to_cpu(a_sle32 val)
++{
++	return le32_to_cpu((__force __le32) val);
++}
++
+ enum wmi_service {
+ 	WMI_SERVICE_BEACON_OFFLOAD = 0,
+ 	WMI_SERVICE_SCAN_OFFLOAD,
+@@ -3657,7 +3676,7 @@ struct wmi_pdev_tpc_config_event {
+ 	__le32 phy_mode;
+ 	__le32 twice_antenna_reduction;
+ 	__le32 twice_max_rd_power;
+-	s32 twice_antenna_gain;
++	a_sle32 twice_antenna_gain;
+ 	__le32 power_limit;
+ 	__le32 rate_max;
+ 	__le32 num_tx_chain;
 
