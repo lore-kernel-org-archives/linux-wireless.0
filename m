@@ -1,57 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49488 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752474AbbIRNcs (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46823 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbbIRVCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:32:48 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDORVj027010
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:48 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1wy3qpfe7k-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:48 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 02/16] mwifiex: update amsdu tx packet time stamp
-Date: Fri, 18 Sep 2015 06:32:04 -0700
-Message-ID: <1442583138-2979-3-git-send-email-akarwar@marvell.com> (sfid-20150918_153252_277242_AF0691C3)
-In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
-References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 18 Sep 2015 17:02:18 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] nl80211:  Print reasons for errors in setting bitrates.
+Date: Fri, 18 Sep 2015 14:02:15 -0700
+Message-Id: <1442610135-8696-1-git-send-email-greearb@candelatech.com> (sfid-20150918_230221_739029_1B62934D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhaoyang Liu <liuzy@marvell.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This patch fixes the issue of delay time in A-MSDU tx packet.
-In generated new A-MSDU packet, the time stamp is initialized to zero.
-Choose the time of first MSDU packet as aggregated packet's time.
+Makes it easier to figure out why user-space calls are
+failing.
 
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/nl80211.c | 37 +++++++++++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index f7c7172..6cb0d33 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -202,6 +202,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
- 	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
- 	skb_aggr->priority = skb_src->priority;
-+	skb_aggr->tstamp = skb_src->tstamp;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba73def..94c9ad8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8287,44 +8287,60 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		enum ieee80211_band band = nla_type(tx_rates);
+ 		int err;
  
- 	do_gettimeofday(&tv);
- 	skb_aggr->tstamp = timeval_to_ktime(tv);
+-		if (band < 0 || band >= IEEE80211_NUM_BANDS)
++		if (band < 0 || band >= IEEE80211_NUM_BANDS) {
++			pr_err("band: %d is out of range, num-bands: %d\n",
++			       band, IEEE80211_NUM_BANDS);
+ 			return -EINVAL;
++		}
+ 		sband = rdev->wiphy.bands[band];
+-		if (sband == NULL)
++		if (!sband) {
++			pr_err("sband[%d] is null\n", band);
+ 			return -EINVAL;
++		}
+ 		err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+ 				nla_len(tx_rates), nl80211_txattr_policy);
+-		if (err)
++		if (err) {
++			pr_err("Error parsing tx_rates, band: %d\n", band);
+ 			return err;
++		}
+ 		if (tb[NL80211_TXRATE_LEGACY]) {
+ 			mask.control[band].legacy = rateset_to_mask(
+ 				sband,
+ 				nla_data(tb[NL80211_TXRATE_LEGACY]),
+ 				nla_len(tb[NL80211_TXRATE_LEGACY]));
+ 			if ((mask.control[band].legacy == 0) &&
+-			    nla_len(tb[NL80211_TXRATE_LEGACY]))
++			    nla_len(tb[NL80211_TXRATE_LEGACY])) {
++				pr_err("Legacy rates invalid, band: %d.\n",
++				       band);
+ 				return -EINVAL;
++			}
+ 		}
+ 		if (tb[NL80211_TXRATE_HT]) {
+ 			if (!ht_rateset_to_mask(
+ 					sband,
+ 					nla_data(tb[NL80211_TXRATE_HT]),
+ 					nla_len(tb[NL80211_TXRATE_HT]),
+-					mask.control[band].ht_mcs))
++					mask.control[band].ht_mcs)) {
++				pr_err("HT rates invalid, band: %d\n", band);
+ 				return -EINVAL;
++			}
+ 		}
+ 		if (tb[NL80211_TXRATE_VHT]) {
+ 			if (!vht_set_mcs_mask(
+ 					sband,
+ 					nla_data(tb[NL80211_TXRATE_VHT]),
+-					mask.control[band].vht_mcs))
++					mask.control[band].vht_mcs)) {
++				pr_err("VHT rates invalid, band: %d\n", band);
+ 				return -EINVAL;
++			}
+ 		}
+ 		if (tb[NL80211_TXRATE_GI]) {
+ 			mask.control[band].gi =
+ 				nla_get_u8(tb[NL80211_TXRATE_GI]);
+-			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI)
++			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI) {
++				pr_err("FORCE-LGI invalid, band: %d\n", band);
+ 				return -EINVAL;
++			}
+ 		}
+ 
+ 		if (mask.control[band].legacy == 0) {
+@@ -8332,8 +8348,11 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 			 * are not even supported.
+ 			 */
+ 			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
+-			      rdev->wiphy.bands[band]->vht_cap.vht_supported))
++			      rdev->wiphy.bands[band]->vht_cap.vht_supported)) {
++				pr_err("Legacy is empty, as is ht, vht, band: %d\n",
++				       band);
+ 				return -EINVAL;
++			}
+ 
+ 			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+ 				if (mask.control[band].ht_mcs[i])
+@@ -8344,6 +8363,8 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 					goto out;
+ 
+ 			/* legacy and mcs rates may not be both empty */
++			pr_err("Legacy and MCS both empty sets, band: %d\n",
++			       band);
+ 			return -EINVAL;
+ 		}
+ 	}
 -- 
-1.8.1.4
+2.4.3
 
