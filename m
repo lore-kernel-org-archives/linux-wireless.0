@@ -1,321 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59604 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164AbbIRUI0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43631 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752883AbbIRNdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:26 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 14/16] brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices.
-Date: Fri, 18 Sep 2015 22:08:17 +0200
-Message-ID: <1442606899-31872-15-git-send-email-arend@broadcom.com> (sfid-20150918_220840_599372_8A60C0AF)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	Fri, 18 Sep 2015 09:33:18 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDOkxV030872
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:12 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1wy3qm7eqp-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:12 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Zhaoyang Liu <liuzy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 12/16] mwifiex: move usb specific data_sent update to usb.c
+Date: Fri, 18 Sep 2015 06:32:14 -0700
+Message-ID: <1442583138-2979-13-git-send-email-akarwar@marvell.com> (sfid-20150918_153326_882770_785EC02F)
+In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
+References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-This patch adds support for the BCM4365 and BCM4366 11ac Wave2
-PCIE devices.
+This patch move data_sent flag update to usb.c file.
+>From now all data_sent update cases only happened in specific file:
+sdio.c, usb.c, pcie.c. Outside ot these files, it is only allowed
+to check the value of data_ent.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/chip.c     | 110 +++++++++++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |  22 +++++
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   9 ++
- include/linux/bcma/bcma.h                          |   2 +
- 4 files changed, 133 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mwifiex/11n_aggr.c |  5 -----
+ drivers/net/wireless/mwifiex/sta_tx.c   |  5 -----
+ drivers/net/wireless/mwifiex/txrx.c     | 13 -------------
+ drivers/net/wireless/mwifiex/usb.c      |  7 ++++++-
+ drivers/net/wireless/mwifiex/wmm.c      |  5 -----
+ 5 files changed, 6 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index ff0c7c6..ffc3ace 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -208,6 +208,7 @@ struct sbsocramregs {
- };
- 
- #define SOCRAMREGOFFS(_f)	offsetof(struct sbsocramregs, _f)
-+#define SYSMEMREGOFFS(_f)	offsetof(struct sbsocramregs, _f)
- 
- #define ARMCR4_CAP		(0x04)
- #define ARMCR4_BANKIDX		(0x40)
-@@ -516,6 +517,9 @@ static int brcmf_chip_cores_check(struct brcmf_chip_priv *ci)
- 		case BCMA_CORE_ARM_CR4:
- 			cpu_found = true;
- 			break;
-+		case BCMA_CORE_ARM_CA7:
-+			cpu_found = true;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -614,6 +618,29 @@ static void brcmf_chip_socram_ramsize(struct brcmf_core_priv *sr, u32 *ramsize,
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index ce22cc8..46221c2 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -259,7 +259,6 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  	}
- }
  
-+/** Return the SYS MEM size */
-+static u32 brcmf_chip_sysmem_ramsize(struct brcmf_core_priv *sysmem)
-+{
-+	u32 memsize = 0;
-+	u32 coreinfo;
-+	u32 idx;
-+	u32 nb;
-+	u32 banksize;
-+
-+	if (!brcmf_chip_iscoreup(&sysmem->pub))
-+		brcmf_chip_resetcore(&sysmem->pub, 0, 0, 0);
-+
-+	coreinfo = brcmf_chip_core_read32(sysmem, SYSMEMREGOFFS(coreinfo));
-+	nb = (coreinfo & SRCI_SRNB_MASK) >> SRCI_SRNB_SHIFT;
-+
-+	for (idx = 0; idx < nb; idx++) {
-+		brcmf_chip_socram_banksize(sysmem, idx, &banksize);
-+		memsize += banksize;
-+	}
-+
-+	return memsize;
-+}
-+
- /** Return the TCM-RAM size of the ARMCR4 core. */
- static u32 brcmf_chip_tcm_ramsize(struct brcmf_core_priv *cr4)
- {
-@@ -656,6 +683,9 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_4358_CHIP_ID:
- 	case BRCM_CC_43602_CHIP_ID:
- 		return 0x180000;
-+	case BRCM_CC_4365_CHIP_ID:
-+	case BRCM_CC_4366_CHIP_ID:
-+		return 0x200000;
- 	default:
- 		brcmf_err("unknown chip: %s\n", ci->pub.name);
- 		break;
-@@ -678,10 +708,28 @@ static int brcmf_chip_get_raminfo(struct brcmf_chip_priv *ci)
- 			return -EINVAL;
- 		}
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+-		adapter->data_sent = true;
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_USB_EP_DATA,
+ 						   skb_aggr, NULL);
  	} else {
--		mem = brcmf_chip_get_core(&ci->pub, BCMA_CORE_INTERNAL_MEM);
--		mem_core = container_of(mem, struct brcmf_core_priv, pub);
--		brcmf_chip_socram_ramsize(mem_core, &ci->pub.ramsize,
--					  &ci->pub.srsize);
-+		mem = brcmf_chip_get_core(&ci->pub, BCMA_CORE_SYS_MEM);
-+		if (mem) {
-+			mem_core = container_of(mem, struct brcmf_core_priv,
-+						pub);
-+			ci->pub.ramsize = brcmf_chip_sysmem_ramsize(mem_core);
-+			ci->pub.rambase = brcmf_chip_tcm_rambase(ci);
-+			if (!ci->pub.rambase) {
-+				brcmf_err("RAM base not provided with ARM CA7 core\n");
-+				return -EINVAL;
-+			}
-+		} else {
-+			mem = brcmf_chip_get_core(&ci->pub,
-+						  BCMA_CORE_INTERNAL_MEM);
-+			if (!mem) {
-+				brcmf_err("No memory cores found\n");
-+				return -ENOMEM;
-+			}
-+			mem_core = container_of(mem, struct brcmf_core_priv,
-+						pub);
-+			brcmf_chip_socram_ramsize(mem_core, &ci->pub.ramsize,
-+						  &ci->pub.srsize);
+@@ -300,16 +299,12 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 		mwifiex_dbg(adapter, ERROR, "data: -EBUSY is returned\n");
+ 		break;
+ 	case -1:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		mwifiex_dbg(adapter, ERROR, "%s: host_to_card failed: %#x\n",
+ 			    __func__, ret);
+ 		adapter->dbg.num_tx_host_to_card_failure++;
+ 		mwifiex_write_data_complete(adapter, skb_aggr, 1, ret);
+ 		return 0;
+ 	case -EINPROGRESS:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		break;
+ 	case 0:
+ 		mwifiex_write_data_complete(adapter, skb_aggr, 1, ret);
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index 7a4d5f4..877ad06 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -174,7 +174,6 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+-		adapter->data_sent = true;
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_USB_EP_DATA,
+ 						   skb, NULL);
+ 	} else {
+@@ -192,8 +191,6 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 		adapter->dbg.num_tx_host_to_card_failure++;
+ 		break;
+ 	case -1:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		dev_kfree_skb_any(skb);
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "%s: host_to_card failed: ret=%d\n",
+@@ -208,8 +205,6 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 		adapter->tx_lock_flag = true;
+ 		break;
+ 	case -EINPROGRESS:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		adapter->tx_lock_flag = true;
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 6ef030a..90f4915 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -115,7 +115,6 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA)
+ 			local_tx_pd = (struct txpd *)(head_ptr + hroom);
+ 		if (adapter->iface_type == MWIFIEX_USB) {
+-			adapter->data_sent = true;
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   MWIFIEX_USB_EP_DATA,
+ 							   skb, NULL);
+@@ -142,8 +141,6 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		mwifiex_dbg(adapter, ERROR, "data: -EBUSY is returned\n");
+ 		break;
+ 	case -1:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "mwifiex_write_data_async failed: 0x%X\n",
+ 			    ret);
+@@ -151,8 +148,6 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
+ 		break;
+ 	case -EINPROGRESS:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		break;
+ 	case 0:
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
+@@ -193,7 +188,6 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
+ 	}
+ 
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+-		adapter->data_sent = true;
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   MWIFIEX_USB_EP_DATA,
+ 						   skb, NULL);
+@@ -222,16 +216,12 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
+ 		mwifiex_dbg(adapter, ERROR, "data: -EBUSY is returned\n");
+ 		break;
+ 	case -1:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "mwifiex_write_data_async failed: 0x%X\n", ret);
+ 		adapter->dbg.num_tx_host_to_card_failure++;
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
+ 		break;
+ 	case -EINPROGRESS:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		break;
+ 	case 0:
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
+@@ -306,9 +296,6 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 	if (!priv)
+ 		goto done;
+ 
+-	if (adapter->iface_type == MWIFIEX_USB)
+-		adapter->data_sent = false;
+-
+ 	mwifiex_set_trans_start(priv->netdev);
+ 	if (!status) {
+ 		priv->stats.tx_packets++;
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index bc8619d..3f1713e 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -272,6 +272,7 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
+ 		mwifiex_dbg(adapter, DATA,
+ 			    "%s: DATA\n", __func__);
+ 		atomic_dec(&card->tx_data_urb_pending);
++		adapter->data_sent = false;
+ 		mwifiex_write_data_complete(adapter, context->skb, 0,
+ 					    urb->status ? -1 : 0);
+ 	}
+@@ -752,6 +753,7 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 
+ 	if (ep == card->tx_data_ep &&
+ 	    atomic_read(&card->tx_data_urb_pending) >= MWIFIEX_TX_DATA_URB) {
++		adapter->data_sent = true;
+ 		return -EBUSY;
+ 	}
+ 
+@@ -788,6 +790,7 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 			atomic_dec(&card->tx_cmd_urb_pending);
+ 		} else {
+ 			atomic_dec(&card->tx_data_urb_pending);
++			adapter->data_sent = false;
+ 			if (card->tx_data_ix)
+ 				card->tx_data_ix--;
+ 			else
+@@ -798,8 +801,10 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 	} else {
+ 		if (ep == card->tx_data_ep &&
+ 		    atomic_read(&card->tx_data_urb_pending) ==
+-							MWIFIEX_TX_DATA_URB)
++							MWIFIEX_TX_DATA_URB) {
++			adapter->data_sent = true;
+ 			return -ENOSR;
 +		}
  	}
- 	brcmf_dbg(INFO, "RAM: base=0x%x size=%d (0x%x) sr=%d (0x%x)\n",
- 		  ci->pub.rambase, ci->pub.ramsize, ci->pub.ramsize,
-@@ -924,7 +972,7 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- static void brcmf_chip_disable_arm(struct brcmf_chip_priv *chip, u16 id)
- {
- 	struct brcmf_core *core;
--	struct brcmf_core_priv *cr4;
-+	struct brcmf_core_priv *cpu;
- 	u32 val;
  
+ 	return -EINPROGRESS;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 8a3f59e..4f303f3 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1326,7 +1326,6 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
  
-@@ -937,10 +985,11 @@ static void brcmf_chip_disable_arm(struct brcmf_chip_priv *chip, u16 id)
- 		brcmf_chip_coredisable(core, 0, 0);
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+-		adapter->data_sent = true;
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_USB_EP_DATA,
+ 						   skb, NULL);
+ 	} else {
+@@ -1356,15 +1355,11 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
+ 				       ra_list_flags);
  		break;
- 	case BCMA_CORE_ARM_CR4:
--		cr4 = container_of(core, struct brcmf_core_priv, pub);
-+	case BCMA_CORE_ARM_CA7:
-+		cpu = container_of(core, struct brcmf_core_priv, pub);
- 
- 		/* clear all IOCTL bits except HALT bit */
--		val = chip->ops->read32(chip->ctx, cr4->wrapbase + BCMA_IOCTL);
-+		val = chip->ops->read32(chip->ctx, cpu->wrapbase + BCMA_IOCTL);
- 		val &= ARMCR4_BCMA_IOCTL_CPUHALT;
- 		brcmf_chip_resetcore(core, val, ARMCR4_BCMA_IOCTL_CPUHALT,
- 				     ARMCR4_BCMA_IOCTL_CPUHALT);
-@@ -1162,6 +1211,33 @@ static bool brcmf_chip_cr4_set_active(struct brcmf_chip_priv *chip, u32 rstvec)
- 	return true;
- }
- 
-+static inline void
-+brcmf_chip_ca7_set_passive(struct brcmf_chip_priv *chip)
-+{
-+	struct brcmf_core *core;
-+
-+	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CA7);
-+
-+	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_80211);
-+	brcmf_chip_resetcore(core, D11_BCMA_IOCTL_PHYRESET |
-+				   D11_BCMA_IOCTL_PHYCLOCKEN,
-+			     D11_BCMA_IOCTL_PHYCLOCKEN,
-+			     D11_BCMA_IOCTL_PHYCLOCKEN);
-+}
-+
-+static bool brcmf_chip_ca7_set_active(struct brcmf_chip_priv *chip, u32 rstvec)
-+{
-+	struct brcmf_core *core;
-+
-+	chip->ops->activate(chip->ctx, &chip->pub, rstvec);
-+
-+	/* restore ARM */
-+	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_ARM_CA7);
-+	brcmf_chip_resetcore(core, ARMCR4_BCMA_IOCTL_CPUHALT, 0, 0);
-+
-+	return true;
-+}
-+
- void brcmf_chip_set_passive(struct brcmf_chip *pub)
- {
- 	struct brcmf_chip_priv *chip;
-@@ -1175,8 +1251,16 @@ void brcmf_chip_set_passive(struct brcmf_chip *pub)
- 		brcmf_chip_cr4_set_passive(chip);
- 		return;
- 	}
--
--	brcmf_chip_cm3_set_passive(chip);
-+	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CA7);
-+	if (arm) {
-+		brcmf_chip_ca7_set_passive(chip);
-+		return;
-+	}
-+	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CM3);
-+	if (arm) {
-+		brcmf_chip_cm3_set_passive(chip);
-+		return;
-+	}
- }
- 
- bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
-@@ -1190,8 +1274,14 @@ bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
- 	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CR4);
- 	if (arm)
- 		return brcmf_chip_cr4_set_active(chip, rstvec);
-+	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CA7);
-+	if (arm)
-+		return brcmf_chip_ca7_set_active(chip, rstvec);
-+	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CM3);
-+	if (arm)
-+		return brcmf_chip_cm3_set_active(chip);
- 
--	return brcmf_chip_cm3_set_active(chip);
-+	return false;
- }
- 
- bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 451022e..30baf35 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -55,6 +55,10 @@ enum brcmf_pcie_state {
- #define BRCMF_PCIE_43570_NVRAM_NAME		"brcm/brcmfmac43570-pcie.txt"
- #define BRCMF_PCIE_4358_FW_NAME			"brcm/brcmfmac4358-pcie.bin"
- #define BRCMF_PCIE_4358_NVRAM_NAME		"brcm/brcmfmac4358-pcie.txt"
-+#define BRCMF_PCIE_4365_FW_NAME			"brcm/brcmfmac4365b-pcie.bin"
-+#define BRCMF_PCIE_4365_NVRAM_NAME		"brcm/brcmfmac4365b-pcie.txt"
-+#define BRCMF_PCIE_4366_FW_NAME			"brcm/brcmfmac4366b-pcie.bin"
-+#define BRCMF_PCIE_4366_NVRAM_NAME		"brcm/brcmfmac4366b-pcie.txt"
- 
- #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
- 
-@@ -204,6 +208,10 @@ MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43570_NVRAM_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4358_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4358_NVRAM_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4365_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4365_NVRAM_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4366_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4366_NVRAM_NAME);
- 
- 
- struct brcmf_pcie_console {
-@@ -1440,6 +1448,14 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
- 		fw_name = BRCMF_PCIE_4358_FW_NAME;
- 		nvram_name = BRCMF_PCIE_4358_NVRAM_NAME;
+ 	case -1:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		mwifiex_dbg(adapter, ERROR, "host_to_card failed: %#x\n", ret);
+ 		adapter->dbg.num_tx_host_to_card_failure++;
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
  		break;
-+	case BRCM_CC_4365_CHIP_ID:
-+		fw_name = BRCMF_PCIE_4365_FW_NAME;
-+		nvram_name = BRCMF_PCIE_4365_NVRAM_NAME;
-+		break;
-+	case BRCM_CC_4366_CHIP_ID:
-+		fw_name = BRCMF_PCIE_4366_FW_NAME;
-+		nvram_name = BRCMF_PCIE_4366_NVRAM_NAME;
-+		break;
- 	default:
- 		brcmf_err("Unsupported chip 0x%04x\n", devinfo->ci->chip);
- 		return -ENODEV;
-@@ -1973,6 +1989,12 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_RAW_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_2G_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_5G_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_2G_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_5G_DEVICE_ID),
- 	{ /* end: all zeroes */ }
- };
- 
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 8278376..d823734 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -48,6 +48,8 @@
- #define BRCM_CC_43570_CHIP_ID		43570
- #define BRCM_CC_4358_CHIP_ID		0x4358
- #define BRCM_CC_43602_CHIP_ID		43602
-+#define BRCM_CC_4365_CHIP_ID		0x4365
-+#define BRCM_CC_4366_CHIP_ID		0x4366
- 
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-@@ -67,6 +69,13 @@
- #define BRCM_PCIE_43602_2G_DEVICE_ID	0x43bb
- #define BRCM_PCIE_43602_5G_DEVICE_ID	0x43bc
- #define BRCM_PCIE_43602_RAW_DEVICE_ID	43602
-+#define BRCM_PCIE_4365_DEVICE_ID	0x43ca
-+#define BRCM_PCIE_4365_2G_DEVICE_ID	0x43cb
-+#define BRCM_PCIE_4365_5G_DEVICE_ID	0x43cc
-+#define BRCM_PCIE_4366_DEVICE_ID	0x43c3
-+#define BRCM_PCIE_4366_2G_DEVICE_ID	0x43c4
-+#define BRCM_PCIE_4366_5G_DEVICE_ID	0x43c5
-+
- 
- /* brcmsmac IDs */
- #define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 2ff4a99..3feb1b2 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -151,6 +151,8 @@ struct bcma_host_ops {
- #define BCMA_CORE_PCIE2			0x83C	/* PCI Express Gen2 */
- #define BCMA_CORE_USB30_DEV		0x83D
- #define BCMA_CORE_ARM_CR4		0x83E
-+#define BCMA_CORE_ARM_CA7		0x847
-+#define BCMA_CORE_SYS_MEM		0x849
- #define BCMA_CORE_DEFAULT		0xFFF
- 
- #define BCMA_MAX_NR_CORES		16
+ 	case -EINPROGRESS:
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			adapter->data_sent = false;
+ 		break;
+ 	case 0:
+ 		mwifiex_write_data_complete(adapter, skb, 0, ret);
 -- 
-1.9.1
+1.8.1.4
 
