@@ -1,69 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36398 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754022AbbIIOQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 10:16:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
-	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
-	<wrfjvbggfhuj.fsf@redhat.com>
-	<8737yrhdm0.fsf@kamboji.qca.qualcomm.com>
-	<wrfjlhcidq9b.fsf@redhat.com> <55EDDC6D.80000@lwfinger.net>
-Date: Wed, 09 Sep 2015 10:16:09 -0400
-In-Reply-To: <55EDDC6D.80000@lwfinger.net> (Larry Finger's message of "Mon, 7
-	Sep 2015 13:50:21 -0500")
-Message-ID: <wrfjoahb65li.fsf@redhat.com> (sfid-20150909_161633_832999_5CE3E599)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45946 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752512AbbIRJPP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 05:15:15 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 31/34] staging: wilc1000: remove typedef from the struct tstrHostIFDelAllSta
+Date: Fri, 18 Sep 2015 18:11:33 +0900
+Message-ID: <1442567496-29331-31-git-send-email-tony.cho@atmel.com> (sfid-20150918_111603_186745_537F2190)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 09/07/2015 01:43 PM, Jes Sorensen wrote:
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>> Hi,
->>>
->>> replying to an old thread first.
->>>
->>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>>
->>>> Kalle Valo <kvalo@codeaurora.org> writes:
->>>>> Jes.Sorensen@redhat.com writes:
->>>>>
->>>>>>   MAINTAINERS                          |    8 +
->>>>>>   drivers/net/wireless/Kconfig         |   19 +
->>>>>>   drivers/net/wireless/Makefile        |    2 +
->>>>>>   drivers/net/wireless/rtl8xxxu.c | 4500
->>>>>> ++++++++++++++++++++++++++++++++++
->>>>>>   drivers/net/wireless/rtl8xxxu.h      |  497 ++++
->>>>>>   drivers/net/wireless/rtl8xxxu_regs.h |  941 +++++++
->>>>>
->>>>> I think someone else already mentioned, but it would be better that has
->>>>> it's own directory. Or should this actually be under rtlwifi
->>>>> directory?
->>>>
->>>> I didn't see the need here - it's just 3 files, as long as it doesn't
->>>> have a huge hierachy of files, a new directory doesn't add much
->>>> value. If it becomes an issue later, we can move it into a
->>>> subdirectory.
->>>
->>> It's easier that the driver has it's on directory as everything
->>> (makefile, kconfig etc) is cleanly separated. And actually I would like
->>> to create a new vendor directory for realtek and have this in
->>> drivers/net/wireless/realtek/rtl8xxxu/. And later we could move rtlwifi
->>> under realtek directory as well.
->>
->> If you want to create drivers/net/wireless/realtek, that is fine with
->> me, but maybe you can go ahead and create that first and move the
->> existing drivers in there?
->
-> I will submit a patch to do that.
+This patch removes typedef from the struct tstrHostIFDelAllSta and
+renames it to del_all_sta in order to comply with the Linux coding
+style.
 
-Awesome, once I see that go in, I'll move rtl8xxxu into that directory.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce4384c..5d72246 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -315,7 +315,7 @@ struct set_multicast {
+ };
+ 
+ /*!
+- *  @struct             tstrHostIFDelAllSta
++ *  @struct             del_all_sta
+  *  @brief		Deauth station message body
+  *  @details
+  *  @todo
+@@ -324,11 +324,10 @@ struct set_multicast {
+  *  @date		09 April 2014
+  *  @version		1.0 Description
+  */
+-
+-typedef struct {
++struct del_all_sta {
+ 	u8 au8Sta_DelAllSta[MAX_NUM_STA][ETH_ALEN];
+ 	u8 u8Num_AssocSta;
+-} tstrHostIFDelAllSta;
++};
+ 
+ /*!
+  *  @struct             del_sta
+@@ -441,7 +440,7 @@ union message_body {
+ 	struct remain_ch strHostIfRemainOnChan;
+ 	struct reg_frame strHostIfRegisterFrame;
+ 	char *pUserData;
+-	tstrHostIFDelAllSta strHostIFDelAllSta;
++	struct del_all_sta strHostIFDelAllSta;
+ };
+ 
+ /*!
+@@ -3664,7 +3663,8 @@ ERRORHANDLER:
+  *  @date
+  *  @version	1.0
+  */
+-static void Handle_DelAllSta(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelAllSta *pstrDelAllStaParam)
++static void Handle_DelAllSta(tstrWILC_WFIDrv *drvHandler,
++			     struct del_all_sta *pstrDelAllStaParam)
+ {
+ 	s32 s32Error = 0;
+ 
+@@ -7175,7 +7175,7 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
+ 	s32 s32Error = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	tstrHostIFDelAllSta *pstrDelAllStationMsg = &msg.body.strHostIFDelAllSta;
++	struct del_all_sta *pstrDelAllStationMsg = &msg.body.strHostIFDelAllSta;
+ 	u8 au8Zero_Buff[ETH_ALEN] = {0};
+ 	u32 i;
+ 	u8 u8AssocNumb = 0;
+-- 
+1.9.1
+
