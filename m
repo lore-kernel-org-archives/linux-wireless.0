@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13778 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45595 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbbI3Jqn (ORCPT
+	with ESMTP id S1752316AbbIRJOO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:46:43 -0400
+	Fri, 18 Sep 2015 05:14:14 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,93 +12,73 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/32] staging: wilc1000: rename strHostIFconnectAttr
-Date: Wed, 30 Sep 2015 18:44:21 +0900
-Message-ID: <1443606289-25407-4-git-send-email-tony.cho@atmel.com> (sfid-20150930_114646_219559_0B4A5461)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 22/34] staging: wilc1000: remove typedef from the struct tstrHostIfSetDrvHandler
+Date: Fri, 18 Sep 2015 18:11:24 +0900
+Message-ID: <1442567496-29331-22-git-send-email-tony.cho@atmel.com> (sfid-20150918_111422_285683_F2E7695A)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFconnectAttr to con_info to avoid CamelCase
-naming convention.
+This patch removes typedef from the struct tstrHostIfSetDrvHandler and
+renames it to drv_handler in order to comply with the Linux coding
+style.
 
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 32 +++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 7 ++++---
+ drivers/staging/wilc1000/host_interface.h | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a039f04..96f0b69 100644
+index 8b995c3..80527b5 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -415,7 +415,7 @@ struct sta_inactive_t {
+@@ -433,7 +433,7 @@ union message_body {
+ 	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
+ 	struct sta_inactive_t strHostIfStaInactiveT;
+ 	struct set_ip_addr strHostIfSetIP;
+-	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
++	struct drv_handler strHostIfSetDrvHandler;
+ 	tstrHostIFSetMulti strHostIfSetMulti;
+ 	tstrHostIfSetOperationMode strHostIfSetOperationMode;
+ 	tstrHostIfSetMacAddress strHostIfSetMacAddress;
+@@ -667,14 +667,15 @@ static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler,
+ /**
+  *  @brief Handle_SetWfiDrvHandler
+  *  @details    Sending config packet to firmware to set driver handler
+- *  @param[in]   void * drvHandler,tstrHostIfSetDrvHandler* pstrHostIfSetDrvHandler
++ *  @param[in]   void * drvHandler,
++ *		 struct drv_handler *pstrHostIfSetDrvHandler
+  *  @return     Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
   */
- union message_body {
- 	struct scan_attr scan_info;
--	struct connect_attr strHostIFconnectAttr;
-+	struct connect_attr con_info;
- 	struct rcvd_net_info strRcvdNetworkInfo;
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;
- 	struct key_attr strHostIFkeyAttr;
-@@ -4103,7 +4103,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+ static s32 Handle_SetWfiDrvHandler(tstrWILC_WFIDrv *drvHandler,
+-				   tstrHostIfSetDrvHandler *pstrHostIfSetDrvHandler)
++				   struct drv_handler *pstrHostIfSetDrvHandler)
+ {
  
- 		case HOST_IF_MSG_CONNECT:
--			Handle_Connect(msg.drvHandler, &msg.body.strHostIFconnectAttr);
-+			Handle_Connect(msg.drvHandler, &msg.body.con_info);
- 			break;
+ 	s32 s32Error = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 90493c6..a023365 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -256,9 +256,9 @@ typedef struct {
+ 	void *u32UserConnectPvoid;
+ } tstrWILC_UsrConnReq;
  
- 		case HOST_IF_MSG_FLUSH_CONNECT:
-@@ -5084,32 +5084,32 @@ s32 host_int_set_join_req(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8bssid,
+-typedef struct {
++struct drv_handler {
+ 	u32 u32Address;
+-} tstrHostIfSetDrvHandler;
++};
  
- 	msg.id = HOST_IF_MSG_CONNECT;
- 
--	msg.body.strHostIFconnectAttr.u8security = u8security;
--	msg.body.strHostIFconnectAttr.tenuAuth_type = tenuAuth_type;
--	msg.body.strHostIFconnectAttr.u8channel = u8channel;
--	msg.body.strHostIFconnectAttr.pfConnectResult = pfConnectResult;
--	msg.body.strHostIFconnectAttr.pvUserArg = pvUserArg;
--	msg.body.strHostIFconnectAttr.pJoinParams = pJoinParams;
-+	msg.body.con_info.u8security = u8security;
-+	msg.body.con_info.tenuAuth_type = tenuAuth_type;
-+	msg.body.con_info.u8channel = u8channel;
-+	msg.body.con_info.pfConnectResult = pfConnectResult;
-+	msg.body.con_info.pvUserArg = pvUserArg;
-+	msg.body.con_info.pJoinParams = pJoinParams;
- 	msg.drvHandler = hWFIDrv;
- 
- 	if (pu8bssid != NULL) {
--		msg.body.strHostIFconnectAttr.pu8bssid = kmalloc(6, GFP_KERNEL); /* will be deallocated by the receiving thread */
--		memcpy(msg.body.strHostIFconnectAttr.pu8bssid,
-+		msg.body.con_info.pu8bssid = kmalloc(6, GFP_KERNEL); /* will be deallocated by the receiving thread */
-+		memcpy(msg.body.con_info.pu8bssid,
- 			    pu8bssid, 6);
- 	}
- 
- 	if (pu8ssid != NULL) {
--		msg.body.strHostIFconnectAttr.ssidLen = ssidLen;
--		msg.body.strHostIFconnectAttr.pu8ssid = kmalloc(ssidLen, GFP_KERNEL); /* will be deallocated by the receiving thread */
--		memcpy(msg.body.strHostIFconnectAttr.pu8ssid,
-+		msg.body.con_info.ssidLen = ssidLen;
-+		msg.body.con_info.pu8ssid = kmalloc(ssidLen, GFP_KERNEL); /* will be deallocated by the receiving thread */
-+		memcpy(msg.body.con_info.pu8ssid,
- 
- 			    pu8ssid, ssidLen);
- 	}
- 
- 	if (pu8IEs != NULL) {
--		msg.body.strHostIFconnectAttr.IEsLen = IEsLen;
--		msg.body.strHostIFconnectAttr.pu8IEs = kmalloc(IEsLen, GFP_KERNEL); /* will be deallocated by the receiving thread */
--		memcpy(msg.body.strHostIFconnectAttr.pu8IEs,
-+		msg.body.con_info.IEsLen = IEsLen;
-+		msg.body.con_info.pu8IEs = kmalloc(IEsLen, GFP_KERNEL); /* will be deallocated by the receiving thread */
-+		memcpy(msg.body.con_info.pu8IEs,
- 			    pu8IEs, IEsLen);
- 	}
- 	if (pstrWFIDrv->enuHostIFstate < HOST_IF_CONNECTING)
+ typedef struct {
+ 	u32 u32Mode;
 -- 
 1.9.1
 
