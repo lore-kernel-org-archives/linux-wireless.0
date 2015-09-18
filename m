@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:35167 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871AbbIVMQL (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24603 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752624AbbIRNc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 08:16:11 -0400
-Date: Tue, 22 Sep 2015 17:46:00 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH] staging: wicl1000: fix dereference after free in
- wilc_wlan_cleanup()
-Message-ID: <20150922121600.GA16336@sudip-pc> (sfid-20150922_141628_116085_9EFCCDFD)
-References: <1442917490-26574-1-git-send-email-javier@osg.samsung.com>
+	Fri, 18 Sep 2015 09:32:58 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDOQIa027003
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:57 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1wy3qpfe86-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:57 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 06/16] mwifiex: don't always include ht/vht info in tdls confirm frame
+Date: Fri, 18 Sep 2015 06:32:08 -0700
+Message-ID: <1442583138-2979-7-git-send-email-akarwar@marvell.com> (sfid-20150918_153301_301085_0A4BA49C)
+In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
+References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442917490-26574-1-git-send-email-javier@osg.samsung.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 12:24:50PM +0200, Javier Martinez Canillas wrote:
-> The wilc_wlan_cleanup() function iterates over the list of transmission
-> buffers freeing all of them and then iterates over the receive buffers
-> list to free all of them as well.
-> 
-> But on the receive loop a pointer to struct txq_entry_t is dereferenced
-> instead of the pointer to a struct rxq_entry_t. This not only causes a
-> dereference to a pointer already freed but also leaks the memory in the
-> struct rxq_entry_t buffer.
-> 
-> Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> 
-> ---
-> 
->  drivers/staging/wilc1000/wilc_wlan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 4c25179c2fec..c40f143b00b7 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -1746,7 +1746,7 @@ static void wilc_wlan_cleanup(void)
->  		if (rqe == NULL)
->  			break;
->  #ifdef MEMORY_DYNAMIC
-> -		kfree(tqe->buffer);
-> +		kfree(rqe->buffer);
->  #endif
-MEMORY_DYNAMIC is only used here and no where else. And buffer was
-allocated in the else part of #ifdef MEMORY_STATIC.
-So you should really be using #ifndef MEMORY_STATIC here instead of
-#ifdef MEMORY_DYNAMIC otherwise memory leak will still remain.
+From: Aniket Nagarnaik <aniketn@marvell.com>
 
-regards
-sudip
+Current TDLS implementation always includes ht/vht information
+in tdls setup confirm frame which causes teardown by legacy
+peer station after TDLS handshake. We will inclue ht/vht
+capabilities in tdls setup confirm frame only if peer station
+supports it to fix this problem.
+
+Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/tdls.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index b3e163d..9275f9c 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -204,6 +204,12 @@ mwifiex_tdls_add_ht_oper(struct mwifiex_private *priv, const u8 *mac,
+ 		return -1;
+ 	}
+ 
++	if (!(le16_to_cpu(sta_ptr->tdls_cap.ht_capb.cap_info))) {
++		mwifiex_dbg(priv->adapter, WARN,
++			    "TDLS peer doesn't support ht capabilities\n");
++		return 0;
++	}
++
+ 	pos = (void *)skb_put(skb, sizeof(struct ieee80211_ht_operation) + 2);
+ 	*pos++ = WLAN_EID_HT_OPERATION;
+ 	*pos++ = sizeof(struct ieee80211_ht_operation);
+@@ -252,6 +258,12 @@ static int mwifiex_tdls_add_vht_oper(struct mwifiex_private *priv,
+ 		return -1;
+ 	}
+ 
++	if (!(le32_to_cpu(sta_ptr->tdls_cap.vhtcap.vht_cap_info))) {
++		mwifiex_dbg(adapter, WARN,
++			    "TDLS peer doesn't support vht capabilities\n");
++		return 0;
++	}
++
+ 	if (!mwifiex_is_bss_in_11ac_mode(priv)) {
+ 		if (sta_ptr->tdls_cap.extcap.ext_capab[7] &
+ 		   WLAN_EXT_CAPA8_TDLS_WIDE_BW_ENABLED) {
+-- 
+1.8.1.4
+
