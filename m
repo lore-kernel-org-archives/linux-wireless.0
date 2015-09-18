@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40161 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625AbbIPJxy (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:36804 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbbIRMht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 05:53:54 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 4/8] staging: wilc1000: remove function linux_wlan_rxq_task
-Date: Wed, 16 Sep 2015 18:53:23 +0900
-Message-ID: <1442397207-20491-4-git-send-email-tony.cho@atmel.com> (sfid-20150916_115359_288451_0C9D9BF0)
-In-Reply-To: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
-References: <1442397207-20491-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 18 Sep 2015 08:37:49 -0400
+Received: by padhk3 with SMTP id hk3so50500763pad.3
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 05:37:49 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	eliad@wizery.com, guym@ti.com, arik@wizery.com, nsekhar@ti.com,
+	luca@coelho.fi, ramrani@ti.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, guodong.xu@linaro.org
+Subject: [PATCH] wlcore: align reg_ch_conf_last[] to 64bit
+Date: Fri, 18 Sep 2015 20:37:27 +0800
+Message-Id: <1442579847-8138-1-git-send-email-guodong.xu@linaro.org> (sfid-20150918_143823_160176_CA05384F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+Align fields reg_ch_conf_last and reg_ch_conf_pending of
+struct wl1271{} to 64bit.
 
-linux_wlan_rxq_task is not used in the driver. Just remove it.
+Without this, on 64bit ARM, wlcore_set_pending_regdomain_ch() fails at
+the point it calls set_bit(ch_bit_idx, (long*)wl->reg_ch_conf_pending);
+Here is the error message while doing iw wlan0 scan or connect:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+[   10.666857] wlcore: IRQ work
+[   10.670046] wlcore: intr: 0x40 (fw_rx_counter = 1, drv_rx_counter = 0, tx_results_counter = 0)
+[   10.678697] wlcore: WL1271_ACX_INTR_DATA
+[   10.682810] Unhandled fault: alignment fault (0x96000021) at 0xffffffc037a817f4
+[   10.690139] Internal error: : 96000021 [#1] PREEMPT SMP
+[   10.695366] Modules linked in:
+[   10.698437] CPU: 3 PID: 894 Comm: irq/60-wl18xx Tainted: G        W       4.2.0-rc6-linaro-hikey #2
+[   10.707501] Hardware name: HiKey Development Board (DT)
+[   10.712733] task: ffffffc03a9d1680 ti: ffffffc039e18000 task.ti: ffffffc039e18000
+[   10.720239] PC is at set_bit+0x14/0x30
+[   10.724002] LR is at wlcore_set_pending_regdomain_ch+0x40/0x4c
+
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 26 --------------------------
- 1 file changed, 26 deletions(-)
+ drivers/net/wireless/ti/wlcore/wlcore.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 08d75ab..de04779 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -587,32 +587,6 @@ int linux_wlan_get_num_conn_ifcs(void)
- 	return ret_val;
- }
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index a1b6040..906be6a 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -318,7 +318,7 @@ struct wl1271 {
+ 	bool watchdog_recovery;
  
--static int linux_wlan_rxq_task(void *vp)
--{
--
--	/* inform wilc1000_wlan_init that RXQ task is started. */
--	up(&g_linux_wlan->rxq_thread_started);
--	while (1) {
--		down(&g_linux_wlan->rxq_event);
--		/* wait_for_completion(&g_linux_wlan->rxq_event); */
--
--		if (g_linux_wlan->close) {
--			/*Unlock the mutex in the mac_close function to indicate the exiting of the RX thread */
--			up(&g_linux_wlan->rxq_thread_started);
--
--			while (!kthread_should_stop())
--				schedule();
--
--			PRINT_D(RX_DBG, " RX thread stopped\n");
--			break;
--		}
--		PRINT_D(RX_DBG, "Calling wlan_handle_rx_que()\n");
--
--		g_linux_wlan->oup.wlan_handle_rx_que();
--	}
--	return 0;
--}
--
- #define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+ 	/* Reg domain last configuration */
+-	u32 reg_ch_conf_last[2];
++	u32 reg_ch_conf_last[2]  __aligned(8);
+ 	/* Reg domain pending configuration */
+ 	u32 reg_ch_conf_pending[2];
  
- static int linux_wlan_txq_task(void *vp)
 -- 
 1.9.1
 
