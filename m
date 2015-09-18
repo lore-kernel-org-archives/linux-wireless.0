@@ -1,50 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41784 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752801AbbIDMKc (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45182 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752994AbbIRJMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 08:10:32 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Marty Faltesek <mfaltesek@google.com>,
-	Belisko Marek <marek.belisko@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: kernel log flooded with GET_CMD_NODE: cmd node not available
-Date: Fri, 4 Sep 2015 12:10:28 +0000
-Message-ID: <fb36615adea446698b3c02498b213efe@SC-EXCH04.marvell.com> (sfid-20150904_141036_771326_62EAB212)
-References: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
-	<26c3f35fd9e74b1d80e80077c19b6717@SC-EXCH04.marvell.com>
-	<CAAfyv36Xf4f33wZvKMeTomyr_T-LKKMYkpYQwWt6B83UthFr8Q@mail.gmail.com>
- <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
-In-Reply-To: <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 18 Sep 2015 05:12:55 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/34] staging: wilc1000: remove typedef from the struct tstrRcvdGnrlAsyncInfo
+Date: Fri, 18 Sep 2015 18:11:12 +0900
+Message-ID: <1442567496-29331-10-git-send-email-tony.cho@atmel.com> (sfid-20150918_111259_236008_3BB42217)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTWFydHksDQoNCj4gRnJvbTogTWFydHkgRmFsdGVzZWsgW21haWx0bzptZmFsdGVzZWtAZ29v
-Z2xlLmNvbV0NCj4gU2VudDogRnJpZGF5LCBTZXB0ZW1iZXIgMDQsIDIwMTUgMzoyMSBBTQ0KPiBU
-bzogQmVsaXNrbyBNYXJlaw0KPiBDYzogQW1pdGt1bWFyIEthcndhcjsgbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBrZXJuZWwgbG9nIGZsb29kZWQgd2l0aCBH
-RVRfQ01EX05PREU6IGNtZCBub2RlIG5vdA0KPiBhdmFpbGFibGUNCj4gDQo+IE9uIE1vbiwgQXVn
-IDMxLCAyMDE1IGF0IDc6NTQgQU0sIEJlbGlza28gTWFyZWsgPG1hcmVrLmJlbGlza29AZ21haWwu
-Y29tPg0KPiB3cm90ZToNCj4gPiBbICAxODIuMDY5MTQ2XSBtd2lmaWV4X3NkaW8gbW1jMDowMDAx
-OjE6IEdFVF9DTURfTk9ERTogY21kIG5vZGUgbm90DQo+ID4gYXZhaWxhYmxlIFsgIDE4Mi4wNzYz
-NTBdIG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogUFJFUF9DTUQ6IG5vIGZyZWUNCj4gPiBjbWQg
-bm9kZSBbICAxODIuMDg1MTAyXSBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IEdFVF9DTURfTk9E
-RTogY21kDQo+ID4gbm9kZSBub3QgYXZhaWxhYmxlIFsgIDE4Mi4wOTIyOTddIG13aWZpZXhfc2Rp
-byBtbWMwOjAwMDE6MTogUFJFUF9DTUQ6DQo+ID4gbm8gZnJlZSBjbWQgbm9kZSBbICAxODIuMTAz
-Mjc2XSBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6DQo+ID4gR0VUX0NNRF9OT0RFOiBjbWQgbm9k
-ZSBub3QgYXZhaWxhYmxlIFsgIDE4Mi4xMTA0NzhdIG13aWZpZXhfc2Rpbw0KPiA+IG1tYzA6MDAw
-MToxOiBQUkVQX0NNRDogbm8gZnJlZSBjbWQgbm9kZSBbICAxODIuMTIxMTU2XSBtd2lmaWV4X3Nk
-aW8NCj4gPiBtbWMwOjAwMDE6MTogR0VUX0NNRF9OT0RFOiBjbWQgbm9kZSBub3QgYXZhaWxhYmxl
-IFsgIDE4Mi4xMjgzNjBdDQo+ID4gbXdpZmlleF9zZGlvIG1tYzA6MDAwMToxOiBQUkVQX0NNRDog
-bm8gZnJlZSBjbWQgbm9kZSBbICAxODIuMTM0NzUwXQ0KPiA+IG13aWZpZXhfc2RpbyBtbWMwOjAw
-MDE6MTogR0VUX0NNRF9OT0RFOiBjbWQgbm9kZSBub3QgYXZhaWxhYmxlIFsNCj4gPiAxODIuMTQx
-OTI3XSBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IFBSRVBfQ01EOiBubyBmcmVlIGNtZCBub2Rl
-DQo+IA0KPiBXZSBhcmUgYWxzbyBzZWVpbmcgdGhlc2UgbWVzc2FnZXMgYWZ0ZXIgcmVjZW50bHkg
-c3dpdGNoaW5nIHRvIG1vcmUNCj4gcmVjZW50IGRyaXZlcnMuDQoNCkNvdWxkIHlvdSBwbGVhc2Ug
-ZW5hYmxlIGRlYnVnIGxvZ3MgdXNpbmcgYmVsb3cgY29tbWFuZCBhbmQgc2hhcmUgY29tcGxldGUg
-bG9nPw0KDQplY2hvICIweGZmZmZmZmZmIiA+IC9zeXMva2VybmVsL2RlYnVnL213aWZpZXgvbWxh
-bjAvZGVidWdfbWFzaw0KDQpJdCBzaG91bGQgY29udGFpbiBub3JtYWwgYmVoYXZpb3IgZm9sbG93
-ZWQgYnkgImNtZCBub2RlIG5vdCBhdmFpbGFibGUiIGVycm9ycy4NCg0KUmVnYXJkcywNCkFtaXRr
-dW1hcg0K
+This patch removes typedef from the struct tstrRcvdGnrlAsyncInfo and
+renames it to rcvd_async_info in order to comply with the Linux coding
+style.
+
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 803c36d..c80d00e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -202,7 +202,7 @@ struct connect_attr {
+ };
+ 
+ /*!
+- *  @struct             tstrRcvdGnrlAsyncInfo
++ *  @struct             rcvd_async_info
+  *  @brief		Structure to hold Received General Asynchronous info
+  *  @details
+  *  @todo
+@@ -211,10 +211,10 @@ struct connect_attr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrRcvdGnrlAsyncInfo {
++struct rcvd_async_info {
+ 	u8 *pu8Buffer;
+ 	u32 u32Length;
+-} tstrRcvdGnrlAsyncInfo;
++};
+ 
+ /*!
+  *  @struct             tstrHostIFSetChan
+@@ -421,7 +421,7 @@ union message_body {
+ 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+ 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+-	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
++	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+ 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
+ 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
+ 	tstrHostIFSetChan strHostIFSetChan;
+@@ -2381,13 +2381,14 @@ done:
+ /**
+  *  @brief Handle_RcvdGnrlAsyncInfo
+  *  @details       Handling received asynchrous general network information
+- *  @param[in]    tstrRcvdGnrlAsyncInfo* pstrRcvdGnrlAsyncInfo
++ *  @param[in]     struct rcvd_async_info *pstrRcvdGnrlAsyncInfo
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsyncInfo *pstrRcvdGnrlAsyncInfo)
++static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
++				    struct rcvd_async_info *pstrRcvdGnrlAsyncInfo)
+ {
+ 	/* TODO: mostafa: till now, this function just handles only the received mac status msg, */
+ 	/*				 which carries only 1 WID which have WID ID = WID_STATUS */
+-- 
+1.9.1
+
