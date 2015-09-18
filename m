@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35815 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbbIPLMJ (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:34394 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070AbbIRV30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:12:09 -0400
-Received: by pacfv12 with SMTP id fv12so210912734pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:12:09 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/10] staging: wilc1000: remove declaration of wilc_get_chipid
-Date: Wed, 16 Sep 2015 20:11:35 +0900
-Message-Id: <1442401895-7463-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131217_711504_AEBA2423)
-In-Reply-To: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 17:29:26 -0400
+Received: by iofb144 with SMTP id b144so70319408iof.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 14:29:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+Date: Fri, 18 Sep 2015 23:29:25 +0200
+Message-ID: <CACna6rz6P4==K=fVr=Vnn8fkwvFJppEqub6dCEcZ8DyK5Bpa=Q@mail.gmail.com> (sfid-20150918_232929_384221_74A06FF2)
+Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the declaration of wilc_get_chipid function.
-It is included wilc_wlan_if.h that has declaration of wilc_get_chipid.
+On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com> wrote:
+> * correct set and get tx-power.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Oh, I got a similar patch, you were faster :)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e12c95d..4c88a60 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,5 +1,6 @@
- #include "host_interface.h"
- #include "coreconfigurator.h"
-+#include "wilc_wlan_if.h"
- 
- extern u8 connecting;
- 
-@@ -7424,7 +7425,6 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
- 	return s32Error;
- }
- #endif /*WILC_AP_EXTERNAL_MLME*/
--u32 wilc_get_chipid(u8);
- 
- s32 host_int_set_power_mgmt(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u32 u32Timeout)
- {
--- 
-2.5.1
 
+> The series should be applied to master branch of the wireless-drivers-next
+> repository after the series sent earlier with
+> Message-ID: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+> and patch "brcmfmac: Reset PCIE devices after recognition." with
+> Message-ID: <1440684846-17214-1-git-send-email-arend@broadcom.com>.
+
+Applied and tested with SR400ac (2 * BCM43602), no regressions
+noticed. Nice work!
