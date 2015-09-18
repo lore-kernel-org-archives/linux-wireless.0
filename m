@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35608 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbIUM6r (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36203 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554AbbIRGNQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:58:47 -0400
-Received: by pacfv12 with SMTP id fv12so118699198pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:58:46 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/16] staging: wilc1000: make mgmt_tx_cancel_wait static
-Date: Mon, 21 Sep 2015 21:58:15 +0900
-Message-Id: <1442840306-9657-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145849_970983_51C93964)
-In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 02:13:16 -0400
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [PATCH] Monitor interface for rtl8188eu
+Date: Fri, 18 Sep 2015 08:12:59 +0200
+Message-Id: <1442556780-12098-1-git-send-email-jsitnicki@gmail.com> (sfid-20150918_081347_407341_8674D390)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes mgmt_tx_cancel_wait static. This function is used only
-at wilc_wfi_cfgoperation.c file.
+Hello,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This was previously posted as a RFC[1] to linux-wireless.  Following
+Larry Finger's suggestion[2] I'm resending it as a proposed patch.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index da04e50..0c72c5e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2505,9 +2505,9 @@ int mgmt_tx(struct wiphy *wiphy,
- 	return s32Error;
- }
- 
--int mgmt_tx_cancel_wait(struct wiphy *wiphy,
--			struct wireless_dev *wdev,
--			u64 cookie)
-+static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
-+			       struct wireless_dev *wdev,
-+			       u64 cookie)
- {
- 	struct wilc_priv *priv;
- 	tstrWILC_WFIDrv *pstrWFIDrv;
+This patch is intended as a debugging aid for people working on the
+rtl8188eu driver.  I started working on it because debug logs from
+rtl8188eu driver got me nowhere when I wanted to see what was "going
+in and out".  It has reached a working state where you can use
+TShark/Wireshark to analyze the flow of 802.11 frames:
+
+  modprobe r8188eu monitor_enable=1
+  ip link set mon0 up
+  tshark -i mon0
+
+I've been testing it against recent staging-next (6dd19f1), in managed
+mode, with hardware encryption, and only with CCMP (AES) cipher in
+use, but it should work with any.
+
+Performance implications? A throughput test ran with iperf for 20
+minutes before and after the changes (with monitor inferace enabled
+and up) showed:
+
+before: 43.0 Mbits/sec
+after:  41.6 Mbits/sec
+
+[1] https://lkml.kernel.org/g/1441383439-27007-1-git-send-email-jsitnicki@gmail.com 
+[2] https://github.com/lwfinger/rtl8188eu/issues/73#issuecomment-138588729
+
+Jakub Sitnicki (1):
+  staging: rtl8188eu: Introduce monitor interface for IEEE 802.11 frames
+
+ drivers/staging/rtl8188eu/Makefile             |   1 +
+ drivers/staging/rtl8188eu/core/rtw_recv.c      |  14 ++
+ drivers/staging/rtl8188eu/core/rtw_xmit.c      |   4 +
+ drivers/staging/rtl8188eu/hal/rtl8188eu_xmit.c |   4 +
+ drivers/staging/rtl8188eu/include/drv_types.h  |   2 +
+ drivers/staging/rtl8188eu/include/mon.h        |  36 +++++
+ drivers/staging/rtl8188eu/os_dep/mon.c         | 194 +++++++++++++++++++++++++
+ drivers/staging/rtl8188eu/os_dep/os_intfs.c    |   5 +
+ drivers/staging/rtl8188eu/os_dep/usb_intf.c    |  10 ++
+ 9 files changed, 270 insertions(+)
+ create mode 100644 drivers/staging/rtl8188eu/include/mon.h
+ create mode 100644 drivers/staging/rtl8188eu/os_dep/mon.c
+
 -- 
-2.5.1
+2.1.0
 
