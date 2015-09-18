@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57804 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754031AbbILEfO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46698 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbbIRHmv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 00:35:14 -0400
-Date: Fri, 11 Sep 2015 19:36:47 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH V2 01/31] staging: wilc1000: rename WILC_WFI_CfgSetChannel
-Message-ID: <20150912023647.GA5330@kroah.com> (sfid-20150912_063707_632580_7E405A54)
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 03:42:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] ath9k_htc: introduce support for different fw versions
+References: <1441537741-11846-1-git-send-email-linux@rempel-privat.de>
+Date: Fri, 18 Sep 2015 10:42:41 +0300
+In-Reply-To: <1441537741-11846-1-git-send-email-linux@rempel-privat.de>
+	(Oleksij Rempel's message of "Sun, 6 Sep 2015 13:09:01 +0200")
+Message-ID: <87fv2crx5a.fsf@kamboji.qca.qualcomm.com> (sfid-20150918_094255_459862_5EB418F0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 11, 2015 at 04:14:00AM +0900, Chaehyun Lim wrote:
-> This patch replaces WILC_WFI_CfgSetChannel with
-> wilc_set_channel to avoid CamelCase.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
-> V2: to make function name simple
-> 
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index cf76a33..3149fd8 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -677,7 +677,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
->  
->  
->  /**
-> - *  @brief      WILC_WFI_CfgSetChannel
-> + *  @brief      wilc_set_channel
->   *  @details    Set channel for a given wireless interface. Some devices
->   *                      may support multi-channel operation (by channel hopping) so cfg80211
->   *                      doesn't verify much. Note, however, that the passed netdev may be
-> @@ -689,8 +689,8 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
->   *  @date	01 MAR 2012
->   *  @version	1.0
->   */
-> -static int WILC_WFI_CfgSetChannel(struct wiphy *wiphy,
-> -				  struct cfg80211_chan_def *chandef)
-> +static int wilc_set_channel(struct wiphy *wiphy,
-> +			    struct cfg80211_chan_def *chandef)
+Oleksij Rempel <linux@rempel-privat.de> writes:
 
-static functions do not need a "wilc_" prefix.  Just name it
-"set_channel()"
+> Current kernel support only one fw name with theoretically only one
+> fw version located in “firmware/htc_[9271|7010].fw”. Which is ok so far we
+> have only one fw version (1.3). After we realised new fw 1.4, we faced
+> compatibility problem which was decided to solve by firmware name and
+> location:
+> - new firmware is located now in
+> 	firmware/ath9k_htc/htc_[9271|7010]-1.4.0.fw
+> - old version 1.3 should be on old place, so old kernel have no issues
+> 	with it.
+> - new kernels including this patch should be able to try different
+> 	supported (min..max) fw version.
+> - new kernel should be able to support old fw location too. At least for
+> 	now.
+>
+> At same time this patch will add new module option which should allow user
+> to play with development  fw version without replacing stable one. If user
+> will set “ath9k_htc use_dev_fw=1” module will try to find
+> firmware/ath9k_htc/htc_[9271|7010]-1.dev.0.fw first and if it fails, use
+> stable version: for example...1.4.0.fw.
+>
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 
-Can you redo this series based on that, rebase on my staging-testing git
-branch as things are changing fast in this driver, and then resend?
+Thanks, applied manually. You forgot to CC linux-wireless and hence
+patchwork didn't see this.
 
-thanks,
+In the future please add a changelog when sending new versions of a
+patch.
 
-greg k-h
+-- 
+Kalle Valo
