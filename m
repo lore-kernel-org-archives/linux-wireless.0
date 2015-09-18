@@ -1,75 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35561 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853AbbI0IS3 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109AbbIRUIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 04:18:29 -0400
-Received: by wicge5 with SMTP id ge5so67942029wic.0
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 01:18:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/6] staging: vt6656: don't stop TX queue unless buffer full.
-Date: Sun, 27 Sep 2015 09:17:43 +0100
-Message-Id: <1443341864-2756-5-git-send-email-tvboxspy@gmail.com> (sfid-20150927_101854_787529_D0162AEE)
-In-Reply-To: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com>
-References: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 18 Sep 2015 16:08:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/16] brcmfmac: Add support for the BCM4350 PCIE device.
+Date: Fri, 18 Sep 2015 22:08:05 +0200
+Message-ID: <1442606899-31872-3-git-send-email-arend@broadcom.com> (sfid-20150918_221653_795877_EB5E3BFF)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Presently the TX buffer stops while filling the buffer and urb.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-However, this does not make use of the available buffer
-space, it also lags the speed of the TX troughtput.
+This patch adds support fo the BRCM4350 2x2 11ac PCIE device.
 
-Only stop the queue when the buffer becomes full. The
-URB complete will start the queue again when a
-buffer and URB is available.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/main_usb.c | 7 +------
- drivers/staging/vt6656/rxtx.c     | 5 ++++-
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 3 files changed, 12 insertions(+)
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 3fc6862..01e642d 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -507,13 +507,8 @@ static void vnt_tx_80211(struct ieee80211_hw *hw,
- {
- 	struct vnt_private *priv = hw->priv;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index e3b8e23..ff0c7c6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -647,6 +647,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 		return 0x198000;
+ 	case BRCM_CC_4335_CHIP_ID:
+ 	case BRCM_CC_4339_CHIP_ID:
++	case BRCM_CC_4350_CHIP_ID:
+ 	case BRCM_CC_4354_CHIP_ID:
+ 	case BRCM_CC_4356_CHIP_ID:
+ 	case BRCM_CC_43567_CHIP_ID:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 255d49a..451022e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -47,6 +47,8 @@ enum brcmf_pcie_state {
  
--	ieee80211_stop_queues(hw);
--
--	if (vnt_tx_packet(priv, skb)) {
-+	if (vnt_tx_packet(priv, skb))
- 		ieee80211_free_txskb(hw, skb);
--
--		ieee80211_wake_queues(hw);
--	}
- }
+ #define BRCMF_PCIE_43602_FW_NAME		"brcm/brcmfmac43602-pcie.bin"
+ #define BRCMF_PCIE_43602_NVRAM_NAME		"brcm/brcmfmac43602-pcie.txt"
++#define BRCMF_PCIE_4350_FW_NAME			"brcm/brcmfmac4350-pcie.bin"
++#define BRCMF_PCIE_4350_NVRAM_NAME		"brcm/brcmfmac4350-pcie.txt"
+ #define BRCMF_PCIE_4356_FW_NAME			"brcm/brcmfmac4356-pcie.bin"
+ #define BRCMF_PCIE_4356_NVRAM_NAME		"brcm/brcmfmac4356-pcie.txt"
+ #define BRCMF_PCIE_43570_FW_NAME		"brcm/brcmfmac43570-pcie.bin"
+@@ -194,6 +196,8 @@ enum brcmf_pcie_state {
  
- static int vnt_start(struct ieee80211_hw *hw)
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index da075f4..efb54f5 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -101,9 +101,12 @@ static struct vnt_usb_send_context
- 		}
- 	}
+ MODULE_FIRMWARE(BRCMF_PCIE_43602_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_43602_NVRAM_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4350_FW_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4350_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4356_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4356_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
+@@ -1418,6 +1422,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
+ 		fw_name = BRCMF_PCIE_43602_FW_NAME;
+ 		nvram_name = BRCMF_PCIE_43602_NVRAM_NAME;
+ 		break;
++	case BRCM_CC_4350_CHIP_ID:
++		fw_name = BRCMF_PCIE_4350_FW_NAME;
++		nvram_name = BRCMF_PCIE_4350_NVRAM_NAME;
++		break;
+ 	case BRCM_CC_4356_CHIP_ID:
+ 		fw_name = BRCMF_PCIE_4356_FW_NAME;
+ 		nvram_name = BRCMF_PCIE_4356_NVRAM_NAME;
+@@ -1956,6 +1964,7 @@ cleanup:
+ 	PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0 }
  
--	if (ii == priv->num_tx_context)
-+	if (ii == priv->num_tx_context) {
- 		dev_dbg(&priv->usb->dev, "%s No Free Tx Context\n", __func__);
+ static struct pci_device_id brcmf_pcie_devid_table[] = {
++	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 7a6daa3..8278376 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -39,6 +39,7 @@
+ #define BRCM_CC_4339_CHIP_ID		0x4339
+ #define BRCM_CC_43430_CHIP_ID		43430
+ #define BRCM_CC_4345_CHIP_ID		0x4345
++#define BRCM_CC_4350_CHIP_ID		0x4350
+ #define BRCM_CC_4354_CHIP_ID		0x4354
+ #define BRCM_CC_4356_CHIP_ID		0x4356
+ #define BRCM_CC_43566_CHIP_ID		43566
+@@ -56,6 +57,7 @@
+ #define BRCM_USB_BCMFW_DEVICE_ID	0x0bdc
  
-+		ieee80211_stop_queues(priv->hw);
-+	}
-+
- 	return NULL;
- }
- 
+ /* PCIE Device IDs */
++#define BRCM_PCIE_4350_DEVICE_ID	0x43a3
+ #define BRCM_PCIE_4354_DEVICE_ID	0x43df
+ #define BRCM_PCIE_4356_DEVICE_ID	0x43ec
+ #define BRCM_PCIE_43567_DEVICE_ID	0x43d3
 -- 
-2.5.0
+1.9.1
 
