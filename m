@@ -1,73 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:33291 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754854AbbI0ISa (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:15590 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156AbbIRUIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 04:18:30 -0400
-Received: by wiclk2 with SMTP id lk2so68254495wic.0
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 01:18:29 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/6] staging: vt6656: remove RX complete locking.
-Date: Sun, 27 Sep 2015 09:17:44 +0100
-Message-Id: <1443341864-2756-6-git-send-email-tvboxspy@gmail.com> (sfid-20150927_101855_444486_03295B19)
-In-Reply-To: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com>
-References: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 18 Sep 2015 16:08:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/16] brcmfmac: Workaround in change vif for wpa_supplicant support.
+Date: Fri, 18 Sep 2015 22:08:11 +0200
+Message-ID: <1442606899-31872-9-git-send-email-arend@broadcom.com> (sfid-20150918_220847_688869_5C9EAE2B)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The lock in vnt_submit_rx_urb_complete is blocked by TX activity.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-The lock comes from a time when RX needed to be synchronized with
-other parts of the driver because the WLAN API was in driver.
+Different wpa_supplicants have different behavior and expectations
+regarding the change_virtual_intf behavior. This patch implements
+a workaround for the different versions and possible brcmfmac
+configuration.
 
-Since this is now dealt with in mac80211 the lock is unnecessary.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 43 ++++++++++++++++------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index a5912dd..c975c3b 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -168,7 +168,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- {
- 	struct vnt_rcb *rcb = urb->context;
- 	struct vnt_private *priv = rcb->priv;
--	unsigned long flags;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 3e1c8fc..891f4ed 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -777,6 +777,37 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 	s32 err = 0;
  
- 	switch (urb->status) {
- 	case 0:
-@@ -184,8 +183,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- 	}
- 
- 	if (urb->actual_length) {
--		spin_lock_irqsave(&priv->lock, flags);
--
- 		if (vnt_rx_data(priv, rcb, urb->actual_length)) {
- 			rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
- 			if (!rcb->skb) {
-@@ -193,7 +190,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- 					"Failed to re-alloc rx skb\n");
- 
- 				rcb->in_use = false;
--				spin_unlock_irqrestore(&priv->lock, flags);
- 				return;
- 			}
- 		} else {
-@@ -203,8 +199,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- 
- 		urb->transfer_buffer = skb_put(rcb->skb,
- 						skb_tailroom(rcb->skb));
--
--		spin_unlock_irqrestore(&priv->lock, flags);
- 	}
- 
- 	if (usb_submit_urb(urb, GFP_ATOMIC)) {
+ 	brcmf_dbg(TRACE, "Enter, idx=%d, type=%d\n", ifp->bssidx, type);
++
++	/* WAR: There are a number of p2p interface related problems which
++	 * need to be handled initially (before doing the validate).
++	 * wpa_supplicant tends to do iface changes on p2p device/client/go
++	 * which are not always possible/allowed. However we need to return
++	 * OK otherwise the wpa_supplicant wont start. The situation differs
++	 * on configuration and setup (p2pon=1 module param). The first check
++	 * is to see if the request is a change to station for p2p iface.
++	 */
++	if ((type == NL80211_IFTYPE_STATION) &&
++	    ((vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT) ||
++	     (vif->wdev.iftype == NL80211_IFTYPE_P2P_GO) ||
++	     (vif->wdev.iftype == NL80211_IFTYPE_P2P_DEVICE))) {
++		brcmf_dbg(TRACE, "Ignoring cmd for p2p if\n");
++		/* Now depending on whether module param p2pon=1 was used the
++		 * response needs to be either 0 or EOPNOTSUPP. The reason is
++		 * that if p2pon=1 is used, but a newer supplicant is used then
++		 * we should return an error, as this combination wont work.
++		 * In other situations 0 is returned and supplicant will start
++		 * normally. It will give a trace in cfg80211, but it is the
++		 * only way to get it working. Unfortunately this will result
++		 * in situation where we wont support new supplicant in
++		 * combination with module param p2pon=1, but that is the way
++		 * it is. If the user tries this then unloading of driver might
++		 * fail/lock.
++		 */
++		if (cfg->p2p.p2pdev_dynamically)
++			return -EOPNOTSUPP;
++		else
++			return 0;
++	}
+ 	err = brcmf_vif_change_validate(wiphy_to_cfg(wiphy), vif, type);
+ 	if (err) {
+ 		brcmf_err("iface validation failed: err=%d\n", err);
+@@ -792,18 +823,6 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 		infra = 0;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		/* Ignore change for p2p IF. Unclear why supplicant does this */
+-		if ((vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT) ||
+-		    (vif->wdev.iftype == NL80211_IFTYPE_P2P_GO)) {
+-			brcmf_dbg(TRACE, "Ignoring cmd for p2p if\n");
+-			/* WAR: It is unexpected to get a change of VIF for P2P
+-			 * IF, but it happens. The request can not be handled
+-			 * but returning EPERM causes a crash. Returning 0
+-			 * without setting ieee80211_ptr->iftype causes trace
+-			 * (WARN_ON) but it works with wpa_supplicant
+-			 */
+-			return 0;
+-		}
+ 		infra = 1;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
 -- 
-2.5.0
+1.9.1
 
