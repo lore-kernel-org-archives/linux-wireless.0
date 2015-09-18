@@ -1,112 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51307 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751068AbbIRNUC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:20:02 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/6] mac80211: Deinline drv_ampdu_action()
-Date: Fri, 18 Sep 2015 15:19:36 +0200
-Message-Id: <1442582379-10342-4-git-send-email-dvlasenk@redhat.com> (sfid-20150918_152130_711810_8CA4B863)
-In-Reply-To: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
-References: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45668 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbIRJO1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 05:14:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/34] staging: wilc1000: remove typedef from the struct tstrHostIfSetOperationMode
+Date: Fri, 18 Sep 2015 18:11:26 +0900
+Message-ID: <1442567496-29331-24-git-send-email-tony.cho@atmel.com> (sfid-20150918_111431_915620_25CA1575)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
-after deinlining the function size is 755 bytes and there are
-6 callsites.
+This patch removes typedef from the struct tstrHostIfSetOperationMode
+and renames it to op_mode in order to comply with the Linux coding
+style.
 
-Total size reduction is about 3.3 kbytes.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: John Linville <linville@tuxdriver.com>
-CC: Michal Kazior <michal.kazior@tieto.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/mac80211/driver-ops.c | 25 +++++++++++++++++++++++++
- net/mac80211/driver-ops.h | 29 +++++------------------------
- 2 files changed, 30 insertions(+), 24 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 5 +++--
+ drivers/staging/wilc1000/host_interface.h | 4 ++--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index b85f6ff..476d684 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -84,3 +84,28 @@ int drv_conf_tx(struct ieee80211_local *local,
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
-+
-+int drv_ampdu_action(struct ieee80211_local *local,
-+		     struct ieee80211_sub_if_data *sdata,
-+		     enum ieee80211_ampdu_mlme_action action,
-+		     struct ieee80211_sta *sta, u16 tid,
-+		     u16 *ssn, u8 buf_size)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	might_sleep();
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
-+
-+	if (local->ops->ampdu_action)
-+		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
-+					       sta, tid, ssn, buf_size);
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index fdde11e..92e7cf1 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -677,30 +677,11 @@ static inline int drv_tx_last_beacon(struct ieee80211_local *local)
- 	return ret;
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c484619..1433417 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -435,7 +435,7 @@ union message_body {
+ 	struct set_ip_addr strHostIfSetIP;
+ 	struct drv_handler strHostIfSetDrvHandler;
+ 	struct set_multicast strHostIfSetMulti;
+-	tstrHostIfSetOperationMode strHostIfSetOperationMode;
++	struct op_mode strHostIfSetOperationMode;
+ 	tstrHostIfSetMacAddress strHostIfSetMacAddress;
+ 	tstrHostIfGetMacAddress strHostIfGetMacAddress;
+ 	tstrHostIfBASessionInfo strHostIfBASessionInfo;
+@@ -715,7 +715,8 @@ static s32 Handle_SetWfiDrvHandler(tstrWILC_WFIDrv *drvHandler,
+  *  @date
+  *  @version	1.0
+  */
+-static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetOperationMode *pstrHostIfSetOperationMode)
++static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler,
++				   struct op_mode *pstrHostIfSetOperationMode)
+ {
  
--static inline int drv_ampdu_action(struct ieee80211_local *local,
--				   struct ieee80211_sub_if_data *sdata,
--				   enum ieee80211_ampdu_mlme_action action,
--				   struct ieee80211_sta *sta, u16 tid,
--				   u16 *ssn, u8 buf_size)
--{
--	int ret = -EOPNOTSUPP;
--
--	might_sleep();
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
--		return -EIO;
--
--	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
--
--	if (local->ops->ampdu_action)
--		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
--					       sta, tid, ssn, buf_size);
--
--	trace_drv_return_int(local, ret);
--
--	return ret;
--}
-+int drv_ampdu_action(struct ieee80211_local *local,
-+		     struct ieee80211_sub_if_data *sdata,
-+		     enum ieee80211_ampdu_mlme_action action,
-+		     struct ieee80211_sta *sta, u16 tid,
-+		     u16 *ssn, u8 buf_size);
+ 	s32 s32Error = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a023365..078bb54 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -260,9 +260,9 @@ struct drv_handler {
+ 	u32 u32Address;
+ };
  
- static inline int drv_get_survey(struct ieee80211_local *local, int idx,
- 				struct survey_info *survey)
+-typedef struct {
++struct op_mode {
+ 	u32 u32Mode;
+-} tstrHostIfSetOperationMode;
++};
+ 
+ /*BugID_5077*/
+ typedef struct {
 -- 
-1.8.1.4
+1.9.1
 
