@@ -1,51 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vi37-28-154-113.vibiznes.pl ([37.28.154.113]:59760 "EHLO
-	vps-vb.mhejs.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbbIBRRz (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45153 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbIRJMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 13:17:55 -0400
-Message-ID: <55E72B2F.0@maciej.szmigiero.name> (sfid-20150902_191814_765592_7B6D8675)
-Date: Wed, 02 Sep 2015 19:00:31 +0200
-From: "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
+	Fri, 18 Sep 2015 05:12:49 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/34] staging: wilc1000: remove typedef from the struct tstrRcvdNetworkInfo
+Date: Fri, 18 Sep 2015 18:11:11 +0900
+Message-ID: <1442567496-29331-9-git-send-email-tony.cho@atmel.com> (sfid-20150918_111252_390781_2A9AFFC9)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: [PATCH] cfg80211: regulatory: restore proper user alpha2
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-restore_regulatory_settings() should restore alpha2
-as computed in restore_alpha2(), not raw user_alpha2 to
-behave as described in the comment just above that code.
+This patch removes typedef from the struct tstrRcvdNetworkInfo and
+renames it to rcvd_net_info in order to comply with the Linux coding
+style.
 
-This fixes endless loop of calling CRDA for "00" and "97"
-countries after resume from suspend on my laptop.
-
-Looks like others had the same problem, too:
-http://ath9k-devel.ath9k.narkive.com/knY5W6St/ath9k-and-crda-messages-in-logs
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/899335
-https://forum.porteus.org/viewtopic.php?t=4975&p=36436
-https://forums.opensuse.org/showthread.php/
-483356-Authentication-Regulatory-Domain-issues-ath5k-12-2
-
-Signed-off-by: Maciej Szmigiero <mail@maciej.szmigiero.name>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/wireless/reg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 7 ++++---
+ drivers/staging/wilc1000/host_interface.h | 6 +++---
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 70aef72..7258246 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2625,7 +2625,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	 * settings, user regulatory settings takes precedence.
- 	 */
- 	if (is_an_alpha2(alpha2))
--		regulatory_hint_user(user_alpha2, NL80211_USER_REG_HINT_USER);
-+		regulatory_hint_user(alpha2, NL80211_USER_REG_HINT_USER);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7f1b801..803c36d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -420,7 +420,7 @@ typedef struct {
+ union message_body {
+ 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+ 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+-	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
++	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+ 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+ 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
+ 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
+@@ -2262,13 +2262,14 @@ static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
+ /**
+  *  @brief Handle_RcvdNtwrkInfo
+  *  @details       Handling received network information
+- *  @param[in]    tstrRcvdNetworkInfo* pstrRcvdNetworkInfo
++ *  @param[in]    struct rcvd_net_info *pstrRcvdNetworkInfo
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdNetworkInfo *pstrRcvdNetworkInfo)
++static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler,
++				struct rcvd_net_info *pstrRcvdNetworkInfo)
+ {
+ 	u32 i;
+ 	bool bNewNtwrkFound;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index fd5fa19..e069a08 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -202,7 +202,7 @@ typedef struct {
+ } *WILC_WFIDrvHandle;
  
- 	spin_lock(&reg_requests_lock);
- 	list_splice_tail_init(&tmp_reg_req_list, &reg_requests_list);
+ /*!
+- *  @struct             tstrRcvdNetworkInfo
++ *  @struct             rcvd_net_info
+  *  @brief		Structure to hold Received Asynchronous Network info
+  *  @details
+  *  @todo
+@@ -211,10 +211,10 @@ typedef struct {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrRcvdNetworkInfo {
++struct rcvd_net_info {
+ 	u8 *pu8Buffer;
+ 	u32 u32Length;
+-} tstrRcvdNetworkInfo;
++};
+ 
+ /*BugID_4156*/
+ typedef struct _tstrHiddenNetworkInfo {
+-- 
+1.9.1
+
