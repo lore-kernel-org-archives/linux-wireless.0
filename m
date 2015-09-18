@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:35531 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924AbbIHP4e (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13486 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbbIRUI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:34 -0400
-Received: by pacfv12 with SMTP id fv12so130439847pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:34 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 09/30] staging: wilc1000: rename WILC_WFI_del_virt_intf
-Date: Wed,  9 Sep 2015 00:55:46 +0900
-Message-Id: <1441727767-26026-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175637_199806_411C901C)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 18 Sep 2015 16:08:28 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 16/16] brcmfmac: Accept events when TDLS is used in combination with p2p.
+Date: Fri, 18 Sep 2015 22:08:19 +0200
+Message-ID: <1442606899-31872-17-git-send-email-arend@broadcom.com> (sfid-20150918_220833_173158_0D41818B)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_del_virt_intf with
-wilc_cfg80211_del_virtual_intf to avoid CamelCase.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+TDLS events are mapped back to primary interface but when p2p is in
+use then this fails because the check was incorrect by checking
+bsscfg number. Which can be different when a p2p device has been
+created.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 9c22c19..cffe4b4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3584,7 +3584,7 @@ struct wireless_dev *wilc_cfg80211_add_virtual_intf(struct wiphy *wiphy, const c
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 81542e0..383d6fa 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -300,8 +300,7 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
+ 			goto event_free;
+ 		}
  
- /**
-- *  @brief      WILC_WFI_del_virt_intf
-+ *  @brief      wilc_cfg80211_del_virtual_intf
-  *  @details
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3592,7 +3592,7 @@ struct wireless_dev *wilc_cfg80211_add_virtual_intf(struct wiphy *wiphy, const c
-  *  @date	01 JUL 2012
-  *  @version	1.0
-  */
--int WILC_WFI_del_virt_intf(struct wiphy *wiphy, struct wireless_dev *wdev)      /* tony for v3.8 support */
-+int wilc_cfg80211_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)      /* tony for v3.8 support */
- {
- 	PRINT_D(HOSTAPD_DBG, "Deleting virtual interface\n");
- 	return WILC_SUCCESS;
-@@ -3613,7 +3613,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.set_default_key = wilc_cfg80211_set_default_key,
- 	#ifdef WILC_AP_EXTERNAL_MLME
- 	.add_virtual_intf = wilc_cfg80211_add_virtual_intf,
--	.del_virtual_intf = WILC_WFI_del_virt_intf,
-+	.del_virtual_intf = wilc_cfg80211_del_virtual_intf,
- 	.change_virtual_intf = WILC_WFI_change_virt_intf,
- 
- 	.start_ap = WILC_WFI_start_ap,
+-		if ((event->code == BRCMF_E_TDLS_PEER_EVENT) &&
+-		    (emsg.bsscfgidx == 1))
++		if (event->code == BRCMF_E_TDLS_PEER_EVENT)
+ 			ifp = drvr->iflist[0];
+ 		else
+ 			ifp = drvr->iflist[emsg.bsscfgidx];
 -- 
-2.5.1
+1.9.1
 
