@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:33584 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965AbbILSLR (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45022 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbbIRJMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 14:11:17 -0400
-Received: by wiclk2 with SMTP id lk2so96489556wic.0
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:15 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 11/11] staging: vt6655: Move code in device_get_pci_info
-Date: Sat, 12 Sep 2015 19:10:38 +0100
-Message-Id: <1442081438-3485-11-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201135_302347_4343D176)
-In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
-References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 18 Sep 2015 05:12:21 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/34] staging: wilc1000 remove typedef from the union
+Date: Fri, 18 Sep 2015 18:11:07 +0900
+Message-ID: <1442567496-29331-5-git-send-email-tony.cho@atmel.com> (sfid-20150918_111225_815352_3D6C6AE9)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function always returns true and now only a few lines move
-to vt6655_probe.
+This patch gets rid of typedef from the union and renames tuniHostIFmsgBody
+with simply message_body because the Linux coding style does not recommend
+camelcase notation and typedef for structure, enmu and also union.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/vt6655/device_main.c | 21 +++------------------
- 1 file changed, 3 insertions(+), 18 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index add9cdf..326bce3 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -29,7 +29,6 @@
-  *   vt6655_probe - module initial (insmod) driver entry
-  *   vt6655_remove - module remove entry
-  *   device_free_info - device structure resource free function
-- *   device_get_pci_info - get allocated pci io/mem resource
-  *   device_print_info - print out resource
-  *   device_rx_srv - rx service function
-  *   device_alloc_rx_buf - rx buffer pre-allocated function
-@@ -136,7 +135,6 @@ static const struct pci_device_id vt6655_pci_id_table[] = {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d215b12..6cb35aa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -409,7 +409,7 @@ typedef struct {
+ } tstrHostIfStaInactiveT;
+ /**/
+ /*!
+- *  @union              tuniHostIFmsgBody
++ *  @union              message_body
+  *  @brief		Message body for the Host Interface message_q
+  *  @details
+  *  @todo
+@@ -418,7 +418,7 @@ typedef struct {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef union _tuniHostIFmsgBody {
++union message_body {
+ 	tstrHostIFscanAttr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+ 	tstrHostIFconnectAttr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+@@ -447,7 +447,7 @@ typedef union _tuniHostIFmsgBody {
+ 	tstrHostIfRegisterFrame strHostIfRegisterFrame;
+ 	char *pUserData;
+ 	tstrHostIFDelAllSta strHostIFDelAllSta;
+-} tuniHostIFmsgBody;
++};
  
- static int  vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent);
- static void device_free_info(struct vnt_private *pDevice);
--static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
- static void device_print_info(struct vnt_private *pDevice);
+ /*!
+  *  @struct             struct host_if_msg
+@@ -461,7 +461,7 @@ typedef union _tuniHostIFmsgBody {
+  */
+ struct host_if_msg {
+ 	u16 id;                                           /*!< Message ID */
+-	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
++	union message_body uniHostIFmsgBody;             /*!< Message body */
+ 	tstrWILC_WFIDrv *drvHandler;
+ };
  
- static void device_init_rd0_ring(struct vnt_private *pDevice);
-@@ -430,17 +428,6 @@ static void device_print_info(struct vnt_private *pDevice)
- 		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
- }
- 
--static bool device_get_pci_info(struct vnt_private *pDevice,
--				struct pci_dev *pcid)
--{
--	pci_set_master(pcid);
--
--	pDevice->memaddr = pci_resource_start(pcid, 0);
--	pDevice->ioaddr = pci_resource_start(pcid, 1);
--
--	return true;
--}
--
- static void device_free_info(struct vnt_private *pDevice)
- {
- 	if (!pDevice)
-@@ -1629,12 +1616,10 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	dev_dbg(&pcid->dev,
- 		"Before get pci_info memaddr is %x\n", priv->memaddr);
- 
--	if (!device_get_pci_info(priv, pcid)) {
--		dev_err(&pcid->dev, ": Failed to find PCI device.\n");
--		device_free_info(priv);
--		return -ENODEV;
--	}
-+	pci_set_master(pcid);
- 
-+	priv->memaddr = pci_resource_start(pcid, 0);
-+	priv->ioaddr = pci_resource_start(pcid, 1);
- 	priv->PortOffset = ioremap(priv->memaddr & PCI_BASE_ADDRESS_MEM_MASK,
- 				   256);
- 	if (!priv->PortOffset) {
 -- 
-2.5.0
+1.9.1
 
