@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33446 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756488AbbIVJfH (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13486 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038AbbIRUIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:07 -0400
-Received: by pacex6 with SMTP id ex6so4739683pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:07 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 01/16] staging: wilc1000: rename WILC_WFI_set_power_mgmt
-Date: Tue, 22 Sep 2015 18:34:46 +0900
-Message-Id: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113512_462915_6509799C)
+	Fri, 18 Sep 2015 16:08:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/16] brcmfmac: Fix bug in flowring management.
+Date: Fri, 18 Sep 2015 22:08:09 +0200
+Message-ID: <1442606899-31872-7-git-send-email-arend@broadcom.com> (sfid-20150918_221654_349121_F5ED4CF3)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_power_mgmt with set_power_mgmt.
-then makes set_power_mgmt static.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The hash index stored in the flowrings is of type u16 but gets
+stored in u8. This can result in incorrect indexing and possibly
+result in crashes. This patch fixes the type.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-v2: rebase latest staging-testing
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index de8c83d..eaec88c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2651,7 +2651,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 
- /**
-- *  @brief      WILC_WFI_set_power_mgmt
-+ *  @brief      set_power_mgmt
-  *  @details
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -2659,8 +2659,8 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 JUL 2012
-  *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
-  */
--int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
--			    bool enabled, int timeout)
-+static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
-+			  bool enabled, int timeout)
- {
- 	struct wilc_priv *priv;
- 
-@@ -3410,7 +3410,7 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
- 	.mgmt_tx_cancel_wait = mgmt_tx_cancel_wait,
- 	.mgmt_tx = mgmt_tx,
- 	.mgmt_frame_register = wilc_mgmt_frame_register,
--	.set_power_mgmt = WILC_WFI_set_power_mgmt,
-+	.set_power_mgmt = set_power_mgmt,
- 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
- 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+index 5551861..95fd1c9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+@@ -34,7 +34,7 @@ enum ring_status {
  };
+ 
+ struct brcmf_flowring_ring {
+-	u8 hash_id;
++	u16 hash_id;
+ 	bool blocked;
+ 	enum ring_status status;
+ 	struct sk_buff_head skblist;
 -- 
-2.5.1
+1.9.1
 
