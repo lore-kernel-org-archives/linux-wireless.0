@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14045 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45120 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755021AbbI3Jsl (ORCPT
+	with ESMTP id S1753126AbbIRJMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:48:41 -0400
+	Fri, 18 Sep 2015 05:12:42 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,55 +12,82 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/32] staging: wilc1000: rename strHostIFSetChan
-Date: Wed, 30 Sep 2015 18:44:28 +0900
-Message-ID: <1443606289-25407-11-git-send-email-tony.cho@atmel.com> (sfid-20150930_114843_995003_B98F01CA)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 08/34] staging: wilc1000: remove typedef from the struct tstrHostIFconnectAttr
+Date: Fri, 18 Sep 2015 18:11:10 +0900
+Message-ID: <1442567496-29331-8-git-send-email-tony.cho@atmel.com> (sfid-20150918_111246_125784_9B61BA49)
+In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFSetChan to channel_info to avoid CamelCase
-naming convention.
+This patch removes typedef from the struct tstrHostIFconnectAttr and
+renames it to connect_attr to comply with the Linux coding style.
 
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e66118a..4559ed5 100644
+index 4a02e10..7f1b801 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -406,7 +406,7 @@ union message_body {
- 	struct rcvd_async_info async_info;
- 	struct key_attr key_info;
- 	struct cfg_param_attr cfg_info;
--	struct channel_attr strHostIFSetChan;
-+	struct channel_attr channel_info;
- 	struct set_beacon strHostIFSetBeacon;
- 	struct del_beacon strHostIFDelBeacon;
- 	struct add_sta_param strAddStaParam;
-@@ -4113,7 +4113,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+@@ -178,7 +178,7 @@ struct scan_attr {
+ };
  
- 		case HOST_IF_MSG_SET_CHANNEL:
--			Handle_SetChannel(msg.drvHandler, &msg.body.strHostIFSetChan);
-+			Handle_SetChannel(msg.drvHandler, &msg.body.channel_info);
- 			break;
+ /*!
+- *  @struct             tstrHostIFconnectAttr
++ *  @struct             connect_attr
+  *  @brief		Structure to hold Host IF Connect Attributes
+  *  @details
+  *  @todo
+@@ -187,7 +187,7 @@ struct scan_attr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFconnectAttr {
++struct connect_attr {
+ 	u8 *pu8bssid;
+ 	u8 *pu8ssid;
+ 	size_t ssidLen;
+@@ -199,7 +199,7 @@ typedef struct _tstrHostIFconnectAttr {
+ 	AUTHTYPE_T tenuAuth_type;
+ 	u8 u8channel;
+ 	void *pJoinParams;
+-} tstrHostIFconnectAttr;
++};
  
- 		case HOST_IF_MSG_DISCONNECT:
-@@ -5368,7 +5368,7 @@ s32 host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
- 	/* prepare the set channel message */
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_CHANNEL;
--	msg.body.strHostIFSetChan.u8SetChan = u8ChNum;
-+	msg.body.channel_info.u8SetChan = u8ChNum;
- 	msg.drvHandler = hWFIDrv;
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ /*!
+  *  @struct             tstrRcvdGnrlAsyncInfo
+@@ -419,7 +419,7 @@ typedef struct {
+  */
+ union message_body {
+ 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+-	tstrHostIFconnectAttr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
++	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+ 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+ 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
+@@ -1512,14 +1512,15 @@ static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent)
+ /**
+  *  @brief Handle_Connect
+  *  @details       Sending config packet to firmware to starting connection
+- *  @param[in]    tstrHostIFconnectAttr* pstrHostIFconnectAttr
++ *  @param[in]    struct connect_attr *pstrHostIFconnectAttr
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+ u8 u8ConnectedSSID[6] = {0};
+-static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *pstrHostIFconnectAttr)
++static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
++			  struct connect_attr *pstrHostIFconnectAttr)
+ {
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
+ 	s32 s32Error = 0;
 -- 
 1.9.1
 
