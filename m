@@ -1,62 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13644 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932185AbbI3Jpv (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13486 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754170AbbIRUI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:45:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/32] staging: wilc1000: remove AGING_ALG
-Date: Wed, 30 Sep 2015 18:44:19 +0900
-Message-ID: <1443606289-25407-2-git-send-email-tony.cho@atmel.com> (sfid-20150930_114558_408890_BE9E1B20)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+	Fri, 18 Sep 2015 16:08:26 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 09/16] brcmfmac: Deleting of p2p device is leaking memory.
+Date: Fri, 18 Sep 2015 22:08:12 +0200
+Message-ID: <1442606899-31872-10-git-send-email-arend@broadcom.com> (sfid-20150918_220842_055810_3746DE5B)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes AGING_ALG from the Makefile because it is always in
-use.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+When a p2p device gets deleted, the memory for the vif is not being
+released. This is solved by reorganizing the cleanup path and
+properly freeing the memory.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/Makefile           | 1 -
- drivers/staging/wilc1000/coreconfigurator.h | 2 --
- 2 files changed, 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/core.c | 13 ++++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c  | 38 +++++++++++++-------------
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.h  |  1 +
+ 3 files changed, 32 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index d226ebe..f495061 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -9,7 +9,6 @@ ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
- 		-DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 031283a..8c2a280 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -887,6 +887,16 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
+ 			cancel_work_sync(&ifp->multicast_work);
+ 		}
+ 		brcmf_net_detach(ifp->ndev);
++	} else {
++		/* Only p2p device interfaces which get dynamically created
++		 * end up here. In this case the p2p module should be informed
++		 * about the removal of the interface within the firmware. If
++		 * not then p2p commands towards the firmware will cause some
++		 * serious troublesome side effects. The p2p module will clean
++		 * up the ifp if needed.
++		 */
++		brcmf_p2p_ifp_removed(ifp);
++		kfree(ifp);
+ 	}
+ }
  
- ccflags-y += -I$(src)/ -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
--		-DAGING_ALG \
- 		-Wno-unused-function -DWILC_DEBUGFS
- #ccflags-y += -DTCP_ACK_FILTER
+@@ -894,7 +904,8 @@ void brcmf_remove_interface(struct brcmf_if *ifp)
+ {
+ 	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bssidx] != ifp))
+ 		return;
+-
++	brcmf_dbg(TRACE, "Enter, bssidx=%d, ifidx=%d\n", ifp->bssidx,
++		  ifp->ifidx);
+ 	brcmf_fws_del_interface(ifp);
+ 	brcmf_del_if(ifp->drvr, ifp->bssidx);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 1e09cd2..83027dc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -2131,20 +2131,6 @@ fail:
+ }
  
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 253c7f0..58aa13c 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -96,9 +96,7 @@ typedef struct {
- 	unsigned long u32TimeRcvdInScanCached;
- 	unsigned long u32TimeRcvdInScan;
- 	bool bNewNetwork;
--#ifdef AGING_ALG
- 	u8 u8Found;
--#endif
- 	u32 u32Tsf;
- 	u8 *pu8IEs;
- 	u16 u16IEsLen;
+ /**
+- * brcmf_p2p_delete_p2pdev() - delete P2P_DEVICE virtual interface.
+- *
+- * @vif: virtual interface object to delete.
+- */
+-static void brcmf_p2p_delete_p2pdev(struct brcmf_p2p_info *p2p,
+-				    struct brcmf_cfg80211_vif *vif)
+-{
+-	cfg80211_unregister_wdev(&vif->wdev);
+-	p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
+-	brcmf_remove_interface(vif->ifp);
+-	brcmf_free_vif(vif);
+-}
+-
+-/**
+  * brcmf_p2p_add_vif() - create a new P2P virtual interface.
+  *
+  * @wiphy: wiphy device of new interface.
+@@ -2267,9 +2253,11 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		break;
+ 
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++		if (!p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
++			return 0;
+ 		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
+ 		brcmf_p2p_deinit_discovery(p2p);
+-		brcmf_p2p_delete_p2pdev(p2p, vif);
++		brcmf_remove_interface(vif->ifp);
+ 		return 0;
+ 	default:
+ 		return -ENOTSUPP;
+@@ -2301,6 +2289,21 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	return err;
+ }
+ 
++void brcmf_p2p_ifp_removed(struct brcmf_if *ifp)
++{
++	struct brcmf_cfg80211_info *cfg;
++	struct brcmf_cfg80211_vif *vif;
++
++	brcmf_dbg(INFO, "P2P: device interface removed\n");
++	vif = ifp->vif;
++	cfg = wdev_to_cfg(&vif->wdev);
++	cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
++	rtnl_lock();
++	cfg80211_unregister_wdev(&vif->wdev);
++	rtnl_unlock();
++	brcmf_free_vif(vif);
++}
++
+ int brcmf_p2p_start_device(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+@@ -2425,10 +2428,7 @@ void brcmf_p2p_detach(struct brcmf_p2p_info *p2p)
+ 	if (vif != NULL) {
+ 		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
+ 		brcmf_p2p_deinit_discovery(p2p);
+-		/* remove discovery interface */
+-		rtnl_lock();
+-		brcmf_p2p_delete_p2pdev(p2p, vif);
+-		rtnl_unlock();
++		brcmf_remove_interface(vif->ifp);
+ 	}
+ 	/* just set it all to zero */
+ 	memset(p2p, 0, sizeof(*p2p));
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+index d82287d..5d49059 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+@@ -157,6 +157,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev);
+ int brcmf_p2p_ifchange(struct brcmf_cfg80211_info *cfg,
+ 		       enum brcmf_fil_p2p_if_types if_type);
++void brcmf_p2p_ifp_removed(struct brcmf_if *ifp);
+ int brcmf_p2p_start_device(struct wiphy *wiphy, struct wireless_dev *wdev);
+ void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev);
+ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
 -- 
 1.9.1
 
