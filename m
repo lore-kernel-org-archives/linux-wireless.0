@@ -1,72 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21379 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756001AbbIUDTo (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754032AbbIRUIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:19:44 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 21/34] staging: wilc1000: remove typedef from the struct tstrHostIFSetIPAddr
-Date: Mon, 21 Sep 2015 12:16:50 +0900
-Message-ID: <1442805423-3711-22-git-send-email-tony.cho@atmel.com> (sfid-20150921_054654_120705_29528A09)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+	Fri, 18 Sep 2015 16:08:24 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/16] brcmfmac: Fix set and get tx-power functions.
+Date: Fri, 18 Sep 2015 22:08:06 +0200
+Message-ID: <1442606899-31872-4-git-send-email-arend@broadcom.com> (sfid-20150918_220830_433529_2575C6F8)
+In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFSetIPAddr and
-renames it to set_ip_addr in order to comply with the Linux coding
-style.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Implementation of tx-power (get and set) related functions are
+still assuming mW interface. This is wrong as functions use dbm
+(or mbm) nowadays. As a result a tx power configuration could
+result in wrong power configuration.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 137 ++++-----------------
+ 1 file changed, 26 insertions(+), 111 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ee550c5..689832a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -375,7 +375,7 @@ struct power_mgmt_param {
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index da24bf0..0a97e61 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -236,89 +236,6 @@ static int brcmf_roamoff;
+ module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
+ MODULE_PARM_DESC(roamoff, "do not use internal roaming engine");
  
- /*!
-- *  @struct             tstrHostIFSetIPAddr
-+ *  @struct             set_ip_addr
-  *  @brief		set IP Address message body
-  *  @details
-  *  @todo
-@@ -384,11 +384,10 @@ struct power_mgmt_param {
-  *  @date		30 August 2013
-  *  @version		1.0 Description
-  */
+-/* Quarter dBm units to mW
+- * Table starts at QDBM_OFFSET, so the first entry is mW for qdBm=153
+- * Table is offset so the last entry is largest mW value that fits in
+- * a u16.
+- */
 -
--typedef struct {
-+struct set_ip_addr {
- 	u8 *au8IPAddr;
- 	u8 idx;
--} tstrHostIFSetIPAddr;
-+};
+-#define QDBM_OFFSET 153		/* Offset for first entry */
+-#define QDBM_TABLE_LEN 40	/* Table size */
+-
+-/* Smallest mW value that will round up to the first table entry, QDBM_OFFSET.
+- * Value is ( mW(QDBM_OFFSET - 1) + mW(QDBM_OFFSET) ) / 2
+- */
+-#define QDBM_TABLE_LOW_BOUND 6493	/* Low bound */
+-
+-/* Largest mW value that will round down to the last table entry,
+- * QDBM_OFFSET + QDBM_TABLE_LEN-1.
+- * Value is ( mW(QDBM_OFFSET + QDBM_TABLE_LEN - 1) +
+- * mW(QDBM_OFFSET + QDBM_TABLE_LEN) ) / 2.
+- */
+-#define QDBM_TABLE_HIGH_BOUND 64938	/* High bound */
+-
+-static const u16 nqdBm_to_mW_map[QDBM_TABLE_LEN] = {
+-/* qdBm:	+0	+1	+2	+3	+4	+5	+6	+7 */
+-/* 153: */ 6683, 7079, 7499, 7943, 8414, 8913, 9441, 10000,
+-/* 161: */ 10593, 11220, 11885, 12589, 13335, 14125, 14962, 15849,
+-/* 169: */ 16788, 17783, 18836, 19953, 21135, 22387, 23714, 25119,
+-/* 177: */ 26607, 28184, 29854, 31623, 33497, 35481, 37584, 39811,
+-/* 185: */ 42170, 44668, 47315, 50119, 53088, 56234, 59566, 63096
+-};
+-
+-static u16 brcmf_qdbm_to_mw(u8 qdbm)
+-{
+-	uint factor = 1;
+-	int idx = qdbm - QDBM_OFFSET;
+-
+-	if (idx >= QDBM_TABLE_LEN)
+-		/* clamp to max u16 mW value */
+-		return 0xFFFF;
+-
+-	/* scale the qdBm index up to the range of the table 0-40
+-	 * where an offset of 40 qdBm equals a factor of 10 mW.
+-	 */
+-	while (idx < 0) {
+-		idx += 40;
+-		factor *= 10;
+-	}
+-
+-	/* return the mW value scaled down to the correct factor of 10,
+-	 * adding in factor/2 to get proper rounding.
+-	 */
+-	return (nqdBm_to_mW_map[idx] + factor / 2) / factor;
+-}
+-
+-static u8 brcmf_mw_to_qdbm(u16 mw)
+-{
+-	u8 qdbm;
+-	int offset;
+-	uint mw_uint = mw;
+-	uint boundary;
+-
+-	/* handle boundary case */
+-	if (mw_uint <= 1)
+-		return 0;
+-
+-	offset = QDBM_OFFSET;
+-
+-	/* move mw into the range of the table */
+-	while (mw_uint < QDBM_TABLE_LOW_BOUND) {
+-		mw_uint *= 10;
+-		offset -= 40;
+-	}
+-
+-	for (qdbm = 0; qdbm < QDBM_TABLE_LEN - 1; qdbm++) {
+-		boundary = nqdBm_to_mW_map[qdbm] + (nqdBm_to_mW_map[qdbm + 1] -
+-						    nqdBm_to_mW_map[qdbm]) / 2;
+-		if (mw_uint < boundary)
+-			break;
+-	}
+-
+-	qdbm += (u8) offset;
+-
+-	return qdbm;
+-}
  
- /*!
-  *  @struct     sta_inactive_t
-@@ -432,7 +431,7 @@ union message_body {
- 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
- 	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
- 	struct sta_inactive_t strHostIfStaInactiveT;
--	tstrHostIFSetIPAddr strHostIfSetIP;
-+	struct set_ip_addr strHostIfSetIP;
- 	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
- 	tstrHostIFSetMulti strHostIfSetMulti;
- 	tstrHostIfSetOperationMode strHostIfSetOperationMode;
+ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
+ 			       struct cfg80211_chan_def *ch)
+@@ -2017,16 +1934,14 @@ static s32
+ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			    enum nl80211_tx_power_setting type, s32 mbm)
+ {
+-
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct net_device *ndev = cfg_to_ndev(cfg);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	u16 txpwrmw;
+-	s32 err = 0;
+-	s32 disable = 0;
+-	s32 dbm = MBM_TO_DBM(mbm);
++	s32 err;
++	s32 disable;
++	u32 qdbm = 127;
+ 
+-	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(TRACE, "Enter %d %d\n", type, mbm);
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+@@ -2035,12 +1950,20 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		break;
+ 	case NL80211_TX_POWER_LIMITED:
+ 	case NL80211_TX_POWER_FIXED:
+-		if (dbm < 0) {
++		if (mbm < 0) {
+ 			brcmf_err("TX_POWER_FIXED - dbm is negative\n");
+ 			err = -EINVAL;
+ 			goto done;
+ 		}
++		qdbm =  MBM_TO_DBM(4 * mbm);
++		if (qdbm > 127)
++			qdbm = 127;
++		qdbm |= WL_TXPWR_OVERRIDE;
+ 		break;
++	default:
++		brcmf_err("Unsupported type %d\n", type);
++		err = -EINVAL;
++		goto done;
+ 	}
+ 	/* Make sure radio is off or on as far as software is concerned */
+ 	disable = WL_RADIO_SW_DISABLE << 16;
+@@ -2048,52 +1971,44 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	if (err)
+ 		brcmf_err("WLC_SET_RADIO error (%d)\n", err);
+ 
+-	if (dbm > 0xffff)
+-		txpwrmw = 0xffff;
+-	else
+-		txpwrmw = (u16) dbm;
+-	err = brcmf_fil_iovar_int_set(ifp, "qtxpower",
+-				      (s32)brcmf_mw_to_qdbm(txpwrmw));
++	err = brcmf_fil_iovar_int_set(ifp, "qtxpower", qdbm);
+ 	if (err)
+ 		brcmf_err("qtxpower error (%d)\n", err);
+-	cfg->conf->tx_power = dbm;
+ 
+ done:
+-	brcmf_dbg(TRACE, "Exit\n");
++	brcmf_dbg(TRACE, "Exit %d (qdbm)\n", qdbm & ~WL_TXPWR_OVERRIDE);
+ 	return err;
+ }
+ 
+-static s32 brcmf_cfg80211_get_tx_power(struct wiphy *wiphy,
+-				       struct wireless_dev *wdev,
+-				       s32 *dbm)
++static s32
++brcmf_cfg80211_get_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
++			    s32 *dbm)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
+-	s32 txpwrdbm;
+-	u8 result;
+-	s32 err = 0;
++	struct net_device *ndev = cfg_to_ndev(cfg);
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	s32 qdbm = 0;
++	s32 err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	err = brcmf_fil_iovar_int_get(ifp, "qtxpower", &txpwrdbm);
++	err = brcmf_fil_iovar_int_get(ifp, "qtxpower", &qdbm);
+ 	if (err) {
+ 		brcmf_err("error (%d)\n", err);
+ 		goto done;
+ 	}
+-
+-	result = (u8) (txpwrdbm & ~WL_TXPWR_OVERRIDE);
+-	*dbm = (s32) brcmf_qdbm_to_mw(result);
++	*dbm = (qdbm & ~WL_TXPWR_OVERRIDE) / 4;
+ 
+ done:
+-	brcmf_dbg(TRACE, "Exit\n");
++	brcmf_dbg(TRACE, "Exit (0x%x %d)\n", qdbm, *dbm);
+ 	return err;
+ }
+ 
+ static s32
+ brcmf_cfg80211_config_default_key(struct wiphy *wiphy, struct net_device *ndev,
+-			       u8 key_idx, bool unicast, bool multicast)
++				  u8 key_idx, bool unicast, bool multicast)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	u32 index;
 -- 
 1.9.1
 
