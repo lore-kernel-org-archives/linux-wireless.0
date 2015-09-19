@@ -1,125 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:32514 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbbIQKCi (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45099 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754280AbbISE7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 06:02:38 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 2/4] staging: wilc1000: remove warnings on the multiple blank lines uses
-Date: Thu, 17 Sep 2015 19:02:18 +0900
-Message-ID: <1442484140-13485-3-git-send-email-tony.cho@atmel.com> (sfid-20150917_120324_623692_7CC8AD1A)
-In-Reply-To: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
-References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+	Sat, 19 Sep 2015 00:59:14 -0400
+Date: Fri, 18 Sep 2015 19:45:16 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
+Subject: Re: [PATCH V2 3/8] staging: wilc1000: replace int8_t with int
+Message-ID: <20150919024516.GA21543@kroah.com> (sfid-20150919_065918_796737_9704FB53)
+References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442476129-14908-3-git-send-email-chaehyun.lim@gmail.com>
+ <20150917103426.GB20514@sudip-pc>
+ <CAKV=isvZ2V+RgpB_Aej5cUjZ+n_9OdOb2X_0f=q6=LNouxF14A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKV=isvZ2V+RgpB_Aej5cUjZ+n_9OdOb2X_0f=q6=LNouxF14A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, Sep 17, 2015 at 09:03:14PM +0900, Chaehyun Lim wrote:
+> On Thu, Sep 17, 2015 at 7:34 PM, Sudip Mukherjee
+> <sudipm.mukherjee@gmail.com> wrote:
+> > On Thu, Sep 17, 2015 at 04:48:44PM +0900, Chaehyun Lim wrote:
+> >> This patch replaces int8_t with int. just use return type as int.
+> >>
+> >> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> >> ---
+> > but isn't int8_t is defined as char?
+> >
+> 
+> Even int8_t is defined as char, I think it's no problem to use int.
+> Is it need to change as char?
 
-This patch removes the warnings reported by checkpatch.pl
-for using multiple blank lines.
+No, you need to make it a u8 (or s8, depending on the usage).  Be very
+careful when changing variable widths.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 12 ------------
- 1 file changed, 12 deletions(-)
+thanks,
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index cc92dc9..9111491 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -7,7 +7,6 @@
- /*  */
- /* ///////////////////////////////////////////////////////////////////////// */
- 
--
- #ifndef WILC_WLAN_IF_H
- #define WILC_WLAN_IF_H
- 
-@@ -15,11 +14,9 @@
- /* #define MEMORY_STATIC */
- /* #define USE_OLD_SPI_SW */
- 
--
- #include "wilc_oswrapper.h"
- #include "linux_wlan_common.h"
- 
--
- /********************************************
-  *
-  *      Debug Flags
-@@ -42,7 +39,6 @@
- #define HIF_SPI            BIT(0)
- #define HIF_SDIO_GPIO_IRQ  BIT(2)
- 
--
- /********************************************
-  *
-  *      Tx/Rx Buffer Size Defines
-@@ -156,7 +152,6 @@ struct tx_complete_data {
- 	struct sk_buff *skb;
- };
- 
--
- typedef void (*wilc_tx_complete_func_t)(void *, int);
- 
- #define WILC_TX_ERR_NO_BUF (-2)
-@@ -392,7 +387,6 @@ typedef enum {
- typedef enum {
- 	WID_NIL                            = 0xffff,
- 
--
- 	/*  BSS Type                                                                                                                                                                            */
- 	/*  --------------------------------------------------------------      */
- 	/*  Configuration :  Infrastructure    Independent   Access Point                                                                               */
-@@ -753,7 +747,6 @@ typedef enum {
- 	/*  --------------------------------------------------------------      */
- 	WID_11N_TXOP_PROT_DISABLE          = 0x00B0,
- 
--
- 	WID_TX_POWER_LEVEL_11N             = 0x00B1,
- 
- 	/* Custom Character WID list */
-@@ -827,7 +820,6 @@ typedef enum {
- 	WID_MEMORY_ACCESS_32BIT            = 0x201F,
- 	WID_RF_REG_VAL                     = 0x2021,
- 
--
- 	/* NMAC Integer WID list */
- 	WID_11N_PHY_ACTIVE_REG_VAL         = 0x2080,
- 
-@@ -883,8 +875,6 @@ typedef enum {
- 	/* BugID 4951: WID toset IP address in firmware */
- 	WID_IP_ADDRESS					= 0x3999,
- 
--
--
- 	/* Custom String WID list */
- 
- 	/* EMAC Binary WID list */
-@@ -899,7 +889,6 @@ typedef enum {
- 	/* NMAC Binary WID list */
- 	WID_11N_AUTORATE_TABLE             = 0x4080,
- 
--
- 	/*Added here by Amr - BugID 4134*/
- 	WID_SCAN_CHANNEL_LIST                      = 0x4084,
- 
-@@ -926,5 +915,4 @@ void wilc_bus_set_max_speed(void);
- void wilc_bus_set_default_speed(void);
- u32 wilc_get_chipid(u8 update);
- 
--
- #endif
--- 
-1.9.1
-
+greg k-h
