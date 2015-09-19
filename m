@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:39966 "EHLO plane.gmane.org"
+Received: from mga09.intel.com ([134.134.136.24]:34380 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbbIOHFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 03:05:08 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZbkIb-00034T-0f
-	for linux-wireless@vger.kernel.org; Tue, 15 Sep 2015 09:05:05 +0200
-Received: from 217.113.177.185 ([217.113.177.185])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2015 09:05:04 +0200
-Received: from chris by 217.113.177.185 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2015 09:05:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Chris <chris@dd-wrt.com>
-Subject: Re: [PATCH 4.3] ath10k: fix DMA related firmware crashes on multiple devices
-Date: Tue, 15 Sep 2015 07:03:34 +0000 (UTC)
-Message-ID: <loom.20150915T085937-648@post.gmane.org> (sfid-20150915_090516_750741_DAD967BD)
-References: <1442176540-34973-1-git-send-email-nbd@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752744AbbISCkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 22:40:17 -0400
+Message-ID: <55FCCB0E.3000807@linux.intel.com> (sfid-20150919_044058_223684_9E302AC2)
+Date: Sat, 19 Sep 2015 10:40:14 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] net/wireless: enable wiphy device to suspend/resume asynchronously
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Now, PM core supports asynchronous suspend/resume mode for devices
+during system suspend/resume, and the power state transition of one
+device may be completed in separate kernel thread. PM core ensures
+all power state transition timing dependency between devices. This
+patch enables wiphy device to suspend/resume asynchronously. This can
+take advantage of multicore and improve system suspend/resume speed.
 
+Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+---
+Changes in v2:
+- Amend commit message.
 
-Felix Fietkau <nbd@...> writes:
+ net/wireless/core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> 
-> Some platforms really don't like DMA bursts of 256 bytes, and this
-> causes the firmware to crash when sending beacons.
-> Also, changing this based on the firmware version does not seem to make
-> much sense, so use 128 bytes for all version
-
-i can confirm that now gateworks laguna / Ventana and Compex wpj344 (HW v1
-and v2) is how working with one and more 9880 cards, using actual firmwares
-(tested firmware-5.bin_10.2.4.70-2 + firmware-5.bin_10.2.4.70.6-2 )
-
-
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 3893409..f223026 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -419,6 +419,7 @@ use_default_name:
+ 	device_initialize(&rdev->wiphy.dev);
+ 	rdev->wiphy.dev.class = &ieee80211_class;
+ 	rdev->wiphy.dev.platform_data = rdev;
++	device_enable_async_suspend(&rdev->wiphy.dev);
+ 
+ 	INIT_LIST_HEAD(&rdev->destroy_list);
+ 	spin_lock_init(&rdev->destroy_list_lock);
+-- 1.7.1
 
