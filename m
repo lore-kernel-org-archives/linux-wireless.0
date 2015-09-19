@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48524 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758708AbbIDMaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 08:30:08 -0400
-Message-ID: <1441369803.1971.4.camel@sipsolutions.net> (sfid-20150904_143036_582086_E12EE242)
-Subject: Re: [PATCH] cfg80211: regulatory: restore proper user alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>,
-	linux-wireless@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Date: Fri, 04 Sep 2015 14:30:03 +0200
-In-Reply-To: <55E72B2F.0@maciej.szmigiero.name>
-References: <55E72B2F.0@maciej.szmigiero.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45172 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754771AbbISE7X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2015 00:59:23 -0400
+Date: Fri, 18 Sep 2015 19:50:38 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH v2 1/4] staging: wilc1000: fix null check routine
+Message-ID: <20150919025038.GA2889@kroah.com> (sfid-20150919_065929_128313_A68F3329)
+References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+ <1442484140-13485-2-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442484140-13485-2-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-02 at 19:00 +0200, Maciej S. Szmigiero wrote:
-> restore_regulatory_settings() should restore alpha2
-> as computed in restore_alpha2(), not raw user_alpha2 to
-> behave as described in the comment just above that code.
+On Thu, Sep 17, 2015 at 07:02:17PM +0900, Tony Cho wrote:
+> From: Leo Kim <leo.kim@atmel.com>
 > 
-> This fixes endless loop of calling CRDA for "00" and "97"
-> countries after resume from suspend on my laptop.
+> This patch removes the potential faults which may happen when unexpectedly
+> getting access to invalid pointer. The pointer of pstrWFIDrv is unlikely
+> to be invalid. However, it is safer to return error when the invalid
+> memory is unfortunately accessed.
 > 
-> Looks like others had the same problem, too:
-> http://ath9k-devel.ath9k.narkive.com/knY5W6St/ath9k-and-crda-messages
-> -in-logs
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/899335
-> https://forum.porteus.org/viewtopic.php?t=4975&p=36436
-> https://forums.opensuse.org/showthread.php/
-> 483356-Authentication-Regulatory-Domain-issues-ath5k-12-2
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 6fdf392..151e8c4 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
+>  	s32 s32Err = 0;
+>  	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
+>  
+> -	if (pstrWFIDrv == NULL)
+> +	if (unlikely(!pstrWFIDrv)) {
 
-Applied, thanks.
+Can you measure the difference of using unlikely and not using it?  If
+not, never use it, as odds are, the compiler and processor already
+guessed it correctly and made the code faster.
 
-johannes
+If you can measure it, great, I'll be glad to take this patch, but you
+need to show your measurements in the changelog comments.
+
+>  		PRINT_ER("Driver handler is NULL\n");
+> +		return -EFAULT;
+
+-EFAULT is only for when we take a memory fault, which is not what is
+happening here.  -ENODEV?
+
+thanks,
+
+greg k-h
