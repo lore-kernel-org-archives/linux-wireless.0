@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:28681 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402AbbIAOzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 10:55:12 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v2 3/9] nfc: nci: Introduce new core opcodes
-Date: Tue,  1 Sep 2015 17:54:22 +0300
-Message-Id: <1441119268-30654-4-git-send-email-robert.dolca@intel.com> (sfid-20150901_165523_489297_28D6E6D9)
-In-Reply-To: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
-References: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45175 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754792AbbISE7Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2015 00:59:24 -0400
+Date: Fri, 18 Sep 2015 19:52:12 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com, austin.shin@atmel.com,
+	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
+	Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH v2 2/4] staging: wilc1000: remove warnings on the
+ multiple blank lines uses
+Message-ID: <20150919025212.GA3614@kroah.com> (sfid-20150919_065930_579325_7E1C495E)
+References: <1442484140-13485-1-git-send-email-tony.cho@atmel.com>
+ <1442484140-13485-3-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442484140-13485-3-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add NCI_OP_CORE_GET_CONFIG_CMD, NCI_OP_CORE_GET_CONFIG_RSP
-and NCI_OP_CORE_RESET_NTF.
+On Thu, Sep 17, 2015 at 07:02:18PM +0900, Tony Cho wrote:
+> From: Leo Kim <leo.kim@atmel.com>
+> 
+> This patch removes the warnings reported by checkpatch.pl
+> for using multiple blank lines.
+> 
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan_if.h | 12 ------------
+>  1 file changed, 12 deletions(-)
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- include/net/nfc/nci.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+Does not apply :(
 
-diff --git a/include/net/nfc/nci.h b/include/net/nfc/nci.h
-index 75d2e18..b495825 100644
---- a/include/net/nfc/nci.h
-+++ b/include/net/nfc/nci.h
-@@ -315,6 +315,8 @@ struct nci_nfcee_mode_set_cmd {
- 	__u8	nfcee_mode;
- } __packed;
- 
-+#define NCI_OP_CORE_GET_CONFIG_CMD	nci_opcode_pack(NCI_GID_CORE, 0x03)
-+
- /* ----------------------- */
- /* ---- NCI Responses ---- */
- /* ----------------------- */
-@@ -375,6 +377,9 @@ struct nci_nfcee_discover_rsp {
- } __packed;
- 
- #define NCI_OP_NFCEE_MODE_SET_RSP nci_opcode_pack(NCI_GID_NFCEE_MGMT, 0x01)
-+
-+#define NCI_OP_CORE_GET_CONFIG_RSP	nci_opcode_pack(NCI_GID_CORE, 0x03)
-+
- /* --------------------------- */
- /* ---- NCI Notifications ---- */
- /* --------------------------- */
-@@ -528,4 +533,6 @@ struct nci_nfcee_discover_ntf {
- 	struct nci_nfcee_information_tlv	information_tlv;
- } __packed;
- 
-+#define NCI_OP_CORE_RESET_NTF		nci_opcode_pack(NCI_GID_CORE, 0x00)
-+
- #endif /* __NCI_H */
--- 
-1.9.1
+Neither did patches 3 and 4 in this series, please rebase and resend.
 
+thanks,
+
+greg k-h
