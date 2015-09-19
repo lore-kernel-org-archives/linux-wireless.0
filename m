@@ -1,42 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13519 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754871AbbISOYD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 10:24:03 -0400
-Message-ID: <55FD7000.7070305@broadcom.com> (sfid-20150919_162407_969597_78B72F5A)
-Date: Sat, 19 Sep 2015 16:24:00 +0200
-From: Arend van Spriel <arend@broadcom.com>
+Received: from mga02.intel.com ([134.134.136.20]:18752 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752196AbbISCpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2015 22:45:15 -0400
+Message-ID: <55FCCC37.9000503@linux.intel.com> (sfid-20150919_044541_949693_B44D7C14)
+Date: Sat, 19 Sep 2015 10:45:11 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com> <CACna6rz6P4==K=fVr=Vnn8fkwvFJppEqub6dCEcZ8DyK5Bpa=Q@mail.gmail.com>
-In-Reply-To: <CACna6rz6P4==K=fVr=Vnn8fkwvFJppEqub6dCEcZ8DyK5Bpa=Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: David Miller <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume asynchronously
+References: <55B9B3BA.6080406@linux.intel.com>		 <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>		 <55D13D66.1050500@linux.intel.com>	 <1439796553.2451.1.camel@sipsolutions.net> <55D19F57.4070605@broadcom.com>	 <55DA9374.2060909@linux.intel.com> <1440401918.3735.0.camel@sipsolutions.net>
+In-Reply-To: <1440401918.3735.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/18/2015 11:29 PM, Rafał Miłecki wrote:
-> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com> wrote:
->> * correct set and get tx-power.
->
-> Oh, I got a similar patch, you were faster :)
->
->
->> The series should be applied to master branch of the wireless-drivers-next
->> repository after the series sent earlier with
->> Message-ID: <1440620104-2715-1-git-send-email-arend@broadcom.com>
->> and patch "brcmfmac: Reset PCIE devices after recognition." with
->> Message-ID: <1440684846-17214-1-git-send-email-arend@broadcom.com>.
->
-> Applied and tested with SR400ac (2 * BCM43602), no regressions
-> noticed. Nice work!o
 
-I replied to first and last patch so you are acknowledged for testing. 
-Doing it for each patch in the series was too much trouble for me :-p
 
-Regards,
-Arend
+On 2015/8/24 15:38, Johannes Berg wrote:
+> On Mon, 2015-08-24 at 11:45 +0800, Fu, Zhonghui wrote:
+>> On 2015/8/17 16:46, Arend van Spriel wrote:
+>>> + Rafael
+>>>
+>>> On 08/17/2015 09:29 AM, Johannes Berg wrote:
+>>>> On Mon, 2015-08-17 at 09:48 +0800, Fu, Zhonghui wrote:
+>>>>> The suspend/resume timing of wiphy device and related devices 
+>>>>> will be
+>>>>> ensured by their parent/child relationship. So, enabling wiphy 
+>>>>> device
+>>>>> to suspend/resume asynchronously does not change any 
+>>>>>  dependency. It
+>>>>> can only take advantage of multicore and improve system
+>>>>> suspend/resume speed.
+>>>>>
+>>>> You're going to have to explain that to me, because I don't see 
+>>>> that.
+>>>> All I see is that when looking at a device, if async is possible, 
+>>>> it
+>>>> gets added to an async work, and if async is not possible then it 
+>>>> gets
+>>>> done immediately. Even putting aside the question of whether or 
+>>>> not
+>>>> async is ordered or not (I don't know), if the wiphy is async and 
+>>>> the
+>>>> PCI (or other bus) device isn't, then it seems they could get 
+>>>> handled
+>>>> out of order, no? Or is there some magic code somewhere that I'm
+>>>> missing that explicitly waits for the async of the parent/child
+>>>> relationship?
+>>> This patch got me worried as well. Can't find the magic either. 
+>>> Maybe Rafael can give some hints here.
+>> "dpm_wait_for_children" function will be invoked in 
+>> "__device_suspend", "__device_suspend_late", and 
+>> "__device_suspend_noirq" functions to synchronize the child 
+>> relationship. "dpm_wait" function will be invoked in 
+>> "device_resume_noirq", "device_resume_early", and "device_resume" 
+>> functions to synchronize the parent relationship. If two devices have 
+>> parent/child relationship, but different suspend/resume mode(sync or 
+>> async), this will have no impact to PM timing order between them. 
+>> Because all devices will use "__device_suspend", 
+>> "__device_suspend_late" ... functions to complete their PM 
+>> transition.
+>>
+> Ok, good point. For the unaware here, can you please resend with a
+> commit message amended with some of this information?
+I take some leaves these days, so very sorry for late reply.
+
+I have resent this patch with your advices - "[PATCH v2] net/wireless: enable wiphy device to suspend/resume asynchronously".
+
+
+Thanks,
+Zhonghui
+>
+> thanks,
+> johannes
 
