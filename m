@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61190 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932955AbbIYTyV (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:3553 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbbISJng (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 15:54:21 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 22:22:33 +0200
-Message-ID: <16046206.NvsuxYn5NN@vostro.rjw.lan> (sfid-20150925_215441_459062_8F95AFE8)
-In-Reply-To: <1460975.zriLPuubXp@vostro.rjw.lan>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1460975.zriLPuubXp@vostro.rjw.lan>
+	Sat, 19 Sep 2015 05:43:36 -0400
+Message-ID: <55FD2E46.4030304@broadcom.com> (sfid-20150919_114338_700211_5B7F1B65)
+Date: Sat, 19 Sep 2015 11:43:34 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 16/16] brcmfmac: Accept events when TDLS is used in combination
+ with p2p.
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com> <1442606899-31872-17-git-send-email-arend@broadcom.com>
+In-Reply-To: <1442606899-31872-17-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, September 25, 2015 10:18:13 PM Rafael J. Wysocki wrote:
-> On Friday, September 25, 2015 09:41:37 AM Viresh Kumar wrote:
-> > global_lock is defined as an unsigned long and accessing only its lower
-> > 32 bits from sysfs is incorrect, as we need to consider other 32 bits
-> > for big endian 64 bit systems. There are no such platforms yet, but the
-> > code needs to be robust for such a case.
-> > 
-> > Fix that by passing a local variable to debugfs_create_bool() and
-> > assigning its value to global_lock later.
-> > 
-> > Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Greg, please take this one if the [2/2] looks good to you.
+On 09/18/2015 10:08 PM, Arend van Spriel wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+>
+> TDLS events are mapped back to primary interface but when p2p is in
+> use then this fails because the check was incorrect by checking
+> bsscfg number. Which can be different when a p2p device has been
+> created.
 
-Ouch, turns out it was a bad idea.  Please scratch that.
-
-Thanks,
-Rafael
+Tested-by: Rafał Miłecki <zajec5@gmail.com>
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> index 81542e0..383d6fa 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> @@ -300,8 +300,7 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
+>   			goto event_free;
+>   		}
+>
+> -		if ((event->code == BRCMF_E_TDLS_PEER_EVENT) &&
+> -		    (emsg.bsscfgidx == 1))
+> +		if (event->code == BRCMF_E_TDLS_PEER_EVENT)
+>   			ifp = drvr->iflist[0];
+>   		else
+>   			ifp = drvr->iflist[emsg.bsscfgidx];
+>
 
