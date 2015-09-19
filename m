@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48153 "EHLO sipsolutions.net"
+Received: from hauke-m.de ([5.39.93.123]:39762 "EHLO hauke-m.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753746AbbI3GrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 02:47:00 -0400
-Message-ID: <1443595615.1859.2.camel@sipsolutions.net> (sfid-20150930_084704_436063_29E59D80)
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Date: Wed, 30 Sep 2015 08:46:55 +0200
-In-Reply-To: <5605D228.7050609@candelatech.com> (sfid-20150926_010105_789618_F93D668E)
-References: <5605D228.7050609@candelatech.com>
-	 (sfid-20150926_010105_789618_F93D668E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754430AbbISKkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2015 06:40:03 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: emmanuel.grumbach@intel.com
+Cc: johannes.berg@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
+Date: Sat, 19 Sep 2015 12:39:50 +0200
+Message-Id: <1442659190-6060-1-git-send-email-hauke@hauke-m.de> (sfid-20150919_124007_995516_62A820AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-25 at 16:00 -0700, Ben Greear wrote:
-> It seems that ath10k ar988X hardware has a bug where the BSSID
-> for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
-> does not seem to use AMSDUs for IBSS, and when I enable it in my CT
-> firmware, then I see the breakage.  So, I suspect it is not
-> just a simple software/firmware bug.
-> 
-> If I simply ignore the bssid_match check in ieee80211_accept_frame,
-> then it seems everything runs fine.
-> 
-> So, I'm curious if anyone knows what sorts of bad things could happen
-> if the bssid_match check is ignored?  Maybe bcast/mcast frames could
-> be accepted when they shouldn't be in certain cases?
-> 
+modinfo iwlwifi showed the following required firmware:
+firmware: iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
 
-You could end up accepting multicast frames from a different,
-overlapping, BSS? Seems like a bad idea.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 6951aba..bccd2d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -348,6 +348,6 @@ const struct iwl_cfg iwl7265d_n_cfg = {
+ };
+ 
+ MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+-MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
++MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3165_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL7265D_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+-- 
+2.1.4
+
