@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:55670 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbbIEEB1 (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33871 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754029AbbITGv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2015 00:01:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21994.26976.882903.355191@gargle.gargle.HOWL> (sfid-20150905_060146_042285_AB085793)
-Date: Sat, 5 Sep 2015 09:32:40 +0530
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-In-Reply-To: <wrfjmvx2gi0m.fsf@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1441032517.13980.21.camel@sipsolutions.net>
-	<wrfjmvx73u0l.fsf@redhat.com>
-	<1441120044.2441.9.camel@sipsolutions.net>
-	<wrfj4mjcqn3x.fsf@redhat.com>
-	<wrfjvbbsp6ot.fsf@redhat.com>
-	<1441275474.2565.18.camel@sipsolutions.net>
-	<wrfjmvx2gi0m.fsf@redhat.com>
+	Sun, 20 Sep 2015 02:51:58 -0400
+Received: by padhy16 with SMTP id hy16so87432980pad.1
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:51:58 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 07/18] staging: wilc1000: replaces PRINT_D with netdev_err
+Date: Sun, 20 Sep 2015 15:51:14 +0900
+Message-Id: <1442731885-4344-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085215_172248_F86B2818)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen wrote:
-> > Ah, this makes sense. There's an rc_update call or something like that,
-> > that might have the requisite information. Not really sure off the top
-> > of my head.
+This patch replaces PRINT_D with netdev_err which is used at error
+checking.
 
-ieee80211_sta doesn't contain the preamble information, though ?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The bss information holds the short preamble information, so that can
-probably be used - using BSS_CHANGED_ERP_PREAMBLE.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 216da0c..bf9d9ee 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3694,17 +3694,17 @@ void wilc_free_wiphy(struct net_device *net)
+ 	netdev_info(net, "Unregistering wiphy\n");
+ 
+ 	if (!net) {
+-		PRINT_D(INIT_DBG, "net_device is NULL\n");
++		netdev_err(net, "net_device is NULL\n");
+ 		return;
+ 	}
+ 
+ 	if (!net->ieee80211_ptr) {
+-		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
++		netdev_err(net, "ieee80211_ptr is NULL\n");
+ 		return;
+ 	}
+ 
+ 	if (!net->ieee80211_ptr->wiphy) {
+-		PRINT_D(INIT_DBG, "wiphy is NULL\n");
++		netdev_err(net, "wiphy is NULL\n");
+ 		return;
+ 	}
+ 
+-- 
+2.5.1
 
-> I'll add a comment to the code explaining why it is done this way. I had
-> a peak at the rate_control code earlier, but it wasn't obvious to me
-> whether I should be using that API at all. Is there an explanation of
-> the API and it's usage somewhere?
-
-sta_rc_update() can be used when the target firmware (or a custom rate
-control module) expects the driver to provide valid operational bitrates.
-
-Sujith
