@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:46969 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785AbbI3Jzm (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36586 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886AbbITGwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:55:42 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 25/32] staging: wilc1000: rename strHostIfSetMacAddress
-Date: Wed, 30 Sep 2015 18:55:07 +0900
-Message-ID: <1443606914-25563-3-git-send-email-tony.cho@atmel.com> (sfid-20150930_115546_925062_07D7AD47)
-In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 20 Sep 2015 02:52:23 -0400
+Received: by padhk3 with SMTP id hk3so87325987pad.3
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:22 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 15/18] staging: wilc1000: remove braces for single statement blocks
+Date: Sun, 20 Sep 2015 15:51:22 +0900
+Message-Id: <1442731885-4344-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091653_819030_1EB57F0F)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIfSetMacAddress to set_mac_info to avoid
-CamelCase naming convention.
+This patch removes braces for single if statement blocks found by
+checkpatch.pl
+WARNING: braces {} are not necessary for single statement blocks
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a66f78d..2fa1158 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -387,7 +387,7 @@ union message_body {
- 	struct drv_handler drv;
- 	struct set_multicast multicast_info;
- 	struct op_mode mode;
--	struct set_mac_addr strHostIfSetMacAddress;
-+	struct set_mac_addr set_mac_info;
- 	struct get_mac_addr strHostIfGetMacAddress;
- 	struct ba_session_info strHostIfBASessionInfo;
- 	struct remain_ch strHostIfRemainOnChan;
-@@ -4177,7 +4177,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 34df5da..fce7dac 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3626,9 +3626,9 @@ int WILC_WFI_InitHostInt(struct net_device *net)
  
- 		case HOST_IF_MSG_SET_MAC_ADDRESS:
--			Handle_SetMacAddress(msg.drvHandler, &msg.body.strHostIfSetMacAddress);
-+			Handle_SetMacAddress(msg.drvHandler, &msg.body.set_mac_info);
- 			break;
+ 	sema_init(&(priv->hSemScanReq), 1);
+ 	s32Error = host_int_init(&priv->hWILCWFIDrv);
+-	if (s32Error) {
++	if (s32Error)
+ 		PRINT_ER("Error while initializing hostinterface\n");
+-	}
++
+ 	return s32Error;
+ }
  
- 		case HOST_IF_MSG_GET_MAC_ADDRESS:
-@@ -4892,7 +4892,7 @@ s32 host_int_set_MacAddress(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8MacAddress)
- 	/* prepare setting mac address message */
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_MAC_ADDRESS;
--	memcpy(msg.body.strHostIfSetMacAddress.u8MacAddress, pu8MacAddress, ETH_ALEN);
-+	memcpy(msg.body.set_mac_info.u8MacAddress, pu8MacAddress, ETH_ALEN);
- 	msg.drvHandler = hWFIDrv;
+@@ -3666,9 +3666,9 @@ int WILC_WFI_DeInitHostInt(struct net_device *net)
+ 	}
+ 	#endif
  
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	if (s32Error)
+ 		PRINT_ER("Error while deintializing host interface\n");
+-	}
++
+ 	return s32Error;
+ }
+ 
 -- 
-1.9.1
+2.5.1
 
