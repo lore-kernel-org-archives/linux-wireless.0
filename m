@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754165AbbIRUI0 (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33352 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755441AbbITGwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:26 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 12/16] brcmfmac: Add module parameter to disable features.
-Date: Fri, 18 Sep 2015 22:08:15 +0200
-Message-ID: <1442606899-31872-13-git-send-email-arend@broadcom.com> (sfid-20150918_220841_166472_5984CB17)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 20 Sep 2015 02:52:32 -0400
+Received: by pacex6 with SMTP id ex6so87545505pac.0
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:31 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 18/18] staging: wilc1000: rename WILC_WFI_InitHostInt
+Date: Sun, 20 Sep 2015 15:51:25 +0900
+Message-Id: <1442731885-4344-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091655_139070_029B6294)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This patch replaces WILC_WFI_InitHostInt with wilc_init_host_int to
+avoid CamelCase.
 
-For debugging purpose it is very handy to be able to disable
-features. It has happened a few times that new features turned
-out not always being properly detected for all devices/firmwares.
-Making it possible to disable the feature with a module parameter
-will make testing/debugging easier.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/feature.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c             | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-index 7c2135f..44bb306 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-@@ -15,6 +15,7 @@
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 181459f..7857ad2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1422,7 +1422,7 @@ int mac_open(struct net_device *ndev)
+ 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+ 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
+ 
+-	ret = WILC_WFI_InitHostInt(ndev);
++	ret = wilc_init_host_int(ndev);
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to initialize host interface\n");
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 50e03f1..a44d8a0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3599,7 +3599,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net)
+  *  @date	01 MAR 2012
+  *  @version	1.0
   */
+-int WILC_WFI_InitHostInt(struct net_device *net)
++int wilc_init_host_int(struct net_device *net)
+ {
  
- #include <linux/netdevice.h>
-+#include <linux/module.h>
- 
- #include <brcm_hw_ids.h>
- #include "core.h"
-@@ -23,6 +24,12 @@
- #include "fwil.h"
- #include "feature.h"
- 
-+
-+/* Module param feature_disable (global for all devices) */
-+static int brcmf_feature_disable;
-+module_param_named(feature_disable, brcmf_feature_disable, int, 0);
-+MODULE_PARM_DESC(feature_disable, "Disable features");
-+
- /*
-  * expand feature list to array of feature strings.
-  */
-@@ -131,6 +138,12 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
- 
-+	if (brcmf_feature_disable) {
-+		brcmf_dbg(INFO, "Features: 0x%02x, disable: 0x%02x\n",
-+			  ifp->drvr->feat_flags, brcmf_feature_disable);
-+		ifp->drvr->feat_flags &= ~brcmf_feature_disable;
-+	}
-+
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43236_CHIP_ID:
+ 	int s32Error = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 859d62a..b240a79 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -96,7 +96,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net);
+ void wilc_free_wiphy(struct net_device *net);
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
+ int wilc_deinit_host_int(struct net_device *net);
+-int WILC_WFI_InitHostInt(struct net_device *net);
++int wilc_init_host_int(struct net_device *net);
+ void WILC_WFI_monitor_rx(u8 *buff, u32 size);
+ int WILC_WFI_deinit_mon_interface(void);
+ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
 -- 
-1.9.1
+2.5.1
 
