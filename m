@@ -1,108 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:34744 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264AbbIAFRc (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33136 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624AbbITGwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 01:17:32 -0400
-Received: by oiex83 with SMTP id x83so77553570oie.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 22:17:32 -0700 (PDT)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
- <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
- <55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
- <55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
- <55E476A0.4080601@lwfinger.net> <wrfjio7v3txe.fsf@redhat.com>
- <55E4EE6F.2010008@lwfinger.net> <wrfjwpwa3fkc.fsf@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	johannes@sipsolutions.net
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55E534EA.9090605@lwfinger.net> (sfid-20150901_071738_250339_A40B518B)
-Date: Tue, 1 Sep 2015 00:17:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <wrfjwpwa3fkc.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sun, 20 Sep 2015 02:52:01 -0400
+Received: by pacex6 with SMTP id ex6so87539446pac.0
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:01 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/18] staging: wilc1000: remove declaration of WILC_WFI_frame_register
+Date: Sun, 20 Sep 2015 15:51:15 +0900
+Message-Id: <1442731885-4344-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085219_200492_EE5E60F6)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2015 11:54 PM, Jes Sorensen wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->> On 08/31/2015 06:43 PM, Jes Sorensen wrote:
->>> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>>> On 08/30/2015 09:39 PM, Jes Sorensen wrote:
->>>>> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>>>>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
->>>>>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
->>>>>>>> 0xff, 0xff),
->>>>>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
->>>>>>>>
->>>>>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
->>>>>>>
->>>>>>> Were you happy with the results, or did it cause problems? Ie. did you
->>>>>>> try on x86 or on PPC32?
->>>>>>
->>>>>> As covered in the other mail, it works very well at G rates.
->>>>>
->>>>> I see - I am a little confused, it works well on G rates but not on N
->>>>> rates, or was this due to the AP used?
->>>>
->>>> The AP is AC1200. It supports full N rates on other devices.
->>>
->>> You only manage to make it work on G rates against this AP? Urgh, I
->>> don't like that at all.
->>>
->>> I thought you reported 30+Mbps performances though?, thats more than you
->>> get on G.
->>
->> OK, I get a bit better than the top G rate of 27 Mbps, but the
->> connection reports a 54 Mbps raw rate. My Intel 7260 gets RX of 95 and
->> TX of 53 Mbps from the same location relative to the AP. For the
->> Intel, the listed raw rate is 300 Mbps.
->
-> It's possible the connection reporting I am doing is wrong. I haven't
-> figured out how to report the actual transmission speed, which is what
-> the mac80211 stack wants. Some of the other drivers fake it or repor RX
-> speeds, but that isn't what one is meant to report.
->
->>>> A full debug=0x3fff showed me one problem on the PPC. I will be
->>>> testing a patch later today.
->>>
->>> Interesting, let me know what you find.
->>
->> Thanks for the fixes. I'm still getting the sleeping while atomic BUG
->> splat from rtl8723a_h2c_cmd+0x48. Today I know that is not a lock
->> dependency issue. I have one in VirtualBox that fires and disables
->> further checking, but that driver is not loading now.
->
-> This is bothersome, I'll have to dig futher into this.
->
->> I have made some progress on the big-endian issues. When the firmware
->> file is read from disk, the first byte read must be the first byte
->> written to the device. In the slow write N routine, four bytes are
->> picked and written using the write32 routine, which does a cpu_to_32()
->> byte swap. As a result, the order of bytes to the device is 03, 02,
->> 01, 00! Rather than byte swap twice, I am calling the regular writeN
->> routine with each hunk. After a bit of thinking about the best
->> blocksize to use, I settled on 64. That reduces the number of
->> full-size hunks that are written without unduly increasing the
->> worst-case number of writes needed for the remainder.
->>
->> On PPC, I now get a device registered; however, the scan data are
->> garbled. That shouldn't be too difficult to debug, but just in case, I
->> have attached the patch for rtl8xxxu_slow_writeN().
->
-> As I mentioned in a direct email - calling writeN from slow_writeN is
-> not a solution. I found some devices fail if you try to use the fast
-> writeN routine. Maybe rtl8xxxu_raw_write32() - without the byteswap
-> would be a better approach, or simply putting the relevant code into the
-> slow_writeN function.
->
-> I am flying back to New York tomorrow, and I'll have some time on the
-> plane, so I'll try to have a look at that.
+This patch removes function declaration of WILC_WFI_frame_register in
+linux_wlan.c file, then adds it in wilc_wfi_cfgoperations.h file.
 
-I also found that trying to write all N bytes at once failed, but writing 64 at 
-a time is OK. I will add the USB calls to slow_writeN.
+The compilation warning occurs because it is assigned to incorrect
+pointer type of second parameter of WILC_WFI_frame_register.
+It is assigned with struct wireless_dev pointer type.
 
-Larry
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 7 ++-----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 ++
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4534fb9..fd5cfd3 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1400,9 +1400,6 @@ int mac_init_fn(struct net_device *ndev)
+ 	return 0;
+ }
+ 
+-void    WILC_WFI_frame_register(struct wiphy *wiphy, struct net_device *dev,
+-				u16 frame_type, bool reg);
+-
+ /* This fn is called, when this device is setup using ifconfig */
+ int mac_open(struct net_device *ndev)
+ {
+@@ -1464,9 +1461,9 @@ int mac_open(struct net_device *ndev)
+ 		goto _err_;
+ 	}
+ 
+-	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev,
++	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
+ 				nic->g_struct_frame_reg[0].frame_type, nic->g_struct_frame_reg[0].reg);
+-	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev,
++	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
+ 				nic->g_struct_frame_reg[1].frame_type, nic->g_struct_frame_reg[1].reg);
+ 	netif_wake_queue(ndev);
+ 	g_linux_wlan->open_ifcs++;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 579bf2b..0bd23b4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -100,6 +100,8 @@ int WILC_WFI_InitHostInt(struct net_device *net);
+ void WILC_WFI_monitor_rx(u8 *buff, u32 size);
+ int WILC_WFI_deinit_mon_interface(void);
+ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
++void WILC_WFI_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
++			     u16 frame_type, bool reg);
+ 
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+ #define DEFAULT_LINK_SPEED			72
+-- 
+2.5.1
 
