@@ -1,62 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:46365 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbbIGVB3 (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35621 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755304AbbITGw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 17:01:29 -0400
-Message-ID: <55EDFB26.8000708@broadcom.com> (sfid-20150907_230132_319690_056E5A48)
-Date: Mon, 7 Sep 2015 23:01:26 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Gucea Doru <gucea.doru@gmail.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: bcmdhd: Concurrent use of wlan0 and virtual interface in
- managed mode
-References: <CANfLQrbXn2pLjVY8DVC=xs9oWZC2nX3VcEZQMLh1zQa7i4EHCg@mail.gmail.com>	<55DAD0FD.3070807@broadcom.com>	<CANfLQrYQnk6bUjPEKxucxBhLvsRsqpfydvAkvsvKdg0nnte3iA@mail.gmail.com>	<CAG8K7gRdXqpfA3_HPoaM+ivgxH4eiPRWkD238QwMMbNigYHDBw@mail.gmail.com>	<CANfLQraZAkw0Eqt-Mog5t4ZfGFx3xm_8-6nJoJ68Mim18bW3Tg@mail.gmail.com> <CANfLQrYVq_eMa-CLJhqVthbm_h7yLBhZN5nm0_f70eEob+rUdw@mail.gmail.com>
-In-Reply-To: <CANfLQrYVq_eMa-CLJhqVthbm_h7yLBhZN5nm0_f70eEob+rUdw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Sun, 20 Sep 2015 02:52:29 -0400
+Received: by pacfv12 with SMTP id fv12so89104986pac.2
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:28 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 17/18] staging: wilc1000: rename WILC_WFI_DeInitHostInt
+Date: Sun, 20 Sep 2015 15:51:24 +0900
+Message-Id: <1442731885-4344-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091655_725881_3F715ACE)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/07/2015 10:41 PM, Gucea Doru wrote:
-> Hello,
->
-> Thanks for helping me. I have some more questions related to parallel
-> usage of p2p and STA (station) interface.
->
-> I use a Nexus 5 device which has a BCM4339 [1] chip and it seems that
-> it's possible to transfer data in parallel using two connections: one
-> based on Wi-Fi direct(p2p, 2.4Ghz) and the other one based on a
-> connection to AP (wlan0, 5Ghz).
->
-> This is done by _time-sharing_ the wireless interface radio? From my
-> understanding the mac80211 layer have support for multiple virtual
-> interfaces and the switching between this interfaces is done inside
-> mac80211. Does the driver creates multiple virtual interfaces (one for
-> p2p and one for the connection to the AP) and the mac80211 manages the
-> time-sharing between them?
+This patch replaces WILC_WFI_DeInitHostInt with wilc_deinit_host_int to
+avoid CamelCase.
 
-Nope. The BCM4339 chip does not rely on mac80211. Instead, there is an 
-802.11 stack running on the device, ie. in firmware. The driver creates 
-the primary interface, ie. wlan0. Additional P2P interfaces are created 
-by wpa_supplicant.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-> I am interested in understanding the code that decides how much the
-> radio should stay on a specific channel. I would be really grateful if
-> you could give me some details about the architecture.
-
-That code runs in firmware on the device and is proprietary. So I can 
-not disclose any details.
-
-Regards,
-Arend
-
-> [1] http://www.broadcom.com/press/release.php?id=s766879
->
-> Thanks,
-> Doru
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index f71f7ea..181459f 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1434,7 +1434,7 @@ int mac_open(struct net_device *ndev)
+ 	ret = wilc1000_wlan_init(ndev, nic);
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to initialize wilc1000\n");
+-		WILC_WFI_DeInitHostInt(ndev);
++		wilc_deinit_host_int(ndev);
+ 		return ret;
+ 	}
+ 
+@@ -1471,7 +1471,7 @@ int mac_open(struct net_device *ndev)
+ 	return 0;
+ 
+ _err_:
+-	WILC_WFI_DeInitHostInt(ndev);
++	wilc_deinit_host_int(ndev);
+ 	wilc1000_wlan_deinit(g_linux_wlan);
+ 	return ret;
+ }
+@@ -1664,7 +1664,7 @@ int mac_close(struct net_device *ndev)
+ 		/* Stop the network interface queue */
+ 		netif_stop_queue(nic->wilc_netdev);
+ 
+-		WILC_WFI_DeInitHostInt(nic->wilc_netdev);
++		wilc_deinit_host_int(nic->wilc_netdev);
+ 	}
+ 
+ 	if (g_linux_wlan->open_ifcs == 0) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ee4cc7f..50e03f1 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3641,7 +3641,7 @@ int WILC_WFI_InitHostInt(struct net_device *net)
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-int WILC_WFI_DeInitHostInt(struct net_device *net)
++int wilc_deinit_host_int(struct net_device *net)
+ {
+ 	int s32Error = 0;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 4730128..859d62a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -95,7 +95,7 @@ struct wireless_dev *WILC_WFI_CfgAlloc(void);
+ struct wireless_dev *wilc_create_wiphy(struct net_device *net);
+ void wilc_free_wiphy(struct net_device *net);
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
+-int WILC_WFI_DeInitHostInt(struct net_device *net);
++int wilc_deinit_host_int(struct net_device *net);
+ int WILC_WFI_InitHostInt(struct net_device *net);
+ void WILC_WFI_monitor_rx(u8 *buff, u32 size);
+ int WILC_WFI_deinit_mon_interface(void);
+-- 
+2.5.1
 
