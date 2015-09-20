@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36708 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756193AbbI1Hls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 03:41:48 -0400
-Message-ID: <1443426103.2401.1.camel@sipsolutions.net> (sfid-20150928_094154_249228_F21D1AFC)
-Subject: Re: Low latency communication over wifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>,
-	Bastian Bittorf <bittorf@bluebottle.com>
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Date: Mon, 28 Sep 2015 09:41:43 +0200
-In-Reply-To: <20150926102403.GA21555@amd>
-References: <20150926102403.GA21555@amd>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33033 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537AbbITGvq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Sep 2015 02:51:46 -0400
+Received: by pacex6 with SMTP id ex6so87536515pac.0
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:51:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/18] staging: wilc1000: fix NULL comparison style
+Date: Sun, 20 Sep 2015 15:51:10 +0900
+Message-Id: <1442731885-4344-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085207_313502_486FF86F)
+In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-09-26 at 12:24 +0200, Pavel Machek wrote:
-> 
-> That would be equivalent to ping -Q, right? It does not seem to have
-> any effect :-(. I'd expect at least local machine to use shorter waits
-> for medium, and thus drop packets instead of waiting.
+This patch fixes NULL comparison style found by checkpatch.pl.
 
-Correct. But it won't *drop* packets, it just increases the chances of
-getting medium access.
+CHECK: Comparison to NULL could be written "!net"
+CHECK: Comparison to NULL could be written "!net->ieee80211_ptr"
+CHECK: Comparison to NULL could be written "!net->ieee80211_ptr->wiphy"
 
-> > # you have to add some magic for matching your data
-> > e.g. $IPT -t mangle -I OUTPUT -j DSCP --set-dscp-class CS7
-> 
-> Again, this is ping -Q equivalent, right? I was doing
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Yes.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e51745e..af11af3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3694,17 +3694,17 @@ void wilc_free_wiphy(struct net_device *net)
+ 
+ 	PRINT_D(CFG80211_DBG, "Unregistering wiphy\n");
+ 
+-	if (net == NULL) {
++	if (!net) {
+ 		PRINT_D(INIT_DBG, "net_device is NULL\n");
+ 		return;
+ 	}
+ 
+-	if (net->ieee80211_ptr == NULL) {
++	if (!net->ieee80211_ptr) {
+ 		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
+ 		return;
+ 	}
+ 
+-	if (net->ieee80211_ptr->wiphy == NULL) {
++	if (!net->ieee80211_ptr->wiphy) {
+ 		PRINT_D(INIT_DBG, "wiphy is NULL\n");
+ 		return;
+ 	}
+-- 
+2.5.1
 
-> ping -c 300 -i .2 -Q $[56*4] -s 500 amd
-> 300 packets transmitted, 300 received, 0% packet loss, time 60989ms
-> rtt min/avg/max/mdev = 2.155/8.599/44.475/5.677 ms
-> 300 packets transmitted, 300 received, +1 duplicates, 0% packet loss, time 61030ms
-> rtt min/avg/max/mdev = 2.158/23.809/300.956/49.969 ms, pipe 2
-> 
-> I would expect packet loss, but got long delays instead.
-
-See above :)
-
-> > also you should consider force the ACK-timing to 450m / Class1
-> > and forbid retransmission in minstrel
-> 
-> Yes, disabling retransmission would be useful. How would I do that?
-> 
-It won't work on Intel devices though since they don't use
-minstrel(_ht)
-
-johannes
