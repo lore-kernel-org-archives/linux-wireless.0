@@ -1,67 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21391 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbbIIJfQ (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:33360 "EHLO
+	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755533AbbIUAwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 05:35:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix DMA alloc failure for target requested memory chunks
-References: <1440762694-11578-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Wed, 9 Sep 2015 12:35:00 +0300
-In-Reply-To: <1440762694-11578-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Fri, 28 Aug 2015 17:21:34
-	+0530")
-Message-ID: <8737yo9bqz.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_113520_206783_9922B45B)
+	Sun, 20 Sep 2015 20:52:47 -0400
+Received: by vkgd64 with SMTP id d64so56400750vkg.0
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2015 17:52:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAGRGNgXmKdpqT=rO=fPaT2fa6oW07ZTpFHsU5z48kNd9Pk-r=g@mail.gmail.com>
+References: <1442795132-19660-1-git-send-email-chaehyun.lim@gmail.com>
+	<CAGRGNgXmKdpqT=rO=fPaT2fa6oW07ZTpFHsU5z48kNd9Pk-r=g@mail.gmail.com>
+Date: Mon, 21 Sep 2015 09:52:46 +0900
+Message-ID: <CAKV=istt72EuHZm1G8dQkzQcgxyzjfqCBZQgWWPyyumfB_JY3g@mail.gmail.com> (sfid-20150921_025252_739841_162A6198)
+Subject: Re: [PATCH 1/2] staging: wilc1000: replace s32Error with result
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, glen.lee@atmel.com,
+	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
-
-> During long hours of stress testing like AP interface up/down along
-> with continuous ping flood from a station doing connect/disconnect,
-> it is observed that the system is not able to allocate DMA consistent
-> memory of size > 512KB chunks as requested by firmware in WMI_SERVICE_EVENTID.
-> With the system memory getting fragmented during the run based on the
-> size of the memory requested, the failure to return physically continguous
-> memory of high order can happen. Once the system gets to this situation,
-> bringing up the wifi interface will fail and a system reboot may be needed
-> to make it work again. This problem is obseved with QCA99X0.
+On Mon, Sep 21, 2015 at 9:40 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Chaehyun,
 >
-> To fix this issue, allocate the DMA memory requested by firmware during
-> device probe time and keep it during the life time of the device. WMI service
-> ready event handler is changed to allocate the memory chunks if it is
-> not already allocated or if the memory allocated for the previous ready
-> event is not same as the current requested ones. After this patch the
-> memory usage when wifi is inactive will be inceased by few 100KB to
-> 3MB based on the target type.
 >
-> Failure happens with the following stack trace
+> On Mon, Sep 21, 2015 at 10:25 AM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+>> Most of functions use s32Error variable to check error and return its value.
+>> This patch replaces s32Error with result to avoid CamelCase.
+>>
+>> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+>> ---
+>>  drivers/staging/wilc1000/coreconfigurator.c       |  40 +-
+>>  drivers/staging/wilc1000/host_interface.c         | 900 +++++++++++-----------
+>>  drivers/staging/wilc1000/linux_wlan.c             |  12 +-
+>>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 230 +++---
+>>  4 files changed, 591 insertions(+), 591 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+>> index 14e8efc..ad3b546 100644
+>> --- a/drivers/staging/wilc1000/coreconfigurator.c
+>> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+>> @@ -339,11 +339,11 @@ static inline u16 get_asoc_id(u8 *data)
+>>
+>>  s32 CoreConfiguratorInit(void)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit()\n");
+>>
+>> -       return s32Error;
+>> +       return result;
 >
-> [29557.488773] kworker/u4:1: page allocation failure: order:8, mode:0xd0
-> [29557.494297] CPU: 0 PID: 8402 Comm: kworker/u4:1 Not tainted 3.14.43 #7
-> [29557.500793] Workqueue: ath10k_aux_wq ath10k_wmi_event_service_ready_work [ath10k_core]
-> [29557.508602] [<c021e9b0>] (unwind_backtrace) from [<c021ba90>] (show_stack+0x10/0x14)
-> [29557.516580] [<c021ba90>] (show_stack) from [<c03bdddc>] (dump_stack+0x88/0xcc)
-> [29557.523612] [<c03bdddc>] (dump_stack) from [<c0290e34>] (warn_alloc_failed+0xdc/0x108)
-> [29557.531515] [<c0290e34>] (warn_alloc_failed) from [<c0292d88>] (__alloc_pages_nodemask+0x4f0/0x654)
-> [29557.540485] [<c0292d88>] (__alloc_pages_nodemask) from [<c0222b48>] (__dma_alloc_buffer.isra.20+0x2c/0x104)
-> [29557.550260] [<c0222b48>] (__dma_alloc_buffer.isra.20) from [<c0222c34>] (__alloc_remap_buffer.isra.23+0x14/0xb8)
-> [29557.560413] [<c0222c34>] (__alloc_remap_buffer.isra.23) from [<c022305c>] (__dma_alloc+0x224/0x2b8)
-> [29557.569490] [<c022305c>] (__dma_alloc) from [<c0223208>] (arm_dma_alloc+0x84/0x90)
-> [29557.577010] [<c0223208>] (arm_dma_alloc) from [<bf5159d0>] (ath10k_wmi_event_service_ready_work+0x2f8/0x420 [ath10k_core])
-> [29557.588055] [<bf5159d0>] (ath10k_wmi_event_service_ready_work [ath10k_core]) from [<c024260c>] (process_one_work+0x20c/0x328)
-> [29557.599305] [<c024260c>] (process_one_work) from [<c02432d0>] (worker_thread+0x228/0x360)
-> [29557.607470] [<c02432d0>] (worker_thread) from [<c0247f88>] (kthread+0xd8/0xec)
-> [29557.614750] [<c0247f88>] (kthread) from [<c0208d18>] (ret_from_fork+0x14/0x3c)
-> [29557.712751] Normal: 696*4kB (UEMR) 512*8kB (UEMR) 367*16kB (UEMR) 404*32kB (UEMR) 455*64kB (UEMR) 424*128kB (UEMR) 379*256kB (UMR) 327*512kB (UMR) 1*1024kB (R) 0*2048kB 0*4096kB = 374544kB
+> This variable is never changed from 0 in this function, so why not
+> just get rid of it? (Perhaps in a separate patch?)
 >
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-
-Thanks, applied.
-
--- 
-Kalle Valo
+>> @@ -414,7 +414,7 @@ u8 get_current_channel(u8 *pu8msa, u16 u16RxLen)
+>>   */
+>>  s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>         tstrNetworkInfo *pstrNetworkInfo = NULL;
+>>         u8 u8MsgType = 0;
+>>         u8 u8MsgID = 0;
+>> @@ -523,7 +523,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+>>
+>>         *ppstrNetworkInfo = pstrNetworkInfo;
+>>
+>> -       return s32Error;
+>> +       return result;
+>
+> Same here.
+>
+>> @@ -538,24 +538,24 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+>>   */
+>>  s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         if (pstrNetworkInfo != NULL) {
+>>                 if (pstrNetworkInfo->pu8IEs != NULL) {
+>>                         kfree(pstrNetworkInfo->pu8IEs);
+>>                         pstrNetworkInfo->pu8IEs = NULL;
+>>                 } else {
+>> -                       s32Error = -EFAULT;
+>> +                       result = -EFAULT;
+>
+> Stupid question: why is it an error if it's already deallocated?
+>
+>>                 }
+>>
+>>                 kfree(pstrNetworkInfo);
+>>                 pstrNetworkInfo = NULL;
+>>
+>>         } else {
+>> -               s32Error = -EFAULT;
+>> +               result = -EFAULT;
+>
+> And again.
+>
+>>         }
+>>
+>> -       return s32Error;
+>> +       return result;
+>>  }
+>>
+>>  /**
+>> @@ -572,7 +572,7 @@ s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo)
+>>  s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+>>                                tstrConnectRespInfo **ppstrConnectRespInfo)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>         tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+>>         u16 u16AssocRespLen = 0;
+>>         u8 *pu8IEs = NULL;
+>> @@ -614,7 +614,7 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+>>         *ppstrConnectRespInfo = pstrConnectRespInfo;
+>>
+>>
+>> -       return s32Error;
+>> +       return result;
+>
+> Another useless variable.
+>
+>>  }
+>>
+>>  /**
+>> @@ -629,24 +629,24 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+>>   */
+>>  s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         if (pstrConnectRespInfo != NULL) {
+>>                 if (pstrConnectRespInfo->pu8RespIEs != NULL) {
+>>                         kfree(pstrConnectRespInfo->pu8RespIEs);
+>>                         pstrConnectRespInfo->pu8RespIEs = NULL;
+>>                 } else {
+>> -                       s32Error = -EFAULT;
+>> +                       result = -EFAULT;
+>
+> and again, why return an error if it's already deallocated?
+>
+>>                 }
+>>
+>>                 kfree(pstrConnectRespInfo);
+>>                 pstrConnectRespInfo = NULL;
+>>
+>>         } else {
+>> -               s32Error = -EFAULT;
+>> +               result = -EFAULT;
+>>         }
+>>
+>> -       return s32Error;
+>> +       return result;
+>>  }
+>>
+>>  #ifndef CONNECT_DIRECT
+>> @@ -654,7 +654,7 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
+>>                                wid_site_survey_reslts_s **ppstrSurveyResults,
+>>                                u32 *pu32SurveyResultsCount)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>         wid_site_survey_reslts_s *pstrSurveyResults = NULL;
+>>         u32 u32SurveyResultsCount = 0;
+>>         u32 u32SurveyBytesLength = 0;
+>> @@ -703,19 +703,19 @@ ERRORHANDLER:
+>>         *ppstrSurveyResults = pstrSurveyResults;
+>>         *pu32SurveyResultsCount = u32SurveyResultsCount;
+>>
+>> -       return s32Error;
+>> +       return result;
+>
+> Another useless variable.
+>
+>>  }
+>>
+>>
+>>  s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         if (pstrSurveyResults != NULL) {
+>>                 kfree(pstrSurveyResults);
+>>         }
+>>
+>> -       return s32Error;
+>> +       return result;
+>
+> Ditto.
+>
+>>  }
+>>  #endif
+>>
+>> @@ -731,12 +731,12 @@ s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults)
+>>
+>>  s32 CoreConfiguratorDeInit(void)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         PRINT_D(CORECONFIG_DBG, "CoreConfiguratorDeInit()\n");
+>>
+>>
+>> -       return s32Error;
+>> +       return result;
+>
+> Ditto.
+>
+>>  }
+>>
+>>  /*Using the global handle of the driver*/
+>> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+>> index 0546f7a..f997628 100644
+>> --- a/drivers/staging/wilc1000/host_interface.c
+>> +++ b/drivers/staging/wilc1000/host_interface.c
+>> @@ -1266,11 +1266,11 @@ ERRORHANDLER:
+>>   */
+>>  static s32 Handle_wait_msg_q_empty(void)
+>>  {
+>> -       s32 s32Error = 0;
+>> +       s32 result = 0;
+>>
+>>         g_wilc_initialized = 0;
+>>         up(&hWaitResponse);
+>> -       return s32Error;
+>> +       return result;
+>
+> Another useless variable.
+>
+> And I'm stopping here.
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
