@@ -1,191 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5711 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbbIPBop (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45739 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756350AbbIUU7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 21:44:45 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 07/10] staging: wilc1000: remove unused variables
-Date: Wed, 16 Sep 2015 10:43:52 +0900
-Message-ID: <1442367835-30733-8-git-send-email-tony.cho@atmel.com> (sfid-20150916_034447_835707_1286C0C7)
-In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
-References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Sep 2015 16:59:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:49 +0300
+Message-Id: <1442869141-31637-9-git-send-email-luca@coelho.fi> (sfid-20150921_230046_122372_517BDCEB)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 09/21] iwlwifi: mvm: remove SCD_QUEUE_CONFIG TLV flag
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Variable g_num_total_switches is never used so just remove it.
-gastrWIDs is also not used because g_num_total_switches is deleted.
-Remove gastrWIDs also.
+We don't support firmwares that don't use the new API.
+This also allows to use all the SCD queues, so increase
+the reported number of queues to 31.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 127 ----------------------------
- drivers/staging/wilc1000/coreconfigurator.h |   2 -
- 2 files changed, 129 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-7000.c    |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-8000.c    |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h |  3 ---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |  5 -----
+ drivers/net/wireless/iwlwifi/mvm/utils.c   | 11 -----------
+ 5 files changed, 2 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 7936b49..87d32ae 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -139,133 +139,6 @@ typedef struct {
- /*****************************************************************************/
- /* Global Variables                                                          */
- /*****************************************************************************/
--/* WID Switches */
--static tstrWID gastrWIDs[] = {
--	{WID_FIRMWARE_VERSION,          WID_STR},
--	{WID_PHY_VERSION,               WID_STR},
--	{WID_HARDWARE_VERSION,          WID_STR},
--	{WID_BSS_TYPE,                  WID_CHAR},
--	{WID_QOS_ENABLE,                WID_CHAR},
--	{WID_11I_MODE,                  WID_CHAR},
--	{WID_CURRENT_TX_RATE,           WID_CHAR},
--	{WID_LINKSPEED,                 WID_CHAR},
--	{WID_RTS_THRESHOLD,             WID_SHORT},
--	{WID_FRAG_THRESHOLD,            WID_SHORT},
--	{WID_SSID,                      WID_STR},
--	{WID_BSSID,                     WID_ADR},
--	{WID_BEACON_INTERVAL,           WID_SHORT},
--	{WID_POWER_MANAGEMENT,          WID_CHAR},
--	{WID_LISTEN_INTERVAL,           WID_CHAR},
--	{WID_DTIM_PERIOD,               WID_CHAR},
--	{WID_CURRENT_CHANNEL,           WID_CHAR},
--	{WID_TX_POWER_LEVEL_11A,        WID_CHAR},
--	{WID_TX_POWER_LEVEL_11B,        WID_CHAR},
--	{WID_PREAMBLE,                  WID_CHAR},
--	{WID_11G_OPERATING_MODE,        WID_CHAR},
--	{WID_MAC_ADDR,                  WID_ADR},
--	{WID_IP_ADDRESS,                WID_ADR},
--	{WID_ACK_POLICY,                WID_CHAR},
--	{WID_PHY_ACTIVE_REG,            WID_CHAR},
--	{WID_AUTH_TYPE,                 WID_CHAR},
--	{WID_REKEY_POLICY,              WID_CHAR},
--	{WID_REKEY_PERIOD,              WID_INT},
--	{WID_REKEY_PACKET_COUNT,        WID_INT},
--	{WID_11I_PSK,                   WID_STR},
--	{WID_1X_KEY,                    WID_STR},
--	{WID_1X_SERV_ADDR,              WID_IP},
--	{WID_SUPP_USERNAME,             WID_STR},
--	{WID_SUPP_PASSWORD,             WID_STR},
--	{WID_USER_CONTROL_ON_TX_POWER,  WID_CHAR},
--	{WID_MEMORY_ADDRESS,            WID_INT},
--	{WID_MEMORY_ACCESS_32BIT,       WID_INT},
--	{WID_MEMORY_ACCESS_16BIT,       WID_SHORT},
--	{WID_MEMORY_ACCESS_8BIT,        WID_CHAR},
--	{WID_SITE_SURVEY_RESULTS,       WID_STR},
--	{WID_PMKID_INFO,                WID_STR},
--	{WID_ASSOC_RES_INFO,            WID_STR},
--	{WID_MANUFACTURER,              WID_STR}, /* 4 Wids added for the CAPI tool*/
--	{WID_MODEL_NAME,                WID_STR},
--	{WID_MODEL_NUM,                 WID_STR},
--	{WID_DEVICE_NAME,               WID_STR},
--	{WID_SSID_PROBE_REQ,            WID_STR},
--
--#ifdef MAC_802_11N
--	{WID_11N_ENABLE,                WID_CHAR},
--	{WID_11N_CURRENT_TX_MCS,        WID_CHAR},
--	{WID_TX_POWER_LEVEL_11N,        WID_CHAR},
--	{WID_11N_OPERATING_MODE,        WID_CHAR},
--	{WID_11N_SMPS_MODE,             WID_CHAR},
--	{WID_11N_PROT_MECH,             WID_CHAR},
--	{WID_11N_ERP_PROT_TYPE,         WID_CHAR},
--	{WID_11N_HT_PROT_TYPE,          WID_CHAR},
--	{WID_11N_PHY_ACTIVE_REG_VAL,    WID_INT},
--	{WID_11N_PRINT_STATS,           WID_CHAR},
--	{WID_11N_AUTORATE_TABLE,        WID_BIN_DATA},
--	{WID_HOST_CONFIG_IF_TYPE,       WID_CHAR},
--	{WID_HOST_DATA_IF_TYPE,         WID_CHAR},
--	{WID_11N_SIG_QUAL_VAL,          WID_SHORT},
--	{WID_11N_IMMEDIATE_BA_ENABLED,  WID_CHAR},
--	{WID_11N_TXOP_PROT_DISABLE,     WID_CHAR},
--	{WID_11N_SHORT_GI_20MHZ_ENABLE, WID_CHAR},
--	{WID_SHORT_SLOT_ALLOWED,        WID_CHAR},
--	{WID_11W_ENABLE,                WID_CHAR},
--	{WID_11W_MGMT_PROT_REQ,         WID_CHAR},
--	{WID_2040_ENABLE,               WID_CHAR},
--	{WID_2040_COEXISTENCE,          WID_CHAR},
--	{WID_USER_SEC_CHANNEL_OFFSET,   WID_CHAR},
--	{WID_2040_CURR_CHANNEL_OFFSET,  WID_CHAR},
--	{WID_2040_40MHZ_INTOLERANT,     WID_CHAR},
--	{WID_HUT_RESTART,               WID_CHAR},
--	{WID_HUT_NUM_TX_PKTS,           WID_INT},
--	{WID_HUT_FRAME_LEN,             WID_SHORT},
--	{WID_HUT_TX_FORMAT,             WID_CHAR},
--	{WID_HUT_BANDWIDTH,             WID_CHAR},
--	{WID_HUT_OP_BAND,               WID_CHAR},
--	{WID_HUT_STBC,                  WID_CHAR},
--	{WID_HUT_ESS,                   WID_CHAR},
--	{WID_HUT_ANTSET,                WID_CHAR},
--	{WID_HUT_HT_OP_MODE,            WID_CHAR},
--	{WID_HUT_RIFS_MODE,             WID_CHAR},
--	{WID_HUT_SMOOTHING_REC,         WID_CHAR},
--	{WID_HUT_SOUNDING_PKT,          WID_CHAR},
--	{WID_HUT_HT_CODING,             WID_CHAR},
--	{WID_HUT_TEST_DIR,              WID_CHAR},
--	{WID_HUT_TXOP_LIMIT,            WID_SHORT},
--	{WID_HUT_DEST_ADDR,             WID_ADR},
--	{WID_HUT_TX_PATTERN,            WID_BIN_DATA},
--	{WID_HUT_TX_TIME_TAKEN,         WID_INT},
--	{WID_HUT_PHY_TEST_MODE,         WID_CHAR},
--	{WID_HUT_PHY_TEST_RATE_HI,      WID_CHAR},
--	{WID_HUT_PHY_TEST_RATE_LO,      WID_CHAR},
--	{WID_HUT_TX_TEST_TIME,          WID_INT},
--	{WID_HUT_LOG_INTERVAL,          WID_INT},
--	{WID_HUT_DISABLE_RXQ_REPLENISH, WID_CHAR},
--	{WID_HUT_TEST_ID,               WID_STR},
--	{WID_HUT_KEY_ORIGIN,            WID_CHAR},
--	{WID_HUT_BCST_PERCENT,          WID_CHAR},
--	{WID_HUT_GROUP_CIPHER_TYPE,     WID_CHAR},
--	{WID_HUT_STATS,                 WID_BIN_DATA},
--	{WID_HUT_TSF_TEST_MODE,         WID_CHAR},
--	{WID_HUT_SIG_QUAL_AVG,          WID_SHORT},
--	{WID_HUT_SIG_QUAL_AVG_CNT,      WID_SHORT},
--	{WID_HUT_TSSI_VALUE,            WID_CHAR},
--	{WID_HUT_MGMT_PERCENT,          WID_CHAR},
--	{WID_HUT_MGMT_BCST_PERCENT,     WID_CHAR},
--	{WID_HUT_MGMT_ALLOW_HT,         WID_CHAR},
--	{WID_HUT_UC_MGMT_TYPE,          WID_CHAR},
--	{WID_HUT_BC_MGMT_TYPE,          WID_CHAR},
--	{WID_HUT_UC_MGMT_FRAME_LEN,     WID_SHORT},
--	{WID_HUT_BC_MGMT_FRAME_LEN,     WID_SHORT},
--	{WID_HUT_11W_MFP_REQUIRED_TX,   WID_CHAR},
--	{WID_HUT_11W_MFP_PEER_CAPABLE,  WID_CHAR},
--	{WID_HUT_11W_TX_IGTK_ID,        WID_CHAR},
--	{WID_HUT_FC_TXOP_MOD,           WID_CHAR},
--	{WID_HUT_FC_PROT_TYPE,          WID_CHAR},
--	{WID_HUT_SEC_CCA_ASSERT,        WID_CHAR},
--#endif /* MAC_802_11N */
--};
--
--u16 g_num_total_switches = (sizeof(gastrWIDs) / sizeof(tstrWID));
- /*****************************************************************************/
- /* Static Function Declarations                                              */
- /*****************************************************************************/
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 3af1935..d2a0a0b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -29,8 +29,6 @@
- #define NUM_11N_HUT_SWITCHES    0
- #endif /* MAC_802_11N */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 22c2430..5b25f36 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -113,7 +113,7 @@
  
--extern u16 g_num_total_switches;
+ static const struct iwl_base_params iwl7000_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_7000,
+-	.num_of_queues = IWLAGN_NUM_QUEUES,
++	.num_of_queues = 31,
+ 	.pll_cfg_val = 0,
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 57,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 6efef46..0116e5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -107,7 +107,7 @@
+ 
+ static const struct iwl_base_params iwl8000_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_8000,
+-	.num_of_queues = IWLAGN_NUM_QUEUES,
++	.num_of_queues = 31,
+ 	.pll_cfg_val = 0,
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 57,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 84653e3..483b1274 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -250,8 +250,6 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
+  * IWL_UCODE_TLV_API_HDC_PHASE_0: ucode supports finer configuration of LTR
+  * @IWL_UCODE_TLV_API_TX_POWER_DEV: new API for tx power.
+  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
+- * @IWL_UCODE_TLV_API_SCD_CFG: This firmware can configure the scheduler
+- *	through the dedicated host command.
+  * @IWL_UCODE_TLV_API_SINGLE_SCAN_EBS: EBS is supported for single scans too.
+  * @IWL_UCODE_TLV_API_ASYNC_DTM: Async temperature notifications are supported.
+  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
+@@ -269,7 +267,6 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_HDC_PHASE_0		= (__force iwl_ucode_tlv_api_t)10,
+ 	IWL_UCODE_TLV_API_TX_POWER_DEV		= (__force iwl_ucode_tlv_api_t)11,
+ 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
+-	IWL_UCODE_TLV_API_SCD_CFG		= (__force iwl_ucode_tlv_api_t)15,
+ 	IWL_UCODE_TLV_API_SINGLE_SCAN_EBS	= (__force iwl_ucode_tlv_api_t)16,
+ 	IWL_UCODE_TLV_API_ASYNC_DTM		= (__force iwl_ucode_tlv_api_t)17,
+ 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= (__force iwl_ucode_tlv_api_t)18,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index ed9b0cc..cf1f514 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -937,11 +937,6 @@ static inline bool iwl_mvm_is_wifi_mcc_supported(struct iwl_mvm *mvm)
+ 			   IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC);
+ }
+ 
+-static inline bool iwl_mvm_is_scd_cfg_supported(struct iwl_mvm *mvm)
+-{
+-	return fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_SCD_CFG);
+-}
 -
- #define MAC_HDR_LEN             24          /* No Address4 - non-ESS         */
- #define MAX_SSID_LEN            33
- #define FCS_LEN                 4
+ static inline bool iwl_mvm_bt_is_plcr_supported(struct iwl_mvm *mvm)
+ {
+ 	return fw_has_capa(&mvm->fw->ucode_capa,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index a7d4342..06cba97 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -672,12 +672,6 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, u16 ssn,
+ 		.tid = cfg->tid,
+ 	};
+ 
+-	if (!iwl_mvm_is_scd_cfg_supported(mvm)) {
+-		iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn, cfg,
+-					 wdg_timeout);
+-		return;
+-	}
+-
+ 	iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn, NULL, wdg_timeout);
+ 	WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd),
+ 	     "Failed to configure queue %d on FIFO %d\n", queue, cfg->fifo);
+@@ -691,11 +685,6 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, u8 flags)
+ 	};
+ 	int ret;
+ 
+-	if (!iwl_mvm_is_scd_cfg_supported(mvm)) {
+-		iwl_trans_txq_disable(mvm->trans, queue, true);
+-		return;
+-	}
+-
+ 	iwl_trans_txq_disable(mvm->trans, queue, false);
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, flags,
+ 				   sizeof(cmd), &cmd);
 -- 
-1.9.1
+2.5.1
 
