@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60017 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752494AbbIWIas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 04:30:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: minstrel[_ht]: remove non-ascii debugfs characters
-Date: Wed, 23 Sep 2015 10:30:41 +0200
-Message-Id: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net> (sfid-20150923_103055_838355_4A2C51F2)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36157 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755192AbbIUHdn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2015 03:33:43 -0400
+Received: by wicgb1 with SMTP id gb1so101815996wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 00:33:42 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1442362098-24859-1-git-send-email-greearb@candelatech.com>
+References: <1442362098-24859-1-git-send-email-greearb@candelatech.com>
+Date: Mon, 21 Sep 2015 09:33:42 +0200
+Message-ID: <CA+BoTQkXma5KXpGa3XnnFw=13GRVoTEth0_=K-YNEKru1CpaOA@mail.gmail.com> (sfid-20150921_093346_625594_78C2F7AA)
+Subject: Re: [PATCH] ath10k: Fix CCK rate definitions.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 16 September 2015 at 02:08,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The old values did NOT match what is found in 10.1.467
+> firmware.  I figure it is likely it is wrong for the others
+> as well.
 
-Replace the average symbol by "avg" to avoid being warned about the
-non-ASCII symbol all the time, line up the columns properly.
+Does this fix anything at all?
 
-(I changed my mind - the warnings are getting annoying)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rc80211_minstrel_debugfs.c    | 12 +++++-------
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 12 +++++-------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/hw.h | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+> index 4c5eee4..710ca32 100644
+> --- a/drivers/net/wireless/ath/ath10k/hw.h
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+> @@ -202,13 +202,13 @@ enum ath10k_hw_rate_ofdm {
+>  };
+>
+>  enum ath10k_hw_rate_cck {
+> -       ATH10K_HW_RATE_CCK_LP_11M = 0,
+> -       ATH10K_HW_RATE_CCK_LP_5_5M,
+> -       ATH10K_HW_RATE_CCK_LP_2M,
+> -       ATH10K_HW_RATE_CCK_LP_1M,
+> -       ATH10K_HW_RATE_CCK_SP_11M,
+> -       ATH10K_HW_RATE_CCK_SP_5_5M,
+> -       ATH10K_HW_RATE_CCK_SP_2M,
+> +       ATH10K_HW_RATE_CCK_LP_11M = 0x40,
+> +       ATH10K_HW_RATE_CCK_LP_5_5M = 0x41,
+> +       ATH10K_HW_RATE_CCK_LP_2M = 0x42,
+> +       ATH10K_HW_RATE_CCK_LP_1M = 0x43,
+> +       ATH10K_HW_RATE_CCK_SP_11M = ATH10K_HW_RATE_CCK_LP_11M | 0x4,
+> +       ATH10K_HW_RATE_CCK_SP_5_5M = ATH10K_HW_RATE_CCK_LP_5_5M | 0x4,
+> +       ATH10K_HW_RATE_CCK_SP_2M = ATH10K_HW_RATE_CCK_LP_2M | 0x4,
+>  };
 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 1db5f7c3318a..820b0abc9c0d 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -85,12 +85,10 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	file->private_data = ms;
- 	p = ms->buf;
- 	p += sprintf(p, "\n");
--	p += sprintf(p, "best   __________rate_________    ______"
--			"statistics______    ________last_______    "
--			"______sum-of________\n");
--	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob) "
--			"sd(prob)]  [prob.|retry|suc|att]  "
--			"[#success | #attempts]\n");
-+	p += sprintf(p,
-+		     "best   __________rate_________    ________statistics________    ________last_______    ______sum-of________\n");
-+	p += sprintf(p,
-+		     "rate  [name idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
- 
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-@@ -112,7 +110,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
-+		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
- 				"     %3u.%1u %3u   %3u %-3u   "
- 				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 6822ce0f95e5..5320e35ed3d0 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -86,7 +86,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
-+		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
- 				"     %3u.%1u %3u   %3u %-3u   "
- 				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
-@@ -129,12 +129,10 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 	p = ms->buf;
- 
- 	p += sprintf(p, "\n");
--	p += sprintf(p, "              best   ____________rate__________    "
--			"______statistics______    ________last_______    "
--			"______sum-of________\n");
--	p += sprintf(p, "mode guard #  rate  [name   idx airtime  max_tp]  "
--			"[ ø(tp) ø(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | "
--			"#attempts]\n");
-+	p += sprintf(p,
-+		     "              best   ____________rate__________    ________statistics________    ________last_______    ______sum-of________\n");
-+	p += sprintf(p,
-+		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
--- 
-2.5.1
+This breaks Rx CCK rate decoding/reporting. See code associated with
+ath10k_mac_hw_rate_to_idx().
 
+
+Michał
