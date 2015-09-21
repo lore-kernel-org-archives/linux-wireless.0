@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33262 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbbIHP5M (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45184 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752732AbbIUMuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:57:12 -0400
-Received: by pacex6 with SMTP id ex6so127503062pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:12 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 24/30] staging: wilc1000: rename WILC_WFI_remain_on_channel
-Date: Wed,  9 Sep 2015 00:56:01 +0900
-Message-Id: <1441727767-26026-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180159_287110_1524DCBB)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 08:50:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 15:50:26 +0300
+Message-Id: <1442839826-26242-1-git-send-email-luca@coelho.fi> (sfid-20150921_145035_085100_DB2283EC)
+Subject: [PATCH] mac80211: don't tear down aggregation on suspend in case of wowlan->any
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_remain_on_channel with
-wilc_cfg80211_remain_on_channel to avoid CamelCase.
+From: Eliad Peller <eliadx.peller@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+in case of "any" wowlan trigger, there is no reason to tear down
+aggregations, as we want the device to continue working normally.
+
+Similarly, there's no reason to tear down aggregations on resume,
+as they should have been torn down on suspend if needed.
+
+However, since the reconfiguration flow is shared with HW restart,
+tear down aggregations on reconfiguration only when we are not resuming.
+
+To keep things working after non-wowlan suspend, keep clearing the
+WLAN_STA_BLOCK_BA flag.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/pm.c   | 3 ++-
+ net/mac80211/util.c | 5 +++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3c49412..f071389 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2391,7 +2391,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index b676b9f..ad88ad4 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -23,7 +23,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
  
+ 	ieee80211_del_virtual_monitor(local);
  
- /**
-- *  @brief      WILC_WFI_remain_on_channel
-+ *  @brief      wilc_cfg80211_remain_on_channel
-  *  @details    Request the driver to remain awake on the specified
-  *                      channel for the specified duration to complete an off-channel
-  *                      operation (e.g., public action frame exchange). When the driver is
-@@ -2403,7 +2403,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int  WILC_WFI_remain_on_channel(struct wiphy *wiphy,
-+static int  wilc_cfg80211_remain_on_channel(struct wiphy *wiphy,
- 				       struct wireless_dev *wdev,
- 				       struct ieee80211_channel *chan,
- 				       unsigned int duration, u64 *cookie)
-@@ -3634,7 +3634,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.del_pmksa = wilc_cfg80211_del_pmksa,
- 	.flush_pmksa = wilc_cfg80211_flush_pmksa,
- #ifdef WILC_P2P
--	.remain_on_channel = WILC_WFI_remain_on_channel,
-+	.remain_on_channel = wilc_cfg80211_remain_on_channel,
- 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
- 	.mgmt_tx = WILC_WFI_mgmt_tx,
+-	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION)) {
++	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION) &&
++	    !(wowlan && wowlan->any)) {
+ 		mutex_lock(&local->sta_mtx);
+ 		list_for_each_entry(sta, &local->sta_list, list) {
+ 			set_sta_flag(sta, WLAN_STA_BLOCK_BA);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 005fc8e..70b5451 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2017,8 +2017,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		mutex_lock(&local->sta_mtx);
+ 
+ 		list_for_each_entry(sta, &local->sta_list, list) {
+-			ieee80211_sta_tear_down_BA_sessions(
+-					sta, AGG_STOP_LOCAL_REQUEST);
++			if (!local->resuming)
++				ieee80211_sta_tear_down_BA_sessions(
++						sta, AGG_STOP_LOCAL_REQUEST);
+ 			clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 		}
+ 
 -- 
 2.5.1
 
