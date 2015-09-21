@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45791 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932659AbbIUVBo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21597 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755878AbbIUDVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 17:01:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 23:58:57 +0300
-Message-Id: <1442869141-31637-17-git-send-email-luca@coelho.fi> (sfid-20150921_230149_788014_22EB624E)
-In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
-References: <1442868938.27148.361.camel@coelho.fi>
-Subject: [PATCH 17/21] iwlwifi: mvm: remove pointless cfg_phy_cnt length check
+	Sun, 20 Sep 2015 23:21:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 33/34] staging: wilc1000: remove u32Intialized which is unnecessary
+Date: Mon, 21 Sep 2015 12:17:02 +0900
+Message-ID: <1442805423-3711-34-git-send-email-tony.cho@atmel.com> (sfid-20150921_052109_851536_9376D0C1)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch removes the global variable, u32Intialized which is not necessary
+from the host_interface.c file.
 
-Since the driver can never configure the data here, this field
-will always be reported as 0 by the firmware. Even if this was
-not the case, however, it wouldn't matter since the extra data
-would be added beyond the end of the phy_info structure we use
-in the driver, so wouldn't harm anything in this code either.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rx.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
-index 623c219..0a6d47c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
-@@ -298,13 +298,6 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		return;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 59e82ee..dd8dd04 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6366,7 +6366,6 @@ void host_int_send_network_info_to_host
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-static u32 u32Intialized;
+ static u32 clients_count;
+ 
+ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+@@ -6375,12 +6374,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	tstrWILC_WFIDrv *pstrWFIDrv;
+ 	int err;
+ 
+-	/*if(u32Intialized == 1)
+-	 * {
+-	 *      PRINT_D(HOSTINF_DBG,"Host interface is previously initialized\n");
+-	 * *phWFIDrv = (WILC_WFIDrvHandle)gWFiDrvHandle; //Will be adjusted later for P2P
+-	 *      return 0;
+-	 * }	*/
+ 	PRINT_D(HOSTINF_DBG, "Initializing host interface for client %d\n", clients_count + 1);
+ 
+ 	gbScanWhileConnected = false;
+@@ -6491,7 +6484,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 		goto _fail_mem_;
  	}
  
--	if ((unlikely(phy_info->cfg_phy_cnt > 20))) {
--		IWL_DEBUG_DROP(mvm, "dsp size out of range [0,20]: %d\n",
--			       phy_info->cfg_phy_cnt);
--		kfree_skb(skb);
--		return;
--	}
+-	u32Intialized = 1;
+ 	clients_count++; /* increase number of created entities */
+ 
+ 	return s32Error;
+@@ -6531,12 +6523,6 @@ s32 host_int_deinit(tstrWILC_WFIDrv *hWFIDrv)
+ 
+ 	/*obtain driver handle*/
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+-	/*if(u32Intialized == 0)
+-	 * {
+-	 *      PRINT_ER("Host Interface is not initialized\n");
+-	 *      return 0;
+-	 * }*/
 -
- 	/*
- 	 * Keep packets with CRC errors (and with overrun) for monitor mode
- 	 * (otherwise the firmware discards them) but mark them as bad.
+ 
+ 	if (pstrWFIDrv == NULL)	{
+ 		PRINT_ER("pstrWFIDrv = NULL\n");
+@@ -6610,7 +6596,6 @@ s32 host_int_deinit(tstrWILC_WFIDrv *hWFIDrv)
+ 	down(&(pstrWFIDrv->gtOsCfgValuesSem));
+ 
+ 	/*Setting the gloabl driver handler with NULL*/
+-	u32Intialized = 0;
+ 	/* gWFiDrvHandle = NULL; */
+ 	ret = remove_handler_in_list(pstrWFIDrv);
+ 	if (ret)
 -- 
-2.5.1
+1.9.1
 
