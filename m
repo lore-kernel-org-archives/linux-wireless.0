@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36143 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754622AbbICSg2 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:34831 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbbIUHFz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 14:36:28 -0400
-From: Alexander Kuleshov <kuleshovmail@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Alexander Kuleshov <kuleshovmail@gmail.com>
-Subject: [PATCH v2] staging/wilc1000: Use %pM format specifier to print mac address
-Date: Fri,  4 Sep 2015 00:35:38 +0600
-Message-Id: <1441305338-10280-1-git-send-email-kuleshovmail@gmail.com> (sfid-20150903_203631_352017_B031C610)
-In-Reply-To: <20150903142350.GA16857@kroah.com>
-References: <20150903142350.GA16857@kroah.com>
+	Mon, 21 Sep 2015 03:05:55 -0400
+Received: by wicge5 with SMTP id ge5so101935668wic.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 00:05:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Mon, 21 Sep 2015 09:05:54 +0200
+Message-ID: <CA+BoTQ=FMCyHtn8BMZv_6awOuLhJNFe5RhB2eNpCQfyk+5Jhcw@mail.gmail.com> (sfid-20150921_090558_890152_9F761604)
+Subject: Re: [PATCH] ath10k: fix ldpc param for fixed rate
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-printk() supports %pM format specifier for printing 6-byte MAC/FDDI
-addresses in hex notation small buffers, let's use it intead of %x:%x...
+On 16 September 2015 at 09:49, Rajkumar Manoharan
+<rmanohar@qti.qualcomm.com> wrote:
+> ldpc is not configured for fixed rates. This blocks auto rate vs fixed
+> rate performance comparison. Since firmware is considering ldpc vdev
+> param for fixed rate selection, it has to be configured to enable ldpc
+> for fixed rates.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+[...]
+> @@ -6041,6 +6049,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+>         band = def.chan->band;
+>         ht_mcs_mask = mask->control[band].ht_mcs;
+>         vht_mcs_mask = mask->control[band].vht_mcs;
+> +       ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
 
-Changelog:
+Is still really correct? LDPC must be supported on the Rx side of
+destination stations hence I would assume you need to check whether
+all stations associated are LDPC capable before enabling it (e.g. via
+ieee80211_iterate_stations_atomic).
 
-v1 -> v2:
 
-* In the first version of the patch was instruduced incorrect conversion,
-now there is previous formatting in the WILC_WFI_mon_xmit().
-
-Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/linux_wlan.c     | 3 +--
- 2 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6b10bbb..48ee908 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -854,7 +854,7 @@ static s32 Handle_SetMacAddress(void *drvHandler, tstrHostIfSetMacAddress *pstrH
- 	strWID.enuWIDtype = WID_STR;
- 	strWID.ps8WidVal = mac_buf;
- 	strWID.s32ValueSize = ETH_ALEN;
--	PRINT_D(GENERIC_DBG, "mac addr = :%x:%x:%x:%x:%x:%x\n", strWID.ps8WidVal[0], strWID.ps8WidVal[1], strWID.ps8WidVal[2], strWID.ps8WidVal[3], strWID.ps8WidVal[4], strWID.ps8WidVal[5]);
-+	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", strWID.ps8WidVal);
- 	/*Sending Cfg*/
- 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, (u32)pstrWFIDrv);
- 	if (s32Error) {
-@@ -1965,8 +1965,8 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	if (pstrHostIFconnectAttr->pu8bssid != NULL) {
- 		WILC_memcpy(u8ConnectedSSID, pstrHostIFconnectAttr->pu8bssid, ETH_ALEN);
- 
--		PRINT_D(GENERIC_DBG, "save Bssid = %x:%x:%x:%x:%x:%x\n", (pstrHostIFconnectAttr->pu8bssid[0]), (pstrHostIFconnectAttr->pu8bssid[1]), (pstrHostIFconnectAttr->pu8bssid[2]), (pstrHostIFconnectAttr->pu8bssid[3]), (pstrHostIFconnectAttr->pu8bssid[4]), (pstrHostIFconnectAttr->pu8bssid[5]));
--		PRINT_D(GENERIC_DBG, "save bssid = %x:%x:%x:%x:%x:%x\n", (u8ConnectedSSID[0]), (u8ConnectedSSID[1]), (u8ConnectedSSID[2]), (u8ConnectedSSID[3]), (u8ConnectedSSID[4]), (u8ConnectedSSID[5]));
-+		PRINT_D(GENERIC_DBG, "save Bssid = %pM\n", pstrHostIFconnectAttr->pu8bssid);
-+		PRINT_D(GENERIC_DBG, "save bssid = %pM\n", u8ConnectedSSID);
- 	}
- 
- 	s32Error = SendConfigPkt(SET_CFG, strWIDList, u32WidsCount, false, (u32)pstrWFIDrv);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b352c50..b65e0ae 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2071,8 +2071,7 @@ int mac_open(struct net_device *ndev)
- 	Set_machw_change_vir_if(false);
- 
- 	host_int_get_MacAddress(priv->hWILCWFIDrv, mac_add);
--	PRINT_D(INIT_DBG, "Mac address: %x:%x:%x:%x:%x:%x\n", mac_add[0], mac_add[1], mac_add[2],
--		mac_add[3], mac_add[4], mac_add[5]);
-+	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
- 
- 	/* loop through the NUM of supported devices and set the MAC address */
- 	for (i = 0; i < g_linux_wlan->u8NoIfcs; i++) {
--- 
-2.5.0
-
+Michał
