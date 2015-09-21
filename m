@@ -1,48 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35337 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040AbbIPQVr (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21106 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755888AbbIUDSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 12:21:47 -0400
-From: Aparna Karuthodi <kdasaparna@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, Aparna Karuthodi <kdasaparna@gmail.com>
-Subject: [PATCH] staging: wilc1000: Removed unwanted curly braces
-Date: Wed, 16 Sep 2015 21:50:50 +0530
-Message-Id: <1442420450-5760-1-git-send-email-kdasaparna@gmail.com> (sfid-20150916_182206_165785_27CE2081)
+	Sun, 20 Sep 2015 23:18:12 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 07/34] staging: wilc1000: remove typedef from the struct tstrHostIFscanAttr
+Date: Mon, 21 Sep 2015 12:16:36 +0900
+Message-ID: <1442805423-3711-8-git-send-email-tony.cho@atmel.com> (sfid-20150921_051815_080459_3BE6D820)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed unwanted curly braces of a single statement if-else block to
-remove a coding style warning detected by checkpatch. The warning is
-given below:
+This patch removes typedef from the structure tstrHostIFscanAttr and
+changes the camelcase name, tstrHostIFscanAttr to scan_attr in order to
+comply with the Linux coding style.
 
-58: WARNING: braces {} are not necessary for any arm of this statement
-
-Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/fifo_buffer.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
-index b6c07cf..4fbac3d 100644
---- a/drivers/staging/wilc1000/fifo_buffer.c
-+++ b/drivers/staging/wilc1000/fifo_buffer.c
-@@ -52,11 +52,10 @@ u32 FIFO_ReadBytes(tHANDLE hFifo, u8 *pu8Buffer, u32 u32BytesToRead, u32 *pu32By
- 		if (pstrFifoHandler->u32TotalBytes) {
- 			down(&pstrFifoHandler->SemBuffer);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3c1a7c80..ef9b3ce 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -155,7 +155,7 @@ typedef struct _tstrHostIFkeyAttr {
  
--			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes) {
-+			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes)
- 				*pu32BytesRead = pstrFifoHandler->u32TotalBytes;
--			} else {
-+			 else
- 				*pu32BytesRead = u32BytesToRead;
--			}
- 			if ((pstrFifoHandler->u32ReadOffset + u32BytesToRead) <= pstrFifoHandler->u32BufferLength) {
- 				WILC_memcpy(pu8Buffer, pstrFifoHandler->pu8Buffer + pstrFifoHandler->u32ReadOffset,
- 					    *pu32BytesRead);
+ 
+ /*!
+- *  @struct             tstrHostIFscanAttr
++ *  @struct             scan_attr
+  *  @brief		Structure to hold Host IF Scan Attributes
+  *  @details
+  *  @todo
+@@ -164,7 +164,7 @@ typedef struct _tstrHostIFkeyAttr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFscanAttr {
++struct scan_attr {
+ 	u8 u8ScanSource;
+ 	u8 u8ScanType;
+ 	u8 *pu8ChnlFreqList;
+@@ -174,8 +174,7 @@ typedef struct _tstrHostIFscanAttr {
+ 	tWILCpfScanResult pfScanResult;
+ 	void *pvUserArg;
+ 	tstrHiddenNetwork strHiddenNetwork;
+-
+-} tstrHostIFscanAttr;
++};
+ 
+ /*!
+  *  @struct             tstrHostIFconnectAttr
+@@ -418,7 +417,7 @@ typedef struct {
+  *  @version		1.0
+  */
+ union message_body {
+-	tstrHostIFscanAttr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
++	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+ 	tstrHostIFconnectAttr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+ 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+@@ -1282,13 +1281,14 @@ static s32 Handle_wait_msg_q_empty(void)
+ /**
+  *  @brief Handle_Scan
+  *  @details       Sending config packet to firmware to set the scan params
+- *  @param[in]    tstrHostIFscanAttr* pstrHostIFscanAttr
++ *  @param[in]    struct scan_attr *pstrHostIFscanAttr
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static s32 Handle_Scan(tstrWILC_WFIDrv *drvHandler, tstrHostIFscanAttr *pstrHostIFscanAttr)
++static s32 Handle_Scan(tstrWILC_WFIDrv *drvHandler,
++		       struct scan_attr *pstrHostIFscanAttr)
+ {
+ 	s32 s32Error = 0;
+ 	tstrWID strWIDList[5];
 -- 
-1.7.9.5
+1.9.1
 
