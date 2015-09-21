@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35674 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753117AbbINDZK (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39447 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbbIUGIB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:25:10 -0400
-Received: by pacfv12 with SMTP id fv12so132592786pac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:09 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 11/31] staging: wilc1000: rename WILC_WFI_change_virt_intf
-Date: Mon, 14 Sep 2015 12:24:11 +0900
-Message-Id: <1442201071-16155-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054652_122264_412A9FF6)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 02:08:01 -0400
+Date: Sun, 20 Sep 2015 23:07:58 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 08/18] staging: wilc1000: remove declaration of
+ WILC_WFI_frame_register
+Message-ID: <20150921060758.GA24173@kroah.com> (sfid-20150921_080805_663167_B035CF5D)
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442731885-4344-8-git-send-email-chaehyun.lim@gmail.com>
+ <20150921020143.GC22262@kroah.com>
+ <55FF9B94.9020300@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55FF9B94.9020300@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_change_virt_intf with change_virtual_intf
-to avoid CamelCase.
+On Mon, Sep 21, 2015 at 02:54:28PM +0900, Tony Cho wrote:
+> 
+> 
+> On 2015년 09월 21일 11:01, Greg KH wrote:
+> >On Sun, Sep 20, 2015 at 03:51:15PM +0900, Chaehyun Lim wrote:
+> >>This patch removes function declaration of WILC_WFI_frame_register in
+> >>linux_wlan.c file, then adds it in wilc_wfi_cfgoperations.h file.
+> >>
+> >>The compilation warning occurs because it is assigned to incorrect
+> >>pointer type of second parameter of WILC_WFI_frame_register.
+> >>It is assigned with struct wireless_dev pointer type.
+> >How was this code ever even working properly if the wrong pointer was
+> >being passed into it?
+> >
+> >Tony, what is going on here, is this code just never called?  If so, can
+> >we just delete the whole function?
+> >
+> >thanks,
+> >
+> >greg k-h
+> 
+> This file with linux_wlan.c file is being fully changed, but at this time, the second parameter which passed as
+> net_device pointer instead of wireless_dev incorrectly is never being used inside the WILC_WFI_frame_register().
+> That's why no problem is found yet.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: remove "wilc_" prefix
+Then we should just delte the parameter entirely, no need to pass
+something into a function that is never used.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Please, someone do that instead.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e85f91f..4197d74 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2827,7 +2827,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- }
- #ifdef WILC_AP_EXTERNAL_MLME
- /**
-- *  @brief      WILC_WFI_change_virt_intf
-+ *  @brief      change_virtual_intf
-  *  @details    Change type/configuration of virtual interface,
-  *                      keep the struct wireless_dev's iftype updated.
-  *  @param[in]   NONE
-@@ -2839,8 +2839,8 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- void wilc1000_wlan_deinit(linux_wlan_t *nic);
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
- 
--static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev,
--				     enum nl80211_iftype type, u32 *flags, struct vif_params *params)
-+static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
-+			       enum nl80211_iftype type, u32 *flags, struct vif_params *params)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	struct WILC_WFI_priv *priv;
-@@ -3569,7 +3569,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	#ifdef WILC_AP_EXTERNAL_MLME
- 	.add_virtual_intf = add_virtual_intf,
- 	.del_virtual_intf = del_virtual_intf,
--	.change_virtual_intf = WILC_WFI_change_virt_intf,
-+	.change_virtual_intf = change_virtual_intf,
- 
- 	.start_ap = WILC_WFI_start_ap,
- 	.change_beacon = WILC_WFI_change_beacon,
--- 
-2.5.1
+thanks,
 
+greg k-h
