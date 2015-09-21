@@ -1,52 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13424 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbbIUHYi (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:38003 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756784AbbIUQUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 03:24:38 -0400
-Date: Mon, 21 Sep 2015 12:53:51 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix ldpc param for fixed rate
-Message-ID: <20150921072347.GA28484@qca.qualcomm.com> (sfid-20150921_092441_492939_53FDFF36)
-References: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CA+BoTQ=FMCyHtn8BMZv_6awOuLhJNFe5RhB2eNpCQfyk+5Jhcw@mail.gmail.com>
+	Mon, 21 Sep 2015 12:20:01 -0400
+Date: Mon, 21 Sep 2015 19:19:53 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
+Message-ID: <20150921161953.GQ5004@mwanda> (sfid-20150921_182010_027283_33B8F1FE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CA+BoTQ=FMCyHtn8BMZv_6awOuLhJNFe5RhB2eNpCQfyk+5Jhcw@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 09:05:54AM +0200, Michal Kazior wrote:
-> On 16 September 2015 at 09:49, Rajkumar Manoharan
-> <rmanohar@qti.qualcomm.com> wrote:
-> > ldpc is not configured for fixed rates. This blocks auto rate vs fixed
-> > rate performance comparison. Since firmware is considering ldpc vdev
-> > param for fixed rate selection, it has to be configured to enable ldpc
-> > for fixed rates.
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> > ---
-> [...]
-> > @@ -6041,6 +6049,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
-> >         band = def.chan->band;
-> >         ht_mcs_mask = mask->control[band].ht_mcs;
-> >         vht_mcs_mask = mask->control[band].vht_mcs;
-> > +       ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
-> 
-> Is still really correct? LDPC must be supported on the Rx side of
-> destination stations hence I would assume you need to check whether
-> all stations associated are LDPC capable before enabling it (e.g. via
-> ieee80211_iterate_stations_atomic).
->
-I already check with firmware on this regard. Below is the clarification
-got from fw team. So no need to go through sta_iter.
+There were several bugs here.
 
-"3) how does fixed rate work for non-LDPC clients (ex. legacy clients),
-if LDPC support is enabled for the given vdev?
-The rates are selected by ANDng the vdev_rates and client rates. If client does not
-support LDPC and LDPC is enabled in vdev then, LDPC will not be used."
+1)  The done label was in the wrong place so we didn't copy any
+    information out when there was no command given.
 
--Rajkumar
+2)  We were using PAGE_SIZE as the size of the buffer instead of
+    "PAGE_SIZE - pos".
+
+3)  snprintf() returns the number of characters that would have been
+    printed if there were enough space.  If there was not enough space
+    (and we had fixed the memory corruption bug #2) then it would result
+    in an information leak when we do simple_read_from_buffer().  I've
+    changed it to use scnprintf() instead.
+
+I also removed the initialization at the start of the function, because
+I thought it made the code a little more clear.
+
+Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2:  My first part introduced a bug.  :(
+
+Sorry for the delay on this.
+
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 5a0636d4..5583856 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
+ 		(struct mwifiex_private *) file->private_data;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *) addr;
+-	int pos = 0, ret = 0, i;
++	int pos, ret, i;
+ 	u8 value[MAX_EEPROM_DATA];
+ 
+ 	if (!buf)
+@@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
+ 
+ 	if (saved_offset == -1) {
+ 		/* No command has been given */
+-		pos += snprintf(buf, PAGE_SIZE, "0");
++		pos = snprintf(buf, PAGE_SIZE, "0");
+ 		goto done;
+ 	}
+ 
+@@ -748,17 +748,17 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
+ 				  (u16) saved_bytes, value);
+ 	if (ret) {
+ 		ret = -EINVAL;
+-		goto done;
++		goto out_free;
+ 	}
+ 
+-	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
++	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
+ 
+ 	for (i = 0; i < saved_bytes; i++)
+-		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ", value[i]);
+-
+-	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
++		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ", value[i]);
+ 
+ done:
++	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
++out_free:
+ 	free_page(addr);
+ 	return ret;
+ }
