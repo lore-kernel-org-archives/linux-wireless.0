@@ -1,72 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36385 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752180AbbIHVYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 17:24:18 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
-	<wrfjfv2rf1e1.fsf@redhat.com>
-	<878u8ifv1o.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 08 Sep 2015 17:24:17 -0400
-In-Reply-To: <878u8ifv1o.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 07 Sep 2015 12:17:07 +0300")
-Message-ID: <wrfjfv2oa9ku.fsf@redhat.com> (sfid-20150908_232422_328722_B9FBBD5E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35791 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbbIUM7A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2015 08:59:00 -0400
+Received: by pacfv12 with SMTP id fv12so118703587pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:58:59 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/16] staging: wilc1000: host_int_init: remove meaningless comment
+Date: Mon, 21 Sep 2015 21:58:19 +0900
+Message-Id: <1442840306-9657-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145902_855450_AA87FA92)
+In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>> Jes.Sorensen@redhat.com writes:
->>>
->>>> Per default only devices I have actually tested will be enabled. If
->>>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
->>>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
->>>> test results back to me.
->>>>
->>>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
->>>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
->>>> to which module you load and/or use modprobe blacklists.
->>>
->>> May clash? So how does this work in practise? Is the clash referring
->>> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
->>>
->>> I think we should only have one driver automatically supporting certain
->>> hardware, and not have a driver randomly chosen and forcing users to use
->>> a blacklist.
->>
->> We already have the clash, if you enable CONFIG_RTL8192U in staging it
->> clashes with rtlwifi's CONFIG_RTL8192CU. Ripping out the above two
->> drivers at this point isn't going to do users any good.
->
-> I'm not saying about we should remove drivers, my worry is only that we
-> don't have two drivers competing about same devices in a normal distro
-> kernel. We should _by default_ not have two drivers claiming support for
-> the same device, developer's can of course enable this via experimental
-> options etc.
->
->>> Also how do we make sure that distros don't enable
->>> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
->>> without thinking.
->>
->> Some distros enable staging whether you ask them or not.
->
-> Sure, that's up to them. I don't care what's in staging so I can't
-> really comment about that, this is only in context of
-> drivers/net/wireless/.
+This patch removes meaningless comment in host_int_init function.
 
-I'm with you, my point is just that we already have multiple drivers
-claming this. It is not a new situation :( Right now the distros enable
-the rtl drivers in staging because it is the only way to get support for
-a number of realtek devices. At least OpenSuSE and Debian seem to be
-enabling CONFIG_RTL8192U right now, while Fedora doesn't.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bc0adcd..317bc60 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6378,9 +6378,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 		goto _fail_timer_2;
+ 	}
+ 	memset(pstrWFIDrv, 0, sizeof(tstrWILC_WFIDrv));
+-	/*return driver handle to user*/
+ 	*phWFIDrv = pstrWFIDrv;
+-	/*save into globl handle*/
+ 	err = add_handler_in_list(pstrWFIDrv);
+ 	if (err) {
+ 		s32Error = -EFAULT;
+@@ -6393,7 +6391,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	#endif
+ 
+ 	PRINT_D(HOSTINF_DBG, "Global handle pointer value=%p\n", pstrWFIDrv);
+-	/* /////////////////////////////////////// */
+ 	if (clients_count == 0)	{
+ 		sema_init(&hSemHostIFthrdEnd, 0);
+ 		sema_init(&hSemDeinitDrvHandle, 0);
+@@ -6407,7 +6404,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	sema_init(&(pstrWFIDrv->hSemGetCHNL), 0);
+ 	sema_init(&(pstrWFIDrv->hSemInactiveTime), 0);
+ 
+-	/* /////////////////////////////////////// */
+ 
+ 
+ 
+@@ -6464,8 +6460,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 
+ 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
+ 
+-	/*TODO Code to setup simulation to be removed later*/
+-
+ 	clients_count++; /* increase number of created entities */
+ 
+ 	return s32Error;
+-- 
+2.5.1
+
