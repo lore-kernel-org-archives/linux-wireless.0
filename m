@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36804 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953AbbIRMht (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45470 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688AbbIUGuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 08:37:49 -0400
-Received: by padhk3 with SMTP id hk3so50500763pad.3
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 05:37:49 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	eliad@wizery.com, guym@ti.com, arik@wizery.com, nsekhar@ti.com,
-	luca@coelho.fi, ramrani@ti.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, guodong.xu@linaro.org
-Subject: [PATCH] wlcore: align reg_ch_conf_last[] to 64bit
-Date: Fri, 18 Sep 2015 20:37:27 +0800
-Message-Id: <1442579847-8138-1-git-send-email-guodong.xu@linaro.org> (sfid-20150918_143823_160176_CA05384F)
+	Mon, 21 Sep 2015 02:50:39 -0400
+Date: Sun, 20 Sep 2015 23:50:37 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 08/18] staging: wilc1000: remove declaration of
+ WILC_WFI_frame_register
+Message-ID: <20150921065037.GA26205@kroah.com> (sfid-20150921_085044_833548_63A64151)
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442731885-4344-8-git-send-email-chaehyun.lim@gmail.com>
+ <20150921020143.GC22262@kroah.com>
+ <55FF9B94.9020300@atmel.com>
+ <20150921060758.GA24173@kroah.com>
+ <55FFA19C.6020701@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55FFA19C.6020701@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align fields reg_ch_conf_last and reg_ch_conf_pending of
-struct wl1271{} to 64bit.
+On Mon, Sep 21, 2015 at 03:20:12PM +0900, Tony Cho wrote:
+> 
+> 
+> On 2015년 09월 21일 15:07, Greg KH wrote:
+> >On Mon, Sep 21, 2015 at 02:54:28PM +0900, Tony Cho wrote:
+> >>
+> >>On 2015년 09월 21일 11:01, Greg KH wrote:
+> >>>On Sun, Sep 20, 2015 at 03:51:15PM +0900, Chaehyun Lim wrote:
+> >>>>This patch removes function declaration of WILC_WFI_frame_register in
+> >>>>linux_wlan.c file, then adds it in wilc_wfi_cfgoperations.h file.
+> >>>>
+> >>>>The compilation warning occurs because it is assigned to incorrect
+> >>>>pointer type of second parameter of WILC_WFI_frame_register.
+> >>>>It is assigned with struct wireless_dev pointer type.
+> >>>How was this code ever even working properly if the wrong pointer was
+> >>>being passed into it?
+> >>>
+> >>>Tony, what is going on here, is this code just never called?  If so, can
+> >>>we just delete the whole function?
+> >>>
+> >>>thanks,
+> >>>
+> >>>greg k-h
+> >>This file with linux_wlan.c file is being fully changed, but at this time, the second parameter which passed as
+> >>net_device pointer instead of wireless_dev incorrectly is never being used inside the WILC_WFI_frame_register().
+> >>That's why no problem is found yet.
+> >Then we should just delte the parameter entirely, no need to pass
+> >something into a function that is never used.
+> 
+> This function is defined in the struct cfg80211_ops as the followings:
+> 
+> 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
+> 				
+> 
+>                                                 struct wireless_dev *wdev,
+> 				
+> 
+>                                                 u16 frame_type, bool reg);
+> 
+> So, the second parameter cannot be removed to connect the cfg80211 structure correctly. The second parameter
+> is not used just in wilc driver. It seems the second parameter is not famous in cfg80211 driver when looking for
+> other cfg80211 driver, just to get the private data, but the wilc driver gets it from struct wiphy.
 
-Without this, on 64bit ARM, wlcore_set_pending_regdomain_ch() fails at
-the point it calls set_bit(ch_bit_idx, (long*)wl->reg_ch_conf_pending);
-Here is the error message while doing iw wlan0 scan or connect:
+Ah, ok, that makes a bit more sense, thanks for explaining it, I'll go
+try to queue up the patch now...
 
-[   10.666857] wlcore: IRQ work
-[   10.670046] wlcore: intr: 0x40 (fw_rx_counter = 1, drv_rx_counter = 0, tx_results_counter = 0)
-[   10.678697] wlcore: WL1271_ACX_INTR_DATA
-[   10.682810] Unhandled fault: alignment fault (0x96000021) at 0xffffffc037a817f4
-[   10.690139] Internal error: : 96000021 [#1] PREEMPT SMP
-[   10.695366] Modules linked in:
-[   10.698437] CPU: 3 PID: 894 Comm: irq/60-wl18xx Tainted: G        W       4.2.0-rc6-linaro-hikey #2
-[   10.707501] Hardware name: HiKey Development Board (DT)
-[   10.712733] task: ffffffc03a9d1680 ti: ffffffc039e18000 task.ti: ffffffc039e18000
-[   10.720239] PC is at set_bit+0x14/0x30
-[   10.724002] LR is at wlcore_set_pending_regdomain_ch+0x40/0x4c
+thanks,
 
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- drivers/net/wireless/ti/wlcore/wlcore.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index a1b6040..906be6a 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -318,7 +318,7 @@ struct wl1271 {
- 	bool watchdog_recovery;
- 
- 	/* Reg domain last configuration */
--	u32 reg_ch_conf_last[2];
-+	u32 reg_ch_conf_last[2]  __aligned(8);
- 	/* Reg domain pending configuration */
- 	u32 reg_ch_conf_pending[2];
- 
--- 
-1.9.1
-
+greg k-h
