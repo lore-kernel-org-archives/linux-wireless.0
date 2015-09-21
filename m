@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35033 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbbIHP5H (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21622 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756031AbbIUDVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:57:07 -0400
-Received: by pacfv12 with SMTP id fv12so130452683pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:07 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 22/30] staging: wilc1000: rename WILC_WFI_del_pmksa
-Date: Wed,  9 Sep 2015 00:55:59 +0900
-Message-Id: <1441727767-26026-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_566164_4729B97C)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 20 Sep 2015 23:21:13 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 34/34] staging: wilc1000: delete unnecessary comments and dead code
+Date: Mon, 21 Sep 2015 12:17:03 +0900
+Message-ID: <1442805423-3711-35-git-send-email-tony.cho@atmel.com> (sfid-20150921_052115_809130_3DF61897)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_del_pmksa with wilc_cfg80211_del_pmksa to
-avoid CamelCase.
+The comments in union message_body are not essential and cross 80 ending
+line, so they are deleted and also a dead code commented out in the union
+is deleted.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 7b2f200..bdcd649 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1932,7 +1932,7 @@ static int wilc_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netde
- }
- 
- /**
-- *  @brief      WILC_WFI_del_pmksa
-+ *  @brief      wilc_cfg80211_del_pmksa
-  *  @details    Delete a cached PMKID.
-  *  @param[in]
-  *  @return     int : Return 0 on Success
-@@ -1940,7 +1940,7 @@ static int wilc_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netde
-  *  @date	01 MAR 2012
-  *  @version	1.0
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dd8dd04..b330e50 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -412,22 +412,21 @@ struct sta_inactive_t {
+  *  @version		1.0
   */
--static int WILC_WFI_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+static int wilc_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 			      struct cfg80211_pmksa *pmksa)
- {
- 
-@@ -3631,7 +3631,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.set_wiphy_params = wilc_cfg80211_set_wiphy_params,
- 
- 	.set_pmksa = wilc_cfg80211_set_pmksa,
--	.del_pmksa = WILC_WFI_del_pmksa,
-+	.del_pmksa = wilc_cfg80211_del_pmksa,
- 	.flush_pmksa = WILC_WFI_flush_pmksa,
- #ifdef WILC_P2P
- 	.remain_on_channel = WILC_WFI_remain_on_channel,
+ union message_body {
+-	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+-	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+-	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+-	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+-	struct key_attr strHostIFkeyAttr;                             /*!<>*/
+-	struct cfg_param_attr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
++	struct scan_attr strHostIFscanAttr;
++	struct connect_attr strHostIFconnectAttr;
++	struct rcvd_net_info strRcvdNetworkInfo;
++	struct rcvd_async_info strRcvdGnrlAsyncInfo;
++	struct key_attr strHostIFkeyAttr;
++	struct cfg_param_attr strHostIFCfgParamAttr;
+ 	struct set_channel strHostIFSetChan;
+ 	struct get_channel strHostIFGetChan;
+-	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
+-	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
+-	struct add_sta_param strAddStaParam;                    /*!< Add station message body */
+-	struct del_sta strDelStaParam;                                /*!< Del Station message body */
+-	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
+-	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
+-	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
+-	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
++	struct set_beacon strHostIFSetBeacon;
++	struct del_beacon strHostIFDelBeacon;
++	struct add_sta_param strAddStaParam;
++	struct del_sta strDelStaParam;
++	struct add_sta_param strEditStaParam;
++	struct timer_cb strTimerCb;
++	struct power_mgmt_param strPowerMgmtparam;
+ 	struct sta_inactive_t strHostIfStaInactiveT;
+ 	struct set_ip_addr strHostIfSetIP;
+ 	struct drv_handler strHostIfSetDrvHandler;
 -- 
-2.5.1
+1.9.1
 
