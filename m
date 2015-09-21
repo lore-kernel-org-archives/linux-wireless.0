@@ -1,56 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35542 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575AbbIAC4W (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:34416 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbbIUFvP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 22:56:22 -0400
-From: <miaoqing@qti.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: enable hw manual peak calibration for QCA9561
-Date: Tue, 1 Sep 2015 10:56:09 +0800
-Message-ID: <1441076169-13398-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150901_045625_713077_08241E7D)
+	Mon, 21 Sep 2015 01:51:15 -0400
+Received: by wicfx3 with SMTP id fx3so129665529wic.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2015 22:51:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <55F1BFBF.5060901@candelatech.com>
+References: <773DB8A82AB6A046AE0195C68612A31901BBD213@sbs2003.acksys.local>
+	<55F1BFBF.5060901@candelatech.com>
+Date: Mon, 21 Sep 2015 07:51:14 +0200
+Message-ID: <CA+BoTQkOOmUZ8qW4Y5h7mrJpvqEsWi2ZGP-+XwesRdxx1z+_+Q@mail.gmail.com> (sfid-20150921_075119_265853_FE6AC1F7)
+Subject: Re: Ath10K issue
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+I think anything from
+https://github.com/kvalo/ath10k-firmware/tree/master/10.2.4/untested
+should support mgmt-over-htt.
 
-This patch fix https://lists.openwrt.org/pipermail/openwrt-devel/
-2015-August/034979.html. As the peak detect calibration is set
-incorrectly.
 
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Michał
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 174442b..0c39199 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1249,7 +1249,8 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
- 			      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR, 0x0);
- 
--	if (AR_SREV_9003_PCOEM(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
-+	if (AR_SREV_9003_PCOEM(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
-+	    AR_SREV_9561(ah)) {
- 		if (is_2g)
- 			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
- 				      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR,
-@@ -1640,7 +1641,8 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 
- skip_tx_iqcal:
- 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
--		if (AR_SREV_9330_11(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah)) {
-+		if (AR_SREV_9330_11(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah) ||
-+		    AR_SREV_9561(ah)) {
- 			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 				if (!(ah->rxchainmask & (1 << i)))
- 					continue;
--- 
-1.9.1
-
+On 10 September 2015 at 19:37, Ben Greear <greearb@candelatech.com> wrote:
+> You probably need a firmware with mgt over htt.  CT firmware has this, but
+> you have to run our
+> kernel patches to allow CT htt-mgt firmware to work.
+>
+> Upstream may have it as well in latest firmware...I'm not sure exactly what
+> versions
+> do support that though.
+>
+> Thanks,
+> Ben
+>
+>
+>
+> On 09/09/2015 10:13 AM, Cedric VONCKEN wrote:
+>>
+>>         I'm using compat-wireless 2015-03-09 from openwrt.
+>>
+>>         At the power up, these equipments worked in AP mode and several
+>> sta can do an association.
+>>         Randomly it is not possible to make association to several AP.
+>>
+>>         If I look the log file I see cyclically these error messages.
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.116104] ath10k_warn: 186
+>> callbacks suppressed
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.133185] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.153058] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157255] ath10k_pci
+>> 0001:02:00.0: reached WMI management transmit queue limit
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157260] ath10k_pci
+>> 0001:02:00.0: failed to transmit packet, dropping: -16
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.212297] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.232087] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.252874] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.286774] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.320914] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
+>> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.355043] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.167694] ath10k_warn: 193
+>> callbacks suppressed
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.184778] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.204514] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.225098] ath10k_pci
+>> 0001:02:00.0: reached WMI management transmit queue limit
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.235968] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.264524] ath10k_pci
+>> 0001:02:00.0: failed to transmit packet, dropping: -16
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.270094] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.303945] ath10k_pci
+>> 0001:02:00.0: failed to transmit management frame via WMI: -11
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304408] ath10k_pci
+>> 0001:02:00.0: reached WMI management transmit queue limit
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304414] ath10k_pci
+>> 0001:02:00.0: failed to transmit packet, dropping: -16
+>> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.363876] ath10k_pci
+>> 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
+>> Wed Sep  9 10:29:59 2015 kern.warn kernel: [17664.219316] ath10k_warn: 208
+>> callbacks suppressed
+>>
+>>         To reestablish my access point I need to restart the Wifi (wifi up
+>> in openwrt).
+>>
+>>         Have you any idea of this issue?
+>>
+>>         Regards.
+>>
+>> Cédric Voncken.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
