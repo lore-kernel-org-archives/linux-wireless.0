@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33300 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbbIHP5P (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46257 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932180AbbIUPvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:57:15 -0400
-Received: by pacex6 with SMTP id ex6so127503990pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:15 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 25/30] staging: wilc1000: rename WILC_WFI_cancel_remain_on_channel
-Date: Wed,  9 Sep 2015 00:56:02 +0900
-Message-Id: <1441727767-26026-25-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_674861_8CFA2324)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 11:51:11 -0400
+Subject: Re: [PATCH] ath10k: Fix CCK rate definitions.
+To: Michal Kazior <michal.kazior@tieto.com>
+References: <1442362098-24859-1-git-send-email-greearb@candelatech.com>
+ <CA+BoTQkXma5KXpGa3XnnFw=13GRVoTEth0_=K-YNEKru1CpaOA@mail.gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5600276E.6080408@candelatech.com> (sfid-20150921_175134_072911_2DE66E30)
+Date: Mon, 21 Sep 2015 08:51:10 -0700
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQkXma5KXpGa3XnnFw=13GRVoTEth0_=K-YNEKru1CpaOA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_cancel_remain_on_channel with
-wilc_cfg80211_cancel_remain_on_channel to avoid CamelCase.
+On 09/21/2015 12:33 AM, Michal Kazior wrote:
+> On 16 September 2015 at 02:08,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The old values did NOT match what is found in 10.1.467
+>> firmware.  I figure it is likely it is wrong for the others
+>> as well.
+>
+> Does this fix anything at all?
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I'm adding support to CT firmware to set arbitrary ratectrl
+masks, and I'm using that enum for part of the implementation.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index f071389..3e6af0c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2444,7 +2444,7 @@ static int  wilc_cfg80211_remain_on_channel(struct wiphy *wiphy,
- }
- 
- /**
-- *  @brief      WILC_WFI_cancel_remain_on_channel
-+ *  @brief      wilc_cfg80211_cancel_remain_on_channel
-  *  @details    Cancel an on-going remain-on-channel operation.
-  *                      This allows the operation to be terminated prior to timeout based on
-  *                      the duration value.
-@@ -2456,7 +2456,7 @@ static int  wilc_cfg80211_remain_on_channel(struct wiphy *wiphy,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int   WILC_WFI_cancel_remain_on_channel(struct wiphy *wiphy,
-+static int   wilc_cfg80211_cancel_remain_on_channel(struct wiphy *wiphy,
- 					       struct wireless_dev *wdev,
- 					       u64 cookie)
- {
-@@ -3635,7 +3635,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.flush_pmksa = wilc_cfg80211_flush_pmksa,
- #ifdef WILC_P2P
- 	.remain_on_channel = wilc_cfg80211_remain_on_channel,
--	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
-+	.cancel_remain_on_channel = wilc_cfg80211_cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
- 	.mgmt_tx = WILC_WFI_mgmt_tx,
- 	.mgmt_frame_register = WILC_WFI_frame_register,
+In the 4.0 kernel, the 'hw-value' for CCK rates is broken since the enum doesn't
+match firmware.
+
+I'll check what code is using that enum and see if it can be fixed.  Otherwise,
+I can fix it with a new enum with the values I need.
+
+Thanks,
+Ben
+
 -- 
-2.5.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
