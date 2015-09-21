@@ -1,221 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:34282 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbbICIo3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45725 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756079AbbIUU7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 04:44:29 -0400
-Received: by laeb10 with SMTP id b10so24075541lae.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 01:44:28 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: split switch_vif_chanctx guts
-Date: Thu,  3 Sep 2015 10:44:51 +0200
-Message-Id: <1441269892-438-1-git-send-email-michal.kazior@tieto.com> (sfid-20150903_104434_291307_EF304D4C)
+	Mon, 21 Sep 2015 16:59:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Gregory Greenman <gregory.greenman@intel.com>,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:45 +0300
+Message-Id: <1442869141-31637-5-git-send-email-luca@coelho.fi> (sfid-20150921_231005_845955_B2E53FE1)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 05/21] iwlwifi: mvm: don't ask for beacons when AP vif and no assoc sta
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is necessary to make vdev restarting logic
-reusable later.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+When in AP mode, we need beacons from other APs for HT protection.
+However, when there's no any associated station we will not do
+any Tx and thus don't really need beacons. On the other hand, these
+beacons will cause a lot of unnecessary wakeups which increase our
+power consumption. Handle this by asking FW to pass beacons only when
+there's at least one associated station.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 168 ++++++++++++++++++----------------
- 1 file changed, 89 insertions(+), 79 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 21 +++++++++++++++------
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  9 +++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  6 ++++++
+ drivers/net/wireless/iwlwifi/mvm/sta.c      |  5 +++++
+ 4 files changed, 35 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 64674c955d44..13e9d5659e96 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6218,6 +6218,94 @@ ath10k_mac_update_rx_channel(struct ath10k *ar,
- 	rcu_read_unlock();
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 3424315..5af0090 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2015 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2015 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1124,10 +1126,11 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
+ 	ctxt_ap->beacon_template = cpu_to_le32(mvmvif->id);
  }
  
-+static void
-+ath10k_mac_update_vif_chan(struct ath10k *ar,
-+			   struct ieee80211_vif_chanctx_switch *vifs,
-+			   int n_vifs)
-+{
-+	struct ath10k_vif *arvif;
-+	int ret;
-+	int i;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	/* First stop monitor interface. Some FW versions crash if there's a
-+	 * lone monitor interface.
-+	 */
-+	if (ar->monitor_started)
-+		ath10k_monitor_stop(ar);
-+
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = ath10k_vif_to_arvif(vifs[i].vif);
-+
-+		ath10k_dbg(ar, ATH10K_DBG_MAC,
-+			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
-+			   arvif->vdev_id,
-+			   vifs[i].old_ctx->def.chan->center_freq,
-+			   vifs[i].new_ctx->def.chan->center_freq,
-+			   vifs[i].old_ctx->def.width,
-+			   vifs[i].new_ctx->def.width);
-+
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to down vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+	}
-+
-+	/* All relevant vdevs are downed and associated channel resources
-+	 * should be available for the channel switch now.
-+	 */
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = ath10k_vif_to_arvif(vifs[i].vif);
-+
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath10k_mac_setup_bcn_tmpl(arvif);
-+		if (ret)
-+			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
-+				    ret);
-+
-+		ret = ath10k_mac_setup_prb_tmpl(arvif);
-+		if (ret)
-+			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
-+				    ret);
-+
-+		ret = ath10k_vdev_restart(arvif, &vifs[i].new_ctx->def);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+
-+		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
-+					 arvif->bssid);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+	}
-+
-+	ath10k_monitor_recalc(ar);
-+}
-+
- static int
- ath10k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- 			  struct ieee80211_chanctx_conf *ctx)
-@@ -6402,91 +6490,13 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- 				 enum ieee80211_chanctx_switch_mode mode)
+-static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
+-				   struct ieee80211_vif *vif,
+-				   u32 action)
++int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
++			    struct ieee80211_vif *vif,
++			    u32 action)
  {
- 	struct ath10k *ar = hw->priv;
--	struct ath10k_vif *arvif;
--	int ret;
--	int i;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mac_ctx_cmd cmd = {};
  
- 	mutex_lock(&ar->conf_mutex);
+ 	WARN_ON(vif->type != NL80211_IFTYPE_AP || vif->p2p);
+@@ -1137,10 +1140,16 @@ static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
  
- 	ath10k_dbg(ar, ATH10K_DBG_MAC,
- 		   "mac chanctx switch n_vifs %d mode %d\n",
- 		   n_vifs, mode);
--
--	/* First stop monitor interface. Some FW versions crash if there's a
--	 * lone monitor interface.
--	 */
--	if (ar->monitor_started)
--		ath10k_monitor_stop(ar);
--
--	for (i = 0; i < n_vifs; i++) {
--		arvif = ath10k_vif_to_arvif(vifs[i].vif);
--
--		ath10k_dbg(ar, ATH10K_DBG_MAC,
--			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
--			   arvif->vdev_id,
--			   vifs[i].old_ctx->def.chan->center_freq,
--			   vifs[i].new_ctx->def.chan->center_freq,
--			   vifs[i].old_ctx->def.width,
--			   vifs[i].new_ctx->def.width);
--
--		if (WARN_ON(!arvif->is_started))
--			continue;
--
--		if (WARN_ON(!arvif->is_up))
--			continue;
--
--		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
--		if (ret) {
--			ath10k_warn(ar, "failed to down vdev %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--	}
--
--	/* All relevant vdevs are downed and associated channel resources
--	 * should be available for the channel switch now.
--	 */
--
--	spin_lock_bh(&ar->data_lock);
--	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
--	spin_unlock_bh(&ar->data_lock);
--
--	for (i = 0; i < n_vifs; i++) {
--		arvif = ath10k_vif_to_arvif(vifs[i].vif);
--
--		if (WARN_ON(!arvif->is_started))
--			continue;
--
--		if (WARN_ON(!arvif->is_up))
--			continue;
--
--		ret = ath10k_mac_setup_bcn_tmpl(arvif);
--		if (ret)
--			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
--				    ret);
--
--		ret = ath10k_mac_setup_prb_tmpl(arvif);
--		if (ret)
--			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
--				    ret);
--
--		ret = ath10k_vdev_restart(arvif, &vifs[i].new_ctx->def);
--		if (ret) {
--			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--
--		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
--					 arvif->bssid);
--		if (ret) {
--			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--	}
--
--	ath10k_monitor_recalc(ar);
-+	ath10k_mac_update_vif_chan(ar, vifs, n_vifs);
+ 	/*
+ 	 * pass probe requests and beacons from other APs (needed
+-	 * for ht protection)
++	 * for ht protection); when there're no any associated station
++	 * don't ask FW to pass beacons to prevent unnecessary wake-ups.
+ 	 */
+-	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST |
+-					MAC_FILTER_IN_BEACON);
++	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
++	if (mvmvif->ap_assoc_sta_count) {
++		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
++		IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
++	} else {
++		IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
++	}
  
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
+ 	/* Fill the data specific for ap mode */
+ 	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.ap,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index aa8c2b7..f9f88e9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2319,6 +2319,8 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	if (vif->type == NL80211_IFTYPE_AP)
+ 		iwl_mvm_mac_ctxt_recalc_tsf_id(mvm, vif);
+ 
++	mvmvif->ap_assoc_sta_count = 0;
++
+ 	/* Add the mac context */
+ 	ret = iwl_mvm_mac_ctxt_add(mvm, vif);
+ 	if (ret)
+@@ -2613,6 +2615,7 @@ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
+ 				       struct ieee80211_sta *sta)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
+ 
+ 	/*
+@@ -2627,6 +2630,12 @@ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
+ 	if (sta == rcu_access_pointer(mvm->fw_id_to_mac_id[mvm_sta->sta_id]))
+ 		rcu_assign_pointer(mvm->fw_id_to_mac_id[mvm_sta->sta_id],
+ 				   ERR_PTR(-ENOENT));
++
++	if (mvm_sta->vif->type == NL80211_IFTYPE_AP) {
++		mvmvif->ap_assoc_sta_count--;
++		iwl_mvm_mac_ctxt_cmd_ap(mvm, vif, FW_CTXT_ACTION_MODIFY);
++	}
++
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 72cd67e..ed9b0cc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -338,6 +338,8 @@ struct iwl_mvm_vif_bf_data {
+  * @bssid: BSSID for this (client) interface
+  * @associated: indicates that we're currently associated, used only for
+  *	managing the firmware state in iwl_mvm_bss_info_changed_station()
++ * @ap_assoc_sta_count: count of stations associated to us - valid only
++ *	if VIF type is AP
+  * @uploaded: indicates the MAC context has been added to the device
+  * @ap_ibss_active: indicates that AP/IBSS is configured and that the interface
+  *	should get quota etc.
+@@ -367,6 +369,7 @@ struct iwl_mvm_vif {
+ 
+ 	u8 bssid[ETH_ALEN];
+ 	bool associated;
++	u8 ap_assoc_sta_count;
+ 
+ 	bool uploaded;
+ 	bool ap_ibss_active;
+@@ -1131,6 +1134,9 @@ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif);
+ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
+ 					 struct ieee80211_vif *exclude_vif);
++int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
++			    struct ieee80211_vif *vif,
++			    u32 action);
+ 
+ /* Bindings */
+ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index df216cd..fe2f538 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -275,6 +275,11 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	if (sta_id == IWL_MVM_STATION_COUNT)
+ 		return -ENOSPC;
+ 
++	if (vif->type == NL80211_IFTYPE_AP) {
++		mvmvif->ap_assoc_sta_count++;
++		iwl_mvm_mac_ctxt_cmd_ap(mvm, vif, FW_CTXT_ACTION_MODIFY);
++	}
++
+ 	spin_lock_init(&mvm_sta->lock);
+ 
+ 	mvm_sta->sta_id = sta_id;
 -- 
-2.1.4
+2.5.1
 
