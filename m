@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45099 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754280AbbISE7O (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45771 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932611AbbIUVB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 00:59:14 -0400
-Date: Fri, 18 Sep 2015 19:45:16 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, rachel.kim@atmel.com,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
-Subject: Re: [PATCH V2 3/8] staging: wilc1000: replace int8_t with int
-Message-ID: <20150919024516.GA21543@kroah.com> (sfid-20150919_065918_796737_9704FB53)
-References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
- <1442476129-14908-3-git-send-email-chaehyun.lim@gmail.com>
- <20150917103426.GB20514@sudip-pc>
- <CAKV=isvZ2V+RgpB_Aej5cUjZ+n_9OdOb2X_0f=q6=LNouxF14A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKV=isvZ2V+RgpB_Aej5cUjZ+n_9OdOb2X_0f=q6=LNouxF14A@mail.gmail.com>
+	Mon, 21 Sep 2015 17:01:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:58 +0300
+Message-Id: <1442869141-31637-18-git-send-email-luca@coelho.fi> (sfid-20150921_230134_059170_2FAEAF0D)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 18/21] iwlwifi: mvm: remove some unused defines from RX API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 09:03:14PM +0900, Chaehyun Lim wrote:
-> On Thu, Sep 17, 2015 at 7:34 PM, Sudip Mukherjee
-> <sudipm.mukherjee@gmail.com> wrote:
-> > On Thu, Sep 17, 2015 at 04:48:44PM +0900, Chaehyun Lim wrote:
-> >> This patch replaces int8_t with int. just use return type as int.
-> >>
-> >> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> >> ---
-> > but isn't int8_t is defined as char?
-> >
-> 
-> Even int8_t is defined as char, I think it's no problem to use int.
-> Is it need to change as char?
+From: Johannes Berg <johannes.berg@intel.com>
 
-No, you need to make it a u8 (or s8, depending on the usage).  Be very
-careful when changing variable widths.
+Remove some unused values from the RX API; these were used
+with older firmware API that didn't have the RX energy API,
+support for which was removed a long time ago.
 
-thanks,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index cd293d2..54db515 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -1080,23 +1080,6 @@ struct iwl_hs20_roc_res {
+ #define IWL_RX_INFO_ENERGY_ANT_B_POS 8
+ #define IWL_RX_INFO_ENERGY_ANT_C_POS 16
+ 
+-#define IWL_RX_INFO_AGC_IDX 1
+-#define IWL_RX_INFO_RSSI_AB_IDX 2
+-#define IWL_OFDM_AGC_A_MSK 0x0000007f
+-#define IWL_OFDM_AGC_A_POS 0
+-#define IWL_OFDM_AGC_B_MSK 0x00003f80
+-#define IWL_OFDM_AGC_B_POS 7
+-#define IWL_OFDM_AGC_CODE_MSK 0x3fe00000
+-#define IWL_OFDM_AGC_CODE_POS 20
+-#define IWL_OFDM_RSSI_INBAND_A_MSK 0x00ff
+-#define IWL_OFDM_RSSI_A_POS 0
+-#define IWL_OFDM_RSSI_ALLBAND_A_MSK 0xff00
+-#define IWL_OFDM_RSSI_ALLBAND_A_POS 8
+-#define IWL_OFDM_RSSI_INBAND_B_MSK 0xff0000
+-#define IWL_OFDM_RSSI_B_POS 16
+-#define IWL_OFDM_RSSI_ALLBAND_B_MSK 0xff000000
+-#define IWL_OFDM_RSSI_ALLBAND_B_POS 24
+-
+ /**
+  * struct iwl_rx_phy_info - phy info
+  * (REPLY_RX_PHY_CMD = 0xc0)
+-- 
+2.5.1
+
