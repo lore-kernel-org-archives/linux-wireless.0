@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43754 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:45791 "EHLO
 	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751264AbbIAFcw (ORCPT
+	with ESMTP id S932659AbbIUVBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 01:32:52 -0400
-Message-ID: <1441085569.25005.112.camel@coelho.fi> (sfid-20150901_073255_170932_9EAA2F44)
+	Mon, 21 Sep 2015 17:01:44 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: John Keeler <keeler@airintech.com>, linux-wireless@vger.kernel.org
-Date: Tue, 01 Sep 2015 08:32:49 +0300
-In-Reply-To: <loom.20150901T021026-586@post.gmane.org>
-References: <loom.20150829T071838-73@post.gmane.org>
-	 <CALx5=V8=fWseiOPfTB63iX-MoA3gcfUF5HfZ8maC8wpxvNQ3_A@mail.gmail.com>
-	 <CALx5=V-FtgTg8b_mp8R-g5WX_0EmRwGKviBUjLLCWfO4Uhx5aQ@mail.gmail.com>
-	 <loom.20150901T021026-586@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Ubuntu 14.04 and the intel 3160 chip monitor mode support
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:57 +0300
+Message-Id: <1442869141-31637-17-git-send-email-luca@coelho.fi> (sfid-20150921_230149_788014_22EB624E)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 17/21] iwlwifi: mvm: remove pointless cfg_phy_cnt length check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-09-01 at 00:13 +0000, John Keeler wrote:
-> Thanks, using the distro's kernel version 3.19 and drivers remedied 
-> the problem.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Oh, I just noticed this branch of the thread now. :)
+Since the driver can never configure the data here, this field
+will always be reported as 0 by the firmware. Even if this was
+not the case, however, it wouldn't matter since the extra data
+would be added beyond the end of the phy_info structure we use
+in the driver, so wouldn't harm anything in this code either.
 
-Sorry for cross-emailing and glad to hear it works for you now. :D
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rx.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index 623c219..0a6d47c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -298,13 +298,6 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		return;
+ 	}
+ 
+-	if ((unlikely(phy_info->cfg_phy_cnt > 20))) {
+-		IWL_DEBUG_DROP(mvm, "dsp size out of range [0,20]: %d\n",
+-			       phy_info->cfg_phy_cnt);
+-		kfree_skb(skb);
+-		return;
+-	}
+-
+ 	/*
+ 	 * Keep packets with CRC errors (and with overrun) for monitor mode
+ 	 * (otherwise the firmware discards them) but mark them as bad.
+-- 
+2.5.1
+
