@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37789 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932620AbbI1Mhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 08:37:35 -0400
-Message-ID: <1443443851.2401.6.camel@sipsolutions.net> (sfid-20150928_143738_878946_8C7B66BE)
-Subject: Re: Low latency communication over wifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bastian Bittorf <bittorf@bluebottle.com>
-Cc: Pavel Machek <pavel@ucw.cz>, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Date: Mon, 28 Sep 2015 14:37:31 +0200
-In-Reply-To: <20150928121504.GE22537@medion.lan>
-References: <20150926102403.GA21555@amd>
-	 <1443426103.2401.1.camel@sipsolutions.net>
-	 <20150928121504.GE22537@medion.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:45162 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756495AbbIUMr6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2015 08:47:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 15:47:40 +0300
+Message-Id: <1442839660-25790-1-git-send-email-luca@coelho.fi> (sfid-20150921_144801_527640_E4340D3E)
+Subject: [PATCH] mac80211: reset CQM history upon reconfiguration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-09-28 at 14:15 +0200, Bastian Bittorf wrote:
-> * Johannes Berg <johannes@sipsolutions.net> [28.09.2015 14:00]:
-> > > > # you have to add some magic for matching your data
-> > > > e.g. $IPT -t mangle -I OUTPUT -j DSCP --set-dscp-class CS7
-> > > 
-> > > Again, this is ping -Q equivalent, right? I was doing
-> > 
-> > Yes.
-> 
-> IMHO this is not the same: you have to do it on both ends.
-> (also the iptables thingy)
-> 
+From: Sara Sharon <sara.sharon@intel.com>
 
-Depends what you're measuring, but ping should apply the same DSCP tag
-on the response I believe.
+Current behavior of notifying CQM events is inconsistent.
+Upon first configuration there is a cqm event of channel status
+according to threshold configured, regardless of signal stability.
+When there is reconfiguration no event is sent unless there is
+a significant change to the signal level according to the new
+configuration.
 
-johannes
+Since current reconfiguration behavior might cause missing CQM
+events in case current signal did not change but is crossing the
+new threshold, fix that by resetting latest signal level upon
+reconfiguration.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 390eabf..8873f93 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2471,6 +2471,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 
+ 	bss_conf->cqm_rssi_thold = rssi_thold;
+ 	bss_conf->cqm_rssi_hyst = rssi_hyst;
++	sdata->u.mgd.last_cqm_event_signal = 0;
+ 
+ 	/* tell the driver upon association, unless already associated */
+ 	if (sdata->u.mgd.associated &&
+-- 
+2.5.1
+
