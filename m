@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55813 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbbI3PHm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:40732 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844AbbIUFyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 11:07:42 -0400
-Message-ID: <560BFABC.8090504@candelatech.com> (sfid-20150930_170745_452777_A4F1D69B)
-Date: Wed, 30 Sep 2015 08:07:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 21 Sep 2015 01:54:41 -0400
+Subject: Re: [PATCH 08/18] staging: wilc1000: remove declaration of
+ WILC_WFI_frame_register
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442731885-4344-8-git-send-email-chaehyun.lim@gmail.com>
+ <20150921020143.GC22262@kroah.com>
+CC: <rachel.kim@atmel.com>, <devel@driverdev.osuosl.org>,
+	<chris.park@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <leo.kim@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <55FF9B94.9020300@atmel.com> (sfid-20150921_075444_054445_67A882E1)
+Date: Mon, 21 Sep 2015 14:54:28 +0900
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-References: <5605D228.7050609@candelatech.com> (sfid-20150926_010105_789618_F93D668E) <1443595615.1859.2.camel@sipsolutions.net>
-In-Reply-To: <1443595615.1859.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20150921020143.GC22262@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
 
-On 09/29/2015 11:46 PM, Johannes Berg wrote:
-> On Fri, 2015-09-25 at 16:00 -0700, Ben Greear wrote:
->> It seems that ath10k ar988X hardware has a bug where the BSSID
->> for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
->> does not seem to use AMSDUs for IBSS, and when I enable it in my CT
->> firmware, then I see the breakage.  So, I suspect it is not
->> just a simple software/firmware bug.
+On 2015년 09월 21일 11:01, Greg KH wrote:
+> On Sun, Sep 20, 2015 at 03:51:15PM +0900, Chaehyun Lim wrote:
+>> This patch removes function declaration of WILC_WFI_frame_register in
+>> linux_wlan.c file, then adds it in wilc_wfi_cfgoperations.h file.
 >>
->> If I simply ignore the bssid_match check in ieee80211_accept_frame,
->> then it seems everything runs fine.
->>
->> So, I'm curious if anyone knows what sorts of bad things could happen
->> if the bssid_match check is ignored?  Maybe bcast/mcast frames could
->> be accepted when they shouldn't be in certain cases?
->>
+>> The compilation warning occurs because it is assigned to incorrect
+>> pointer type of second parameter of WILC_WFI_frame_register.
+>> It is assigned with struct wireless_dev pointer type.
+> How was this code ever even working properly if the wrong pointer was
+> being passed into it?
 >
-> You could end up accepting multicast frames from a different,
-> overlapping, BSS? Seems like a bad idea.
+> Tony, what is going on here, is this code just never called?  If so, can
+> we just delete the whole function?
+>
+> thanks,
+>
+> greg k-h
 
-It's definitely not a great idea.
+This file with linux_wlan.c file is being fully changed, but at this time, the second parameter which passed as
+net_device pointer instead of wireless_dev incorrectly is never being used inside the WILC_WFI_frame_register().
+That's why no problem is found yet.
 
-In my testing, I always see the first frame of the AMPDU have
-a proper IBSS BSSID.  Any idea if it would be OK (and even possible)
-for the driver or stack to detect this and save the BSSID aside
-for the subsequent frames?
-
-Its not clear to me whether the rest of the AMPDU frames could
-somehow be interleaved with frames from a different BSSID?
-
+As of the patch which Chaehyun Lim made, the second parameter, nic->wilc_netdev should be replaced by nic->wilc_netdev->ieee80211_ptr.
 Thanks,
-Ben
+Tony.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
