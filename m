@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39750 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755246AbbIYGzU (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45732 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756350AbbIUU7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 02:55:20 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/7] ath10k: export htt tx rx handlers
-Date: Fri, 25 Sep 2015 12:23:33 +0530
-Message-ID: <1443164016-3612-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150925_085524_845820_478DDD08)
-In-Reply-To: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Sep 2015 16:59:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:47 +0300
+Message-Id: <1442869141-31637-7-git-send-email-luca@coelho.fi> (sfid-20150921_230043_102946_4E6103D3)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 07/21] iwlwifi: mvm: don't NUL-terminate low-latency debugfs file
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some special copy engines delivers messages directly to HTT by
-bypassing HTC layer. Hence exporting tx_completion and rx_handler
-for delivering the data to HTT layer.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+There's obviously no reason to write a NUL-terminating byte into
+the debugfs file. Apparently nobody tried to use this from a tool
+that doesn't strip NUL bytes though, so we never noticed. Fix it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    | 1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c | 1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
- 3 files changed, 8 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 5a8e4ea..3b9ddef 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1587,6 +1587,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-+void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
- 
- void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 606c1a3..6060dda 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2125,6 +2125,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	/* Free the indication buffer */
- 	dev_kfree_skb_any(skb);
- }
-+EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
- 
- static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 383a316..334ae56 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -1250,11 +1250,10 @@ static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
  {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index eb5ba9b..64ba977 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -175,6 +175,12 @@ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
- 	dev_kfree_skb_any(skb);
+ 	struct ieee80211_vif *vif = file->private_data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	char buf[3];
++	char buf[2];
+ 
+ 	buf[0] = mvmvif->low_latency ? '1' : '0';
+ 	buf[1] = '\n';
+-	buf[2] = '\0';
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, sizeof(buf));
  }
  
-+void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	dev_kfree_skb_any(skb);
-+}
-+EXPORT_SYMBOL(ath10k_htt_hif_tx_complete);
-+
- int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
 -- 
-2.5.2
+2.5.1
 
