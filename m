@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:36841 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754048AbbINO4p (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45729 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752762AbbIUU7M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 10:56:45 -0400
-Received: by qgx61 with SMTP id 61so117010184qgx.3
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 07:56:44 -0700 (PDT)
-Received: from ?IPv6:2001:48f8:22:9a9::6? ([2001:48f8:22:9a9::6])
-        by smtp.googlemail.com with ESMTPSA id c188sm6016321qka.37.2015.09.14.07.56.43
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Sep 2015 07:56:44 -0700 (PDT)
+	Mon, 21 Sep 2015 16:59:12 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-From: rhubarbpieguy@gmail.com
-Subject: Firmware works only if kernel source drivers are built as modules.
-Message-ID: <55F6E028.9010809@gmail.com> (sfid-20150914_165649_091406_77B462AD)
-Date: Mon, 14 Sep 2015 09:56:40 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Cc: Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:46 +0300
+Message-Id: <1442869141-31637-6-git-send-email-luca@coelho.fi> (sfid-20150921_230221_860475_458D9F4A)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 06/21] iwlwifi: mvm: make sure d0i3 exit work runs before suspending
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I'm attempting to load iwlwifi-3160 firmware.  It works only if I build 
-the following drivers as modules.
+If we are in d0i3 when entering suspend, we leave d0i3 so that
+mac80211 can call us to remove connections or whatever before going to
+suspend.  We do this by calling pm_runtime_resume() early in the slave
+transport flow and reactivating it later, when the wiphy suspend flow
+runs.
 
-     Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate
+The problem is that we queue a work in order to leave d0i3.  If this
+work hasn't run yet when the wiphy suspend flow is called, we have a
+race and entering d0i3 fails (because we're still holding the
+IWL_MVM_REF_EXIT_WORK reference).
 
-      Intel Wireless WiFi MVM Firmware Support
+To solve this, simply flush the d0i3_exit_work at the beginning of the
+iwl_mvm_suspend() function.
 
-If I compile them into the kernel the firmware is not found.  This is my 
-first experience with firmware.  Does firmware require drivers built as 
-modules?  I see nothing at 
-https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi stating 
-modules must be used.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 04264e4..1d54355 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1170,6 +1170,9 @@ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	int ret;
+ 
++	/* make sure the d0i3 exit work is not pending */
++	flush_work(&mvm->d0i3_exit_work);
++
+ 	ret = iwl_trans_suspend(mvm->trans);
+ 	if (ret)
+ 		return ret;
+-- 
+2.5.1
+
