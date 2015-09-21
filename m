@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47704 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932675AbbIYRmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 13:42:38 -0400
-Message-ID: <1443202945.2161.8.camel@sipsolutions.net> (sfid-20150925_194245_561641_5AA9DB85)
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Date: Fri, 25 Sep 2015 19:42:25 +0200
-In-Reply-To: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> (sfid-20150925_184230_610012_AD3DF607)
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	 (sfid-20150925_184230_610012_AD3DF607)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11762 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755667AbbIUByJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Sep 2015 21:54:09 -0400
+Subject: Re: [PATCH 03/34] staging: wilc1000: rename strHostIFmsg
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+ <1442567496-29331-3-git-send-email-tony.cho@atmel.com>
+ <20150919030006.GA28582@kroah.com>
+CC: <devel@driverdev.osuosl.org>, <rachel.kim@atmel.com>,
+	<chris.park@atmel.com>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <55FF6334.4090104@atmel.com> (sfid-20150921_035412_876221_0538158D)
+Date: Mon, 21 Sep 2015 10:53:56 +0900
+MIME-Version: 1.0
+In-Reply-To: <20150919030006.GA28582@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-25 at 09:41 -0700, Viresh Kumar wrote:
 
-> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
-> ---
-> V3->V4:
-> - Create a local variable instead of changing type of global_lock
->   (Rafael)
 
-Err, surely that wasn't what Rafael meant, since it's clearly
-impossible to use a pointer to the stack, assign to it once, and the
-expect anything to wkr at all ...
+On 2015년 09월 19일 12:00, Greg KH wrote:
+> On Fri, Sep 18, 2015 at 06:11:05PM +0900, Tony Cho wrote:
+>> This patch changes the name, strHostIFmsg simply to msg because the
+>> camelcase notation is not recommended in Linux.
+>>
+>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> Because of the other patches I didn't accept, and I think because of
+> patches that community members sent in, this patch doesn't apply
+> (patches 1 and 2 I had to do by hand, but I don't want to keep doing
+> that...)
+>
+> So can you rebase this series on my staging-testing branch and resend
+> them?
 
-johannes
+Sure, I will resend them to you.
+Thanks,
+Tony.
+
+> thanks,
+>
+> greg k-h
 
