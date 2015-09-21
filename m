@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33095 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565AbbIOFHV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45777 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932229AbbIUVBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 01:07:21 -0400
-Received: by pacex6 with SMTP id ex6so165319949pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:20 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/18] staging: wilc1000: remove bit shift macro that is custom defined
-Date: Tue, 15 Sep 2015 14:06:20 +0900
-Message-Id: <1442293588-15323-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_070734_061089_929167BA)
-In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 17:01:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:59:01 +0300
+Message-Id: <1442869141-31637-21-git-send-email-luca@coelho.fi> (sfid-20150921_230139_247509_357AFDAD)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 21/21] iwlwifi: mvm: add debug print for d0i3 exit indication
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch remove bit shift macro that is custom defined, then it is
-replaced BIT(x) macro.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+In order to verify d0i3 flow, add debug print to indicate
+d0i3 exit was completed (right after tx was re-enabled),
+along with the wakeup reasons.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dfc210a..a4321a4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -19,10 +19,6 @@
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 62eefab..3f6428c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -1263,7 +1263,7 @@ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk)
+ 	};
+ 	struct iwl_wowlan_status *status;
+ 	int ret;
+-	u32 handled_reasons, wakeup_reasons;
++	u32 handled_reasons, wakeup_reasons = 0;
+ 	__le16 *qos_seq = NULL;
  
- #define IP_ALEN  4
+ 	mutex_lock(&mvm->mutex);
+@@ -1295,6 +1295,9 @@ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk)
+ out:
+ 	iwl_mvm_d0i3_enable_tx(mvm, qos_seq);
  
--#define BIT2                    ((u32)(1 << 2))
--#define BIT1                    ((u32)(1 << 1))
--#define BIT0                    ((u32)(1 << 0))
--
- #define IDLE_MODE	0x00
- #define AP_MODE		0x01
- #define STATION_MODE	0x02
-@@ -36,9 +32,9 @@
- #define MIN_SCAN_TIME				10
- #define MAX_SCAN_TIME				1200
- #define DEFAULT_SCAN				0
--#define USER_SCAN					BIT0
--#define OBSS_PERIODIC_SCAN			BIT1
--#define OBSS_ONETIME_SCAN			BIT2
-+#define USER_SCAN				BIT(0)
-+#define OBSS_PERIODIC_SCAN			BIT(1)
-+#define OBSS_ONETIME_SCAN			BIT(2)
- #define GTK_RX_KEY_BUFF_LEN			24
- #define ADDKEY						0x1
- #define REMOVEKEY					0x2
++	IWL_DEBUG_INFO(mvm, "d0i3 exit completed (wakeup reasons: 0x%x)\n",
++		       wakeup_reasons);
++
+ 	/* qos_seq might point inside resp_pkt, so free it only now */
+ 	if (get_status_cmd.resp_pkt)
+ 		iwl_free_resp(&get_status_cmd);
 -- 
 2.5.1
 
