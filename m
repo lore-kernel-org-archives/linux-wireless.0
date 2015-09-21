@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35453 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924AbbIHP43 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54183 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903AbbIUMR6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:29 -0400
-Received: by pacfv12 with SMTP id fv12so130437953pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:29 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/30] staging: wilc1000: rename WILC_WFI_set_default_key
-Date: Wed,  9 Sep 2015 00:55:44 +0900
-Message-Id: <1441727767-26026-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175632_258306_EB4B74D5)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 08:17:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	<CACna6rz6P4==K=fVr=Vnn8fkwvFJppEqub6dCEcZ8DyK5Bpa=Q@mail.gmail.com>
+	<55FD7000.7070305@broadcom.com>
+	<CACna6rxqZ08iFRwjaEpa4fLY8MCNU-tRm6X74y=FVCha2i7cig@mail.gmail.com>
+	<55FD8E39.2010104@broadcom.com>
+Date: Mon, 21 Sep 2015 15:17:51 +0300
+In-Reply-To: <55FD8E39.2010104@broadcom.com> (Arend van Spriel's message of
+	"Sat, 19 Sep 2015 18:32:57 +0200")
+Message-ID: <871tdsq840.fsf@kamboji.qca.qualcomm.com> (sfid-20150921_141801_759170_D2E30145)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_default_key with
-wilc_cfg80211_set_default_key to avoid CamelCase.
+Arend van Spriel <arend@broadcom.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On 09/19/2015 05:05 PM, Rafał Miłecki wrote:
+>> On 19 September 2015 at 16:24, Arend van Spriel <arend@broadcom.com> wrote:
+>>
+>>> I replied to first and last patch so you are acknowledged for testing. Doing
+>>> it for each patch in the series was too much trouble for me :-p
+>>
+>> Sure. I didn't really bother because of old patchwork installed on
+>> kernel.org. It doesn't understand UTF and malforms my name forcing
+>> Kalle to fixup patches manually:
+>> https://patchwork.kernel.org/patch/7220471/
+>> https://patchwork.kernel.org/patch/7220401/
+>
+> So the patchwork upgrade request did not get through yet ;-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 67a6cfb..0ac9acb 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1566,7 +1566,7 @@ static int wilc_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev,
- }
- 
- /**
-- *  @brief      WILC_WFI_set_default_key
-+ *  @brief      wilc_cfg80211_set_default_key
-  *  @details    Set the default management frame key on an interface
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -1574,7 +1574,7 @@ static int wilc_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
-+static int wilc_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 				    bool unicast, bool multicast)
- {
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3610,7 +3610,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.add_key = wilc_cfg80211_add_key,
- 	.del_key = wilc_cfg80211_del_key,
- 	.get_key = wilc_cfg80211_get_key,
--	.set_default_key = WILC_WFI_set_default_key,
-+	.set_default_key = wilc_cfg80211_set_default_key,
- 	#ifdef WILC_AP_EXTERNAL_MLME
- 	.add_virtual_intf = WILC_WFI_add_virt_intf,
- 	.del_virtual_intf = WILC_WFI_del_virt_intf,
+At least I haven't heard anything and the ticket is still open :/
+
 -- 
-2.5.1
-
+Kalle Valo
