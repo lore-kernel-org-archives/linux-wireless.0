@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.190]:54283 "EHLO
-	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933483AbbI1PAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 11:00:12 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
-CC: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Subject: RE: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
- 'global_lock'
-Date: Mon, 28 Sep 2015 14:50:44 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CBA4232@AcuExch.aculab.com> (sfid-20150928_170018_542932_3E70F243)
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	 <2524822.pQu4UKMrlb@vostro.rjw.lan>
-	 <1443297128.2181.11.camel@HansenPartnership.com>
-	 <3461169.v5xKdGLGjP@vostro.rjw.lan>
-	 <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com>
- <1443450406.2168.3.camel@HansenPartnership.com>
-In-Reply-To: <1443450406.2168.3.camel@HansenPartnership.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from ns.gsystem.sk ([62.176.172.50]:50256 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932166AbbIUOQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2015 10:16:06 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>, netdev@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 2/2] airo: Implement netif_carrier_on/off
+Date: Mon, 21 Sep 2015 15:44:25 +0200
+Message-Id: <1442843065-30234-2-git-send-email-linux@rainbow-software.org> (sfid-20150921_161610_847229_F29A19B4)
+In-Reply-To: <1442843065-30234-1-git-send-email-linux@rainbow-software.org>
+References: <1442843065-30234-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRu
-ZXJzaGlwLmNvbV0NCj4gU2VudDogMjggU2VwdGVtYmVyIDIwMTUgMTU6MjcNCj4gT24gTW9uLCAy
-MDE1LTA5LTI4IGF0IDA4OjU4ICswMDAwLCBEYXZpZCBMYWlnaHQgd3JvdGU6DQo+ID4gRnJvbTog
-UmFmYWVsIEouIFd5c29ja2kNCj4gPiA+IFNlbnQ6IDI3IFNlcHRlbWJlciAyMDE1IDE1OjA5DQo+
-ID4gLi4uDQo+ID4gPiA+ID4gU2F5IHlvdSBoYXZlIHRocmVlIGFkamFjZW50IGZpZWxkcyBpbiBh
-IHN0cnVjdHVyZSwgeCwgeSwgeiwgZWFjaCBvbmUgYnl0ZSBsb25nLg0KPiA+ID4gPiA+IEluaXRp
-YWxseSwgYWxsIG9mIHRoZW0gYXJlIGVxdWFsIHRvIDAuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBD
-UFUgQSB3cml0ZXMgMSB0byB4IGFuZCBDUFUgQiB3cml0ZXMgMiB0byB5IGF0IHRoZSBzYW1lIHRp
-bWUuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBXaGF0J3MgdGhlIHJlc3VsdD8NCj4gPiA+ID4NCj4g
-PiA+ID4gSSB0aGluayBldmVyeSBDUFUncyAgY2FjaGUgYXJjaGl0ZWN1cmUgZ3VhcmFudGVlcyBh
-ZGphY2VudCBzdG9yZQ0KPiA+ID4gPiBpbnRlZ3JpdHksIGV2ZW4gaW4gdGhlIGZhY2Ugb2YgU01Q
-LCBzbyBpdCdzIHg9PTEgYW5kIHk9PTIuICBJZiB5b3UncmUNCj4gPiA+ID4gdGhpbmtpbmcgb2Yg
-b2xkIGFscGhhIFNNUCBzeXN0ZW0gd2hlcmUgdGhlIGxvd2VzdCBzdG9yZSB3aWR0aCBpcyAzMiBi
-aXRzDQo+ID4gPiA+IGFuZCB0aHVzIHlvdSBoYXZlIHRvIGRvIFJNVyB0byB1cGRhdGUgYSBieXRl
-LCB0aGlzIHdhcyB1c3VhbGx5IGZpeGVkIGJ5DQo+ID4gPiA+IHBhZGRpbmcgKGFzc3VtaW5nIHRo
-ZSBzdHJ1Y3R1cmUgaXMgbm90IHBhY2tlZCkuICBIb3dldmVyLCBpdCB3YXMgc3VjaCBhDQo+ID4g
-PiA+IHByb2JsZW0gdGhhdCBldmVuIHRoZSBsYXRlciBhbHBoYSBjaGlwcyBoYWQgYnl0ZSBleHRl
-bnNpb25zLg0KPiA+DQo+ID4gRG9lcyBsaW51eCBzdGlsbCBzdXBwb3J0IHRob3NlIG9sZCBBbHBo
-YXM/DQo+ID4NCj4gPiBUaGUgeDg2IGNwdXMgd2lsbCBhbHNvIGRvIDMyYml0IHdpZGUgcm13IGN5
-Y2xlcyBmb3IgdGhlICdiaXQnIG9wZXJhdGlvbnMuDQo+IA0KPiBUaGF0J3MgZGlmZmVyZW50OiBp
-dCdzIGFuIGF0b21pYyBSTVcgb3BlcmF0aW9uLiAgVGhlIHByb2JsZW0gd2l0aCB0aGUNCj4gYWxw
-aGEgd2FzIHRoYXQgdGhlIG9wZXJhdGlvbiB3YXNuJ3QgYXRvbWljIChtZWFuaW5nIHRoYXQgaXQg
-Y2FuJ3QgYmUNCj4gaW50ZXJydXB0ZWQgYW5kIG5vIGludGVybWVkaWF0ZSBvdXRwdXQgc3RhdGVz
-IGFyZSB2aXNpYmxlKS4NCg0KSXQgaXMgb25seSBhdG9taWMgaWYgcHJlZml4ZWQgYnkgdGhlICds
-b2NrJyBwcmVmaXguDQpOb3JtYWxseSB0aGUgcmVhZCBhbmQgd3JpdGUgYXJlIHNlcGFyYXRlIGJ1
-cyBjeWNsZXMuDQogDQo+ID4gWW91IHN0aWxsIGhhdmUgdG8gZW5zdXJlIHRoZSBjb21waWxlciBk
-b2Vzbid0IGRvIHdpZGVyIHJtdyBjeWNsZXMuDQo+ID4gSSBiZWxpZXZlIHRoZSByZWNlbnQgdmVy
-c2lvbnMgb2YgZ2NjIHdvbid0IGRvIHdpZGVyIGFjY2Vzc2VzIGZvciB2b2xhdGlsZSBkYXRhLg0K
-PiANCj4gSSBkb24ndCB1bmRlcnN0YW5kIHRoaXMgY29tbWVudC4gIFlvdSBzZWVtIHRvIGJlIGlt
-cGx5aW5nIGdjYyB3b3VsZCBkbyBhDQo+IDY0IGJpdCBSTVcgZm9yIGEgMzIgYml0IHN0b3JlIC4u
-LiB0aGF0IHdvdWxkIGJlIGRhZnQgd2hlbiBhIHNpbmdsZQ0KPiBpbnN0cnVjdGlvbiBleGlzdHMg
-dG8gcGVyZm9ybSB0aGUgb3BlcmF0aW9uIG9uIGFsbCBhcmNoaXRlY3R1cmVzLg0KDQpSZWFkIHRo
-ZSBvYmplY3QgY29kZSBhbmQgd2VlcC4uLg0KSXQgaXMgbW9zdCBsaWtlbHkgdG8gaGFwcGVuIGZv
-ciBvcGVyYXRpb25zIHRoYXQgYXJlIHJtdyAoZWcgYml0IHNldCkuDQpGb3IgaW5zdGFuY2UgdGhl
-IGFybSBjcHUgaGFzIGxpbWl0ZWQgb2Zmc2V0cyBmb3IgMTZiaXQgYWNjZXNzZXMsIGZvcg0Kbm9y
-bWFsIHN0cnVjdHVyZXMgdGhlIGNvbXBpbGVyIGlzIGxpa2VseSB0byB1c2UgYSAzMmJpdCBybXcg
-c2VxdWVuY2UNCmZvciBhIDE2Yml0IGZpZWxkIHRoYXQgaGFzIGEgbGFyZ2Ugb2Zmc2V0Lg0KVGhl
-IEMgbGFuZ3VhZ2UgYWxsb3dzIHRoZSBjb21waWxlciB0byBkbyBpdCBmb3IgYW55IGFjY2VzcyAo
-SUlSQyBpbmNsdWRpbmcNCnZvbGF0aWxlcykuDQoNCglEYXZpZA0KDQo=
+Add calls to netif_carrier_on and netif_carrier_off
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/net/wireless/airo.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 67001a8..8ae838d 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -3267,6 +3267,7 @@ static void airo_handle_link(struct airo_info *ai)
+ 			wake_up_interruptible(&ai->thr_wait);
+ 		} else
+ 			airo_send_event(ai->dev);
++		netif_carrier_on(ai->dev);
+ 	} else if (!scan_forceloss) {
+ 		if (auto_wep && !ai->expires) {
+ 			ai->expires = RUN_AT(3*HZ);
+@@ -3277,6 +3278,9 @@ static void airo_handle_link(struct airo_info *ai)
+ 		eth_zero_addr(wrqu.ap_addr.sa_data);
+ 		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 		wireless_send_event(ai->dev, SIOCGIWAP, &wrqu, NULL);
++		netif_carrier_off(ai->dev);
++	} else {
++		netif_carrier_off(ai->dev);
+ 	}
+ }
+ 
+@@ -3613,6 +3617,7 @@ static void disable_MAC( struct airo_info *ai, int lock ) {
+ 		return;
+ 
+ 	if (test_bit(FLAG_ENABLED, &ai->flags)) {
++		netif_carrier_off(ai->dev);
+ 		memset(&cmd, 0, sizeof(cmd));
+ 		cmd.cmd = MAC_DISABLE; // disable in case already enabled
+ 		issuecommand(ai, &cmd, &rsp);
+-- 
+Ondrej Zary
+
