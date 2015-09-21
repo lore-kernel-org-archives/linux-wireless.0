@@ -1,106 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53246 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969AbbIAUIr convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21516 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755878AbbIUDUc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 16:08:47 -0400
-From: "Roberts, William C" <william.c.roberts@intel.com>
-To: Joshua Brindle <brindle@quarksecurity.com>,
-	Paul Moore <paul@paul-moore.com>
-CC: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>,
-	David Howells <dhowells@redhat.com>,
-	Peter Jones <pjones@redhat.com>,
-	"selinux@tycho.nsa.gov" <selinux@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Kees Cook <keescook@chromium.org>,
-	=?iso-8859-1?Q?Vojtech_Pavl=EDk?= <vojtech@suse.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joey Lee <jlee@suse.de>, Kyle McMartin <kyle@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Andy Lutomirski" <luto@amacapital.net>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	"David Woodhouse" <dwmw2@infradead.org>
-Subject: RE: Linux Firmware Signing
-Date: Tue, 1 Sep 2015 20:08:45 +0000
-Message-ID: <476DC76E7D1DF2438D32BFADF679FC560105E5D3@ORSMSX103.amr.corp.intel.com> (sfid-20150901_220901_646712_77255FF8)
-References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
- <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
- <1440464705.2737.36.camel@linux.vnet.ibm.com>
- <14540.1440599584@warthog.procyon.org.uk>
- <31228.1440671938@warthog.procyon.org.uk>
- <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
- <20150827212907.GF8051@wotan.suse.de>
- <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
- <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com>
- <CAHC9VhRF-39ZbwawkM-aR+th2nRPEVF9-nR1NEHDPDmakpt4FQ@mail.gmail.com>
- <20150829020301.GM8051@wotan.suse.de>
- <CAHC9VhTTRr7N2bqU-7jm2oG72t5wgqH_SmXk4icqs3h3_=EMzg@mail.gmail.com>
- <55E5B257.6070205@quarksecurity.com>
-In-Reply-To: <55E5B257.6070205@quarksecurity.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	Sun, 20 Sep 2015 23:20:32 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 28/34] staging: wilc1000: remove typedef from the struct tstrHostIFDelSta
+Date: Mon, 21 Sep 2015 12:16:57 +0900
+Message-ID: <1442805423-3711-29-git-send-email-tony.cho@atmel.com> (sfid-20150921_052034_230820_0BD9E226)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes typedef from the struct tstrHostIFDelSta and renames
+it del_sta in order to comply with the Linux coding style.
 
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-> -----Original Message-----
-> From: owner-linux-security-module@vger.kernel.org [mailto:owner-linux-
-> security-module@vger.kernel.org] On Behalf Of Joshua Brindle
-> Sent: Tuesday, September 1, 2015 7:13 AM
-> To: Paul Moore
-> Cc: Luis R. Rodriguez; Takashi Iwai; Ming Lei; David Howells; Peter Jones;
-> selinux@tycho.nsa.gov; Schaufler, Casey; Stephen Smalley; Matthew Garrett;
-> Kees Cook; Vojtech Pavlík; Seth Forshee; james.l.morris@oracle.com; Dmitry
-> Kasatkin; Johannes Berg; Joey Lee; Kyle McMartin; linux-
-> wireless@vger.kernel.org; linux-kernel@vger.kernel.org; Andy Lutomirski; linux-
-> security-module@vger.kernel.org; Greg Kroah-Hartman; Vitaly Kuznetsov; David
-> Woodhouse
-> Subject: Re: Linux Firmware Signing
-> 
-> Paul Moore wrote:
-> <snip>
-> >
-> > Yes, there are lots of way we could solve the signed policy format
-> > issue, I just don't have one in mind at this moment.  Also, to be
-> > honest, there are enough limitations to signing SELinux policies that
-> > this isn't very high onmy personal SELinux priority list.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d405d03..be8b152 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -330,7 +330,7 @@ typedef struct {
+ } tstrHostIFDelAllSta;
+ 
+ /*!
+- *  @struct             tstrHostIFDelSta
++ *  @struct             del_sta
+  *  @brief		Delete station message body
+  *  @details
+  *  @todo
+@@ -339,10 +339,9 @@ typedef struct {
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-
+-typedef struct {
++struct del_sta {
+ 	u8 au8MacAddr[ETH_ALEN];
+-} tstrHostIFDelSta;
++};
+ 
+ /*!
+  *  @struct             timer_cb
+@@ -425,7 +424,7 @@ union message_body {
+ 	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
+ 	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
+ 	struct add_sta_param strAddStaParam;                    /*!< Add station message body */
+-	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
++	struct del_sta strDelStaParam;                                /*!< Del Station message body */
+ 	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
+ 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
+ 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
+@@ -3697,13 +3696,14 @@ ERRORHANDLER:
+ /**
+  *  @brief Handle_DelStation
+  *  @details        Sending config packet to delete station
+- *  @param[in]   tstrHostIFDelSta* pstrDelStaParam
++ *  @param[in]   struct del_sta *pstrDelStaParam
+  *  @return         NONE
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static void Handle_DelStation(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelSta *pstrDelStaParam)
++static void Handle_DelStation(tstrWILC_WFIDrv *drvHandler,
++			      struct del_sta *pstrDelStaParam)
+ {
+ 	s32 s32Error = 0;
+ 	tstrWID strWID;
+@@ -7096,7 +7096,7 @@ s32 host_int_del_station(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8MacAddr)
+ 	s32 s32Error = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	tstrHostIFDelSta *pstrDelStationMsg = &msg.body.strDelStaParam;
++	struct del_sta *pstrDelStationMsg = &msg.body.strDelStaParam;
+ 
+ 	if (pstrWFIDrv == NULL) {
+ 		PRINT_ER("driver is null\n");
+-- 
+1.9.1
 
-Yes I would say this is low on my end. Especially if we can kill off
-Reloadable policy support on Android, my need for this goes away 100%.
-
-> >
-> 
-> The fact that there are so many userspace specific parts of the policy that never
-> make it into the kernel precludes any meaningful verification anyway.
-
-Yes and no. On Android, if I was able to load a policy I could grant myself capabilities that
-We're not possible via the userspace portions, i.e. relabeling, etc. Granted, not checking the
-userspace portions Is not great. In an ideal world, everything is checked. However, the main
-reason to doing it in the kernel is where you want your trust to be. For instance, If I trust that
-userspace Loader, then I need to trust that + the kernel. In the case of verifying the policy signature
-In the kernel, I need to trust only the kernel.
-
-As far as the desktop environment, I claim ignorance and have no input there.
-
-> 
-> And SELinux already has a mechanism for raising the integrity of a process to do
-> things like signature checking in userspace, the domain transition. If someone
-> wants validation of the SELinux policy they just need to eliminate every domains
-> ability to load policy except for a trusted policy loader that does signature
-> checking.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-security-module" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
