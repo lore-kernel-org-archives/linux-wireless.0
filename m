@@ -1,52 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41811 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbbIQEsS (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33140 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbbIUM6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 00:48:18 -0400
-Date: Wed, 16 Sep 2015 21:47:41 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Aparna Karuthodi <kdasaparna@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, johnny.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: Added spaces
-Message-ID: <20150917044741.GB10134@kroah.com> (sfid-20150917_064839_320957_8C00861F)
-References: <1442428970-9091-1-git-send-email-kdasaparna@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442428970-9091-1-git-send-email-kdasaparna@gmail.com>
+	Mon, 21 Sep 2015 08:58:37 -0400
+Received: by pacex6 with SMTP id ex6so116404689pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:58:37 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/16] staging: wilc1000: remove useless comment
+Date: Mon, 21 Sep 2015 21:58:12 +0900
+Message-Id: <1442840306-9657-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145840_465542_72B23249)
+In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 12:12:50AM +0530, Aparna Karuthodi wrote:
-> Added spaces around '=' to remove coding style errors detected by
-> checkpatch.The errors are given below:
-> drivers/staging/wilc1000/host_interface.c:7951: ERROR: spaces required
-> around that '=' (ctx:VxV)
-> drivers/staging/wilc1000/host_interface.c:7952: ERROR: spaces required
-> around that '=' (ctx:VxW)
-> 
-> Signed-off-by: Aparna Karuthodi <kdasaparna@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 6b10bbb..d1fe73d 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -7945,8 +7945,8 @@ s32 host_int_get_ipaddress(WILC_WFIDrvHandle hWFIDrv, u8 *u16ipadd, u8 idx)
->  	strHostIFmsg.u16MsgId = HOST_IF_MSG_GET_IPADDRESS;
->  
->  	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.au8IPAddr = u16ipadd;
-> -	strHostIFmsg.drvHandler=hWFIDrv;
-> -	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx= idx;
-> +	strHostIFmsg.drvHandler = hWFIDrv;
-> +	strHostIFmsg.uniHostIFmsgBody.strHostIfSetIP.idx = idx;
->  
->  	s32Error = WILC_MsgQueueSend(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), NULL);
->  	if (s32Error) {
-> -- 
-> 1.7.9.5
+This patch removes useless comment.
 
-Does not apply to my tree :(
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index eaec88c..58b1481 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -13,7 +13,7 @@
+ #include "wilc_wfi_cfgoperations.h"
+ #include "wilc_wlan.c"
+ #ifdef WILC_SDIO
+-#include "linux_wlan_sdio.h"    /* tony : for set_wiphy_dev() */
++#include "linux_wlan_sdio.h"
+ #endif
+ #include <linux/errno.h>
+ 
+@@ -701,10 +701,6 @@ static int set_channel(struct wiphy *wiphy,
+  *  @version	1.0
+  */
+ 
+-/*
+- *	kernel version 3.8.8 supported
+- *	tony, sswd, WILC-KR, 2013-10-29
+- */
+ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ {
+ 	struct wilc_priv *priv;
+@@ -1626,11 +1622,6 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		host_int_get_statistics(priv->hWILCWFIDrv, &strStatistics);
+ 
+-		/*
+-		 * tony: 2013-11-13
+-		 * tx_failed introduced more than
+-		 * kernel version 3.0.0
+-		 */
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
+ 						BIT(NL80211_STA_INFO_RX_PACKETS) |
+ 						BIT(NL80211_STA_INFO_TX_PACKETS) |
+@@ -2657,7 +2648,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @return     int : Return 0 on Success.
+  *  @author	mdaftedar
+  *  @date	01 JUL 2012
+- *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
++ *  @version	1.0
+  */
+ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			  bool enabled, int timeout)
+@@ -3371,7 +3362,7 @@ struct wireless_dev *add_virtual_intf(struct wiphy *wiphy, const char *name,
+  *  @date	01 JUL 2012
+  *  @version	1.0
+  */
+-int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)      /* tony for v3.8 support */
++int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+ 	PRINT_D(HOSTAPD_DBG, "Deleting virtual interface\n");
+ 	return 0;
+@@ -3426,7 +3417,7 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
+  *  @return     int : Return 0 on Success.
+  *  @author	mdaftedar
+  *  @date	01 MAR 2012
+- *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
++ *  @version	1.0
+  */
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+ {
+@@ -3573,7 +3564,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net)
+ 		   wdev->wiphy->interface_modes, wdev->iftype);
+ 
+ 	#ifdef WILC_SDIO
+-	set_wiphy_dev(wdev->wiphy, &local_sdio_func->dev); /* tony */
++	set_wiphy_dev(wdev->wiphy, &local_sdio_func->dev);
+ 	#endif
+ 
+ 	/*Register wiphy structure*/
+-- 
+2.5.1
+
