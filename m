@@ -1,539 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45168 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756645AbbIUMsa (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21127 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755888AbbIUDSS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:48:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 15:48:21 +0300
-Message-Id: <1442839701-25882-1-git-send-email-luca@coelho.fi> (sfid-20150921_144835_501473_F55B5F4D)
-Subject: [PATCH] cfg80211: Add multiple scan plans for scheduled scan
+	Sun, 20 Sep 2015 23:18:18 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 08/34] staging: wilc1000: remove typedef from the struct tstrHostIFconnectAttr
+Date: Mon, 21 Sep 2015 12:16:37 +0900
+Message-ID: <1442805423-3711-9-git-send-email-tony.cho@atmel.com> (sfid-20150921_051820_781751_85885F85)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+This patch removes typedef from the struct tstrHostIFconnectAttr and
+renames it to connect_attr to comply with the Linux coding style.
 
-Add the option to configure multiple 'scan plans' for scheduled scan.
-Each 'scan plan' defines the number of scan cycles and the interval
-between scans. The scan plans are executed in the order they were
-configured. The last scan plan will always run infinitely and thus
-defines only the interval between scans.
-The maximum number of scan plans supported by the device and the
-maximum number of iterations in a single scan plan are advertised
-to userspace so it can configure the scan plans appropriately.
-
-When scheduled scan results are received there is no way to know which
-scan plan is being currently executed, so there is no way to know when
-the next scan iteration will start. This is not a problem, however.
-The scan start timestamp is only used for flushing old scan results,
-and there is no difference between flushing all results received until
-the end of the previous iteration or the start of the current one,
-since no results will be received in between.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/scan.c |   4 +-
- include/net/cfg80211.h                  |  31 +++++-
- include/uapi/linux/nl80211.h            |  53 +++++++++-
- net/wireless/core.c                     |   3 +
- net/wireless/nl80211.c                  | 179 +++++++++++++++++++++++++++++---
- net/wireless/scan.c                     |   3 +-
- 6 files changed, 253 insertions(+), 20 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 56559d4..67cca5f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -1273,12 +1273,12 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 
- 	params.type = iwl_mvm_get_scan_type(mvm, vif, &params);
- 
--	if (req->interval > U16_MAX) {
-+	if (req->scan_plans[0].interval > U16_MAX) {
- 		IWL_DEBUG_SCAN(mvm,
- 			       "interval value is > 16-bits, set to max possible\n");
- 		params.interval = U16_MAX;
- 	} else {
--		params.interval = req->interval / MSEC_PER_SEC;
-+		params.interval = req->scan_plans[0].interval;
- 	}
- 
- 	/* In theory, LMAC scans can handle a 32-bit delay, but since
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0f54c9e..bfafa7d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5,6 +5,7 @@
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014 Intel Mobile Communications GmbH
-+ * Copyright 2015	Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1498,13 +1499,26 @@ struct cfg80211_match_set {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ef9b3ce..a3015b1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -177,7 +177,7 @@ struct scan_attr {
  };
  
+ /*!
+- *  @struct             tstrHostIFconnectAttr
++ *  @struct             connect_attr
+  *  @brief		Structure to hold Host IF Connect Attributes
+  *  @details
+  *  @todo
+@@ -186,7 +186,7 @@ struct scan_attr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFconnectAttr {
++struct connect_attr {
+ 	u8 *pu8bssid;
+ 	u8 *pu8ssid;
+ 	size_t ssidLen;
+@@ -198,7 +198,7 @@ typedef struct _tstrHostIFconnectAttr {
+ 	AUTHTYPE_T tenuAuth_type;
+ 	u8 u8channel;
+ 	void *pJoinParams;
+-} tstrHostIFconnectAttr;
++};
+ 
+ /*!
+  *  @struct             tstrRcvdGnrlAsyncInfo
+@@ -418,7 +418,7 @@ typedef struct {
+  */
+ union message_body {
+ 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
+-	tstrHostIFconnectAttr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
++	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
+ 	tstrRcvdNetworkInfo strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
+ 	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
+ 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
+@@ -1507,14 +1507,15 @@ static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent)
  /**
-+ * struct cfg80211_sched_scan_plan - scan plan for scheduled scan
-+ *
-+ * @interval: interval between scheduled scan iterations. In seconds.
-+ * @iterations: number of scan iterations in this scan plan. Zero means
-+ *	infinite loop.
-+ *	The last scan plan will always have this parameter set to zero,
-+ *	all other scan plans will have a finite number of iterations.
-+ */
-+struct cfg80211_sched_scan_plan {
-+	u32 interval;
-+	u32 iterations;
-+};
-+
-+/**
-  * struct cfg80211_sched_scan_request - scheduled scan request description
-  *
-  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
-  * @n_ssids: number of SSIDs
-  * @n_channels: total number of channels to scan
-  * @scan_width: channel width for scanning
-- * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-  * @flags: bit field of flags controlling operation
-@@ -1523,6 +1537,9 @@ struct cfg80211_match_set {
-  * @mac_addr_mask: MAC address mask used with randomisation, bits that
-  *	are 0 in the mask should be randomised, bits that are 1 should
-  *	be taken from the @mac_addr
-+ * @scan_plans: scan plans to be executed in this scheduled scan. Lowest
-+ *	index must be executed first.
-+ * @n_scan_plans: number of scan plans, at least 1.
-  * @rcu_head: RCU callback used to free the struct
-  * @owner_nlportid: netlink portid of owner (if this should is a request
-  *	owned by a particular socket)
-@@ -1536,7 +1553,6 @@ struct cfg80211_sched_scan_request {
- 	int n_ssids;
- 	u32 n_channels;
- 	enum nl80211_bss_scan_width scan_width;
--	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
- 	u32 flags;
-@@ -1544,6 +1560,8 @@ struct cfg80211_sched_scan_request {
- 	int n_match_sets;
- 	s32 min_rssi_thold;
- 	u32 delay;
-+	struct cfg80211_sched_scan_plan *scan_plans;
-+	int n_scan_plans;
- 
- 	u8 mac_addr[ETH_ALEN] __aligned(2);
- 	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
-@@ -3053,6 +3071,12 @@ struct wiphy_vendor_command {
-  *	include fixed IEs like supported rates
-  * @max_sched_scan_ie_len: same as max_scan_ie_len, but for scheduled
-  *	scans
-+ * @max_sched_scan_plans: maximum number of scan plans (scan interval and number
-+ *	of iterations) for scheduled scan supported by the device.
-+ * @max_sched_scan_plan_interval: maximum interval (in seconds) for a
-+ *	single scan plan supported by the device.
-+ * @max_sched_scan_plan_iterations: maximum number of iterations for a single
-+ *	scan plan supported by the device.
-  * @coverage_class: current coverage class
-  * @fw_version: firmware version for ethtool reporting
-  * @hw_version: hardware version for ethtool reporting
-@@ -3160,6 +3184,9 @@ struct wiphy {
- 	u8 max_match_sets;
- 	u16 max_scan_ie_len;
- 	u16 max_sched_scan_ie_len;
-+	u32 max_sched_scan_plans;
-+	u32 max_sched_scan_plan_interval;
-+	u32 max_sched_scan_plan_iterations;
- 
- 	int n_cipher_suites;
- 	const u32 *cipher_suites;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c0ab6b0..1872578 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -10,6 +10,7 @@
-  * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-+ * Copyright 2015	Intel Deutschland GmbH
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -328,7 +329,15 @@
-  *	partial scan results may be available
-  *
-  * @NL80211_CMD_START_SCHED_SCAN: start a scheduled scan at certain
-- *	intervals, as specified by %NL80211_ATTR_SCHED_SCAN_INTERVAL.
-+ *	intervals and certain number of cycles, as specified by
-+ *	%NL80211_ATTR_SCHED_SCAN_PLANS. If %NL80211_ATTR_SCHED_SCAN_PLANS is
-+ *	not specified and only %NL80211_ATTR_SCHED_SCAN_INTERVAL is specified,
-+ *	scheduled scan will run in an infinite loop with the specified interval.
-+ *	These attributes are mutually exculsive,
-+ *	i.e. NL80211_ATTR_SCHED_SCAN_INTERVAL must not be passed if
-+ *	NL80211_ATTR_SCHED_SCAN_PLANS is defined.
-+ *	If for some reason scheduled scan is aborted by the driver, all scan
-+ *	plans are canceled (including scan plans that did not start yet).
-  *	Like with normal scans, if SSIDs (%NL80211_ATTR_SCAN_SSIDS)
-  *	are passed, they are used in the probe requests.  For
-  *	broadcast, a broadcast SSID must be passed (ie. an empty
-@@ -1761,6 +1770,19 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
-  *      is operating in an indoor environment.
-  *
-+ * @NL80211_ATTR_MAX_NUM_SCHED_SCAN_PLANS: maximum number of scan plans for
-+ *	scheduled scan supported by the device (u32), a wiphy attribute.
-+ * @NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL: maximum interval (in seconds) for
-+ *	a scan plan (u32), a wiphy attribute.
-+ * @NL80211_ATTR_MAX_SCAN_PLAN_ITERATIONS: maximum number of iterations in
-+ *	a scan plan (u32), a wiphy attribute.
-+ * @NL80211_ATTR_SCHED_SCAN_PLANS: a list of scan plans for scheduled scan.
-+ *	Each scan plan defines the number of scan iterations and the interval
-+ *	between scans. The last scan plan will always run infinitely,
-+ *	thus it must not specify the number of iterations, only the interval
-+ *	between scans. The scan plans are executed sequentially.
-+ *	Each scan plan is a nested attribute of &enum nl80211_sched_scan_plan.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2130,6 +2152,11 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_REG_INDOOR,
- 
-+	NL80211_ATTR_MAX_NUM_SCHED_SCAN_PLANS,
-+	NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL,
-+	NL80211_ATTR_MAX_SCAN_PLAN_ITERATIONS,
-+	NL80211_ATTR_SCHED_SCAN_PLANS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4589,4 +4616,28 @@ enum nl80211_tdls_peer_capability {
- 	NL80211_TDLS_PEER_WMM = 1<<2,
- };
- 
-+/**
-+ * enum nl80211_sched_scan_plan - scanning plan for scheduled scan
-+ * @__NL80211_SCHED_SCAN_PLAN_INVALID: attribute number 0 is reserved
-+ * @NL80211_SCHED_SCAN_PLAN_INTERVAL: interval between scan iterations. In
-+ *	seconds (u32).
-+ * @NL80211_SCHED_SCAN_PLAN_ITERATIONS: number of scan iterations in this
-+ *	scan plan (u32). The last scan plan must not specify this attribute
-+ *	because it will run infinitely. A value of zero is invalid as it will
-+ *	make the scan plan meaningless.
-+ * @NL80211_SCHED_SCAN_PLAN_MAX: highest scheduled scan plan attribute number
-+ *	currently defined
-+ * @__NL80211_SCHED_SCAN_PLAN_AFTER_LAST: internal use
-+ */
-+enum nl80211_sched_scan_plan {
-+	__NL80211_SCHED_SCAN_PLAN_INVALID,
-+	NL80211_SCHED_SCAN_PLAN_INTERVAL,
-+	NL80211_SCHED_SCAN_PLAN_ITERATIONS,
-+
-+	/* keep last */
-+	__NL80211_SCHED_SCAN_PLAN_AFTER_LAST,
-+	NL80211_SCHED_SCAN_PLAN_MAX =
-+		__NL80211_SCHED_SCAN_PLAN_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 3893409..0266af3 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -460,6 +460,9 @@ use_default_name:
- 
- 	rdev->wiphy.max_num_csa_counters = 1;
- 
-+	rdev->wiphy.max_sched_scan_plans = 1;
-+	rdev->wiphy.max_sched_scan_plan_interval = U32_MAX;
-+
- 	return &rdev->wiphy;
- }
- EXPORT_SYMBOL(wiphy_new_nm);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 50cd770..5b64bba 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -479,6 +479,12 @@ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
- 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
- };
- 
-+static const struct nla_policy
-+nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
-+	[NL80211_SCHED_SCAN_PLAN_INTERVAL] = { .type = NLA_U32 },
-+	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
-+};
-+
- static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- 				     struct netlink_callback *cb,
- 				     struct cfg80211_registered_device **rdev,
-@@ -1304,7 +1310,13 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		    nla_put_u16(msg, NL80211_ATTR_MAX_SCHED_SCAN_IE_LEN,
- 				rdev->wiphy.max_sched_scan_ie_len) ||
- 		    nla_put_u8(msg, NL80211_ATTR_MAX_MATCH_SETS,
--			       rdev->wiphy.max_match_sets))
-+			       rdev->wiphy.max_match_sets) ||
-+		    nla_put_u32(msg, NL80211_ATTR_MAX_NUM_SCHED_SCAN_PLANS,
-+				rdev->wiphy.max_sched_scan_plans) ||
-+		    nla_put_u32(msg, NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL,
-+				rdev->wiphy.max_sched_scan_plan_interval) ||
-+		    nla_put_u32(msg, NL80211_ATTR_MAX_SCAN_PLAN_ITERATIONS,
-+				rdev->wiphy.max_sched_scan_plan_iterations))
- 			goto nla_put_failure;
- 
- 		if ((rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN) &&
-@@ -5971,14 +5983,100 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+static int
-+nl80211_parse_sched_scan_plans(struct wiphy *wiphy, int n_plans,
-+			       struct cfg80211_sched_scan_request *request,
-+			       struct nlattr **attrs)
-+{
-+	int tmp, err, i = 0;
-+	struct nlattr *attr;
-+
-+	if (!attrs[NL80211_ATTR_SCHED_SCAN_PLANS]) {
-+		u32 interval;
-+
-+		/*
-+		 * If scan plans are not specified,
-+		 * %NL80211_ATTR_SCHED_SCAN_INTERVAL must be specified. In this
-+		 * case one scan plan will be set with the specified scan
-+		 * interval and infinite number of iterations.
-+		 */
-+		if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
-+			return -EINVAL;
-+
-+		interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
-+		if (!interval)
-+			return -EINVAL;
-+
-+		request->scan_plans[0].interval =
-+			DIV_ROUND_UP(interval, MSEC_PER_SEC);
-+		if (!request->scan_plans[0].interval)
-+			return -EINVAL;
-+
-+		if (request->scan_plans[0].interval >
-+		    wiphy->max_sched_scan_plan_interval)
-+			request->scan_plans[0].interval =
-+				wiphy->max_sched_scan_plan_interval;
-+
-+		return 0;
-+	}
-+
-+	nla_for_each_nested(attr, attrs[NL80211_ATTR_SCHED_SCAN_PLANS], tmp) {
-+		struct nlattr *plan[NL80211_SCHED_SCAN_PLAN_MAX + 1];
-+
-+		if (WARN_ON(i >= n_plans))
-+			return -EINVAL;
-+
-+		err = nla_parse(plan, NL80211_SCHED_SCAN_PLAN_MAX,
-+				nla_data(attr), nla_len(attr),
-+				nl80211_plan_policy);
-+		if (err)
-+			return err;
-+
-+		if (!plan[NL80211_SCHED_SCAN_PLAN_INTERVAL])
-+			return -EINVAL;
-+
-+		request->scan_plans[i].interval =
-+			nla_get_u32(plan[NL80211_SCHED_SCAN_PLAN_INTERVAL]);
-+		if (!request->scan_plans[i].interval ||
-+		    request->scan_plans[i].interval >
-+		    wiphy->max_sched_scan_plan_interval)
-+			return -EINVAL;
-+
-+		if (plan[NL80211_SCHED_SCAN_PLAN_ITERATIONS]) {
-+			request->scan_plans[i].iterations =
-+				nla_get_u32(plan[NL80211_SCHED_SCAN_PLAN_ITERATIONS]);
-+			if (!request->scan_plans[i].iterations ||
-+			    (request->scan_plans[i].iterations >
-+			     wiphy->max_sched_scan_plan_iterations))
-+				return -EINVAL;
-+		} else if (i < n_plans - 1) {
-+			/*
-+			 * All scan plans but the last one must specify
-+			 * a finite number of iterations
-+			 */
-+			return -EINVAL;
-+		}
-+
-+		i++;
-+	}
-+
-+	/*
-+	 * The last scan plan must not specify the number of
-+	 * iterations, it is supposed to run infinitely
-+	 */
-+	if (request->scan_plans[n_plans - 1].iterations)
-+		return  -EINVAL;
-+
-+	return 0;
-+}
-+
- static struct cfg80211_sched_scan_request *
- nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 struct nlattr **attrs)
+  *  @brief Handle_Connect
+  *  @details       Sending config packet to firmware to starting connection
+- *  @param[in]    tstrHostIFconnectAttr* pstrHostIFconnectAttr
++ *  @param[in]    struct connect_attr *pstrHostIFconnectAttr
+  *  @return         Error code.
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+ u8 u8ConnectedSSID[6] = {0};
+-static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *pstrHostIFconnectAttr)
++static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
++			  struct connect_attr *pstrHostIFconnectAttr)
  {
- 	struct cfg80211_sched_scan_request *request;
- 	struct nlattr *attr;
--	int err, tmp, n_ssids = 0, n_match_sets = 0, n_channels, i;
--	u32 interval;
-+	int err, tmp, n_ssids = 0, n_match_sets = 0, n_channels, i, n_plans = 0;
- 	enum ieee80211_band band;
- 	size_t ie_len;
- 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
-@@ -5987,13 +6085,6 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	if (!is_valid_ie_attr(attrs[NL80211_ATTR_IE]))
- 		return ERR_PTR(-EINVAL);
- 
--	if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
--		return ERR_PTR(-EINVAL);
--
--	interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
--	if (interval == 0)
--		return ERR_PTR(-EINVAL);
--
- 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
- 		n_channels = validate_scan_freqs(
- 				attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
-@@ -6057,9 +6148,37 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	if (ie_len > wiphy->max_sched_scan_ie_len)
- 		return ERR_PTR(-EINVAL);
- 
-+	if (attrs[NL80211_ATTR_SCHED_SCAN_PLANS]) {
-+		/*
-+		 * NL80211_ATTR_SCHED_SCAN_INTERVAL must not be specified since
-+		 * each scan plan already specifies its own interval
-+		 */
-+		if (attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
-+			return ERR_PTR(-EINVAL);
-+
-+		nla_for_each_nested(attr,
-+				    attrs[NL80211_ATTR_SCHED_SCAN_PLANS], tmp)
-+			n_plans++;
-+	} else {
-+		/*
-+		 * The scan interval attribute is kept for backward
-+		 * compatibility. If no scan plans are specified and sched scan
-+		 * interval is specified, one scan plan will be set with this
-+		 * scan interval and infinite number of iterations.
-+		 */
-+		if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
-+			return ERR_PTR(-EINVAL);
-+
-+		n_plans = 1;
-+	}
-+
-+	if (!n_plans || n_plans > wiphy->max_sched_scan_plans)
-+		return ERR_PTR(-EINVAL);
-+
- 	request = kzalloc(sizeof(*request)
- 			+ sizeof(*request->ssids) * n_ssids
- 			+ sizeof(*request->match_sets) * n_match_sets
-+			+ sizeof(*request->scan_plans) * n_plans
- 			+ sizeof(*request->channels) * n_channels
- 			+ ie_len, GFP_KERNEL);
- 	if (!request)
-@@ -6087,6 +6206,18 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	}
- 	request->n_match_sets = n_match_sets;
- 
-+	if (n_match_sets)
-+		request->scan_plans = (void *)(request->match_sets +
-+					       n_match_sets);
-+	else if (request->ie)
-+		request->scan_plans = (void *)(request->ie + ie_len);
-+	else if (n_ssids)
-+		request->scan_plans = (void *)(request->ssids + n_ssids);
-+	else
-+		request->scan_plans = (void *)(request->channels + n_channels);
-+
-+	request->n_scan_plans = n_plans;
-+
- 	i = 0;
- 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
- 		/* user specified, bail out if channel not found */
-@@ -6249,7 +6380,10 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		request->delay =
- 			nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_DELAY]);
- 
--	request->interval = interval;
-+	err = nl80211_parse_sched_scan_plans(wiphy, n_plans, request, attrs);
-+	if (err)
-+		goto out_free;
-+
- 	request->scan_start = jiffies;
- 
- 	return request;
-@@ -8842,7 +8976,7 @@ static int nl80211_send_wowlan_tcp(struct sk_buff *msg,
- static int nl80211_send_wowlan_nd(struct sk_buff *msg,
- 				  struct cfg80211_sched_scan_request *req)
- {
--	struct nlattr *nd, *freqs, *matches, *match;
-+	struct nlattr *nd, *freqs, *matches, *match, *scan_plans, *scan_plan;
- 	int i;
- 
- 	if (!req)
-@@ -8852,7 +8986,9 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
- 	if (!nd)
- 		return -ENOBUFS;
- 
--	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL, req->interval))
-+	if (req->n_scan_plans == 1 &&
-+	    nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL,
-+			req->scan_plans[0].interval * 1000))
- 		return -ENOBUFS;
- 
- 	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_DELAY, req->delay))
-@@ -8879,6 +9015,23 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
- 		nla_nest_end(msg, matches);
- 	}
- 
-+	scan_plans = nla_nest_start(msg, NL80211_ATTR_SCHED_SCAN_PLANS);
-+	if (!scan_plans)
-+		return -ENOBUFS;
-+
-+	for (i = 0; i < req->n_scan_plans; i++) {
-+		scan_plan = nla_nest_start(msg, i + 1);
-+		if (!scan_plan ||
-+		    nla_put_u32(msg, NL80211_SCHED_SCAN_PLAN_INTERVAL,
-+				req->scan_plans[i].interval) ||
-+		    (req->scan_plans[i].iterations &&
-+		     nla_put_u32(msg, NL80211_SCHED_SCAN_PLAN_ITERATIONS,
-+				 req->scan_plans[i].iterations)))
-+			return -ENOBUFS;
-+		nla_nest_end(msg, scan_plan);
-+	}
-+	nla_nest_end(msg, scan_plans);
-+
- 	nla_nest_end(msg, nd);
- 
- 	return 0;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 3a50aa2..b7ee7f6 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -266,8 +266,7 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
- 			spin_lock_bh(&rdev->bss_lock);
- 			__cfg80211_bss_expire(rdev, request->scan_start);
- 			spin_unlock_bh(&rdev->bss_lock);
--			request->scan_start =
--				jiffies + msecs_to_jiffies(request->interval);
-+			request->scan_start = jiffies;
- 		}
- 		nl80211_send_sched_scan_results(rdev, request->dev);
- 	}
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
+ 	s32 s32Error = 0;
 -- 
-2.5.1
+1.9.1
 
