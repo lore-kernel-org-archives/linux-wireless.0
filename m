@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35138 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932086AbbIVJfT (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34150 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863AbbIUHrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:19 -0400
-Received: by pacfv12 with SMTP id fv12so4722512pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:19 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 05/16] staging: wilc1000: make mgmt_tx_cancel_wait static
-Date: Tue, 22 Sep 2015 18:34:50 +0900
-Message-Id: <1442914501-2315-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113526_247498_A0C94020)
-In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 03:47:46 -0400
+Received: by lahg1 with SMTP id g1so62922167lah.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 00:47:45 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] ssb: drop declaration of non existing ssb_sdio_hardware_setup
+Date: Mon, 21 Sep 2015 09:47:20 +0200
+Message-Id: <1442821640-14582-3-git-send-email-zajec5@gmail.com> (sfid-20150921_094749_323331_95F157BE)
+In-Reply-To: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
+References: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes mgmt_tx_cancel_wait static. This function is used only
-at wilc_wfi_cfgoperation.c file.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2: rebase latest staging-testing
+ drivers/ssb/ssb_private.h | 5 -----
+ 1 file changed, 5 deletions(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index da04e50..0c72c5e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2505,9 +2505,9 @@ int mgmt_tx(struct wiphy *wiphy,
- 	return s32Error;
- }
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 1d2256e..426c805 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -133,7 +133,6 @@ extern int ssb_sdio_get_invariants(struct ssb_bus *bus,
  
--int mgmt_tx_cancel_wait(struct wiphy *wiphy,
--			struct wireless_dev *wdev,
--			u64 cookie)
-+static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
-+			       struct wireless_dev *wdev,
-+			       u64 cookie)
+ extern u32 ssb_sdio_scan_read32(struct ssb_bus *bus, u16 offset);
+ extern int ssb_sdio_scan_switch_coreidx(struct ssb_bus *bus, u8 coreidx);
+-extern int ssb_sdio_hardware_setup(struct ssb_bus *bus);
+ extern void ssb_sdio_exit(struct ssb_bus *bus);
+ extern int ssb_sdio_init(struct ssb_bus *bus);
+ 
+@@ -147,10 +146,6 @@ static inline int ssb_sdio_scan_switch_coreidx(struct ssb_bus *bus, u8 coreidx)
  {
- 	struct wilc_priv *priv;
- 	tstrWILC_WFIDrv *pstrWFIDrv;
+ 	return 0;
+ }
+-static inline int ssb_sdio_hardware_setup(struct ssb_bus *bus)
+-{
+-	return 0;
+-}
+ static inline void ssb_sdio_exit(struct ssb_bus *bus)
+ {
+ }
 -- 
-2.5.1
+1.8.4.5
 
