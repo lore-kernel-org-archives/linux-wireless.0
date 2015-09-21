@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15783 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751746AbbIHB2t convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 21:28:49 -0400
-From: David Lin <dlin@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Subject: RE: [PATCH v6] Add new mac80211 driver mwlwifi.
-Date: Tue, 8 Sep 2015 01:28:44 +0000
-Message-ID: <8b2f365955774ddea9d6e99c40c8a892@SC-EXCH02.marvell.com> (sfid-20150908_032852_167400_93CD9541)
-References: <20456de5ab0b43b69441b19abb282c31@SC-EXCH02.marvell.com>
- <87zj0yb7rt.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zj0yb7rt.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54198 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751817AbbIUEiP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2015 00:38:15 -0400
+Date: Sun, 20 Sep 2015 19:00:07 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 06/18] staging: wilc1000: replace PRINT_D with netdev_info
+Message-ID: <20150921020007.GA22262@kroah.com> (sfid-20150921_063821_846139_1B2DDBB8)
+References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+ <1442731885-4344-6-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442731885-4344-6-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Kalle Valo [mailto:kvalo@codeaurora.org] writes:
+On Sun, Sep 20, 2015 at 03:51:13PM +0900, Chaehyun Lim wrote:
+> This patch replaces PRINT_D with netdev_info in wilc_free_wiphy function.
 > 
-> David Lin <dlin@marvell.com> writes:
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> > The Linux driver for WRT1900AC. The work was initially developed as
-> > part of openwrt effort and maintained on https://github.com/kaloz/mwlwifi.
-> >
-> > This is still work in progress, with 8864 chipset more mature and
-> > tested, while 8897 for the similar use case is added recently.
-> >
-> > Signed-off-by: David Lin <dlin@marvell.com>
-> 
-> The commit log is really short. For a new driver you should explain a lot more,
-> for example what works and what doesn't. Also it should contained detailed
-> info about how and why (!) this conflicts with mwifiex and the way that
-> problem was solved.
-> 
-> Also no new BUG_ON() calls in drivers, please:
-> 
-> fwcmd.c:        BUG_ON(tid >= SYSADPT_MAX_TID);
-> mac80211.c:     BUG_ON(queue > SYSADPT_TX_WMM_QUEUES - 1);
-> mac80211.c:             BUG_ON(stream->state !=
-> AMPDU_STREAM_IN_PROGRESS);
-> tx.c:   BUG_ON(tid > 7);
-> tx.c:   BUG_ON(tid >= SYSADPT_MAX_TID);
-> tx.c:   BUG_ON(!tx_skb);
-> 
-> We should start to get rid of all 200+ calls we already have, wireless drivers
-> should never call BUG_ON(). Instead use descriptive error message
-> (WARN_ON() etc) and bail out nicely with an error. That's much more user
-> friendly than crashing the kernel.
-> 
-> --
-> Kalle Valo
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index fbe8643..216da0c 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -3691,7 +3691,7 @@ int WILC_WFI_DeInitHostInt(struct net_device *net)
+>   */
+>  void wilc_free_wiphy(struct net_device *net)
+>  {
+> -	PRINT_D(CFG80211_DBG, "Unregistering wiphy\n");
+> +	netdev_info(net, "Unregistering wiphy\n");
 
-I will change BUG_ON() to WARN_ON() for next patch.
+these were only getting printed out if you had a specific debug flag
+set.  But you just changed it to always print this message, which isn't
+good.
 
-Thanks,
-David
+As this really is just a debugging statement, can you make it
+netdev_debug() instead?
+
+thanks,
+
+greg k-h
