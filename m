@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57656 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932891AbbIYTuA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13424 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476AbbIUHYi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 15:50:00 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 22:18:13 +0200
-Message-ID: <1460975.zriLPuubXp@vostro.rjw.lan> (sfid-20150925_215023_278971_BDA13C20)
-In-Reply-To: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	Mon, 21 Sep 2015 03:24:38 -0400
+Date: Mon, 21 Sep 2015 12:53:51 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix ldpc param for fixed rate
+Message-ID: <20150921072347.GA28484@qca.qualcomm.com> (sfid-20150921_092441_492939_53FDFF36)
+References: <1442389740-29053-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <CA+BoTQ=FMCyHtn8BMZv_6awOuLhJNFe5RhB2eNpCQfyk+5Jhcw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+BoTQ=FMCyHtn8BMZv_6awOuLhJNFe5RhB2eNpCQfyk+5Jhcw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, September 25, 2015 09:41:37 AM Viresh Kumar wrote:
-> global_lock is defined as an unsigned long and accessing only its lower
-> 32 bits from sysfs is incorrect, as we need to consider other 32 bits
-> for big endian 64 bit systems. There are no such platforms yet, but the
-> code needs to be robust for such a case.
+On Mon, Sep 21, 2015 at 09:05:54AM +0200, Michal Kazior wrote:
+> On 16 September 2015 at 09:49, Rajkumar Manoharan
+> <rmanohar@qti.qualcomm.com> wrote:
+> > ldpc is not configured for fixed rates. This blocks auto rate vs fixed
+> > rate performance comparison. Since firmware is considering ldpc vdev
+> > param for fixed rate selection, it has to be configured to enable ldpc
+> > for fixed rates.
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> > ---
+> [...]
+> > @@ -6041,6 +6049,7 @@ static int ath10k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+> >         band = def.chan->band;
+> >         ht_mcs_mask = mask->control[band].ht_mcs;
+> >         vht_mcs_mask = mask->control[band].vht_mcs;
+> > +       ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
 > 
-> Fix that by passing a local variable to debugfs_create_bool() and
-> assigning its value to global_lock later.
-> 
-> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> Is still really correct? LDPC must be supported on the Rx side of
+> destination stations hence I would assume you need to check whether
+> all stations associated are LDPC capable before enabling it (e.g. via
+> ieee80211_iterate_stations_atomic).
+>
+I already check with firmware on this regard. Below is the clarification
+got from fw team. So no need to go through sta_iter.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+"3) how does fixed rate work for non-LDPC clients (ex. legacy clients),
+if LDPC support is enabled for the given vdev?
+The rates are selected by ANDng the vdev_rates and client rates. If client does not
+support LDPC and LDPC is enabled in vdev then, LDPC will not be used."
 
-Greg, please take this one if the [2/2] looks good to you.
-
-> ---
-> V3->V4:
-> - Create a local variable instead of changing type of global_lock
->   (Rafael)
-> - Drop the stable tag
-> - BCC'd a lot of people (rather than cc'ing them) to make sure
->   - the series reaches them
->   - mailing lists do not block the patchset due to long cc list
->   - and we don't spam the BCC'd people for every reply
-> ---
->  drivers/acpi/ec_sys.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
-> index b4c216bab22b..b44b91331a56 100644
-> --- a/drivers/acpi/ec_sys.c
-> +++ b/drivers/acpi/ec_sys.c
-> @@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
->  	struct dentry *dev_dir;
->  	char name[64];
->  	umode_t mode = 0400;
-> +	u32 val;
->  
->  	if (ec_device_count == 0) {
->  		acpi_ec_debugfs_dir = debugfs_create_dir("ec", NULL);
-> @@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
->  
->  	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
->  		goto error;
-> -	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
-> -				 (u32 *)&first_ec->global_lock))
-> +	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
->  		goto error;
->  
-> +	first_ec->global_lock = val;
-> +
->  	if (write_support)
->  		mode = 0600;
->  	if (!debugfs_create_file("io", mode, dev_dir, ec, &acpi_ec_io_ops))
-> 
-
-Thanks,
-Rafael
-
+-Rajkumar
