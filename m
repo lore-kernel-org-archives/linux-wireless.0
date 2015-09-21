@@ -1,126 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:33972 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbbIBP2F (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45788 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756198AbbIUVBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 11:28:05 -0400
-Received: by iofb144 with SMTP id b144so24356307iof.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2015 08:28:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1441165462.17898.94.camel@linux.vnet.ibm.com>
-References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
-	<CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
-	<1440464705.2737.36.camel@linux.vnet.ibm.com>
-	<14540.1440599584@warthog.procyon.org.uk>
-	<31228.1440671938@warthog.procyon.org.uk>
-	<36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
-	<20150827212907.GF8051@wotan.suse.de>
-	<1440719673.2118.84.camel@linux.vnet.ibm.com>
-	<20150829021659.GN8051@wotan.suse.de>
-	<1441030735.2647.70.camel@linux.vnet.ibm.com>
-	<20150901234305.GU8051@wotan.suse.de>
-	<CAGXu5j+_yHc1wbubzw4h=QFM=uyn1pCraGYCWS6LvgtS3-A+Qw@mail.gmail.com>
-	<1441165462.17898.94.camel@linux.vnet.ibm.com>
-Date: Wed, 2 Sep 2015 08:28:03 -0700
-Message-ID: <CAGXu5jJ7XGzYD=HX13SavVXSqZ_DvOKU2udym91tM4RFknapZw@mail.gmail.com> (sfid-20150902_172811_371542_D3A21058)
-Subject: Re: Linux Firmware Signing
-From: Kees Cook <keescook@chromium.org>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>,
-	SE Linux <selinux@tycho.nsa.gov>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?UTF-8?B?Vm9qdMSbY2ggUGF2bMOtaw==?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Jay Schulist <jschlst@samba.org>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	Alexei Starovoitov <ast@plumgrid.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 21 Sep 2015 17:01:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 21 Sep 2015 23:58:54 +0300
+Message-Id: <1442869141-31637-14-git-send-email-luca@coelho.fi> (sfid-20150921_230148_533159_30864F3D)
+In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
+References: <1442868938.27148.361.camel@coelho.fi>
+Subject: [PATCH 14/21] iwlwifi: mvm: remove IWL_UCODE_TLV_API_STATS_V10 TLV flag
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 1, 2015 at 8:44 PM, Mimi Zohar <zohar@linux.vnet.ibm.com> wrote:
-> On Tue, 2015-09-01 at 20:08 -0700, Kees Cook wrote:
->> On Tue, Sep 1, 2015 at 4:43 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> > On Mon, Aug 31, 2015 at 10:18:55AM -0400, Mimi Zohar wrote:
->> >> > > eBPF/seccomp
->> >
->> > OK I knew nothing about this but I just looked into it, here are my notes:
->> >
->> >   * old BPF - how far do we want to go? This goes so far as to parsing
->> >     user passed void __user *arg data through ioctls which typically
->> >     gets copy_from_user()'d and eventually gets BPF_PROG_RUN().
->> >
->> >   * eBPF:
->> >                              seccomp() & prctl_set_seccomp()
->> >                                         |
->> >                                         V
->> >                              do_seccomp()
->> >                                         |
->> >                                         V
->> >                              seccomp_set_mode_filter()
->> >                                         |
->> >                                         V
->> >                              seccomp_prepare_user_filter()
->> >                                         |
->> >                                         V
->> >         bpf_prog_create_from_user() (seccomp) \
->> >         bpf_prog_create()                      > bpf_prepare_filter()
->> >         sk_attach_filter()                    /
->> >
->> >     All approaches come from user passed data, nothing fd based.
->> >
->> >     For both old BPF and eBPF then:
->> >
->> >     If we wanted to be paranoid I suppose the Machine Owner Key (MOK)
->> >     Paul had mentioned up could be used to vet for passed filters, or
->> >     a new interface to enable fd based filters. This really would limit
->> >     the dynamic nature of these features though.
->> >
->> >     eBPF / secccomp would not be the only place in the kernel that would have
->> >     issues with user passed data, we have tons of places the same applies so
->> >     implicating the old BPF / eBPF / seccomp approaches can easily implicate
->> >     many other areas of the kernel, that's pretty huge but from the looks of
->> >     it below you seem to enable that to be a possibility for us to consider.
->>
->> At the time (LSS 2014?) I argued that seccomp policies come from
->> binaries, which are already being measured. And that policies only
->> further restrict a process, so there seems to be to be little risk in
->> continuing to leave them unmeasured.
->
-> What do you mean by "measured"?  Who is doing the measurement?  Could
-> someone detect a change in measurement?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I meant from the perspective of IMA. The binary would have already
-been evaluated when it executed, and it's what's installing the
-seccomp filter. And since seccomp filters can only reduce privilege,
-it seems like they're not worth getting processed by IMA. But I might
-not understand the requirements! :)
+This flag is set in all supported firmwares.
 
--Kees
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h      |  2 --
+ drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h | 33 -----------------
+ drivers/net/wireless/iwlwifi/mvm/rx.c           | 47 ++++++++-----------------
+ 3 files changed, 15 insertions(+), 67 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 104468b..352d245 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -249,7 +249,6 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
+  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
+  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
+- * @IWL_UCODE_TLV_API_STATS_V10: uCode supports/uses statistics API version 10
+  * @IWL_UCODE_TLV_API_NEW_VERSION: new versioning format
+  * @IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY: scan APIs use 8-level priority
+  *	instead of 3.
+@@ -262,7 +261,6 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
+ 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
+ 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= (__force iwl_ucode_tlv_api_t)18,
+-	IWL_UCODE_TLV_API_STATS_V10		= (__force iwl_ucode_tlv_api_t)19,
+ 	IWL_UCODE_TLV_API_NEW_VERSION		= (__force iwl_ucode_tlv_api_t)20,
+ 	IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY	= (__force iwl_ucode_tlv_api_t)24,
+ 	IWL_UCODE_TLV_API_TX_POWER_CHAIN	= (__force iwl_ucode_tlv_api_t)27,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
+index 4ca4bce..0c321f6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
+@@ -219,32 +219,6 @@ struct mvm_statistics_bt_activity {
+ 	__le32 lo_priority_rx_denied_cnt;
+ } __packed;  /* STATISTICS_BT_ACTIVITY_API_S_VER_1 */
+ 
+-struct mvm_statistics_general_v5 {
+-	__le32 radio_temperature;
+-	__le32 radio_voltage;
+-	struct mvm_statistics_dbg dbg;
+-	__le32 sleep_time;
+-	__le32 slots_out;
+-	__le32 slots_idle;
+-	__le32 ttl_timestamp;
+-	struct mvm_statistics_div slow_div;
+-	__le32 rx_enable_counter;
+-	/*
+-	 * num_of_sos_states:
+-	 *  count the number of times we have to re-tune
+-	 *  in order to get out of bad PHY status
+-	 */
+-	__le32 num_of_sos_states;
+-	__le32 beacon_filtered;
+-	__le32 missed_beacons;
+-	u8 beacon_filter_average_energy;
+-	u8 beacon_filter_reason;
+-	u8 beacon_filter_current_energy;
+-	u8 beacon_filter_reserved;
+-	__le32 beacon_filter_delta_time;
+-	struct mvm_statistics_bt_activity bt_activity;
+-} __packed; /* STATISTICS_GENERAL_API_S_VER_5 */
+-
+ struct mvm_statistics_general_v8 {
+ 	__le32 radio_temperature;
+ 	__le32 radio_voltage;
+@@ -293,13 +267,6 @@ struct mvm_statistics_rx {
+  * STATISTICS_CMD (0x9c), below.
+  */
+ 
+-struct iwl_notif_statistics_v8 {
+-	__le32 flag;
+-	struct mvm_statistics_rx rx;
+-	struct mvm_statistics_tx tx;
+-	struct mvm_statistics_general_v5 general;
+-} __packed; /* STATISTICS_NTFY_API_S_VER_8 */
+-
+ struct iwl_notif_statistics_v10 {
+ 	__le32 flag;
+ 	struct mvm_statistics_rx rx;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index b620142..c203a1b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -577,47 +577,30 @@ iwl_mvm_rx_stats_check_trigger(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
+ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 				  struct iwl_rx_packet *pkt)
+ {
+-	size_t v8_len = sizeof(struct iwl_notif_statistics_v8);
+-	size_t v10_len = sizeof(struct iwl_notif_statistics_v10);
++	struct iwl_notif_statistics_v10 *stats = (void *)&pkt->data;
+ 	struct iwl_mvm_stat_data data = {
+ 		.mvm = mvm,
+ 	};
+ 	u32 temperature;
+ 
+-	if (fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_STATS_V10)) {
+-		struct iwl_notif_statistics_v10 *stats = (void *)&pkt->data;
++	if (iwl_rx_packet_payload_len(pkt) != sizeof(*stats))
++		goto invalid;
+ 
+-		if (iwl_rx_packet_payload_len(pkt) != v10_len)
+-			goto invalid;
++	temperature = le32_to_cpu(stats->general.radio_temperature);
++	data.mac_id = stats->rx.general.mac_id;
++	data.beacon_filter_average_energy =
++		stats->general.beacon_filter_average_energy;
+ 
+-		temperature = le32_to_cpu(stats->general.radio_temperature);
+-		data.mac_id = stats->rx.general.mac_id;
+-		data.beacon_filter_average_energy =
+-			stats->general.beacon_filter_average_energy;
++	iwl_mvm_update_rx_statistics(mvm, &stats->rx);
+ 
+-		iwl_mvm_update_rx_statistics(mvm, &stats->rx);
++	mvm->radio_stats.rx_time = le64_to_cpu(stats->general.rx_time);
++	mvm->radio_stats.tx_time = le64_to_cpu(stats->general.tx_time);
++	mvm->radio_stats.on_time_rf =
++		le64_to_cpu(stats->general.on_time_rf);
++	mvm->radio_stats.on_time_scan =
++		le64_to_cpu(stats->general.on_time_scan);
+ 
+-		mvm->radio_stats.rx_time = le64_to_cpu(stats->general.rx_time);
+-		mvm->radio_stats.tx_time = le64_to_cpu(stats->general.tx_time);
+-		mvm->radio_stats.on_time_rf =
+-			le64_to_cpu(stats->general.on_time_rf);
+-		mvm->radio_stats.on_time_scan =
+-			le64_to_cpu(stats->general.on_time_scan);
+-
+-		data.general = &stats->general;
+-	} else {
+-		struct iwl_notif_statistics_v8 *stats = (void *)&pkt->data;
+-
+-		if (iwl_rx_packet_payload_len(pkt) != v8_len)
+-			goto invalid;
+-
+-		temperature = le32_to_cpu(stats->general.radio_temperature);
+-		data.mac_id = stats->rx.general.mac_id;
+-		data.beacon_filter_average_energy =
+-			stats->general.beacon_filter_average_energy;
+-
+-		iwl_mvm_update_rx_statistics(mvm, &stats->rx);
+-	}
++	data.general = &stats->general;
+ 
+ 	iwl_mvm_rx_stats_check_trigger(mvm, pkt);
+ 
 -- 
-Kees Cook
-Chrome OS Security
+2.5.1
+
