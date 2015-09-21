@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49017 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755023AbbI2BVU (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36815 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbbIUM7S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 21:21:20 -0400
-Date: Tue, 29 Sep 2015 02:39:36 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 5/6] staging: wilc1000: remove wilc_platform include file
-Message-ID: <20150929003936.GA27938@kroah.com> (sfid-20150929_032123_306398_451FF514)
-References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
- <1442999030-31934-5-git-send-email-chaehyun.lim@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442999030-31934-5-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Sep 2015 08:59:18 -0400
+Received: by padbj2 with SMTP id bj2so6764475pad.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:59:18 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 15/16] staging: wilc1000: host_int_init: remove blank line before a close brace.
+Date: Mon, 21 Sep 2015 21:58:25 +0900
+Message-Id: <1442840306-9657-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145922_081707_C9C592C2)
+In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 06:03:49PM +0900, Chaehyun Lim wrote:
-> This patch removes wilc_platform.h include file in wilc_oswrapper.h
-> Because wilc_platform.h have several standard header files so that some
-> header file should be included .c file to avoid compilation errors.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 1 +
->  drivers/staging/wilc1000/host_interface.c   | 4 ++++
->  drivers/staging/wilc1000/wilc_oswrapper.h   | 2 --
->  drivers/staging/wilc1000/wilc_wlan_if.h     | 2 +-
->  4 files changed, 6 insertions(+), 3 deletions(-)
+This patch removes blank line before a close brace.
+CHECK: Blank lines aren't necessary before a close brace '}'
 
-This patch, and 6/6 doesn't apply to the tree anymore, can you rebase
-and resend them?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ee4f169..82db248 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6463,7 +6463,6 @@ _fail_mq_:
+ 	wilc_mq_destroy(&gMsgQHostIF);
+ _fail_:
+ 	return result;
+-
+ }
+ /**
+  *  @brief              host_int_deinit
+-- 
+2.5.1
 
-greg k-h
