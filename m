@@ -1,78 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33715 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932595AbbIYQmH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21532 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755878AbbIUDUi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 12:42:07 -0400
-Received: by pacex6 with SMTP id ex6so110216347pac.0
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 09:42:06 -0700 (PDT)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 09:41:37 -0700
-Message-Id: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> (sfid-20150925_184230_610012_AD3DF607)
+	Sun, 20 Sep 2015 23:20:38 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 29/34] staging: wilc1000: remove typedef from the struct tstrHostIfRemainOnChan
+Date: Mon, 21 Sep 2015 12:16:58 +0900
+Message-ID: <1442805423-3711-30-git-send-email-tony.cho@atmel.com> (sfid-20150921_052040_763387_1B1FCA98)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-global_lock is defined as an unsigned long and accessing only its lower
-32 bits from sysfs is incorrect, as we need to consider other 32 bits
-for big endian 64 bit systems. There are no such platforms yet, but the
-code needs to be robust for such a case.
+This patch removes typedef from the struct tstrHostIfRemainOnChan and
+renames it to remain_ch in order to comply with the Linux coding style
 
-Fix that by passing a local variable to debugfs_create_bool() and
-assigning its value to global_lock later.
-
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-V3->V4:
-- Create a local variable instead of changing type of global_lock
-  (Rafael)
-- Drop the stable tag
-- BCC'd a lot of people (rather than cc'ing them) to make sure
-  - the series reaches them
-  - mailing lists do not block the patchset due to long cc list
-  - and we don't spam the BCC'd people for every reply
----
- drivers/acpi/ec_sys.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 +++++---
+ drivers/staging/wilc1000/host_interface.h | 6 +++---
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
-index b4c216bab22b..b44b91331a56 100644
---- a/drivers/acpi/ec_sys.c
-+++ b/drivers/acpi/ec_sys.c
-@@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
- 	struct dentry *dev_dir;
- 	char name[64];
- 	umode_t mode = 0400;
-+	u32 val;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index be8b152..53e16ab 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -437,7 +437,7 @@ union message_body {
+ 	struct set_mac_addr strHostIfSetMacAddress;
+ 	struct get_mac_addr strHostIfGetMacAddress;
+ 	struct ba_session_info strHostIfBASessionInfo;
+-	tstrHostIfRemainOnChan strHostIfRemainOnChan;
++	struct remain_ch strHostIfRemainOnChan;
+ 	tstrHostIfRegisterFrame strHostIfRegisterFrame;
+ 	char *pUserData;
+ 	tstrHostIFDelAllSta strHostIFDelAllSta;
+@@ -3784,7 +3784,8 @@ ERRORHANDLER:
+  *  @date
+  *  @version	1.0
+  */
+-static int Handle_RemainOnChan(tstrWILC_WFIDrv *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
++static int Handle_RemainOnChan(tstrWILC_WFIDrv *drvHandler,
++			       struct remain_ch *pstrHostIfRemainOnChan)
+ {
+ 	s32 s32Error = 0;
+ 	u8 u8remain_on_chan_flag;
+@@ -3920,7 +3921,8 @@ static int Handle_RegisterFrame(tstrWILC_WFIDrv *drvHandler, tstrHostIfRegisterF
+  *  @version		1.0
+  */
+ #define FALSE_FRMWR_CHANNEL 100
+-static u32 Handle_ListenStateExpired(tstrWILC_WFIDrv *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
++static u32 Handle_ListenStateExpired(tstrWILC_WFIDrv *drvHandler,
++				     struct remain_ch *pstrHostIfRemainOnChan)
+ {
+ 	u8 u8remain_on_chan_flag;
+ 	tstrWID strWID;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index aba00f1..e0fc27f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -278,14 +278,14 @@ struct ba_session_info {
+ 	u16 u16SessionTimeout;
+ };
  
- 	if (ec_device_count == 0) {
- 		acpi_ec_debugfs_dir = debugfs_create_dir("ec", NULL);
-@@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+-typedef struct {
++struct remain_ch {
+ 	u16 u16Channel;
+ 	u32 u32duration;
+ 	tWILCpfRemainOnChanExpired pRemainOnChanExpired;
+ 	tWILCpfRemainOnChanReady pRemainOnChanReady;
+ 	void *pVoid;
+ 	u32 u32ListenSessionID;
+-} tstrHostIfRemainOnChan;
++};
  
- 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
- 		goto error;
--	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
--				 (u32 *)&first_ec->global_lock))
-+	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
- 		goto error;
+ typedef struct {
  
-+	first_ec->global_lock = val;
-+
- 	if (write_support)
- 		mode = 0600;
- 	if (!debugfs_create_file("io", mode, dev_dir, ec, &acpi_ec_io_ops))
+@@ -318,7 +318,7 @@ typedef struct {
+ 	tstrWILC_UsrConnReq strWILC_UsrConnReq;
+ 
+ 	/*Remain on channel struvture*/
+-	tstrHostIfRemainOnChan strHostIfRemainOnChan;
++	struct remain_ch strHostIfRemainOnChan;
+ 	u8 u8RemainOnChan_pendingreq;
+ 	u64 u64P2p_MgmtTimeout;
+ 	u8 u8P2PConnect;
 -- 
-2.4.0
+1.9.1
 
