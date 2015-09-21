@@ -1,42 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54094 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbbIFNYw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21289 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892AbbIUDTL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 09:24:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Lin <dlin@marvell.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	Chor Teck Law <ctlaw@marvell.com>
-Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
-References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>
-	<1433598191.2467.65.camel@sipsolutions.net>
-Date: Sun, 06 Sep 2015 16:24:45 +0300
-In-Reply-To: <1433598191.2467.65.camel@sipsolutions.net> (Johannes Berg's
-	message of "Sat, 06 Jun 2015 15:43:11 +0200")
-Message-ID: <877fo3he8y.fsf@kamboji.qca.qualcomm.com> (sfid-20150906_152515_101686_3394FB23)
+	Sun, 20 Sep 2015 23:19:11 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 16/34] staging: wilc1000: remove typedef from the struct tstrHostIFDelBeacon
+Date: Mon, 21 Sep 2015 12:16:45 +0900
+Message-ID: <1442805423-3711-17-git-send-email-tony.cho@atmel.com> (sfid-20150921_054655_621921_AB565549)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This patch removes typedef from the struct tstrHostIFDelBeacon and
+renames it to del_beacon in order to comply with the Linux coding style.
 
-> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
->
->>  drivers/net/wireless/mwlwifi/Kconfig        |   17 +
->
-> Does this driver has any relation to mwifiex? Perhaps the same
-> maintainer team, etc.? Could consider moving all the Marvell drivers
-> into one directory, but not really necessary I guess.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Actually I would want to start adding vendor directories for wireless
-drivers, just like drivers/net/ethernet has, to cleanup the directory
-structure. So for example this driver we would have
-drivers/net/wireless/marvell/mwlwifi and later we would start moving
-existing drivers to vendor drivers as well. Thoughts?
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6f93908..f530e89 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -284,7 +284,7 @@ struct set_beacon {
+ 
+ 
+ /*!
+- *  @struct             tstrHostIFDelBeacon
++ *  @struct             del_beacon
+  *  @brief		Del Beacon  message body
+  *  @details
+  *  @todo
+@@ -293,9 +293,9 @@ struct set_beacon {
+  *  @date		15 July 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFDelBeacon {
++struct del_beacon {
+ 	u8 u8dummy;
+-} tstrHostIFDelBeacon;
++};
+ 
+ /*!
+  *  @struct             tstrHostIFSetMulti
+@@ -425,7 +425,7 @@ union message_body {
+ 	struct set_channel strHostIFSetChan;
+ 	struct get_channel strHostIFGetChan;
+ 	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
+-	tstrHostIFDelBeacon strHostIFDelBeacon;                 /*!< Del beacon message body */
++	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
+ 	tstrWILC_AddStaParam strAddStaParam;                    /*!< Add station message body */
+ 	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
+ 	tstrWILC_AddStaParam strEditStaParam;                           /*!< Edit station message body */
+@@ -3506,13 +3506,14 @@ ERRORHANDLER:
+ /**
+  *  @brief Handle_AddBeacon
+  *  @details       Sending config packet to delete beacon
+- *  @param[in]   tstrHostIFDelBeacon* pstrDelBeacon
++ *  @param[in]   struct del_beacon *pstrDelBeacon
+  *  @return         NONE
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelBeacon *pstrDelBeacon)
++static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler,
++			     struct del_beacon *pstrDelBeacon)
+ {
+ 	s32 s32Error = 0;
+ 	tstrWID strWID;
 -- 
-Kalle Valo
+1.9.1
+
