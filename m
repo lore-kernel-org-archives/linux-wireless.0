@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:34300 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbbI0ISS (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21379 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756001AbbIUDTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 04:18:18 -0400
-Received: by wicfx3 with SMTP id fx3so67890538wic.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 01:18:16 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/6] staging: vt6655: don't stop TX queue unless buffer full.
-Date: Sun, 27 Sep 2015 09:17:39 +0100
-Message-Id: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com> (sfid-20150927_101849_107909_CAA72EC3)
+	Sun, 20 Sep 2015 23:19:44 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 21/34] staging: wilc1000: remove typedef from the struct tstrHostIFSetIPAddr
+Date: Mon, 21 Sep 2015 12:16:50 +0900
+Message-ID: <1442805423-3711-22-git-send-email-tony.cho@atmel.com> (sfid-20150921_054654_120705_29528A09)
+In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Presently the TX buffer stops while filling the buffer.
+This patch removes typedef from the struct tstrHostIFSetIPAddr and
+renames it to set_ip_addr in order to comply with the Linux coding
+style.
 
-However, this does not make use of the available buffer
-space, it also lags the speed of the TX troughtput.
-
-Only stop the queue when the buffer becomes full. The
-Interupt handler will start the queue again when a
-buffer is available.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/vt6655/device_main.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 326bce3..07ebdea 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1105,6 +1105,7 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ee550c5..689832a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -375,7 +375,7 @@ struct power_mgmt_param {
+ };
  
- 	if (AVAIL_TD(priv, dma_idx) < 1) {
- 		spin_unlock_irqrestore(&priv->lock, flags);
-+		ieee80211_stop_queues(priv->hw);
- 		return -ENOMEM;
- 	}
- 
-@@ -1156,13 +1157,8 @@ static void vnt_tx_80211(struct ieee80211_hw *hw,
- {
- 	struct vnt_private *priv = hw->priv;
- 
--	ieee80211_stop_queues(hw);
+ /*!
+- *  @struct             tstrHostIFSetIPAddr
++ *  @struct             set_ip_addr
+  *  @brief		set IP Address message body
+  *  @details
+  *  @todo
+@@ -384,11 +384,10 @@ struct power_mgmt_param {
+  *  @date		30 August 2013
+  *  @version		1.0 Description
+  */
 -
--	if (vnt_tx_packet(priv, skb)) {
-+	if (vnt_tx_packet(priv, skb))
- 		ieee80211_free_txskb(hw, skb);
--
--		ieee80211_wake_queues(hw);
--	}
- }
+-typedef struct {
++struct set_ip_addr {
+ 	u8 *au8IPAddr;
+ 	u8 idx;
+-} tstrHostIFSetIPAddr;
++};
  
- static int vnt_start(struct ieee80211_hw *hw)
+ /*!
+  *  @struct     sta_inactive_t
+@@ -432,7 +431,7 @@ union message_body {
+ 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
+ 	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
+ 	struct sta_inactive_t strHostIfStaInactiveT;
+-	tstrHostIFSetIPAddr strHostIfSetIP;
++	struct set_ip_addr strHostIfSetIP;
+ 	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
+ 	tstrHostIFSetMulti strHostIfSetMulti;
+ 	tstrHostIfSetOperationMode strHostIfSetOperationMode;
 -- 
-2.5.0
+1.9.1
 
