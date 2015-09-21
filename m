@@ -1,66 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14106 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754750AbbI3JtB (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33661 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbbIUM7P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:49:01 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 14/32] staging: wilc1000: rename strHostIFSetBeacon
-Date: Wed, 30 Sep 2015 18:44:31 +0900
-Message-ID: <1443606289-25407-14-git-send-email-tony.cho@atmel.com> (sfid-20150930_114904_207827_9479F936)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Sep 2015 08:59:15 -0400
+Received: by pacex6 with SMTP id ex6so116417581pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:59:15 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 14/16] staging: wilc1000: host_int_init: replace s32Error with result
+Date: Mon, 21 Sep 2015 21:58:24 +0900
+Message-Id: <1442840306-9657-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145919_843903_53C0B439)
+In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFSetBeacon to beacon_info to avoid CamelCase
-naming convention.
+This patch replaces s32Error with result in host_int_init function to
+avoid camelcase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2f211f9..7e53aa9 100644
+index ce7bb0f..ee4f169 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -391,7 +391,7 @@ union message_body {
- 	struct key_attr key_info;
- 	struct cfg_param_attr cfg_info;
- 	struct channel_attr channel_info;
--	struct beacon_attr strHostIFSetBeacon;
-+	struct beacon_attr beacon_info;
- 	struct add_sta_param strAddStaParam;
- 	struct del_sta strDelStaParam;
- 	struct add_sta_param strEditStaParam;
-@@ -4134,7 +4134,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+@@ -6358,7 +6358,7 @@ static u32 clients_count;
  
- 		case HOST_IF_MSG_ADD_BEACON:
--			Handle_AddBeacon(msg.drvHandler, &msg.body.strHostIFSetBeacon);
-+			Handle_AddBeacon(msg.drvHandler, &msg.body.beacon_info);
- 			break;
+ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv;
+ 	int err;
  
- 		case HOST_IF_MSG_DEL_BEACON:
-@@ -6548,7 +6548,7 @@ s32 host_int_add_beacon(tstrWILC_WFIDrv *hWFIDrv, u32 u32Interval,
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct beacon_attr *pstrSetBeaconParam = &msg.body.strHostIFSetBeacon;
-+	struct beacon_attr *pstrSetBeaconParam = &msg.body.beacon_info;
+@@ -6371,13 +6371,13 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	/*Allocate host interface private structure*/
+ 	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
+ 	if (!pstrWFIDrv) {
+-		s32Error = -ENOMEM;
++		result = -ENOMEM;
+ 		goto _fail_timer_2;
+ 	}
+ 	*phWFIDrv = pstrWFIDrv;
+ 	err = add_handler_in_list(pstrWFIDrv);
+ 	if (err) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		goto _fail_timer_2;
+ 	}
  
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
+@@ -6403,16 +6403,16 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
+ 
+ 	if (clients_count == 0)	{
+-		s32Error = wilc_mq_create(&gMsgQHostIF);
++		result = wilc_mq_create(&gMsgQHostIF);
+ 
+-		if (s32Error < 0) {
++		if (result < 0) {
+ 			PRINT_ER("Failed to creat MQ\n");
+ 			goto _fail_;
+ 		}
+ 		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
+ 		if (IS_ERR(HostIFthreadHandler)) {
+ 			PRINT_ER("Failed to creat Thread\n");
+-			s32Error = -EFAULT;
++			result = -EFAULT;
+ 			goto _fail_mq_;
+ 		}
+ 		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
+@@ -6452,7 +6452,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 
+ 	clients_count++; /* increase number of created entities */
+ 
+-	return s32Error;
++	return result;
+ 
+ _fail_timer_2:
+ 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
+@@ -6462,7 +6462,7 @@ _fail_timer_2:
+ _fail_mq_:
+ 	wilc_mq_destroy(&gMsgQHostIF);
+ _fail_:
+-	return s32Error;
++	return result;
+ 
+ }
+ /**
 -- 
-1.9.1
+2.5.1
 
