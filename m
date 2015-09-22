@@ -1,110 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39609 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132AbbIXO7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 10:59:03 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: Deinline iwl_write8/write32/read32()
-Date: Thu, 24 Sep 2015 16:58:55 +0200
-Message-Id: <1443106735-9661-1-git-send-email-dvlasenk@redhat.com> (sfid-20150924_165926_056144_9DFC3994)
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33125 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933384AbbIVNsB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 09:48:01 -0400
+Received: by pacex6 with SMTP id ex6so10025299pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 06:48:01 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/9] staging: wilc1000: replace kmalloc/memcpy with kmemdup
+Date: Tue, 22 Sep 2015 22:47:40 +0900
+Message-Id: <1442929665-19709-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_154806_234329_2905AF5C)
+In-Reply-To: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
-after deinlining these functions have sizes and callsite counts
-as follows:
+This patch replaces kmalloc followed by memset and memcpy with kmemdup.
 
-iwl_write8: 315 bytes, 3 calls
-iwl_write32: 296 bytes, 90 calls
-iwl_read32: 278 bytes, 51 calls
-
-Total size reduction is about 40 kbytes.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>
-CC: Gregory Greenman <gregory.greenman@intel.com>
-CC: John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-io.c | 22 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-io.h | 21 +++------------------
- 2 files changed, 25 insertions(+), 18 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index 27c66e4..782e7e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -38,6 +38,28 @@
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index d8b8c3d..875b769 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -488,13 +488,10 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
  
- #define IWL_POLL_INTERVAL 10	/* microseconds */
- 
-+void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val)
-+{
-+	trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val);
-+	iwl_trans_write8(trans, ofs, val);
-+}
-+IWL_EXPORT_SYMBOL(iwl_write8);
-+
-+void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val)
-+{
-+	trace_iwlwifi_dev_iowrite32(trans->dev, ofs, val);
-+	iwl_trans_write32(trans, ofs, val);
-+}
-+IWL_EXPORT_SYMBOL(iwl_write32);
-+
-+u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
-+{
-+	u32 val = iwl_trans_read32(trans, ofs);
-+	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val);
-+	return val;
-+}
-+IWL_EXPORT_SYMBOL(iwl_read32);
-+
- int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
- 		 u32 bits, u32 mask, int timeout)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index 705d12c..501d056 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -32,24 +32,9 @@
- #include "iwl-devtrace.h"
- #include "iwl-trans.h"
- 
--static inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val)
--{
--	trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val);
--	iwl_trans_write8(trans, ofs, val);
--}
+ 		if (u16IEsLen > 0) {
+-			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_KERNEL);
++			pstrNetworkInfo->pu8IEs = kmemdup(pu8IEs, u16IEsLen,
++							  GFP_KERNEL);
+ 			if (!pstrNetworkInfo->pu8IEs)
+ 				return -ENOMEM;
 -
--static inline void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val)
--{
--	trace_iwlwifi_dev_iowrite32(trans->dev, ofs, val);
--	iwl_trans_write32(trans, ofs, val);
--}
+-			memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
 -
--static inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
--{
--	u32 val = iwl_trans_read32(trans, ofs);
--	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val);
--	return val;
--}
-+void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val);
-+void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val);
-+u32 iwl_read32(struct iwl_trans *trans, u32 ofs);
+-			memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
+ 		}
+ 		pstrNetworkInfo->u16IEsLen = u16IEsLen;
  
- static inline void iwl_set_bit(struct iwl_trans *trans, u32 reg, u32 mask)
- {
+@@ -578,13 +575,10 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+-		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_KERNEL);
++		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
+ 		if (!pstrConnectRespInfo->pu8RespIEs)
+ 			return -ENOMEM;
+ 
+-		memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
+-
+-		memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
+ 		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
+ 	}
+ 
 -- 
-1.8.1.4
+2.5.1
 
