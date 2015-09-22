@@ -1,72 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49164 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752259AbbIQQma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 12:42:30 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] wil6210: remove MCS radiotap field
-Date: Thu, 17 Sep 2015 18:42:27 +0200
-Message-Id: <1442508147-16657-1-git-send-email-johannes@sipsolutions.net> (sfid-20150917_184233_678014_EA4CC8C4)
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33081 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753826AbbIVJfr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 05:35:47 -0400
+Received: by pacex6 with SMTP id ex6so4754819pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:46 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 14/16] staging: wilc1000: host_int_init: replace s32Error with result
+Date: Tue, 22 Sep 2015 18:34:59 +0900
+Message-Id: <1442914501-2315-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_114654_820623_EB5E0936)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch replaces s32Error with result in host_int_init function to
+avoid camelcase.
 
-The MCS radiotap field was really intended for HT MCS (and the
-radiotap spec does indiciate that) and dissectors treat it as
-meaning the frame was a HT frame. Therefore, inclusion of it
-in a 60GHz device is misleading.
-
-Cf. the thread at
-http://mid.gmane.org/CACyXjPzq-ePB1ux6wi_Rv3onPKXomcJcm15XJwA51u0E4W2txw@mail.gmail.com
-
-Remove the field for now, until a proper 60 GHz PHY information
-field is defined.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+v2: rebase latest staging-testing
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 6229110d558a..19bf5d4d3e44 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -270,10 +270,6 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
- 		/* channel */
- 		__le16 chnl_freq __aligned(2);
- 		__le16 chnl_flags;
--		/* MCS */
--		u8 mcs_present;
--		u8 mcs_flags;
--		u8 mcs_index;
- 	} __packed;
- 	struct wil6210_rtap_vendor {
- 		struct wil6210_rtap rtap;
-@@ -329,18 +325,13 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
- 	rtap_vendor->rtap.rthdr.it_len = cpu_to_le16(rtap_len);
- 	rtap_vendor->rtap.rthdr.it_present = cpu_to_le32(
- 			(1 << IEEE80211_RADIOTAP_FLAGS) |
--			(1 << IEEE80211_RADIOTAP_CHANNEL) |
--			(1 << IEEE80211_RADIOTAP_MCS));
-+			(1 << IEEE80211_RADIOTAP_CHANNEL));
- 	if (d->dma.status & RX_DMA_STATUS_ERROR)
- 		rtap_vendor->rtap.flags |= IEEE80211_RADIOTAP_F_BADFCS;
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce7bb0f..ee4f169 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6358,7 +6358,7 @@ static u32 clients_count;
  
- 	rtap_vendor->rtap.chnl_freq = cpu_to_le16(ch ? ch->center_freq : 58320);
- 	rtap_vendor->rtap.chnl_flags = cpu_to_le16(0);
+ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv;
+ 	int err;
  
--	rtap_vendor->rtap.mcs_present = IEEE80211_RADIOTAP_MCS_HAVE_MCS;
--	rtap_vendor->rtap.mcs_flags = 0;
--	rtap_vendor->rtap.mcs_index = wil_rxdesc_mcs(d);
--
- 	if (rtap_include_phy_info) {
- 		rtap_vendor->rtap.rthdr.it_present |= cpu_to_le32(1 <<
- 				IEEE80211_RADIOTAP_VENDOR_NAMESPACE);
+@@ -6371,13 +6371,13 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	/*Allocate host interface private structure*/
+ 	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
+ 	if (!pstrWFIDrv) {
+-		s32Error = -ENOMEM;
++		result = -ENOMEM;
+ 		goto _fail_timer_2;
+ 	}
+ 	*phWFIDrv = pstrWFIDrv;
+ 	err = add_handler_in_list(pstrWFIDrv);
+ 	if (err) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		goto _fail_timer_2;
+ 	}
+ 
+@@ -6403,16 +6403,16 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
+ 
+ 	if (clients_count == 0)	{
+-		s32Error = wilc_mq_create(&gMsgQHostIF);
++		result = wilc_mq_create(&gMsgQHostIF);
+ 
+-		if (s32Error < 0) {
++		if (result < 0) {
+ 			PRINT_ER("Failed to creat MQ\n");
+ 			goto _fail_;
+ 		}
+ 		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
+ 		if (IS_ERR(HostIFthreadHandler)) {
+ 			PRINT_ER("Failed to creat Thread\n");
+-			s32Error = -EFAULT;
++			result = -EFAULT;
+ 			goto _fail_mq_;
+ 		}
+ 		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
+@@ -6452,7 +6452,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 
+ 	clients_count++; /* increase number of created entities */
+ 
+-	return s32Error;
++	return result;
+ 
+ _fail_timer_2:
+ 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
+@@ -6462,7 +6462,7 @@ _fail_timer_2:
+ _fail_mq_:
+ 	wilc_mq_destroy(&gMsgQHostIF);
+ _fail_:
+-	return s32Error;
++	return result;
+ 
+ }
+ /**
 -- 
 2.5.1
 
