@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:56674 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbbIOCyR (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33763 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601AbbIVJfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 22:54:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 5/7] staging: wilc1000: remove definitions unused
-Date: Tue, 15 Sep 2015 11:53:39 +0900
-Message-ID: <1442285621-29457-6-git-send-email-tony.cho@atmel.com> (sfid-20150915_045420_658565_85F5F744)
-In-Reply-To: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
-References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Sep 2015 05:35:25 -0400
+Received: by pacex6 with SMTP id ex6so4746921pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:25 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 07/16] staging: wilc1000: make add_virtual_intf static
+Date: Tue, 22 Sep 2015 18:34:52 +0900
+Message-Id: <1442914501-2315-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113533_226310_725FBAFB)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch makes add_virtual_intf static. This function is used only at
+wilc_wfi_cfgoperation.c file.
 
-Remove the definitions which are not used anywhere.
-- WILC_ALREADY_EXSIT
-- WILC_EMPTY
-- WILC_FULL
-- WILC_CANCELED
-- WILC_INVALID_FILE
-- WILC_UNSUPPORTED_VERSION
-- WILC_FILE_EOF
-
-Remove the definition which is not used anymore.
-- WILC_CATCH
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_errorsupport.h | 17 -----------------
- 1 file changed, 17 deletions(-)
+v2: rebase latest staging-testing
 
-diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
-index 99ded3d..054ed76 100644
---- a/drivers/staging/wilc1000/wilc_errorsupport.h
-+++ b/drivers/staging/wilc1000/wilc_errorsupport.h
-@@ -12,9 +12,6 @@
- 
- #include "linux_wlan_common.h"
- 
--/* Psitive Numbers to indicate sucess with special status */
--#define WILC_ALREADY_EXSIT	(+100)    /** The requested object already exists */
--
- /* Generic success will return 0 */
- #define WILC_SUCCESS	0       /** Generic success */
- 
-@@ -25,22 +22,8 @@
- #define WILC_INVALID_STATE		-103 /** An API request would violate the Driver state machine (i.e. to start PID while not camped)*/
- #define WILC_BUFFER_OVERFLOW		-104 /** In copy operations if the copied data is larger than the allocated buffer*/
- #define WILC_NULL_PTR			-105 /** null pointer is passed or used */
--#define WILC_EMPTY			-107
--#define WILC_FULL			-108
- #define WILC_TIMEOUT			-109
--#define WILC_CANCELED			-110 /** The required operation have been canceled by the user*/
--#define WILC_INVALID_FILE		-112 /** The Loaded file is corruped or having an invalid format */
- #define WILC_NOT_FOUND			-113 /** Cant find the file to load */
- #define WILC_NO_MEM			-114
--#define WILC_UNSUPPORTED_VERSION	-115
--#define WILC_FILE_EOF			-116
--
--
--
--
--
--#define WILC_CATCH(__status__) \
--ERRORHANDLER: \
--	if (__status__ < WILC_SUCCESS) \
- 
- #endif
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 0becefb..7d26ccd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3321,10 +3321,12 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 JUL 2012
+  *  @version	1.0
+  */
+-struct wireless_dev *add_virtual_intf(struct wiphy *wiphy, const char *name,
+-				      unsigned char name_assign_type,
+-				      enum nl80211_iftype type, u32 *flags,
+-				      struct vif_params *params)
++static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
++					     const char *name,
++					     unsigned char name_assign_type,
++					     enum nl80211_iftype type,
++					     u32 *flags,
++					     struct vif_params *params)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct wilc_priv *priv;
 -- 
-1.9.1
+2.5.1
 
