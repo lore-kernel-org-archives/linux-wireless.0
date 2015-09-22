@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49330 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702AbbICOXv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 10:23:51 -0400
-Date: Thu, 3 Sep 2015 07:23:50 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Alexander Kuleshov <kuleshovmail@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] staging/wilc1000: Use %pM format specifier to print
- mac address
-Message-ID: <20150903142350.GA16857@kroah.com> (sfid-20150903_162430_760698_7B1F27F9)
-References: <1441267542-32053-1-git-send-email-kuleshovmail@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441267542-32053-1-git-send-email-kuleshovmail@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50534 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756488AbbIVIom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 04:44:42 -0400
+Message-ID: <1442911476.2018.2.camel@sipsolutions.net> (sfid-20150922_104447_027012_36D311B0)
+Subject: Re: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>, emmanuel.grumbach@intel.com
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Date: Tue, 22 Sep 2015 10:44:36 +0200
+In-Reply-To: <1442659190-6060-1-git-send-email-hauke@hauke-m.de> (sfid-20150919_124007_995516_62A820AE)
+References: <1442659190-6060-1-git-send-email-hauke@hauke-m.de>
+	 (sfid-20150919_124007_995516_62A820AE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 03, 2015 at 02:05:42PM +0600, Alexander Kuleshov wrote:
-> printk() supports %pM format specifier for printing 6-byte MAC/FDDI
-> addresses in hex notation small buffers, let's use it intead of %x:%x...
+On Sat, 2015-09-19 at 12:39 +0200, Hauke Mehrtens wrote:
+> modinfo iwlwifi showed the following required firmware:
+> firmware: iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
+
+This is obviously wrong.
+
 > 
-> Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 6 +++---
->  drivers/staging/wilc1000/linux_wlan.c     | 3 +--
->  2 files changed, 4 insertions(+), 5 deletions(-)
+>  MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+> -MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
+> +MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3165_UCODE_API_OK));
+> 
+But this is also wrong, it should be 7260, and there should be a
+separate entry for 3165. I'll get a patch on the way to fix it.
 
-What changed from v1 of this patch?  Please be specific.
-
-thanks,
-
-greg k-h
+johannes
