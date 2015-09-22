@@ -1,70 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13826 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753505AbbI3JrJ (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34517 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753826AbbIVJfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:47:09 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/32] staging: wilc1000: rename strRcvdNetworkInfo
-Date: Wed, 30 Sep 2015 18:44:22 +0900
-Message-ID: <1443606289-25407-5-git-send-email-tony.cho@atmel.com> (sfid-20150930_114726_097138_C93B5225)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Sep 2015 05:35:53 -0400
+Received: by padhy16 with SMTP id hy16so4763650pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:53 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 16/16] staging: wilc1000: host_int_init: remove unnecessary parentheses
+Date: Tue, 22 Sep 2015 18:35:01 +0900
+Message-Id: <1442914501-2315-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_114655_090675_D4E17DD8)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strRcvdNetworkInfo to net_info to avoid CamelCase
-naming convention.
+This patch removes unnecessary parentheses found by checkpatch.pl
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Unnecessary parentheses around pstrWFIDrv->hSemTestKeyBlock
+Unnecessary parentheses around pstrWFIDrv->hSemTestDisconnectBlock
+Unnecessary parentheses around pstrWFIDrv->hSemGetRSSI
+Unnecessary parentheses around pstrWFIDrv->hSemGetLINKSPEED
+Unnecessary parentheses around pstrWFIDrv->hSemGetCHNL
+Unnecessary parentheses around pstrWFIDrv->hSemInactiveTime
+Unnecessary parentheses around pstrWFIDrv->gtOsCfgValuesSem
+Unnecessary parentheses around pstrWFIDrv->gtOsCfgValuesSem
+
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+v2: rebase latest staging-testing
+
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 96f0b69..8a93112 100644
+index 82db248..db93940 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -416,7 +416,7 @@ struct sta_inactive_t {
- union message_body {
- 	struct scan_attr scan_info;
- 	struct connect_attr con_info;
--	struct rcvd_net_info strRcvdNetworkInfo;
-+	struct rcvd_net_info net_info;
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;
- 	struct key_attr strHostIFkeyAttr;
- 	struct cfg_param_attr strHostIFCfgParamAttr;
-@@ -4111,7 +4111,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+@@ -6393,12 +6393,12 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 		sema_init(&hSemHostIntDeinit, 1);
+ 	}
  
- 		case HOST_IF_MSG_RCVD_NTWRK_INFO:
--			Handle_RcvdNtwrkInfo(msg.drvHandler, &msg.body.strRcvdNetworkInfo);
-+			Handle_RcvdNtwrkInfo(msg.drvHandler, &msg.body.net_info);
- 			break;
+-	sema_init(&(pstrWFIDrv->hSemTestKeyBlock), 0);
+-	sema_init(&(pstrWFIDrv->hSemTestDisconnectBlock), 0);
+-	sema_init(&(pstrWFIDrv->hSemGetRSSI), 0);
+-	sema_init(&(pstrWFIDrv->hSemGetLINKSPEED), 0);
+-	sema_init(&(pstrWFIDrv->hSemGetCHNL), 0);
+-	sema_init(&(pstrWFIDrv->hSemInactiveTime), 0);
++	sema_init(&pstrWFIDrv->hSemTestKeyBlock, 0);
++	sema_init(&pstrWFIDrv->hSemTestDisconnectBlock, 0);
++	sema_init(&pstrWFIDrv->hSemGetRSSI, 0);
++	sema_init(&pstrWFIDrv->hSemGetLINKSPEED, 0);
++	sema_init(&pstrWFIDrv->hSemGetCHNL, 0);
++	sema_init(&pstrWFIDrv->hSemInactiveTime, 0);
  
- 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
-@@ -6302,9 +6302,9 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.id = HOST_IF_MSG_RCVD_NTWRK_INFO;
- 	msg.drvHandler = pstrWFIDrv;
+ 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
  
--	msg.body.strRcvdNetworkInfo.u32Length = u32Length;
--	msg.body.strRcvdNetworkInfo.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
--	memcpy(msg.body.strRcvdNetworkInfo.pu8Buffer,
-+	msg.body.net_info.u32Length = u32Length;
-+	msg.body.net_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
-+	memcpy(msg.body.net_info.pu8Buffer,
- 		    pu8Buffer, u32Length);
+@@ -6428,7 +6428,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	setup_timer(&pstrWFIDrv->hRemainOnChannel, ListenTimerCB, 0);
  
- 	/* send the message */
+ 	sema_init(&(pstrWFIDrv->gtOsCfgValuesSem), 1);
+-	down(&(pstrWFIDrv->gtOsCfgValuesSem));
++	down(&pstrWFIDrv->gtOsCfgValuesSem);
+ 
+ 	pstrWFIDrv->enuHostIFstate = HOST_IF_IDLE;
+ 
+@@ -6448,14 +6448,14 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 		   pstrWFIDrv->strCfgValues.active_scan_time, pstrWFIDrv->strCfgValues.passive_scan_time,
+ 		   pstrWFIDrv->strCfgValues.curr_tx_rate);
+ 
+-	up(&(pstrWFIDrv->gtOsCfgValuesSem));
++	up(&pstrWFIDrv->gtOsCfgValuesSem);
+ 
+ 	clients_count++; /* increase number of created entities */
+ 
+ 	return result;
+ 
+ _fail_timer_2:
+-	up(&(pstrWFIDrv->gtOsCfgValuesSem));
++	up(&pstrWFIDrv->gtOsCfgValuesSem);
+ 	del_timer_sync(&pstrWFIDrv->hConnectTimer);
+ 	del_timer_sync(&pstrWFIDrv->hScanTimer);
+ 	kthread_stop(HostIFthreadHandler);
 -- 
-1.9.1
+2.5.1
 
