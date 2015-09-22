@@ -1,100 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45743 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756677AbbIUU7R (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34035 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933384AbbIVNsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 16:59:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 23:58:50 +0300
-Message-Id: <1442869141-31637-10-git-send-email-luca@coelho.fi> (sfid-20150921_230123_545396_ED1B0D20)
-In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
-References: <1442868938.27148.361.camel@coelho.fi>
-Subject: [PATCH 10/21] iwlwifi: mvm: remove IWL_UCODE_TLV_API_HDC_PHASE_0 TLV flag
+	Tue, 22 Sep 2015 09:48:08 -0400
+Received: by padhy16 with SMTP id hy16so10101324pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 06:48:07 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/9] staging: wilc1000: remove useless comment
+Date: Tue, 22 Sep 2015 22:47:42 +0900
+Message-Id: <1442929665-19709-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_154813_201821_8E9991EF)
+In-Reply-To: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch removes useless comment in coreconfigurator.c
 
-All the supported firwmares support the new API.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h |  2 --
- drivers/net/wireless/iwlwifi/iwl-io.c      |  1 +
- drivers/net/wireless/iwlwifi/mvm/fw.c      | 16 ----------------
- 3 files changed, 1 insertion(+), 18 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 38 -----------------------------
+ drivers/staging/wilc1000/coreconfigurator.h | 29 ++++++----------------
+ 2 files changed, 8 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 483b1274..55ff72e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -247,7 +247,6 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
-  *	longer than the passive one, which is essential for fragmented scan.
-  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
-- * IWL_UCODE_TLV_API_HDC_PHASE_0: ucode supports finer configuration of LTR
-  * @IWL_UCODE_TLV_API_TX_POWER_DEV: new API for tx power.
-  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
-  * @IWL_UCODE_TLV_API_SINGLE_SCAN_EBS: EBS is supported for single scans too.
-@@ -264,7 +263,6 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_BT_COEX_SPLIT         = (__force iwl_ucode_tlv_api_t)3,
- 	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= (__force iwl_ucode_tlv_api_t)8,
- 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
--	IWL_UCODE_TLV_API_HDC_PHASE_0		= (__force iwl_ucode_tlv_api_t)10,
- 	IWL_UCODE_TLV_API_TX_POWER_DEV		= (__force iwl_ucode_tlv_api_t)11,
- 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
- 	IWL_UCODE_TLV_API_SINGLE_SCAN_EBS	= (__force iwl_ucode_tlv_api_t)16,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index 3c263a1..0bd9d4a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -53,6 +53,7 @@ IWL_EXPORT_SYMBOL(iwl_write32);
- u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
- {
- 	u32 val = iwl_trans_read32(trans, ofs);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 8b56b92..47a37fa 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -9,26 +9,11 @@
+  */
+ 
+ 
+-/*****************************************************************************/
+-/* File Includes                                                             */
+-/*****************************************************************************/
+ #include "coreconfigurator.h"
+ #include <linux/errno.h>
+-/*****************************************************************************/
+-/* Constants                                                                 */
+-/*****************************************************************************/
+ #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
+ 							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+ 
+-/*****************************************************************************/
+-/* Function Macros                                                           */
+-/*****************************************************************************/
+-
+-
+-/*****************************************************************************/
+-/* Type Definitions                                                          */
+-/*****************************************************************************/
+-
+ /* Basic Frame Type Codes (2-bit) */
+ typedef enum {
+ 	FRAME_TYPE_CONTROL     = 0x04,
+@@ -130,25 +115,6 @@ typedef struct {
+ 	bool bRespRequired;
+ } tstrConfigPktInfo;
+ 
+-
+-
+-/*****************************************************************************/
+-/* Extern Variable Declarations                                              */
+-/*****************************************************************************/
+-
+-/*****************************************************************************/
+-/* Global Variables                                                          */
+-/*****************************************************************************/
+-/*****************************************************************************/
+-/* Static Function Declarations                                              */
+-/*****************************************************************************/
+-
+-
+-
+-/*****************************************************************************/
+-/* Functions                                                                 */
+-/*****************************************************************************/
+-
+ /* This function extracts the beacon period field from the beacon or probe   */
+ /* response frame.                                                           */
+ static inline u16 get_beacon_period(u8 *data)
+@@ -688,7 +654,6 @@ s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults)
+ }
+ #endif
+ 
+-/*Using the global handle of the driver*/
+ extern wilc_wlan_oup_t *gpstrWlanOps;
+ /**
+  *  @brief              sends certain Configuration Packet based on the input WIDs pstrWIDs
+@@ -735,9 +700,6 @@ s32 send_config_pkt(u8 u8Mode, tstrWID *pstrWIDs,
+ 				break;
+ 			}
+ 		}
+-		/**
+-		 *      get the value
+-		 **/
+ 		counter = 0;
+ 		for (counter = 0; counter < u32WIDsCount; counter++) {
+ 			pstrWIDs[counter].s32ValueSize = gpstrWlanOps->wlan_cfg_get_value(
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 7227c0f..e2b7b09 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -12,10 +12,7 @@
+ #define CORECONFIGURATOR_H
+ 
+ #include "wilc_wlan_if.h"
+-/*****************************************************************************/
+-/* Constants                                                                 */
+-/*****************************************************************************/
+-/* Number of WID Options Supported */
 +
- 	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val);
- 	return val;
- }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 4a0ce83..248b025 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -940,19 +940,6 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
- 	return ret;
- }
+ #define NUM_BASIC_SWITCHES      45
+ #define NUM_FHSS_SWITCHES       0
  
--static int iwl_mvm_config_ltr_v1(struct iwl_mvm *mvm)
--{
--	struct iwl_ltr_config_cmd_v1 cmd_v1 = {
--		.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
--	};
--
--	if (!mvm->trans->ltr_enabled)
--		return 0;
--
--	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
--				    sizeof(cmd_v1), &cmd_v1);
--}
--
- static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
- {
- 	struct iwl_ltr_config_cmd cmd = {
-@@ -962,9 +949,6 @@ static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
- 	if (!mvm->trans->ltr_enabled)
- 		return 0;
+@@ -24,12 +21,12 @@
+ #ifdef MAC_802_11N
+ #define NUM_11N_BASIC_SWITCHES  25
+ #define NUM_11N_HUT_SWITCHES    47
+-#else /* MAC_802_11N */
++#else
+ #define NUM_11N_BASIC_SWITCHES  0
+ #define NUM_11N_HUT_SWITCHES    0
+-#endif /* MAC_802_11N */
++#endif
  
--	if (!fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_HDC_PHASE_0))
--		return iwl_mvm_config_ltr_v1(mvm);
--
- 	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
- 				    sizeof(cmd), &cmd);
- }
+-#define MAC_HDR_LEN             24          /* No Address4 - non-ESS         */
++#define MAC_HDR_LEN             24
+ #define MAX_SSID_LEN            33
+ #define FCS_LEN                 4
+ #define TIME_STAMP_LEN          8
+@@ -39,9 +36,7 @@
+ #define AID_LEN                 2
+ #define IE_HDR_LEN              2
+ 
+-/* Operating Mode: SET */
+ #define SET_CFG              0
+-/* Operating Mode: GET */
+ #define GET_CFG              1
+ 
+ #define MAX_STRING_LEN               256
+@@ -52,16 +47,9 @@
+ #define MAC_CONNECTED                1
+ #define MAC_DISCONNECTED             0
+ 
+-/*****************************************************************************/
+-/* Function Macros                                                           */
+-/*****************************************************************************/
+ #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
+ #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+ 
+-/*****************************************************************************/
+-/* Type Definitions                                                                                                                       */
+-/*****************************************************************************/
+-/* Status Codes for Authentication and Association Frames */
+ typedef enum {
+ 	SUCCESSFUL_STATUSCODE    = 0,
+ 	UNSPEC_FAIL              = 1,
+@@ -95,7 +83,7 @@ typedef struct {
+ 	u8 u8Index;
+ 	s8 as8RSSI[NUM_RSSI];
+ } tstrRSSI;
+-/* This structure is used to support parsing of the received 'N' message */
++
+ typedef struct {
+ 	s8 s8rssi;
+ 	u16 u16CapInfo;
+@@ -105,21 +93,20 @@ typedef struct {
+ 	u16 u16BeaconPeriod;
+ 	u8 u8DtimPeriod;
+ 	u8 u8channel;
+-	unsigned long u32TimeRcvdInScanCached; /* of type unsigned long to be accepted by the linux kernel macro time_after() */
++	unsigned long u32TimeRcvdInScanCached;
+ 	unsigned long u32TimeRcvdInScan;
+ 	bool bNewNetwork;
+ #ifdef AGING_ALG
+ 	u8 u8Found;
+ #endif
+-	u32 u32Tsf; /* time-stamp [Low only 32 bit] */
++	u32 u32Tsf;
+ 	u8 *pu8IEs;
+ 	u16 u16IEsLen;
+ 	void *pJoinParams;
+ 	tstrRSSI strRssi;
+-	u64 u64Tsf; /* time-stamp [Low and High 64 bit] */
++	u64 u64Tsf;
+ } tstrNetworkInfo;
+ 
+-/* This structure is used to support parsing of the received Association Response frame */
+ typedef struct {
+ 	u16 u16capability;
+ 	u16 u16ConnectStatus;
 -- 
 2.5.1
 
