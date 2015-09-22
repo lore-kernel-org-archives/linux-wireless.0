@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5732 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbbIPBow (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:32888 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932086AbbIVJfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 21:44:52 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 08/10] staging: wilc1000: delete function declaration SendRawPacket
-Date: Wed, 16 Sep 2015 10:43:53 +0900
-Message-ID: <1442367835-30733-9-git-send-email-tony.cho@atmel.com> (sfid-20150916_034454_396115_A2D47FD7)
-In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
-References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Sep 2015 05:35:34 -0400
+Received: by pacex6 with SMTP id ex6so4750327pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 10/16] staging: wilc1000: host_int_init: replace kmalloc with kzalloc
+Date: Tue, 22 Sep 2015 18:34:55 +0900
+Message-Id: <1442914501-2315-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113538_948529_CE28E7F3)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+This patch replaces kmalloc with kzalloc in host_int_init.
 
-SendRawpacket is declared but not implemented. It is not used also.
-So just delete it.
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h | 1 -
- 1 file changed, 1 deletion(-)
+v2: rebase latest staging-testing
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index d2a0a0b..c2aee05 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -180,7 +180,6 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
- s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults);
- #endif
+ drivers/staging/wilc1000/host_interface.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 317bc60..8c0c478 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6371,13 +6371,12 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
  
--s32 SendRawPacket(s8 *pspacket, s32 s32PacketLen);
- void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length);
- void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length);
- void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length);
+ 
+ 	/*Allocate host interface private structure*/
+-	pstrWFIDrv  = kmalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
++	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
+ 	if (pstrWFIDrv == NULL) {
+ 		s32Error = -ENOMEM;
+ 		PRINT_ER("Failed to allocate memory\n");
+ 		goto _fail_timer_2;
+ 	}
+-	memset(pstrWFIDrv, 0, sizeof(tstrWILC_WFIDrv));
+ 	*phWFIDrv = pstrWFIDrv;
+ 	err = add_handler_in_list(pstrWFIDrv);
+ 	if (err) {
 -- 
-1.9.1
+2.5.1
 
