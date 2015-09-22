@@ -1,59 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50872 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751154AbbI3PRI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 11:17:08 -0400
-Message-ID: <1443626224.1859.9.camel@sipsolutions.net> (sfid-20150930_171712_220189_861D907C)
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:16915 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932117AbbIVK7D convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 06:59:03 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Date: Wed, 30 Sep 2015 17:17:04 +0200
-In-Reply-To: <560BFABC.8090504@candelatech.com>
-References: <5605D228.7050609@candelatech.com>
-	 (sfid-20150926_010105_789618_F93D668E) <1443595615.1859.2.camel@sipsolutions.net>
-	 <560BFABC.8090504@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
+Date: Tue, 22 Sep 2015 10:58:59 +0000
+Message-ID: <bd6f0967147e436fae399297d295fd34@SC-EXCH04.marvell.com> (sfid-20150922_125907_905348_9E7BA874)
+References: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com>
+ <20150921161953.GQ5004@mwanda>
+In-Reply-To: <20150921161953.GQ5004@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-30 at 08:07 -0700, Ben Greear wrote:
-> 
-> On 09/29/2015 11:46 PM, Johannes Berg wrote:
-> > On Fri, 2015-09-25 at 16:00 -0700, Ben Greear wrote:
-> > > It seems that ath10k ar988X hardware has a bug where the BSSID
-> > > for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
-> > > does not seem to use AMSDUs for IBSS, and when I enable it in my CT
-> > > firmware, then I see the breakage.  So, I suspect it is not
-> > > just a simple software/firmware bug.
-> > > 
-> > > If I simply ignore the bssid_match check in ieee80211_accept_frame,
-> > > then it seems everything runs fine.
-> > > 
-> > > So, I'm curious if anyone knows what sorts of bad things could happen
-> > > if the bssid_match check is ignored?  Maybe bcast/mcast frames could
-> > > be accepted when they shouldn't be in certain cases?
-> > > 
-> > 
-> > You could end up accepting multicast frames from a different,
-> > overlapping, BSS? Seems like a bad idea.
-> 
-> It's definitely not a great idea.
-> 
-> In my testing, I always see the first frame of the AMPDU have
-> a proper IBSS BSSID.  Any idea if it would be OK (and even possible)
-> for the driver or stack to detect this and save the BSSID aside
-> for the subsequent frames?
+Hi Dan,
 
-That seems reasonable.
-
-> Its not clear to me whether the rest of the AMPDU frames could
-> somehow be interleaved with frames from a different BSSID?
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Monday, September 21, 2015 9:50 PM
+> To: Amitkumar Karwar
+> Cc: Nishant Sarmukadam; Kalle Valo; linux-wireless@vger.kernel.org;
+> kernel-janitors@vger.kernel.org
+> Subject: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
 > 
+> There were several bugs here.
+> 
+> 1)  The done label was in the wrong place so we didn't copy any
+>     information out when there was no command given.
+> 
+> 2)  We were using PAGE_SIZE as the size of the buffer instead of
+>     "PAGE_SIZE - pos".
+> 
+> 3)  snprintf() returns the number of characters that would have been
+>     printed if there were enough space.  If there was not enough space
+>     (and we had fixed the memory corruption bug #2) then it would result
+>     in an information leak when we do simple_read_from_buffer().  I've
+>     changed it to use scnprintf() instead.
+> 
+> I also removed the initialization at the start of the function, because
+> I thought it made the code a little more clear.
+> 
+> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell
+> mwifiex driver')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> v2:  My first part introduced a bug.  :(
+> 
+> Sorry for the delay on this.
+> 
+> diff --git a/drivers/net/wireless/mwifiex/debugfs.c
+> b/drivers/net/wireless/mwifiex/debugfs.c
+> index 5a0636d4..5583856 100644
+> --- a/drivers/net/wireless/mwifiex/debugfs.c
+> +++ b/drivers/net/wireless/mwifiex/debugfs.c
+> @@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
+> *ubuf,
+>  		(struct mwifiex_private *) file->private_data;
+>  	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+>  	char *buf = (char *) addr;
+> -	int pos = 0, ret = 0, i;
+> +	int pos, ret, i;
+>  	u8 value[MAX_EEPROM_DATA];
+> 
+>  	if (!buf)
+> @@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
+> *ubuf,
+> 
+>  	if (saved_offset == -1) {
+>  		/* No command has been given */
+> -		pos += snprintf(buf, PAGE_SIZE, "0");
+> +		pos = snprintf(buf, PAGE_SIZE, "0");
+>  		goto done;
+>  	}
+> 
+> @@ -748,17 +748,17 @@ mwifiex_rdeeprom_read(struct file *file, char
+> __user *ubuf,
+>  				  (u16) saved_bytes, value);
+>  	if (ret) {
+>  		ret = -EINVAL;
+> -		goto done;
+> +		goto out_free;
+>  	}
+> 
+> -	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
+> saved_bytes);
+> +	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
+> saved_bytes);
+> 
+>  	for (i = 0; i < saved_bytes; i++)
+> -		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ",
+> value[i]);
+> -
+> -	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
+> +		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ",
+> value[i]);
+> 
+>  done:
+> +	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
+> +out_free:
+>  	free_page(addr);
+>  	return ret;
+>  }
 
-They can't be, at least not without some very strange hacks on the
-transmitter.
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-johannes
+Regards,
+Amitkumar
