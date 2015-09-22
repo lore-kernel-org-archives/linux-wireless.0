@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34119 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490AbbINDZl (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:36961 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758850AbbIVXPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:25:41 -0400
-Received: by padhy16 with SMTP id hy16so129906562pad.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:40 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 21/31] staging: wilc1000: rename WILC_WFI_set_wiphy_params
-Date: Mon, 14 Sep 2015 12:24:21 +0900
-Message-Id: <1442201071-16155-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054653_676672_4B9211E8)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 22 Sep 2015 19:15:15 -0400
+Date: Tue, 22 Sep 2015 16:15:14 -0700 (PDT)
+Message-Id: <20150922.161514.1111134025006072085.davem@davemloft.net> (sfid-20150923_011848_305367_26A566EF)
+To: a.hajda@samsung.com
+Cc: linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com,
+	m.szyprowski@samsung.com, akarwar@marvell.com,
+	nishants@marvell.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 21/38] mwifiex: fix comparison expression
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1442842450-29769-22-git-send-email-a.hajda@samsung.com>
+References: <1442842450-29769-1-git-send-email-a.hajda@samsung.com>
+	<1442842450-29769-22-git-send-email-a.hajda@samsung.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_wiphy_params with set_wiphy_params to
-avoid CamelCase.
+From: Andrzej Hajda <a.hajda@samsung.com>
+Date: Mon, 21 Sep 2015 15:33:53 +0200
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: remove "wilc_" prefix
+> To avoid underflows signed variables should be used in expression.
+> 
+> The problem has been detected using proposed semantic patch
+> scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
+> 
+> [1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
+> 
+> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e1514db..51ed89a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1802,7 +1802,7 @@ static int  WILC_WFI_disassoc(struct wiphy *wiphy, struct net_device *dev,
- }
- 
- /**
-- *  @brief      WILC_WFI_set_wiphy_params
-+ *  @brief      set_wiphy_params
-  *  @details    Notify that wiphy parameters have changed;
-  *  @param[in]   Changed bitfield (see &enum wiphy_params_flags) describes which values
-  *                      have changed.
-@@ -1811,7 +1811,7 @@ static int  WILC_WFI_disassoc(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_set_wiphy_params(struct wiphy *wiphy, u32 changed)
-+static int set_wiphy_params(struct wiphy *wiphy, u32 changed)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrCfgParamVal pstrCfgParamVal;
-@@ -3581,7 +3581,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.get_station = get_station,
- 	.dump_station = dump_station,
- 	.change_bss = change_bss,
--	.set_wiphy_params = WILC_WFI_set_wiphy_params,
-+	.set_wiphy_params = set_wiphy_params,
- 
- 	.set_pmksa = WILC_WFI_set_pmksa,
- 	.del_pmksa = WILC_WFI_del_pmksa,
--- 
-2.5.1
-
+Applied.
