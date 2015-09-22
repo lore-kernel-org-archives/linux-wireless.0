@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45283 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbbIRJNP (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35546 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752871AbbIVJfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:13:15 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/34] staging: wilc1000: remove typedef from the struct tstrHostIFSetChan
-Date: Fri, 18 Sep 2015 18:11:15 +0900
-Message-ID: <1442567496-29331-13-git-send-email-tony.cho@atmel.com> (sfid-20150918_111654_724953_14BBE128)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Sep 2015 05:35:44 -0400
+Received: by pacfv12 with SMTP id fv12so4731811pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:43 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 13/16] staging: wilc1000: host_int_init: remove commented code
+Date: Tue, 22 Sep 2015 18:34:58 +0900
+Message-Id: <1442914501-2315-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_114654_187941_2240BF8B)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFSetChan and ranames
-it to set_channel in order to comply with the Linux coding style.
+This patch removes commented code in host_int_init function.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+v2: rebase latest staging-testing
+
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d863a8c..2f86a3b 100644
+index 43062c5..ce7bb0f 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -216,7 +216,7 @@ struct rcvd_async_info {
- };
+@@ -6431,7 +6431,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	down(&(pstrWFIDrv->gtOsCfgValuesSem));
  
- /*!
-- *  @struct             tstrHostIFSetChan
-+ *  @struct             set_channel
-  *  @brief		Set Channel  message body
-  *  @details
-  *  @todo
-@@ -225,9 +225,9 @@ struct rcvd_async_info {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFSetChan {
-+struct set_channel {
- 	u8 u8SetChan;
--} tstrHostIFSetChan;
-+};
+ 	pstrWFIDrv->enuHostIFstate = HOST_IF_IDLE;
+-	/* gWFiDrvHandle->bPendingConnRequest = false; */
  
- /*!
-  *  @struct             tstrHostIFSetChan
-@@ -423,7 +423,7 @@ union message_body {
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
- 	struct key_attr strHostIFkeyAttr;                             /*!<>*/
- 	struct cfg_param_attr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
--	tstrHostIFSetChan strHostIFSetChan;
-+	struct set_channel strHostIFSetChan;
- 	tstrHostIFGetChan strHostIFGetChan;
- 	tstrHostIFSetBeacon strHostIFSetBeacon;                 /*!< Set beacon message body */
- 	tstrHostIFDelBeacon strHostIFDelBeacon;                 /*!< Del beacon message body */
-@@ -635,13 +635,14 @@ static tstrWILC_WFIDrv *get_handler_from_id(int id)
- /**
-  *  @brief Handle_SetChannel
-  *  @details    Sending config packet to firmware to set channel
-- *  @param[in]   tstrHostIFSetChan* pstrHostIFSetChan
-+ *  @param[in]   struct set_channel *pstrHostIFSetChan
-  *  @return     Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler, tstrHostIFSetChan *pstrHostIFSetChan)
-+static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler,
-+			     struct set_channel *pstrHostIFSetChan)
- {
+ 	/*Initialize CFG WIDS Defualt Values*/
  
- 	s32 s32Error = 0;
 -- 
-1.9.1
+2.5.1
 
