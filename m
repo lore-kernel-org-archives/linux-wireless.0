@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:50256 "EHLO gsystem.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932166AbbIUOQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 10:16:06 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Williams <dcbw@redhat.com>, netdev@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 2/2] airo: Implement netif_carrier_on/off
-Date: Mon, 21 Sep 2015 15:44:25 +0200
-Message-Id: <1442843065-30234-2-git-send-email-linux@rainbow-software.org> (sfid-20150921_161610_847229_F29A19B4)
-In-Reply-To: <1442843065-30234-1-git-send-email-linux@rainbow-software.org>
-References: <1442843065-30234-1-git-send-email-linux@rainbow-software.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34161 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933384AbbIVNsR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 09:48:17 -0400
+Received: by padhy16 with SMTP id hy16so10104489pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 06:48:17 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 9/9] staging: wilc1000: parse_network_info: remove s32Error
+Date: Tue, 22 Sep 2015 22:47:45 +0900
+Message-Id: <1442929665-19709-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_154821_246437_C3F760B7)
+In-Reply-To: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add calls to netif_carrier_on and netif_carrier_off
+s32Error is defined, but not used anywhere in this function.
+Then just delete it and return 0 at the end of this function.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/airo.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/staging/wilc1000/coreconfigurator.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 67001a8..8ae838d 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -3267,6 +3267,7 @@ static void airo_handle_link(struct airo_info *ai)
- 			wake_up_interruptible(&ai->thr_wait);
- 		} else
- 			airo_send_event(ai->dev);
-+		netif_carrier_on(ai->dev);
- 	} else if (!scan_forceloss) {
- 		if (auto_wep && !ai->expires) {
- 			ai->expires = RUN_AT(3*HZ);
-@@ -3277,6 +3278,9 @@ static void airo_handle_link(struct airo_info *ai)
- 		eth_zero_addr(wrqu.ap_addr.sa_data);
- 		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 		wireless_send_event(ai->dev, SIOCGIWAP, &wrqu, NULL);
-+		netif_carrier_off(ai->dev);
-+	} else {
-+		netif_carrier_off(ai->dev);
- 	}
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3c71b9f..68e3c7f 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -362,7 +362,6 @@ u8 get_current_channel(u8 *pu8msa, u16 u16RxLen)
+  */
+ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ {
+-	s32 s32Error = 0;
+ 	tstrNetworkInfo *pstrNetworkInfo = NULL;
+ 	u8 u8MsgType = 0;
+ 	u8 u8MsgID = 0;
+@@ -466,7 +465,7 @@ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 
+ 	*ppstrNetworkInfo = pstrNetworkInfo;
+ 
+-	return s32Error;
++	return 0;
  }
  
-@@ -3613,6 +3617,7 @@ static void disable_MAC( struct airo_info *ai, int lock ) {
- 		return;
- 
- 	if (test_bit(FLAG_ENABLED, &ai->flags)) {
-+		netif_carrier_off(ai->dev);
- 		memset(&cmd, 0, sizeof(cmd));
- 		cmd.cmd = MAC_DISABLE; // disable in case already enabled
- 		issuecommand(ai, &cmd, &rsp);
+ /**
 -- 
-Ondrej Zary
+2.5.1
 
