@@ -1,96 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:25429 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbbIXJNJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 05:13:09 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/15] staging: wilc1000: remove function pointer os_debug
-Date: Thu, 24 Sep 2015 18:14:55 +0900
-Message-ID: <1443086106-20482-4-git-send-email-glen.lee@atmel.com> (sfid-20150924_111317_812410_19501D16)
-In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:52139 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933585AbbIVNaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 09:30:12 -0400
+Message-ID: <1442928605.2018.11.camel@sipsolutions.net> (sfid-20150922_153040_857397_C5D38FAB)
+Subject: Re: [PATCH 0/6] mac80211: Deinline large functions in driver-ops.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denys Vlasenko <dvlasenk@redhat.com>,
+	John Linville <linville@tuxdriver.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 22 Sep 2015 15:30:05 +0200
+In-Reply-To: <1442928526.2018.10.camel@sipsolutions.net> (sfid-20150922_152920_167326_BEB334F9)
+References: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
+	 (sfid-20150918_152212_883153_32910567) <1442928526.2018.10.camel@sipsolutions.net>
+	 (sfid-20150922_152920_167326_BEB334F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes os_debug and call linux_wlan_dbg function instead of
-os_debug. Delete static from the linux_wlan_dbg.
+On Tue, 2015-09-22 at 15:28 +0200, Johannes Berg wrote:
+> On Fri, 2015-09-18 at 15:19 +0200, Denys Vlasenko wrote:
+> > After measuring size of inlines, these functions were found to be 
+> > largest.
+> > These patches reduce code size by about 21 kbytes.
+> > 
+> 
+> Only patches 1, 2 and 5 applied to mac80211-next.
+> 
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 3 +--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
- drivers/staging/wilc1000/wilc_wlan.c          | 3 +--
- drivers/staging/wilc1000/wilc_wlan_if.h       | 1 -
- 4 files changed, 3 insertions(+), 5 deletions(-)
+To clarify - it's not that I didn't like the others, but they didn't
+apply and you need to resend them against mac80211-next.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 7b76b22..d2678a3 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -376,7 +376,7 @@ static void deinit_irq(linux_wlan_t *nic)
- /*
-  *      OS functions
-  */
--static void linux_wlan_dbg(u8 *buff)
-+void linux_wlan_dbg(u8 *buff)
- {
- 	PRINT_D(INIT_DBG, "%d\n", *buff);
- }
-@@ -1072,7 +1072,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
- 	nwi->os_context.rxq_critical_section = (void *)&g_linux_wlan->rxq_cs;
- 	nwi->os_context.cfg_wait_event = (void *)&g_linux_wlan->cfg_event;
- 
--	nwi->os_func.os_debug = linux_wlan_dbg;
- 	nwi->os_func.os_wait = linux_wlan_lock_timeout;
- 
- #ifdef WILC_SDIO
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index bda9244..47e04c2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -219,5 +219,6 @@ extern struct net_device *WILC_WFI_devs[];
- void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
- void linux_wlan_mac_indicate(int flag);
- void linux_wlan_rx_complete(void);
-+void linux_wlan_dbg(u8 *buff);
- 
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a133595..3e1479f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -113,8 +113,7 @@ static void wilc_debug(u32 flag, char *fmt, ...)
- 		vsprintf(buf, fmt, args);
- 		va_end(args);
- 
--		if (g_wlan.os_func.os_debug)
--			g_wlan.os_func.os_debug(buf);
-+		linux_wlan_dbg(buf);
- 	}
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 4ff1a8f..aafb492 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -75,7 +75,6 @@ typedef struct {
- } sdio_cmd53_t;
- 
- typedef struct {
--	void (*os_debug)(u8 *);
- 	int (*os_wait)(void *, u32);
- } wilc_wlan_os_func_t;
- 
--- 
-1.9.1
-
+johannes
