@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36735 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbbIJTOv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:14:51 -0400
-Received: by padhk3 with SMTP id hk3so50739695pad.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:14:51 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 04/31] staging: wilc1000: rename WILC_WFI_disconnect
-Date: Fri, 11 Sep 2015 04:14:03 +0900
-Message-Id: <1441912470-3371-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211455_430389_951A8F8C)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from hauke-m.de ([5.39.93.123]:52659 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934462AbbIVTOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 15:14:14 -0400
+Subject: Re: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
+To: Johannes Berg <johannes@sipsolutions.net>,
+	emmanuel.grumbach@intel.com
+References: <1442659190-6060-1-git-send-email-hauke@hauke-m.de>
+ (sfid-20150919_124007_995516_62A820AE)
+ <1442911476.2018.2.camel@sipsolutions.net>
+ (sfid-20150922_104447_027012_36D311B0)
+ <1442911617.2018.3.camel@sipsolutions.net>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <5601A883.1010209@hauke-m.de> (sfid-20150922_211426_011461_64340ED0)
+Date: Tue, 22 Sep 2015 21:14:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <1442911617.2018.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_disconnect with wilc_disconnect to avoid
-CamelCase.
+On 09/22/2015 10:46 AM, Johannes Berg wrote:
+> On Tue, 2015-09-22 at 10:44 +0200, Johannes Berg wrote:
+>> On Sat, 2015-09-19 at 12:39 +0200, Hauke Mehrtens wrote:
+>>> modinfo iwlwifi showed the following required firmware:
+>>> firmware: iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
+>>
+>> This is obviously wrong.
+>>
+>>>
+>>>  MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+>>> -MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
+>>> +MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3165_UCODE_API_OK));
+>>>
+>> But this is also wrong, it should be 7260, and there should be a
+>> separate entry for 3165. I'll get a patch on the way to fix it.
+>>
+> 
+> Actually, no, there shouldn't be another entry since 3165 uses the same
+> firmware as 7265-D.
+> 
+> johannes
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+Should I change something?
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+iwl3165 uses iwl3160 firmware, but support for that was added in rev 13
+of that firmware. That's the information I got from the driver and the
+linux-firmware commit messages.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0337a29..e301372 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1064,7 +1064,7 @@ done:
- 
- 
- /**
-- *  @brief      WILC_WFI_disconnect
-+ *  @brief      wilc_disconnect
-  *  @details    Disconnect from the BSS/ESS.
-  *  @param[in]
-  *  @return     int : Return 0 on Success
-@@ -1072,7 +1072,7 @@ done:
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_code)
-+static int wilc_disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_code)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	struct WILC_WFI_priv *priv;
-@@ -3561,7 +3561,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.set_monitor_channel = wilc_set_channel,
- 	.scan = wilc_scan,
- 	.connect = wilc_connect,
--	.disconnect = WILC_WFI_disconnect,
-+	.disconnect = wilc_disconnect,
- 	.add_key = WILC_WFI_add_key,
- 	.del_key = WILC_WFI_del_key,
- 	.get_key = WILC_WFI_get_key,
--- 
-2.5.1
-
+Hauke
