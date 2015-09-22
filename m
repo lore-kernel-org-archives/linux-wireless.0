@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45173 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756688AbbIUMsz (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36358 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbbIVJfX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:48:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 15:48:49 +0300
-Message-Id: <1442839729-25955-1-git-send-email-luca@coelho.fi> (sfid-20150921_144859_041155_C9E93066)
-Subject: [PATCH] mac80211: Do not restart scheduled scan if multiple scan plans are set
+	Tue, 22 Sep 2015 05:35:23 -0400
+Received: by pacgz1 with SMTP id gz1so2040703pac.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:22 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 06/16] staging: wilc1000: make mgmt_tx static
+Date: Tue, 22 Sep 2015 18:34:51 +0900
+Message-Id: <1442914501-2315-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113529_479341_BAB300E0)
+In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+This patch makes mgmt_tx static. This function is used only at
+wilc_wfi_cfgoperation.c file.
 
-If multiple scan plans were set for scheduled scan, do not restart
-scheduled scan on reconfig because it is possible that some scan
-plans were already completed and there is no need to run them all
-over again. Instead, notify userspace that scheduled scan stopped
-so it can configure new scan plans for scheduled scan.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/mac80211/util.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+v2: rebase latest staging-testing
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9cabf07..005fc8e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2041,9 +2041,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	if (sched_scan_sdata && sched_scan_req)
- 		/*
- 		 * Sched scan stopped, but we don't want to report it. Instead,
--		 * we're trying to reschedule.
-+		 * we're trying to reschedule. However, if more than one scan
-+		 * plan was set, we cannot reschedule since we don't know which
-+		 * scan plan was currently running (and some scan plans may have
-+		 * already finished).
- 		 */
--		if (__ieee80211_request_sched_scan_start(sched_scan_sdata,
-+		if (sched_scan_req->n_scan_plans > 1 ||
-+		    __ieee80211_request_sched_scan_start(sched_scan_sdata,
- 							 sched_scan_req))
- 			sched_scan_stopped = true;
- 	mutex_unlock(&local->mtx);
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 0c72c5e..0becefb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2354,10 +2354,10 @@ void WILC_WFI_add_wilcvendorspec(u8 *buff)
+  */
+ extern linux_wlan_t *g_linux_wlan;
+ extern bool bEnablePS;
+-int mgmt_tx(struct wiphy *wiphy,
+-	    struct wireless_dev *wdev,
+-	    struct cfg80211_mgmt_tx_params *params,
+-	    u64 *cookie)
++static int mgmt_tx(struct wiphy *wiphy,
++		   struct wireless_dev *wdev,
++		   struct cfg80211_mgmt_tx_params *params,
++		   u64 *cookie)
+ {
+ 	struct ieee80211_channel *chan = params->chan;
+ 	unsigned int wait = params->wait;
 -- 
 2.5.1
 
