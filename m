@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45470 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688AbbIUGuj (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35166 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757527AbbIVHUU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 02:50:39 -0400
-Date: Sun, 20 Sep 2015 23:50:37 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, rachel.kim@atmel.com,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH 08/18] staging: wilc1000: remove declaration of
- WILC_WFI_frame_register
-Message-ID: <20150921065037.GA26205@kroah.com> (sfid-20150921_085044_833548_63A64151)
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
- <1442731885-4344-8-git-send-email-chaehyun.lim@gmail.com>
- <20150921020143.GC22262@kroah.com>
- <55FF9B94.9020300@atmel.com>
- <20150921060758.GA24173@kroah.com>
- <55FFA19C.6020701@atmel.com>
+	Tue, 22 Sep 2015 03:20:20 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	"bin9zha0@gmail.com" <bin9zha0@gmail.com>
+Subject: RE: [PATCH] mmc: new API for data write using scatter gather DMA
+Date: Tue, 22 Sep 2015 07:20:15 +0000
+Message-ID: <45f6a18040ce4439a73272f5aeb5f4c1@SC-EXCH04.marvell.com> (sfid-20150922_092030_634240_647C8907)
+References: <1417000056-16920-1-git-send-email-patila@marvell.com>
+	<CAPDyKFr-iaPWKWWgk-5_XcJm9sag=y=uZjfJvo-DQiJFM8BVLw@mail.gmail.com>
+	<54761785.2070803@broadcom.com>
+ <CAEhWJFmxxFyh5oF33NiTQn70RhoP_z-vkRBEdVb-XcMfDDnHfg@mail.gmail.com>
+ <e5ce420ddc0f4ceca8cac83f5350ded3@SC-EXCH04.marvell.com>
+In-Reply-To: <e5ce420ddc0f4ceca8cac83f5350ded3@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55FFA19C.6020701@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 03:20:12PM +0900, Tony Cho wrote:
-> 
-> 
-> On 2015년 09월 21일 15:07, Greg KH wrote:
-> >On Mon, Sep 21, 2015 at 02:54:28PM +0900, Tony Cho wrote:
-> >>
-> >>On 2015년 09월 21일 11:01, Greg KH wrote:
-> >>>On Sun, Sep 20, 2015 at 03:51:15PM +0900, Chaehyun Lim wrote:
-> >>>>This patch removes function declaration of WILC_WFI_frame_register in
-> >>>>linux_wlan.c file, then adds it in wilc_wfi_cfgoperations.h file.
-> >>>>
-> >>>>The compilation warning occurs because it is assigned to incorrect
-> >>>>pointer type of second parameter of WILC_WFI_frame_register.
-> >>>>It is assigned with struct wireless_dev pointer type.
-> >>>How was this code ever even working properly if the wrong pointer was
-> >>>being passed into it?
-> >>>
-> >>>Tony, what is going on here, is this code just never called?  If so, can
-> >>>we just delete the whole function?
-> >>>
-> >>>thanks,
-> >>>
-> >>>greg k-h
-> >>This file with linux_wlan.c file is being fully changed, but at this time, the second parameter which passed as
-> >>net_device pointer instead of wireless_dev incorrectly is never being used inside the WILC_WFI_frame_register().
-> >>That's why no problem is found yet.
-> >Then we should just delte the parameter entirely, no need to pass
-> >something into a function that is never used.
-> 
-> This function is defined in the struct cfg80211_ops as the followings:
-> 
-> 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
-> 				
-> 
->                                                 struct wireless_dev *wdev,
-> 				
-> 
->                                                 u16 frame_type, bool reg);
-> 
-> So, the second parameter cannot be removed to connect the cfg80211 structure correctly. The second parameter
-> is not used just in wilc driver. It seems the second parameter is not famous in cfg80211 driver when looking for
-> other cfg80211 driver, just to get the private data, but the wilc driver gets it from struct wiphy.
-
-Ah, ok, that makes a bit more sense, thanks for explaining it, I'll go
-try to queue up the patch now...
-
-thanks,
-
-greg k-h
+SGkgVWxmL0FyZW5kLA0KDQo+IA0KPiA+IE9uIFdlZCwgTm92IDI2LCAyMDE0IGF0IDExOjQwIFBN
+LCBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9hZGNvbS5jb20+DQo+ID4gd3JvdGU6DQo+ID4g
+T24gMTEvMjYvMTQgMTQ6NDMsIFVsZiBIYW5zc29uIHdyb3RlOg0KPiA+ID4gT24gMjYgTm92ZW1i
+ZXIgMjAxNCBhdCAxMjowNywgQXZpbmFzaCBQYXRpbDxwYXRpbGFAbWFydmVsbC5jb20+wqAgd3Jv
+dGU6DQo+ID4gPiBGcm9tOiBCaW5nIFpoYW88YnpoYW9AbWFydmVsbC5jb20+DQo+IA0KPiA+ID4g
+VGhpcyBwYXRjaCBhZGRzIG5ldyBBUEkgdG8gaGFuZGxlIHNjYXR0ZXIgZ2F0aGVyIGFnZ3JlZ2F0
+aW9uLg0KPiANCj4gPiBXaHkgaXMgdGhpcyBuZWVkZWQ/DQo+IA0KPiBPbmUgdGhpbmcgSSBjYW4g
+aW1hZ2luZSBpcyB0aGF0IHRoZSByZWNlaXZpbmcgZGV2aWNlIGhhcyBzcGVjaWZpYw0KPiBzY2F0
+dGVyLWdhdGhlciBhbGlnbm1lbnQgcmVxdWlyZW1lbnRzIHRoYXQgYXJlIG5vdCBjb3ZlcmVkIGlu
+DQo+IG1tY19pb19yd19leHRlbmRlZCgpLiBTbyB0aGUgbmV3IEFQSSBkb2VzIG5vdCBzbyBtdWNo
+IGhhbmRsZSBzY2F0dGVyLQ0KPiBnYXRoZXIsIGJ1dCBsZWF2ZXMgdGhhdCB1cCB0byB0aGUgY2Fs
+bGVyLiBRdWVzdGlvbiBpcyB3aGV0aGVyDQo+IG1tY19pb19yd19leHRlbmRlZCgpIGNvdWxkIGJl
+IGNoYW5nZWQgdG8gYWNjb21tb2RhdGUgdGhvc2UgcmVxdWlyZW1lbnRzDQo+IGluc3RlYWQgb2Yg
+ZHVwbGljYXRpbmcgYmlnIHBhcnQgb2YgaXQuIFdpdGhvdXQga25vd2luZyB0aGUgZXhhY3QNCj4g
+cmVxdWlyZW1lbnRzIHRoYXQgaXMgZGlmZmljdWx0IHRvIGFuc3dlci4NCj4gDQo+IFJlZ2FyZHMs
+DQo+IEFyZW5kDQoNCk15IGFwb2xvZ2llcyBmb3Igb3BlbmluZyBkaXNjdXNzaW9uIG9uIHRoaXMg
+dG9waWMgYWZ0ZXIgbG9uZyB0aW1lLg0KDQpFYXJsaWVyIHdlIGhhZCBkcm9wcGVkIHRoaXMgcGF0
+Y2gsIGJlY2F1c2Ugd2UgZGlkbid0IHNlZSBzaWduaWZpY2FudCBwZXJmb3JtYW5jZSBpbXByb3Zl
+bWVudCB3aXRoIGl0LiBOb3cgd2UgaGF2ZSBvcHRpbWl6ZWQgY29kZSBpbiBvdXIgV0xBTiBkcml2
+ZXIgYW5kIGFyZSBwbGFubmluZyB0byBoYXZlIHRoaXMgcGF0Y2guDQoNCkV4aXN0aW5nIG1tY19p
+b19yd19leHRlbmRlZCgpIEFQSSBleHBlY3RzIGNhbGxlciB0byBwYXNzIHNpbmdsZSBjb250aWd1
+b3VzIGJ1ZmZlci4gSXQgd2lsbCBiZSBzcGxpdCBpZiBpdCBleGNlZWRzIHNlZ21lbnQgc2l6ZSwg
+U0cgdGFibGUgaXMgcHJlcGFyZWQgYW5kIHVzZWQgaXQgZm9yIHJlYWRpbmcvd3JpdGluZyB0aGUg
+ZGF0YS4gT3VyIGludGVudGlvbiBmb3IgZGVmaW5pbmcgbmV3IEFQSSBoZXJlIGlzIHRvIGZhY2ls
+aXRhdGUgY2FsbGVyIHRvIHByb3ZpZGUgcmVhZHkgU0cgdGFibGUoc2NhdHRlcmVkIGJ1ZmZlciBs
+aXN0KS4gT24gb25lIG9mIG91ciBwbGF0Zm9ybXMgbWF4aW11bSBzZWdtZW50cyBhcmUgMjU2IHdp
+dGggZWFjaCBzZWdtZW50IG9mIDRrIHNpemUuIFNvIHRoaXMgbmV3IEFQSSB3b3VsZCBiZSByZWFs
+bHkgYmVuZWZpY2lhbCB0aGVyZSBmb3IgcGVyZm9ybWFuY2UgaW1wcm92ZW1lbnQuDQoNCkxldCBt
+ZSBrbm93IHlvdXIgc3VnZ2VzdGlvbnMvdGhvdWdodHMuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXIN
+Cg==
