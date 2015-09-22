@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46461 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754890AbbIYMUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 08:20:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/2] mac80211: allow driver to prevent two stations w/ same address
-Date: Fri, 25 Sep 2015 14:20:17 +0200
-Message-Id: <1443183617-23181-2-git-send-email-johannes@sipsolutions.net> (sfid-20150925_142026_061461_D0CC6F70)
-In-Reply-To: <1443183617-23181-1-git-send-email-johannes@sipsolutions.net>
-References: <1443183617-23181-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33446 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756488AbbIVJfH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2015 05:35:07 -0400
+Received: by pacex6 with SMTP id ex6so4739683pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:07 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 01/16] staging: wilc1000: rename WILC_WFI_set_power_mgmt
+Date: Tue, 22 Sep 2015 18:34:46 +0900
+Message-Id: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113512_462915_6509799C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch replaces WILC_WFI_set_power_mgmt with set_power_mgmt.
+then makes set_power_mgmt static.
 
-Some devices or drivers cannot deal with having the same station
-address for different virtual interfaces, say as a client to two
-virtual AP interfaces. Rather than requiring each driver with a
-limitation like that to enforce it, add a hardware flag for it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/net/mac80211.h  | 6 ++++++
- net/mac80211/debugfs.c  | 1 +
- net/mac80211/sta_info.c | 4 ++++
- 3 files changed, 11 insertions(+)
+v2: rebase latest staging-testing
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 301fceb2fd10..a16c3e92a592 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1901,6 +1901,11 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_BEACON_TX_STATUS: The device/driver provides TX status
-  *	for sent beacons.
-  *
-+ * @IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR: Hardware (or driver) requires that each
-+ *	station has a unique address, i.e. each station entry can be identified
-+ *	by just its MAC address; this prevents, for example, the same station
-+ *	from connecting to two virtual AP interfaces at the same time.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index de8c83d..eaec88c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2651,7 +2651,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_set_power_mgmt
++ *  @brief      set_power_mgmt
+  *  @details
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -2659,8 +2659,8 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 JUL 2012
+  *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
   */
- enum ieee80211_hw_flags {
-@@ -1936,6 +1941,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TDLS_WIDER_BW,
- 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
- 	IEEE80211_HW_BEACON_TX_STATUS,
-+	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+-int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+-			    bool enabled, int timeout)
++static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
++			  bool enabled, int timeout)
+ {
+ 	struct wilc_priv *priv;
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 3636b45440ab..78fe7f611d6a 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -125,6 +125,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(TDLS_WIDER_BW),
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
-+	FLAG(NEEDS_UNIQUE_STA_ADDR),
+@@ -3410,7 +3410,7 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
+ 	.mgmt_tx_cancel_wait = mgmt_tx_cancel_wait,
+ 	.mgmt_tx = mgmt_tx,
+ 	.mgmt_frame_register = wilc_mgmt_frame_register,
+-	.set_power_mgmt = WILC_WFI_set_power_mgmt,
++	.set_power_mgmt = set_power_mgmt,
+ 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
  
- 	/* keep last for the build bug below */
- 	(void *)0x1
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c54dbcaa97b6..0cb6d026ea99 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -306,6 +306,10 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	struct timespec uptime;
- 	int i, ret;
- 
-+	if (ieee80211_hw_check(hw, NEEDS_UNIQUE_STA_ADDR) &&
-+	    ieee80211_find_sta_by_ifaddr(hw, addr, NULL))
-+		return ERR_PTR(-ENOTUNIQ);
-+
- 	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
- 	if (!sta)
- 		return ERR_PTR(-ENOMEM);
+ };
 -- 
 2.5.1
 
