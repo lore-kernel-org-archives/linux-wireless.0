@@ -1,75 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34292 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754433AbbIOJi5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 05:38:57 -0400
-From: Ronit Halder <ronit.crj@gmail.com>
-To: johnny.kim@atmel.com
-Cc: rachel.kim@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Ronit Halder <ronit.crj@gmail.com>
-Subject: [PATCH 2/2] Staging: wilc1000: fix NULL comparison style
-Date: Tue, 15 Sep 2015 15:08:15 +0530
-Message-Id: <1442309895-12563-1-git-send-email-ronit.crj@gmail.com> (sfid-20150915_113922_775908_D2847780)
-In-Reply-To: <1442309698-12393-1-git-send-email-ronit.crj@gmail.com>
-References: <1442309698-12393-1-git-send-email-ronit.crj@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51797 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754686AbbIWMSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 08:18:47 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] mac80211: Deinline drv_get/set/reset_tsf()
+Date: Wed, 23 Sep 2015 14:18:36 +0200
+Message-Id: <1443010716-32651-3-git-send-email-dvlasenk@redhat.com> (sfid-20150923_141916_752131_747B0D68)
+In-Reply-To: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
+References: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed NULL comparison style as suggested by checkpatch.pl with --strict option.
+With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
+after deinlining these functions have sizes and callsite counts
+as follows:
 
-Signed-off-by: Ronit halder <ronit.crj@gmail.com>
+drv_get_tsf: 634 bytes, 6 calls
+drv_set_tsf: 626 bytes, 2 calls
+drv_reset_tsf: 617 bytes, 2 calls
+
+Total size reduction is about 4.2 kbytes.
+
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: John Linville <linville@tuxdriver.com>
+CC: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 2 +-
- drivers/staging/wilc1000/linux_wlan.c       | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 8164a33..872400a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -670,7 +670,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+Rediffed against mac80211-next
+
+ net/mac80211/driver-ops.c | 46 +++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 52 +++++++----------------------------------------
+ 2 files changed, 53 insertions(+), 45 deletions(-)
+
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index 4f7c81d..5d51a5d 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -139,6 +139,52 @@ int drv_conf_tx(struct ieee80211_local *local,
+ 	return ret;
+ }
  
- 		/* Get DTIM Period */
- 		pu8TimElm = get_tim_elm(pu8msa, (u16RxLen + FCS_LEN), u8index);
--		if (pu8TimElm != NULL)
-+		if (pu8TimElm)
- 			pstrNetworkInfo->u8DtimPeriod = pu8TimElm[3];
- 		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
- 		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d8f17c6..d2b0ce6 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -412,7 +412,7 @@ static int isr_bh_routine(void *vp)
- 			break;
- 		}
- 		PRINT_D(INT_DBG, "Interrupt received BH\n");
--		if (g_linux_wlan->oup.wlan_handle_rx_isr != NULL)
-+		if (g_linux_wlan->oup.wlan_handle_rx_isr)
- 			g_linux_wlan->oup.wlan_handle_rx_isr();
- 		else
- 			PRINT_ER("wlan_handle_rx_isr() hasn't been initialized\n");
-@@ -1284,7 +1284,7 @@ int wlan_initialize_threads(perInterface_wlan_t *nic)
- #elif (RX_BH_TYPE == RX_BH_KTHREAD)
- 	PRINT_D(INIT_DBG, "Creating kthread for Rxq BH\n");
- 	g_linux_wlan->rx_bh_thread = kthread_run(isr_bh_routine, (void *)g_linux_wlan, "K_RXQ_BH");
--	if (g_linux_wlan->rx_bh_thread == NULL) {
-+	if (!g_linux_wlan->rx_bh_thread) {
- 		PRINT_ER("couldn't create RX BH thread\n");
- 		ret = -ENOBUFS;
- 		goto _fail_;
-@@ -1309,7 +1309,7 @@ int wlan_initialize_threads(perInterface_wlan_t *nic)
- 	/* create tx task */
- 	PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
- 	g_linux_wlan->txq_thread = kthread_run(linux_wlan_txq_task, (void *)g_linux_wlan, "K_TXQ_TASK");
--	if (g_linux_wlan->txq_thread == NULL) {
-+	if (!g_linux_wlan->txq_thread) {
- 		PRINT_ER("couldn't create TXQ thread\n");
- 		ret = -ENOBUFS;
- 		goto _fail_2;
++u64 drv_get_tsf(struct ieee80211_local *local,
++		struct ieee80211_sub_if_data *sdata)
++{
++	u64 ret = -1ULL;
++
++	might_sleep();
++
++	if (!check_sdata_in_driver(sdata))
++		return ret;
++
++	trace_drv_get_tsf(local, sdata);
++	if (local->ops->get_tsf)
++		ret = local->ops->get_tsf(&local->hw, &sdata->vif);
++	trace_drv_return_u64(local, ret);
++	return ret;
++}
++
++void drv_set_tsf(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 u64 tsf)
++{
++	might_sleep();
++
++	if (!check_sdata_in_driver(sdata))
++		return;
++
++	trace_drv_set_tsf(local, sdata, tsf);
++	if (local->ops->set_tsf)
++		local->ops->set_tsf(&local->hw, &sdata->vif, tsf);
++	trace_drv_return_void(local);
++}
++
++void drv_reset_tsf(struct ieee80211_local *local,
++		   struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++
++	if (!check_sdata_in_driver(sdata))
++		return;
++
++	trace_drv_reset_tsf(local, sdata);
++	if (local->ops->reset_tsf)
++		local->ops->reset_tsf(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ int
+ drv_switch_vif_chanctx(struct ieee80211_local *local,
+ 		       struct ieee80211_vif_chanctx_switch *vifs,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 7f08d82..5ef28af 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -590,51 +590,13 @@ int drv_conf_tx(struct ieee80211_local *local,
+ 		struct ieee80211_sub_if_data *sdata, u16 ac,
+ 		const struct ieee80211_tx_queue_params *params);
+ 
+-static inline u64 drv_get_tsf(struct ieee80211_local *local,
+-			      struct ieee80211_sub_if_data *sdata)
+-{
+-	u64 ret = -1ULL;
+-
+-	might_sleep();
+-
+-	if (!check_sdata_in_driver(sdata))
+-		return ret;
+-
+-	trace_drv_get_tsf(local, sdata);
+-	if (local->ops->get_tsf)
+-		ret = local->ops->get_tsf(&local->hw, &sdata->vif);
+-	trace_drv_return_u64(local, ret);
+-	return ret;
+-}
+-
+-static inline void drv_set_tsf(struct ieee80211_local *local,
+-			       struct ieee80211_sub_if_data *sdata,
+-			       u64 tsf)
+-{
+-	might_sleep();
+-
+-	if (!check_sdata_in_driver(sdata))
+-		return;
+-
+-	trace_drv_set_tsf(local, sdata, tsf);
+-	if (local->ops->set_tsf)
+-		local->ops->set_tsf(&local->hw, &sdata->vif, tsf);
+-	trace_drv_return_void(local);
+-}
+-
+-static inline void drv_reset_tsf(struct ieee80211_local *local,
+-				 struct ieee80211_sub_if_data *sdata)
+-{
+-	might_sleep();
+-
+-	if (!check_sdata_in_driver(sdata))
+-		return;
+-
+-	trace_drv_reset_tsf(local, sdata);
+-	if (local->ops->reset_tsf)
+-		local->ops->reset_tsf(&local->hw, &sdata->vif);
+-	trace_drv_return_void(local);
+-}
++u64 drv_get_tsf(struct ieee80211_local *local,
++		struct ieee80211_sub_if_data *sdata);
++void drv_set_tsf(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 u64 tsf);
++void drv_reset_tsf(struct ieee80211_local *local,
++		   struct ieee80211_sub_if_data *sdata);
+ 
+ static inline int drv_tx_last_beacon(struct ieee80211_local *local)
+ {
 -- 
-2.4.0.GIT
+1.8.1.4
 
