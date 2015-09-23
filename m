@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35501 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbbIQKZK (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40754 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbbIWNOr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 06:25:10 -0400
-Received: by pacfv12 with SMTP id fv12so17160181pac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 03:25:10 -0700 (PDT)
-Date: Thu, 17 Sep 2015 15:54:58 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH V2 1/8] staging: wilc1000: remove INLINE macro
-Message-ID: <20150917102458.GA20514@sudip-pc> (sfid-20150917_122516_375191_2003C0F0)
-References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 23 Sep 2015 09:14:47 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+Message-ID: <22018.42528.871404.504088@gargle.gargle.HOWL> (sfid-20150923_151450_818769_331BCC0B)
+Date: Wed, 23 Sep 2015 18:46:16 +0530
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: use ether_addr_copy() instead of memcpy()
+In-Reply-To: <1442931866-17115-1-git-send-email-linux@rempel-privat.de>
+References: <87lhbylifx.fsf@kamboji.qca.qualcomm.com>
+	<1442931866-17115-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 04:48:42PM +0900, Chaehyun Lim wrote:
-> This patch removes INLINE macro that is used anymore.
-used? if used then why are you removing it? :)
+Oleksij Rempel wrote:
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  2 +-
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 24 ++++++++++++------------
+>  2 files changed, 13 insertions(+), 13 deletions(-)
 
-regards
-sudip
+Both the arguments for ether_addr_copy() need to be
+aligned. Is this the case for all the replacements in
+this patch ?
+
+Sujith
