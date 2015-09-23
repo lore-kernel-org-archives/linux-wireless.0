@@ -1,196 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:56633 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbbIOCx4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 22:53:56 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/7] staging: wilc1000: remove definition WILC_NULLCHECK
-Date: Tue, 15 Sep 2015 11:53:36 +0900
-Message-ID: <1442285621-29457-3-git-send-email-tony.cho@atmel.com> (sfid-20150915_045359_329537_DF8C812D)
-In-Reply-To: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
-References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:60288 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752904AbbIWJAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 05:00:49 -0400
+Message-ID: <1442998845.1889.2.camel@sipsolutions.net> (sfid-20150923_110055_809652_BFBBCE0D)
+Subject: Re: [PATCH] mac80211: minstrel[_ht]: remove non-ascii debugfs
+ characters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bastian Bittorf <bittorf@bluebottle.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 23 Sep 2015 11:00:45 +0200
+In-Reply-To: <20150923084935.GD6319@medion.lan> (sfid-20150923_105920_696562_4775F523)
+References: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net>
+	 <20150923084935.GD6319@medion.lan> (sfid-20150923_105920_696562_4775F523)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, 2015-09-23 at 10:49 +0200, Bastian Bittorf wrote:
+> * Johannes Berg <johannes@sipsolutions.net> [23.09.2015 10:44]:
+> > Replace the average symbol by "avg" to avoid being warned about the
+> > non-ASCII symbol all the time, line up the columns properly.
+> 
+> who warns you? the compiler? the terminal?
+> 
 
-This patch removes the definition WILC_NULLCHECK which is not used anymore.
+sparse, or perhaps smatch? either way, those tools are crucial for my
+workflow, and there seems to be very little downside to the change.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c         |  8 ++++++--
- drivers/staging/wilc1000/wilc_errorsupport.h      |  6 ------
- drivers/staging/wilc1000/wilc_msgqueue.c          |  9 +++++++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 ++++++++++++++---------
- 4 files changed, 28 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 59a1a9d..29491f6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,5 +1,6 @@
- #include "host_interface.h"
- #include "coreconfigurator.h"
-+#include <linux/errno.h>
- 
- extern s32 TransportInit(void);
- extern s32 TransportDeInit(void);
-@@ -7291,7 +7292,8 @@ s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSta
- 	if (pstrAddStationMsg->u8NumRates > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
- 
--		WILC_NULLCHECK(s32Error, rates);
-+		if (rates == NULL)
-+			return -ENOMEM;
- 
- 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
- 		pstrAddStationMsg->pu8Rates = rates;
-@@ -7446,7 +7448,9 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
- 	if (pstrAddStationMsg->u8NumRates > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
- 
--		WILC_NULLCHECK(s32Error, rates);
-+		if (rates == NULL)
-+			return -ENOMEM;
-+
- 		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
- 		pstrAddStationMsg->pu8Rates = rates;
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_errorsupport.h b/drivers/staging/wilc1000/wilc_errorsupport.h
-index 8eb8150..42495d9 100644
---- a/drivers/staging/wilc1000/wilc_errorsupport.h
-+++ b/drivers/staging/wilc1000/wilc_errorsupport.h
-@@ -51,12 +51,6 @@
- 		goto ERRORHANDLER; \
- } while (0)
- 
--#define  WILC_NULLCHECK(__status__, __ptr__)	do { \
--		if (__ptr__ == NULL) { \
--			WILC_ERRORREPORT(__status__, WILC_NULL_PTR); \
--		} \
--} while (0)
--
- #define WILC_CATCH(__status__) \
- ERRORHANDLER: \
- 	if (__status__ < WILC_SUCCESS) \
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 41244ce..f3d0d34 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -1,6 +1,7 @@
- 
- #include "wilc_msgqueue.h"
- #include <linux/spinlock.h>
-+#include <linux/errno.h>
- 
- /*!
-  *  @author		syounan
-@@ -69,11 +70,15 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 
- 	/* construct a new message */
- 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
--	WILC_NULLCHECK(s32RetStatus, pstrMessage);
-+	if (pstrMessage == NULL)
-+		return -ENOMEM;
- 	pstrMessage->u32Length = u32SendBufferSize;
- 	pstrMessage->pstrNext = NULL;
- 	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
--	WILC_NULLCHECK(s32RetStatus, pstrMessage->pvBuffer);
-+	if (pstrMessage->pvBuffer == NULL) {
-+		s32RetStatus = -ENOMEM;
-+		goto ERRORHANDLER;
-+	}
- 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
- 
- 	/* add it to the message queue */
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 068e648..a182bdb 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -15,7 +15,7 @@
- #ifdef WILC_SDIO
- #include "linux_wlan_sdio.h"    /* tony : for set_wiphy_dev() */
- #endif
--
-+#include <linux/errno.h>
- 
- #define IS_MANAGMEMENT				0x100
- #define IS_MANAGMEMENT_CALLBACK			0x080
-@@ -382,7 +382,10 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
- 	if (priv->bCfgScanning == true) {
- 		if (enuScanEvent == SCAN_EVENT_NETWORK_FOUND) {
- 			wiphy = priv->dev->ieee80211_ptr->wiphy;
--			WILC_NULLCHECK(s32Error, wiphy);
-+
-+			if (wiphy == NULL)
-+				return;
-+
- 			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC
- 			    &&
- 			    ((((s32)pstrNetworkInfo->s8rssi) * 100) < 0
-@@ -396,7 +399,8 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
- 				s32Freq = ieee80211_channel_to_frequency((s32)pstrNetworkInfo->u8channel, IEEE80211_BAND_2GHZ);
- 				channel = ieee80211_get_channel(wiphy, s32Freq);
- 
--				WILC_NULLCHECK(s32Error, channel);
-+				if (channel == NULL)
-+					return;
- 
- 				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
- 					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)pstrNetworkInfo->s8rssi) * 100),
-@@ -3292,8 +3296,8 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	struct WILC_WFI_priv *priv;
- 	u8 NullBssid[ETH_ALEN] = {0};
- 
--
--	WILC_NULLCHECK(s32Error, wiphy);
-+	if (wiphy == NULL)
-+		return -EFAULT;
- 
- 	priv = wiphy_priv(wiphy);
- 
-@@ -3329,8 +3333,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 	tstrWILC_AddStaParam strStaParams = { {0} };
- 	perInterface_wlan_t *nic;
- 
--
--	WILC_NULLCHECK(s32Error, wiphy);
-+	if (wiphy == NULL)
-+		return -EFAULT;
- 
- 	priv = wiphy_priv(wiphy);
- 	nic = netdev_priv(dev);
-@@ -3400,7 +3404,8 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
- 	struct WILC_WFI_priv *priv;
- 	perInterface_wlan_t *nic;
- 
--	WILC_NULLCHECK(s32Error, wiphy);
-+	if (wiphy == NULL)
-+		return -EFAULT;
- 
- 	priv = wiphy_priv(wiphy);
- 	nic = netdev_priv(dev);
-@@ -3446,7 +3451,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	PRINT_D(HOSTAPD_DBG, "Change station paramters\n");
- 
--	WILC_NULLCHECK(s32Error, wiphy);
-+	if (wiphy == NULL)
-+		return -EFAULT;
- 
- 	priv = wiphy_priv(wiphy);
- 	nic = netdev_priv(dev);
--- 
-1.9.1
-
+johannes
