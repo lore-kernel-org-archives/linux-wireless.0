@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36735 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbbIPLLm (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36737 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349AbbIWJD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:11:42 -0400
-Received: by padhk3 with SMTP id hk3so206655478pad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:11:42 -0700 (PDT)
+	Wed, 23 Sep 2015 05:03:57 -0400
+Received: by pacgz1 with SMTP id gz1so1184481pac.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:03:56 -0700 (PDT)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/10] staging: wilc1000: wilc_wlan.c: use BIT(x) macro
-Date: Wed, 16 Sep 2015 20:11:26 +0900
-Message-Id: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131146_123690_6202309A)
+Subject: [PATCH 1/6] staging: wilc1000: move struct Message and WILC_MsgQueueHandle
+Date: Wed, 23 Sep 2015 18:03:45 +0900
+Message-Id: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110441_452986_763CD98F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove bit shift macro that is custom defined, then replace BIT(x)
-macro.
+This patch moves struct Message and WILC_MsgQueueHandle from
+wilc_platform.h to wilc_msgqueue.h because those two structures are used
+only at wilc_msgqueue.c so that it is good to be defined at
+wilc_msgqueue.h
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_msgqueue.h | 15 +++++++++++++++
+ drivers/staging/wilc1000/wilc_platform.h | 14 --------------
+ 2 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 7496c1f..add9eeb 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -2177,7 +2177,6 @@ _fail_:
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index a3c0bba..982628e 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -12,6 +12,21 @@
  
- }
+ #include "wilc_platform.h"
  
--#define BIT31 (1 << 31)
- u16 Set_machw_change_vir_if(bool bValue)
- {
- 	u16 ret;
-@@ -2191,9 +2190,9 @@ u16 Set_machw_change_vir_if(bool bValue)
- 	}
++/* Message Queue type is a structure */
++typedef struct __Message_struct {
++	void *pvBuffer;
++	u32 u32Length;
++	struct __Message_struct *pstrNext;
++} Message;
++
++typedef struct __MessageQueue_struct {
++	struct semaphore hSem;
++	spinlock_t strCriticalSection;
++	bool bExiting;
++	u32 u32ReceiversCount;
++	Message *pstrMessageList;
++} WILC_MsgQueueHandle;
++
+ /*!
+  *  @brief		Creates a new Message queue
+  *  @details		Creates a new Message queue, if the feature
+diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
+index b763616..6ec1aa3 100644
+--- a/drivers/staging/wilc1000/wilc_platform.h
++++ b/drivers/staging/wilc1000/wilc_platform.h
+@@ -16,20 +16,6 @@
+  *      OS specific types
+  *******************************************************************/
  
- 	if (bValue)
--		reg |= (BIT31);
-+		reg |= BIT(31);
- 	else
--		reg &= ~(BIT31);
-+		reg &= ~BIT(31);
+-/* Message Queue type is a structure */
+-typedef struct __Message_struct {
+-	void *pvBuffer;
+-	u32 u32Length;
+-	struct __Message_struct *pstrNext;
+-} Message;
+-
+-typedef struct __MessageQueue_struct {
+-	struct semaphore hSem;
+-	spinlock_t strCriticalSection;
+-	bool bExiting;
+-	u32 u32ReceiversCount;
+-	Message *pstrMessageList;
+-} WILC_MsgQueueHandle;
  
- 	ret = (&g_wlan)->hif_func.hif_write_reg(WILC_CHANGING_VIR_IF, reg);
+ 
  
 -- 
 2.5.1
