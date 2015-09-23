@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40754 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbbIWNOr (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35330 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbbIWJEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 09:14:47 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <22018.42528.871404.504088@gargle.gargle.HOWL> (sfid-20150923_151450_818769_331BCC0B)
-Date: Wed, 23 Sep 2015 18:46:16 +0530
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: use ether_addr_copy() instead of memcpy()
-In-Reply-To: <1442931866-17115-1-git-send-email-linux@rempel-privat.de>
-References: <87lhbylifx.fsf@kamboji.qca.qualcomm.com>
-	<1442931866-17115-1-git-send-email-linux@rempel-privat.de>
+	Wed, 23 Sep 2015 05:04:04 -0400
+Received: by pacfv12 with SMTP id fv12so35766523pac.2
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:04:03 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/6] staging: wilc1000: move wilc_msgqueue.h include file
+Date: Wed, 23 Sep 2015 18:03:47 +0900
+Message-Id: <1442999030-31934-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110417_298705_671AC006)
+In-Reply-To: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel wrote:
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  2 +-
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 24 ++++++++++++------------
->  2 files changed, 13 insertions(+), 13 deletions(-)
+This patch moves wilc_msgqueue.h include file from wilc_oswrapper.h to
+host_interface.c because message queue function as wilc_mq_create,
+wilc_mq_send, wilc_mq_recv and wilc_mq_destroy are used only at
+host_interface.c file.
 
-Both the arguments for ether_addr_copy() need to be
-aligned. Is this the case for all the replacements in
-this patch ?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 +
+ drivers/staging/wilc1000/wilc_oswrapper.h | 2 --
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-Sujith
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e7fc648..49f3de9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1,6 +1,7 @@
+ #include "host_interface.h"
+ #include "coreconfigurator.h"
+ #include "wilc_wlan_if.h"
++#include "wilc_msgqueue.h"
+ 
+ extern u8 connecting;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
+index 9b5c23a..4f7bd89 100644
+--- a/drivers/staging/wilc1000/wilc_oswrapper.h
++++ b/drivers/staging/wilc1000/wilc_oswrapper.h
+@@ -16,7 +16,5 @@
+ /* Os Configuration File */
+ #include "wilc_platform.h"
+ 
+-/* Message Queue */
+-#include "wilc_msgqueue.h"
+ 
+ #endif
+-- 
+2.5.1
+
