@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35166 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757527AbbIVHUU (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:54640 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753335AbbIWLDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 03:20:20 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	"bin9zha0@gmail.com" <bin9zha0@gmail.com>
-Subject: RE: [PATCH] mmc: new API for data write using scatter gather DMA
-Date: Tue, 22 Sep 2015 07:20:15 +0000
-Message-ID: <45f6a18040ce4439a73272f5aeb5f4c1@SC-EXCH04.marvell.com> (sfid-20150922_092030_634240_647C8907)
-References: <1417000056-16920-1-git-send-email-patila@marvell.com>
-	<CAPDyKFr-iaPWKWWgk-5_XcJm9sag=y=uZjfJvo-DQiJFM8BVLw@mail.gmail.com>
-	<54761785.2070803@broadcom.com>
- <CAEhWJFmxxFyh5oF33NiTQn70RhoP_z-vkRBEdVb-XcMfDDnHfg@mail.gmail.com>
- <e5ce420ddc0f4ceca8cac83f5350ded3@SC-EXCH04.marvell.com>
-In-Reply-To: <e5ce420ddc0f4ceca8cac83f5350ded3@SC-EXCH04.marvell.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 23 Sep 2015 07:03:45 -0400
+Date: Wed, 23 Sep 2015 13:03:43 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Low latency communication over wifi
+Message-ID: <20150923110343.GA19160@amd> (sfid-20150923_130348_584090_91456CD1)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgVWxmL0FyZW5kLA0KDQo+IA0KPiA+IE9uIFdlZCwgTm92IDI2LCAyMDE0IGF0IDExOjQwIFBN
-LCBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9hZGNvbS5jb20+DQo+ID4gd3JvdGU6DQo+ID4g
-T24gMTEvMjYvMTQgMTQ6NDMsIFVsZiBIYW5zc29uIHdyb3RlOg0KPiA+ID4gT24gMjYgTm92ZW1i
-ZXIgMjAxNCBhdCAxMjowNywgQXZpbmFzaCBQYXRpbDxwYXRpbGFAbWFydmVsbC5jb20+wqAgd3Jv
-dGU6DQo+ID4gPiBGcm9tOiBCaW5nIFpoYW88YnpoYW9AbWFydmVsbC5jb20+DQo+IA0KPiA+ID4g
-VGhpcyBwYXRjaCBhZGRzIG5ldyBBUEkgdG8gaGFuZGxlIHNjYXR0ZXIgZ2F0aGVyIGFnZ3JlZ2F0
-aW9uLg0KPiANCj4gPiBXaHkgaXMgdGhpcyBuZWVkZWQ/DQo+IA0KPiBPbmUgdGhpbmcgSSBjYW4g
-aW1hZ2luZSBpcyB0aGF0IHRoZSByZWNlaXZpbmcgZGV2aWNlIGhhcyBzcGVjaWZpYw0KPiBzY2F0
-dGVyLWdhdGhlciBhbGlnbm1lbnQgcmVxdWlyZW1lbnRzIHRoYXQgYXJlIG5vdCBjb3ZlcmVkIGlu
-DQo+IG1tY19pb19yd19leHRlbmRlZCgpLiBTbyB0aGUgbmV3IEFQSSBkb2VzIG5vdCBzbyBtdWNo
-IGhhbmRsZSBzY2F0dGVyLQ0KPiBnYXRoZXIsIGJ1dCBsZWF2ZXMgdGhhdCB1cCB0byB0aGUgY2Fs
-bGVyLiBRdWVzdGlvbiBpcyB3aGV0aGVyDQo+IG1tY19pb19yd19leHRlbmRlZCgpIGNvdWxkIGJl
-IGNoYW5nZWQgdG8gYWNjb21tb2RhdGUgdGhvc2UgcmVxdWlyZW1lbnRzDQo+IGluc3RlYWQgb2Yg
-ZHVwbGljYXRpbmcgYmlnIHBhcnQgb2YgaXQuIFdpdGhvdXQga25vd2luZyB0aGUgZXhhY3QNCj4g
-cmVxdWlyZW1lbnRzIHRoYXQgaXMgZGlmZmljdWx0IHRvIGFuc3dlci4NCj4gDQo+IFJlZ2FyZHMs
-DQo+IEFyZW5kDQoNCk15IGFwb2xvZ2llcyBmb3Igb3BlbmluZyBkaXNjdXNzaW9uIG9uIHRoaXMg
-dG9waWMgYWZ0ZXIgbG9uZyB0aW1lLg0KDQpFYXJsaWVyIHdlIGhhZCBkcm9wcGVkIHRoaXMgcGF0
-Y2gsIGJlY2F1c2Ugd2UgZGlkbid0IHNlZSBzaWduaWZpY2FudCBwZXJmb3JtYW5jZSBpbXByb3Zl
-bWVudCB3aXRoIGl0LiBOb3cgd2UgaGF2ZSBvcHRpbWl6ZWQgY29kZSBpbiBvdXIgV0xBTiBkcml2
-ZXIgYW5kIGFyZSBwbGFubmluZyB0byBoYXZlIHRoaXMgcGF0Y2guDQoNCkV4aXN0aW5nIG1tY19p
-b19yd19leHRlbmRlZCgpIEFQSSBleHBlY3RzIGNhbGxlciB0byBwYXNzIHNpbmdsZSBjb250aWd1
-b3VzIGJ1ZmZlci4gSXQgd2lsbCBiZSBzcGxpdCBpZiBpdCBleGNlZWRzIHNlZ21lbnQgc2l6ZSwg
-U0cgdGFibGUgaXMgcHJlcGFyZWQgYW5kIHVzZWQgaXQgZm9yIHJlYWRpbmcvd3JpdGluZyB0aGUg
-ZGF0YS4gT3VyIGludGVudGlvbiBmb3IgZGVmaW5pbmcgbmV3IEFQSSBoZXJlIGlzIHRvIGZhY2ls
-aXRhdGUgY2FsbGVyIHRvIHByb3ZpZGUgcmVhZHkgU0cgdGFibGUoc2NhdHRlcmVkIGJ1ZmZlciBs
-aXN0KS4gT24gb25lIG9mIG91ciBwbGF0Zm9ybXMgbWF4aW11bSBzZWdtZW50cyBhcmUgMjU2IHdp
-dGggZWFjaCBzZWdtZW50IG9mIDRrIHNpemUuIFNvIHRoaXMgbmV3IEFQSSB3b3VsZCBiZSByZWFs
-bHkgYmVuZWZpY2lhbCB0aGVyZSBmb3IgcGVyZm9ybWFuY2UgaW1wcm92ZW1lbnQuDQoNCkxldCBt
-ZSBrbm93IHlvdXIgc3VnZ2VzdGlvbnMvdGhvdWdodHMuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXIN
-Cg==
+Hi!
+
+I'm trying to transfer some audio data over wifi. Latency constrains
+are such that if it would took more than 20msec to wait for
+transmission, the packet should be dropped instead, and new one should
+be transmitted.
+
+My final hardware contains CSR6026 chip, but drivers are way too
+ugly, I decided it would be easier to prototype on ath5k-based card.
+
+I hacked qcu.c to limit latencies:
+
+  	  qi->tqi_cw_min = ath5k_cw_validate(0);
+          qi->tqi_cw_max = ath5k_cw_validate(20);
+
+...but I don't think it did what I wanted. What am I missing?
+
+(I could use Intel 3945ABG-based card instead, but I figured out ath5k
+might be easier to hack?)
+
+Is there way to manipulate type of service from userland to get
+similar behaviour without patching kernel?
+
+Thanks,
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
