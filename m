@@ -1,253 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21312 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbbIUDTS (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33106 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422AbbIWJEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:19:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 17/34] staging: wilc1000: remove typedef from the struct tstrWILC_AddStaParam
-Date: Mon, 21 Sep 2015 12:16:46 +0900
-Message-ID: <1442805423-3711-18-git-send-email-tony.cho@atmel.com> (sfid-20150921_054657_441269_9A328F79)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 23 Sep 2015 05:04:00 -0400
+Received: by pacex6 with SMTP id ex6so35315135pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:04:00 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/6] staging: wilc1000: remove wilc_platform.h include file
+Date: Wed, 23 Sep 2015 18:03:46 +0900
+Message-Id: <1442999030-31934-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110436_339659_B6478A2E)
+In-Reply-To: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrWILC_AddStaParam and
-renames it to add_sta_param in oder to comply with the Linux coding
-style.
+This patch removes wilc_platform.h include file that is defined in
+wilc_msgqueue.h file. After removing it, compilation error occurs so
+that it is included two header files as <linux/semaphore.h> and
+<linux/slab.h> at wilc_msgqueue.h and wilc_msgqueue.c
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 37 +++++++++++++----------
- drivers/staging/wilc1000/host_interface.h         | 16 ++++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  4 +--
- 3 files changed, 33 insertions(+), 24 deletions(-)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 1 +
+ drivers/staging/wilc1000/wilc_msgqueue.h | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f530e89..5b5c46c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -426,9 +426,9 @@ union message_body {
- 	struct get_channel strHostIFGetChan;
- 	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
- 	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
--	tstrWILC_AddStaParam strAddStaParam;                    /*!< Add station message body */
-+	struct add_sta_param strAddStaParam;                    /*!< Add station message body */
- 	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
--	tstrWILC_AddStaParam strEditStaParam;                           /*!< Edit station message body */
-+	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
- 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
- 	tstrTimerCb strTimerCb;                                                 /*!< Timer callback message body */
- 	tstrHostIfPowerMgmtParam strPowerMgmtparam;     /*!< Power Management message body */
-@@ -3544,13 +3544,14 @@ static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler,
- /**
-  *  @brief WILC_HostIf_PackStaParam
-  *  @details       Handling packing of the station params in a buffer
-- *  @param[in]   u8* pu8Buffer, tstrWILC_AddStaParam* pstrStationParam
-+ *  @param[in]   u8* pu8Buffer, struct add_sta_param *pstrStationParam
-  *  @return         NONE
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer, tstrWILC_AddStaParam *pstrStationParam)
-+static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
-+				    struct add_sta_param *pstrStationParam)
- {
- 	u8 *pu8CurrByte;
- 
-@@ -3598,13 +3599,14 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer, tstrWILC_AddStaParam *pstrSta
- /**
-  *  @brief Handle_AddStation
-  *  @details       Sending config packet to add station
-- *  @param[in]   tstrWILC_AddStaParam* pstrStationParam
-+ *  @param[in]   struct add_sta_param *pstrStationParam
-  *  @return         NONE
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_AddStation(tstrWILC_WFIDrv *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
-+static void Handle_AddStation(tstrWILC_WFIDrv *drvHandler,
-+			      struct add_sta_param *pstrStationParam)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -3733,13 +3735,14 @@ ERRORHANDLER:
- /**
-  *  @brief Handle_EditStation
-  *  @details        Sending config packet to edit station
-- *  @param[in]   tstrWILC_AddStaParam* pstrStationParam
-+ *  @param[in]   struct add_sta_param *pstrStationParam
-  *  @return         NONE
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_EditStation(tstrWILC_WFIDrv *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
-+static void Handle_EditStation(tstrWILC_WFIDrv *drvHandler,
-+			       struct add_sta_param *pstrStationParam)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -7024,18 +7027,19 @@ s32 host_int_del_beacon(tstrWILC_WFIDrv *hWFIDrv)
- /**
-  *  @brief host_int_add_station
-  *  @details       Setting add station params in message queue
-- *  @param[in]    WILC_WFIDrvHandle hWFIDrv, tstrWILC_AddStaParam* pstrStaParams
-+ *  @param[in]    WILC_WFIDrvHandle hWFIDrv, struct add_sta_param *pstrStaParams
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrStaParams)
-+s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv,
-+			 struct add_sta_param *pstrStaParams)
- {
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	tstrWILC_AddStaParam *pstrAddStationMsg = &msg.body.strAddStaParam;
-+	struct add_sta_param *pstrAddStationMsg = &msg.body.strAddStaParam;
- 
- 
- 	if (pstrWFIDrv == NULL) {
-@@ -7052,7 +7056,7 @@ s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSta
- 	msg.id = HOST_IF_MSG_ADD_STATION;
- 	msg.drvHandler = hWFIDrv;
- 
--	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(tstrWILC_AddStaParam));
-+	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
- 	if (pstrAddStationMsg->u8NumRates > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
- 
-@@ -7174,18 +7178,19 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
- /**
-  *  @brief host_int_edit_station
-  *  @details       Setting edit station params in message queue
-- *  @param[in]    WILC_WFIDrvHandle hWFIDrv, tstrWILC_AddStaParam* pstrStaParams
-+ *  @param[in]    WILC_WFIDrvHandle hWFIDrv, struct add_sta_param *pstrStaParams
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrStaParams)
-+s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv,
-+			  struct add_sta_param *pstrStaParams)
- {
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	tstrWILC_AddStaParam *pstrAddStationMsg = &msg.body.strAddStaParam;
-+	struct add_sta_param *pstrAddStationMsg = &msg.body.strAddStaParam;
- 
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
-@@ -7201,7 +7206,7 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
- 	msg.id = HOST_IF_MSG_EDIT_STATION;
- 	msg.drvHandler = hWFIDrv;
- 
--	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(tstrWILC_AddStaParam));
-+	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
- 	if (pstrAddStationMsg->u8NumRates > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 537845e..b24eeb6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -369,7 +369,7 @@ typedef enum {
- 	WILC_STA_FLAG_AUTHENTICATED             /*!< station is authenticated*/
- } tenuWILC_StaFlag;
- 
--typedef struct {
-+struct add_sta_param {
- 	u8 au8BSSID[ETH_ALEN];
- 	u16 u16AssocID;
- 	u8 u8NumRates;
-@@ -383,7 +383,7 @@ typedef struct {
- 	u8 u8ASELCap;
- 	u16 u16FlagsMask;               /*<! Determines which of u16FlagsSet were changed>*/
- 	u16 u16FlagsSet;                /*<! Decoded according to tenuWILC_StaFlag */
--} tstrWILC_AddStaParam;
-+};
- 
- /*****************************************************************************/
- /*																			 */
-@@ -1049,7 +1049,8 @@ s32 host_int_add_beacon(tstrWILC_WFIDrv *hWFIDrv, u32 u32Interval,
- s32 host_int_del_beacon(tstrWILC_WFIDrv *hWFIDrv);
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 869736a..d5ebd6d 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -3,6 +3,7 @@
+ #include <linux/spinlock.h>
+ #include "linux_wlan_common.h"
+ #include <linux/errno.h>
++#include <linux/slab.h>
  
  /*!
-- *  @fn		s32 host_int_add_station(WILC_WFIDrvHandle hWFIDrv, tstrWILC_AddStaParam strStaParams)
-+ *  @fn		s32 host_int_add_station(WILC_WFIDrvHandle hWFIDrv,
-+ *					 struct add_sta_param *pstrStaParams)
-  *  @brief		Notifies the firmware with a new associated stations
-  *  @details
-  *  @param[in,out]	hWFIDrv		handle to the wifi driver
-@@ -1061,7 +1062,8 @@ s32 host_int_del_beacon(tstrWILC_WFIDrv *hWFIDrv);
-  *  @date		12 July 2012
-  *  @version		1.0 Description
+  *  @author		syounan
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 982628e..d231c33 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -10,7 +10,7 @@
+  *  @version	1.0
   */
--s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrStaParams);
-+s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv,
-+			 struct add_sta_param *pstrStaParams);
  
- /*!
-  *  @fn		s32 host_int_del_allstation(WILC_WFIDrvHandle hWFIDrv, const u8* pu8MacAddr)
-@@ -1094,7 +1096,8 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
- s32 host_int_del_station(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8MacAddr);
+-#include "wilc_platform.h"
++#include <linux/semaphore.h>
  
- /*!
-- *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv, tstrWILC_AddStaParam strStaParams)
-+ *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
-+ *					  struct add_sta_param *pstrStaParams)
-  *  @brief		Notifies the firmware with new parameters of an already associated station
-  *  @details
-  *  @param[in,out]	hWFIDrv		handle to the wifi driver
-@@ -1106,7 +1109,8 @@ s32 host_int_del_station(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8MacAddr);
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrStaParams);
-+s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv,
-+			  struct add_sta_param *pstrStaParams);
- 
- /*!
-  *  @fn		s32 host_int_set_power_mgmt(WILC_WFIDrvHandle hWFIDrv, bool bIsEnabled, u32 u32Timeout)
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5a95b95..ac1b874 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3161,7 +3161,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- {
- 	s32 s32Error = 0;
- 	struct wilc_priv *priv;
--	tstrWILC_AddStaParam strStaParams = { {0} };
-+	struct add_sta_param strStaParams = { {0} };
- 	perInterface_wlan_t *nic;
- 
- 	if (!wiphy)
-@@ -3272,7 +3272,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- {
- 	s32 s32Error = 0;
- 	struct wilc_priv *priv;
--	tstrWILC_AddStaParam strStaParams = { {0} };
-+	struct add_sta_param strStaParams = { {0} };
- 	perInterface_wlan_t *nic;
- 
- 
+ /* Message Queue type is a structure */
+ typedef struct __Message_struct {
 -- 
-1.9.1
+2.5.1
 
