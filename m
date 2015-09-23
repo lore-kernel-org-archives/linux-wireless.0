@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jptorel01.sonyericsson.com ([124.215.201.70]:9790 "EHLO
-	jptorel01.sonyericsson.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752893AbbIWKVR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 06:21:17 -0400
-Date: Wed, 23 Sep 2015 12:11:09 +0200
-From: Lars Svensson <Lars1.Svensson@sonymobile.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"m.v.b@runbox.com" <m.v.b@runbox.com>,
-	"gdonald@gmail.com" <gdonald@gmail.com>,
-	"joe@perches.com" <joe@perches.com>,
-	"ruchandani.tina@gmail.com" <ruchandani.tina@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au: Mark type casts to __le32 as
- intentional
-Message-ID: <20150923101109.GA1107@sonymobile.com> (sfid-20150923_122135_842216_CB4DD6A7)
-References: <1442906641-22824-1-git-send-email-lars1.svensson@sonymobile.com>
- <5601C88E.4010807@lwfinger.net>
+Received: from mga09.intel.com ([134.134.136.24]:21052 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752414AbbIWFIM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 01:08:12 -0400
+Message-ID: <5602339F.1010301@linux.intel.com> (sfid-20150923_070836_603276_E2BC8441)
+Date: Wed, 23 Sep 2015 13:07:43 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5601C88E.4010807@lwfinger.net>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] net/wireless: enable wiphy device to suspend/resume
+ asynchronously
+References: <55FCCB0E.3000807@linux.intel.com> <1442930747.2018.12.camel@sipsolutions.net>
+In-Reply-To: <1442930747.2018.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 11:30:54PM +0200, Larry Finger wrote:
-> 
-> You may have silenced the Sparse warnings, but the code was not wrong. Your 
-> version is also correct; however, you end up with some really ugly casts.
-> 
-> Here is my analysis of these two, identical sections:
-> 
-> The output of getcrc32() is an unsigned, 4-byte quantity that has the endianess 
-> of the cpu. Therefore, the le32_to_cpu() conversion is suspect for a big-endian 
-> machine. Those statements should be be a simple "actual_crc = getcrc32(....).
-> 
-> The expected crc comes from a byte string that is in little-endian order. For 
-> that reason, it needs to be converted on big-endian machines, which is exactly 
-> what get_unaligned_le32() does. Thus, the second statement in each block becomes 
-> "expected_crc = get_unaligned_le32(....)".
-> 
-> Both the original code and your patch byte swap both quantities, thus they get 
-> the correct result. at least if all you are doing is to compare the two results.
 
-I agree, it seems obvious when You spell it out like this. I was more
-focused on producing an identical result while removing the sparse warnings. Your
-suggestion is much nicer, I will change the patch accordingly.
+Hi johannes,
 
-> 
-> The above compiles with no Sparse warnings, and I think it would work on both LE 
-> and BE architectures; however, it has only been compile tested.
+Could you please tell me which kernel version will merge this patch?
 
-I have no big endian machine to try it on, but it seems reasonable to assume
-that at least the compare will work. The printk in case of a mismatch im not
-sure about, though. Assuming the analysis is correct, I think the printed values
-would be wrong on a BE machine before this change?
 
 Thanks,
-//Lars
+Zhonghui
+
+ 
+On 2015/9/22 22:05, Johannes Berg wrote:
+> On Sat, 2015-09-19 at 10:40 +0800, Fu, Zhonghui wrote:
+>> Now, PM core supports asynchronous suspend/resume mode for devices
+>> during system suspend/resume, and the power state transition of one
+>> device may be completed in separate kernel thread. PM core ensures
+>> all power state transition timing dependency between devices. This
+>> patch enables wiphy device to suspend/resume asynchronously. This can
+>> take advantage of multicore and improve system suspend/resume speed.
+>>
+> Applied.
+>
+> johannes
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
