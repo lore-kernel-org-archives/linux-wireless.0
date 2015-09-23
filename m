@@ -1,105 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:51406 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754187AbbIRUI0 (ORCPT
+Received: from mail.bluebottle.com ([176.9.67.91]:53702 "EHLO
+	mail.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753117AbbIWI7M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:26 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 13/16] brcmfmac: Fix race condition bug when deleting p2p interface.
-Date: Fri, 18 Sep 2015 22:08:16 +0200
-Message-ID: <1442606899-31872-14-git-send-email-arend@broadcom.com> (sfid-20150918_220844_567426_ABF7557A)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	Wed, 23 Sep 2015 04:59:12 -0400
+Date: Wed, 23 Sep 2015 10:49:35 +0200
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: minstrel[_ht]: remove non-ascii debugfs
+ characters
+Message-ID: <20150923084935.GD6319@medion.lan> (sfid-20150923_105920_696562_4775F523)
+References: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+* Johannes Berg <johannes@sipsolutions.net> [23.09.2015 10:44]:
+> Replace the average symbol by "avg" to avoid being warned about the
+> non-ASCII symbol all the time, line up the columns properly.
 
-When p2p device interface gets deleted by deinitialising discovery
-it will result in an event which removes the interface, but that is
-also done by delete p2p interface code. This results in race
-condition which sometimes results in lockup/crash. With this patch
-the delete device interface will wait for the event (with timeout)
-removing the possible race condition. Also on the stop device call
-from cfg80211 the deinitialisation of the discovery device should
-be avoided as it can result in a similar situation.
+who warns you? the compiler? the terminal?
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 76e4771..fda726c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2241,6 +2241,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	brcmf_dbg(TRACE, "delete P2P vif\n");
- 	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
- 
-+	brcmf_cfg80211_arm_vif_event(cfg, vif);
- 	switch (vif->wdev.iftype) {
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 		if (test_bit(BRCMF_VIF_STATUS_DISCONNECTING, &vif->sme_state))
-@@ -2257,8 +2258,6 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 			return 0;
- 		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
- 		brcmf_p2p_deinit_discovery(p2p);
--		brcmf_remove_interface(vif->ifp);
--		return 0;
- 	default:
- 		return -ENOTSUPP;
- 	}
-@@ -2270,10 +2269,11 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		wait_for_completion_timeout(&cfg->vif_disabled,
- 					    msecs_to_jiffies(500));
- 
--	brcmf_vif_clear_mgmt_ies(vif);
--
--	brcmf_cfg80211_arm_vif_event(cfg, vif);
--	err = brcmf_p2p_release_p2p_if(vif);
-+	err = 0;
-+	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE) {
-+		brcmf_vif_clear_mgmt_ies(vif);
-+		err = brcmf_p2p_release_p2p_if(vif);
-+	}
- 	if (!err) {
- 		/* wait for firmware event */
- 		err = brcmf_cfg80211_wait_vif_event_timeout(cfg, BRCMF_E_IF_DEL,
-@@ -2283,8 +2283,12 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		else
- 			err = 0;
- 	}
-+	if (err)
-+		brcmf_remove_interface(vif->ifp);
-+
- 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
--	p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
-+	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
-+		p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
- 
- 	return err;
- }
-@@ -2333,7 +2337,9 @@ void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	 */
- 	if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif == vif) {
- 		mutex_lock(&cfg->usr_sync);
--		(void)brcmf_p2p_deinit_discovery(p2p);
-+		/* Set the discovery state to SCAN */
-+		(void)brcmf_p2p_set_discover_state(vif->ifp,
-+						   WL_P2P_DISC_ST_SCAN, 0, 0);
- 		brcmf_abort_scanning(cfg);
- 		clear_bit(BRCMF_VIF_STATUS_READY, &vif->sme_state);
- 		mutex_unlock(&cfg->usr_sync);
--- 
-1.9.1
-
+bye, bastian
