@@ -1,36 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52139 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60070 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933585AbbIVNaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 09:30:12 -0400
-Message-ID: <1442928605.2018.11.camel@sipsolutions.net> (sfid-20150922_153040_857397_C5D38FAB)
-Subject: Re: [PATCH 0/6] mac80211: Deinline large functions in driver-ops.h
+	id S1753335AbbIWIlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 04:41:31 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Denys Vlasenko <dvlasenk@redhat.com>,
-	John Linville <linville@tuxdriver.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 22 Sep 2015 15:30:05 +0200
-In-Reply-To: <1442928526.2018.10.camel@sipsolutions.net> (sfid-20150922_152920_167326_BEB334F9)
-References: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com>
-	 (sfid-20150918_152212_883153_32910567) <1442928526.2018.10.camel@sipsolutions.net>
-	 (sfid-20150922_152920_167326_BEB334F9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Ayala Beker <ayala.beker@intel.com>
+Subject: [PATCH] mac80211: advertise support for full station state in AP mode
+Date: Wed, 23 Sep 2015 10:41:27 +0200
+Message-Id: <1442997687-13543-1-git-send-email-johannes@sipsolutions.net> (sfid-20150923_104138_290018_78A19EB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-09-22 at 15:28 +0200, Johannes Berg wrote:
-> On Fri, 2015-09-18 at 15:19 +0200, Denys Vlasenko wrote:
-> > After measuring size of inlines, these functions were found to be 
-> > largest.
-> > These patches reduce code size by about 21 kbytes.
-> > 
-> 
-> Only patches 1, 2 and 5 applied to mac80211-next.
-> 
+From: Ayala Beker <ayala.beker@intel.com>
 
-To clarify - it's not that I didn't like the others, but they didn't
-apply and you need to resend them against mac80211-next.
+This enables adding stations in unauthenticated mode, just after
+receiving the first authentication frame; which in turn allows
+sending a negative authentication reply if the station cannot be
+added.
 
-johannes
+In addition init rate control for unassociated station only when
+it becomes associated, prior to that low rates will be used.
+
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c  | 33 ++++++++++++++++++++++-----------
+ net/mac80211/main.c |  3 ++-
+ 2 files changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9eab783701aa..1b91fcd0aa11 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -981,7 +981,7 @@ static int sta_apply_auth_flags(struct ieee80211_local *local,
+ 		 * well. Some drivers require rate control initialized
+ 		 * before drv_sta_state() is called.
+ 		 */
+-		if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++		if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+ 			rate_control_rate_init(sta);
+ 
+ 		ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+@@ -1120,8 +1120,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	    local->hw.queues >= IEEE80211_NUM_ACS)
+ 		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
+ 
+-	/* auth flags will be set later for TDLS stations */
+-	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++	/* auth flags will be set later for TDLS,
++	 * and for unassociated stations that move to assocaited */
++	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
++	    !((mask & BIT(NL80211_STA_FLAG_ASSOCIATED)) &&
++	      (set & BIT(NL80211_STA_FLAG_ASSOCIATED)))) {
+ 		ret = sta_apply_auth_flags(local, sta, mask, set);
+ 		if (ret)
+ 			return ret;
+@@ -1213,7 +1216,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		sta_apply_mesh_params(local, sta, params);
+ 
+ 	/* set the STA state after all sta info from usermode has been set */
+-	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) ||
++	    set & BIT(NL80211_STA_FLAG_ASSOCIATED)) {
+ 		ret = sta_apply_auth_flags(local, sta, mask, set);
+ 		if (ret)
+ 			return ret;
+@@ -1255,12 +1259,14 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	 * defaults -- if userspace wants something else we'll
+ 	 * change it accordingly in sta_apply_parameters()
+ 	 */
+-	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
++	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
++	    !(params->sta_flags_set & (BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++					BIT(NL80211_STA_FLAG_ASSOCIATED)))) {
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+-	} else {
+-		sta->sta.tdls = true;
+ 	}
++	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++		sta->sta.tdls = true;
+ 
+ 	err = sta_apply_parameters(local, sta, params);
+ 	if (err) {
+@@ -1269,10 +1275,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	/*
+-	 * for TDLS, rate control should be initialized only when
+-	 * rates are known and station is marked authorized
++	 * for TDLS and for unassociated station, rate control should be
++	 * initialized only when rates are known and station is marked
++	 * authorized/associated
+ 	 */
+-	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
++	    test_sta_flag(sta, WLAN_STA_ASSOC))
+ 		rate_control_rate_init(sta);
+ 
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+@@ -1347,7 +1355,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		statype = CFG80211_STA_AP_CLIENT;
++		if (test_sta_flag(sta, WLAN_STA_ASSOC))
++			statype = CFG80211_STA_AP_CLIENT;
++		else
++			statype = CFG80211_STA_AP_CLIENT_UNASSOC;
+ 		break;
+ 	default:
+ 		err = -EOPNOTSUPP;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ff79a13d231d..9b813a2f3a75 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -543,7 +543,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 			   NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_VIF_TXPOWER |
+ 			   NL80211_FEATURE_MAC_ON_CREATE |
+-			   NL80211_FEATURE_USERSPACE_MPM;
++			   NL80211_FEATURE_USERSPACE_MPM |
++			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
+ 
+ 	if (!ops->hw_scan)
+ 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-- 
+2.5.1
+
