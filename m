@@ -1,167 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:52319 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbbIBXyd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 19:54:33 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Thu, 3 Sep 2015 05:24:31 +0530
-Message-ID: <1441238053.4172.3.camel@linux.vnet.ibm.com> (sfid-20150903_015452_559199_C9BDC6FD)
-Subject: Re: Linux Firmware Signing
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?UTF-8?Q?=22Vojt=C4=9Bch_Pavl=C3=ADk=22?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Jay Schulist <jschlst@samba.org>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	Alexei Starovoitov <ast@plumgrid.com>
-Date: Wed, 02 Sep 2015 19:54:13 -0400
-In-Reply-To: <20150901234305.GU8051@wotan.suse.de>
-References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
-	 <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
-	 <1440464705.2737.36.camel@linux.vnet.ibm.com>
-	 <14540.1440599584@warthog.procyon.org.uk>
-	 <31228.1440671938@warthog.procyon.org.uk>
-	 <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
-	 <20150827212907.GF8051@wotan.suse.de>
-	 <1440719673.2118.84.camel@linux.vnet.ibm.com>
-	 <20150829021659.GN8051@wotan.suse.de>
-	 <1441030735.2647.70.camel@linux.vnet.ibm.com>
-	 <20150901234305.GU8051@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:60075 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753305AbbIWImb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 04:42:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: allow writing TX PN in debugfs
+Date: Wed, 23 Sep 2015 10:42:28 +0200
+Message-Id: <1442997748-13741-1-git-send-email-johannes@sipsolutions.net> (sfid-20150923_104247_640158_5B3D926C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-02 at 01:43 +0200, Luis R. Rodriguez wrote:
-> On Mon, Aug 31, 2015 at 10:18:55AM -0400, Mimi Zohar wrote:
-> > On Sat, 2015-08-29 at 04:16 +0200, Luis R. Rodriguez wrote:
-> > > On Thu, Aug 27, 2015 at 07:54:33PM -0400, Mimi Zohar wrote:
-> > > > On Thu, 2015-08-27 at 23:29 +0200, Luis R. Rodriguez wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Right so there are different solutions to this problem, it will depend on the
-> distribution and solution they have in place for this. For instance maybe some
-> distros may be satisfied with the integrity of the initramfs for kexec *iff*
-> they can vet for the integrity of the components that build the initramfs on
-> the target system, or perhaps they distribute the initramfs used by some
-> systems so they use singing facilities trusted by the kernel, or in the IMA
-> case you do boot up vetting through xatrrs and IMA.
-> 
-> A lot of this means a lot of these signing facilities then should be optional
-> and work in a permissive mode. Part of my earlier work (already merged) on the firmware
-> signing stuff was to take out from module signing code the part that let it be
-> permissive with my goal to re-share the same strategy for other purposes. This
-> is accomplished by using the bool_enable_only module parameter, for instance fw
-> signing will use:
-> 
-> +static bool sysdata_sig_enforce = IS_ENABLED(CONFIG_SYSTEM_DATA_SIG_FORCE);
-> +#ifndef CONFIG_SYSTEM_DATA_SIG_FORCE
-> +module_param(sysdata_sig_enforce, bool_enable_only, 0644);
-> +#endif /* !CONFIG_SYSTEM_DATA_SIG_FORCE */
-> 
-> Technically it should also be possible to remove the #ifndef provided we can
-> all rest assured no bullets can be put through it. Anyway, that's the gist of
-> the permissive model copied from module signing. If we have a lot of similar
-> users it begs the question if we should somehow drivertize a generic interface
-> for these things so that the actual implemenation that deals with permissivity
-> is shared, its perhaps too early to do that now but something to keep in mind
-> as it does sound like we will have a bit of users of the same mechanisms /
-> strategy. Exactly how they need to be differentiated remains to be seen.
+For certain tests, for example replay detection, it can be useful
+to be able to influence/set the PN used in outgoing packets. Make
+it possible to change the TX PN in debugfs.
 
-Ok.  Each "hook" would require a separate config option to allow
-flexibility.  With this design, the decision for requiring signatures
-would be made at build.  Do we really want policy hard coded into the
-kernel?   (IMA is policy based.)
+For now, this doesn't support TKIP since I haven't needed it, but
+there's no reason it couldn't be added if necessary.
 
-> > > > initramfs, 
-> > > 
-> > > Hm, what code path?
-> > 
-> > In addition, the files within the initramfs should be measured and
-> > verified.   There isn't a need for a new hook, but for xattr support in
-> > CPIO.  I started adding that support last winter -
-> > http://lwn.net/Articles/630101/ .   Others have requested other changes,
-> > not related to xattrs, before bumping the CPIO magic number.   There
-> > should be a discussion as to what else needs to be done.
-> 
-> I see, thanks. Another way to do this is to copy the module signing
-> strategy and since the initramfs is linked in just peg the sinagure of the
-> blog at the end. This of course would mean you have to be permissive to
-> only enable folks who want this feature.
+Note that this must be used very carefully: it could, for example,
+be used to make "valid replays" where the PN reuse happens on a
+different TID. This couldn't be done by an attacker since the TID
+is protected as part of the AAD.
 
-At the same time the boot loader verifies the kernel signature, it could
-verify the the initramfs signature.  kexec should emulate whatever the
-boot loader's method for verifying the initramfs signature.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_key.c | 51 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 49 insertions(+), 2 deletions(-)
 
-> > > >  that have
-> > > > been or need to be addressed.  Since then, a new kexec syscall, file
-> > > > descriptor based, was upstreamed that appraises the image.  Until we can
-> > > > preserve the measurement list across kexec,
-> > > 
-> > > I'm sorry I do not follow, can you elaborate on what you mean by this.
-> > > Its not clear to me what you mean by the measurement list. Do you mean
-> > > all the above items?
-> >  
-> > A measurement is a hash of the file which is stored in the measurement
-> > list <securityfs>/ima/ascii_runtime_measurements and is used to extend
-> > the TPM (eg. PCR 10).   The measurement list, in conjunction with a
-> > quote of the TPM PCRs, can be used to remotely detect whether a system
-> > has been compromised.
-> 
-> I see thanks. In light of that its unclear why you'd want to "preserve"
-> the measurement list from one boot onto another.
-
-The TPM is reset on a hard reboot, not a soft one like kexec.  Without
-preserving the measurement list across kexec, we would not be able to
-validate the quote.
-
-> > > >.)  Lastly, measuring/appraising policies
-> > > > (eg. IMA, SELinux, Smack, iptables/ebtables) 
-> > > 
-> > > OK for each of these:
-> > > 
-> > > how do we load the data? 
-> > 
-> > I'm not real happy about it, but since we can't break the existing ABI
-> > of loading data into the kernel via a buffer, a stop gap method of
-> > signing and verifying a buffer would be needed.
-> 
-> Right so if such a solution were really desirable it would seem we'd be
-> wanting to change a histical approach to user <--> kernel interfaces.
-> This is a pretty significant change in paradigm. Is everyone on board?
-
-Perhaps defining a common method and converting an example or two would
-make sense,  before making sure "everyone" is on board.   The IMA policy
-could be the first. Dmitry has already added support for verifying the
-policy's signature for those systems without an initramfs.  I can look
-into generalizing that solution.
-
-Mimi
-
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 702ca122c498..7961e7d0b61e 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -2,6 +2,7 @@
+  * Copyright 2003-2005	Devicescape Software, Inc.
+  * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ * Copyright (C) 2015	Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -34,6 +35,14 @@ static const struct file_operations key_ ##name## _ops = {		\
+ 	.llseek = generic_file_llseek,					\
+ }
+ 
++#define KEY_OPS_W(name)							\
++static const struct file_operations key_ ##name## _ops = {		\
++	.read = key_##name##_read,					\
++	.write = key_##name##_write,					\
++	.open = simple_open,						\
++	.llseek = generic_file_llseek,					\
++}
++
+ #define KEY_FILE(name, format)						\
+ 		 KEY_READ_##format(name)				\
+ 		 KEY_OPS(name)
+@@ -74,6 +83,41 @@ static ssize_t key_algorithm_read(struct file *file,
+ }
+ KEY_OPS(algorithm);
+ 
++static ssize_t key_tx_spec_write(struct file *file, const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ieee80211_key *key = file->private_data;
++	u64 pn;
++	int ret;
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++	case WLAN_CIPHER_SUITE_WEP104:
++		return -EINVAL;
++	case WLAN_CIPHER_SUITE_TKIP:
++		/* not supported yet */
++		return -EOPNOTSUPP;
++	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		ret = kstrtou64_from_user(userbuf, count, 16, &pn);
++		if (ret)
++			return ret;
++		/* PN is a 48-bit counter */
++		if (pn >= (1ULL << 48))
++			return -ERANGE;
++		atomic64_set(&key->conf.tx_pn, pn);
++		return count;
++	default:
++		return 0;
++	}
++}
++
+ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
+ 				size_t count, loff_t *ppos)
+ {
+@@ -110,7 +154,7 @@ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
+ 	}
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
+ }
+-KEY_OPS(tx_spec);
++KEY_OPS_W(tx_spec);
+ 
+ static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
+ 				size_t count, loff_t *ppos)
+@@ -278,6 +322,9 @@ KEY_OPS(key);
+ #define DEBUGFS_ADD(name) \
+ 	debugfs_create_file(#name, 0400, key->debugfs.dir, \
+ 			    key, &key_##name##_ops);
++#define DEBUGFS_ADD_W(name) \
++	debugfs_create_file(#name, 0600, key->debugfs.dir, \
++			    key, &key_##name##_ops);
+ 
+ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ {
+@@ -310,7 +357,7 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ 	DEBUGFS_ADD(keyidx);
+ 	DEBUGFS_ADD(hw_key_idx);
+ 	DEBUGFS_ADD(algorithm);
+-	DEBUGFS_ADD(tx_spec);
++	DEBUGFS_ADD_W(tx_spec);
+ 	DEBUGFS_ADD(rx_spec);
+ 	DEBUGFS_ADD(replays);
+ 	DEBUGFS_ADD(icverrors);
+-- 
+2.5.1
 
