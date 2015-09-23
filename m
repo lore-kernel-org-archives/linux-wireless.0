@@ -1,37 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34877 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292AbbIOG1X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 02:27:23 -0400
-Received: by pacfv12 with SMTP id fv12so170345277pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 23:27:23 -0700 (PDT)
-Date: Tue, 15 Sep 2015 11:57:15 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 0/7] remove wilc_errorsupport.h from the wilc driver
-Message-ID: <20150915062715.GG12611@sudip-pc> (sfid-20150915_082726_660233_58631334)
-References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60068 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754662AbbIWMSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2015 08:18:45 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] mac80211: Deinline drv_ampdu_action()
+Date: Wed, 23 Sep 2015 14:18:35 +0200
+Message-Id: <1443010716-32651-2-git-send-email-dvlasenk@redhat.com> (sfid-20150923_141924_630545_0790077D)
+In-Reply-To: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
+References: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 11:53:34AM +0900, Tony Cho wrote:
-> This patch aims to remove the wilc_errorsupport.h which is unnecessary in the
-> wilc driver. This patch replaces the error types defined by wilc driver with
-> kernel generic error types and removes macros which handles the errors.
+With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
+after deinlining the function size is 755 bytes and there are
+6 callsites.
 
-Patch 2/7 and 4/7 are introducing new checkpatch warnings which again
-some has to fix in a separate patch. Better to fix it while you are
-sending. And instead of printk it should be pr_err or much better if you
-can use netev_err. Looks like it can be used in some of the functions.
+Total size reduction is about 3.3 kbytes.
 
-regards
-sudip
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: John Linville <linville@tuxdriver.com>
+CC: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+
+Rediffed against mac80211-next
+
+ net/mac80211/driver-ops.c | 26 ++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 30 +++++-------------------------
+ 2 files changed, 31 insertions(+), 25 deletions(-)
+
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index 54581ce..4f7c81d 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -191,3 +191,29 @@ drv_switch_vif_chanctx(struct ieee80211_local *local,
+ 
+ 	return ret;
+ }
++
++int drv_ampdu_action(struct ieee80211_local *local,
++		     struct ieee80211_sub_if_data *sdata,
++		     enum ieee80211_ampdu_mlme_action action,
++		     struct ieee80211_sta *sta, u16 tid,
++		     u16 *ssn, u8 buf_size, bool amsdu)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	trace_drv_ampdu_action(local, sdata, action, sta, tid,
++			       ssn, buf_size, amsdu);
++
++	if (local->ops->ampdu_action)
++		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
++					       sta, tid, ssn, buf_size, amsdu);
++
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1cf1b4a..7f08d82 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -649,31 +649,11 @@ static inline int drv_tx_last_beacon(struct ieee80211_local *local)
+ 	return ret;
+ }
+ 
+-static inline int drv_ampdu_action(struct ieee80211_local *local,
+-				   struct ieee80211_sub_if_data *sdata,
+-				   enum ieee80211_ampdu_mlme_action action,
+-				   struct ieee80211_sta *sta, u16 tid,
+-				   u16 *ssn, u8 buf_size, bool amsdu)
+-{
+-	int ret = -EOPNOTSUPP;
+-
+-	might_sleep();
+-
+-	sdata = get_bss_sdata(sdata);
+-	if (!check_sdata_in_driver(sdata))
+-		return -EIO;
+-
+-	trace_drv_ampdu_action(local, sdata, action, sta, tid,
+-			       ssn, buf_size, amsdu);
+-
+-	if (local->ops->ampdu_action)
+-		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
+-					       sta, tid, ssn, buf_size, amsdu);
+-
+-	trace_drv_return_int(local, ret);
+-
+-	return ret;
+-}
++int drv_ampdu_action(struct ieee80211_local *local,
++		     struct ieee80211_sub_if_data *sdata,
++		     enum ieee80211_ampdu_mlme_action action,
++		     struct ieee80211_sta *sta, u16 tid,
++		     u16 *ssn, u8 buf_size, bool amsdu);
+ 
+ static inline int drv_get_survey(struct ieee80211_local *local, int idx,
+ 				struct survey_info *survey)
+-- 
+1.8.1.4
+
