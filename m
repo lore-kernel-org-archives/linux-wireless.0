@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:34897 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753915AbbILSLP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:18604 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbbIWHIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 14:11:15 -0400
-Received: by wicge5 with SMTP id ge5so96624529wic.0
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:14 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/11] staging: vt6655: device_get_pci_info pcid already assigned.
-Date: Sat, 12 Sep 2015 19:10:37 +0100
-Message-Id: <1442081438-3485-10-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201133_640715_7EEEA231)
-In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
-References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 23 Sep 2015 03:08:41 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/4] staging: wilc1000: remove ifdef OLD_FPGA_BITFILE line
+Date: Wed, 23 Sep 2015 16:10:52 +0900
+Message-ID: <1442992255-23005-1-git-send-email-glen.lee@atmel.com> (sfid-20150923_090845_201395_6EB5790B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pcid has already been assigned earlier in vt6655_probe.
+OLD_FPGA_BITFILE is not used in the driver. Just delete ifdef line and it's
+related codes.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/vt6655/device_main.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index edda836..add9cdf 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -438,8 +438,6 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
- 	pDevice->memaddr = pci_resource_start(pcid, 0);
- 	pDevice->ioaddr = pci_resource_start(pcid, 1);
- 
--	pDevice->pcid = pcid;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 0a930ec..9f5b5e6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1500,22 +1500,6 @@ static int wilc_wlan_start(void)
+ 	/**
+ 	 *      Set the host interface
+ 	 **/
+-#ifdef OLD_FPGA_BITFILE
+-	acquire_bus(ACQUIRE_ONLY);
+-	ret = p->hif_func.hif_read_reg(WILC_VMM_CORE_CTL, &reg);
+-	if (!ret) {
+-		wilc_debug(N_ERR, "[wilc start]: fail read reg vmm_core_ctl...\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
+-		return ret;
+-	}
+-	reg |= (p->io_func.io_type << 2);
+-	ret = p->hif_func.hif_write_reg(WILC_VMM_CORE_CTL, reg);
+-	if (!ret) {
+-		wilc_debug(N_ERR, "[wilc start]: fail write reg vmm_core_ctl...\n");
+-		release_bus(RELEASE_ONLY);
+-		return ret;
+-	}
+-#else
+ 	if (p->io_func.io_type == HIF_SDIO) {
+ 		reg = 0;
+ 		reg |= (1 << 3); /* bug 4456 and 4557 */
+@@ -1572,8 +1556,6 @@ static int wilc_wlan_start(void)
+ 		ret = -5;
+ 		return ret;
+ 	}
+-#endif
 -
- 	return true;
- }
  
+ 	/**
+ 	 *      Bus related
 -- 
-2.5.0
+1.9.1
 
