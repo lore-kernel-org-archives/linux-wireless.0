@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21168 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885AbbIUDSb (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:42040
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753361AbbIXM74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:18:31 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 10/34] staging: wilc1000: remove typedef from the struct tstrRcvdGnrlAsyncInfo
-Date: Mon, 21 Sep 2015 12:16:39 +0900
-Message-ID: <1442805423-3711-11-git-send-email-tony.cho@atmel.com> (sfid-20150921_051833_860486_420A47C4)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Sep 2015 08:59:56 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 4.3 2/2] mac80211: fix handling of PS filtering with fast-xmit
+Date: Thu, 24 Sep 2015 14:59:49 +0200
+Message-Id: <1443099589-69793-2-git-send-email-nbd@openwrt.org> (sfid-20150924_150001_043155_50DE3E09)
+In-Reply-To: <1443099589-69793-1-git-send-email-nbd@openwrt.org>
+References: <1443099589-69793-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrRcvdGnrlAsyncInfo and
-renames it to rcvd_async_info in order to comply with the Linux coding
-style.
+Fixes dropped packets in the tx path in case a non-PS station triggers
+the tx filter.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Cc: stable@vger.kernel.org # 4.2
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ net/mac80211/status.c | 1 +
+ net/mac80211/tx.c     | 7 +++++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 256369c..1706bef 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -201,7 +201,7 @@ struct connect_attr {
- };
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 8ba5832..3ed7ddf 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -101,6 +101,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	 * when it wakes up for the next time.
+ 	 */
+ 	set_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT);
++	ieee80211_clear_fast_xmit(sta);
  
- /*!
-- *  @struct             tstrRcvdGnrlAsyncInfo
-+ *  @struct             rcvd_async_info
-  *  @brief		Structure to hold Received General Asynchronous info
-  *  @details
-  *  @todo
-@@ -210,10 +210,10 @@ struct connect_attr {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrRcvdGnrlAsyncInfo {
-+struct rcvd_async_info {
- 	u8 *pu8Buffer;
- 	u32 u32Length;
--} tstrRcvdGnrlAsyncInfo;
-+};
+ 	/*
+ 	 * This code races in the following way:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index af058eb..77a7726 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1218,8 +1218,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
  
- /*!
-  *  @struct             tstrHostIFSetChan
-@@ -420,7 +420,7 @@ union message_body {
- 	struct scan_attr strHostIFscanAttr;                           /*!< Host IF Scan Request Attributes message body */
- 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
- 	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
--	tstrRcvdGnrlAsyncInfo strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
-+	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
- 	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
- 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
- 	tstrHostIFSetChan strHostIFSetChan;
-@@ -2369,13 +2369,14 @@ done:
- /**
-  *  @brief Handle_RcvdGnrlAsyncInfo
-  *  @details       Handling received asynchrous general network information
-- *  @param[in]    tstrRcvdGnrlAsyncInfo* pstrRcvdGnrlAsyncInfo
-+ *  @param[in]     struct rcvd_async_info *pstrRcvdGnrlAsyncInfo
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsyncInfo *pstrRcvdGnrlAsyncInfo)
-+static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
-+				    struct rcvd_async_info *pstrRcvdGnrlAsyncInfo)
- {
- 	/* TODO: mostafa: till now, this function just handles only the received mac status msg, */
- 	/*				 which carries only 1 WID which have WID ID = WID_STATUS */
+ 	if (!tx->sta)
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT))
++	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT)) {
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++		ieee80211_check_fast_xmit(tx->sta);
++	}
+ 
+ 	info->flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
+ 
+@@ -2451,7 +2453,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
+ 	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
+-	    test_sta_flag(sta, WLAN_STA_PS_DELIVER))
++	    test_sta_flag(sta, WLAN_STA_PS_DELIVER) ||
++	    test_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT))
+ 		goto out;
+ 
+ 	if (sdata->noack_map)
 -- 
-1.9.1
+2.2.2
 
