@@ -1,68 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36240 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753835AbbIJTP3 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:25506 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbbIXJNh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:29 -0400
-Received: by padhk3 with SMTP id hk3so50752999pad.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:28 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 16/31] staging: wilc1000: rename WILC_WFI_del_station
-Date: Fri, 11 Sep 2015 04:14:15 +0900
-Message-Id: <1441912470-3371-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211542_166126_BA7066F4)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 24 Sep 2015 05:13:37 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/15] staging: wilc1000: remove pointer varialbe cfg_wait and cfg_wait_event
+Date: Thu, 24 Sep 2015 18:14:59 +0900
+Message-ID: <1443086106-20482-8-git-send-email-glen.lee@atmel.com> (sfid-20150924_111342_257231_FC5B5724)
+In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
+References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_del_station with wilc_del_station to avoid
-CamelCase.
+This patch removes cfg_wait and cfg_wait_event which are pointer of
+g_linux_wlan->cfg_event. No need to have pointer varialbe of it. Just use
+g_linux_wlan->cfg_event.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-V2: to make function name simple
+ drivers/staging/wilc1000/linux_wlan.c   |  2 --
+ drivers/staging/wilc1000/wilc_wlan.c    | 14 +++++++-------
+ drivers/staging/wilc1000/wilc_wlan_if.h |  2 --
+ 3 files changed, 7 insertions(+), 11 deletions(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 03dd87f..ff78497 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3384,7 +3384,7 @@ static int  wilc_add_station(struct wiphy *wiphy, struct net_device *dev,
- }
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 5bec7f2..2893776 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1065,8 +1065,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
+ #if defined(MEMORY_STATIC)
+ 	nwi->os_context.rx_buffer_size = LINUX_RX_SIZE;
+ #endif
+-	nwi->os_context.cfg_wait_event = (void *)&g_linux_wlan->cfg_event;
+-
+ 	nwi->os_func.os_wait = linux_wlan_lock_timeout;
  
- /**
-- *  @brief      WILC_WFI_del_station
-+ *  @brief      wilc_del_station
-  *  @details    Remove a station; @mac may be NULL to remove all stations.
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3392,8 +3392,8 @@ static int  wilc_add_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_del_station(struct wiphy *wiphy, struct net_device *dev,
--				struct station_del_parameters *params)
-+static int wilc_del_station(struct wiphy *wiphy, struct net_device *dev,
-+			    struct station_del_parameters *params)
- {
- 	const u8 *mac = params->mac;
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3575,7 +3575,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_beacon = wilc_change_beacon,
- 	.stop_ap = wilc_stop_ap,
- 	.add_station = wilc_add_station,
--	.del_station = WILC_WFI_del_station,
-+	.del_station = wilc_del_station,
- 	.change_station = WILC_WFI_change_station,
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	.get_station = WILC_WFI_get_station,
+ #ifdef WILC_SDIO
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e70c367..5bca997 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -47,7 +47,6 @@ typedef struct {
+ 	wilc_cfg_frame_t cfg_frame;
+ 	u32 cfg_frame_offset;
+ 	int cfg_seq_no;
+-	void *cfg_wait;
+ 
+ 	/**
+ 	 *      RX buffer
+@@ -485,7 +484,7 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
+ 	PRINT_D(TX_DBG, "Adding config packet ...\n");
+ 	if (p->quit) {
+ 		PRINT_D(TX_DBG, "Return due to clear function\n");
+-		up(p->cfg_wait);
++		up(&g_linux_wlan->cfg_event);
+ 		return 0;
+ 	}
+ 
+@@ -1137,7 +1136,7 @@ static void wilc_wlan_handle_rxq(void)
+ 	do {
+ 		if (p->quit) {
+ 			PRINT_D(RX_DBG, "exit 1st do-while due to Clean_UP function\n");
+-			up(p->cfg_wait);
++			up(&g_linux_wlan->cfg_event);
+ 			break;
+ 		}
+ 		rqe = wilc_wlan_rxq_remove();
+@@ -1211,7 +1210,7 @@ static void wilc_wlan_handle_rxq(void)
+ 						 **/
+ 						PRINT_D(RX_DBG, "p->cfg_seq_no = %d - rsp.seq_no = %d\n", p->cfg_seq_no, rsp.seq_no);
+ 						if (p->cfg_seq_no == rsp.seq_no) {
+-							up(p->cfg_wait);
++							up(&g_linux_wlan->cfg_event);
+ 						}
+ 					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
+ 						/**
+@@ -1781,7 +1780,8 @@ static int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size, in
+ 		if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
+ 			ret_size = 0;
+ 
+-		if (p->os_func.os_wait(p->cfg_wait, CFG_PKTS_TIMEOUT)) {
++		if (p->os_func.os_wait(&g_linux_wlan->cfg_event,
++				       CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Set Timed Out\n");
+ 			ret_size = 0;
+ 		}
+@@ -1818,7 +1818,8 @@ static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 			ret_size = 0;
+ 
+ 
+-		if (p->os_func.os_wait(p->cfg_wait, CFG_PKTS_TIMEOUT)) {
++		if (p->os_func.os_wait(&g_linux_wlan->cfg_event,
++				       CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Get Timed Out\n");
+ 			ret_size = 0;
+ 		}
+@@ -1972,7 +1973,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
+ 
+ 	g_wlan.txq_add_to_head_lock = inp->os_context.txq_add_to_head_critical_section;
+ 
+-	g_wlan.cfg_wait = inp->os_context.cfg_wait_event;
+ 	g_wlan.tx_buffer_size = inp->os_context.tx_buffer_size;
+ #if defined (MEMORY_STATIC)
+ 	g_wlan.rx_buffer_size = inp->os_context.rx_buffer_size;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 1a0bfdb..f761347 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -118,8 +118,6 @@ typedef struct {
+ #if defined(MEMORY_STATIC)
+ 	u32 rx_buffer_size;
+ #endif
+-
+-	struct semaphore *cfg_wait_event;
+ } wilc_wlan_os_context_t;
+ 
+ typedef struct {
 -- 
-2.5.1
+1.9.1
 
