@@ -1,211 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:35984 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843AbbIIQsF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:25451 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752009AbbIXJNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 12:48:05 -0400
-Received: by ioii196 with SMTP id i196so29101519ioi.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2015 09:48:04 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 3/3] ath10k: implement mesh support
-Date: Wed,  9 Sep 2015 12:47:36 -0400
-Message-Id: <1441817256-3997-3-git-send-email-me@bobcopeland.com> (sfid-20150909_184813_183241_100C236A)
-In-Reply-To: <1441817256-3997-1-git-send-email-me@bobcopeland.com>
-References: <1441817256-3997-1-git-send-email-me@bobcopeland.com>
+	Thu, 24 Sep 2015 05:13:17 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/15] staging: wilc1000: use g_linux_wlan->txq_spinlock not the pointer of it
+Date: Thu, 24 Sep 2015 18:14:56 +0900
+Message-ID: <1443086106-20482-5-git-send-email-glen.lee@atmel.com> (sfid-20150924_111323_431697_5D42CFF3)
+In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
+References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for mesh to ath10k.  We simply use an AP virtual interface
-in the firmware in order to enable beaconing without TSF adoption, and
-use the raw (802.11) transmit mode.
+Use spinlock variable g_linux_wlan->txq_spinlock itself instead of
+g_wlan.txq_spinlock which is pointer of g_linux_wlan->txq_spinlock.
+Delete os_context.txq_spin_lock, g_wlan.txq_spinlock and it's related codes.
 
-Due to firmware limitations, the firmware must operate in raw
-(non-native 802.11) mode.  As this is configured at firmware init time,
-a new "rawmode" modparam is added, and mesh interfaces are available
-only if rawmode=true.  The firmware must advertise support for rawmode;
-tested successfully with firmware 10.2.4.70-2.
-
-When the module is loaded with (newly implemented) modparam rawmode=1, it
-will enable operating an open mesh STA via something like the following:
-
-    ip link set wlan0 down
-    iw dev wlan0 set type mp
-    ip link set wlan0 up
-    iw dev wlan0 set freq 5745 80 5775
-    iw dev wlan0 mesh join mesh-vht
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-v3:
- * fix cfg80211 interface combinations warning when
-   CONFIG_MAC80211_MESH=n or when using 10.4 FW (Kalle Valo)
-v2:
- * added raw mode feature flag check
- * usage and firmware notes in commit log
+ drivers/staging/wilc1000/linux_wlan.c         |  2 --
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ drivers/staging/wilc1000/wilc_wlan.c          | 37 ++++++++++++---------------
+ drivers/staging/wilc1000/wilc_wlan_if.h       |  1 -
+ 4 files changed, 18 insertions(+), 23 deletions(-)
 
- drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++++
- drivers/net/wireless/ath/ath10k/mac.c  | 36 +++++++++++++++++++++++++++++++++-
- 2 files changed, 47 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 6e5033b..09a74a8 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -34,16 +34,19 @@ unsigned int ath10k_debug_mask;
- static unsigned int ath10k_cryptmode_param;
- static bool uart_print;
- static bool skip_otp;
-+static bool rawmode;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d2678a3..d953ffe 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1062,8 +1062,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
  
- module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
- module_param_named(cryptmode, ath10k_cryptmode_param, uint, 0644);
- module_param(uart_print, bool, 0644);
- module_param(skip_otp, bool, 0644);
-+module_param(rawmode, bool, 0644);
+ 	nwi->os_context.txq_add_to_head_critical_section = (void *)&g_linux_wlan->txq_add_to_head_cs;
  
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- MODULE_PARM_DESC(uart_print, "Uart target debugging");
- MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
- MODULE_PARM_DESC(cryptmode, "Crypto mode: 0-hardware, 1-software");
-+MODULE_PARM_DESC(rawmode, "Use raw 802.11 frame datapath");
+-	nwi->os_context.txq_spin_lock = (void *)&g_linux_wlan->txq_spinlock;
+-
+ 	nwi->os_context.txq_wait_event = (void *)&g_linux_wlan->txq_event;
  
- static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 	{
-@@ -1122,6 +1125,15 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
- 	ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
+ #if defined(MEMORY_STATIC)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 47e04c2..b24b9a9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -215,6 +215,7 @@ struct WILC_WFI_mon_priv {
+ 	struct net_device *real_ndev;
+ };
  
-+	if (rawmode) {
-+		if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
-+			      ar->fw_features)) {
-+			ath10k_err(ar, "rawmode = 1 requires support from firmware");
-+			return -EINVAL;
-+		}
-+		set_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-+	}
-+
- 	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
- 		ar->wmi.rx_decap_mode = ATH10K_HW_TXRX_RAW;
++extern linux_wlan_t *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
+ void linux_wlan_mac_indicate(int flag);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 3e1479f..68826eb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -70,7 +70,6 @@ typedef struct {
+ 	void *txq_lock;
  
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 80efcc8..1cda4f9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4211,6 +4211,14 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_ADHOC:
- 		arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+			ret = -EINVAL;
-+			ath10k_warn(ar, "must load driver with rawmode=1 to add mesh interfaces\n");
-+			goto err;
-+		}
-+		arvif->vdev_type = WMI_VDEV_TYPE_AP;
-+		break;
- 	case NL80211_IFTYPE_AP:
- 		arvif->vdev_type = WMI_VDEV_TYPE_AP;
+ 	struct semaphore *txq_add_to_head_lock;
+-	void *txq_spinlock;
+ 	unsigned long txq_spinlock_flags;
  
-@@ -4251,6 +4259,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	 * become corrupted, e.g. have garbled IEs or out-of-date TIM bitmap.
- 	 */
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
-+	    vif->type == NL80211_IFTYPE_MESH_POINT ||
- 	    vif->type == NL80211_IFTYPE_AP) {
- 		arvif->beacon_buf = dma_zalloc_coherent(ar->dev,
- 							IEEE80211_MAX_FRAME_LEN,
-@@ -4590,6 +4599,13 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		if (ret)
- 			ath10k_warn(ar, "failed to update beacon template: %d\n",
- 				    ret);
-+
-+		if (ieee80211_vif_is_mesh(vif)) {
-+			/* mesh doesn't use SSID but firmware needs it */
-+			strncpy(arvif->u.ap.ssid, "mesh",
-+				sizeof(arvif->u.ap.ssid));
-+			arvif->u.ap.ssid_len = 4;
-+		}
+ 	struct txq_entry_t *txq_head;
+@@ -179,7 +178,7 @@ static struct txq_entry_t *wilc_wlan_txq_remove_from_head(void)
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+ 	if (p->txq_head) {
+ 		tqe = p->txq_head;
+ 		p->txq_head = tqe->next;
+@@ -194,7 +193,7 @@ static struct txq_entry_t *wilc_wlan_txq_remove_from_head(void)
+ 	} else {
+ 		tqe = NULL;
  	}
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 	return tqe;
+ }
  
- 	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
-@@ -5329,6 +5345,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 	} else if (old_state == IEEE80211_STA_AUTH &&
- 		   new_state == IEEE80211_STA_ASSOC &&
- 		   (vif->type == NL80211_IFTYPE_AP ||
-+		    vif->type == NL80211_IFTYPE_MESH_POINT ||
- 		    vif->type == NL80211_IFTYPE_ADHOC)) {
- 		/*
- 		 * New association.
-@@ -5364,6 +5381,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		    new_state == IEEE80211_STA_AUTH &&
- 		    (vif->type == NL80211_IFTYPE_AP ||
-+		     vif->type == NL80211_IFTYPE_MESH_POINT ||
- 		     vif->type == NL80211_IFTYPE_ADHOC)) {
- 		/*
- 		 * Disassociation.
-@@ -6678,6 +6696,9 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
- 	{
- 	.max	= 7,
- 	.types	= BIT(NL80211_IFTYPE_AP)
-+#ifdef CONFIG_MAC80211_MESH
-+		| BIT(NL80211_IFTYPE_MESH_POINT)
-+#endif
- 	},
- };
+@@ -202,7 +201,7 @@ static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
  
-@@ -6685,6 +6706,9 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
- 	{
- 	.max	= 8,
- 	.types	= BIT(NL80211_IFTYPE_AP)
-+#ifdef CONFIG_MAC80211_MESH
-+		| BIT(NL80211_IFTYPE_MESH_POINT)
-+#endif
- 	},
- };
+ 	if (p->txq_head == NULL) {
+ 		tqe->next = NULL;
+@@ -218,7 +217,7 @@ static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
+ 	p->txq_entries += 1;
+ 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
  
-@@ -6722,6 +6746,9 @@ static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
- 	{
- 		.max = 2,
- 		.types = BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+			 BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
- 			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			 BIT(NL80211_IFTYPE_P2P_GO),
- 	},
-@@ -6743,6 +6770,9 @@ static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
- 	{
- 		.max = 1,
- 		.types = BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+			 BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
- 			 BIT(NL80211_IFTYPE_P2P_GO),
- 	},
- 	{
-@@ -6809,6 +6839,9 @@ static const struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
- 	{
- 		.max	= 16,
- 		.types	= BIT(NL80211_IFTYPE_AP)
-+#ifdef CONFIG_MAC80211_MESH
-+			| BIT(NL80211_IFTYPE_MESH_POINT)
-+#endif
- 	},
- };
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
  
-@@ -7033,7 +7066,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	/**
+ 	 *      wake up TX queue
+@@ -235,7 +234,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+ 	if (p->os_func.os_wait(p->txq_add_to_head_lock, CFG_PKTS_TIMEOUT))
+ 		return -1;
  
- 	ar->hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP);
-+		BIT(NL80211_IFTYPE_AP) |
-+		BIT(NL80211_IFTYPE_MESH_POINT);
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
  
- 	ar->hw->wiphy->available_antennas_rx = ar->supp_rx_chainmask;
- 	ar->hw->wiphy->available_antennas_tx = ar->supp_tx_chainmask;
+ 	if (p->txq_head == NULL) {
+ 		tqe->next = NULL;
+@@ -251,7 +250,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+ 	p->txq_entries += 1;
+ 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
+ 
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 	up(p->txq_add_to_head_lock);
+ 
+ 
+@@ -352,9 +351,9 @@ static inline int remove_TCP_related(void)
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+ 
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 	return 0;
+ }
+ 
+@@ -368,7 +367,7 @@ static inline int tcp_process(struct txq_entry_t *tqe)
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+ 
+ 	eth_hdr_ptr = &buffer[0];
+ 	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
+@@ -416,7 +415,7 @@ static inline int tcp_process(struct txq_entry_t *tqe)
+ 	} else {
+ 		ret = 0;
+ 	}
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 	return ret;
+ }
+ 
+@@ -428,7 +427,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(void)
+ 	u32 Dropped = 0;
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 
+-	spin_lock_irqsave(p->txq_spinlock, p->txq_spinlock_flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, p->txq_spinlock_flags);
+ 	for (i = PendingAcks_arrBase; i < (PendingAcks_arrBase + Pending_Acks); i++) {
+ 		if (Pending_Acks_info[i].ack_num < Acks_keep_track_info[Pending_Acks_info[i].Session_index].Bigger_Ack_num) {
+ 			struct txq_entry_t *tqe;
+@@ -455,7 +454,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(void)
+ 		PendingAcks_arrBase = 0;
+ 
+ 
+-	spin_unlock_irqrestore(p->txq_spinlock, p->txq_spinlock_flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock,
++			       p->txq_spinlock_flags);
+ 
+ 	while (Dropped > 0) {
+ 		/*consume the semaphore count of the removed packet*/
+@@ -576,11 +576,11 @@ static struct txq_entry_t *wilc_wlan_txq_get_first(void)
+ 	struct txq_entry_t *tqe;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+ 
+ 	tqe = p->txq_head;
+ 
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 
+ 
+ 	return tqe;
+@@ -588,12 +588,11 @@ static struct txq_entry_t *wilc_wlan_txq_get_first(void)
+ 
+ static struct txq_entry_t *wilc_wlan_txq_get_next(struct txq_entry_t *tqe)
+ {
+-	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	unsigned long flags;
+-	spin_lock_irqsave(p->txq_spinlock, flags);
++	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+ 
+ 	tqe = tqe->next;
+-	spin_unlock_irqrestore(p->txq_spinlock, flags);
++	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+ 
+ 
+ 	return tqe;
+@@ -1975,8 +1974,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
+ 
+ 	g_wlan.txq_add_to_head_lock = inp->os_context.txq_add_to_head_critical_section;
+ 
+-	g_wlan.txq_spinlock = inp->os_context.txq_spin_lock;
+-
+ 	g_wlan.rxq_lock = inp->os_context.rxq_critical_section;
+ 	g_wlan.txq_wait = inp->os_context.txq_wait_event;
+ 	g_wlan.cfg_wait = inp->os_context.cfg_wait_event;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index aafb492..e82d7a24 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -114,7 +114,6 @@ typedef struct {
+ 	void *txq_critical_section;
+ 
+ 	void *txq_add_to_head_critical_section;
+-	void *txq_spin_lock;
+ 
+ 	void *txq_wait_event;
+ 
 -- 
-2.1.4
+1.9.1
 
