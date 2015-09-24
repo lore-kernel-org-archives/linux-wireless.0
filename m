@@ -1,67 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:35121 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751915AbbIQRsb (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:25662 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbbIXJOY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 13:48:31 -0400
-Received: by obbzf10 with SMTP id zf10so19264387obb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 10:48:30 -0700 (PDT)
+	Thu, 24 Sep 2015 05:14:24 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 15/15] staging: wilc1000: remove variable cif_func
+Date: Thu, 24 Sep 2015 18:15:06 +0900
+Message-ID: <1443086106-20482-15-git-send-email-glen.lee@atmel.com> (sfid-20150924_111426_995614_197CBD7D)
+In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
+References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150916123937.GB2051@localhost>
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
-	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
-	<CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
-	<20150829222531.GA8604@localhost>
-	<CAEFj987gvasYnRq8tiFeQitbBmoXAr77hXU2cUW_TsH+viUn8g@mail.gmail.com>
-	<20150916123937.GB2051@localhost>
-Date: Fri, 18 Sep 2015 01:48:30 +0800
-Message-ID: <CAEFj986tjgK-=eBaoR3G8m7wf0m32WLutRypPzMfjj2+MW5ybw@mail.gmail.com> (sfid-20150917_194835_066862_2739B19E)
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jason Andryuk <jandryuk@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Bob
+This patch removes variable cif_func and use mac_cfg directly. No need to have
+another pointer variable.
 
-I have also tested with nwifi mode for non-secured mesh. It seems to
-be worked for me with the following two test scenarios:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-Node 1 [ath10k] <---> Node 2 [ath10k] <---> Node 3 [ath10k]
-Node 1 [ath10k] <---> Node 2 [ath9k]
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 24a3aa1..1937d7d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -40,7 +40,6 @@ typedef struct {
+ 	/**
+ 	 *      configuration interface functions
+ 	 **/
+-	wilc_cfg_func_t cif_func;
+ 	int cfg_frame_in_use;
+ 	wilc_cfg_frame_t cfg_frame;
+ 	u32 cfg_frame_offset;
+@@ -1199,7 +1198,7 @@ static void wilc_wlan_handle_rxq(void)
+ 
+ 
+ 
+-					p->cif_func.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
++					mac_cfg.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
+ 					if (rsp.type == WILC_CFG_RSP) {
+ 						/**
+ 						 *      wake up the waiting task...
+@@ -1764,7 +1763,8 @@ static int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size, in
+ 		p->cfg_frame_offset = 0;
+ 
+ 	offset = p->cfg_frame_offset;
+-	ret_size = p->cif_func.cfg_wid_set(p->cfg_frame.frame, offset, (u16)wid, buffer, buffer_size);
++	ret_size = mac_cfg.cfg_wid_set(p->cfg_frame.frame, offset, (u16)wid,
++				       buffer, buffer_size);
+ 	offset += ret_size;
+ 	p->cfg_frame_offset = offset;
+ 
+@@ -1803,7 +1803,7 @@ static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 		p->cfg_frame_offset = 0;
+ 
+ 	offset = p->cfg_frame_offset;
+-	ret_size = p->cif_func.cfg_wid_get(p->cfg_frame.frame, offset, (u16)wid);
++	ret_size = mac_cfg.cfg_wid_get(p->cfg_frame.frame, offset, (u16)wid);
+ 	offset += ret_size;
+ 	p->cfg_frame_offset = offset;
+ 
+@@ -1830,10 +1830,9 @@ static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 
+ static int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size)
+ {
+-	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	int ret;
+ 
+-	ret = p->cif_func.cfg_wid_get_val((u16)wid, buffer, buffer_size);
++	ret = mac_cfg.cfg_wid_get_val((u16)wid, buffer, buffer_size);
+ 
+ 	return ret;
+ }
+@@ -1999,8 +1998,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
+ 		ret = -105;
+ 		goto _fail_;
+ 	}
+-	memcpy((void *)&g_wlan.cif_func, &mac_cfg, sizeof(wilc_cfg_func_t));
+-
+ 
+ 	/**
+ 	 *      alloc tx, rx buffer
+-- 
+1.9.1
 
-I am using the following:
-compat-wireless-2015-07-21 from OpenWRT
-firmware-5.bin_10.2.4.70.6-2
-
-I just wondering whether using raw wifi is better for encrypted mesh later?
-
-----
-Chun-Yeow
-
-On Wed, Sep 16, 2015 at 8:39 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Aug 31, 2015 at 01:43:28AM +0800, Chun-Yeow Yeoh wrote:
->> Hi, Bob
->>
->> > Yes: you don't want to enable raw mode TX / RX decap in the normal
->> > case because it's fairly inefficient compared to "native" wifi mode,
->> > according to my understanding.  The latter doesn't support mesh framing
->> > however.
->> >
->>
->> The native WiFi mode doesn't support mesh framing. Can you elaborate
->> more on this?
->
-> Sorry, missed this before -- the 'nwifi' mode which is the normal
-> datapath for ath10k discards the QoS header and following mesh header
-> when transmitting, if I recall correctly.  I also had some issues with the
-> received frames when using nwifi RX decap with raw mode TX, but I don't
-> recall exactly the problem.  I can retest with these modes if you really
-> want the details.
->
-> --
-> Bob Copeland %% http://bobcopeland.com/
