@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f194.google.com ([209.85.212.194]:32910 "EHLO
-	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbbIYWT6 (ORCPT
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:8858 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756325AbbIXOBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 18:19:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150925214438.GH5951@linux>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	<4357538.Wlf88yQie6@vostro.rjw.lan>
-	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
-	<2524822.pQu4UKMrlb@vostro.rjw.lan>
-	<20150925214438.GH5951@linux>
-Date: Sat, 26 Sep 2015 00:19:56 +0200
-Message-ID: <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com> (sfid-20150926_002100_530543_CAD07D8B)
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thu, 24 Sep 2015 10:01:32 -0400
+From: Andrzej Hajda <a.hajda@samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Andrzej Hajda <a.hajda@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset=UTF-8
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 18/19] mac80211: make ieee80211_new_mesh_header return unsigned
+Date: Thu, 24 Sep 2015 16:00:26 +0200
+Message-id: <1443103227-25612-19-git-send-email-a.hajda@samsung.com> (sfid-20150924_160621_498089_1D951B4A)
+In-reply-to: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
+References: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 25, 2015 at 11:44 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> On 25-09-15, 22:58, Rafael J. Wysocki wrote:
->> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
->> Initially, all of them are equal to 0.
->>
->> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
->>
->> What's the result?
->
-> But then two CPUs can update the same variable as well, and we must
-> have proper locking in place to fix that.
+The function returns always non-negative values.
 
-Right.
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-So if you allow something like debugfs to update your structure, how
-do you make sure there is the proper locking?
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
-Is that not a problem in all of the places modified by the [2/2]?
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+Hi,
 
-How can the future users of the API know what to do to avoid potential
-problems with it?
+To avoid problems with too many mail recipients I have sent whole
+patchset only to LKML. Anyway patches have no dependencies.
 
->
-> Anyway, that problem isn't here for sure as its between two
-> unsigned-longs. So, should I just move it to bool and resend ?
+Regards
+Andrzej
+---
+ net/mac80211/mesh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I guess it might be more convenient to fold this into the other patch,
-because we seem to be splitting hairs here.
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e06a5ca..09de65a 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -540,7 +540,7 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+  *
+  * Return the header length.
+  */
+-int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
++unsigned int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
+ 			      struct ieee80211s_hdr *meshhdr,
+ 			      const char *addr4or5, const char *addr6)
+ {
+-- 
+1.9.1
 
-Thanks,
-Rafael
