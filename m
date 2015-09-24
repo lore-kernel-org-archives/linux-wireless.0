@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:35597 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932234AbbIYQjg (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:42038
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753148AbbIXM74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 12:39:36 -0400
-Received: by ioiz6 with SMTP id z6so116213305ioi.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 09:39:36 -0700 (PDT)
-Date: Fri, 25 Sep 2015 11:39:34 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
+	Thu, 24 Sep 2015 08:59:56 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [ANN] wireless-regdb: master-2015-09-25
-Message-ID: <20150925163934.GB11862@ubuntu-xps13> (sfid-20150925_183940_010247_C8092202)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 4.3 1/2] mac80211: fix tx sequence number assignment with software queue + fast-xmit
+Date: Thu, 24 Sep 2015 14:59:48 +0200
+Message-Id: <1443099589-69793-1-git-send-email-nbd@openwrt.org> (sfid-20150924_145959_372488_3B4C55F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2015-09-25) is available at:
+When using software queueing, tx sequence number assignment happens at
+ieee80211_tx_dequeue time, so the fast-xmit codepath must not do that.
 
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.09.25.tar.gz
-
-The short log of changes since the 2015-07-20 release is below.
-
-Thanks,
-Seth
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ net/mac80211/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Seth Forshee (2):
-      wireless-regdb: Add ETSI as the DFS region for Hong Kong
-      wireless-regdb: update regulatory.bin based on preceding changes
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 84e0e8c..af058eb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2767,7 +2767,8 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+ 		*ieee80211_get_qos_ctl(hdr) = tid;
+-		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
++		if (!sta->sta.txq[0])
++			hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
+ 	} else {
+ 		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+ 		hdr->seq_ctrl = cpu_to_le16(sdata->sequence_number);
+-- 
+2.2.2
 
