@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37723 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbbIKHxj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10309 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755916AbbIXOY2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2015 03:53:39 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 5/7] staging: wilc1000: remove unnecessary extern function declaration
-Date: Fri, 11 Sep 2015 16:53:01 +0900
-Message-ID: <1441957983-17726-6-git-send-email-tony.cho@atmel.com> (sfid-20150911_095341_416388_890E405D)
-In-Reply-To: <1441957983-17726-1-git-send-email-tony.cho@atmel.com>
-References: <1441957983-17726-1-git-send-email-tony.cho@atmel.com>
+	Thu, 24 Sep 2015 10:24:28 -0400
+From: <c_mkenna@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Increase pci wakeup timeout to 30 ms
+Date: Thu, 24 Sep 2015 19:54:00 +0530
+Message-ID: <1443104640-13965-1-git-send-email-c_mkenna@qti.qualcomm.com> (sfid-20150924_162431_637485_0AFC1B4D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-Function NetworkInfoReceived, GnrlAsyncInfoReceived and
-host_int_ScanCompleteReceived are declared in the header file already.
-Just removes the declaration and comments.
+It is noticed that pci wakeup time is exceeding current timeout (10ms)
+randomly which is tested on QCA988x. So, the wake up time is increased
+to 30 ms and added debug prints to log total timeout.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 6 +++++-
+ drivers/net/wireless/ath/ath10k/pci.h | 3 ++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index cada26d..60b8961 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -137,14 +137,6 @@ typedef struct {
- /* Extern Variable Declarations                                              */
- /*****************************************************************************/
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1046ab6..2df1692 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -452,8 +452,12 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+ 	int curr_delay = 5;
  
--
--/*****************************************************************************/
--/* Extern Function Declarations                                              */
--/*****************************************************************************/
--extern s32 SendRawPacket(s8 *ps8Packet, s32 s32PacketLen);
--extern void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length);
--extern void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length);
--extern void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length);
- /*****************************************************************************/
- /* Global Variables                                                          */
- /*****************************************************************************/
+ 	while (tot_delay < PCIE_WAKE_TIMEOUT) {
+-		if (ath10k_pci_is_awake(ar))
++		if (ath10k_pci_is_awake(ar)) {
++			if (tot_delay > PCIE_WAKE_LATE_US)
++				ath10k_warn(ar, "device wakeup took %d ms which is unusally long, otherwise it works normally.\n",
++					    tot_delay / 1000);
+ 			return 0;
++		}
+ 
+ 		udelay(curr_delay);
+ 		tot_delay += curr_delay;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 8d364fb..54af2d7 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -230,7 +230,8 @@ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+ 
+ #define ATH10K_PCI_RX_POST_RETRY_MS 50
+ #define ATH_PCI_RESET_WAIT_MAX 10 /* ms */
+-#define PCIE_WAKE_TIMEOUT 10000	/* 10ms */
++#define PCIE_WAKE_TIMEOUT 30000	/* 30ms */
++#define PCIE_WAKE_LATE_US 10000	/* 10ms */
+ 
+ #define BAR_NUM 0
+ 
 -- 
 1.9.1
 
