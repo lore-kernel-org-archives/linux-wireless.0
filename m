@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54680 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbbIGIxg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 04:53:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
-	<wrfjfv2rf1e1.fsf@redhat.com> <wrfj37yqg8l5.fsf@redhat.com>
-Date: Mon, 07 Sep 2015 11:53:29 +0300
-In-Reply-To: <wrfj37yqg8l5.fsf@redhat.com> (Jes Sorensen's message of "Mon, 07
-	Sep 2015 00:24:38 -0400")
-Message-ID: <87h9n6fw52.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_105339_759075_81F36220)
+Received: from mx2.suse.de ([195.135.220.15]:45456 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755391AbbIYI7H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 04:59:07 -0400
+Date: Fri, 25 Sep 2015 10:59:04 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH v2 3/3] NFC: nfcmrvl: Auto-select core module
+Message-ID: <20150925105904.6633628d@endymion.delvare> (sfid-20150925_105913_897814_83E28505)
+In-Reply-To: <20150925104936.3b526b68@endymion.delvare>
+References: <20150925104936.3b526b68@endymion.delvare>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+As I understand it, the core nfcmrvl module is useless without
+either the USB or the UART access module. So hide NFC_MRVL and select
+it automatically if either NFC_MRVL_USB or NFC_MRVL_UART is selected.
 
->>> Also how do we make sure that distros don't enable
->>> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
->>> without thinking.
->>
->> Some distros enable staging whether you ask them or not. I think
->> CONFIG_RTL8XXXYU_UNTESTED is pretty safe and will most likely just work
->> for the devices on that list, but the driver will spit out a warning
->> asking the person to report test results to me.
->
-> Just one more note - we could put UNTESTED under EXPERIMENTAL
+This avoids presenting NFC_MRVL when neither NFC_MRVL_USB nor
+NFC_MRVL_UART can be selected.
 
-I think that's a good idea. Does anyone know if the distros use features
-which depend on EXPERIMENTAL? I hope not.
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+---
+Already sent on 2014-04-19. Changes since v1: rebased to handle
+NFC_MRVL_UART.
+
+Note that the s3fwrn5 NFC driver is already implemented the same way.
+
+ drivers/nfc/nfcmrvl/Kconfig |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+--- linux-4.3-rc2.orig/drivers/nfc/nfcmrvl/Kconfig	2015-09-24 11:44:28.103745867 +0200
++++ linux-4.3-rc2/drivers/nfc/nfcmrvl/Kconfig	2015-09-25 10:39:53.972729905 +0200
+@@ -1,18 +1,15 @@
+ config NFC_MRVL
+-	tristate "Marvell NFC driver support"
+-	depends on NFC_NCI
++	tristate
+ 	help
+ 	  The core driver to support Marvell NFC devices.
+ 
+ 	  This driver is required if you want to support
+ 	  Marvell NFC device 8897.
+ 
+-	  Say Y here to compile Marvell NFC driver into the kernel or
+-	  say M to compile it as module.
+-
+ config NFC_MRVL_USB
+ 	tristate "Marvell NFC-over-USB driver"
+-	depends on NFC_MRVL && USB
++	depends on NFC_NCI && USB
++	select NFC_MRVL
+ 	help
+ 	  Marvell NFC-over-USB driver.
+ 
+@@ -24,7 +21,8 @@ config NFC_MRVL_USB
+ 
+ config NFC_MRVL_UART
+ 	tristate "Marvell NFC-over-UART driver"
+-	depends on NFC_MRVL && NFC_NCI_UART
++	depends on NFC_NCI && NFC_NCI_UART
++	select NFC_MRVL
+ 	help
+ 	  Marvell NFC-over-UART driver.
+ 
 
 -- 
-Kalle Valo
+Jean Delvare
+SUSE L3 Support
