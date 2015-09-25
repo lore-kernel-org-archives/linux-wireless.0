@@ -1,112 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37709 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109AbbIRUIZ (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:52335 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932965AbbIYUFL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 02/16] brcmfmac: Add support for the BCM4350 PCIE device.
-Date: Fri, 18 Sep 2015 22:08:05 +0200
-Message-ID: <1442606899-31872-3-git-send-email-arend@broadcom.com> (sfid-20150918_221653_795877_EB5E3BFF)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	Fri, 25 Sep 2015 16:05:11 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Fri, 25 Sep 2015 22:33:24 +0200
+Message-ID: <4357538.Wlf88yQie6@vostro.rjw.lan> (sfid-20150925_220606_885498_90EE8133)
+In-Reply-To: <4331507.W3ZDWldbWu@vostro.rjw.lan>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <20150925185256.GG5951@linux> <4331507.W3ZDWldbWu@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Friday, September 25, 2015 10:26:22 PM Rafael J. Wysocki wrote:
+> On Friday, September 25, 2015 11:52:56 AM Viresh Kumar wrote:
+> > On 25-09-15, 20:49, Johannes Berg wrote:
+> > > Ok, then, but that means Rafael is completely wrong ...
+> > > debugfs_create_bool() takes a *pointer* and it needs to be long-lived,
+> > > it can't be on the stack. You also don't get a call when it changes.
+> > 
+> > Ahh, ofcourse. My bad as well...
+> 
+> Well, sorry about the wrong suggestion.
+> 
+> > I think we can change structure definition but will wait for Rafael's
+> > comment before that.
+> 
+> OK, change the structure then.
 
-This patch adds support fo the BRCM4350 2x2 11ac PCIE device.
+But here's a question.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
- 3 files changed, 12 insertions(+)
+You're going to change that into bool in the next patch, right?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index e3b8e23..ff0c7c6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -647,6 +647,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 		return 0x198000;
- 	case BRCM_CC_4335_CHIP_ID:
- 	case BRCM_CC_4339_CHIP_ID:
-+	case BRCM_CC_4350_CHIP_ID:
- 	case BRCM_CC_4354_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
- 	case BRCM_CC_43567_CHIP_ID:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 255d49a..451022e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -47,6 +47,8 @@ enum brcmf_pcie_state {
- 
- #define BRCMF_PCIE_43602_FW_NAME		"brcm/brcmfmac43602-pcie.bin"
- #define BRCMF_PCIE_43602_NVRAM_NAME		"brcm/brcmfmac43602-pcie.txt"
-+#define BRCMF_PCIE_4350_FW_NAME			"brcm/brcmfmac4350-pcie.bin"
-+#define BRCMF_PCIE_4350_NVRAM_NAME		"brcm/brcmfmac4350-pcie.txt"
- #define BRCMF_PCIE_4356_FW_NAME			"brcm/brcmfmac4356-pcie.bin"
- #define BRCMF_PCIE_4356_NVRAM_NAME		"brcm/brcmfmac4356-pcie.txt"
- #define BRCMF_PCIE_43570_FW_NAME		"brcm/brcmfmac43570-pcie.bin"
-@@ -194,6 +196,8 @@ enum brcmf_pcie_state {
- 
- MODULE_FIRMWARE(BRCMF_PCIE_43602_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43602_NVRAM_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4350_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4350_NVRAM_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4356_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4356_NVRAM_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
-@@ -1418,6 +1422,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
- 		fw_name = BRCMF_PCIE_43602_FW_NAME;
- 		nvram_name = BRCMF_PCIE_43602_NVRAM_NAME;
- 		break;
-+	case BRCM_CC_4350_CHIP_ID:
-+		fw_name = BRCMF_PCIE_4350_FW_NAME;
-+		nvram_name = BRCMF_PCIE_4350_NVRAM_NAME;
-+		break;
- 	case BRCM_CC_4356_CHIP_ID:
- 		fw_name = BRCMF_PCIE_4356_FW_NAME;
- 		nvram_name = BRCMF_PCIE_4356_NVRAM_NAME;
-@@ -1956,6 +1964,7 @@ cleanup:
- 	PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0 }
- 
- static struct pci_device_id brcmf_pcie_devid_table[] = {
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 7a6daa3..8278376 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -39,6 +39,7 @@
- #define BRCM_CC_4339_CHIP_ID		0x4339
- #define BRCM_CC_43430_CHIP_ID		43430
- #define BRCM_CC_4345_CHIP_ID		0x4345
-+#define BRCM_CC_4350_CHIP_ID		0x4350
- #define BRCM_CC_4354_CHIP_ID		0x4354
- #define BRCM_CC_4356_CHIP_ID		0x4356
- #define BRCM_CC_43566_CHIP_ID		43566
-@@ -56,6 +57,7 @@
- #define BRCM_USB_BCMFW_DEVICE_ID	0x0bdc
- 
- /* PCIE Device IDs */
-+#define BRCM_PCIE_4350_DEVICE_ID	0x43a3
- #define BRCM_PCIE_4354_DEVICE_ID	0x43df
- #define BRCM_PCIE_4356_DEVICE_ID	0x43ec
- #define BRCM_PCIE_43567_DEVICE_ID	0x43d3
--- 
-1.9.1
+So what if bool is a byte and the field is not word-aligned and changing
+that byte requires a read-modify-write.  How do we ensure that things remain
+consistent in that case?
+
+Thanks,
+Rafael
 
