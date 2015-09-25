@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34266 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858AbbINDYp (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:35635 "EHLO
+	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933168AbbIYUcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:24:45 -0400
-Received: by padhy16 with SMTP id hy16so129885334pad.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:24:44 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 03/31] staging: wilc1000: rename WILC_WFI_CfgConnect
-Date: Mon, 14 Sep 2015 12:24:03 +0900
-Message-Id: <1442201071-16155-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_052450_290551_7B734836)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 25 Sep 2015 16:32:46 -0400
+Received: by vkao3 with SMTP id o3so62989704vka.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 13:32:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4357538.Wlf88yQie6@vostro.rjw.lan>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	<20150925185256.GG5951@linux>
+	<4331507.W3ZDWldbWu@vostro.rjw.lan>
+	<4357538.Wlf88yQie6@vostro.rjw.lan>
+Date: Fri, 25 Sep 2015 13:25:49 -0700
+Message-ID: <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com> (sfid-20150925_223249_536652_812475EC)
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_CfgConnect with connect to avoid CamelCase.
+On 25 September 2015 at 13:33, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> You're going to change that into bool in the next patch, right?
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: remove "wilc_" prefix
+Yeah.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> So what if bool is a byte and the field is not word-aligned
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 2c39179..7f1ca95 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -806,7 +806,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- }
- 
- /**
-- *  @brief      WILC_WFI_CfgConnect
-+ *  @brief      connect
-  *  @details    Connect to the ESS with the specified parameters. When connected,
-  *                      call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
-  *                      If the connection fails for some reason, call cfg80211_connect_result()
-@@ -817,8 +817,8 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_CfgConnect(struct wiphy *wiphy, struct net_device *dev,
--			       struct cfg80211_connect_params *sme)
-+static int connect(struct wiphy *wiphy, struct net_device *dev,
-+		   struct cfg80211_connect_params *sme)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	u32 i;
-@@ -3560,7 +3560,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 
- 	.set_monitor_channel = set_channel,
- 	.scan = scan,
--	.connect = WILC_WFI_CfgConnect,
-+	.connect = connect,
- 	.disconnect = WILC_WFI_disconnect,
- 	.add_key = WILC_WFI_add_key,
- 	.del_key = WILC_WFI_del_key,
--- 
-2.5.1
+Its between two 'unsigned long' variables today, and the struct isn't packed.
+So, it will be aligned, isn't it?
 
+> and changing
+> that byte requires a read-modify-write.  How do we ensure that things remain
+> consistent in that case?
+
+I didn't understood why a read-modify-write is special here? That's
+what will happen
+to most of the non-word-sized fields anyway?
+
+Probably I didn't understood what you meant..
+
+--
+viresh
