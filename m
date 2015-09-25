@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44487 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756132AbbIUM1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:27:54 -0400
-Message-ID: <1442838469.1876.1.camel@sipsolutions.net> (sfid-20150921_142757_616898_6F8AA169)
-Subject: Re: [PATCH] nl80211:  Print reasons for errors in setting bitrates.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Mon, 21 Sep 2015 14:27:49 +0200
-In-Reply-To: <1442610135-8696-1-git-send-email-greearb@candelatech.com>
-References: <1442610135-8696-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f169.google.com ([209.85.223.169]:35597 "EHLO
+	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932234AbbIYQjg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 12:39:36 -0400
+Received: by ioiz6 with SMTP id z6so116213305ioi.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 09:39:36 -0700 (PDT)
+Date: Fri, 25 Sep 2015 11:39:34 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2015-09-25
+Message-ID: <20150925163934.GB11862@ubuntu-xps13> (sfid-20150925_183940_010247_C8092202)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-18 at 14:02 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Makes it easier to figure out why user-space calls are
-> failing.
+A new release of wireless-regdb (master-2015-09-25) is available at:
 
-I'm aware of this problem, but I'm not going to gratuitously start
-printing to dmesg for this.
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.09.25.tar.gz
 
-There's a scheme being discussed for extended error numbers/messages,
-particularly for perf but it might be implemented for any syscall. We
-might be able to extend that to netlink in a different way, including
-the description in the (extended) netlink ack message.
+The short log of changes since the 2015-07-20 release is below.
 
-johannes
+Thanks,
+Seth
+
+---
+
+Seth Forshee (2):
+      wireless-regdb: Add ETSI as the DFS region for Hong Kong
+      wireless-regdb: update regulatory.bin based on preceding changes
+
