@@ -1,45 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34841 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbbIGPg4 (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33715 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932595AbbIYQmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 11:36:56 -0400
-Received: by pacfv12 with SMTP id fv12so102008362pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 08:36:55 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/5] staging: wilc1000: wilc_msgqueue.c: use kmalloc with GFP_ATOMIC
-Date: Tue,  8 Sep 2015 00:36:38 +0900
-Message-Id: <1441640199-1507-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150907_173701_069567_D2BD0DFE)
-In-Reply-To: <1441640199-1507-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441640199-1507-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 25 Sep 2015 12:42:07 -0400
+Received: by pacex6 with SMTP id ex6so110216347pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 09:42:06 -0700 (PDT)
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Fri, 25 Sep 2015 09:41:37 -0700
+Message-Id: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> (sfid-20150925_184230_610012_AD3DF607)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch use kmalloc with GFP_ATOMIC instead of WILC_MALLOC.
-It is inside the spin lock region.
+global_lock is defined as an unsigned long and accessing only its lower
+32 bits from sysfs is incorrect, as we need to consider other 32 bits
+for big endian 64 bit systems. There are no such platforms yet, but the
+code needs to be robust for such a case.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fix that by passing a local variable to debugfs_create_bool() and
+assigning its value to global_lock later.
+
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+V3->V4:
+- Create a local variable instead of changing type of global_lock
+  (Rafael)
+- Drop the stable tag
+- BCC'd a lot of people (rather than cc'ing them) to make sure
+  - the series reaches them
+  - mailing lists do not block the patchset due to long cc list
+  - and we don't spam the BCC'd people for every reply
+---
+ drivers/acpi/ec_sys.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 76d2e63..41244ce 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -72,7 +72,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	WILC_NULLCHECK(s32RetStatus, pstrMessage);
- 	pstrMessage->u32Length = u32SendBufferSize;
- 	pstrMessage->pstrNext = NULL;
--	pstrMessage->pvBuffer = WILC_MALLOC(u32SendBufferSize);
-+	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
- 	WILC_NULLCHECK(s32RetStatus, pstrMessage->pvBuffer);
- 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
+index b4c216bab22b..b44b91331a56 100644
+--- a/drivers/acpi/ec_sys.c
++++ b/drivers/acpi/ec_sys.c
+@@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+ 	struct dentry *dev_dir;
+ 	char name[64];
+ 	umode_t mode = 0400;
++	u32 val;
  
+ 	if (ec_device_count == 0) {
+ 		acpi_ec_debugfs_dir = debugfs_create_dir("ec", NULL);
+@@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+ 
+ 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
+ 		goto error;
+-	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+-				 (u32 *)&first_ec->global_lock))
++	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
+ 		goto error;
+ 
++	first_ec->global_lock = val;
++
+ 	if (write_support)
+ 		mode = 0600;
+ 	if (!debugfs_create_file("io", mode, dev_dir, ec, &acpi_ec_io_ops))
 -- 
-2.5.1
+2.4.0
 
