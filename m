@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13869 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753740AbbI3Jrf (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35343 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932891AbbIYSrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:47:35 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/32] staging: wilc1000: rename strRcvdGnrlAsyncInfo
-Date: Wed, 30 Sep 2015 18:44:23 +0900
-Message-ID: <1443606289-25407-6-git-send-email-tony.cho@atmel.com> (sfid-20150930_114737_612785_E91EF293)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+	Fri, 25 Sep 2015 14:47:43 -0400
+Received: by pacfv12 with SMTP id fv12so115018534pac.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 11:47:43 -0700 (PDT)
+Date: Fri, 25 Sep 2015 11:47:41 -0700
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
+ 'global_lock'
+Message-ID: <20150925184741.GF5951@linux> (sfid-20150925_204847_613699_77476E32)
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+ <1443202945.2161.8.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443202945.2161.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strRcvdGnrlAsyncInfo to async_info to avoid CamelCase
-naming convention.
+On 25-09-15, 19:42, Johannes Berg wrote:
+> On Fri, 2015-09-25 at 09:41 -0700, Viresh Kumar wrote:
+> 
+> > Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> > ---
+> > V3->V4:
+> > - Create a local variable instead of changing type of global_lock
+> >   (Rafael)
+> 
+> Err, surely that wasn't what Rafael meant, since it's clearly
+> impossible to use a pointer to the stack, assign to it once, and the
+> expect anything to wkr at all ...
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Sorry, I am not sure on what wouldn't work with this patch but this is
+what Rafael said, and I don't think I wrote it differently :)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8a93112..b24c022 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -417,7 +417,7 @@ union message_body {
- 	struct scan_attr scan_info;
- 	struct connect_attr con_info;
- 	struct rcvd_net_info net_info;
--	struct rcvd_async_info strRcvdGnrlAsyncInfo;
-+	struct rcvd_async_info async_info;
- 	struct key_attr strHostIFkeyAttr;
- 	struct cfg_param_attr strHostIFCfgParamAttr;
- 	struct set_channel strHostIFSetChan;
-@@ -4115,7 +4115,7 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
--			Handle_RcvdGnrlAsyncInfo(msg.drvHandler, &msg.body.strRcvdGnrlAsyncInfo);
-+			Handle_RcvdGnrlAsyncInfo(msg.drvHandler, &msg.body.async_info);
- 			break;
- 
- 		case HOST_IF_MSG_KEY:
-@@ -6359,9 +6359,9 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.drvHandler = pstrWFIDrv;
- 
- 
--	msg.body.strRcvdGnrlAsyncInfo.u32Length = u32Length;
--	msg.body.strRcvdGnrlAsyncInfo.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
--	memcpy(msg.body.strRcvdGnrlAsyncInfo.pu8Buffer,
-+	msg.body.async_info.u32Length = u32Length;
-+	msg.body.async_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
-+	memcpy(msg.body.async_info.pu8Buffer,
- 		    pu8Buffer, u32Length);
- 
- 	/* send the message */
+Rafael wrote:
+> Actually, what about adding a local u32 variable, say val, here and doing
+> 
+> >  	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
+> >  		goto error;
+> >  	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+> > -				 (u32 *)&first_ec->global_lock))
+> > +				 &first_ec->global_lock))
+> 
+> 	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
+> 
+> >  		goto error;
+> 
+> 	first_ec->global_lock = val;
+> 
+> And then you can turn val into bool just fine without changing the structure
+> definition.
+
 -- 
-1.9.1
-
+viresh
