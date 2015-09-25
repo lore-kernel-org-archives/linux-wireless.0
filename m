@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55145 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933295AbbI1SOw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 14:14:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Pending patches in patchwork and their states
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-	<56097D6D.1010509@broadcom.com>
-Date: Mon, 28 Sep 2015 21:14:45 +0300
-In-Reply-To: <56097D6D.1010509@broadcom.com> (Arend van Spriel's message of
-	"Mon, 28 Sep 2015 19:48:29 +0200")
-Message-ID: <8737xy9zsa.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20150928_201456_943772_B28908AC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:46387 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754729AbbIYMCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 08:02:13 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: allow driver to prevent two stations w/ same address
+Date: Fri, 25 Sep 2015 14:02:08 +0200
+Message-Id: <1443182528-22834-1-git-send-email-johannes@sipsolutions.net> (sfid-20150925_140220_473806_3554E3DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> If my administration is correct there are 29 patches pending. Any
-> chance these will get applied. Or did I miss some remarks requiring a
-> resend.
+Some devices or drivers cannot deal with having the same station
+address for different virtual interfaces, say as a client to two
+virtual AP interfaces. Rather than requiring each driver with a
+limitation like that to enforce it, add a hardware flag for it.
 
-Yeah, I have been lagging behind patches due to other stuff and I have
-64 patches pending right now. Sorry about that, I should get to them in
-a day or two. Here's a short summary how I use patchwork. Hopefully it
-makes it easier for people to follow their patch status and I get less
-emails ;)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h  | 6 ++++++
+ net/mac80211/sta_info.c | 4 ++++
+ 2 files changed, 10 insertions(+)
 
-If the patch in patchwork is in state New or Under Review they are on my
-queue and waiting my action:
-
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-If the patch is Deferred it means that there was a problem and I look at
-the patch more closely later (when I have more time etc):
-
-https://patchwork.kernel.org/project/linux-wireless/list/?state=10
-
-Awaiting Upstream means that I cannot apply the patch right now due to a
-mising patch in some other component, for example to mac80211. I will
-apply the patch once the dependency is available in my tree:
-
-https://patchwork.kernel.org/project/linux-wireless/list/?state=8
-
-Any other state means that the patch is out of my radar due to one
-reason or another, and a resend is needed to get the patch active again:
-
-Rejected = In my opinion not acceptable patch
-RFC = Request For Comments, submitter didn't officially send the patch yet
-Not Applicaple = Not a wireless patch
-Changes Requested = Needs a new version due to review comments
-Superseded = A new version of the patch submitted without comments
-
-And Accepted state of course means that I have commited the patch :)
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 301fceb2fd10..a16c3e92a592 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1901,6 +1901,11 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_BEACON_TX_STATUS: The device/driver provides TX status
+  *	for sent beacons.
+  *
++ * @IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR: Hardware (or driver) requires that each
++ *	station has a unique address, i.e. each station entry can be identified
++ *	by just its MAC address; this prevents, for example, the same station
++ *	from connecting to two virtual AP interfaces at the same time.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -1936,6 +1941,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TDLS_WIDER_BW,
+ 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+ 	IEEE80211_HW_BEACON_TX_STATUS,
++	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 64f1936350c6..0ca536c75abc 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -306,6 +306,10 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	struct timespec uptime;
+ 	int i;
+ 
++	if (ieee80211_hw_check(hw, NEEDS_UNIQUE_STA_ADDR) &&
++	    ieee80211_find_sta_by_ifaddr(hw, addr, NULL))
++		return -ENOTUNIQ;
++
+ 	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
+ 	if (!sta)
+ 		return NULL;
 -- 
-Kalle Valo
+2.5.1
+
