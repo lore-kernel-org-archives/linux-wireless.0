@@ -1,30 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47572 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751605AbbIWKLG (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:57656 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932891AbbIYTuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 06:11:06 -0400
-Message-ID: <1443003063.3323.2.camel@coelho.fi> (sfid-20150923_121110_546723_14E131E0)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>
-Date: Wed, 23 Sep 2015 12:11:03 +0200
-In-Reply-To: <1442999618.1889.3.camel@sipsolutions.net>
-References: <1442839701-25882-1-git-send-email-luca@coelho.fi>
-	 <1442999618.1889.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] cfg80211: Add multiple scan plans for scheduled scan
+	Fri, 25 Sep 2015 15:50:00 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Fri, 25 Sep 2015 22:18:13 +0200
+Message-ID: <1460975.zriLPuubXp@vostro.rjw.lan> (sfid-20150925_215023_278971_BDA13C20)
+In-Reply-To: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-23 at 11:13 +0200, Johannes Berg wrote:
-> Need to fix up the other drivers ...
+On Friday, September 25, 2015 09:41:37 AM Viresh Kumar wrote:
+> global_lock is defined as an unsigned long and accessing only its lower
+> 32 bits from sysfs is incorrect, as we need to consider other 32 bits
+> for big endian 64 bit systems. There are no such platforms yet, but the
+> code needs to be robust for such a case.
+> 
+> Fix that by passing a local variable to debugfs_create_bool() and
+> assigning its value to global_lock later.
+> 
+> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
 
-Huh, right, I completely forgot that.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Avi can you do that?
+Greg, please take this one if the [2/2] looks good to you.
 
---
-Luca.
+> ---
+> V3->V4:
+> - Create a local variable instead of changing type of global_lock
+>   (Rafael)
+> - Drop the stable tag
+> - BCC'd a lot of people (rather than cc'ing them) to make sure
+>   - the series reaches them
+>   - mailing lists do not block the patchset due to long cc list
+>   - and we don't spam the BCC'd people for every reply
+> ---
+>  drivers/acpi/ec_sys.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
+> index b4c216bab22b..b44b91331a56 100644
+> --- a/drivers/acpi/ec_sys.c
+> +++ b/drivers/acpi/ec_sys.c
+> @@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+>  	struct dentry *dev_dir;
+>  	char name[64];
+>  	umode_t mode = 0400;
+> +	u32 val;
+>  
+>  	if (ec_device_count == 0) {
+>  		acpi_ec_debugfs_dir = debugfs_create_dir("ec", NULL);
+> @@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+>  
+>  	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
+>  		goto error;
+> -	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+> -				 (u32 *)&first_ec->global_lock))
+> +	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
+>  		goto error;
+>  
+> +	first_ec->global_lock = val;
+> +
+>  	if (write_support)
+>  		mode = 0600;
+>  	if (!debugfs_create_file("io", mode, dev_dir, ec, &acpi_ec_io_ops))
+> 
+
+Thanks,
+Rafael
+
