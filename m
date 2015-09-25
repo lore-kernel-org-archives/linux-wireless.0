@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:36475 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754068AbbIHROX (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:61450 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932955AbbIYT6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 13:14:23 -0400
-Received: by igcrk20 with SMTP id rk20so79738269igc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 10:14:22 -0700 (PDT)
-Date: Tue, 8 Sep 2015 13:14:06 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Jesse Jones <jjones@cococorp.com>
-Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: mesh - always do every discovery retry
-Message-ID: <20150908171406.GE18335@localhost> (sfid-20150908_191426_644588_0CB5D315)
-References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
- <4bd697c41f2bb66593c849246bde7b00@mail.gmail.com>
- <CAEFj9878gNnDViLYh+TW6GPUvJBbSn4Y=tDBmdp3NwBHymqxRg@mail.gmail.com>
- <b193de6c0b11af0193414a217f0ea56b@mail.gmail.com>
- <CAEFj986Jt-1rymgARCvDe+2Tb1R0PqsDfSELC7WbAXfkC+9xPw@mail.gmail.com>
- <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
+	Fri, 25 Sep 2015 15:58:09 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Fri, 25 Sep 2015 22:26:22 +0200
+Message-ID: <4331507.W3ZDWldbWu@vostro.rjw.lan> (sfid-20150925_215817_136446_07065E5C)
+In-Reply-To: <20150925185256.GG5951@linux>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1443206945.2161.9.camel@sipsolutions.net> <20150925185256.GG5951@linux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 26, 2015 at 01:05:06PM -0700, Jesse Jones wrote:
-> > > My big worry is that we will select bad paths. And this *will* happen.
-> > > I've seen it many times. And if it does happen the effects are not
-> > > theoretical; they are by definition bad. We *have* selected a bad path
-> > > after all. And when we select a bad path it will be very apparent to
-> > > end users. Bandwidth will be lower than it should be and loss may go up
-> > > as
-> > well.
-> >
-> > Agreed with your point. How about adding nl80211 command for this?
+On Friday, September 25, 2015 11:52:56 AM Viresh Kumar wrote:
+> On 25-09-15, 20:49, Johannes Berg wrote:
+> > Ok, then, but that means Rafael is completely wrong ...
+> > debugfs_create_bool() takes a *pointer* and it needs to be long-lived,
+> > it can't be on the stack. You also don't get a call when it changes.
 > 
-> I'm not keen on the idea. I still think it's the right thing to do and I
-> don't much like the idea of having to turn it on. And it will become an even
-> better idea if we don't refresh as often (eventually I'll send a patch for
-> that though I think I may have to massage what we're using now).
+> Ahh, ofcourse. My bad as well...
 
-At the very least I think this is a change in semantics around
-dot11MeshHWMPmaxPREQretries -- the intent as far as I know is to limit
-total attempts to determine whether target is reachable at all, and I
-don't think there is enough evidence in the standard to support the
-other interpretation.  In my opinion it's also somewhat confusing that a 'max'
-parameter is used as a 'min'.
+Well, sorry about the wrong suggestion.
 
-I could also see some users wanting different behavior here depending on
-node density.
+> I think we can change structure definition but will wait for Rafael's
+> comment before that.
 
-So, at the risk of having too many knobs, could we perhaps add another
-tunable for this, call it min_preq_attempts or something, and fix it to the
-interval [1, dot11MeshHWMPmaxPREQretries]?  My preference would be to
-maintain the default value of 1.
+OK, change the structure then.
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+Thanks,
+Rafael
+
