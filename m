@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:32899 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139AbbIHP4t (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33668 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbbIYVol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:49 -0400
-Received: by pacex6 with SMTP id ex6so127494071pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:49 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 15/30] staging: wilc1000: rename WILC_WFI_del_station
-Date: Wed,  9 Sep 2015 00:55:52 +0900
-Message-Id: <1441727767-26026-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180159_647786_F18DB01C)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 25 Sep 2015 17:44:41 -0400
+Received: by pacex6 with SMTP id ex6so116361475pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2015 14:44:40 -0700 (PDT)
+Date: Fri, 25 Sep 2015 14:44:38 -0700
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
+ 'global_lock'
+Message-ID: <20150925214438.GH5951@linux> (sfid-20150925_234502_416539_8ED7F751)
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+ <4357538.Wlf88yQie6@vostro.rjw.lan>
+ <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
+ <2524822.pQu4UKMrlb@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2524822.pQu4UKMrlb@vostro.rjw.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_del_station with wilc_cfg80211_del_station
-to avoid CamelCase.
+On 25-09-15, 22:58, Rafael J. Wysocki wrote:
+> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
+> Initially, all of them are equal to 0.
+> 
+> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
+> 
+> What's the result?
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+But then two CPUs can update the same variable as well, and we must
+have proper locking in place to fix that.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ccfd4c6..02ab135 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3417,7 +3417,7 @@ static int  wilc_cfg80211_add_station(struct wiphy *wiphy, struct net_device *de
- }
- 
- /**
-- *  @brief      WILC_WFI_del_station
-+ *  @brief      wilc_cfg80211_del_station
-  *  @details    Remove a station; @mac may be NULL to remove all stations.
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3425,7 +3425,7 @@ static int  wilc_cfg80211_add_station(struct wiphy *wiphy, struct net_device *de
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_del_station(struct wiphy *wiphy, struct net_device *dev,
-+static int wilc_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
- 				struct station_del_parameters *params)
- {
- 	const u8 *mac = params->mac;
-@@ -3620,7 +3620,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_beacon = wilc_cfg80211_change_beacon,
- 	.stop_ap = wilc_cfg80211_stop_ap,
- 	.add_station = wilc_cfg80211_add_station,
--	.del_station = WILC_WFI_del_station,
-+	.del_station = wilc_cfg80211_del_station,
- 	.change_station = WILC_WFI_change_station,
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	#ifndef WILC_FULLY_HOSTING_AP
+Anyway, that problem isn't here for sure as its between two
+unsigned-longs. So, should I just move it to bool and resend ?
+
 -- 
-2.5.1
-
+viresh
