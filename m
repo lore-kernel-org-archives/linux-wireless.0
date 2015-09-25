@@ -1,114 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35334 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139AbbIHP4W (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:33353 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181AbbIYOBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:22 -0400
-Received: by pacfv12 with SMTP id fv12so130434958pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:21 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 04/30] staging: wilc1000: rename WILC_WFI_add_key
-Date: Wed,  9 Sep 2015 00:55:41 +0900
-Message-Id: <1441727767-26026-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175624_633864_23F33C07)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 25 Sep 2015 10:01:32 -0400
+MIME-Version: 1.0
+Date: Fri, 25 Sep 2015 17:01:31 +0300
+Message-ID: <CAMwBb8PRbYxULAYeRUMe8X4DFhqW5SjT3VwgtVqy+p0YjQg_Ag@mail.gmail.com> (sfid-20150925_160136_013627_256306FF)
+Subject: Driver maintainers, Other Developers (rt2800usb bugs)
+From: stalingraddd <stalingraddd@gmail.com>
+To: linux-wireless@vger.kernel.org, backports@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_add_key with wilc_cfg80211_add_key to avoid
-CamelCase.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 563841f..0714034 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1112,7 +1112,7 @@ static int WILC_WFI_disconnect(struct wiphy *wiphy, struct net_device *dev, u16
- }
- 
- /**
-- *  @brief      WILC_WFI_add_key
-+ *  @brief      wilc_cfg80211_add_key
-  *  @details    Add a key with the given parameters. @mac_addr will be %NULL
-  *                      when adding a group key.
-  *  @param[in] key : key buffer; TKIP: 16-byte temporal key, 8-byte Tx Mic key, 8-byte Rx Mic Key
-@@ -1121,7 +1121,7 @@ static int WILC_WFI_disconnect(struct wiphy *wiphy, struct net_device *dev, u16
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
-+static int wilc_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 			    bool pairwise,
- 			    const u8 *mac_addr, struct key_params *params)
- 
-@@ -2932,14 +2932,14 @@ static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev
- 				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
- 					g_key_gtk_params.key[1],
- 					g_key_gtk_params.key[2]);
--				WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+				wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 						 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 						 g_add_ptk_key_params.key_idx,
- 						 g_add_ptk_key_params.pairwise,
- 						 g_add_ptk_key_params.mac_addr,
- 						 (struct key_params *)(&g_key_ptk_params));
- 
--				WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+				wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 						 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 						 g_add_gtk_key_params.key_idx,
- 						 g_add_gtk_key_params.pairwise,
-@@ -3018,14 +3018,14 @@ static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev
- 				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
- 					g_key_gtk_params.key[1],
- 					g_key_gtk_params.key[2]);
--				WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+				wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 						 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 						 g_add_ptk_key_params.key_idx,
- 						 g_add_ptk_key_params.pairwise,
- 						 g_add_ptk_key_params.mac_addr,
- 						 (struct key_params *)(&g_key_ptk_params));
- 
--				WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+				wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 						 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 						 g_add_gtk_key_params.key_idx,
- 						 g_add_gtk_key_params.pairwise,
-@@ -3149,14 +3149,14 @@ static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev
- 				g_key_gtk_params.key[2],
- 				g_key_gtk_params.cipher);
- 			#if 1
--			WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+			wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 					 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 					 g_add_ptk_key_params.key_idx,
- 					 g_add_ptk_key_params.pairwise,
- 					 g_add_ptk_key_params.mac_addr,
- 					 (struct key_params *)(&g_key_ptk_params));
- 
--			WILC_WFI_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
-+			wilc_cfg80211_add_key(g_linux_wlan->strInterfaceInfo[0].wilc_netdev->ieee80211_ptr->wiphy,
- 					 g_linux_wlan->strInterfaceInfo[0].wilc_netdev,
- 					 g_add_gtk_key_params.key_idx,
- 					 g_add_gtk_key_params.pairwise,
-@@ -3607,7 +3607,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.scan = wilc_cfg80211_scan,
- 	.connect = wilc_cfg80211_connect,
- 	.disconnect = WILC_WFI_disconnect,
--	.add_key = WILC_WFI_add_key,
-+	.add_key = wilc_cfg80211_add_key,
- 	.del_key = WILC_WFI_del_key,
- 	.get_key = WILC_WFI_get_key,
- 	.set_default_key = WILC_WFI_set_default_key,
--- 
-2.5.1
-
+Hi, i'm having trouble with rt2800usb driver. My notebook is HP
+Elitebook 8530w, i have tp-link tl-wn7200nd adapter v1.2 (rt3070) and
+it doesn't work in kali linux 2.0, i also tried debian 8.2 and still
+no luck. Please check these threads
+https://forums.kali.org/showthread.php?27522-TP-Link-TL-WN7200ND-(rt3070-rt2800usb)-not-working-in-Kali-on-notebook
+https://forums.kali.org/showthread.php?27514-Alfa-AWUS051NH-v2-not-working-with-rt2x00usb
+My thread is about wn7200nd adapter, and the other guy is also having
+troubles like me. If you need any additional information to understand
+what is the problem feel free to write me.
