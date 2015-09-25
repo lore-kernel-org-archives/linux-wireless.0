@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33559 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767AbbILSLN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 14:11:13 -0400
-Received: by wiclk2 with SMTP id lk2so96488711wic.0
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:12 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/11] staging: vt6655: device_get_pci_info remove variable cis_addr.
-Date: Sat, 12 Sep 2015 19:10:35 +0100
-Message-Id: <1442081438-3485-8-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201129_048994_36B80A67)
-In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
-References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46461 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754890AbbIYMUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 08:20:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 2/2] mac80211: allow driver to prevent two stations w/ same address
+Date: Fri, 25 Sep 2015 14:20:17 +0200
+Message-Id: <1443183617-23181-2-git-send-email-johannes@sipsolutions.net> (sfid-20150925_142026_061461_D0CC6F70)
+In-Reply-To: <1443183617-23181-1-git-send-email-johannes@sipsolutions.net>
+References: <1443183617-23181-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cis_addr is never used remove its call to pci_resource_start.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Some devices or drivers cannot deal with having the same station
+address for different virtual interfaces, say as a client to two
+virtual AP interfaces. Rather than requiring each driver with a
+limitation like that to enforce it, add a hardware flag for it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6655/device_main.c | 3 ---
- 1 file changed, 3 deletions(-)
+ include/net/mac80211.h  | 6 ++++++
+ net/mac80211/debugfs.c  | 1 +
+ net/mac80211/sta_info.c | 4 ++++
+ 3 files changed, 11 insertions(+)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 1e660cc..17fa6aa 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -434,15 +434,12 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
- 				struct pci_dev *pcid)
- {
- 	u8  b;
--	unsigned int cis_addr;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 301fceb2fd10..a16c3e92a592 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1901,6 +1901,11 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_BEACON_TX_STATUS: The device/driver provides TX status
+  *	for sent beacons.
+  *
++ * @IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR: Hardware (or driver) requires that each
++ *	station has a unique address, i.e. each station entry can be identified
++ *	by just its MAC address; this prevents, for example, the same station
++ *	from connecting to two virtual AP interfaces at the same time.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -1936,6 +1941,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TDLS_WIDER_BW,
+ 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+ 	IEEE80211_HW_BEACON_TX_STATUS,
++	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
  
- 	pci_set_master(pcid);
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 3636b45440ab..78fe7f611d6a 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -125,6 +125,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+ 	FLAG(TDLS_WIDER_BW),
+ 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
+ 	FLAG(BEACON_TX_STATUS),
++	FLAG(NEEDS_UNIQUE_STA_ADDR),
  
- 	pDevice->memaddr = pci_resource_start(pcid, 0);
- 	pDevice->ioaddr = pci_resource_start(pcid, 1);
+ 	/* keep last for the build bug below */
+ 	(void *)0x1
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index c54dbcaa97b6..0cb6d026ea99 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -306,6 +306,10 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	struct timespec uptime;
+ 	int i, ret;
  
--	cis_addr = pci_resource_start(pcid, 2);
--
- 	pDevice->pcid = pcid;
- 
- 	pci_read_config_byte(pcid, PCI_COMMAND, &b);
++	if (ieee80211_hw_check(hw, NEEDS_UNIQUE_STA_ADDR) &&
++	    ieee80211_find_sta_by_ifaddr(hw, addr, NULL))
++		return ERR_PTR(-ENOTUNIQ);
++
+ 	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
+ 	if (!sta)
+ 		return ERR_PTR(-ENOMEM);
 -- 
-2.5.0
+2.5.1
 
