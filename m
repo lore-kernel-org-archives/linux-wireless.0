@@ -1,123 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36165 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbbICIoa (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39750 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755246AbbIYGzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 04:44:30 -0400
-Received: by lbcao8 with SMTP id ao8so20159001lbc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 01:44:29 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: handle IEEE80211_CHANCTX_CHANGE_WIDTH properly
-Date: Thu,  3 Sep 2015 10:44:52 +0200
-Message-Id: <1441269892-438-2-git-send-email-michal.kazior@tieto.com> (sfid-20150903_104436_530911_931BE0B2)
-In-Reply-To: <1441269892-438-1-git-send-email-michal.kazior@tieto.com>
-References: <1441269892-438-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 25 Sep 2015 02:55:20 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 4/7] ath10k: export htt tx rx handlers
+Date: Fri, 25 Sep 2015 12:23:33 +0530
+Message-ID: <1443164016-3612-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150925_085524_845820_478DDD08)
+In-Reply-To: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vdevs associated with a given chanctx should be
-restarted if the bandwidth changes. Otherwise
-traffic may cease.
+Some special copy engines delivers messages directly to HTT by
+bypassing HTC layer. Hence exporting tx_completion and rx_handler
+for delivering the data to HTT layer.
 
-This is known to fix STA CSA with bandwidths wider
-than 20MHz.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 64 +++++++++++++++++++++++++++++++++++
- 1 file changed, 64 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt.h    | 1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 3 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 13e9d5659e96..34aff8683943 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6352,12 +6352,52 @@ ath10k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
- 	mutex_unlock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 5a8e4ea..3b9ddef 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1587,6 +1587,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
++void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+ 
+ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 606c1a3..6060dda 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2125,6 +2125,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	/* Free the indication buffer */
+ 	dev_kfree_skb_any(skb);
+ }
++EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
+ 
+ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index eb5ba9b..64ba977 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -175,6 +175,12 @@ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ 	dev_kfree_skb_any(skb);
  }
  
-+struct ath10k_mac_change_chanctx_arg {
-+	struct ieee80211_chanctx_conf *ctx;
-+	struct ieee80211_vif_chanctx_switch *vifs;
-+	int n_vifs;
-+	int next_vif;
-+};
-+
-+static void
-+ath10k_mac_change_chanctx_cnt_iter(void *data, u8 *mac,
-+				   struct ieee80211_vif *vif)
++void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb)
 +{
-+	struct ath10k_mac_change_chanctx_arg *arg = data;
-+
-+	if (rcu_access_pointer(vif->chanctx_conf) != arg->ctx)
-+		return;
-+
-+	arg->n_vifs++;
++	dev_kfree_skb_any(skb);
 +}
++EXPORT_SYMBOL(ath10k_htt_hif_tx_complete);
 +
-+static void
-+ath10k_mac_change_chanctx_fill_iter(void *data, u8 *mac,
-+				    struct ieee80211_vif *vif)
-+{
-+	struct ath10k_mac_change_chanctx_arg *arg = data;
-+	struct ieee80211_chanctx_conf *ctx;
-+
-+	ctx = rcu_access_pointer(vif->chanctx_conf);
-+	if (ctx != arg->ctx)
-+		return;
-+
-+	if (WARN_ON(arg->next_vif == arg->n_vifs))
-+		return;
-+
-+	arg->vifs[arg->next_vif].vif = vif;
-+	arg->vifs[arg->next_vif].old_ctx = ctx;
-+	arg->vifs[arg->next_vif].new_ctx = ctx;
-+	arg->next_vif++;
-+}
-+
- static void
- ath10k_mac_op_change_chanctx(struct ieee80211_hw *hw,
- 			     struct ieee80211_chanctx_conf *ctx,
- 			     u32 changed)
+ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt)
  {
- 	struct ath10k *ar = hw->priv;
-+	struct ath10k_mac_change_chanctx_arg arg = { .ctx = ctx };
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -6371,6 +6411,30 @@ ath10k_mac_op_change_chanctx(struct ieee80211_hw *hw,
- 	if (WARN_ON(changed & IEEE80211_CHANCTX_CHANGE_CHANNEL))
- 		goto unlock;
- 
-+	if (changed & IEEE80211_CHANCTX_CHANGE_WIDTH) {
-+		ieee80211_iterate_active_interfaces_atomic(
-+					hw,
-+					IEEE80211_IFACE_ITER_NORMAL,
-+					ath10k_mac_change_chanctx_cnt_iter,
-+					&arg);
-+		if (arg.n_vifs == 0)
-+			goto radar;
-+
-+		arg.vifs = kcalloc(arg.n_vifs, sizeof(arg.vifs[0]),
-+				   GFP_KERNEL);
-+		if (!arg.vifs)
-+			goto radar;
-+
-+		ieee80211_iterate_active_interfaces_atomic(
-+					hw,
-+					IEEE80211_IFACE_ITER_NORMAL,
-+					ath10k_mac_change_chanctx_fill_iter,
-+					&arg);
-+		ath10k_mac_update_vif_chan(ar, arg.vifs, arg.n_vifs);
-+		kfree(arg.vifs);
-+	}
-+
-+radar:
- 	ath10k_recalc_radar_detection(ar);
- 
- 	/* FIXME: How to configure Rx chains properly? */
+ 	struct ath10k *ar = htt->ar;
 -- 
-2.1.4
+2.5.2
 
