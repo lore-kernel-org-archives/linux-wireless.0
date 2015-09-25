@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:46089 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469AbbIISXd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 14:23:33 -0400
-Received: from smtp07.msg.oleane.net (smtp07.mail.priv [172.17.20.116])
-	by smtp-out05.msg.oleane.net with ESMTP id t89HYtOw008098
-	for <linux-wireless@vger.kernel.org>; Wed, 9 Sep 2015 19:34:55 +0200
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp07.msg.oleane.net (MTA) with ESMTP id t89HEWXP014670
-	for <linux-wireless@vger.kernel.org>; Wed, 9 Sep 2015 19:14:33 +0200
-Subject: Ath10K issue
-Date: Wed, 9 Sep 2015 19:13:59 +0200
+Received: from mx2.suse.de ([195.135.220.15]:44781 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755260AbbIYItl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 04:49:41 -0400
+Date: Fri, 25 Sep 2015 10:49:36 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH 1/3] NFC: pn544: Auto-select core module
+Message-ID: <20150925104936.3b526b68@endymion.delvare> (sfid-20150925_104947_179541_CDC8B9A5)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Message-ID: <773DB8A82AB6A046AE0195C68612A31901BBD213@sbs2003.acksys.local> (sfid-20150909_202337_142926_B500E7CA)
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	I'm using compat-wireless 2015-03-09 from openwrt.
+As I understand it, the core nfc_pn544 module is useless without
+either the I2C or the MEI access module. So hide NFC_PN544 and
+select it automatically if either NFC_PN544_I2C or NFC_PN544_MEI is
+selected.
 
-	At the power up, these equipments worked in AP mode and several sta can do an association.
-	Randomly it is not possible to make association to several AP.
+This avoids presenting NFC_PN544 when neither NFC_PN544_I2C nor
+NFC_PN544_MEI can be selected.
 
-	If I look the log file I see cyclically these error messages.
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.116104] ath10k_warn: 186 callbacks suppressed
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.133185] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.153058] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157255] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157260] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.212297] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.232087] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.252874] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.286774] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.320914] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.355043] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.167694] ath10k_warn: 193 callbacks suppressed
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.184778] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.204514] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.225098] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.235968] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.264524] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.270094] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.303945] ath10k_pci 0001:02:00.0: failed to transmit management frame via WMI: -11
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304408] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304414] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.363876] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-Wed Sep  9 10:29:59 2015 kern.warn kernel: [17664.219316] ath10k_warn: 208 callbacks suppressed
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+---
+Already sent on 2014-04-19.
 
-	To reestablish my access point I need to restart the Wifi (wifi up in openwrt).
+Note that the s3fwrn5 NFC driver is already implemented the same way.
 
-	Have you any idea of this issue?
+ drivers/nfc/pn544/Kconfig |   18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
 
-	Regards.
+--- linux-3.15-rc1.orig/drivers/nfc/pn544/Kconfig	2014-04-18 19:18:55.998723014 +0200
++++ linux-3.15-rc1/drivers/nfc/pn544/Kconfig	2014-04-18 19:19:16.195149146 +0200
+@@ -1,20 +1,15 @@
+ config NFC_PN544
+-	tristate "NXP PN544 NFC driver"
+-	depends on NFC_HCI
++	tristate
+ 	select CRC_CCITT
+-	default n
+ 	---help---
+ 	  NXP PN544 core driver.
+ 	  This is a driver based on the HCI NFC kernel layers and
+ 	  will thus not work with NXP libnfc library.
+ 
+-	  To compile this driver as a module, choose m here. The module will
+-	  be called pn544.
+-	  Say N if unsure.
+-
+ config NFC_PN544_I2C
+-	tristate "NFC PN544 i2c support"
+-	depends on NFC_PN544 && I2C && NFC_SHDLC
++	tristate "NXP PN544 device support (I2C)"
++	depends on NFC_HCI && I2C && NFC_SHDLC
++	select NFC_PN544
+ 	---help---
+ 	  This module adds support for the NXP pn544 i2c interface.
+ 	  Select this if your platform is using the i2c bus.
+@@ -23,8 +18,9 @@ config NFC_PN544_I2C
+ 	  Say N if unsure.
+ 
+ config NFC_PN544_MEI
+-	tristate "NFC PN544 MEI support"
+-	depends on NFC_PN544 && NFC_MEI_PHY
++	tristate "NXP PN544 device support (MEI)"
++	depends on NFC_HCI && NFC_MEI_PHY
++	select NFC_PN544
+ 	---help---
+ 	  This module adds support for the mei interface of adapters using
+ 	  NXP pn544 chipsets.  Select this if your pn544 chipset
 
-Cédric Voncken.
+
+-- 
+Jean Delvare
+SUSE L3 Support
