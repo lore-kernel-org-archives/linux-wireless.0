@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45295 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbbIMWI1 (ORCPT
+Received: from mail-wi0-f194.google.com ([209.85.212.194]:32910 "EHLO
+	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbbIYWT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 18:08:27 -0400
-Message-ID: <55F5F3D9.8090005@candelatech.com> (sfid-20150914_000830_307523_9DE0070B)
-Date: Sun, 13 Sep 2015 15:08:25 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 25 Sep 2015 18:19:58 -0400
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-CC: kvalo@codeaurora.org
-Subject: Re: [PATCH 4.3] ath10k: fix DMA related firmware crashes on multiple
- devices
-References: <1442176540-34973-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1442176540-34973-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20150925214438.GH5951@linux>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	<4357538.Wlf88yQie6@vostro.rjw.lan>
+	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
+	<2524822.pQu4UKMrlb@vostro.rjw.lan>
+	<20150925214438.GH5951@linux>
+Date: Sat, 26 Sep 2015 00:19:56 +0200
+Message-ID: <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com> (sfid-20150926_002100_530543_CAD07D8B)
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 25, 2015 at 11:44 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> On 25-09-15, 22:58, Rafael J. Wysocki wrote:
+>> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
+>> Initially, all of them are equal to 0.
+>>
+>> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
+>>
+>> What's the result?
+>
+> But then two CPUs can update the same variable as well, and we must
+> have proper locking in place to fix that.
 
+Right.
 
-On 09/13/2015 01:35 PM, Felix Fietkau wrote:
-> Some platforms really don't like DMA bursts of 256 bytes, and this
-> causes the firmware to crash when sending beacons.
-> Also, changing this based on the firmware version does not seem to make
-> much sense, so use 128 bytes for all versions.
+So if you allow something like debugfs to update your structure, how
+do you make sure there is the proper locking?
 
-Is there any good reason to allow users to enable this with
-module-param or similar on platforms that do support it?
+Is that not a problem in all of the places modified by the [2/2]?
 
-Like better performance perhaps?
+How can the future users of the API know what to do to avoid potential
+problems with it?
+
+>
+> Anyway, that problem isn't here for sure as its between two
+> unsigned-longs. So, should I just move it to bool and resend ?
+
+I guess it might be more convenient to fold this into the other patch,
+because we seem to be splitting hairs here.
 
 Thanks,
-Ben
-
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->   drivers/net/wireless/ath/ath10k/hw.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-> index 23afcda..678d72a 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -337,7 +337,7 @@ enum ath10k_hw_rate_cck {
->   #define TARGET_10X_MAX_FRAG_ENTRIES		0
->
->   /* 10.2 parameters */
-> -#define TARGET_10_2_DMA_BURST_SIZE		1
-> +#define TARGET_10_2_DMA_BURST_SIZE		0
->
->   /* Target specific defines for WMI-TLV firmware */
->   #define TARGET_TLV_NUM_VDEVS			4
-> @@ -391,7 +391,7 @@ enum ath10k_hw_rate_cck {
->
->   #define TARGET_10_4_TX_DBG_LOG_SIZE		1024
->   #define TARGET_10_4_NUM_WDS_ENTRIES		32
-> -#define TARGET_10_4_DMA_BURST_SIZE		1
-> +#define TARGET_10_4_DMA_BURST_SIZE		0
->   #define TARGET_10_4_MAC_AGGR_DELIM		0
->   #define TARGET_10_4_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
->   #define TARGET_10_4_VOW_CONFIG			0
->
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Rafael
