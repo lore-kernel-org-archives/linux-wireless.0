@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36579 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753955AbbIQHtT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7393 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753483AbbIYIB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 03:49:19 -0400
-Received: by padhk3 with SMTP id hk3so13298114pad.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 00:49:18 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 8/8] staging: wilc1000: remove declaration of wilc_get_chipid
-Date: Thu, 17 Sep 2015 16:48:49 +0900
-Message-Id: <1442476129-14908-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150917_094923_832375_A6076A7F)
-In-Reply-To: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 25 Sep 2015 04:01:27 -0400
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH v2] ath10k: Use station's current operating mode from assoc request
+Date: Fri, 25 Sep 2015 13:31:08 +0530
+Message-ID: <1443168068-5719-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20150925_100131_433048_C5253BF4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the declaration of wilc_get_chipid function.
-It is included wilc_wlan_if.h that has declaration of wilc_get_chipid.
+The current number of spatial streams used by the client is advertised
+as a separate IE in assoc request. Use this information to set
+the NSS operating mode.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fixes: 45c9abc059fa ("ath10k: implement more versatile set_bitrate_mask").
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 ---
-V2 : rebase latest staging-testing
+v2: Fix commit message
 
- drivers/staging/wilc1000/host_interface.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c63c5ee..703712e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,5 +1,6 @@
- #include "host_interface.h"
- #include "coreconfigurator.h"
-+#include "wilc_wlan_if.h"
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bb44161..5acebf5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2169,7 +2169,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
+ 			arg->peer_ht_rates.rates[i] = i;
+ 	} else {
+ 		arg->peer_ht_rates.num_rates = n;
+-		arg->peer_num_spatial_streams = max_nss;
++		arg->peer_num_spatial_streams = min(sta->rx_nss, max_nss);
+ 	}
  
- extern u8 connecting;
- 
-@@ -7211,8 +7212,6 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv, tstrWILC_AddStaParam *pstrSt
- 	return s32Error;
- }
- 
--u32 wilc_get_chipid(u8);
--
- s32 host_int_set_power_mgmt(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u32 u32Timeout)
- {
- 	s32 s32Error = 0;
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
 -- 
-2.5.1
+1.9.1
 
