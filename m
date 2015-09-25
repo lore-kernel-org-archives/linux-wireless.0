@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60107 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753377AbbIWIoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 04:44:18 -0400
-Message-ID: <1442997854.1889.1.camel@sipsolutions.net> (sfid-20150923_104431_004682_B9B1DDC8)
-Subject: pull-request: mac80211 2015-09-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 23 Sep 2015 10:44:14 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:61190 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932955AbbIYTyV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2015 15:54:21 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Fri, 25 Sep 2015 22:22:33 +0200
+Message-ID: <16046206.NvsuxYn5NN@vostro.rjw.lan> (sfid-20150925_215441_459062_8F95AFE8)
+In-Reply-To: <1460975.zriLPuubXp@vostro.rjw.lan>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1460975.zriLPuubXp@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Friday, September 25, 2015 10:18:13 PM Rafael J. Wysocki wrote:
+> On Friday, September 25, 2015 09:41:37 AM Viresh Kumar wrote:
+> > global_lock is defined as an unsigned long and accessing only its lower
+> > 32 bits from sysfs is incorrect, as we need to consider other 32 bits
+> > for big endian 64 bit systems. There are no such platforms yet, but the
+> > code needs to be robust for such a case.
+> > 
+> > Fix that by passing a local variable to debugfs_create_bool() and
+> > assigning its value to global_lock later.
+> > 
+> > Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> 
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Greg, please take this one if the [2/2] looks good to you.
 
-It's been pretty quiet for this cycle since the sizeof() mess, but I
-have two more fixes now I'd like to get in.
-
-Let me know if there's any problem.
+Ouch, turns out it was a bad idea.  Please scratch that.
 
 Thanks,
-johannes
+Rafael
 
-
-
-The following changes since commit ef9be10c8c999e00b239eec24cf01952a308f8e7:
-
-  mac80211: reject software RSSI CQM with beacon filtering (2015-09-04 15:23:22 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-09-22
-
-for you to fetch changes up to babc305e21ea3811d98b67437299360904ac1b6a:
-
-  mac80211: reset CQM history upon reconfiguration (2015-09-22 15:22:50 +0200)
-
-----------------------------------------------------------------
-Just two small fixes:
- * VHT MCS mask array overrun, reported by Dan Carpenter
- * reset CQM history to always get a notification, from Sara Sharon
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: fix VHT MCS mask array overrun
-
-Sara Sharon (1):
-      mac80211: reset CQM history upon reconfiguration
-
- net/mac80211/cfg.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
