@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:32831 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073AbbIMRIq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50644 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753930AbbIYXA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 13:08:46 -0400
-Received: by ykei199 with SMTP id i199so133527713yke.0
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 10:08:46 -0700 (PDT)
+	Fri, 25 Sep 2015 19:00:57 -0400
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Can we ignore frames with invalid BSSID in IBSS mode?
+Message-ID: <5605D228.7050609@candelatech.com> (sfid-20150926_010105_789618_F93D668E)
+Date: Fri, 25 Sep 2015 16:00:56 -0700
 MIME-Version: 1.0
-From: Ramprasad Vempati <ramprasad.vempati@gmail.com>
-Date: Sun, 13 Sep 2015 22:38:26 +0530
-Message-ID: <CAB6w8ekO7YW224ujkEH34D-qyvoHe3p6bWwZcBTd_tovRMraxw@mail.gmail.com> (sfid-20150913_190849_721440_A8334A7E)
-Subject: How to use hwsim?
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+It seems that ath10k ar988X hardware has a bug where the BSSID
+for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
+does not seem to use AMSDUs for IBSS, and when I enable it in my CT
+firmware, then I see the breakage.  So, I suspect it is not
+just a simple software/firmware bug.
 
-I've got hwsim source code from:
-http://git.sipsolutions.net/hwsim.git. I could compile it.
+If I simply ignore the bssid_match check in ieee80211_accept_frame,
+then it seems everything runs fine.
 
- And I see binary-hwsim is created after compilation.
+So, I'm curious if anyone knows what sorts of bad things could happen
+if the bssid_match check is ignored?  Maybe bcast/mcast frames could
+be accepted when they shouldn't be in certain cases?
 
-But there isn't any help on how do I use this. Can someone help me
-with these details?
+Thanks,
+Ben
 
--ram
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
