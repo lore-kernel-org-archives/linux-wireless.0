@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33871 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754029AbbITGv6 (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58223 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbbIZKYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:51:58 -0400
-Received: by padhy16 with SMTP id hy16so87432980pad.1
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:51:58 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/18] staging: wilc1000: replaces PRINT_D with netdev_err
-Date: Sun, 20 Sep 2015 15:51:14 +0900
-Message-Id: <1442731885-4344-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085215_172248_F86B2818)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+	Sat, 26 Sep 2015 06:24:07 -0400
+Date: Sat, 26 Sep 2015 12:24:03 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Bastian Bittorf <bittorf@bluebottle.com>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Re: Low latency communication over wifi
+Message-ID: <20150926102403.GA21555@amd> (sfid-20150926_122433_646369_56870BC7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150923114236.GJ6319@medion.lan>
+ <1443007312.1889.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces PRINT_D with netdev_err which is used at error
-checking.
+Hi!
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> > (I could use Intel 3945ABG-based card instead, but I figured out 
+> > ath5k might be easier to hack?)
+> > 
+> > Is there way to manipulate type of service from userland to get
+> > similar behaviour without patching kernel?
+> 
+> If your AP has WMM/QoS then you can use setsockopt(SO_PRIORITY) to
+> change the TID and thus the AC and get your packets classified as voice
+> (VO) on wifi, which makes them much more likely to get access to the
+> medium.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 216da0c..bf9d9ee 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3694,17 +3694,17 @@ void wilc_free_wiphy(struct net_device *net)
- 	netdev_info(net, "Unregistering wiphy\n");
- 
- 	if (!net) {
--		PRINT_D(INIT_DBG, "net_device is NULL\n");
-+		netdev_err(net, "net_device is NULL\n");
- 		return;
- 	}
- 
- 	if (!net->ieee80211_ptr) {
--		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
-+		netdev_err(net, "ieee80211_ptr is NULL\n");
- 		return;
- 	}
- 
- 	if (!net->ieee80211_ptr->wiphy) {
--		PRINT_D(INIT_DBG, "wiphy is NULL\n");
-+		netdev_err(net, "wiphy is NULL\n");
- 		return;
- 	}
- 
+That would be equivalent to ping -Q, right? It does not seem to have
+any effect :-(. I'd expect at least local machine to use shorter waits
+for medium, and thus drop packets instead of waiting.
+
+On Wed 2015-09-23 13:42:36, Bastian Bittorf wrote:
+> * Pavel Machek <pavel@ucw.cz> [23.09.2015 13:38]:
+> > Is there way to manipulate type of service from userland to get
+> > similar behaviour without patching kernel?
+> 
+> yes, iptables DSCP / DiffServ / Differentiated Services Field
+> 
+> # you have to add some magic for matching your data
+> e.g. $IPT -t mangle -I OUTPUT -j DSCP --set-dscp-class CS7
+
+Again, this is ping -Q equivalent, right? I was doing
+
+ping -c 300 -i .2 -Q $[56*4] -s 500 amd
+300 packets transmitted, 300 received, 0% packet loss, time 60989ms
+rtt min/avg/max/mdev = 2.155/8.599/44.475/5.677 ms
+300 packets transmitted, 300 received, +1 duplicates, 0% packet loss, time 61030ms
+rtt min/avg/max/mdev = 2.158/23.809/300.956/49.969 ms, pipe 2
+
+I would expect packet loss, but got long delays instead.
+
+> also you should consider force the ACK-timing to 450m / Class1
+> and forbid retransmission in minstrel
+
+Yes, disabling retransmission would be useful. How would I do that?
+
+Thanks and best regards,
+
+									Pavel
 -- 
-2.5.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
