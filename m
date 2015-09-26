@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:38611 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbbINEhe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38932 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957AbbIZRia convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 00:37:34 -0400
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: remove unused enum
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1441940660-5925-1-git-send-email-tony.cho@atmel.com>
- <1441940660-5925-2-git-send-email-tony.cho@atmel.com>
- <20150912023503.GA32162@kroah.com> <55F622F6.7010803@atmel.com>
- <20150914042506.GB26591@kroah.com>
-CC: <devel@driverdev.osuosl.org>, <rachel.kim@atmel.com>,
-	<chris.park@atmel.com>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
-	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
-	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <55F64F0C.9050002@atmel.com> (sfid-20150914_063756_217099_FE6D0C8F)
-Date: Mon, 14 Sep 2015 13:37:32 +0900
+	Sat, 26 Sep 2015 13:38:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH] b43: probe bcma core (device) rev 0x15
+References: <1441775802-1230-1-git-send-email-zajec5@gmail.com>
+Date: Sat, 26 Sep 2015 20:38:23 +0300
+In-Reply-To: <1441775802-1230-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 9 Sep 2015
+ 07:16:42 +0200")
+Message-ID: <877fnddqsw.fsf@kamboji.qca.qualcomm.com> (sfid-20150926_193832_596429_AB01EED7)
 MIME-Version: 1.0
-In-Reply-To: <20150914042506.GB26591@kroah.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-
-On 2015년 09월 14일 13:25, Greg KH wrote:
-> On Mon, Sep 14, 2015 at 10:29:26AM +0900, Tony Cho wrote:
->>
->> On 2015년 09월 12일 11:35, Greg KH wrote:
->>> On Fri, Sep 11, 2015 at 12:04:19PM +0900, Tony Cho wrote:
->>>> From: Glen Lee <glen.lee@atmel.com>
->>>>
->>>> This patch removes a unused enum tenuFrameClass.
->>>>
->>>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->>>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
->>>> ---
->>>>   drivers/staging/wilc1000/coreconfigurator.c | 8 --------
->>>>   1 file changed, 8 deletions(-)
->>> I already applied this, why resend it?
->>>
->>> greg k-h
->> This is one of series for the "[PATCH v2 2/2] staging: wilc1000: coreconfigurator.c: remove unused function".
->> That's why it was sent to you.
-> But you sent it as a part of a different series, why do that?
+> OpenWrt user reported b43 doesn't probe wireless core on SoC BCM5356A1:
+> [    0.000000] bcma: bus0: Found chip with id 0x5356, rev 0x01 and package 0x04
+> it is because this chip uses different 802.11 core revison than others:
+> [    0.000000] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x15, class 0x0)
 >
-> When you do a v2 patch, please be specific, resend the whole series.
-> Otherwise how am I supposed to know what to do?  Remember, I get
-> hundreds of patches to review and handle every day, you need to be very
-> obvious as to what I need to do otherwise I will get it wrong :)
->
-> greg k-h
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Understood. I will keep it in my mind to be more obvious.
+Thanks, manually applied to wireless-drivers.git.
 
-Thanks,
-
-Tony.
-
-
+-- 
+Kalle Valo
