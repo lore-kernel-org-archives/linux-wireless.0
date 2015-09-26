@@ -1,125 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:25534 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014AbbIXJNo (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33610 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932377AbbIZWEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 05:13:44 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/15] staging: wilc1000: remove pointer variables of txq_add_to_head_cs
-Date: Thu, 24 Sep 2015 18:15:00 +0900
-Message-ID: <1443086106-20482-9-git-send-email-glen.lee@atmel.com> (sfid-20150924_111347_816017_F6A247B0)
-In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 26 Sep 2015 18:04:42 -0400
+Received: by pacex6 with SMTP id ex6so137743249pac.0
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2015 15:04:41 -0700 (PDT)
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linaro-kernel@lists.linaro.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-mm@kvack.org,
+	alsa-devel@alsa-project.org
+Subject: [PATCH V5 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Sat, 26 Sep 2015 15:04:06 -0700
+Message-Id: <8d3d3428c3a36f821e4c3d8563d094ca4b4763fd.1443304934.git.viresh.kumar@linaro.org> (sfid-20150927_000459_309339_83BD3125)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes txq_add_to_head_critical_section and txq_add_to_head_lock
-which are pointer of g_linux_wlan->txq_add_to_head_cs.
-Just use g_linux_wlan->txq_add_to_head_cs as argument of function.
+global_lock is defined as an unsigned long and accessing only its lower
+32 bits from sysfs is incorrect, as we need to consider other 32 bits
+for big endian 64-bit systems. There are no such platforms yet, but the
+code needs to be robust for such a case.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Fix that by changing type of 'global_lock' to u32.
+
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
 ---
- drivers/staging/wilc1000/linux_wlan.c   |  3 ---
- drivers/staging/wilc1000/wilc_wlan.c    | 13 ++++++-------
- drivers/staging/wilc1000/wilc_wlan_if.h |  3 ---
- 3 files changed, 6 insertions(+), 13 deletions(-)
+BCC'd a lot of people (rather than cc'ing them) to make sure
+- the series reaches them
+- mailing lists do not block the patchset due to long cc list
+- and we don't spam the BCC'd people for every reply
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 2893776..61161b9 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1059,9 +1059,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
- 	nwi->os_context.os_private = (void *)nic;
- 	nwi->os_context.tx_buffer_size = LINUX_TX_SIZE;
- 	nwi->os_context.txq_critical_section = (void *)&g_linux_wlan->txq_cs;
--
--	nwi->os_context.txq_add_to_head_critical_section = (void *)&g_linux_wlan->txq_add_to_head_cs;
--
- #if defined(MEMORY_STATIC)
- 	nwi->os_context.rx_buffer_size = LINUX_RX_SIZE;
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 5bca997..f042b78 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -68,7 +68,6 @@ typedef struct {
- 	 **/
- 	void *txq_lock;
+V4->V5:
+- Switch back to the original solution of making global_lock u32.
+---
+ drivers/acpi/ec_sys.c   | 2 +-
+ drivers/acpi/internal.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
+index b4c216bab22b..bea8e425a8de 100644
+--- a/drivers/acpi/ec_sys.c
++++ b/drivers/acpi/ec_sys.c
+@@ -128,7 +128,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+ 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
+ 		goto error;
+ 	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+-				 (u32 *)&first_ec->global_lock))
++				 &first_ec->global_lock))
+ 		goto error;
  
--	struct semaphore *txq_add_to_head_lock;
- 	unsigned long txq_spinlock_flags;
- 
- 	struct txq_entry_t *txq_head;
-@@ -228,7 +227,8 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	if (write_support)
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 9e426210c2a8..9db196de003c 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -138,7 +138,7 @@ struct acpi_ec {
+ 	unsigned long gpe;
+ 	unsigned long command_addr;
+ 	unsigned long data_addr;
+-	unsigned long global_lock;
++	u32 global_lock;
  	unsigned long flags;
--	if (p->os_func.os_wait(p->txq_add_to_head_lock, CFG_PKTS_TIMEOUT))
-+	if (p->os_func.os_wait(&g_linux_wlan->txq_add_to_head_cs,
-+			       CFG_PKTS_TIMEOUT))
- 		return -1;
- 
- 	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
-@@ -248,7 +248,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
- 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
- 
- 	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
--	up(p->txq_add_to_head_lock);
-+	up(&g_linux_wlan->txq_add_to_head_cs);
- 
- 
- 	/**
-@@ -843,7 +843,8 @@ static int wilc_wlan_handle_txq(u32 *pu32TxqCount)
- 		if (p->quit)
- 			break;
- 
--		p->os_func.os_wait(p->txq_add_to_head_lock, CFG_PKTS_TIMEOUT);
-+		p->os_func.os_wait(&g_linux_wlan->txq_add_to_head_cs,
-+				   CFG_PKTS_TIMEOUT);
- #ifdef	TCP_ACK_FILTER
- 		wilc_wlan_txq_filter_dup_tcp_ack();
- #endif
-@@ -1112,7 +1113,7 @@ _end_:
- 		if (ret != 1)
- 			break;
- 	} while (0);
--	up(p->txq_add_to_head_lock);
-+	up(&g_linux_wlan->txq_add_to_head_cs);
- 
- 	p->txq_exit = 1;
- 	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
-@@ -1971,8 +1972,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
- 	g_wlan.hif_lock = inp->os_context.hif_critical_section;
- 	g_wlan.txq_lock = inp->os_context.txq_critical_section;
- 
--	g_wlan.txq_add_to_head_lock = inp->os_context.txq_add_to_head_critical_section;
--
- 	g_wlan.tx_buffer_size = inp->os_context.tx_buffer_size;
- #if defined (MEMORY_STATIC)
- 	g_wlan.rx_buffer_size = inp->os_context.rx_buffer_size;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index f761347..6f19277 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -112,9 +112,6 @@ typedef struct {
- 
- 	u32 tx_buffer_size;
- 	void *txq_critical_section;
--
--	void *txq_add_to_head_critical_section;
--
- #if defined(MEMORY_STATIC)
- 	u32 rx_buffer_size;
- #endif
+ 	unsigned long reference_count;
+ 	struct mutex mutex;
 -- 
-1.9.1
+2.4.0
 
