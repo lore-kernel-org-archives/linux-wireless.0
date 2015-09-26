@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34364 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbbI1U1B convert rfc822-to-8bit (ORCPT
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:35250 "EHLO
+	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbbIZSkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 16:27:01 -0400
-Received: by wicfx3 with SMTP id fx3so121721021wic.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2015 13:27:00 -0700 (PDT)
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2087\))
-Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for South Africa (ZA) on 5GHz
-From: =?utf-8?Q?Karl_M=C3=B6ller?= <karl@excors.net>
-In-Reply-To: <1443462165.2401.7.camel@sipsolutions.net>
-Date: Mon, 28 Sep 2015 22:26:52 +0200
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <D78DAA74-CFD9-4D12-81F0-E994924D401F@excors.net> (sfid-20150928_222705_516292_F9BFF170)
-References: <9BEBB87E-EA6D-4219-ADC5-40C1E19DA5DA@excors.net> <1443426260.2401.2.camel@sipsolutions.net> <20150928160741.GA25936@ubuntu-hedt> <1443462165.2401.7.camel@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 26 Sep 2015 14:40:02 -0400
+Received: by vkao3 with SMTP id o3so72301012vka.2
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2015 11:40:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	<4357538.Wlf88yQie6@vostro.rjw.lan>
+	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
+	<2524822.pQu4UKMrlb@vostro.rjw.lan>
+	<20150925214438.GH5951@linux>
+	<CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com>
+Date: Sat, 26 Sep 2015 11:40:00 -0700
+Message-ID: <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com> (sfid-20150926_204103_210327_7C450CFC)
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is an older draft document, dated end 2014 directly from the regulator (ICASA):
+On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> So if you allow something like debugfs to update your structure, how
+> do you make sure there is the proper locking?
 
-http://www.icasa.org.za/Portals/0/Regulations/Working%20Docmuents/Radio%20Frequency%20Spectrum%20Regulations/DraftRevRadioFreq.pdf
+Not really sure at all.. Isn't there some debugfs locking that will
+jump in, to avoid updation of fields to the same device?
 
-Notice on page end 80 / top 81 that it lists:
+> Is that not a problem in all of the places modified by the [2/2]?
 
-"DFS & Transmitter Power Control Obligatory” for the band in question, which is now deleted in the final document published in March this year.
+Right, but its not new AFAICT.
 
-Regards
-Karl
+We already have u32 fields in those structs and on 64 bit machines
+we have the same read-update-write problems for two consecutive
+u32's. Right?
 
-> On 28 Sep 2015, at 7:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> On Mon, 2015-09-28 at 11:07 -0500, Seth Forshee wrote:
->> On Mon, Sep 28, 2015 at 09:44:20AM +0200, Johannes Berg wrote:
->>> 
->>>> The bands don’t quite match up and DFS/TPC is (apparently) not 
->>>> required for 5470 - 5725. More importantly, the max transmitted 
->>>> power
->>>> seems to be 1W/30dBm e.i.r.p and not 27dBm.
->>> 
->>> Without checking now, just a note: we sometimes have lower limits 
->>> here
->>> due to spectral power density, indoor/outdoor or TPC requirements.
->> 
->> One of the documents says that the TPC requirement for that range was
->> lifted in March 2015, so if it was lowered for TPC then we may be 
->> able to bump it up to 30 dBm.
->> 
-> 
-> That's very well possible then - the typical TCP requirement is "1/2 of
-> the power w/o TPC", which would match the 3dB
-> 
-> johannes
+> How can the future users of the API know what to do to avoid potential
+> problems with it?
 
+No idea really :)
+
+>> Anyway, that problem isn't here for sure as its between two
+>> unsigned-longs. So, should I just move it to bool and resend ?
+>
+> I guess it might be more convenient to fold this into the other patch,
+> because we seem to be splitting hairs here.
+
+I can and that's what I did. But then Arnd asked me to separate it
+out. I can fold it back if that's what you want.
+
+--
+viresh
