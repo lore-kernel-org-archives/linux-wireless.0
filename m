@@ -1,32 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60288 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752904AbbIWJAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 05:00:49 -0400
-Message-ID: <1442998845.1889.2.camel@sipsolutions.net> (sfid-20150923_110055_809652_BFBBCE0D)
-Subject: Re: [PATCH] mac80211: minstrel[_ht]: remove non-ascii debugfs
- characters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bastian Bittorf <bittorf@bluebottle.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 23 Sep 2015 11:00:45 +0200
-In-Reply-To: <20150923084935.GD6319@medion.lan> (sfid-20150923_105920_696562_4775F523)
-References: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net>
-	 <20150923084935.GD6319@medion.lan> (sfid-20150923_105920_696562_4775F523)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([212.227.126.187]:65466 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753323AbbIZTeP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Sep 2015 15:34:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linaro-kernel@lists.linaro.org
+Cc: Viresh Kumar <viresh.kumar@linaro.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Sat, 26 Sep 2015 21:33:56 +0200
+Message-ID: <1540878.9slRi6Q7xb@wuerfel> (sfid-20150926_213439_898576_69C59F9C)
+In-Reply-To: <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com> <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-23 at 10:49 +0200, Bastian Bittorf wrote:
-> * Johannes Berg <johannes@sipsolutions.net> [23.09.2015 10:44]:
-> > Replace the average symbol by "avg" to avoid being warned about the
-> > non-ASCII symbol all the time, line up the columns properly.
+On Saturday 26 September 2015 11:40:00 Viresh Kumar wrote:
+> On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > So if you allow something like debugfs to update your structure, how
+> > do you make sure there is the proper locking?
 > 
-> who warns you? the compiler? the terminal?
+> Not really sure at all.. Isn't there some debugfs locking that will
+> jump in, to avoid updation of fields to the same device?
+
+No, if you need any locking to access variable, you cannot use the
+simple debugfs helpers but have to provide your own functions.
+
+> >> Anyway, that problem isn't here for sure as its between two
+> >> unsigned-longs. So, should I just move it to bool and resend ?
+> >
+> > I guess it might be more convenient to fold this into the other patch,
+> > because we seem to be splitting hairs here.
 > 
+> I can and that's what I did. But then Arnd asked me to separate it
+> out. I can fold it back if that's what you want.
 
-sparse, or perhaps smatch? either way, those tools are crucial for my
-workflow, and there seems to be very little downside to the change.
+It still makes sense to keep it separate I think, the patch is clearly
+different from the other parts.
 
-johannes
+	Arnd
