@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36033 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbbIGLUK convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43932 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755837AbbI0PFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 07:20:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Chor Teck Law <ctlaw@marvell.com>
-Cc: David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-	<1436455659.36587.131.camel@sakura.staff.proxad.net>
-	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
-	<20150804220956.GA28583@sakura.staff.proxad.net>
-	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
-Date: Mon, 07 Sep 2015 14:20:04 +0300
-In-Reply-To: <1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com> (Chor
-	Teck Law's message of "Wed, 5 Aug 2015 08:39:28 +0000")
-Message-ID: <87vbbmeasb.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_132014_185676_1F642CAB)
+	Sun, 27 Sep 2015 11:05:42 -0400
+Date: Sun, 27 Sep 2015 08:03:47 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Pinkesh Jain <pinkeshbadjatiya@gmail.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, carlos@cgarcia.org,
+	linux-wireless@vger.kernel.org,
+	rickard_strandqvist@spectrumdigital.se, luca@lucaceresoli.net,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	gdonald@gmail.com
+Subject: Re: [PATCH] Removed extra spaces, and error from checkpatch.pl
+Message-ID: <20150927150347.GA27003@kroah.com> (sfid-20150927_170634_956155_ACF487DE)
+References: <20150927001415.GA34976@ubuntu>
+ <20150927060352.GA1835@fool>
+ <CACJZ1zqyVJ95GNWReSZ-C3hgjgA97LaJNna=pGkKC8ZQjzvnuA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CACJZ1zqyVJ95GNWReSZ-C3hgjgA97LaJNna=pGkKC8ZQjzvnuA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chor Teck Law <ctlaw@marvell.com> writes:
+On Sun, Sep 27, 2015 at 01:59:17PM +0530, Pinkesh Jain wrote:
+> There were many warnings and error given by checkpatch.pl and most of them were
+> almost of the same type so i believed a single patch is enough to do the
+> cleanup.
+> 
+> 1. Remove errors of the struct declaration (foo*bar to foo *bar)
+> 2. Removed warnings of 'spaces before comma'.
+> 3. Added space after enum declaration and before opening of paranthesis.
+> 4. removed spaces between function calls (func () to func() )
+> 5. Still there are a lot of warnings related to only line lengths but removing
+> then would not make sense and would leave the code unreadable.
+> 
+> There were one or two more of such kind of very small code refactoring that i
+> did. Since they were not that important, also i 'Did Not Alter' any other part
+> of functioning code so i made the changes in a single patch.
+> 
+> I am new here and this is my first patch so please give me  enough suggestions
+> and reviews for what i do, so that i can get familiar with the community
+> guidelines.
+> 
+> If i do anything wrong then please correct me.
+> 
+> Questions:
+> 1.) Do i need to mention all this changes that i wrote about in the commit as
+> they are very descriptive? I tried to be brief in the commit message.
 
->> On Tuesday 04 Aug 2015 Ã  20:02:23 (+0300), Kalle Valo wrote:
->> 
->> > I haven't looked at the driver myself yet. Do you have any estimates
->> > how much duplication there is?
->> 
->
-> I do think that someone interested in this thread should compare the
-> two drivers to decide if they want to accept mwlwifi (or we let it
-> develop closed door).
->
-> You will find the differences with some leverage. To make your
-> comparison easier, here is the summary (excluding the patch1-patch6
-> improvements as per review feedbacks from Johannes and community):
->
-> mwlwifi functions leveraged from mwl8k:
-> - 802.11n setting for mac80211
-> - Functions needed to hook up to mac80211
-> - Interactions with mac80211 to establish BA streams
-> - Partial firmware APIs, some data fields
-> - Method to pass rx packets to mac80211 (but added with 11ac rate map/reports)
->
-> All others are different/new. Including some listed below:
-> - Different/new 11ac chipsets, including combo BT devices
-> - Added support for 11ac related settings and functions
-> - Added support for concurrent AP+STA functionalities with single firmware per chip
-> - Additional firmware APIs 
-> - Added functions to convert newly supported settings from mac80211 to firmware
-> - Different Tx datapath 
-> - Different Rx low level datapath (though data structure for receiving is same)
-> - Reorganized the files for future scalability and features addition (more to come)
-> - Addressed all (sort of) review feedbacks from patch1-patch6 of this submission
+Be descriptive.
 
-You have named the new driver as mwlwifi, which is a really generic
-name. Does that imply that mwlwifi will start supporting more Marvell
-devices in the future? Or will be in the situation that you fork the
-driver again and we end up having mwlwifi2, mwlwifi3 and so on?
+> 2.) Do i need to split the changes in separate commits, as one of the members
+> pointed out.
 
--- 
-Kalle Valo
+yes.
