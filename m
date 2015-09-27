@@ -1,44 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:35803 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbbIQMDP (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:35011 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbbI0Sb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 08:03:15 -0400
-Received: by vkao3 with SMTP id o3so9186226vka.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 05:03:14 -0700 (PDT)
+	Sun, 27 Sep 2015 14:31:57 -0400
+Received: by igbkq10 with SMTP id kq10so39769298igb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 11:31:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150917103426.GB20514@sudip-pc>
-References: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com>
-	<1442476129-14908-3-git-send-email-chaehyun.lim@gmail.com>
-	<20150917103426.GB20514@sudip-pc>
-Date: Thu, 17 Sep 2015 21:03:14 +0900
-Message-ID: <CAKV=isvZ2V+RgpB_Aej5cUjZ+n_9OdOb2X_0f=q6=LNouxF14A@mail.gmail.com> (sfid-20150917_140319_019332_8B038963)
-Subject: Re: [PATCH V2 3/8] staging: wilc1000: replace int8_t with int
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, rachel.kim@atmel.com,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
+In-Reply-To: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+Date: Sun, 27 Sep 2015 11:31:56 -0700
+Message-ID: <CAJ-VmokjZRaTuNuSna5PR09qnKky=7RJSUWzM3=TnjzWkQhCAg@mail.gmail.com> (sfid-20150927_203200_434462_417638F2)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+From: Adrian Chadd <adrian@freebsd.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 7:34 PM, Sudip Mukherjee
-<sudipm.mukherjee@gmail.com> wrote:
-> On Thu, Sep 17, 2015 at 04:48:44PM +0900, Chaehyun Lim wrote:
->> This patch replaces int8_t with int. just use return type as int.
->>
->> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
->> ---
-> but isn't int8_t is defined as char?
+hiya,
+
+for what it's worth - this looks okay to me. His noise floor looks
+about as low as I'd expect on his plots.
+
+
+-adrian
+
+
+On 22 July 2015 at 01:42, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> The FreeBSD driver [0] uses the same 2G values as for the AR9280 chips.
+> Using the same values in ath9k results in much better throughput for me.
 >
-
-Even int8_t is defined as char, I think it's no problem to use int.
-Is it need to change as char?
-
-Regards
-Chaehyun Lim
-
-> regards
-> sudip
+> Before this patch I had a huge amount of packet loss (sometimes up to
+> 40%) and the max transfer speed was somewhere around 5Mbit/s. With this
+> patch applied I have zero packet loss and ten times the throughput.
+> My device uses a AR9227 which is the PCI variant of the AR9287.
+>
+> [0] http://bxr.su/FreeBSD/sys/dev/ath/ath_hal/ar9002/ar9287.h
+>
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+> Patch has not changed, I am just CC'ing @linux-wireless (instead of
+> @ath9k-devel only).
+>
+>  drivers/net/wireless/ath/ath9k/ar9002_phy.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+> index 6314ae2..9d17a53 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+> @@ -610,8 +610,8 @@
+>  #define AR_PHY_CCA_MIN_GOOD_VAL_9271_2GHZ      -127
+>  #define AR_PHY_CCA_MAX_GOOD_VAL_9271_2GHZ      -116
+>
+> -#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -120
+> +#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -112
+>  #define AR_PHY_CCA_MIN_GOOD_VAL_9287_2GHZ    -127
+> -#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -110
+> +#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -97
+>
+>  #endif
+> --
+> 2.4.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
