@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35484 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868AbbIND0C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:26:02 -0400
-Received: by pacfv12 with SMTP id fv12so132612880pac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:26:02 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+Received: from mx1.redhat.com ([209.132.183.28]:44415 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754732AbbI0CZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Sep 2015 22:25:38 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Pinkesh Badjatiya <pinkeshbadjatiya@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	gdonald@gmail.com, luca@lucaceresoli.net,
+	rickard_strandqvist@spectrumdigital.se, carlos@cgarcia.org,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 28/31] staging: wilc1000: rename WILC_WFI_mgmt_tx
-Date: Mon, 14 Sep 2015 12:24:28 +0900
-Message-Id: <1442201071-16155-28-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054652_550371_4A530739)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Removed extra spaces, and error from checkpatch.pl
+References: <20150927001415.GA34976@ubuntu>
+Date: Sat, 26 Sep 2015 22:25:34 -0400
+In-Reply-To: <20150927001415.GA34976@ubuntu> (Pinkesh Badjatiya's message of
+	"Sun, 27 Sep 2015 05:44:16 +0530")
+Message-ID: <wrfjio6wr42p.fsf@redhat.com> (sfid-20150927_042555_042910_A36FBAD0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_mgmt_tx with mgmt_tx to avoid CamelCase.
+Pinkesh Badjatiya <pinkeshbadjatiya@gmail.com> writes:
+> Removed trailing spaces.
+> Fixed some errors from checkpatch.pl verification.
+> No changes made to actual functional code.
+>
+> Signed-off-by: Pinkesh Badjatiya <pinkeshbadjatiya@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/include/rtw_cmd.h | 162 ++++++++++++++--------------
+>  1 file changed, 80 insertions(+), 82 deletions(-)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: remove "wilc_" prefix
+Please read the guidelines for how to post a patch for staging. The
+subject line needs to have the correct prefixes for it to be considered.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 627a254..068e648 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2496,10 +2496,10 @@ void WILC_WFI_add_wilcvendorspec(u8 *buff)
-  */
- extern linux_wlan_t *g_linux_wlan;
- extern bool bEnablePS;
--int WILC_WFI_mgmt_tx(struct wiphy *wiphy,
--			struct wireless_dev *wdev,
--			struct cfg80211_mgmt_tx_params *params,
--			u64 *cookie)
-+int mgmt_tx(struct wiphy *wiphy,
-+	    struct wireless_dev *wdev,
-+	    struct cfg80211_mgmt_tx_params *params,
-+	    u64 *cookie)
- {
- 	struct ieee80211_channel *chan = params->chan;
- 	unsigned int wait = params->wait;
-@@ -3590,7 +3590,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.remain_on_channel = remain_on_channel,
- 	.cancel_remain_on_channel = cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = mgmt_tx_cancel_wait,
--	.mgmt_tx = WILC_WFI_mgmt_tx,
-+	.mgmt_tx = mgmt_tx,
- 	.mgmt_frame_register = WILC_WFI_frame_register,
- 	.set_power_mgmt = WILC_WFI_set_power_mgmt,
- 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
--- 
-2.5.1
-
+Jes
