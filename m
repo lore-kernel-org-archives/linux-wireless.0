@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26023 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754921AbbIIJdh (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:34300 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753642AbbI0ISS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 05:33:37 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: fix mu-mimo rx status reporting
-References: <1440679653-20289-1-git-send-email-michal.kazior@tieto.com>
-	<1440679653-20289-2-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 9 Sep 2015 12:33:23 +0300
-In-Reply-To: <1440679653-20289-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 27 Aug 2015 14:47:33 +0200")
-Message-ID: <877fo09bto.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_113352_566656_E12A9B30)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 27 Sep 2015 04:18:18 -0400
+Received: by wicfx3 with SMTP id fx3so67890538wic.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 01:18:16 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/6] staging: vt6655: don't stop TX queue unless buffer full.
+Date: Sun, 27 Sep 2015 09:17:39 +0100
+Message-Id: <1443341864-2756-1-git-send-email-tvboxspy@gmail.com> (sfid-20150927_101849_107909_CAA72EC3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Presently the TX buffer stops while filling the buffer.
 
-> MU-MIMO Rx involves different interpretation of
-> the VHT-SIG-A compared to SU-MIMO.
->
-> The incorrect interpretation led ath10k to report
-> VHT MCS values greater than 9 which subsequently
-> prompted mac80211 to drop such frames. This
-> effectively broke Rx with MU-MIMO in many cases
-> and manifested with a kernel warning in the log
-> which looked like this:
->
->   [   14.552520] WARNING: CPU: 2 PID: 0 at net/mac80211/rx.c:3578 ieee80211_rx+0x26c/0x940 [mac80211]()
->   [   14.552522] Rate marked as a VHT rate but data is invalid: MCS: 10, NSS: 2
->   ... call trace follows ...
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+However, this does not make use of the available buffer
+space, it also lags the speed of the TX troughtput.
 
-Thanks, patch 2 applied.
+Only stop the queue when the buffer becomes full. The
+Interupt handler will start the queue again when a
+buffer is available.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 326bce3..07ebdea 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1105,6 +1105,7 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	if (AVAIL_TD(priv, dma_idx) < 1) {
+ 		spin_unlock_irqrestore(&priv->lock, flags);
++		ieee80211_stop_queues(priv->hw);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -1156,13 +1157,8 @@ static void vnt_tx_80211(struct ieee80211_hw *hw,
+ {
+ 	struct vnt_private *priv = hw->priv;
+ 
+-	ieee80211_stop_queues(hw);
+-
+-	if (vnt_tx_packet(priv, skb)) {
++	if (vnt_tx_packet(priv, skb))
+ 		ieee80211_free_txskb(hw, skb);
+-
+-		ieee80211_wake_queues(hw);
+-	}
+ }
+ 
+ static int vnt_start(struct ieee80211_hw *hw)
 -- 
-Kalle Valo
+2.5.0
+
