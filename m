@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28192 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbbIVFc1 (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:34771 "EHLO
+	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038AbbI0OfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 01:32:27 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v3 1/4] staging: wilc1000: Modify null check routine
-Date: Tue, 22 Sep 2015 14:34:43 +0900
-Message-ID: <1442900086-9480-1-git-send-email-glen.lee@atmel.com> (sfid-20150922_073231_099947_21F04ADA)
+	Sun, 27 Sep 2015 10:35:21 -0400
+Received: by vkhf67 with SMTP id f67so78649246vkh.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 07:35:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJPN1uvPyZ+hZ64_0ZXU9wPLuAR-qm06GrRmHTjc9+rgiChYDQ@mail.gmail.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	<CAJPN1uvPyZ+hZ64_0ZXU9wPLuAR-qm06GrRmHTjc9+rgiChYDQ@mail.gmail.com>
+Date: Sun, 27 Sep 2015 07:35:20 -0700
+Message-ID: <CAKohpo=s9A_M5FphkvmXutWNzxewCimBUv-mK75tO6nrp3-3AA@mail.gmail.com> (sfid-20150927_163543_366479_AD74C725)
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On 26 September 2015 at 22:31, Jiri Slaby <jirislaby@gmail.com> wrote:
+> But this has to crash whenever the file is read as val's storage is gone at
+> that moment already, right?
 
-This patch removes the potential faults which may happen when unexpectedly
-getting access to invalid pointer. Return error when the invalid memory is
-accessed.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 62f4a8a..158d8b8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2384,8 +2384,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
- 	s32 s32Err = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
- 
--	if (pstrWFIDrv == NULL)
-+	if (!pstrWFIDrv) {
- 		PRINT_ER("Driver handler is NULL\n");
-+		return -ENODEV;
-+	}
- 	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
- 		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
- 
--- 
-1.9.1
-
+Yeah, its fixed now in the new version. This was a *really* bad idea :(
