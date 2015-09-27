@@ -1,113 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:34186 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbIBDIh (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:47084 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755836AbbI0Nmc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 23:08:37 -0400
-Received: by iofb144 with SMTP id b144so5819585iof.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2015 20:08:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150901234305.GU8051@wotan.suse.de>
-References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
-	<CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
-	<1440464705.2737.36.camel@linux.vnet.ibm.com>
-	<14540.1440599584@warthog.procyon.org.uk>
-	<31228.1440671938@warthog.procyon.org.uk>
-	<36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
-	<20150827212907.GF8051@wotan.suse.de>
-	<1440719673.2118.84.camel@linux.vnet.ibm.com>
-	<20150829021659.GN8051@wotan.suse.de>
-	<1441030735.2647.70.camel@linux.vnet.ibm.com>
-	<20150901234305.GU8051@wotan.suse.de>
-Date: Tue, 1 Sep 2015 20:08:35 -0700
-Message-ID: <CAGXu5j+_yHc1wbubzw4h=QFM=uyn1pCraGYCWS6LvgtS3-A+Qw@mail.gmail.com> (sfid-20150902_050912_247909_08E1A754)
-Subject: Re: Linux Firmware Signing
-From: Kees Cook <keescook@chromium.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>,
-	SE Linux <selinux@tycho.nsa.gov>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Sun, 27 Sep 2015 09:42:32 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linaro-kernel@lists.linaro.org,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?UTF-8?B?Vm9qdMSbY2ggUGF2bMOtaw==?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Jay Schulist <jschlst@samba.org>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	Alexei Starovoitov <ast@plumgrid.com>
-Content-Type: text/plain; charset=UTF-8
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Sun, 27 Sep 2015 16:10:48 +0200
+Message-ID: <1578470.DLzaBp4j3T@vostro.rjw.lan> (sfid-20150927_154242_753412_0328C71B)
+In-Reply-To: <1540878.9slRi6Q7xb@wuerfel>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com> <1540878.9slRi6Q7xb@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 1, 2015 at 4:43 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Mon, Aug 31, 2015 at 10:18:55AM -0400, Mimi Zohar wrote:
->> > > eBPF/seccomp
->
-> OK I knew nothing about this but I just looked into it, here are my notes:
->
->   * old BPF - how far do we want to go? This goes so far as to parsing
->     user passed void __user *arg data through ioctls which typically
->     gets copy_from_user()'d and eventually gets BPF_PROG_RUN().
->
->   * eBPF:
->                              seccomp() & prctl_set_seccomp()
->                                         |
->                                         V
->                              do_seccomp()
->                                         |
->                                         V
->                              seccomp_set_mode_filter()
->                                         |
->                                         V
->                              seccomp_prepare_user_filter()
->                                         |
->                                         V
->         bpf_prog_create_from_user() (seccomp) \
->         bpf_prog_create()                      > bpf_prepare_filter()
->         sk_attach_filter()                    /
->
->     All approaches come from user passed data, nothing fd based.
->
->     For both old BPF and eBPF then:
->
->     If we wanted to be paranoid I suppose the Machine Owner Key (MOK)
->     Paul had mentioned up could be used to vet for passed filters, or
->     a new interface to enable fd based filters. This really would limit
->     the dynamic nature of these features though.
->
->     eBPF / secccomp would not be the only place in the kernel that would have
->     issues with user passed data, we have tons of places the same applies so
->     implicating the old BPF / eBPF / seccomp approaches can easily implicate
->     many other areas of the kernel, that's pretty huge but from the looks of
->     it below you seem to enable that to be a possibility for us to consider.
+On Saturday, September 26, 2015 09:33:56 PM Arnd Bergmann wrote:
+> On Saturday 26 September 2015 11:40:00 Viresh Kumar wrote:
+> > On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > > So if you allow something like debugfs to update your structure, how
+> > > do you make sure there is the proper locking?
+> > 
+> > Not really sure at all.. Isn't there some debugfs locking that will
+> > jump in, to avoid updation of fields to the same device?
+> 
+> No, if you need any locking to access variable, you cannot use the
+> simple debugfs helpers but have to provide your own functions.
+> 
+> > >> Anyway, that problem isn't here for sure as its between two
+> > >> unsigned-longs. So, should I just move it to bool and resend ?
+> > >
+> > > I guess it might be more convenient to fold this into the other patch,
+> > > because we seem to be splitting hairs here.
+> > 
+> > I can and that's what I did. But then Arnd asked me to separate it
+> > out. I can fold it back if that's what you want.
+> 
+> It still makes sense to keep it separate I think, the patch is clearly
+> different from the other parts.
 
-At the time (LSS 2014?) I argued that seccomp policies come from
-binaries, which are already being measured. And that policies only
-further restrict a process, so there seems to be to be little risk in
-continuing to leave them unmeasured.
+I just don't see much point in going from unsigned long to u32 and then
+from 32 to bool if we can go directly to bool in one go.
 
--Kees
+Thanks,
+Rafael
 
--- 
-Kees Cook
-Chrome OS Security
