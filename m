@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35723 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbbIPLMD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55145 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933295AbbI1SOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:12:03 -0400
-Received: by pacfv12 with SMTP id fv12so210910597pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 04:12:03 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/10] staging: wilc1000: remove WILC_TIME typedef
-Date: Wed, 16 Sep 2015 20:11:33 +0900
-Message-Id: <1442401895-7463-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150916_131214_853502_D2BCC52D)
-In-Reply-To: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442401895-7463-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 28 Sep 2015 14:14:52 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Pending patches in patchwork and their states
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	<56097D6D.1010509@broadcom.com>
+Date: Mon, 28 Sep 2015 21:14:45 +0300
+In-Reply-To: <56097D6D.1010509@broadcom.com> (Arend van Spriel's message of
+	"Mon, 28 Sep 2015 19:48:29 +0200")
+Message-ID: <8737xy9zsa.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20150928_201456_943772_B28908AC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes WILC_TIME typedef that is not used anymore.
+Arend van Spriel <arend@broadcom.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_platform.h | 2 --
- 1 file changed, 2 deletions(-)
+> If my administration is correct there are 29 patches pending. Any
+> chance these will get applied. Or did I miss some remarks requiring a
+> resend.
 
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index 5c867ec..b763616 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -33,8 +33,6 @@ typedef struct __MessageQueue_struct {
- 
- 
- 
--/*Time represented in 64 bit format*/
--typedef time_t WILC_Time;
- 
- 
- /*******************************************************************
+Yeah, I have been lagging behind patches due to other stuff and I have
+64 patches pending right now. Sorry about that, I should get to them in
+a day or two. Here's a short summary how I use patchwork. Hopefully it
+makes it easier for people to follow their patch status and I get less
+emails ;)
+
+If the patch in patchwork is in state New or Under Review they are on my
+queue and waiting my action:
+
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+If the patch is Deferred it means that there was a problem and I look at
+the patch more closely later (when I have more time etc):
+
+https://patchwork.kernel.org/project/linux-wireless/list/?state=10
+
+Awaiting Upstream means that I cannot apply the patch right now due to a
+mising patch in some other component, for example to mac80211. I will
+apply the patch once the dependency is available in my tree:
+
+https://patchwork.kernel.org/project/linux-wireless/list/?state=8
+
+Any other state means that the patch is out of my radar due to one
+reason or another, and a resend is needed to get the patch active again:
+
+Rejected = In my opinion not acceptable patch
+RFC = Request For Comments, submitter didn't officially send the patch yet
+Not Applicaple = Not a wireless patch
+Changes Requested = Needs a new version due to review comments
+Superseded = A new version of the patch submitted without comments
+
+And Accepted state of course means that I have commited the patch :)
+
 -- 
-2.5.1
-
+Kalle Valo
