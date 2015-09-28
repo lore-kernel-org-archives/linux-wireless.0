@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45207 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbbIRJNB (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36490 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932297AbbI1LYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:13:01 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/34] staging: wilc1000: remove typedef from the struct tstrHostIFkeyAttr
-Date: Fri, 18 Sep 2015 18:11:13 +0900
-Message-ID: <1442567496-29331-11-git-send-email-tony.cho@atmel.com> (sfid-20150918_111654_110550_488F1313)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+	Mon, 28 Sep 2015 07:24:07 -0400
+Date: Mon, 28 Sep 2015 16:53:46 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix resource leak
+Message-ID: <20150928112346.GB10335@sudip-pc> (sfid-20150928_132425_264132_3ED7A31F)
+References: <1443382254-7358-1-git-send-email-mateusz.kulikowski@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443382254-7358-1-git-send-email-mateusz.kulikowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFkeyAttr and renames
-it to key_attr in oder to comply with the Linux coding style.
+On Sun, Sep 27, 2015 at 09:30:54PM +0200, Mateusz Kulikowski wrote:
+> Firmware was not released properly if kmemdup fails.
+> 
+> Addresses-Coverity-Id: 1269118
+> Signed-off-by: Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> index cd014f7..87bb87f 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> @@ -249,13 +249,13 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
+>  		goto Exit;
+>  	}
+>  	firmware_buf = kmemdup(fw->data, fw->size, GFP_KERNEL);
+> +	release_firmware(fw);
+>  	if (!firmware_buf) {
+>  		rtStatus = _FAIL;
+>  		goto Exit;
+>  	}
+>  	buf = firmware_buf;
+>  	fw_size = fw->size;
+> -	release_firmware(fw);
+You are releasing the firmware and then accessing fw->size here. That
+just introduced a NULL pointer dereference.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c80d00e..1f0c842 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -136,7 +136,7 @@ typedef union _tuniHostIFkeyAttr {
- } tuniHostIFkeyAttr;
- 
- /*!
-- *  @struct             tstrHostIFkeyAttr
-+ *  @struct             key_attr
-  *  @brief		Structure to hold Host IF Scan Attributes
-  *  @details
-  *  @todo
-@@ -145,11 +145,11 @@ typedef union _tuniHostIFkeyAttr {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFkeyAttr {
-+struct key_attr {
- 	tenuKeyType enuKeyType;
- 	u8 u8KeyAction;
- 	tuniHostIFkeyAttr uniHostIFkeyAttr;
--} tstrHostIFkeyAttr;
-+};
- 
- 
- 
-@@ -422,7 +422,7 @@ union message_body {
- 	struct connect_attr strHostIFconnectAttr;     /*!< Host IF Connect Request Attributes message body */
- 	struct rcvd_net_info strRcvdNetworkInfo;                 /*!< Received Asynchronous Network Info message body */
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
--	tstrHostIFkeyAttr strHostIFkeyAttr;                             /*!<>*/
-+	struct key_attr strHostIFkeyAttr;                             /*!<>*/
- 	tstrHostIFCfgParamAttr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
- 	tstrHostIFSetChan strHostIFSetChan;
- 	tstrHostIFGetChan strHostIFGetChan;
-@@ -2711,13 +2711,14 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
- /**
-  *  @brief Handle_Key
-  *  @details       Sending config packet to firmware to set key
-- *  @param[in]    tstrHostIFkeyAttr* pstrHostIFkeyAttr
-+ *  @param[in]    struct key_attr *pstrHostIFkeyAttr
-  *  @return         Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
--static int Handle_Key(tstrWILC_WFIDrv *drvHandler, tstrHostIFkeyAttr *pstrHostIFkeyAttr)
-+static int Handle_Key(tstrWILC_WFIDrv *drvHandler,
-+		      struct key_attr *pstrHostIFkeyAttr)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
--- 
-1.9.1
-
+regards
+sudip
