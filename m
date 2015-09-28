@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54210 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751742AbbIPGkZ (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34284 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbbI1SiI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 02:40:25 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Marty Faltesek <mfaltesek@google.com>,
-	Belisko Marek <marek.belisko@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: kernel log flooded with GET_CMD_NODE: cmd node not available
-Date: Wed, 16 Sep 2015 06:40:21 +0000
-Message-ID: <4410b233bfdf45dc94eba8e913962c00@SC-EXCH04.marvell.com> (sfid-20150916_084029_472787_18C59BB7)
-References: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
-	<26c3f35fd9e74b1d80e80077c19b6717@SC-EXCH04.marvell.com>
-	<CAAfyv36Xf4f33wZvKMeTomyr_T-LKKMYkpYQwWt6B83UthFr8Q@mail.gmail.com>
- <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
-In-Reply-To: <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 28 Sep 2015 14:38:08 -0400
+Date: Tue, 29 Sep 2015 00:07:43 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
+Subject: Re: [PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove
+ code that no effect
+Message-ID: <20150928183743.GA2879@gcs-HP-Notebook> (sfid-20150928_203825_767826_FC8998C2)
+References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+ <1443464037-3591-2-git-send-email-csgorentla@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443464037-3591-2-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBNYXJ0eSBGYWx0ZXNlayBbbWFpbHRvOm1mYWx0ZXNla0Bnb29nbGUuY29tXQ0KPiBT
-ZW50OiBGcmlkYXksIFNlcHRlbWJlciAwNCwgMjAxNSAzOjIxIEFNDQo+IFRvOiBCZWxpc2tvIE1h
-cmVrDQo+IENjOiBBbWl0a3VtYXIgS2Fyd2FyOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
-cmcNCj4gU3ViamVjdDogUmU6IGtlcm5lbCBsb2cgZmxvb2RlZCB3aXRoIEdFVF9DTURfTk9ERTog
-Y21kIG5vZGUgbm90DQo+IGF2YWlsYWJsZQ0KPiANCj4gT24gTW9uLCBBdWcgMzEsIDIwMTUgYXQg
-Nzo1NCBBTSwgQmVsaXNrbyBNYXJlayA8bWFyZWsuYmVsaXNrb0BnbWFpbC5jb20+DQo+IHdyb3Rl
-Og0KPiA+IFsgIDE4Mi4wNjkxNDZdIG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogR0VUX0NNRF9O
-T0RFOiBjbWQgbm9kZSBub3QNCj4gPiBhdmFpbGFibGUgWyAgMTgyLjA3NjM1MF0gbXdpZmlleF9z
-ZGlvIG1tYzA6MDAwMToxOiBQUkVQX0NNRDogbm8gZnJlZQ0KPiA+IGNtZCBub2RlIFsgIDE4Mi4w
-ODUxMDJdIG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogR0VUX0NNRF9OT0RFOiBjbWQNCj4gPiBu
-b2RlIG5vdCBhdmFpbGFibGUgWyAgMTgyLjA5MjI5N10gbXdpZmlleF9zZGlvIG1tYzA6MDAwMTox
-OiBQUkVQX0NNRDoNCj4gPiBubyBmcmVlIGNtZCBub2RlIFsgIDE4Mi4xMDMyNzZdIG13aWZpZXhf
-c2RpbyBtbWMwOjAwMDE6MToNCj4gPiBHRVRfQ01EX05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFi
-bGUgWyAgMTgyLjExMDQ3OF0gbXdpZmlleF9zZGlvDQo+ID4gbW1jMDowMDAxOjE6IFBSRVBfQ01E
-OiBubyBmcmVlIGNtZCBub2RlIFsgIDE4Mi4xMjExNTZdIG13aWZpZXhfc2Rpbw0KPiA+IG1tYzA6
-MDAwMToxOiBHRVRfQ01EX05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFibGUgWyAgMTgyLjEyODM2
-MF0NCj4gPiBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IFBSRVBfQ01EOiBubyBmcmVlIGNtZCBu
-b2RlIFsgIDE4Mi4xMzQ3NTBdDQo+ID4gbXdpZmlleF9zZGlvIG1tYzA6MDAwMToxOiBHRVRfQ01E
-X05PREU6IGNtZCBub2RlIG5vdCBhdmFpbGFibGUgWw0KPiA+IDE4Mi4xNDE5MjddIG13aWZpZXhf
-c2RpbyBtbWMwOjAwMDE6MTogUFJFUF9DTUQ6IG5vIGZyZWUgY21kIG5vZGUNCj4gDQo+IFdlIGFy
-ZSBhbHNvIHNlZWluZyB0aGVzZSBtZXNzYWdlcyBhZnRlciByZWNlbnRseSBzd2l0Y2hpbmcgdG8g
-bW9yZQ0KPiByZWNlbnQgZHJpdmVycy4NCg0KTWFydHkgY29uZmlybWVkIHRoYXQgdGhpcyBwcm9i
-bGVtIGdvdCByZXNvbHZlZCBhZnRlciBiYWNrcG9ydGluZyBiZWxvdyBjaGFuZ2UgdG8gaGlzIGNv
-ZGViYXNlLg0KDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21z
-ZzEzNzEzNC5odG1sDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+Please do not review this.  This is duplicate to -
+[PATCH 2/2] drivers: staging: wilc1000: wilc_msgqueue.c: Remove ineffective code
+
+On Mon, Sep 28, 2015 at 11:43:56PM +0530, Chandra S Gorentla wrote:
+> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_msgqueue.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> index a01ada4..1a411d3 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> @@ -133,11 +133,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+>  	down(&pHandle->hSem);
+>  
+>  	/* other non-timeout scenarios */
+> -	if (result) {
+> -		PRINT_ER("Non-timeout\n");
+> -		return result;
+> -	}
+> -
+>  	if (pHandle->bExiting) {
+>  		PRINT_ER("pHandle fail\n");
+>  		return -EFAULT;
+> -- 
+> 2.1.4
+> 
