@@ -1,64 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55009 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbbIIJKu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34699 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933528AbbI1NCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 05:10:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
-	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
-	<87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 9 Sep 2015 12:10:38 +0300
-In-Reply-To: <87oahc9g9h.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Wed, 09 Sep 2015 10:57:30 +0300")
-Message-ID: <87fv2o9cvl.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_111053_841401_014079CC)
+	Mon, 28 Sep 2015 09:02:06 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Disable PCI PS for QCA988X and QCA99X0
+Date: Mon, 28 Sep 2015 18:31:18 +0530
+Message-ID: <1443445278-11051-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20150928_150214_424683_3410C811)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-> Bob Copeland <me@bobcopeland.com> writes:
->
->> Add support for mesh to ath10k.  We simply use an AP virtual interface
->> in the firmware in order to enable beaconing without TSF adoption, and
->> use the raw (802.11) transmit mode.
->>
->> Due to firmware limitations, the firmware must operate in raw
->> (non-native 802.11) mode.  As this is configured at firmware init time,
->> a new "rawmode" modparam is added, and mesh interfaces are available
->> only if rawmode=true.  The firmware must advertise support for rawmode
->> (tested successfully with firmware 10.2.4.70-2).
->>
->> When loaded with rawmode=1, ath10k can operate an open mesh STA via
->> something like the following:
->>
->>     ip link set wlan0 down
->>     iw dev wlan0 set type mp
->>     ip link set wlan0 up
->>     iw dev wlan0 set freq 5745 80 5775
->>     iw dev wlan0 mesh join mesh-vht
->>
->> Signed-off-by: Bob Copeland <me@bobcopeland.com>
->
-> I did a quick smoke test and saw the splat below. It's this warning from
-> cfg80211:
->
-> 			/*
-> 			 * Don't advertise an unsupported type
-> 			 * in a combination.
-> 			 */
-> 			if (WARN_ON((wiphy->interface_modes & types) != types))
-> 				return -EINVAL;
+This patch disables PCI PS for QCA988X and QCA99X0, Since PCI PS is
+validated for QCA6174, let it be enabled only for QCA6174. It would be
+better to execute PCI PS related functions only for the supported devices.
 
-Forgot to mention that this was with 10.2.4.70.6-2 (which has the raw
-feature bit set, will push it soon) but rawmode modparam not set. And I
-had applied your patches on top of ath.git master branch (commit
-d89281c7d6bb9).
+PCI time out issue is observed with QCA99X0 on x86 platform, We will
+disable PCI PS for QCA988X and QCA99X0 until PCI PS is properly implemented.
 
+Taking and releasing ps_lock is causing higher CPU consumption. Michal Kazior
+suggested ps_lock overhead to be reworked so that ath10k_pci_wake/sleep
+functions are called less often, i.e. move the powersave logic up (only during
+irq handling, tx path, submitting fw commands).
+
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+---
+
+ drivers/net/wireless/ath/ath10k/pci.c | 83 ++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/pci.h |  6 +++
+ 2 files changed, 88 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1046ab6..36b6f34 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -465,12 +465,53 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int ath10k_pci_force_wake(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&ar_pci->ps_lock, flags);
++
++	if (!ar_pci->ps_awake) {
++		iowrite32(PCIE_SOC_WAKE_V_MASK,
++				ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
++				PCIE_SOC_WAKE_ADDRESS);
++
++		ret = ath10k_pci_wake_wait(ar);
++		if (ret == 0)
++			ar_pci->ps_awake = true;
++	}
++
++	spin_unlock_irqrestore(&ar_pci->ps_lock, flags);
++
++	return ret;
++}
++
++static void ath10k_pci_force_sleep(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	unsigned long flags;
++
++	spin_lock_irqsave(&ar_pci->ps_lock, flags);
++
++	iowrite32(PCIE_SOC_WAKE_RESET,
++			ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
++			PCIE_SOC_WAKE_ADDRESS);
++	ar_pci->ps_awake = false;
++
++	spin_unlock_irqrestore(&ar_pci->ps_lock, flags);
++}
++
+ static int ath10k_pci_wake(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
++	if (ar_pci->pci_ps == 0)
++		return ret;
++
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI_PS, "pci ps wake refcount %lu awake %d\n",
+@@ -502,6 +543,9 @@ static void ath10k_pci_sleep(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	unsigned long flags;
+ 
++	if (ar_pci->pci_ps == 0)
++		return;
++
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI_PS, "pci ps sleep refcount %lu awake %d\n",
+@@ -544,6 +588,11 @@ static void ath10k_pci_sleep_sync(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	unsigned long flags;
+ 
++	if (ar_pci->pci_ps == 0) {
++		ath10k_pci_force_sleep(ar);
++		return;
++	}
++
+ 	del_timer_sync(&ar_pci->ps_timer);
+ 
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+@@ -2397,6 +2446,15 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct pci_dev *pdev = ar_pci->pdev;
+ 	u32 val;
++	int ret = 0;
++
++	if (ar_pci->pci_ps == 0) {
++		ret = ath10k_pci_force_wake(ar);
++		if (ret) {
++			ath10k_err(ar, "failed to wake up target: %d\n", ret);
++			return ret;
++		}
++	}
+ 
+ 	/* Suspend/Resume resets the PCI configuration space, so we have to
+ 	 * re-disable the RETRY_TIMEOUT register (0x41) to keep PCI Tx retries
+@@ -2407,7 +2465,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 	if ((val & 0x0000ff00) != 0)
+ 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 
+-	return 0;
++	return ret;
+ }
+ #endif
+ 
+@@ -2501,6 +2559,16 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
+ {
+ 	struct ath10k *ar = arg;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int ret;
++
++	if (ar_pci->pci_ps == 0) {
++		ret = ath10k_pci_force_wake(ar);
++		if (ret) {
++			ath10k_warn(ar, "failed to wake device up on irq: \
++					%d\n", ret);
++			return IRQ_NONE;
++		}
++	}
+ 
+ 	if (ar_pci->num_msi_intrs == 0) {
+ 		if (!ath10k_pci_irq_pending(ar))
+@@ -2908,17 +2976,21 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	struct ath10k_pci *ar_pci;
+ 	enum ath10k_hw_rev hw_rev;
+ 	u32 chip_id;
++	bool pci_ps;
+ 
+ 	switch (pci_dev->device) {
+ 	case QCA988X_2_0_DEVICE_ID:
+ 		hw_rev = ATH10K_HW_QCA988X;
++		pci_ps = false;
+ 		break;
+ 	case QCA6164_2_1_DEVICE_ID:
+ 	case QCA6174_2_1_DEVICE_ID:
+ 		hw_rev = ATH10K_HW_QCA6174;
++		pci_ps = true;
+ 		break;
+ 	case QCA99X0_2_0_DEVICE_ID:
+ 		hw_rev = ATH10K_HW_QCA99X0;
++		pci_ps = false;
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+@@ -2939,6 +3011,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	ar_pci->dev = &pdev->dev;
+ 	ar_pci->ar = ar;
+ 	ar->dev_id = pci_dev->device;
++	ar_pci->pci_ps = pci_ps;
+ 
+ 	if (pdev->subsystem_vendor || pdev->subsystem_device)
+ 		scnprintf(ar->spec_board_id, sizeof(ar->spec_board_id),
+@@ -2970,6 +3043,14 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_irq_disable(ar);
+ 
++	if (ar_pci->pci_ps == 0) {
++		ret = ath10k_pci_force_wake(ar);
++		if (ret) {
++			ath10k_warn(ar, "failed to wake up device : %d\n", ret);
++			goto err_free_pipes;
++		}
++	}
++
+ 	ret = ath10k_pci_init_irq(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to init irqs: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 8d364fb..faba10d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -221,6 +221,12 @@ struct ath10k_pci {
+ 	 * powersave register state changes.
+ 	 */
+ 	bool ps_awake;
++
++	/* pci power save, disable for QCA988X and QCA99X0.
++	 * Writing 'false' to this variable avoids frequent locking
++	 * on MMIO read/write.
++	 */
++	bool pci_ps;
+ };
+ 
+ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
 -- 
-Kalle Valo
+1.9.1
+
