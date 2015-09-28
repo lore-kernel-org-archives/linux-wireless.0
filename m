@@ -1,63 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8330 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017AbbIQJHS (ORCPT
+Received: from smtp-out6.electric.net ([192.162.217.190]:54283 "EHLO
+	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933483AbbI1PAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 05:07:18 -0400
-Subject: Re: [PATCH 1/4] staging: wilc1000: Modify null check routine
-To: <leo.kim@atmel.com>
-References: <1442479806-10737-1-git-send-email-tony.cho@atmel.com>
-CC: Tony Cho <tony.cho@atmel.com>, <gregkh@linuxfoundation.org>,
-	<devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <glen.lee@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
-Message-ID: <55FA8299.5060606@atmel.com> (sfid-20150917_110725_031790_1269C55A)
-Date: Thu, 17 Sep 2015 11:06:33 +0200
+	Mon, 28 Sep 2015 11:00:12 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+CC: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Subject: RE: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
+ 'global_lock'
+Date: Mon, 28 Sep 2015 14:50:44 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CBA4232@AcuExch.aculab.com> (sfid-20150928_170018_542932_3E70F243)
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	 <2524822.pQu4UKMrlb@vostro.rjw.lan>
+	 <1443297128.2181.11.camel@HansenPartnership.com>
+	 <3461169.v5xKdGLGjP@vostro.rjw.lan>
+	 <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com>
+ <1443450406.2168.3.camel@HansenPartnership.com>
+In-Reply-To: <1443450406.2168.3.camel@HansenPartnership.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1442479806-10737-1-git-send-email-tony.cho@atmel.com>
-Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 17/09/2015 10:50, Tony Cho a écrit :
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch modify null check routine.
-> - Null check error non return. (Handle_RcvdGnrlAsyncInfo)
-
-It doesn't parse...
-
-Is it fixing a bug? What were the consequences without the return?
-
-Bye,
-
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 6fdf392..a9eaa8f 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
->  	s32 s32Err = 0;
->  	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
->  
-> -	if (pstrWFIDrv == NULL)
-> +	if (!pstrWFIDrv) {
->  		PRINT_ER("Driver handler is NULL\n");
-> +		return -EFAULT;
-> +	}
->  	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
->  		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
->  
-> 
-
-
--- 
-Nicolas Ferre
+RnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRu
+ZXJzaGlwLmNvbV0NCj4gU2VudDogMjggU2VwdGVtYmVyIDIwMTUgMTU6MjcNCj4gT24gTW9uLCAy
+MDE1LTA5LTI4IGF0IDA4OjU4ICswMDAwLCBEYXZpZCBMYWlnaHQgd3JvdGU6DQo+ID4gRnJvbTog
+UmFmYWVsIEouIFd5c29ja2kNCj4gPiA+IFNlbnQ6IDI3IFNlcHRlbWJlciAyMDE1IDE1OjA5DQo+
+ID4gLi4uDQo+ID4gPiA+ID4gU2F5IHlvdSBoYXZlIHRocmVlIGFkamFjZW50IGZpZWxkcyBpbiBh
+IHN0cnVjdHVyZSwgeCwgeSwgeiwgZWFjaCBvbmUgYnl0ZSBsb25nLg0KPiA+ID4gPiA+IEluaXRp
+YWxseSwgYWxsIG9mIHRoZW0gYXJlIGVxdWFsIHRvIDAuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBD
+UFUgQSB3cml0ZXMgMSB0byB4IGFuZCBDUFUgQiB3cml0ZXMgMiB0byB5IGF0IHRoZSBzYW1lIHRp
+bWUuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBXaGF0J3MgdGhlIHJlc3VsdD8NCj4gPiA+ID4NCj4g
+PiA+ID4gSSB0aGluayBldmVyeSBDUFUncyAgY2FjaGUgYXJjaGl0ZWN1cmUgZ3VhcmFudGVlcyBh
+ZGphY2VudCBzdG9yZQ0KPiA+ID4gPiBpbnRlZ3JpdHksIGV2ZW4gaW4gdGhlIGZhY2Ugb2YgU01Q
+LCBzbyBpdCdzIHg9PTEgYW5kIHk9PTIuICBJZiB5b3UncmUNCj4gPiA+ID4gdGhpbmtpbmcgb2Yg
+b2xkIGFscGhhIFNNUCBzeXN0ZW0gd2hlcmUgdGhlIGxvd2VzdCBzdG9yZSB3aWR0aCBpcyAzMiBi
+aXRzDQo+ID4gPiA+IGFuZCB0aHVzIHlvdSBoYXZlIHRvIGRvIFJNVyB0byB1cGRhdGUgYSBieXRl
+LCB0aGlzIHdhcyB1c3VhbGx5IGZpeGVkIGJ5DQo+ID4gPiA+IHBhZGRpbmcgKGFzc3VtaW5nIHRo
+ZSBzdHJ1Y3R1cmUgaXMgbm90IHBhY2tlZCkuICBIb3dldmVyLCBpdCB3YXMgc3VjaCBhDQo+ID4g
+PiA+IHByb2JsZW0gdGhhdCBldmVuIHRoZSBsYXRlciBhbHBoYSBjaGlwcyBoYWQgYnl0ZSBleHRl
+bnNpb25zLg0KPiA+DQo+ID4gRG9lcyBsaW51eCBzdGlsbCBzdXBwb3J0IHRob3NlIG9sZCBBbHBo
+YXM/DQo+ID4NCj4gPiBUaGUgeDg2IGNwdXMgd2lsbCBhbHNvIGRvIDMyYml0IHdpZGUgcm13IGN5
+Y2xlcyBmb3IgdGhlICdiaXQnIG9wZXJhdGlvbnMuDQo+IA0KPiBUaGF0J3MgZGlmZmVyZW50OiBp
+dCdzIGFuIGF0b21pYyBSTVcgb3BlcmF0aW9uLiAgVGhlIHByb2JsZW0gd2l0aCB0aGUNCj4gYWxw
+aGEgd2FzIHRoYXQgdGhlIG9wZXJhdGlvbiB3YXNuJ3QgYXRvbWljIChtZWFuaW5nIHRoYXQgaXQg
+Y2FuJ3QgYmUNCj4gaW50ZXJydXB0ZWQgYW5kIG5vIGludGVybWVkaWF0ZSBvdXRwdXQgc3RhdGVz
+IGFyZSB2aXNpYmxlKS4NCg0KSXQgaXMgb25seSBhdG9taWMgaWYgcHJlZml4ZWQgYnkgdGhlICds
+b2NrJyBwcmVmaXguDQpOb3JtYWxseSB0aGUgcmVhZCBhbmQgd3JpdGUgYXJlIHNlcGFyYXRlIGJ1
+cyBjeWNsZXMuDQogDQo+ID4gWW91IHN0aWxsIGhhdmUgdG8gZW5zdXJlIHRoZSBjb21waWxlciBk
+b2Vzbid0IGRvIHdpZGVyIHJtdyBjeWNsZXMuDQo+ID4gSSBiZWxpZXZlIHRoZSByZWNlbnQgdmVy
+c2lvbnMgb2YgZ2NjIHdvbid0IGRvIHdpZGVyIGFjY2Vzc2VzIGZvciB2b2xhdGlsZSBkYXRhLg0K
+PiANCj4gSSBkb24ndCB1bmRlcnN0YW5kIHRoaXMgY29tbWVudC4gIFlvdSBzZWVtIHRvIGJlIGlt
+cGx5aW5nIGdjYyB3b3VsZCBkbyBhDQo+IDY0IGJpdCBSTVcgZm9yIGEgMzIgYml0IHN0b3JlIC4u
+LiB0aGF0IHdvdWxkIGJlIGRhZnQgd2hlbiBhIHNpbmdsZQ0KPiBpbnN0cnVjdGlvbiBleGlzdHMg
+dG8gcGVyZm9ybSB0aGUgb3BlcmF0aW9uIG9uIGFsbCBhcmNoaXRlY3R1cmVzLg0KDQpSZWFkIHRo
+ZSBvYmplY3QgY29kZSBhbmQgd2VlcC4uLg0KSXQgaXMgbW9zdCBsaWtlbHkgdG8gaGFwcGVuIGZv
+ciBvcGVyYXRpb25zIHRoYXQgYXJlIHJtdyAoZWcgYml0IHNldCkuDQpGb3IgaW5zdGFuY2UgdGhl
+IGFybSBjcHUgaGFzIGxpbWl0ZWQgb2Zmc2V0cyBmb3IgMTZiaXQgYWNjZXNzZXMsIGZvcg0Kbm9y
+bWFsIHN0cnVjdHVyZXMgdGhlIGNvbXBpbGVyIGlzIGxpa2VseSB0byB1c2UgYSAzMmJpdCBybXcg
+c2VxdWVuY2UNCmZvciBhIDE2Yml0IGZpZWxkIHRoYXQgaGFzIGEgbGFyZ2Ugb2Zmc2V0Lg0KVGhl
+IEMgbGFuZ3VhZ2UgYWxsb3dzIHRoZSBjb21waWxlciB0byBkbyBpdCBmb3IgYW55IGFjY2VzcyAo
+SUlSQyBpbmNsdWRpbmcNCnZvbGF0aWxlcykuDQoNCglEYXZpZA0KDQo=
