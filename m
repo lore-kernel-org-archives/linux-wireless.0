@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43932 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755837AbbI0PFm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 11:05:42 -0400
-Date: Sun, 27 Sep 2015 08:03:47 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Pinkesh Jain <pinkeshbadjatiya@gmail.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, carlos@cgarcia.org,
-	linux-wireless@vger.kernel.org,
-	rickard_strandqvist@spectrumdigital.se, luca@lucaceresoli.net,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	gdonald@gmail.com
-Subject: Re: [PATCH] Removed extra spaces, and error from checkpatch.pl
-Message-ID: <20150927150347.GA27003@kroah.com> (sfid-20150927_170634_956155_ACF487DE)
-References: <20150927001415.GA34976@ubuntu>
- <20150927060352.GA1835@fool>
- <CACJZ1zqyVJ95GNWReSZ-C3hgjgA97LaJNna=pGkKC8ZQjzvnuA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CACJZ1zqyVJ95GNWReSZ-C3hgjgA97LaJNna=pGkKC8ZQjzvnuA@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36708 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756193AbbI1Hls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2015 03:41:48 -0400
+Message-ID: <1443426103.2401.1.camel@sipsolutions.net> (sfid-20150928_094154_249228_F21D1AFC)
+Subject: Re: Low latency communication over wifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>,
+	Bastian Bittorf <bittorf@bluebottle.com>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Date: Mon, 28 Sep 2015 09:41:43 +0200
+In-Reply-To: <20150926102403.GA21555@amd>
+References: <20150926102403.GA21555@amd>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 27, 2015 at 01:59:17PM +0530, Pinkesh Jain wrote:
-> There were many warnings and error given by checkpatch.pl and most of them were
-> almost of the same type so i believed a single patch is enough to do the
-> cleanup.
+On Sat, 2015-09-26 at 12:24 +0200, Pavel Machek wrote:
 > 
-> 1. Remove errors of the struct declaration (foo*bar to foo *bar)
-> 2. Removed warnings of 'spaces before comma'.
-> 3. Added space after enum declaration and before opening of paranthesis.
-> 4. removed spaces between function calls (func () to func() )
-> 5. Still there are a lot of warnings related to only line lengths but removing
-> then would not make sense and would leave the code unreadable.
-> 
-> There were one or two more of such kind of very small code refactoring that i
-> did. Since they were not that important, also i 'Did Not Alter' any other part
-> of functioning code so i made the changes in a single patch.
-> 
-> I am new here and this is my first patch so please give me  enough suggestions
-> and reviews for what i do, so that i can get familiar with the community
-> guidelines.
-> 
-> If i do anything wrong then please correct me.
-> 
-> Questions:
-> 1.) Do i need to mention all this changes that i wrote about in the commit as
-> they are very descriptive? I tried to be brief in the commit message.
+> That would be equivalent to ping -Q, right? It does not seem to have
+> any effect :-(. I'd expect at least local machine to use shorter waits
+> for medium, and thus drop packets instead of waiting.
 
-Be descriptive.
+Correct. But it won't *drop* packets, it just increases the chances of
+getting medium access.
 
-> 2.) Do i need to split the changes in separate commits, as one of the members
-> pointed out.
+> > # you have to add some magic for matching your data
+> > e.g. $IPT -t mangle -I OUTPUT -j DSCP --set-dscp-class CS7
+> 
+> Again, this is ping -Q equivalent, right? I was doing
 
-yes.
+Yes.
+
+> ping -c 300 -i .2 -Q $[56*4] -s 500 amd
+> 300 packets transmitted, 300 received, 0% packet loss, time 60989ms
+> rtt min/avg/max/mdev = 2.155/8.599/44.475/5.677 ms
+> 300 packets transmitted, 300 received, +1 duplicates, 0% packet loss, time 61030ms
+> rtt min/avg/max/mdev = 2.158/23.809/300.956/49.969 ms, pipe 2
+> 
+> I would expect packet loss, but got long delays instead.
+
+See above :)
+
+> > also you should consider force the ACK-timing to 450m / Class1
+> > and forbid retransmission in minstrel
+> 
+> Yes, disabling retransmission would be useful. How would I do that?
+> 
+It won't work on Intel devices though since they don't use
+minstrel(_ht)
+
+johannes
