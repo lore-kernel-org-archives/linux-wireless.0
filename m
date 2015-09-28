@@ -1,178 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:51426 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbIIHIA (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:34364 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbbI1U1B convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 03:08:00 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/4] staging: wilc1000: delete wilc_memory.c and wilc_memory.h
-Date: Wed, 9 Sep 2015 16:08:11 +0900
-Message-ID: <1441782493-11338-2-git-send-email-tony.cho@atmel.com> (sfid-20150909_090804_066041_84AF0023)
-In-Reply-To: <1441782493-11338-1-git-send-email-tony.cho@atmel.com>
-References: <1441782493-11338-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Sep 2015 16:27:01 -0400
+Received: by wicfx3 with SMTP id fx3so121721021wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2015 13:27:00 -0700 (PDT)
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2087\))
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for South Africa (ZA) on 5GHz
+From: =?utf-8?Q?Karl_M=C3=B6ller?= <karl@excors.net>
+In-Reply-To: <1443462165.2401.7.camel@sipsolutions.net>
+Date: Mon, 28 Sep 2015 22:26:52 +0200
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <D78DAA74-CFD9-4D12-81F0-E994924D401F@excors.net> (sfid-20150928_222705_516292_F9BFF170)
+References: <9BEBB87E-EA6D-4219-ADC5-40C1E19DA5DA@excors.net> <1443426260.2401.2.camel@sipsolutions.net> <20150928160741.GA25936@ubuntu-hedt> <1443462165.2401.7.camel@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+Here is an older draft document, dated end 2014 directly from the regulator (ICASA):
 
-The macro WILC_MALLOC is not used in the driver anymore, so just
-delete files.
+http://www.icasa.org.za/Portals/0/Regulations/Working%20Docmuents/Radio%20Frequency%20Spectrum%20Regulations/DraftRevRadioFreq.pdf
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/Makefile         |  2 +-
- drivers/staging/wilc1000/wilc_memory.c    | 16 --------
- drivers/staging/wilc1000/wilc_memory.h    | 66 -------------------------------
- drivers/staging/wilc1000/wilc_msgqueue.h  |  1 -
- drivers/staging/wilc1000/wilc_oswrapper.h |  4 --
- 5 files changed, 1 insertion(+), 88 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_memory.c
- delete mode 100644 drivers/staging/wilc1000/wilc_memory.h
+Notice on page end 80 / top 81 that it lists:
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index 8336a89..bdeffea 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -21,7 +21,7 @@ ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
- 
- 
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
--			wilc_memory.o wilc_msgqueue.o \
-+			wilc_msgqueue.o \
- 			coreconfigurator.o host_interface.o \
- 			wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o
- 
-diff --git a/drivers/staging/wilc1000/wilc_memory.c b/drivers/staging/wilc1000/wilc_memory.c
-deleted file mode 100644
-index e90a957..0000000
---- a/drivers/staging/wilc1000/wilc_memory.c
-+++ /dev/null
-@@ -1,16 +0,0 @@
--
--#include "wilc_memory.h"
--
--/*!
-- *  @author	syounan
-- *  @date	18 Aug 2010
-- *  @version	1.0
-- */
--void *WILC_MemoryAlloc(u32 u32Size, tstrWILC_MemoryAttrs *strAttrs,
--		       char *pcFileName, u32 u32LineNo)
--{
--	if (u32Size > 0)
--		return kmalloc(u32Size, GFP_ATOMIC);
--	else
--		return NULL;
--}
-diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
-deleted file mode 100644
-index f19cec1..0000000
---- a/drivers/staging/wilc1000/wilc_memory.h
-+++ /dev/null
-@@ -1,66 +0,0 @@
--#ifndef __WILC_MEMORY_H__
--#define __WILC_MEMORY_H__
--
--/*!
-- *  @file	wilc_memory.h
-- *  @brief	Memory OS wrapper functionality
-- *  @author	syounan
-- *  @sa		wilc_oswrapper.h top level OS wrapper file
-- *  @date	16 Aug 2010
-- *  @version	1.0
-- */
--
--#include <linux/types.h>
--#include <linux/slab.h>
--
--/*!
-- *  @struct             tstrWILC_MemoryAttrs
-- *  @brief		Memory API options
-- *  @author		syounan
-- *  @date		16 Aug 2010
-- *  @version		1.0
-- */
--typedef struct {
--} tstrWILC_MemoryAttrs;
--
--/*!
-- *  @brief	Allocates a given size of bytes
-- *  @param[in]	u32Size size of memory in bytes to be allocated
-- *  @param[in]	strAttrs Optional attributes, NULL for default
-- *              if not NULL, pAllocationPool should point to the pool to use for
-- *              this allocation. if NULL memory will be allocated directly from
-- *              the system
-- *  @param[in]	pcFileName file name of the calling code for debugging
-- *  @param[in]	u32LineNo line number of the calling code for debugging
-- *  @return	The new allocated block, NULL if allocation fails
-- *  @note	It is recommended to use of of the wrapper macros instead of
-- *              calling this function directly
-- *  @sa		sttrWILC_MemoryAttrs
-- *  @sa		WILC_MALLOC
-- *  @sa		WILC_MALLOC_EX
-- *  @author	syounan
-- *  @date	16 Aug 2010
-- *  @version	1.0
-- */
--void *WILC_MemoryAlloc(u32 u32Size, tstrWILC_MemoryAttrs *strAttrs,
--		       char *pcFileName, u32 u32LineNo);
--
--/*!
-- * @brief	standrad malloc wrapper with custom attributes
-- */
--	#define WILC_MALLOC_EX(__size__, __attrs__) \
--	(WILC_MemoryAlloc( \
--		 (__size__), __attrs__, NULL, 0))
--
--
--/*!
-- * @brief	standrad malloc wrapper with default attributes
-- */
--#define WILC_MALLOC(__size__) \
--	WILC_MALLOC_EX(__size__, NULL)
--
--
--
--
--
--#endif
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index fc65dfe..fb26463 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -12,7 +12,6 @@
- 
- #include "wilc_platform.h"
- #include "wilc_errorsupport.h"
--#include "wilc_memory.h"
- 
- /*!
-  *  @brief		Creates a new Message queue
-diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-index cb48325..68f6efe 100644
---- a/drivers/staging/wilc1000/wilc_oswrapper.h
-+++ b/drivers/staging/wilc1000/wilc_oswrapper.h
-@@ -19,10 +19,6 @@
- /* Error reporting and handling support */
- #include "wilc_errorsupport.h"
- 
--/* Memory support */
--#include "wilc_memory.h"
--
--
- /* Message Queue */
- #include "wilc_msgqueue.h"
- 
--- 
-1.9.1
+"DFS & Transmitter Power Control Obligatory” for the band in question, which is now deleted in the final document published in March this year.
+
+Regards
+Karl
+
+> On 28 Sep 2015, at 7:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> On Mon, 2015-09-28 at 11:07 -0500, Seth Forshee wrote:
+>> On Mon, Sep 28, 2015 at 09:44:20AM +0200, Johannes Berg wrote:
+>>> 
+>>>> The bands don’t quite match up and DFS/TPC is (apparently) not 
+>>>> required for 5470 - 5725. More importantly, the max transmitted 
+>>>> power
+>>>> seems to be 1W/30dBm e.i.r.p and not 27dBm.
+>>> 
+>>> Without checking now, just a note: we sometimes have lower limits 
+>>> here
+>>> due to spectral power density, indoor/outdoor or TPC requirements.
+>> 
+>> One of the documents says that the TPC requirement for that range was
+>> lifted in March 2015, so if it was lowered for TPC then we may be 
+>> able to bump it up to 30 dBm.
+>> 
+> 
+> That's very well possible then - the typical TCP requirement is "1/2 of
+> the power w/o TPC", which would match the 3dB
+> 
+> johannes
 
