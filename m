@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36203 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbbIQHs4 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:35536 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbbI1TE0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 03:48:56 -0400
-Received: by padhk3 with SMTP id hk3so13289418pad.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2015 00:48:56 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 1/8] staging: wilc1000: remove INLINE macro
-Date: Thu, 17 Sep 2015 16:48:42 +0900
-Message-Id: <1442476129-14908-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150917_094900_131159_C9EC2E04)
+	Mon, 28 Sep 2015 15:04:26 -0400
+Received: by wicge5 with SMTP id ge5so118741429wic.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2015 12:04:24 -0700 (PDT)
+In-Reply-To: <1673287.PfdWxMzLgk@debian64>
+References: <1673287.PfdWxMzLgk@debian64>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH] mac80211: fix oops in ieee80211_beacon_get_tim
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Date: Mon, 28 Sep 2015 21:04:20 +0200
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+CC: johannes@sipsolutions.net
+Message-ID: <c2bbeb9a-3682-4fee-9ba3-8eb4d684707b@email.android.com> (sfid-20150928_210428_892433_60EB5F9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes INLINE macro that is used anymore.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2 : rebase latest staging-testing
 
- drivers/staging/wilc1000/coreconfigurator.c | 1 -
- drivers/staging/wilc1000/wilc_wlan.c        | 1 -
- 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 2fa2790..14e8efc 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -17,7 +17,6 @@
- /*****************************************************************************/
- /* Constants                                                                 */
- /*****************************************************************************/
--#define INLINE static __inline
- #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
- 							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 4c25179..47fa0f3 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -9,7 +9,6 @@
- 
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
--#define INLINE static __inline
- 
- /********************************************
-  *
--- 
-2.5.1
+
+Christian Lamparter <chunkeey@googlemail.com> schrieb:
+>This patch fixes a crash which is triggered
+>by __ieee80211_beacon_get returning NULL.
+
+Ouch, thanks for catching this!
+Helmut
+
+>This causes sky_copy to crash later unless
+>the hardware supports BEACON_TX_STATUS
+>feature.
+>
+>Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+>---
+>"mac80211: Copy tx'ed beacons to monitor mode" added the skb_copy.
+>There are few other possibilities to do this. This is just one.
+>---
+> net/mac80211/tx.c | 3 +++
+> 1 file changed, 3 insertions(+)
+>
+>diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+>index f7317a7..666e46b 100644
+>--- a/net/mac80211/tx.c
+>+++ b/net/mac80211/tx.c
+>@@ -3530,6 +3530,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct
+>ieee80211_hw *hw,
+> 	struct ieee80211_supported_band *sband;
+> 	int shift;
+> 
+>+	if (!bcn)
+>+		return bcn;
+>+
+> 	if (tim_offset)
+> 		*tim_offset = offs.tim_offset;
+> 
 
