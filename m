@@ -1,70 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:32852 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754900AbbIHN7o (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34143 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933771AbbI1PLx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 09:59:44 -0400
-Received: by wiclk2 with SMTP id lk2so121634467wic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 06:59:42 -0700 (PDT)
-Subject: Re: [PATCH] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
-To: Seth Forshee <seth.forshee@canonical.com>
-References: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
- <20150813143154.GA121347@ubuntu-hedt>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wireless-regdb@lists.infradead.org
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Message-ID: <55EEE9CA.5010309@gmail.com> (sfid-20150908_155952_031705_DC90975E)
-Date: Tue, 8 Sep 2015 15:59:38 +0200
-MIME-Version: 1.0
-In-Reply-To: <20150813143154.GA121347@ubuntu-hedt>
-Content-Type: text/plain; charset=utf-8
+	Mon, 28 Sep 2015 11:11:53 -0400
+Message-ID: <1443453111.2168.9.camel@HansenPartnership.com> (sfid-20150928_171217_763589_16B5F833)
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
+ 'global_lock'
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS (WIRELESS)"
+	<linux-wireless@vger.kernel.org>,
+	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
+	<linux-usb@vger.kernel.org>,
+	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
+	<alsa-devel@alsa-project.org>
+Date: Mon, 28 Sep 2015 08:11:51 -0700
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CBA4232@AcuExch.aculab.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	 <2524822.pQu4UKMrlb@vostro.rjw.lan>
+	 <1443297128.2181.11.camel@HansenPartnership.com>
+	 <3461169.v5xKdGLGjP@vostro.rjw.lan>
+	 <063D6719AE5E284EB5DD2968C1650D6D1CBA3BF7@AcuExch.aculab.com>
+	 <1443450406.2168.3.camel@HansenPartnership.com>
+	 <063D6719AE5E284EB5DD2968C1650D6D1CBA4232@AcuExch.aculab.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2015 04:31 PM, Seth Forshee wrote:
-
-> On Tue, Aug 11, 2015 at 03:29:55PM +0200, Xose Vazquez Perez wrote:
->> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
->> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
->>
->> Cc: Seth Forshee <seth.forshee@canonical.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: wireless-regdb@lists.infradead.org
->> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->> ---
->>  db.txt | 7 +++++++
->>  1 file changed, 7 insertions(+)
->>
->> diff --git a/db.txt b/db.txt
->> index 982db34..2edbf90 100644
->> --- a/db.txt
->> +++ b/db.txt
->> @@ -275,6 +275,13 @@ country CR: DFS-FCC
->>  	(5490 - 5730 @ 20), (24), DFS
->>  	(5735 - 5835 @ 20), (30)
->>  
->> +# http://www.mincom.gob.cu/?q=marcoregulatorio
->> +# - Redes Informáticas
->> +# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
->> +country CU: DFS-FCC
->> +	(2400 - 2456 @ 40), (200 mW)
->> +	(2456 - 2483.5 @ 40), (200 mW)
->> +
+On Mon, 2015-09-28 at 14:50 +0000, David Laight wrote:
+> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> > Sent: 28 September 2015 15:27
+> > On Mon, 2015-09-28 at 08:58 +0000, David Laight wrote:
+> > > From: Rafael J. Wysocki
+> > > > Sent: 27 September 2015 15:09
+> > > ...
+> > > > > > Say you have three adjacent fields in a structure, x, y, z, each one byte long.
+> > > > > > Initially, all of them are equal to 0.
+> > > > > >
+> > > > > > CPU A writes 1 to x and CPU B writes 2 to y at the same time.
+> > > > > >
+> > > > > > What's the result?
+> > > > >
+> > > > > I think every CPU's  cache architecure guarantees adjacent store
+> > > > > integrity, even in the face of SMP, so it's x==1 and y==2.  If you're
+> > > > > thinking of old alpha SMP system where the lowest store width is 32 bits
+> > > > > and thus you have to do RMW to update a byte, this was usually fixed by
+> > > > > padding (assuming the structure is not packed).  However, it was such a
+> > > > > problem that even the later alpha chips had byte extensions.
+> > >
+> > > Does linux still support those old Alphas?
+> > >
+> > > The x86 cpus will also do 32bit wide rmw cycles for the 'bit' operations.
+> > 
+> > That's different: it's an atomic RMW operation.  The problem with the
+> > alpha was that the operation wasn't atomic (meaning that it can't be
+> > interrupted and no intermediate output states are visible).
 > 
-> Based on the Google translation of the document you linked to, I don't
-> see anything which would prevent merging these rules into one rule. Am I
-> missing something?
+> It is only atomic if prefixed by the 'lock' prefix.
+> Normally the read and write are separate bus cycles.
 
-from http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
-page 7:
+The essential point is that x86 has atomic bit ops and byte writes.
+Early alpha did not.
 
-Artículo 4: Disposiciones de carácter técnico
-[..]
-4.3.- No obstante lo anterior, los equipos que operen en las frecuencias entre 2456 y
-2483,5 MHz pueden emplear valores de p.i.r.e superiores, cuando ello se justifique en
-beneficio de objetivos de interés nacional [...]
-4.4.- Para estos casos es necesario obtener una autorización expresa de la Agencia
-[...]
+> > > You still have to ensure the compiler doesn't do wider rmw cycles.
+> > > I believe the recent versions of gcc won't do wider accesses for volatile data.
+> > 
+> > I don't understand this comment.  You seem to be implying gcc would do a
+> > 64 bit RMW for a 32 bit store ... that would be daft when a single
+> > instruction exists to perform the operation on all architectures.
+> 
+> Read the object code and weep...
+> It is most likely to happen for operations that are rmw (eg bit set).
+> For instance the arm cpu has limited offsets for 16bit accesses, for
+> normal structures the compiler is likely to use a 32bit rmw sequence
+> for a 16bit field that has a large offset.
+> The C language allows the compiler to do it for any access (IIRC including
+> volatiles).
 
-If you grant an authorization, for 2456-2483.5 pire can be increased.
+I think you might be confusing different things.  Most RISC CPUs can't
+do 32 bit store immediates because there aren't enough bits in their
+arsenal, so they tend to split 32 bit loads into a left and right part
+(first the top then the offset).  This (and other things) are mostly
+what you see in code.  However, 32 bit register stores are still atomic,
+which is all we require.  It's not really the compiler's fault, it's
+mostly an architectural limitation.
+
+James
+
 
