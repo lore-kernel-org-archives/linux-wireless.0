@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bluebottle.com ([176.9.67.91]:47072 "EHLO
-	mail.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbbIWJhw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 05:37:52 -0400
-Date: Wed, 23 Sep 2015 11:07:23 +0200
-From: Bastian Bittorf <bittorf@bluebottle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bastian Bittorf <bittorf@bluebottle.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: minstrel[_ht]: remove non-ascii debugfs
- characters
-Message-ID: <20150923090723.GF6319@medion.lan> (sfid-20150923_113755_939568_E81E70A8)
-References: <1442997041-8916-1-git-send-email-johannes@sipsolutions.net>
- <20150923084935.GD6319@medion.lan>
- <1442998845.1889.2.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442998845.1889.2.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39246 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932079AbbI1Rms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2015 13:42:48 -0400
+Message-ID: <1443462165.2401.7.camel@sipsolutions.net> (sfid-20150928_194251_442018_CC7C4CB4)
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ South Africa (ZA) on 5GHz
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>,
+	Karl =?ISO-8859-1?Q?M=F6ller?= <karl@excors.net>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Mon, 28 Sep 2015 19:42:45 +0200
+In-Reply-To: <20150928160741.GA25936@ubuntu-hedt> (sfid-20150928_180803_494069_1D6E674B)
+References: <9BEBB87E-EA6D-4219-ADC5-40C1E19DA5DA@excors.net>
+	 <1443426260.2401.2.camel@sipsolutions.net>
+	 <20150928160741.GA25936@ubuntu-hedt> (sfid-20150928_180803_494069_1D6E674B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Johannes Berg <johannes@sipsolutions.net> [23.09.2015 11:03]:
-> > > non-ASCII symbol all the time, line up the columns properly.
+On Mon, 2015-09-28 at 11:07 -0500, Seth Forshee wrote:
+> On Mon, Sep 28, 2015 at 09:44:20AM +0200, Johannes Berg wrote:
 > > 
-> > who warns you? the compiler? the terminal?
+> > > The bands don’t quite match up and DFS/TPC is (apparently) not 
+> > > required for 5470 - 5725. More importantly, the max transmitted 
+> > > power
+> > > seems to be 1W/30dBm e.i.r.p and not 27dBm.
+> > 
+> > Without checking now, just a note: we sometimes have lower limits 
+> > here
+> > due to spectral power density, indoor/outdoor or TPC requirements.
 > 
-> sparse, or perhaps smatch? either way, those tools are crucial for my
-> workflow, and there seems to be very little downside to the change.
+> One of the documents says that the TPC requirement for that range was
+> lifted in March 2015, so if it was lowered for TPC then we may be 
+> able to bump it up to 30 dBm.
+> 
 
-thanks for making this clear. bye, bastian
+That's very well possible then - the typical TCP requirement is "1/2 of
+the power w/o TPC", which would match the 3dB
+
+johannes
