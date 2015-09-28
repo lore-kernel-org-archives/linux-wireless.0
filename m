@@ -1,78 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48977 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758517AbbIDOiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 10:38:01 -0400
-Message-ID: <1441377476.1971.14.camel@sipsolutions.net> (sfid-20150904_163811_124987_F0D91096)
-Subject: pull-request: mac80211 2015-09-04
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 04 Sep 2015 16:37:56 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.bluebottle.com ([176.9.67.91]:46800 "EHLO
+	mail.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932908AbbI1MzI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2015 08:55:08 -0400
+Date: Mon, 28 Sep 2015 14:52:38 +0200
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bastian Bittorf <bittorf@bluebottle.com>,
+	Pavel Machek <pavel@ucw.cz>, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Re: Low latency communication over wifi
+Message-ID: <20150928125238.GJ22537@medion.lan> (sfid-20150928_145513_470862_575B9397)
+References: <20150926102403.GA21555@amd>
+ <1443426103.2401.1.camel@sipsolutions.net>
+ <20150928121504.GE22537@medion.lan>
+ <1443443851.2401.6.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443443851.2401.6.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+* Johannes Berg <johannes@sipsolutions.net> [28.09.2015 14:38]:
+> Depends what you're measuring, but ping should apply the same DSCP tag
+> on the response I believe.
 
-First pull request for this cycle, and the fix for the pointer issue is
-the first patch in it :) Since nobody really has devices with enough
-streams where this matters, it was pretty harmless though.
+your are right, I did not know this till yet 8-)
+(i applied 0xb8 with 'ping -c1 -Q' just for testing)
 
-Other than that, there are a few fixes all over - let me know if you
-see any issues.
+14:49:52.491925 IP (tos 0xb8, ttl 64, id 51117, offset 0, flags [+], proto ICMP (1), 
+	length 1500) 192.168.2.1 > 192.168.2.103: ICMP echo reply, id 14925, seq 1, length 1480
+14:49:52.491993 IP (tos 0xb8, ttl 64, id 51117, offset 1480, flags [none], proto ICMP (1),
+	length 48) 192.168.2.1 > 192.168.2.103: icmp
 
-johannes
-
-The following changes since commit dd5cdb48edfd34401799056a9acf61078d773f90:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-09-03 08:08:17 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-09-04
-
-for you to fetch changes up to ef9be10c8c999e00b239eec24cf01952a308f8e7:
-
-  mac80211: reject software RSSI CQM with beacon filtering (2015-09-04 15:23:22 +0200)
-
-----------------------------------------------------------------
-For the first round of fixes, we have this:
- * fix for the sizeof() pointer type issue
- * a fix for regulatory getting into a restore loop
- * a fix for rfkill global 'all' state, it needs to be stored
-   everywhere to apply correctly to new rfkill instances
- * properly refuse CQM RSSI when it cannot actually be used
- * protect HT TDLS traffic properly in non-HT networks
- * don't incorrectly advertise 80 MHz support when not allowed
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      mac80211: avoid VHT usage with no 80MHz chans allowed
-
-Avri Altman (1):
-      mac80211: protect non-HT BSS when HT TDLS traffic exists
-
-Johannes Berg (1):
-      mac80211: reject software RSSI CQM with beacon filtering
-
-João Paulo Rechi Vita (1):
-      rfkill: Copy "all" global state to other types
-
-Maciej S. Szmigiero (1):
-      cfg80211: regulatory: restore proper user alpha2
-
-Thierry Reding (1):
-      mac80211: Do not use sizeof() on pointer type
-
- include/net/mac80211.h |  4 ++-
- net/mac80211/cfg.c     |  4 +++
- net/mac80211/mlme.c    | 16 ++++++++++++
- net/mac80211/rate.c    |  2 +-
- net/mac80211/tdls.c    | 70 +++++++++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/vht.c     | 15 +++++++++++
- net/rfkill/core.c      | 10 +++++++-
- net/wireless/reg.c     |  2 +-
- 8 files changed, 116 insertions(+), 7 deletions(-)
+bye, bastian
