@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:35812 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786AbbIGPgv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 11:36:51 -0400
-Received: by pacfv12 with SMTP id fv12so102006993pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 08:36:50 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/5] staging: wilc1000: linux_wlan.c: add kzalloc error check
-Date: Tue,  8 Sep 2015 00:36:36 +0900
-Message-Id: <1441640199-1507-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150907_173659_229381_7FC60328)
-In-Reply-To: <1441640199-1507-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441640199-1507-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36738 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754247AbbI1HoX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2015 03:44:23 -0400
+Message-ID: <1443426260.2401.2.camel@sipsolutions.net> (sfid-20150928_094426_838109_9839823B)
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ South Africa (ZA) on 5GHz
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl =?ISO-8859-1?Q?M=F6ller?= <karl@excors.net>,
+	seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Mon, 28 Sep 2015 09:44:20 +0200
+In-Reply-To: <9BEBB87E-EA6D-4219-ADC5-40C1E19DA5DA@excors.net>
+References: <9BEBB87E-EA6D-4219-ADC5-40C1E19DA5DA@excors.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds error check if kzalloc is failed.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+> The bands don’t quite match up and DFS/TPC is (apparently) not 
+> required for 5470 - 5725. More importantly, the max transmitted power
+> seems to be 1W/30dBm e.i.r.p and not 27dBm.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index f7dda75..76c48a4 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2270,6 +2270,8 @@ int wilc_netdev_init(void)
- 
- 	/*create the common structure*/
- 	g_linux_wlan = kzalloc(sizeof(linux_wlan_t), GFP_KERNEL);
-+	if (!g_linux_wlan)
-+		return -ENOMEM;
- 
- 	/*Reset interrupt count debug*/
- 	int_rcvdU = 0;
--- 
-2.5.1
+Without checking now, just a note: we sometimes have lower limits here
+due to spectral power density, indoor/outdoor or TPC requirements.
 
+johannes
