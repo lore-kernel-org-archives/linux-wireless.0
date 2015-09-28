@@ -1,63 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33454 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755393AbbIHP5Z (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:34200 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393AbbI1NAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:57:25 -0400
-Received: by pacex6 with SMTP id ex6so127507772pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:25 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 29/30] staging: wilc1000: rename WILC_WFI_set_power_mgmt
-Date: Wed,  9 Sep 2015 00:56:06 +0900
-Message-Id: <1441727767-26026-29-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180200_038312_8C62EEC2)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 28 Sep 2015 09:00:07 -0400
+Received: by igcpb10 with SMTP id pb10so54572645igc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2015 06:00:06 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath10k: only advertise mesh support in raw mode
+Date: Mon, 28 Sep 2015 08:59:52 -0400
+Message-Id: <1443445192-30464-1-git-send-email-me@bobcopeland.com> (sfid-20150928_150011_619160_0641E6CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_power_mgmt with
-wilc_cfg80211_set_power_mgmt to avoid CamelCase.
+Rather than always advertising mesh support and then generating
+an error when the user attempts to bring up the device without
+rawmode, only advertise it when available: that is, if the module
+is loaded with rawmode=1, the firmware supports it, and the
+device/firmware supports an AP virtual interface internally.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Actually, I think this is perhaps worse than just spitting out an
+error on interface up, but I'm sending anyway because it was requested
+a couple of times in review.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 55ca2db..078220f 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2793,7 +2793,7 @@ static int wilc_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *de
+The reason this is so ugly is that the structures in question are
+defined const in the API; when also declared const in the driver,
+they go into the .rodata section and the interface limit types
+cannot be changed without causing a fault.  So this patch removes
+const in a bunch of places and adds casts to const where required.
+
+Another approach might be changing cfg80211 to silently remove interface
+types from advertised combinations when the given mode is not also
+in interface_modes, instead of warning and failing registration as it
+does today.  But this would make errors here harder to spot.
+
+Or we can keep it the way it is with the driver failing and showing an
+error on add interface.  I'm okay with any of these approaches really.
+
+ drivers/net/wireless/ath/ath10k/mac.c | 98 ++++++++++++++++++++++-------------
+ 1 file changed, 63 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 20d002c..c689613 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4209,11 +4209,6 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
+-			ret = -EINVAL;
+-			ath10k_warn(ar, "must load driver with rawmode=1 to add mesh interfaces\n");
+-			goto err;
+-		}
+ 		arvif->vdev_type = WMI_VDEV_TYPE_AP;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+@@ -6755,7 +6750,7 @@ void ath10k_mac_destroy(struct ath10k *ar)
+ 	ieee80211_free_hw(ar->hw);
+ }
  
+-static const struct ieee80211_iface_limit ath10k_if_limits[] = {
++static struct ieee80211_iface_limit ath10k_if_limits[] = {
+ 	{
+ 	.max	= 8,
+ 	.types	= BIT(NL80211_IFTYPE_STATION)
+@@ -6772,23 +6767,17 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+ 	{
+ 	.max	= 7,
+ 	.types	= BIT(NL80211_IFTYPE_AP)
+-#ifdef CONFIG_MAC80211_MESH
+-		| BIT(NL80211_IFTYPE_MESH_POINT)
+-#endif
+ 	},
+ };
  
- /**
-- *  @brief      WILC_WFI_set_power_mgmt
-+ *  @brief      wilc_cfg80211_set_power_mgmt
-  *  @details
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -2801,7 +2801,7 @@ static int wilc_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *de
-  *  @date	01 JUL 2012
-  *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
-  */
--int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
-+int wilc_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 			    bool enabled, int timeout)
+-static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
++static struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
+ 	{
+ 	.max	= 8,
+ 	.types	= BIT(NL80211_IFTYPE_AP)
+-#ifdef CONFIG_MAC80211_MESH
+-		| BIT(NL80211_IFTYPE_MESH_POINT)
+-#endif
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_combination ath10k_if_comb[] = {
++static struct ieee80211_iface_combination ath10k_if_comb[] = {
+ 	{
+ 		.limits = ath10k_if_limits,
+ 		.n_limits = ARRAY_SIZE(ath10k_if_limits),
+@@ -6798,7 +6787,7 @@ static const struct ieee80211_iface_combination ath10k_if_comb[] = {
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
++static struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
+ 	{
+ 		.limits = ath10k_10x_if_limits,
+ 		.n_limits = ARRAY_SIZE(ath10k_10x_if_limits),
+@@ -6814,7 +6803,7 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
++static struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
+ 	{
+ 		.max = 2,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+@@ -6822,9 +6811,6 @@ static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
+ 	{
+ 		.max = 2,
+ 		.types = BIT(NL80211_IFTYPE_AP) |
+-#ifdef CONFIG_MAC80211_MESH
+-			 BIT(NL80211_IFTYPE_MESH_POINT) |
+-#endif
+ 			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			 BIT(NL80211_IFTYPE_P2P_GO),
+ 	},
+@@ -6834,7 +6820,7 @@ static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
++static struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
+ 	{
+ 		.max = 2,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+@@ -6846,9 +6832,6 @@ static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
+ 	{
+ 		.max = 1,
+ 		.types = BIT(NL80211_IFTYPE_AP) |
+-#ifdef CONFIG_MAC80211_MESH
+-			 BIT(NL80211_IFTYPE_MESH_POINT) |
+-#endif
+ 			 BIT(NL80211_IFTYPE_P2P_GO),
+ 	},
+ 	{
+@@ -6857,7 +6840,7 @@ static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_limit ath10k_tlv_if_limit_ibss[] = {
++static struct ieee80211_iface_limit ath10k_tlv_if_limit_ibss[] = {
+ 	{
+ 		.max = 1,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+@@ -6907,7 +6890,7 @@ static struct ieee80211_iface_combination ath10k_tlv_qcs_if_comb[] = {
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
++static struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
+ 	{
+ 		.max = 1,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+@@ -6915,13 +6898,10 @@ static const struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
+ 	{
+ 		.max	= 16,
+ 		.types	= BIT(NL80211_IFTYPE_AP)
+-#ifdef CONFIG_MAC80211_MESH
+-			| BIT(NL80211_IFTYPE_MESH_POINT)
+-#endif
+ 	},
+ };
+ 
+-static const struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
++static struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
+ 	{
+ 		.limits = ath10k_10_4_if_limits,
+ 		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
+@@ -6937,6 +6917,43 @@ static const struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
+ 	},
+ };
+ 
++static
++void ath10k_if_comb_add_mesh(struct ath10k *ar,
++			     struct ieee80211_iface_combination *if_comb)
++{
++	int i;
++
++	for (i = 0; i < if_comb->n_limits; i++) {
++		struct ieee80211_iface_limit *limit =
++			(struct ieee80211_iface_limit *)&if_comb->limits[i];
++
++		/* we can support mesh if we already support AP */
++		if (limit->types & BIT(NL80211_IFTYPE_AP)) {
++			limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
++			ar->hw->wiphy->interface_modes |=
++				BIT(NL80211_IFTYPE_MESH_POINT);
++		}
++	}
++}
++
++static void ath10k_enable_mesh(struct ath10k *ar)
++{
++	int i;
++
++	if (!config_enabled(CONFIG_MAC80211_MESH))
++		return;
++
++#define ATH10K_IF_COMB_ADD_MESH(comb_array) \
++	for (i = 0; i < ARRAY_SIZE(comb_array); i++) \
++		ath10k_if_comb_add_mesh(ar, &comb_array[i])
++
++	ATH10K_IF_COMB_ADD_MESH(ath10k_if_comb);
++	ATH10K_IF_COMB_ADD_MESH(ath10k_10x_if_comb);
++	ATH10K_IF_COMB_ADD_MESH(ath10k_tlv_if_comb);
++	ATH10K_IF_COMB_ADD_MESH(ath10k_tlv_qcs_if_comb);
++	ATH10K_IF_COMB_ADD_MESH(ath10k_10_4_if_comb);
++}
++
+ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
  {
- 	struct WILC_WFI_priv *priv;
-@@ -3639,7 +3639,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.mgmt_tx_cancel_wait = wilc_cfg80211_mgmt_tx_cancel_wait,
- 	.mgmt_tx = wilc_cfg80211_mgmt_tx,
- 	.mgmt_frame_register = wilc_cfg80211_mgmt_frame_register,
--	.set_power_mgmt = WILC_WFI_set_power_mgmt,
-+	.set_power_mgmt = wilc_cfg80211_set_power_mgmt,
- 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
- #endif
+ 	struct ieee80211_sta_vht_cap vht_cap = {0};
+@@ -7142,8 +7159,7 @@ int ath10k_mac_register(struct ath10k *ar)
  
+ 	ar->hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_AP) |
+-		BIT(NL80211_IFTYPE_MESH_POINT);
++		BIT(NL80211_IFTYPE_AP);
+ 
+ 	ar->hw->wiphy->available_antennas_rx = ar->supp_rx_chainmask;
+ 	ar->hw->wiphy->available_antennas_tx = ar->supp_tx_chainmask;
+@@ -7154,6 +7170,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			BIT(NL80211_IFTYPE_P2P_GO);
+ 
++	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
++		ath10k_enable_mesh(ar);
++
+ 	ieee80211_hw_set(ar->hw, SIGNAL_DBM);
+ 	ieee80211_hw_set(ar->hw, SUPPORTS_PS);
+ 	ieee80211_hw_set(ar->hw, SUPPORTS_DYNAMIC_PS);
+@@ -7238,7 +7257,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 
+ 	switch (ar->wmi.op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
++		ar->hw->wiphy->iface_combinations =
++			(const struct ieee80211_iface_combination *)
++			ath10k_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(ath10k_if_comb);
+ 		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
+@@ -7246,11 +7267,14 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+ 		if (test_bit(WMI_SERVICE_ADAPTIVE_OCS, ar->wmi.svc_map)) {
+ 			ar->hw->wiphy->iface_combinations =
++				(const struct ieee80211_iface_combination *)
+ 				ath10k_tlv_qcs_if_comb;
+ 			ar->hw->wiphy->n_iface_combinations =
+ 				ARRAY_SIZE(ath10k_tlv_qcs_if_comb);
+ 		} else {
+-			ar->hw->wiphy->iface_combinations = ath10k_tlv_if_comb;
++			ar->hw->wiphy->iface_combinations =
++				(const struct ieee80211_iface_combination *)
++				ath10k_tlv_if_comb;
+ 			ar->hw->wiphy->n_iface_combinations =
+ 				ARRAY_SIZE(ath10k_tlv_if_comb);
+ 		}
+@@ -7259,12 +7283,16 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+-		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
++		ar->hw->wiphy->iface_combinations =
++			(const struct ieee80211_iface_combination *)
++			ath10k_10x_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(ath10k_10x_if_comb);
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+-		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
++		ar->hw->wiphy->iface_combinations =
++			(const struct ieee80211_iface_combination *)
++			ath10k_10_4_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(ath10k_10_4_if_comb);
+ 		break;
 -- 
-2.5.1
+2.1.4
 
