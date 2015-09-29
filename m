@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36964 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755835AbbI2H50 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 03:57:26 -0400
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:39214 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934678AbbI2KmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:42:09 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
+	<wrfjvbggfhuj.fsf@redhat.com>
+	<8737yrhdm0.fsf@kamboji.qca.qualcomm.com>
+	<wrfjlhcidq9b.fsf@redhat.com>
+	<87io6t7gdt.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 29 Sep 2015 06:42:07 -0400
+In-Reply-To: <87io6t7gdt.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Tue, 29 Sep 2015 11:56:46 +0300")
+Message-ID: <wrfjoaglld6o.fsf@redhat.com> (sfid-20150929_124223_400742_4D4DB804)
 MIME-Version: 1.0
-Subject: Re: [01/16] brcmfmac: Fix exception handling.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1442606899-31872-2-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20150929075725.D0D56140F8E@smtp.codeaurora.org> (sfid-20150929_095749_006702_FE47D49A)
-Date: Tue, 29 Sep 2015 07:57:25 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>
+>>>>> I doubt that this will be in active enough development that a separate
+>>>>> git tree is needed. wireless-drivers trees should be enough and this
+>>>>> line can be removed.
+>>>>
+>>>> I would like to keep this line, it points to my development tree, which
+>>>> allows users to go back and look through my full development logs, as
+>>>> well as see ongoing work before it's pushed upstream.
+>>>
+>>> I prefer that wireless-drivers(-next).git is used as the baseline for
+>>> wireless driver patches, so please remove this tag. You can document
+>>> your git server in the wiki, commit log and so on.
+>>
+>> I will insist on keeping my branch listed as long as I maintain the
+>> driver. Other drivers do the same thing, like iwlwifi. I'm happy to send
+>> you patches against wireless-drivers-next.git though.
+>
+> To keep things simple for me I want that the patches are based on
+> wireless-drivers-next.git. iwlwifi is under so active development that
+> an extra tree is justified, but having a dedicated tree for a not so
+> active driver is just extra work for me which I do not want to have.
+>
+> With rtlwifi it goes so that Larry acks the patches on the list and
+> patchwork automatically adds the ack to the commit log when I apply the
+> patch, which is easy and fast for everyone. The same should go with
+> rtl8723au.
 
-> From: Hante Meuleman <meuleman@broadcom.com>
-> 
-> In some exception situations the ifp->vif was not properly assigned
-> which could result in crash.
-> 
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The rtl8xxxu branch is there because that is where I do the active
+development, and work actively on the driver. If people post patches for
+it and it's smaller fixes, sure just take them, if they post larger
+changes, please punt them to me and I will integrate them and send them
+on to you.
 
-Thanks, 16 patches applied to wireless-drivers-next.git:
-
-2b5d348ee786 brcmfmac: Fix exception handling.
-e3c92cb2eea3 brcmfmac: Add support for the BCM4350 PCIE device.
-60dc35ef9ffd brcmfmac: Fix set and get tx-power functions.
-6ea696eb4e26 brcmfmac: Only assign primary netdev to if2bss array.
-ae7c03f68ee2 brcmfmac: Inform p2p module about p2pon through API
-9f64df940cfe brcmfmac: Fix bug in flowring management.
-43e55a2a1cf0 brcmfmac: Make p2pon module param always available.
-178e9ef9b6c6 brcmfmac: Workaround in change vif for wpa_supplicant support.
-9831bcb987df brcmfmac: Deleting of p2p device is leaking memory.
-d1bb34c128f5 brcmfmac: Only handle p2p_stop_device if vif is valid
-35a3cbcc49b5 brcmfmac: Fix p2p bug for older firmwares.
-8268c2011d25 brcmfmac: Add module parameter to disable features.
-a2044d91d9d2 brcmfmac: Fix race condition bug when deleting p2p interface.
-55acca90da52 brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices.
-cb8dc71f516a brcmfmac: Fix TDLS setup by properly handling p2p noif.
-29b93c0e3c38 brcmfmac: Accept events when TDLS is used in combination with p2p.
-
-Kalle Valo
+Jes
