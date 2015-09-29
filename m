@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45535 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbbIPBTr (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40773 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755817AbbI2I4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 21:19:47 -0400
-Subject: Re: [PATCH 2/2] staging: wilc1000: remove RX_BH_TYPE
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1441957983-17726-1-git-send-email-tony.cho@atmel.com>
- <1441957983-17726-2-git-send-email-tony.cho@atmel.com>
- <55F771B5.50702@atmel.com> <20150915133103.GA18036@kroah.com>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <55F8C3B0.8000902@atmel.com> (sfid-20150916_031950_096582_AD7331E3)
-Date: Wed, 16 Sep 2015 10:19:44 +0900
+	Tue, 29 Sep 2015 04:56:52 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
+	<wrfjvbggfhuj.fsf@redhat.com>
+	<8737yrhdm0.fsf@kamboji.qca.qualcomm.com>
+	<wrfjlhcidq9b.fsf@redhat.com>
+Date: Tue, 29 Sep 2015 11:56:46 +0300
+In-Reply-To: <wrfjlhcidq9b.fsf@redhat.com> (Jes Sorensen's message of "Mon, 07
+	Sep 2015 14:43:28 -0400")
+Message-ID: <87io6t7gdt.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_105659_491067_266D1C39)
 MIME-Version: 1.0
-In-Reply-To: <20150915133103.GA18036@kroah.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 
-If it's already in your tree and can be applied alone, no problem to me. I will later send remaining series of it.
-
-Thanks,
-
-Tony.
-
-
-On 2015년 09월 15일 22:31, Greg KH wrote:
-> On Tue, Sep 15, 2015 at 10:17:41AM +0900, Tony Cho wrote:
->> Hi Greg,
+>>>> I doubt that this will be in active enough development that a separate
+>>>> git tree is needed. wireless-drivers trees should be enough and this
+>>>> line can be removed.
+>>>
+>>> I would like to keep this line, it points to my development tree, which
+>>> allows users to go back and look through my full development logs, as
+>>> well as see ongoing work before it's pushed upstream.
 >>
->> I am sorry but please ignore this patch in this time.
-> It's already in my tree, right?  I can revert it if you want me to, but
-> I can't ignore it anymore, sorry.
+>> I prefer that wireless-drivers(-next).git is used as the baseline for
+>> wireless driver patches, so please remove this tag. You can document
+>> your git server in the wiki, commit log and so on.
 >
-> greg k-h
+> I will insist on keeping my branch listed as long as I maintain the
+> driver. Other drivers do the same thing, like iwlwifi. I'm happy to send
+> you patches against wireless-drivers-next.git though.
 
+To keep things simple for me I want that the patches are based on
+wireless-drivers-next.git. iwlwifi is under so active development that
+an extra tree is justified, but having a dedicated tree for a not so
+active driver is just extra work for me which I do not want to have.
+
+With rtlwifi it goes so that Larry acks the patches on the list and
+patchwork automatically adds the ack to the commit log when I apply the
+patch, which is easy and fast for everyone. The same should go with
+rtl8723au.
+
+-- 
+Kalle Valo
