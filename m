@@ -1,83 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36316 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbbITGvn (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56769 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754161AbbI2AXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:51:43 -0400
-Received: by padhk3 with SMTP id hk3so87318268pad.3
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:51:42 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/18] staging: wilc1000: rename WILC_WFI_WiphyRegister
-Date: Sun, 20 Sep 2015 15:51:09 +0900
-Message-Id: <1442731885-4344-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085206_375638_02C7549C)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 28 Sep 2015 20:23:17 -0400
+From: Ben Greear <greearb@candelatech.com>
+Subject: CT firmware beta-15 can now do A-MSDU with IBSS interfaces.
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Message-ID: <5609D9F4.4000407@candelatech.com> (sfid-20150929_022346_201934_7B7D9F69)
+Date: Mon, 28 Sep 2015 17:23:16 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_WiphyRegister with wilc_create_wiphy to
-avoid CamelCase.
+Here is the changelog note.  This requires some corresponding driver patches to
+enable the A-MSDU with IBSS because the ath10k hardware (or maybe firmware bug)
+causes the BSSID in A-MSDU packets to be all zeros.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c             | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+So, in CT 4.0 and 4.2 kernels there is a patch that allows all-zero BSSIDs
+on IBSS interfaces.  Only tested on 4.2 so far.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index ed6044e..4534fb9 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1883,7 +1883,7 @@ int wilc_netdev_init(void)
- 		{
- 			struct wireless_dev *wdev;
- 			/*Register WiFi*/
--			wdev = WILC_WFI_WiphyRegister(ndev);
-+			wdev = wilc_create_wiphy(ndev);
- 
- 			#ifdef WILC_SDIO
- 			/* set netdev, tony */
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 239d0fc..e51745e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3519,7 +3519,7 @@ _fail_:
- 
- }
- /**
-- *  @brief      WILC_WFI_WiphyRegister
-+ *  @brief      wilc_create_wiphy
-  *  @details    Registering of the wiphy structure and interface modes
-  *  @param[in]   NONE
-  *  @return     NONE
-@@ -3527,7 +3527,7 @@ _fail_:
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--struct wireless_dev *WILC_WFI_WiphyRegister(struct net_device *net)
-+struct wireless_dev *wilc_create_wiphy(struct net_device *net)
- {
- 	struct wilc_priv *priv;
- 	struct wireless_dev *wdev;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 67b8de3..579bf2b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -92,7 +92,7 @@ static const struct ieee80211_txrx_stypes
- #define WILC_WFI_DWELL_ACTIVE  40
- 
- struct wireless_dev *WILC_WFI_CfgAlloc(void);
--struct wireless_dev *WILC_WFI_WiphyRegister(struct net_device *net);
-+struct wireless_dev *wilc_create_wiphy(struct net_device *net);
- void wilc_free_wiphy(struct net_device *net);
- int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
- int WILC_WFI_DeInitHostInt(struct net_device *net);
+This gives a modest performance gain, depending on RF environment.
+
+I also have had a bug in the beta-15 rate-ctrl code for a week or two,
+and I fixed that today as well.  Performance should be back up to
+previous rates.
+
+
+In addition, the ath10k firmware was always adding Legacy /b and /ag
+IEs to probe requests, and the mac80211 stack was as well.  I have fixed
+CT firmware to not crap itself when requested to not send any legacy
+IEs, and this allows the host to have full control.  This also keeps
+duplicate IEs off the air.  For backwards compat, if you want to take
+advantage of this feature, you need CT kernels (or patches).
+
+
+ From release notes:
+
+   *  Allow disabling firmware-added legacy, HT and VHT related IEs in probe requests.
+      The host can do a better job of adding these, and this keeps there from being
+      duplicated IEs in probe requests.  Requires kernel patch to take advantage of
+      these new features.
+
+   *  IBSS:  Allow enabling A-MSDU for IBSS.  It appears there is a bug in the
+      hardware or firmware that causes the BSSID to be zero when diong A-MSDU frames
+      for IBSS interfaces.  I cannot figure out how to fix that, and it may just not
+      be fixable due to hardware issues.
+
+      But, the receiving host could be configured (hacked?) to just match on the
+      destination address and ignore the BSSID address, and then it appears to work
+      just fine.
+
+      CT Kernel (4.2 now, maybe 4.0 soon) has patches to allow enabling IBSS A-MSDU
+      in the CT firmware.  By default, A-MSDU is (still) disabled for IBSS.
+
+      # Enable A-MSDU IBSS on wiphy0 radio.
+      echo 0x500000001 > /debug/ieee80211/wiphy0/ath10k/ct_special
+      # Disable A-MSDU IBSS on wiphy0 radio.
+      echo 0x500000000 > /debug/ieee80211/wiphy0/ath10k/ct_special
+
+
+http://www.candelatech.com/ath10k.php
+
+
+http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.0.dev.y/.git;a=summary
+http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.2.dev.y/.git;a=summary
+
+Thanks,
+Ben
+
 -- 
-2.5.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
