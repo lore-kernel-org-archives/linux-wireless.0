@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:39769 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981AbbISKr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 06:47:27 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: kvalo@codeaurora.org
-Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] brcmfmac: include linux/atomic.h
-Date: Sat, 19 Sep 2015 12:47:20 +0200
-Message-Id: <1442659640-11835-1-git-send-email-hauke@hauke-m.de> (sfid-20150919_124731_518008_CE7B07D7)
+Received: from smtp.codeaurora.org ([198.145.29.96]:37778 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932496AbbI2IJJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 04:09:09 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v2] mwifiex: fix mwifiex_rdeeprom_read()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20150921161953.GQ5004@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20150929080908.CC1F813F7C4@smtp.codeaurora.org> (sfid-20150929_100917_467239_2C752D85)
+Date: Tue, 29 Sep 2015 08:09:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmfmac uses atomic_or() and other atomic_* functions, but does not
-include linux/atomic.h. This file gets included by some other header
-file so this normally does not cause problems.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+> There were several bugs here.
+> 
+> 1)  The done label was in the wrong place so we didn't copy any
+>     information out when there was no command given.
+> 
+> 2)  We were using PAGE_SIZE as the size of the buffer instead of
+>     "PAGE_SIZE - pos".
+> 
+> 3)  snprintf() returns the number of characters that would have been
+>     printed if there were enough space.  If there was not enough space
+>     (and we had fixed the memory corruption bug #2) then it would result
+>     in an information leak when we do simple_read_from_buffer().  I've
+>     changed it to use scnprintf() instead.
+> 
+> I also removed the initialization at the start of the function, because
+> I thought it made the code a little more clear.
+> 
+> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index f990e3d..ea9150b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include <linux/types.h>
-+#include <linux/atomic.h>
- #include <linux/kernel.h>
- #include <linux/kthread.h>
- #include <linux/printk.h>
--- 
-2.1.4
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
