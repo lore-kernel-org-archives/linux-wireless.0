@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34987 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755369AbbIHP5F (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36705 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755592AbbI2Htd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:57:05 -0400
-Received: by pacfv12 with SMTP id fv12so130451538pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:04 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 21/30] staging: wilc1000: rename WILC_WFI_set_pmksa
-Date: Wed,  9 Sep 2015 00:55:58 +0900
-Message-Id: <1441727767-26026-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_799942_BAC281C7)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 29 Sep 2015 03:49:33 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [01/16] mwifiex: fix typo in del_virtual_intf() function
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1442583138-2979-2-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20150929074933.01843140F48@smtp.codeaurora.org> (sfid-20150929_094936_787968_9F1F8854)
+Date: Tue, 29 Sep 2015 07:49:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_pmksa with wilc_cfg80211_set_pmksa to
-avoid CamelCase.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Interface counters should be incremented in add_virtual_intf()
+> and decremented in del_virtual_intf() function. This patch
+> corrects it.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 25b4531..7b2f200 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1880,7 +1880,7 @@ static int WILC_WFI_set_bitrate_mask(struct wiphy *wiphy,
- }
- 
- /**
-- *  @brief      WILC_WFI_set_pmksa
-+ *  @brief      wilc_cfg80211_set_pmksa
-  *  @details    Cache a PMKID for a BSSID. This is mostly useful for fullmac
-  *                      devices running firmwares capable of generating the (re) association
-  *                      RSN IE. It allows for faster roaming between WPA2 BSSIDs.
-@@ -1890,7 +1890,7 @@ static int WILC_WFI_set_bitrate_mask(struct wiphy *wiphy,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+static int wilc_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 			      struct cfg80211_pmksa *pmksa)
- {
- 	u32 i;
-@@ -3630,7 +3630,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_bss = wilc_cfg80211_change_bss,
- 	.set_wiphy_params = wilc_cfg80211_set_wiphy_params,
- 
--	.set_pmksa = WILC_WFI_set_pmksa,
-+	.set_pmksa = wilc_cfg80211_set_pmksa,
- 	.del_pmksa = WILC_WFI_del_pmksa,
- 	.flush_pmksa = WILC_WFI_flush_pmksa,
- #ifdef WILC_P2P
--- 
-2.5.1
+Thanks, 16 patches applied to wireless-drivers-next.git:
 
+65405c51bb2e mwifiex: fix typo in del_virtual_intf() function
+0a252abb6ad7 mwifiex: update amsdu tx packet time stamp
+e3ad3d5b6ab2 mwifiex: minor corrections in multiport aggregation code
+9a9053c3420f mwifiex: fix driver init failure under memory pressure
+02421dd3f6af mwifiex: NULL check for cfg80211_inform_bss()
+2c3da961268f mwifiex: don't always include ht/vht info in tdls confirm frame
+17e524b1b60f mwifiex: fix NULL pointer dereference during hidden SSID scan
+14d9c11c91a6 mwifiex: avoid memsetting PCIe event buffer
+70c5ad7e20c1 mwifiex: correct paused tx data packet counter
+17090beec26e mwifiex: Suppress -ENOSR error for data traffic on USB
+d22871db0172 mwifiex: fix tx data_sent issue for usb interface
+d941444321f6 mwifiex: move usb specific data_sent update to usb.c
+2b0f997db43f mwifiex: add usb multi channel event process support
+308fe29ef243 mwifiex: add usb tx data multi endpoints support
+7e4e5d2cd081 mwifiex: add usb multi endpoints resync support
+735ab6bfc038 mwifiex: complete usb tx data with multi endpoints
+
+Kalle Valo
