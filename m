@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28309 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752145AbbIRNcm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34803 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755654AbbI2HdV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:32:42 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDOR8X027007
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:41 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1wy3qpfe74-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:41 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 00/16] mwifiex fixes and USB multichannel
-Date: Fri, 18 Sep 2015 06:32:02 -0700
-Message-ID: <1442583138-2979-1-git-send-email-akarwar@marvell.com> (sfid-20150918_153245_776375_E72DAFBB)
+	Tue, 29 Sep 2015 03:33:21 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: mwifiex: Make mwifiex_dbg a function, reduce object size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1441043205.3276.28.camel@perches.com>
+To: Joe Perches <joe@perches.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20150929073320.9C61F140BF6@smtp.codeaurora.org> (sfid-20150929_093326_304868_C2935FAE)
+Date: Tue, 29 Sep 2015 07:33:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes few fixes and USB multichannel
-feature support patch series
 
-Amitkumar Karwar (2):
-  mwifiex: avoid memsetting PCIe event buffer
-  mwifiex: Suppress -ENOSR error for data traffic on USB
+> The mwifiex_dbg macro has two tests that could be consolidated
+> into a function reducing overall object size ~10KB (~4%).
+> 
+> So convert the macro into a function.
+> 
+> $ size drivers/net/wireless/mwifiex/built-in.o* (x86-64 defconfig)
+>    text	   data	    bss	    dec	    hex	filename
+>  233102	   8628	   4809	 246539	  3c30b	drivers/net/wireless/mwifiex/built-in.o.new
+>  243949	   8628	   4809	 257386	  3ed6a	drivers/net/wireless/mwifiex/built-in.o.old
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Aniket Nagarnaik (2):
-  mwifiex: don't always include ht/vht info in tdls confirm frame
-  mwifiex: fix NULL pointer dereference during hidden SSID scan
+Thanks, applied to wireless-drivers-next.git.
 
-Xinming Hu (4):
-  mwifiex: fix typo in del_virtual_intf() function
-  mwifiex: minor corrections in multiport aggregation code
-  mwifiex: fix driver init failure under memory pressure
-  mwifiex: NULL check for cfg80211_inform_bss()
-
-Zhaoyang Liu (8):
-  mwifiex: update amsdu tx packet time stamp
-  mwifiex: correct paused tx data packet counter
-  mwifiex: fix tx data_sent issue for usb interface
-  mwifiex: move usb specific data_sent update to usb.c
-  mwifiex: add usb multi channel event process support
-  mwifiex: add usb tx data multi endpoints support
-  mwifiex: add usb multi endpoints resync support
-  mwifiex: complete usb tx data with multi endpoints
-
- drivers/net/wireless/mwifiex/11n_aggr.c    |   8 +-
- drivers/net/wireless/mwifiex/cfg80211.c    |  12 +-
- drivers/net/wireless/mwifiex/fw.h          |  18 +++
- drivers/net/wireless/mwifiex/init.c        |   1 +
- drivers/net/wireless/mwifiex/main.c        |  60 +++++++-
- drivers/net/wireless/mwifiex/main.h        |   8 ++
- drivers/net/wireless/mwifiex/pcie.c        |   1 -
- drivers/net/wireless/mwifiex/scan.c        |  22 +--
- drivers/net/wireless/mwifiex/sdio.c        |  29 ++--
- drivers/net/wireless/mwifiex/sta_cmd.c     |   3 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  11 ++
- drivers/net/wireless/mwifiex/sta_event.c   |  78 ++++++++--
- drivers/net/wireless/mwifiex/sta_tx.c      |   7 +-
- drivers/net/wireless/mwifiex/tdls.c        |  12 ++
- drivers/net/wireless/mwifiex/txrx.c        |  19 +--
- drivers/net/wireless/mwifiex/uap_event.c   |   4 +-
- drivers/net/wireless/mwifiex/uap_txrx.c    |  10 +-
- drivers/net/wireless/mwifiex/usb.c         | 224 +++++++++++++++++++++++------
- drivers/net/wireless/mwifiex/usb.h         |  15 +-
- drivers/net/wireless/mwifiex/wmm.c         |  52 +++++--
- 20 files changed, 469 insertions(+), 125 deletions(-)
-
--- 
-1.8.1.4
-
+Kalle Valo
