@@ -1,118 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:36321 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbbIJKEt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37170 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932820AbbI2ICc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 06:04:49 -0400
-Received: by lbcao8 with SMTP id ao8so20179257lbc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 03:04:48 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ibss: add VHT80 support for IBSS
-Date: Thu, 10 Sep 2015 12:04:13 +0200
-Message-Id: <1441879453-6391-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150910_120453_422997_31C76776)
+	Tue, 29 Sep 2015 04:02:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 1/3] ssb: unexport ssb_bus_pcibus_register
+References: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
+Date: Tue, 29 Sep 2015 11:02:25 +0300
+In-Reply-To: <1442821640-14582-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Mon, 21 Sep 2015
+ 09:47:18 +0200")
+Message-ID: <874mid8xgu.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_100237_288651_DD412646)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT80 support for IBSS.
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-eg. iw wlan0 ibss join 5180 80MHZ
-    iw wlan0 ibbs join 5220 80MHZ
+> It isn't used anywhere out of ssb code and we don't (plan to) build
+> pcihost_wrapper.c as a separated module.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- ibss.c | 48 ++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 40 insertions(+), 8 deletions(-)
+Thanks, all three patches manually applied.
 
-diff --git a/ibss.c b/ibss.c
-index 7a0b707..460f549 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -16,6 +16,38 @@
- 
- SECTION(ibss);
- 
-+struct chanmode {
-+	const char *name;
-+	unsigned int width;
-+	int freq1_diff;
-+	int chantype; /* for older kernel */
-+};
-+
-+static int get_cf1(const struct chanmode *chanmode, unsigned long freq) {
-+	int cf1 = freq, j;
-+	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
-+
-+	switch (chanmode->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+	        /* setup center_freq1 */
-+		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
-+			if (freq >= vht80[j] && freq < vht80[j] + 80)
-+				break;
-+		}
-+
-+		if (j == ARRAY_SIZE(vht80))
-+			break;
-+
-+		cf1 = vht80[j] + 30;
-+		break;
-+	default:
-+		cf1 = freq + chanmode->freq1_diff;
-+		break;
-+	}
-+
-+	return cf1;
-+}
-+
- static int join_ibss(struct nl80211_state *state,
- 		     struct nl_msg *msg,
- 		     int argc, char **argv,
-@@ -30,12 +62,8 @@ static int join_ibss(struct nl80211_state *state,
- 	int bintval;
- 	int i;
- 	unsigned long freq;
--	static const struct {
--		const char *name;
--		unsigned int width;
--		int freq1_diff;
--		int chantype; /* for older kernel */
--	} *chanmode_selected = NULL, chanmode[] = {
-+	const struct chanmode *chanmode_selected = NULL;
-+	static const struct chanmode chanmode[] = {
- 		{ .name = "HT20",
- 		  .width = NL80211_CHAN_WIDTH_20,
- 		  .freq1_diff = 0,
-@@ -60,6 +88,10 @@ static int join_ibss(struct nl80211_state *state,
- 		  .width = NL80211_CHAN_WIDTH_10,
- 		  .freq1_diff = 0,
- 		  .chantype = -1 },
-+		{ .name = "80MHZ",
-+		  .width = NL80211_CHAN_WIDTH_80,
-+		  .freq1_diff = 0,
-+		  .chantype = -1 },
- 	};
- 
- 	if (argc < 2)
-@@ -90,7 +122,7 @@ static int join_ibss(struct nl80211_state *state,
- 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
- 				    chanmode_selected->width);
- 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
--				    freq + chanmode_selected->freq1_diff);
-+				    get_cf1(chanmode_selected, freq));
- 			if (chanmode_selected->chantype != -1)
- 				NLA_PUT_U32(msg,
- 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-@@ -192,7 +224,7 @@ COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
- COMMAND(ibss, join,
--	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
-+	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ|80MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
- 	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
- 	"[key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
 -- 
-1.9.1
-
+Kalle Valo
