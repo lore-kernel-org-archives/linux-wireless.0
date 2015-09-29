@@ -1,58 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5664 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbbIPBob (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37026 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932731AbbI2H6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 21:44:31 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 05/10] staging: wilc1000: remove unnecessary extern function declaration
-Date: Wed, 16 Sep 2015 10:43:50 +0900
-Message-ID: <1442367835-30733-6-git-send-email-tony.cho@atmel.com> (sfid-20150916_034433_507060_8418F8F6)
-In-Reply-To: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
-References: <1442367835-30733-1-git-send-email-tony.cho@atmel.com>
+	Tue, 29 Sep 2015 03:58:45 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: brcmfmac: include linux/atomic.h
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1442659640-11835-1-git-send-email-hauke@hauke-m.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Message-Id: <20150929075845.3F224140FA5@smtp.codeaurora.org> (sfid-20150929_095849_025351_19D1BB16)
+Date: Tue, 29 Sep 2015 07:58:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
 
-Function NetworkInfoReceived, GnrlAsyncInfoReceived and
-host_int_ScanCompleteReceived are declared in the header file already.
-Just removes the declaration and comments.
+> brcmfmac uses atomic_or() and other atomic_* functions, but does not
+> include linux/atomic.h. This file gets included by some other header
+> file so this normally does not cause problems.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 8 --------
- 1 file changed, 8 deletions(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index a0b0d97..b514d09 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -136,14 +136,6 @@ typedef struct {
- /* Extern Variable Declarations                                              */
- /*****************************************************************************/
- 
--
--/*****************************************************************************/
--/* Extern Function Declarations                                              */
--/*****************************************************************************/
--extern s32 SendRawPacket(s8 *ps8Packet, s32 s32PacketLen);
--extern void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length);
--extern void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length);
--extern void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length);
- /*****************************************************************************/
- /* Global Variables                                                          */
- /*****************************************************************************/
--- 
-1.9.1
-
+Kalle Valo
