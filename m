@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33497 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181AbbIOFHm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38193 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932836AbbI2IWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 01:07:42 -0400
-Received: by pacex6 with SMTP id ex6so165329454pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:42 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 17/18] staging: wilc1000: remove if defined codes of FORCE_P2P_CLIENT
-Date: Tue, 15 Sep 2015 14:06:27 +0900
-Message-Id: <1442293588-15323-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_071652_432857_7E3F8712)
-In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 29 Sep 2015 04:22:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: use ether_addr_copy() instead of memcpy()
+References: <87lhbylifx.fsf@kamboji.qca.qualcomm.com>
+	<1442931866-17115-1-git-send-email-linux@rempel-privat.de>
+	<22018.42528.871404.504088@gargle.gargle.HOWL>
+	<5602D690.7000806@rempel-privat.de>
+Date: Tue, 29 Sep 2015 11:22:17 +0300
+In-Reply-To: <5602D690.7000806@rempel-privat.de> (Oleksij Rempel's message of
+	"Wed, 23 Sep 2015 18:42:56 +0200")
+Message-ID: <87vbat7hza.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_102228_920007_22A25BAE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes if defined codes of FORCE_P2P_CLIENT.
-This macro is deleted because it it commented out.
+Oleksij Rempel <linux@rempel-privat.de> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 --------
- 1 file changed, 8 deletions(-)
+> Am 23.09.2015 um 15:16 schrieb Sujith Manoharan:
+>> Oleksij Rempel wrote:
+>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  2 +-
+>>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 24 ++++++++++++------------
+>>>  2 files changed, 13 insertions(+), 13 deletions(-)
+>> 
+>> Both the arguments for ether_addr_copy() need to be
+>> aligned. Is this the case for all the replacements in
+>> this patch ?
+>
+> hm... you right. Kvalo, please drop this patch.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c3e0892..3ecf5b1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2028,11 +2028,7 @@ void WILC_WFI_CfgParseRxAction(u8 *buf, u32 len)
- 
- 	while (index < len) {
- 		if (buf[index] == GO_INTENT_ATTR_ID) {
--			#ifdef FORCE_P2P_CLIENT
--			buf[index + 3] = (buf[index + 3]  & 0x01) | (0x0f << 1);
--			#else
- 			buf[index + 3] = (buf[index + 3]  & 0x01) | (0x00 << 1);
--			#endif
- 		}
- 
- 		if (buf[index] ==  CHANLIST_ATTR_ID)
-@@ -2085,11 +2081,7 @@ void WILC_WFI_CfgParseTxAction(u8 *buf, u32 len, bool bOperChan, u8 iftype)
- 
- 	while (index < len) {
- 		if (buf[index] == GO_INTENT_ATTR_ID) {
--			#ifdef FORCE_P2P_CLIENT
--			buf[index + 3] = (buf[index + 3]  & 0x01) | (0x00 << 1);
--			#else
- 			buf[index + 3] = (buf[index + 3]  & 0x01) | (0x0f << 1);
--			#endif
- 
- 			break;
- 		}
+Dropped.
+
 -- 
-2.5.1
-
+Kalle Valo
