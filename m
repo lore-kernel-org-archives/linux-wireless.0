@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36586 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886AbbITGwX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:52:23 -0400
-Received: by padhk3 with SMTP id hk3so87325987pad.3
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:22 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 15/18] staging: wilc1000: remove braces for single statement blocks
-Date: Sun, 20 Sep 2015 15:51:22 +0900
-Message-Id: <1442731885-4344-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091653_819030_1EB57F0F)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:42136 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934568AbbI2KaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:30:12 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath: fix DFS timestamp wraparound reset condition
+Date: Tue, 29 Sep 2015 12:29:49 +0200
+Message-Id: <1443522589-14421-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150929_123017_195136_131C4137)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes braces for single if statement blocks found by
-checkpatch.pl
-WARNING: braces {} are not necessary for single statement blocks
+The DFS pattern detector ought to reset the
+detector lines when a pulse is added with
+lower time stamp than the previous (which
+indicates a TSF restart).
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This did not work so far and is fixed with
+this patch.
+
+The modification does not change detection
+performance within the driver, since it
+only ensures early reset (which is later
+performed by the PRI detectors anyway).
+It is relevant for synthetic tests and
+statistical evaluations, where millions
+of pulse patterns are processed and an
+early reset helps reducing load.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 34df5da..fce7dac 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3626,9 +3626,9 @@ int WILC_WFI_InitHostInt(struct net_device *net)
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 656ce42..b52c209 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -290,10 +290,10 @@ dpd_add_pulse(struct dfs_pattern_detector *dpd, struct pulse_event *event)
+ 	if (cd == NULL)
+ 		return false;
  
- 	sema_init(&(priv->hSemScanReq), 1);
- 	s32Error = host_int_init(&priv->hWILCWFIDrv);
--	if (s32Error) {
-+	if (s32Error)
- 		PRINT_ER("Error while initializing hostinterface\n");
--	}
-+
- 	return s32Error;
- }
+-	dpd->last_pulse_ts = event->ts;
+ 	/* reset detector on time stamp wraparound, caused by TSF reset */
+ 	if (event->ts < dpd->last_pulse_ts)
+ 		dpd_reset(dpd);
++	dpd->last_pulse_ts = event->ts;
  
-@@ -3666,9 +3666,9 @@ int WILC_WFI_DeInitHostInt(struct net_device *net)
- 	}
- 	#endif
- 
--	if (s32Error) {
-+	if (s32Error)
- 		PRINT_ER("Error while deintializing host interface\n");
--	}
-+
- 	return s32Error;
- }
- 
+ 	/* do type individual pattern matching */
+ 	for (i = 0; i < dpd->num_radar_types; i++) {
 -- 
-2.5.1
+2.5.0
 
