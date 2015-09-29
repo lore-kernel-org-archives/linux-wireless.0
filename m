@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:41449 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752550AbbIAANe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 20:13:34 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZWZCc-00034Y-In
-	for linux-wireless@vger.kernel.org; Tue, 01 Sep 2015 02:13:31 +0200
-Received: from 64.129.254.235 ([64.129.254.235])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2015 02:13:30 +0200
-Received: from keeler by 64.129.254.235 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2015 02:13:30 +0200
-To: linux-wireless@vger.kernel.org
-From: John Keeler <keeler@airintech.com>
-Subject: Re: Ubuntu 14.04 and the intel 3160 chip monitor mode support
-Date: Tue, 1 Sep 2015 00:13:24 +0000 (UTC)
-Message-ID: <loom.20150901T021026-586@post.gmane.org> (sfid-20150901_021337_234782_97EAA556)
-References: <loom.20150829T071838-73@post.gmane.org> <CALx5=V8=fWseiOPfTB63iX-MoA3gcfUF5HfZ8maC8wpxvNQ3_A@mail.gmail.com> <CALx5=V-FtgTg8b_mp8R-g5WX_0EmRwGKviBUjLLCWfO4Uhx5aQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.codeaurora.org ([198.145.29.96]:58245 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbbI2FYy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 01:24:54 -0400
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 2/2] ath9k: fix QCA9561 XLNA rxgain initial
+Date: Tue, 29 Sep 2015 13:24:37 +0800
+Message-Id: <1443504277-3482-2-git-send-email-miaoqing@codeaurora.org> (sfid-20150929_072457_312861_4B78934E)
+In-Reply-To: <1443504277-3482-1-git-send-email-miaoqing@codeaurora.org>
+References: <1443504277-3482-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, using the distro's kernel version 3.19 and drivers remedied the problem.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
+A small bugfix for commit ede6a5e7b859 ("ath9k: Add QCA956x HW support").
+I guess I would have skipped renaming (that initial QCA956x commit has
+been there already for almost a year with the "5g" in the name) and move
+the call outside AR_SREV_9462_20_OR_LATER() to make it reachable.
 
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 296a69e..201425e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -929,16 +929,15 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 			REG_WRITE_ARRAY(&ah->ini_modes_rxgain_xlna,
+ 					modesIndex, regWrites);
+ 		}
+-
+-		if (AR_SREV_9561(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
+-			REG_WRITE_ARRAY(&ah->ini_modes_rxgain_xlna,
+-					modesIndex, regWrites);
+ 	}
+ 
+ 	if (AR_SREV_9550(ah) || AR_SREV_9561(ah))
+ 		REG_WRITE_ARRAY(&ah->ini_modes_rx_gain_bounds, modesIndex,
+ 				regWrites);
+ 
++	if (AR_SREV_9561(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
++		REG_WRITE_ARRAY(&ah->ini_modes_rxgain_xlna,
++				modesIndex, regWrites);
+ 	/*
+ 	 * TXGAIN initvals.
+ 	 */
+-- 
+1.9.1
 
