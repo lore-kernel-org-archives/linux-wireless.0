@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34650 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbbIJTPx (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:31495 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754463AbbI2CcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:53 -0400
-Received: by padhy16 with SMTP id hy16so50968825pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:53 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	Mon, 28 Sep 2015 22:32:14 -0400
+Date: Tue, 29 Sep 2015 05:31:53 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Chandra S Gorentla <csgorentla@gmail.com>
+Cc: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 24/31] staging: wilc1000: rename WILC_WFI_flush_pmksa
-Date: Fri, 11 Sep 2015 04:14:23 +0900
-Message-Id: <1441912470-3371-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211558_460752_B4AF41F9)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Replace message queue
+ with standard Linux lists
+Message-ID: <20150929023152.GD7289@mwanda> (sfid-20150929_043228_499908_397A8D57)
+References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_flush_pmksa with wilc_flush_pmksa to avoid
-CamelCase.
+On Mon, Sep 28, 2015 at 11:43:55PM +0530, Chandra S Gorentla wrote:
+>  - The message queue is replaced with standard Linux linked list
+>  - kmem_cache is used for list members
+>  - A check for return value of receive method is added
+>  - GFP_ATOMIC is changed to GFP_KERNEL
+>  - A few other related minor changes
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+These should be listed and explained.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+>  
+>  	while (1) {
+> -		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
+> +		ret = wilc_mq_recv(&gMsgQHostIF, &msg,
+> +					sizeof(struct host_if_msg), &u32Ret);
+> +		if (ret)
+> +			continue;
+> +
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 96c94e59..c7cc1a2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1981,7 +1981,7 @@ static int wilc_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- }
- 
- /**
-- *  @brief      WILC_WFI_flush_pmksa
-+ *  @brief      wilc_flush_pmksa
-  *  @details    Flush all cached PMKIDs.
-  *  @param[in]
-  *  @return     int : Return 0 on Success
-@@ -1989,7 +1989,7 @@ static int wilc_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int  WILC_WFI_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
-+static int  wilc_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- {
- 	struct WILC_WFI_priv *priv = wiphy_priv(wiphy);
- 
-@@ -3585,7 +3585,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 
- 	.set_pmksa = wilc_set_pmksa,
- 	.del_pmksa = wilc_del_pmksa,
--	.flush_pmksa = WILC_WFI_flush_pmksa,
-+	.flush_pmksa = wilc_flush_pmksa,
- #ifdef WILC_P2P
- 	.remain_on_channel = WILC_WFI_remain_on_channel,
- 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
--- 
-2.5.1
+I asked before if this was a forever loop and never got a response.
+Also what does this have to do with list macros?
 
+regards,
+dan carpenter
