@@ -1,70 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:29090 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754481AbbIQJbc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35122 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755683AbbI2Hi7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 05:31:32 -0400
-Subject: Re: [PATCH 1/4] staging: wilc1000: Modify null check routine
-To: Nicolas Ferre <nicolas.ferre@atmel.com>, <leo.kim@atmel.com>
-References: <1442479806-10737-1-git-send-email-tony.cho@atmel.com>
- <55FA8299.5060606@atmel.com>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
-	<chris.park@atmel.com>, <rachel.kim@atmel.com>,
-	<glen.lee@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <55FA8870.4080301@atmel.com> (sfid-20150917_113138_875789_5EFDCC04)
-Date: Thu, 17 Sep 2015 18:31:28 +0900
+	Tue, 29 Sep 2015 03:38:59 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <55FA8299.5060606@atmel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Subject: Re: carl9170: fix bad rssi reading
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1441908285-606-1-git-send-email-hiroaki.kawai@gmail.com>
+To: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+Message-Id: <20150929073858.7C6D1140C83@smtp.codeaurora.org> (sfid-20150929_093902_420086_4CBE3DF5)
+Date: Tue, 29 Sep 2015 07:38:58 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+> Fix rssi calculation error which was introduced in otus to ar9170
+> porting.
+> 
+> Signed-off-by: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
-On 2015년 09월 17일 18:06, Nicolas Ferre wrote:
-> Le 17/09/2015 10:50, Tony Cho a écrit :
->> From: Leo Kim <leo.kim@atmel.com>
->>
->> This patch modify null check routine.
->> - Null check error non return. (Handle_RcvdGnrlAsyncInfo)
-> It doesn't parse...
->
-> Is it fixing a bug? What were the consequences without the return?
->
-> Bye,
+Thanks, applied to wireless-drivers-next.git.
 
-I think commit log is not enough to explain what this commit is.
-
-I will resend this series of patch as v2. do you have any concern?
-Thanks,
-Tony.
-
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
-  drivers/staging/wilc1000/host_interface.c | 4 +++-
-  1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6fdf392..a9eaa8f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2403,8 +2403,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
-  	s32 s32Err = 0;
-  	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
-  
--	if (pstrWFIDrv == NULL)
-+	if (!pstrWFIDrv) {
-  		PRINT_ER("Driver handler is NULL\n");
-+		return -EFAULT;
-+	}
-  	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", pstrWFIDrv->enuHostIFstate,
-  		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
-  
-
->
-
+Kalle Valo
