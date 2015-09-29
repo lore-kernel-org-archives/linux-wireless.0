@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36546 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755247AbbIAH4A (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34531 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755696AbbI2H3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 03:56:00 -0400
-Received: by lbvd4 with SMTP id d4so37772562lbv.3
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2015 00:55:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH iw] iw: display interface TX power if available
-Date: Tue,  1 Sep 2015 09:55:52 +0200
-Message-Id: <1441094152-10977-1-git-send-email-zajec5@gmail.com> (sfid-20150901_095603_036555_7CBF1B31)
+	Tue, 29 Sep 2015 03:29:23 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [01/12] brcmfmac: consolidate ifp lookup in driver core
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1440620104-2715-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20150929072923.29284140B8B@smtp.codeaurora.org> (sfid-20150929_092939_042914_1B9A6152)
+Date: Tue, 29 Sep 2015 07:29:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This makes use of the recently submitted patch
-[PATCH] nl80211: put current TX power in interface info
----
- interface.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/interface.c b/interface.c
-index 73ccecd..13806ba 100644
---- a/interface.c
-+++ b/interface.c
-@@ -367,6 +367,8 @@ static int print_iface_handler(struct nl_msg *msg, void *arg)
- 
- 		printf("\n");
- 	}
-+	if (tb_msg[NL80211_ATTR_WIPHY_TX_POWER_LEVEL])
-+		printf("%s\ttxpower %d mBm\n", indent, nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_TX_POWER_LEVEL]));
- 
- 	return NL_SKIP;
- }
--- 
-1.8.4.5
+> In rx path the firmware provide an interface index which is used to
+> map to a struct brcmf_if instance. However, this involves some trick
+> that is done in two places. This is changed by having driver core
+> providing brcmf_get_ifp() function.
+> 
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
+Thanks, 12 patches applied to wireless-drivers-next.git:
+
+75effb03ee8e brcmfmac: consolidate ifp lookup in driver core
+796cfb65e3ed brcmfmac: make brcmf_proto_hdrpull() return struct brcmf_if instance
+ee6e3a3414a4 brcmfmac: change parameters for brcmf_remove_interface()
+1c626cf472fc brcmfmac: only call brcmf_cfg80211_detach() when attach was successful
+ddddfed2f9d8 brcmfmac: correct detection of p2pdev interface event
+46f3b6ee4838 brcmfmac: use brcmf_get_ifp() to map ifidx to struct brcmf_if instance
+054e68add659 brcmfmac: pass struct brcmf_if instance in brcmf_txfinalize()
+291da87b6910 brcmfmac: add mapping for interface index to bsscfg index
+9d6c1dc4f913 brcmfmac: add dedicated debug level for firmware console logging
+03cca20a6ee1 brcmfmac: remove ifidx parameter from brcmf_fws_txstatus_suppressed()
+c67d41ba6ff3 brcmfmac: change prototype for brcmf_fws_hdrpull()
+95ef12394a4d brcmfmac: introduce brcmf_net_detach() function
+
+Kalle Valo
