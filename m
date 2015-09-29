@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56469 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbbIGEYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2015 00:24:42 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
-	<wrfjfv2rf1e1.fsf@redhat.com>
-Date: Mon, 07 Sep 2015 00:24:38 -0400
-In-Reply-To: <wrfjfv2rf1e1.fsf@redhat.com> (Jes Sorensen's message of "Sun, 06
-	Sep 2015 21:45:26 -0400")
-Message-ID: <wrfj37yqg8l5.fsf@redhat.com> (sfid-20150907_062445_605072_229861AD)
+Received: from smtp.codeaurora.org ([198.145.29.96]:37656 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932623AbbI2III (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 04:08:08 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v3,1/2] airo: fix IW_AUTH_ALG_OPEN_SYSTEM
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1442843065-30234-1-git-send-email-linux@rainbow-software.org>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	netdev@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Message-Id: <20150929080807.80C6D13F6A5@smtp.codeaurora.org> (sfid-20150929_100815_500543_E6DFE22F)
+Date: Tue, 29 Sep 2015 08:08:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->> Jes.Sorensen@redhat.com writes:
->>
->>> Per default only devices I have actually tested will be enabled. If
->>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
->>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
->>> test results back to me.
->>>
->>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
->>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
->>> to which module you load and/or use modprobe blacklists.
->>
->> May clash? So how does this work in practise? Is the clash referring
->> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
->>
->> I think we should only have one driver automatically supporting certain
->> hardware, and not have a driver randomly chosen and forcing users to use
->> a blacklist.
->
-> We already have the clash, if you enable CONFIG_RTL8192U in staging it
-> clashes with rtlwifi's CONFIG_RTL8192CU. Ripping out the above two
-> drivers at this point isn't going to do users any good.
->
->> Also how do we make sure that distros don't enable
->> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
->> without thinking.
->
-> Some distros enable staging whether you ask them or not. I think
-> CONFIG_RTL8XXXYU_UNTESTED is pretty safe and will most likely just work
-> for the devices on that list, but the driver will spit out a warning
-> asking the person to report test results to me.
 
-Just one more note - we could put UNTESTED under EXPERIMENTAL
+> IW_AUTH_ALG_OPEN_SYSTEM is ambiguous in set_auth for WEP as
+> wpa_supplicant uses it for both no encryption and WEP open system.
+> Cache the last mode set (only of these two) and use it here.
+> 
+> This allows wpa_supplicant to work with unencrypted APs.
+> 
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
-Cheers,
-Jes
+Thanks, 2 patches applied to wireless-drivers-next.git:
+
+4a0f2ea79797 airo: fix IW_AUTH_ALG_OPEN_SYSTEM
+2b8fa9e870b7 airo: Implement netif_carrier_on/off
+
+Kalle Valo
