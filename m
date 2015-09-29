@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59304 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557AbbIYGyT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 02:54:19 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 0/7] ath10k: add copy engine fast path support
-Date: Fri, 25 Sep 2015 12:23:29 +0530
-Message-ID: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150925_085423_344087_358C741B)
+Received: from r00tworld.com ([212.85.137.150]:51740 "EHLO r00tworld.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935119AbbI2Pd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 11:33:28 -0400
+From: "PaX Team" <pageexec@freemail.hu>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 29 Sep 2015 17:21:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: question about potential integer truncation in mwifiex_set_wapi_ie and mwifiex_set_wps_ie
+Reply-to: pageexec@freemail.hu
+CC: Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	re.emese@gmail.com, spender@grsecurity.net
+Message-ID: <560AAC78.14106.6193CAA9@pageexec.freemail.hu> (sfid-20150929_173437_941244_F44E1CCD)
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Below patchset adds fast path support for uplink traffic by bypassing
-HTC layer processing. This is enabled by making use of unused copy
-engine 5 to receive HTT messages directly from HIF layer. From initial
-validation in VHT80/5G mode TCP UL is improved to 900Mbps from ~840Mbps
-in conducted test.
+hi all,
 
--Rajkumar
+in drivers/net/wireless/mwifiex/sta_ioctl.c the following functions
 
-Rajkumar Manoharan (7):
-  ath10k: export htc tx rx handlers
-  ath10k: register per copy engine send completion callbacks
-  ath10k: register per copy engine receive callbacks
-  ath10k: export htt tx rx handlers
-  ath10k: Configure copy engine 5 for HTT messages
-  ath10k: remove unused dl_is_polled
-  ath10k: remove htc polling for tx completion
+	mwifiex_set_wpa_ie_helper
+	mwifiex_set_wapi_ie
+	mwifiex_set_wps_ie
 
- drivers/net/wireless/ath/ath10k/ce.c     |   8 +-
- drivers/net/wireless/ath/ath10k/ce.h     |   7 +-
- drivers/net/wireless/ath/ath10k/hif.h    |  26 +------
- drivers/net/wireless/ath/ath10k/htc.c    |  51 ++----------
- drivers/net/wireless/ath/ath10k/htc.h    |   4 +-
- drivers/net/wireless/ath/ath10k/htt.h    |   1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |   1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c |   6 ++
- drivers/net/wireless/ath/ath10k/pci.c    | 129 ++++++++++++++++++++-----------
- drivers/net/wireless/ath/ath10k/pci.h    |   2 -
- 10 files changed, 108 insertions(+), 127 deletions(-)
+can truncate the incoming ie_len argument from u16 to u8 when it gets
+stored in mwifiex_private.wpa_ie_len, mwifiex_private.wapi_ie_len and
+mwifiex_private.wps_ie_len, respectively. based on some light code
+reading it seems a length value of 256 is valid (IEEE_MAX_IE_SIZE and
+MWIFIEX_MAX_VSIE_LEN seem to limit it) and thus would get truncated
+to 0 when stored in those u8 fields. the question is whether this is
+intentional or a bug somewhere.
 
--- 
-2.5.2
+FTR, this issue was detected with the upcoming version of the size overflow
+plugin we have in PaX/grsecurity and there're a handful of similar cases in
+the tree where potentially unwanted or unnecessary integer truncations occur,
+this being one of these. any opinion/help is welcome!
+
+cheers,
+  PaX Team
 
