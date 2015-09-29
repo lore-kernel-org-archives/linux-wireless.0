@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:40978 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933168AbbIYUa3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36964 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835AbbI2H50 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 16:30:29 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 22:58:42 +0200
-Message-ID: <2524822.pQu4UKMrlb@vostro.rjw.lan> (sfid-20150925_223051_926460_ED18CD14)
-In-Reply-To: <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <4357538.Wlf88yQie6@vostro.rjw.lan> <CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
+	Tue, 29 Sep 2015 03:57:26 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: Re: [01/16] brcmfmac: Fix exception handling.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1442606899-31872-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20150929075725.D0D56140F8E@smtp.codeaurora.org> (sfid-20150929_095749_006702_FE47D49A)
+Date: Tue, 29 Sep 2015 07:57:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, September 25, 2015 01:25:49 PM Viresh Kumar wrote:
-> On 25 September 2015 at 13:33, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > You're going to change that into bool in the next patch, right?
-> 
-> Yeah.
-> 
-> > So what if bool is a byte and the field is not word-aligned
-> 
-> Its between two 'unsigned long' variables today, and the struct isn't packed.
-> So, it will be aligned, isn't it?
-> 
-> > and changing
-> > that byte requires a read-modify-write.  How do we ensure that things remain
-> > consistent in that case?
-> 
-> I didn't understood why a read-modify-write is special here? That's
-> what will happen
-> to most of the non-word-sized fields anyway?
-> 
-> Probably I didn't understood what you meant..
 
-Say you have three adjacent fields in a structure, x, y, z, each one byte long.
-Initially, all of them are equal to 0.
+> From: Hante Meuleman <meuleman@broadcom.com>
+> 
+> In some exception situations the ifp->vif was not properly assigned
+> which could result in crash.
+> 
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-CPU A writes 1 to x and CPU B writes 2 to y at the same time.
+Thanks, 16 patches applied to wireless-drivers-next.git:
 
-What's the result?
+2b5d348ee786 brcmfmac: Fix exception handling.
+e3c92cb2eea3 brcmfmac: Add support for the BCM4350 PCIE device.
+60dc35ef9ffd brcmfmac: Fix set and get tx-power functions.
+6ea696eb4e26 brcmfmac: Only assign primary netdev to if2bss array.
+ae7c03f68ee2 brcmfmac: Inform p2p module about p2pon through API
+9f64df940cfe brcmfmac: Fix bug in flowring management.
+43e55a2a1cf0 brcmfmac: Make p2pon module param always available.
+178e9ef9b6c6 brcmfmac: Workaround in change vif for wpa_supplicant support.
+9831bcb987df brcmfmac: Deleting of p2p device is leaking memory.
+d1bb34c128f5 brcmfmac: Only handle p2p_stop_device if vif is valid
+35a3cbcc49b5 brcmfmac: Fix p2p bug for older firmwares.
+8268c2011d25 brcmfmac: Add module parameter to disable features.
+a2044d91d9d2 brcmfmac: Fix race condition bug when deleting p2p interface.
+55acca90da52 brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices.
+cb8dc71f516a brcmfmac: Fix TDLS setup by properly handling p2p noif.
+29b93c0e3c38 brcmfmac: Accept events when TDLS is used in combination with p2p.
 
-Thanks,
-Rafael
-
+Kalle Valo
