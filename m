@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:39762 "EHLO hauke-m.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51325 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754430AbbISKkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 06:40:03 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: emmanuel.grumbach@intel.com
-Cc: johannes.berg@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
-Date: Sat, 19 Sep 2015 12:39:50 +0200
-Message-Id: <1442659190-6060-1-git-send-email-hauke@hauke-m.de> (sfid-20150919_124007_995516_62A820AE)
+	id S1752673AbbI3ROe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 13:14:34 -0400
+Message-ID: <1443633267.1859.11.camel@sipsolutions.net> (sfid-20150930_191437_446438_784AADED)
+Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Date: Wed, 30 Sep 2015 19:14:27 +0200
+In-Reply-To: <560C036C.7000401@candelatech.com>
+References: <5605D228.7050609@candelatech.com>
+	 (sfid-20150926_010105_789618_F93D668E) <1443595615.1859.2.camel@sipsolutions.net>
+	 <560BFABC.8090504@candelatech.com>
+	 <1443626224.1859.9.camel@sipsolutions.net>
+	 <560C036C.7000401@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-modinfo iwlwifi showed the following required firmware:
-firmware: iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
+On Wed, 2015-09-30 at 08:44 -0700, Ben Greear wrote:
+> 
+> Any idea how this could be done in the stack instead of the driver?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't see why it should be?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 6951aba..bccd2d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -348,6 +348,6 @@ const struct iwl_cfg iwl7265d_n_cfg = {
- };
- 
- MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3165_UCODE_API_OK));
- MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
- MODULE_FIRMWARE(IWL7265D_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--- 
-2.1.4
+> The problem is that this is a receiver-side issue, so even if I manage
+> to hack the ath10k firmware or driver rx logic, it would not fix any other
+> IBSS peer connected to ath10k peer.
+> 
 
+You mean it's a transmitter-side issue? In that case you should
+probably simply disable aggregation on the broken transmitter ...
+
+johannes
