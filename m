@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36319 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbbIQGyX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2015 02:54:23 -0400
-Date: Thu, 17 Sep 2015 12:23:59 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Ronit Halder <ronit.crj@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, rachel.kim@atmel.com,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	linux-kernel@vger.kernel.org, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH v2 1/2] Staging: wilc1000: Use NULL instead of zero
-Message-ID: <20150917065359.GA9199@sudip-pc> (sfid-20150917_085438_802296_FF831E7B)
-References: <1442309698-12393-1-git-send-email-ronit.crj@gmail.com>
- <20150915135424.GA29308@kroah.com>
- <CAAm8cU6AvgQ5xYjbxZHd0bZ=sU6zwuqJYFbfC9VUF1YUh3AfxA@mail.gmail.com>
- <20150917022207.GA1753@kroah.com>
- <1442458732.13630.14.camel@roni-HP>
- <20150917031541.GA8579@kroah.com>
- <1442461175.13630.20.camel@roni-HP>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442461175.13630.20.camel@roni-HP>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51636 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932885AbbI3Sac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 14:30:32 -0400
+Message-ID: <1443637830.1859.17.camel@sipsolutions.net> (sfid-20150930_203036_792474_D5ECDC68)
+Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Date: Wed, 30 Sep 2015 20:30:30 +0200
+In-Reply-To: <560C19F3.6070903@candelatech.com>
+References: <5605D228.7050609@candelatech.com>
+	 (sfid-20150926_010105_789618_F93D668E) <1443595615.1859.2.camel@sipsolutions.net>
+	 <560BFABC.8090504@candelatech.com>
+	 <1443626224.1859.9.camel@sipsolutions.net>
+	 <560C036C.7000401@candelatech.com>
+	 <1443633267.1859.11.camel@sipsolutions.net>
+	 <560C19F3.6070903@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 09:09:35AM +0530, Ronit Halder wrote:
-> On Wed, 2015-09-16 at 20:15 -0700, Greg KH wrote:
-> > On Thu, Sep 17, 2015 at 08:28:52AM +0530, roni wrote:
-<snip>
-> > 
-> > I don't remember, that was many hundreds of patches ago, sorry.  Try it
-> > yourself to see if I messed up.  Perhaps someone else had already sent
-> > in that same change before you did?
+On Wed, 2015-09-30 at 10:20 -0700, Ben Greear wrote:
 > 
-> git-apply shows no error if I apply second patch on
-> staging/staging-testing.
-If you think your patch still applies properly then please resend it.
+> Yes, it is a transmitter side problem, and A-MSDU on IBSS
+> is disabled by default in all ath10k firmware versions that I am aware of.
 
-regards
-sudip
+Right.
+
+> I was hoping there might be a way to allow A-MSDU + IBSS + ath10k
+> to work in future kernels without applying out-of-tree
+> kernel hacks.  This would let people with appropriate firmware
+> enable IBSS + A-MSDU for added performance in cases where they
+> knew the peer could support the needed work-around.
+> 
+> I don't think it is worth a lot of effort, but if it were relatively
+> simple to fix, then maybe it is worth it.
+> 
+
+Had it been a receiver-side issue, then it'd seem reasonable to work
+around it. But it being a transmitter-side issue it doesn't really seem
+so - *every* possible peer would have to be adjusted, and some might
+not even be able to get adjusted (e.g. devices that have A-MSDU
+deaggregation in hardware/firmware) ...
+
+So to do that properly you'd have to advertise some sort of quirk
+vendor IE, and all that, which seems excessive given the limited use.
+
+johannes
