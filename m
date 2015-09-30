@@ -1,497 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:33432 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308AbbIUJE3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49179 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbbI3DJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 05:04:29 -0400
-Received: by lamp12 with SMTP id p12so62714208lam.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 02:04:27 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][RFC][RFT] ssb: pick PCMCIA host code support from b43 driver
-Date: Mon, 21 Sep 2015 11:04:19 +0200
-Message-Id: <1442826259-6270-1-git-send-email-zajec5@gmail.com> (sfid-20150921_110434_301885_E296EA5E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Sep 2015 23:09:41 -0400
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, lkp@intel.com,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2] ath9k: feeding entropy in kernel from ADC capture
+Date: Wed, 30 Sep 2015 11:09:28 +0800
+Message-Id: <1443582568-1216-1-git-send-email-miaoqing@codeaurora.org> (sfid-20150930_050944_206309_7E711E93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb bus can be found on various "host" devices like PCI/PCMCIA/SDIO.
-Every ssb bus contains cores AKA devices.
-The main idea is to have ssb driver scan/initialize bus and register
-ready-to-use cores. This way ssb drivers can operate on a single core
-mostly ignoring underlaying details.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-For some reason PCMCIA support was split between ssb and b43. We got
-PCMCIA host device probing in b43, then bus scanning in ssb and then
-wireless core probing back in b43. The truth is it's very unlikely we
-will ever see PCMCIA ssb device with no 802.11 core but I still don't
-see any advantage of the current architecture.
+This patch is derived from
+commit 6301566e0b2d ("ath9k: export HW random number generator"),
 
-With proposed change we get the same functionality with a simpler
-architecture, less Kconfig symbols, one killed EXPORT and hopefully
-cleaner b43. Since b43 supports both: ssb & bcma I prefer to keep ssb
-specific code in ssb driver.
+We evaluated the entropy of the ADC data on QCA9531, QCA9561, QCA955x,
+and AR9340, and it has sufficient quality random data (at least 10 bits
+and up to 22 bits of min-entropy for a 32-bit value). We conservatively
+assume the min-entropy is 10 bits out of 32 bits. Thus, ATH9K_RNG_BUF_SIZE
+is set to 320 (u32) i.e., 1.25 kilobytes of data is inserted to fill up
+the pool as soon as the entropy counter becomes 896/4096 (set by random.c).
+Since ADC was not designed to be a dedicated HW RNG, we do not want to bind
+it to /dev/hwrng framework directly. This patch feeds the entropy directly
+from the WiFi driver to the input pool. The ADC register output is only
+used as a seed for the Linux entropy pool. No conditioning is needed,
+since all the conditioning is performed by the pool itself.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/b43/Kconfig  |  20 ------
- drivers/net/wireless/b43/Makefile |   1 -
- drivers/net/wireless/b43/main.c   |   9 +--
- drivers/net/wireless/b43/pcmcia.c | 145 --------------------------------------
- drivers/net/wireless/b43/pcmcia.h |  20 ------
- drivers/ssb/main.c                |   8 ++-
- drivers/ssb/pcmcia.c              | 110 +++++++++++++++++++++++++++++
- drivers/ssb/ssb_private.h         |   9 +++
- 8 files changed, 127 insertions(+), 195 deletions(-)
- delete mode 100644 drivers/net/wireless/b43/pcmcia.c
- delete mode 100644 drivers/net/wireless/b43/pcmcia.h
+ drivers/net/wireless/ath/ath9k/Kconfig  |  11 ++++
+ drivers/net/wireless/ath/ath9k/Makefile |   1 +
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  22 +++++++
+ drivers/net/wireless/ath/ath9k/main.c   |   4 ++
+ drivers/net/wireless/ath/ath9k/rng.c    | 106 ++++++++++++++++++++++++++++++++
+ 5 files changed, 144 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 759fb8d..fba8560 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -71,26 +71,6 @@ config B43_PCICORE_AUTOSELECT
- 	select SSB_DRIVER_PCICORE
- 	default y
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index fee0cad..40fa915 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -176,3 +176,14 @@ config ATH9K_HTC_DEBUGFS
+ 	depends on ATH9K_HTC && DEBUG_FS
+ 	---help---
+ 	  Say Y, if you need access to ath9k_htc's statistics.
++
++config ATH9K_HWRNG
++	bool "Random number generator support"
++	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
++	default y
++	---help---
++	  This option incorporates the ADC register output as a source of
++	  randomness into Linux entropy pool (/dev/urandom and /dev/random)
++
++	  Say Y, feeds the entropy directly from the WiFi driver to the input
++	  pool.
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index ecda613..76f9dc3 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
+ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
+ ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
+ ath9k-$(CONFIG_ATH9K_WOW) += wow.o
++ath9k-$(CONFIG_ATH9K_HWRNG) += rng.o
  
--config B43_PCMCIA
--	bool "Broadcom 43xx PCMCIA device support"
--	depends on B43 && B43_SSB && SSB_PCMCIAHOST_POSSIBLE
--	select SSB_PCMCIAHOST
--	---help---
--	  Broadcom 43xx PCMCIA device support.
--
--	  Support for 16bit PCMCIA devices.
--	  Please note that most PC-CARD devices are _NOT_ 16bit PCMCIA
--	  devices, but 32bit CardBUS devices. CardBUS devices are supported
--	  out of the box by b43.
--
--	  With this config option you can drive b43 cards in
--	  CompactFlash formfactor in a PCMCIA adaptor.
--	  CF b43 cards can sometimes be found in handheld PCs.
--
--	  It's safe to select Y here, even if you don't have a B43 PCMCIA device.
--
--	  If unsure, say N.
--
- config B43_SDIO
- 	bool "Broadcom 43xx SDIO device support"
- 	depends on B43 && B43_SSB && SSB_SDIOHOST_POSSIBLE
-diff --git a/drivers/net/wireless/b43/Makefile b/drivers/net/wireless/b43/Makefile
-index c624d4d..ddc4df4 100644
---- a/drivers/net/wireless/b43/Makefile
-+++ b/drivers/net/wireless/b43/Makefile
-@@ -21,7 +21,6 @@ b43-y				+= pio.o
- b43-y				+= rfkill.o
- b43-y				+= ppr.o
- b43-$(CONFIG_B43_LEDS)		+= leds.o
--b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
- b43-$(CONFIG_B43_SDIO)		+= sdio.o
- b43-$(CONFIG_B43_DEBUG)		+= debugfs.o
+ ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
  
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2849070..ba792ae09 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -56,7 +56,6 @@
- #include "sysfs.h"
- #include "xmit.h"
- #include "lo.h"
--#include "pcmcia.h"
- #include "sdio.h"
- #include <linux/mmc/sdio_func.h>
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c85c479..cd74f68 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -23,6 +23,7 @@
+ #include <linux/leds.h>
+ #include <linux/completion.h>
+ #include <linux/time.h>
++#include <linux/hw_random.h>
  
-@@ -5849,12 +5848,9 @@ static int __init b43_init(void)
- 	int err;
- 
- 	b43_debugfs_init();
--	err = b43_pcmcia_init();
--	if (err)
--		goto err_dfs_exit;
- 	err = b43_sdio_init();
- 	if (err)
--		goto err_pcmcia_exit;
-+		goto err_dfs_exit;
- #ifdef CONFIG_B43_BCMA
- 	err = bcma_driver_register(&b43_bcma_driver);
- 	if (err)
-@@ -5877,8 +5873,6 @@ err_bcma_driver_exit:
- err_sdio_exit:
+ #include "common.h"
+ #include "debug.h"
+@@ -1039,6 +1040,11 @@ struct ath_softc {
+ 	u32 wow_intr_before_sleep;
+ 	bool force_wow;
  #endif
- 	b43_sdio_exit();
--err_pcmcia_exit:
--	b43_pcmcia_exit();
- err_dfs_exit:
- 	b43_debugfs_exit();
- 	return err;
-@@ -5893,7 +5887,6 @@ static void __exit b43_exit(void)
- 	bcma_driver_unregister(&b43_bcma_driver);
- #endif
- 	b43_sdio_exit();
--	b43_pcmcia_exit();
- 	b43_debugfs_exit();
++
++#ifdef CONFIG_ATH9K_HWRNG
++	u32 rng_last;
++	struct task_struct *rng_task;
++#endif
+ };
+ 
+ /********/
+@@ -1061,6 +1067,22 @@ static inline int ath9k_tx99_send(struct ath_softc *sc,
  }
+ #endif /* CONFIG_ATH9K_TX99 */
  
-diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
-deleted file mode 100644
-index 55f2bd7..0000000
---- a/drivers/net/wireless/b43/pcmcia.c
-+++ /dev/null
-@@ -1,145 +0,0 @@
--/*
--
--  Broadcom B43 wireless driver
--
--  Copyright (c) 2007 Michael Buesch <m@bues.ch>
--
--  This program is free software; you can redistribute it and/or modify
--  it under the terms of the GNU General Public License as published by
--  the Free Software Foundation; either version 2 of the License, or
--  (at your option) any later version.
--
--  This program is distributed in the hope that it will be useful,
--  but WITHOUT ANY WARRANTY; without even the implied warranty of
--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--  GNU General Public License for more details.
--
--  You should have received a copy of the GNU General Public License
--  along with this program; see the file COPYING.  If not, write to
--  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
--  Boston, MA 02110-1301, USA.
--
--*/
--
--#include "pcmcia.h"
--
--#include <linux/ssb/ssb.h>
--#include <linux/slab.h>
--#include <linux/module.h>
--
--#include <pcmcia/cistpl.h>
--#include <pcmcia/ciscode.h>
--#include <pcmcia/ds.h>
--#include <pcmcia/cisreg.h>
--
--
--static const struct pcmcia_device_id b43_pcmcia_tbl[] = {
--	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
--	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
--	PCMCIA_DEVICE_NULL,
--};
--
--MODULE_DEVICE_TABLE(pcmcia, b43_pcmcia_tbl);
--
--#ifdef CONFIG_PM
--static int b43_pcmcia_suspend(struct pcmcia_device *dev)
--{
--	struct ssb_bus *ssb = dev->priv;
--
--	return ssb_bus_suspend(ssb);
--}
--
--static int b43_pcmcia_resume(struct pcmcia_device *dev)
--{
--	struct ssb_bus *ssb = dev->priv;
--
--	return ssb_bus_resume(ssb);
--}
--#else /* CONFIG_PM */
--# define b43_pcmcia_suspend		NULL
--# define b43_pcmcia_resume		NULL
--#endif /* CONFIG_PM */
--
--static int b43_pcmcia_probe(struct pcmcia_device *dev)
--{
--	struct ssb_bus *ssb;
--	int err = -ENOMEM;
--	int res = 0;
--
--	ssb = kzalloc(sizeof(*ssb), GFP_KERNEL);
--	if (!ssb)
--		goto out_error;
--
--	err = -ENODEV;
--
--	dev->config_flags |= CONF_ENABLE_IRQ;
--
--	dev->resource[2]->flags |=  WIN_ENABLE | WIN_DATA_WIDTH_16 |
--			 WIN_USE_WAIT;
--	dev->resource[2]->start = 0;
--	dev->resource[2]->end = SSB_CORE_SIZE;
--	res = pcmcia_request_window(dev, dev->resource[2], 250);
--	if (res != 0)
--		goto err_kfree_ssb;
--
--	res = pcmcia_map_mem_page(dev, dev->resource[2], 0);
--	if (res != 0)
--		goto err_disable;
--
--	if (!dev->irq)
--		goto err_disable;
--
--	res = pcmcia_enable_device(dev);
--	if (res != 0)
--		goto err_disable;
--
--	err = ssb_bus_pcmciabus_register(ssb, dev, dev->resource[2]->start);
--	if (err)
--		goto err_disable;
--	dev->priv = ssb;
--
--	return 0;
--
--err_disable:
--	pcmcia_disable_device(dev);
--err_kfree_ssb:
--	kfree(ssb);
--out_error:
--	printk(KERN_ERR "b43-pcmcia: Initialization failed (%d, %d)\n",
--	       res, err);
--	return err;
--}
--
--static void b43_pcmcia_remove(struct pcmcia_device *dev)
--{
--	struct ssb_bus *ssb = dev->priv;
--
--	ssb_bus_unregister(ssb);
--	pcmcia_disable_device(dev);
--	kfree(ssb);
--	dev->priv = NULL;
--}
--
--static struct pcmcia_driver b43_pcmcia_driver = {
--	.owner		= THIS_MODULE,
--	.name		= "b43-pcmcia",
--	.id_table	= b43_pcmcia_tbl,
--	.probe		= b43_pcmcia_probe,
--	.remove		= b43_pcmcia_remove,
--	.suspend	= b43_pcmcia_suspend,
--	.resume		= b43_pcmcia_resume,
--};
--
--/*
-- * These are not module init/exit functions!
-- * The module_pcmcia_driver() helper cannot be used here.
-- */
--int b43_pcmcia_init(void)
--{
--	return pcmcia_register_driver(&b43_pcmcia_driver);
--}
--
--void b43_pcmcia_exit(void)
--{
--	pcmcia_unregister_driver(&b43_pcmcia_driver);
--}
-diff --git a/drivers/net/wireless/b43/pcmcia.h b/drivers/net/wireless/b43/pcmcia.h
-deleted file mode 100644
-index 85f120a..0000000
---- a/drivers/net/wireless/b43/pcmcia.h
-+++ /dev/null
-@@ -1,20 +0,0 @@
--#ifndef B43_PCMCIA_H_
--#define B43_PCMCIA_H_
--
--#ifdef CONFIG_B43_PCMCIA
--
--int b43_pcmcia_init(void);
--void b43_pcmcia_exit(void);
--
--#else /* CONFIG_B43_PCMCIA */
--
--static inline int b43_pcmcia_init(void)
--{
--	return 0;
--}
--static inline void b43_pcmcia_exit(void)
--{
--}
--
--#endif /* CONFIG_B43_PCMCIA */
--#endif /* B43_PCMCIA_H_ */
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 8cf23a2..90ec6a0 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -897,7 +897,6 @@ int ssb_bus_pcmciabus_register(struct ssb_bus *bus,
- 
- 	return err;
- }
--EXPORT_SYMBOL(ssb_bus_pcmciabus_register);
- #endif /* CONFIG_SSB_PCMCIAHOST */
- 
- #ifdef CONFIG_SSB_SDIOHOST
-@@ -1464,6 +1463,12 @@ static int __init ssb_modinit(void)
- 		/* don't fail SSB init because of this */
- 		err = 0;
- 	}
-+	err = ssb_host_pcmcia_init();
-+	if (err) {
-+		ssb_err("PCMCIA host initialization failed\n");
-+		/* don't fail SSB init because of this */
-+		err = 0;
-+	}
- 	err = ssb_gige_init();
- 	if (err) {
- 		ssb_err("SSB Broadcom Gigabit Ethernet driver initialization failed\n");
-@@ -1481,6 +1486,7 @@ fs_initcall(ssb_modinit);
- static void __exit ssb_modexit(void)
++/***************************/
++/* Random Number Generator */
++/***************************/
++#ifdef CONFIG_ATH9K_HWRNG
++void ath9k_rng_start(struct ath_softc *sc);
++void ath9k_rng_stop(struct ath_softc *sc);
++#else
++static inline void ath9k_rng_start(struct ath_softc *sc)
++{
++}
++
++static inline void ath9k_rng_stop(struct ath_softc *sc)
++{
++}
++#endif
++
+ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
  {
- 	ssb_gige_exit();
-+	ssb_host_pcmcia_exit();
- 	b43_pci_ssb_bridge_exit();
- 	bus_unregister(&ssb_bustype);
- }
-diff --git a/drivers/ssb/pcmcia.c b/drivers/ssb/pcmcia.c
-index f03422b..e279925 100644
---- a/drivers/ssb/pcmcia.c
-+++ b/drivers/ssb/pcmcia.c
-@@ -839,3 +839,113 @@ error:
- 	ssb_err("Failed to initialize PCMCIA host device\n");
- 	return err;
- }
+ 	common->bus_ops->read_cachesize(common, csz);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 323eb33..39ba17f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -739,6 +739,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	ath9k_ps_restore(sc);
+ 
++	ath9k_rng_start(sc);
 +
-+static const struct pcmcia_device_id ssb_host_pcmcia_tbl[] = {
-+	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
-+	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
-+	PCMCIA_DEVICE_NULL,
-+};
-+
-+MODULE_DEVICE_TABLE(pcmcia, ssb_host_pcmcia_tbl);
-+
-+static int ssb_host_pcmcia_probe(struct pcmcia_device *dev)
-+{
-+	struct ssb_bus *ssb;
-+	int err = -ENOMEM;
-+	int res = 0;
-+
-+	ssb = kzalloc(sizeof(*ssb), GFP_KERNEL);
-+	if (!ssb)
-+		goto out_error;
-+
-+	err = -ENODEV;
-+
-+	dev->config_flags |= CONF_ENABLE_IRQ;
-+
-+	dev->resource[2]->flags |=  WIN_ENABLE | WIN_DATA_WIDTH_16 |
-+			 WIN_USE_WAIT;
-+	dev->resource[2]->start = 0;
-+	dev->resource[2]->end = SSB_CORE_SIZE;
-+	res = pcmcia_request_window(dev, dev->resource[2], 250);
-+	if (res != 0)
-+		goto err_kfree_ssb;
-+
-+	res = pcmcia_map_mem_page(dev, dev->resource[2], 0);
-+	if (res != 0)
-+		goto err_disable;
-+
-+	if (!dev->irq)
-+		goto err_disable;
-+
-+	res = pcmcia_enable_device(dev);
-+	if (res != 0)
-+		goto err_disable;
-+
-+	err = ssb_bus_pcmciabus_register(ssb, dev, dev->resource[2]->start);
-+	if (err)
-+		goto err_disable;
-+	dev->priv = ssb;
-+
-+	return 0;
-+
-+err_disable:
-+	pcmcia_disable_device(dev);
-+err_kfree_ssb:
-+	kfree(ssb);
-+out_error:
-+	ssb_err("Initialization failed (%d, %d)\n", res, err);
-+	return err;
-+}
-+
-+static void ssb_host_pcmcia_remove(struct pcmcia_device *dev)
-+{
-+	struct ssb_bus *ssb = dev->priv;
-+
-+	ssb_bus_unregister(ssb);
-+	pcmcia_disable_device(dev);
-+	kfree(ssb);
-+	dev->priv = NULL;
-+}
-+
-+#ifdef CONFIG_PM
-+static int ssb_host_pcmcia_suspend(struct pcmcia_device *dev)
-+{
-+	struct ssb_bus *ssb = dev->priv;
-+
-+	return ssb_bus_suspend(ssb);
-+}
-+
-+static int ssb_host_pcmcia_resume(struct pcmcia_device *dev)
-+{
-+	struct ssb_bus *ssb = dev->priv;
-+
-+	return ssb_bus_resume(ssb);
-+}
-+#else /* CONFIG_PM */
-+# define ssb_host_pcmcia_suspend		NULL
-+# define ssb_host_pcmcia_resume		NULL
-+#endif /* CONFIG_PM */
-+
-+static struct pcmcia_driver ssb_host_pcmcia_driver = {
-+	.owner		= THIS_MODULE,
-+	.name		= "ssb-pcmcia",
-+	.id_table	= ssb_host_pcmcia_tbl,
-+	.probe		= ssb_host_pcmcia_probe,
-+	.remove		= ssb_host_pcmcia_remove,
-+	.suspend	= ssb_host_pcmcia_suspend,
-+	.resume		= ssb_host_pcmcia_resume,
-+};
-+
-+/*
-+ * These are not module init/exit functions!
-+ * The module_pcmcia_driver() helper cannot be used here.
-+ */
-+int ssb_host_pcmcia_init(void)
-+{
-+	return pcmcia_register_driver(&ssb_host_pcmcia_driver);
-+}
-+
-+void ssb_host_pcmcia_exit(void)
-+{
-+	pcmcia_unregister_driver(&ssb_host_pcmcia_driver);
-+}
-diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
-index 8a2ebc8..93bb8f0 100644
---- a/drivers/ssb/ssb_private.h
-+++ b/drivers/ssb/ssb_private.h
-@@ -94,6 +94,8 @@ extern int ssb_pcmcia_get_invariants(struct ssb_bus *bus,
- extern int ssb_pcmcia_hardware_setup(struct ssb_bus *bus);
- extern void ssb_pcmcia_exit(struct ssb_bus *bus);
- extern int ssb_pcmcia_init(struct ssb_bus *bus);
-+extern int ssb_host_pcmcia_init(void);
-+extern void ssb_host_pcmcia_exit(void);
- extern const struct ssb_bus_ops ssb_pcmcia_ops;
- #else /* CONFIG_SSB_PCMCIAHOST */
- static inline int ssb_pcmcia_switch_coreidx(struct ssb_bus *bus,
-@@ -117,6 +119,13 @@ static inline int ssb_pcmcia_init(struct ssb_bus *bus)
- {
  	return 0;
  }
-+static inline int ssb_host_pcmcia_init(void)
+ 
+@@ -828,6 +830,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	ath9k_deinit_channel_context(sc);
+ 
++	ath9k_rng_stop(sc);
++
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+new file mode 100644
+index 0000000..93a7485
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/rng.c
+@@ -0,0 +1,106 @@
++/*
++ * Copyright (c) 2015 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/hw_random.h>
++#include <linux/kthread.h>
++
++#include "ath9k.h"
++#include "hw.h"
++#include "ar9003_phy.h"
++
++#define ATH9K_RNG_BUF_SIZE	320
++#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
++
++static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
 +{
++	int i, j;
++	u32  v1, v2, rng_last = sc->rng_last;
++	struct ath_hw *ah = sc->sc_ah;
++
++	ath9k_ps_wakeup(sc);
++
++	REG_RMW_FIELD(ah, AR_PHY_TEST, AR_PHY_TEST_BBB_OBS_SEL, 1);
++	REG_CLR_BIT(ah, AR_PHY_TEST, AR_PHY_TEST_RX_OBS_SEL_BIT5);
++	REG_RMW_FIELD(ah, AR_PHY_TEST_CTL_STATUS, AR_PHY_TEST_CTL_RX_OBS_SEL, 0);
++
++	for (i = 0, j = 0; i < buf_size; i++) {
++		v1 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
++		v2 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
++
++		/* wait for data ready */
++		if (v1 && v2 && rng_last != v1 && v1 != v2 && v1 != 0xffff &&
++		    v2 != 0xffff)
++			buf[j++] = (v1 << 16) | v2;
++
++		rng_last = v2;
++	}
++
++	ath9k_ps_restore(sc);
++
++	sc->rng_last = rng_last;
++
++	return j << 2;
++}
++
++static int ath9k_rng_kthread(void *data)
++{
++	int bytes_read;
++	struct ath_softc *sc = data;
++	u32 *rng_buf;
++
++	rng_buf = kmalloc_array(ATH9K_RNG_BUF_SIZE, sizeof(u32), GFP_KERNEL);
++	if (!rng_buf)
++		goto out;
++
++	while (!kthread_should_stop()) {
++		bytes_read = ath9k_rng_data_read(sc, rng_buf,
++						 ATH9K_RNG_BUF_SIZE);
++		if (!bytes_read) {
++			msleep_interruptible(10);
++			continue;
++		}
++
++		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
++					   ATH9K_RNG_ENTROPY(bytes_read));
++	}
++
++	kfree(rng_buf);
++out:
++	sc->rng_task = NULL;
++
 +	return 0;
 +}
-+static inline void ssb_host_pcmcia_exit(void)
++
++void ath9k_rng_start(struct ath_softc *sc)
 +{
++	struct ath_hw *ah = sc->sc_ah;
++
++	if (sc->rng_task)
++		return;
++
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		return;
++
++	sc->rng_task = kthread_run(ath9k_rng_kthread, sc, "ath9k-hwrng");
++	if (IS_ERR(sc->rng_task))
++		sc->rng_task = NULL;
 +}
- #endif /* CONFIG_SSB_PCMCIAHOST */
- 
- /* sdio.c */
++
++void ath9k_rng_stop(struct ath_softc *sc)
++{
++	if (sc->rng_task)
++		kthread_stop(sc->rng_task);
++}
 -- 
-1.8.4.5
+1.9.1
 
