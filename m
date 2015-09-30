@@ -1,50 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38373 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932395AbbJ0PLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 11:11:38 -0400
-Message-ID: <1445958696.22230.8.camel@redhat.com> (sfid-20151027_161142_114689_26FCC419)
-Subject: Re: mwifiex problem: incompatible network settings
-From: Dan Williams <dcbw@redhat.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Oct 2015 10:11:36 -0500
-In-Reply-To: <87twpd8fk4.fsf@free.fr>
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	 <87twpd8fk4.fsf@free.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f177.google.com ([209.85.223.177]:34580 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754572AbbI3XeU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 19:34:20 -0400
+Received: by iow1 with SMTP id 1so29080723iow.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 16:34:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com>
+References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
+ <20150930231613.GC20220@us.netrek.org> <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 1 Oct 2015 09:34:00 +1000
+Message-ID: <CAGRGNgVRAUOEX7zWcQjJ0rWseYTsBE1e+6HjzEeifXnSMDLrAw@mail.gmail.com> (sfid-20151001_013423_524911_208C15A1)
+Subject: Re: [PATCH] iw: Memory leak in error condition
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: James Cameron <quozl@laptop.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-10-26 at 22:50 +0100, Julien Cubizolles wrote:
-> Dan Williams <dcbw@redhat.com> writes:
-> 
-> > On Mon, 2015-10-26 at 16:51 +0100, Julien Cubizolles wrote:
-> >> I can't connect anymore to my home wifi since upgrading my machine from
-> >> Ubuntu 15.04 to Ubuntuy 15.10. I was previously running kernel 4.3.0-rc2
-> >> from kernel.org without any problem. After the upgrade, and with the
-> >> same kernel, I couldn't connect anymore. I built 4.3.0-rc7, and the
-> >> problem remains. However, I can connect to the wifi access point from my
-> >> Android phone.
-> >> 
-> >> Here are the relevant lines from syslog. Let me know if you need more
-> >> information.
-> >
-> > The AP uses WPA, but the driver has been told that WPA is disabled.  Are
-> > you using wpa_supplicant (or NetworkManager, or something else?) to
-> > control the WiFi, and if so what version is it?
-> 
-> Yes, I'm using NetworkManager, version 1.0.4-ubuntu5, and I'm guessing
-> it's using wpa_supplicant. I deleted the configuration for this network
-> and created it again. The network is configured for WPA in
-> NetworkManager but I still get the same error message.
+Hi Ola,
 
-Ok, I think it's a problem with the driver not correctly handling the
-wpa_supplicant configuration requests.  Clearly wpa_supplicant is
-sending WPA-enabled configuration, but the driver isn't interpreting it
-correctly.  I'll leave it up to the mwifiex maintainers to figure that
-out though.
+On Thu, Oct 1, 2015 at 9:27 AM, Ola Olsson <ola1olsson@gmail.com> wrote:
+> Oh yes! :)
+> Suddenly valgrind was happy as well.
+>
+> From 2724dd259f2bf61a2b7c85a70a70fd640a583453 Mon Sep 17 00:00:00 2001
+> From: Ola Olsson <ola.olsson@sonymobile.com>
+> Date: Thu, 1 Oct 2015 00:43:06 +0200
+> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola Olsson
+>  <ola.olsson@sonymobile.com>
+>
+> ---
+>  scan.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/scan.c b/scan.c
+> index e959c1b..f3441a7 100644
+> --- a/scan.c
+> +++ b/scan.c
+> @@ -445,8 +445,11 @@ static int handle_scan(struct nl80211_state *state,
+>
+>         if (ies || meshid) {
+>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
+> -               if (!tmpies)
+> +               if (!tmpies) {
+> +                       free(ies);
+> +                       free(meshid);
+>                         goto nla_put_failure;
+> +               }
+>                 if (ies) {
 
-Dan
+free() doesn't set it to "null" or anything like that, so isn't the
+line above a use-after-free?
 
+>                         memcpy(tmpies, ies, ies_len);
+>                         free(ies);
+> --
+> 1.7.9.5
+>
+> On Thu, Oct 1, 2015 at 1:16 AM, James Cameron <quozl@laptop.org> wrote:
+>> On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
+>>> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
+>>> From: Ola Olsson <ola.olsson@sonymobile.com>
+>>> Date: Thu, 1 Oct 2015 00:43:06 +0200
+>>> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
+>>>  Olsson <ola.olsson@sonymobile.com>
+>>>
+>>> ---
+>>>  scan.c |    2 ++
+>>>  1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/scan.c b/scan.c
+>>> index e959c1b..f248981 100644
+>>> --- a/scan.c
+>>> +++ b/scan.c
+>>> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
+>>>         if (ies || meshid) {
+>>>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
+>>>                 if (!tmpies)
+>>> +                       free(ies);
+>>> +                       free(meshid);
+>>>                         goto nla_put_failure;
+>>
+>> Braces?  { }
+>>
+>>
+>>>                 if (ies) {
+>>>                         memcpy(tmpies, ies, ies_len);
+>>> --
+>>> 1.7.9.5
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> James Cameron
+>> http://quozl.linux.org.au/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
