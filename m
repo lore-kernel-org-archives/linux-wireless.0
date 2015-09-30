@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46336 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932164AbbIUPxq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 11:53:46 -0400
-Subject: Re: [PATCH] nl80211: Print reasons for errors in setting bitrates.
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1442610135-8696-1-git-send-email-greearb@candelatech.com>
- <1442838469.1876.1.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56002809.8010307@candelatech.com> (sfid-20150921_175352_870736_08811092)
-Date: Mon, 21 Sep 2015 08:53:45 -0700
-MIME-Version: 1.0
-In-Reply-To: <1442838469.1876.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:48153 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753746AbbI3GrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 02:47:00 -0400
+Message-ID: <1443595615.1859.2.camel@sipsolutions.net> (sfid-20150930_084704_436063_29E59D80)
+Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Date: Wed, 30 Sep 2015 08:46:55 +0200
+In-Reply-To: <5605D228.7050609@candelatech.com> (sfid-20150926_010105_789618_F93D668E)
+References: <5605D228.7050609@candelatech.com>
+	 (sfid-20150926_010105_789618_F93D668E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2015 05:27 AM, Johannes Berg wrote:
-> On Fri, 2015-09-18 at 14:02 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Makes it easier to figure out why user-space calls are
->> failing.
->
-> I'm aware of this problem, but I'm not going to gratuitously start
-> printing to dmesg for this.
->
-> There's a scheme being discussed for extended error numbers/messages,
-> particularly for perf but it might be implemented for any syscall. We
-> might be able to extend that to netlink in a different way, including
-> the description in the (extended) netlink ack message.
+On Fri, 2015-09-25 at 16:00 -0700, Ben Greear wrote:
+> It seems that ath10k ar988X hardware has a bug where the BSSID
+> for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
+> does not seem to use AMSDUs for IBSS, and when I enable it in my CT
+> firmware, then I see the breakage.  So, I suspect it is not
+> just a simple software/firmware bug.
+> 
+> If I simply ignore the bssid_match check in ieee80211_accept_frame,
+> then it seems everything runs fine.
+> 
+> So, I'm curious if anyone knows what sorts of bad things could happen
+> if the bssid_match check is ignored?  Maybe bcast/mcast frames could
+> be accepted when they shouldn't be in certain cases?
+> 
 
-I understand...I figured the patch might not be wanted.  A more general
-solution would be welcome.
+You could end up accepting multicast frames from a different,
+overlapping, BSS? Seems like a bad idea.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+johannes
