@@ -1,67 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41706 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601AbbIDRsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 13:48:16 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1441032517.13980.21.camel@sipsolutions.net>
-	<wrfjmvx73u0l.fsf@redhat.com>
-	<1441120044.2441.9.camel@sipsolutions.net>
-	<wrfj4mjcqn3x.fsf@redhat.com>
-	<1441275442.2565.17.camel@sipsolutions.net>
-Date: Fri, 04 Sep 2015 13:48:13 -0400
-In-Reply-To: <1441275442.2565.17.camel@sipsolutions.net> (Johannes Berg's
-	message of "Thu, 03 Sep 2015 12:17:22 +0200")
-Message-ID: <wrfjr3megjoi.fsf@redhat.com> (sfid-20150904_194820_110007_EF2D5594)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47042 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989AbbI3J4C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 05:56:02 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 28/32] staging: wilc1000: rename strHostIfRemainOnChan
+Date: Wed, 30 Sep 2015 18:55:10 +0900
+Message-ID: <1443606914-25563-6-git-send-email-tony.cho@atmel.com> (sfid-20150930_115609_998549_AB89A2E3)
+In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-> On Wed, 2015-09-02 at 21:59 -0400, Jes Sorensen wrote:
->> 
->> The code mimics what the vendor driver does - part of the bringup of the
->> chip sets a bunch of parameters from an register value array. Rather
->> than guessing what their default is, I feel it's safer to just shut 
->> it down here and stick with that.
->
-> Ok, fair enough. Might be worth putting that into start() rather than
-> add_interface() though? Anyway, it's not a big deal, I just wasn't sure
-> if that was intentional.
+This patch renames strHostIfRemainOnChan to remain_on_ch to avoid
+CamelCase naming convention.
 
-OK, I'll probably just leave it there for now then.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
->> > I'd be extremely surprised if any of this worked - perhaps you're 
->> > not advertising A-MPDU support (yet)?
->> > 
->> > You're not calling ieee80211_start_tx_ba_cb_irqsafe() or
->> > ieee80211_stop_tx_ba_cb_irqsafe(), so this can't really work. The
->> > session might be set up but will never actually start.
->> > 
->> > That said, the code also looks incomplete. Perhaps better to just
->> > remove it entirely for now?
->> 
->> I started working on this, but I guess I didn't finish it. One thing I
->> haven't figured out yet is why I see AMPDU_RX_START events, but I never
->> see AMPDU_TX_START events show in the log.
->
-> Nothing in your system is calling ieee80211_start_tx_ba_session() then.
-
-Gotcha, now you mention it, that rings a bell! I'll put that on my todo
-list. One of the biggest things puzzling me is how much the firmware
-does with AMPDU - there is a break bit I can set in the TX descriptor to
-say 'don't AMPDU this packet' but do not actually know if it will do all
-of this behind my back. I need to dig more into the vendor driver (and
-their 80211 stack) to see if I can figure that out.
-
-Cheers,
-Jes
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b7797a5..9dac906 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -390,7 +390,7 @@ union message_body {
+ 	struct set_mac_addr set_mac_info;
+ 	struct get_mac_addr get_mac_info;
+ 	struct ba_session_info session_info;
+-	struct remain_ch strHostIfRemainOnChan;
++	struct remain_ch remain_on_ch;
+ 	struct reg_frame strHostIfRegisterFrame;
+ 	char *pUserData;
+ 	struct del_all_sta strHostIFDelAllSta;
+@@ -3693,7 +3693,7 @@ static void ListenTimerCB(unsigned long arg)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+ 	msg.drvHandler = pstrWFIDrv;
+-	msg.body.strHostIfRemainOnChan.u32ListenSessionID = pstrWFIDrv->strHostIfRemainOnChan.u32ListenSessionID;
++	msg.body.remain_on_ch.u32ListenSessionID = pstrWFIDrv->strHostIfRemainOnChan.u32ListenSessionID;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4098,7 +4098,7 @@ static int hostIFthread(void *pvArg)
+ 			Handle_ScanDone(msg.drvHandler, SCAN_EVENT_DONE);
+ 
+ 			if (pstrWFIDrv->u8RemainOnChan_pendingreq)
+-				Handle_RemainOnChan(msg.drvHandler, &msg.body.strHostIfRemainOnChan);
++				Handle_RemainOnChan(msg.drvHandler, &msg.body.remain_on_ch);
+ 
+ 			break;
+ 
+@@ -4186,7 +4186,7 @@ static int hostIFthread(void *pvArg)
+ 
+ 		case HOST_IF_MSG_REMAIN_ON_CHAN:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_REMAIN_ON_CHAN\n");
+-			Handle_RemainOnChan(msg.drvHandler, &msg.body.strHostIfRemainOnChan);
++			Handle_RemainOnChan(msg.drvHandler, &msg.body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REGISTER_FRAME:
+@@ -4195,7 +4195,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_LISTEN_TIMER_FIRED:
+-			Handle_ListenStateExpired(msg.drvHandler, &msg.body.strHostIfRemainOnChan);
++			Handle_ListenStateExpired(msg.drvHandler, &msg.body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MULTICAST_FILTER:
+@@ -6407,12 +6407,12 @@ s32 host_int_remain_on_channel(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID, u32 u
+ 
+ 	/* prepare the WiphyParams Message */
+ 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
+-	msg.body.strHostIfRemainOnChan.u16Channel = chan;
+-	msg.body.strHostIfRemainOnChan.pRemainOnChanExpired = RemainOnChanExpired;
+-	msg.body.strHostIfRemainOnChan.pRemainOnChanReady = RemainOnChanReady;
+-	msg.body.strHostIfRemainOnChan.pVoid = pvUserArg;
+-	msg.body.strHostIfRemainOnChan.u32duration = u32duration;
+-	msg.body.strHostIfRemainOnChan.u32ListenSessionID = u32SessionID;
++	msg.body.remain_on_ch.u16Channel = chan;
++	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
++	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
++	msg.body.remain_on_ch.pVoid = pvUserArg;
++	msg.body.remain_on_ch.u32duration = u32duration;
++	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+ 	msg.drvHandler = hWFIDrv;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -6454,7 +6454,7 @@ s32 host_int_ListenStateExpired(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+ 	msg.drvHandler = hWFIDrv;
+-	msg.body.strHostIfRemainOnChan.u32ListenSessionID = u32SessionID;
++	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
+-- 
+1.9.1
 
