@@ -1,217 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33778 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755611AbbI0ONf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 10:13:35 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	sudipm.mukherjee@gmail.com,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH] drivers: staging: wilc1000: Replace message queue with standard Linux lists
-Date: Sun, 27 Sep 2015 19:43:18 +0530
-Message-Id: <1443363198-4384-1-git-send-email-csgorentla@gmail.com> (sfid-20150927_161429_493047_BB349A88)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5409 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751741AbbI3CFb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2015 22:05:31 -0400
+From: David Lin <dlin@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Chor Teck Law <ctlaw@marvell.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v5] Add new mac80211 driver mwlwifi.
+Date: Wed, 30 Sep 2015 02:05:24 +0000
+Message-ID: <63b962e0771b4279aa0f1a4cf1f01516@SC-EXCH02.marvell.com> (sfid-20150930_040535_598174_59AE33EF)
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+	<1436455659.36587.131.camel@sakura.staff.proxad.net>
+	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
+	<20150804220956.GA28583@sakura.staff.proxad.net>
+	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
+	<87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
+	<5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com>
+	<87eghh7g30.fsf@kamboji.qca.qualcomm.com>
+ <87y4fp5yd2.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87y4fp5yd2.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The message queue is replaced with standard Linux linked list.  A check for
-return value of receive method is added.
+> 
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+> > Chor Teck Law <ctlaw@marvell.com> writes:
+> >
+> >> But for different generation of future chipsets/new technology, when
+> >> the hardware no longer permit us to use same driver, we will have to
+> >> re-evaluate our options. We cannot guarantee something way out into
+> >> the future.
+> >
+> > Yeah, that's understandable. But the community really dislikes having
+> > duplicated code/functionality, so please keep this in mind.
+> >
+> > If you can submit the next version soon we could try to get this
+> > driver to 4.4. We have few more weeks.
+> 
+> I forgot to ask about the firmware image for this driver. Is that available in
+> linux-firmware.git?
+>
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+I had already sent firmware patch for linux-firmware.git. However, it looks like it had not yet been added to linux-firmware.git. After sending out Patch v7, I will check to see if this patch can be added to linux-firmware.git.
+
+> --
+> Kalle Valo
+
+Thanks,
+David
+
+From: David Lin <dlin@...>
+Subject: [PATCH] Add FW binary used by mwlwifi driver.
+Newsgroups: gmane.linux.kernel.wireless.general
+Date: 2015-08-22 03:54:38 GMT (5 weeks, 3 days, 22 hours and 7 minutes ago)
+Signed-off-by: David Lin <dlin-eYqpPyKDWXRBDgjK7y7TUQ <at> public.gmane.org>
 ---
- drivers/staging/wilc1000/host_interface.c |  7 +++-
- drivers/staging/wilc1000/wilc_msgqueue.c  | 62 ++++++++++++++-----------------
- drivers/staging/wilc1000/wilc_platform.h  |  5 ++-
- 3 files changed, 36 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 62f4a8a..8d0776f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4304,11 +4304,16 @@ static int hostIFthread(void *pvArg)
- 	u32 u32Ret;
- 	struct host_if_msg msg;
- 	tstrWILC_WFIDrv *pstrWFIDrv;
-+	int recv_ret;
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	while (1) {
--		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
-+		recv_ret = wilc_mq_recv(&gMsgQHostIF, &msg,
-+					sizeof(struct host_if_msg), &u32Ret);
-+		if (recv_ret)
-+			continue;
-+
- 		pstrWFIDrv = (tstrWILC_WFIDrv *)msg.drvHandler;
- 		if (msg.id == HOST_IF_MSG_EXIT) {
- 			PRINT_D(GENERIC_DBG, "THREAD: Exiting HostIfThread\n");
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 869736a..67617d5 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -12,9 +12,15 @@
-  */
- int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
- {
-+	pHandle->msg_cache = kmem_cache_create("wilc_message_queue",
-+						sizeof(Message),
-+						0, SLAB_POISON, NULL);
-+	if (!pHandle->msg_cache)
-+		return -ENOMEM;
-+
- 	spin_lock_init(&pHandle->strCriticalSection);
- 	sema_init(&pHandle->hSem, 0);
--	pHandle->pstrMessageList = NULL;
-+	INIT_LIST_HEAD(&pHandle->msg_list_head);
- 	pHandle->u32ReceiversCount = 0;
- 	pHandle->bExiting = false;
- 	return 0;
-@@ -28,6 +34,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
-  */
- int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- {
-+	Message *msg;
- 	pHandle->bExiting = true;
- 
- 	/* Release any waiting receiver thread. */
-@@ -36,13 +43,16 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- 		pHandle->u32ReceiversCount--;
- 	}
- 
--	while (pHandle->pstrMessageList) {
--		Message *pstrMessge = pHandle->pstrMessageList->pstrNext;
--
--		kfree(pHandle->pstrMessageList);
--		pHandle->pstrMessageList = pstrMessge;
-+	while (!list_empty(&pHandle->msg_list_head)) {
-+		msg = list_first_entry(&pHandle->msg_list_head,
-+					Message, link);
-+		list_del(&msg->link);
-+		kfree(msg->pvBuffer);
-+		kmem_cache_free(pHandle->msg_cache, msg);
- 	}
- 
-+	kmem_cache_destroy(pHandle->msg_cache);
-+
- 	return 0;
- }
- 
-@@ -74,41 +84,28 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
- 
- 	/* construct a new message */
--	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
--	if (!pstrMessage)
-+	pstrMessage = kmem_cache_zalloc(pHandle->msg_cache, GFP_ATOMIC);
-+	if (!pstrMessage) {
-+		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 		return -ENOMEM;
-+	}
- 	pstrMessage->u32Length = u32SendBufferSize;
--	pstrMessage->pstrNext = NULL;
- 	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
- 	if (!pstrMessage->pvBuffer) {
-+		kmem_cache_free(pHandle->msg_cache, pstrMessage);
- 		result = -ENOMEM;
- 		goto ERRORHANDLER;
- 	}
- 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
- 
- 	/* add it to the message queue */
--	if (!pHandle->pstrMessageList) {
--		pHandle->pstrMessageList  = pstrMessage;
--	} else {
--		Message *pstrTailMsg = pHandle->pstrMessageList;
--
--		while (pstrTailMsg->pstrNext)
--			pstrTailMsg = pstrTailMsg->pstrNext;
--
--		pstrTailMsg->pstrNext = pstrMessage;
--	}
-+	list_add_tail(&pstrMessage->link, &pHandle->msg_list_head);
- 
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
- 	up(&pHandle->hSem);
- 
- ERRORHANDLER:
--	/* error occured, free any allocations */
--	if (pstrMessage) {
--		kfree(pstrMessage->pvBuffer);
--		kfree(pstrMessage);
--	}
--
- 	return result;
- }
- 
-@@ -144,11 +141,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	down(&pHandle->hSem);
- 
- 	/* other non-timeout scenarios */
--	if (result) {
--		PRINT_ER("Non-timeout\n");
--		return result;
--	}
--
- 	if (pHandle->bExiting) {
- 		PRINT_ER("pHandle fail\n");
- 		return -EFAULT;
-@@ -156,12 +148,13 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 
- 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
- 
--	pstrMessage = pHandle->pstrMessageList;
--	if (!pstrMessage) {
-+	if (list_empty(&pHandle->msg_list_head)) {
- 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 		PRINT_ER("pstrMessage is null\n");
- 		return -EFAULT;
- 	}
-+
-+	pstrMessage = list_first_entry(&pHandle->msg_list_head, Message, link);
- 	/* check buffer size */
- 	if (u32RecvBufferSize < pstrMessage->u32Length)	{
- 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-@@ -175,10 +168,9 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	memcpy(pvRecvBuffer, pstrMessage->pvBuffer, pstrMessage->u32Length);
- 	*pu32ReceivedLength = pstrMessage->u32Length;
- 
--	pHandle->pstrMessageList = pstrMessage->pstrNext;
--
-+	list_del(&pstrMessage->link);
- 	kfree(pstrMessage->pvBuffer);
--	kfree(pstrMessage);
-+	kmem_cache_free(pHandle->msg_cache, pstrMessage);
- 
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index b763616..3871658 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -20,7 +20,7 @@
- typedef struct __Message_struct {
- 	void *pvBuffer;
- 	u32 u32Length;
--	struct __Message_struct *pstrNext;
-+	struct list_head link;
- } Message;
- 
- typedef struct __MessageQueue_struct {
-@@ -28,7 +28,8 @@ typedef struct __MessageQueue_struct {
- 	spinlock_t strCriticalSection;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
--	Message *pstrMessageList;
-+	struct list_head msg_list_head;
-+	struct kmem_cache *msg_cache;
- } WILC_MsgQueueHandle;
- 
- 
--- 
-2.1.4
-
+ WHENCE              |  12 ++++++++++++
+ mwlwifi/88W8864.bin | Bin 0 -> 116356 bytes
+ mwlwifi/88W8897.bin | Bin 0 -> 489084 bytes
+ 3 files changed, 12 insertions(+)
+ mode change 100644 => 100755 WHENCE
+ create mode 100755 mwlwifi/88W8864.bin
+ create mode 100755 mwlwifi/88W8897.bin
