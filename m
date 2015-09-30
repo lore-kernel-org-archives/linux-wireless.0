@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:35294 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbbIAXfI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14062 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbbI3Jsr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 19:35:08 -0400
-From: =?UTF-8?q?Micha=C5=82=20Bartoszkiewicz?=
-	<mbartoszkiewicz@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: remove unnecessary le32_to_cpu
-Date: Wed,  2 Sep 2015 01:35:00 +0200
-Message-Id: <1441150500-14023-1-git-send-email-mbartoszkiewicz@gmail.com> (sfid-20150902_013513_857295_55255CE4)
+	Wed, 30 Sep 2015 05:48:47 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 12/32] staging: wilc1000: remove struct del_beacon
+Date: Wed, 30 Sep 2015 18:44:29 +0900
+Message-ID: <1443606289-25407-12-git-send-email-tony.cho@atmel.com> (sfid-20150930_114850_453512_FC34615D)
+In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The values passed to le32_to_cpu are already in the correct byte order.
-This fixes four "cast to restricted __le32" sparse warnings.
+This patch removes struct del_beacon which is not necessary. This patch
+also changes Handle_DelBeacon function by removing 2nd parameter, struct
+del_beacon because it is not used inside.
 
-Signed-off-by: Michał Bartoszkiewicz <mbartoszkiewicz@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 +++---------------------
+ 1 file changed, 3 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 3d40bab..9d1cce1 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -245,8 +245,8 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
- 	arcfour_encrypt(&mycontext, payload, payload, length);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4559ed5..686402a9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -269,22 +269,6 @@ struct set_beacon {
+ 											*                              after the TIM inormation element	*/
+ };
  
- 	/* calculate icv and compare the icv */
--	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
--	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
-+	actual_crc = getcrc32(payload, length - 4);
-+	expected_crc = get_unaligned_le32(&payload[length - 4]);
+-
+-
+-/*!
+- *  @struct             del_beacon
+- *  @brief		Del Beacon  message body
+- *  @details
+- *  @todo
+- *  @sa
+- *  @author		Adham Abozaeid
+- *  @date		15 July 2012
+- *  @version		1.0
+- */
+-struct del_beacon {
+-	u8 u8dummy;
+-};
+-
+ /*!
+  *  @struct             set_multicast
+  *  @brief		set Multicast filter Address
+@@ -408,7 +392,6 @@ union message_body {
+ 	struct cfg_param_attr cfg_info;
+ 	struct channel_attr channel_info;
+ 	struct set_beacon strHostIFSetBeacon;
+-	struct del_beacon strHostIFDelBeacon;
+ 	struct add_sta_param strAddStaParam;
+ 	struct del_sta strDelStaParam;
+ 	struct add_sta_param strEditStaParam;
+@@ -3244,14 +3227,13 @@ ERRORHANDLER:
+ /**
+  *  @brief Handle_AddBeacon
+  *  @details       Sending config packet to delete beacon
+- *  @param[in]   struct del_beacon *pstrDelBeacon
++ *  @param[in]	tstrWILC_WFIDrv *drvHandler
+  *  @return         NONE
+  *  @author
+  *  @date
+  *  @version	1.0
+  */
+-static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler,
+-			     struct del_beacon *pstrDelBeacon)
++static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+ 	tstrWID strWID;
+@@ -4156,7 +4138,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
  
- 	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-@@ -773,8 +773,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	arcfour_init(&mycontext, rc4key, 16);
- 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 		case HOST_IF_MSG_DEL_BEACON:
+-			Handle_DelBeacon(msg.drvHandler, &msg.body.strHostIFDelBeacon);
++			Handle_DelBeacon(msg.drvHandler);
+ 			break;
  
--	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
--	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
-+	actual_crc = getcrc32(payload, length - 4);
-+	expected_crc = get_unaligned_le32(&payload[length - 4]);
- 
- 	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+ 		case HOST_IF_MSG_ADD_STATION:
 -- 
-2.5.1
+1.9.1
 
