@@ -1,81 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33103 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbbI2XQA (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:46941 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670AbbI3Jzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 19:16:00 -0400
-Received: by pacex6 with SMTP id ex6so19276108pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2015 16:15:59 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/2] staging: wilc1000: delete wilc_oswrapper.h
-Date: Wed, 30 Sep 2015 08:15:42 +0900
-Message-Id: <1443568542-15372-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150930_011602_901933_E00E4F69)
-In-Reply-To: <1443568542-15372-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443568542-15372-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 30 Sep 2015 05:55:35 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/32] staging: wilc1000: rename strHostIfSetOperationMode
+Date: Wed, 30 Sep 2015 18:55:06 +0900
+Message-ID: <1443606914-25563-2-git-send-email-tony.cho@atmel.com> (sfid-20150930_115541_752813_45AC0CB9)
+In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch deletes wilc_oswrapper.h that has nothing inside.
+This patch renames strHostIfSetOperationMode to mode to avoid CamelCase
+naming convention.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_oswrapper.h | 16 ----------------
- drivers/staging/wilc1000/wilc_wlan.h      |  1 -
- drivers/staging/wilc1000/wilc_wlan_if.h   |  1 -
- 3 files changed, 18 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-deleted file mode 100644
-index 10d16e9..0000000
---- a/drivers/staging/wilc1000/wilc_oswrapper.h
-+++ /dev/null
-@@ -1,16 +0,0 @@
--#ifndef __WILC_OSWRAPPER_H__
--#define __WILC_OSWRAPPER_H__
--
--/*!
-- *  @file	wilc_oswrapper.h
-- *  @brief	Top level OS Wrapper, include this file and it will include all
-- *              other files as necessary
-- *  @author	syounan
-- *  @date	10 Aug 2010
-- *  @version	1.0
-- */
--
--
--
--
--#endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 60da18c..ad8de29 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -1,7 +1,6 @@
- #ifndef WILC_WLAN_H
- #define WILC_WLAN_H
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 034e3d9..a66f78d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -386,7 +386,7 @@ union message_body {
+ 	struct set_ip_addr ip_info;
+ 	struct drv_handler drv;
+ 	struct set_multicast multicast_info;
+-	struct op_mode strHostIfSetOperationMode;
++	struct op_mode mode;
+ 	struct set_mac_addr strHostIfSetMacAddress;
+ 	struct get_mac_addr strHostIfGetMacAddress;
+ 	struct ba_session_info strHostIfBASessionInfo;
+@@ -4163,7 +4163,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
  
--#include "wilc_oswrapper.h"
+ 		case HOST_IF_MSG_SET_OPERATION_MODE:
+-			Handle_SetOperationMode(msg.drvHandler, &msg.body.strHostIfSetOperationMode);
++			Handle_SetOperationMode(msg.drvHandler, &msg.body.mode);
+ 			break;
  
+ 		case HOST_IF_MSG_SET_IPADDRESS:
+@@ -5407,7 +5407,7 @@ s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
  
- #define ISWILC1000(id)   (((id & 0xfffff000) == 0x100000) ? 1 : 0)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index e4807ae..c0b5df9 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -14,7 +14,6 @@
- /* #define USE_OLD_SPI_SW */
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_OPERATION_MODE;
+-	msg.body.strHostIfSetOperationMode.u32Mode = u32mode;
++	msg.body.mode.u32Mode = u32mode;
+ 	msg.drvHandler = hWFIDrv;
  
- #include <linux/semaphore.h>
--#include "wilc_oswrapper.h"
- #include "linux_wlan_common.h"
- 
- /********************************************
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
 -- 
-2.5.1
+1.9.1
 
