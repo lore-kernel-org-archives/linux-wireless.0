@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f193.google.com ([209.85.212.193]:34155 "EHLO
-	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950AbbJ0TEE (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:47018 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932779AbbI3XQg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:04:04 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Punit Vara <punitvara@gmail.com>
-Subject: [RESEND PATCH 05/10] net: wireless: simplify return flow for zd1201_setconfig16
-Date: Wed, 28 Oct 2015 00:32:40 +0530
-Message-Id: <1445972565-14963-5-git-send-email-punitvara@gmail.com> (sfid-20151027_200640_170523_A80DE867)
-In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
-References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+	Wed, 30 Sep 2015 19:16:36 -0400
+Date: Thu, 1 Oct 2015 09:16:13 +1000
+From: James Cameron <quozl@laptop.org>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iw: Memory leak in error condition
+Message-ID: <20150930231613.GC20220@us.netrek.org> (sfid-20151001_011649_203990_1FB3CDCC)
+References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the zd1201.c file that fixes up warning
-reported by coccicheck:
+On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
+> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
+> From: Ola Olsson <ola.olsson@sonymobile.com>
+> Date: Thu, 1 Oct 2015 00:43:06 +0200
+> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
+>  Olsson <ola.olsson@sonymobile.com>
+> 
+> ---
+>  scan.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/scan.c b/scan.c
+> index e959c1b..f248981 100644
+> --- a/scan.c
+> +++ b/scan.c
+> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
+>         if (ies || meshid) {
+>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
+>                 if (!tmpies)
+> +                       free(ies);
+> +                       free(meshid);
+>                         goto nla_put_failure;
 
-WARNING: end returns can be simplified and declaration on line 1658 can
-be dropped
+Braces?  { }
 
-Prefer direct return value instead of writing 2-3 more sentence.
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
- drivers/net/wireless/zd1201.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+>                 if (ies) {
+>                         memcpy(tmpies, ies, ies_len);
+> -- 
+> 1.7.9.5
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
-index 6f5c793..d9e67d9 100644
---- a/drivers/net/wireless/zd1201.c
-+++ b/drivers/net/wireless/zd1201.c
-@@ -1655,15 +1655,11 @@ static int zd1201_set_maxassoc(struct net_device *dev,
-     struct iw_request_info *info, struct iw_param *rrq, char *extra)
- {
- 	struct zd1201 *zd = netdev_priv(dev);
--	int err;
- 
- 	if (!zd->ap)
- 		return -EOPNOTSUPP;
- 
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, rrq->value);
--	if (err)
--		return err;
--	return 0;
-+	return zd1201_setconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, rrq->value);
- }
- 
- static int zd1201_get_maxassoc(struct net_device *dev,
 -- 
-2.5.3
-
+James Cameron
+http://quozl.linux.org.au/
