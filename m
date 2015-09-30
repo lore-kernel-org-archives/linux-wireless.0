@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21583 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755878AbbIUDU6 (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34750 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932180AbbI3MaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:20:58 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 32/34] staging: wilc1000: remove unnecessary global variable
-Date: Mon, 21 Sep 2015 12:17:01 +0900
-Message-ID: <1442805423-3711-33-git-send-email-tony.cho@atmel.com> (sfid-20150921_052101_266817_53B07A56)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+	Wed, 30 Sep 2015 08:30:05 -0400
+Date: Wed, 30 Sep 2015 17:59:22 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Replace message queue
+ with standard Linux lists
+Message-ID: <20150930122922.GA4704@gcs-HP-Notebook> (sfid-20150930_143027_036459_5B1DF7D1)
+References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+ <20150929004402.GB7811@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150929004402.GB7811@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The global variable msgQ_created is removed because it is not necessary.
+On Tue, Sep 29, 2015 at 02:44:02AM +0200, Greg KH wrote:
+> On Mon, Sep 28, 2015 at 11:43:55PM +0530, Chandra S Gorentla wrote:
+> >  - The message queue is replaced with standard Linux linked list
+> >  - kmem_cache is used for list members
+> 
+> Why?
+The list entires are of fixed type and repeatedly allocated and deallocated
+for messages.
+> 
+> >  - A check for return value of receive method is added
+> >  - GFP_ATOMIC is changed to GFP_KERNEL
+> 
+> Why?  Are you sure that is safe?
+The allocations are moved out of 'spin_lock_irqsave' and
+'spin_unlock_irqrestore'.  Hence they are safe.
+> 
+> >  - A few other related minor changes
+> 
+> Be specific please.
+OK.  I will try to send seperate patches.
+> 
+> thanks,
+> 
+> greg k-h
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0c8bc05..59e82ee 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6367,7 +6367,6 @@ void host_int_send_network_info_to_host
-  *  @version		1.0
-  */
- static u32 u32Intialized;
--static u32 msgQ_created;
- static u32 clients_count;
- 
- s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
-@@ -6440,7 +6439,6 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 			PRINT_ER("Failed to creat MQ\n");
- 			goto _fail_;
- 		}
--		msgQ_created = 1;
- 		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
- 		if (IS_ERR(HostIFthreadHandler)) {
- 			PRINT_ER("Failed to creat Thread\n");
-@@ -6607,7 +6605,6 @@ s32 host_int_deinit(tstrWILC_WFIDrv *hWFIDrv)
- 		down(&hSemHostIFthrdEnd);
- 
- 		wilc_mq_destroy(&gMsgQHostIF);
--		msgQ_created = 0;
- 	}
- 
- 	down(&(pstrWFIDrv->gtOsCfgValuesSem));
--- 
-1.9.1
-
+Thank you,
+chandra
