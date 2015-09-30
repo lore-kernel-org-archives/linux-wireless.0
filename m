@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55664 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755611AbbI0MvR (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60624 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932481AbbI3S4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 08:51:17 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath: fix incorrect PPB on JAPAN chirp radar
-References: <1441819724-25344-1-git-send-email-poh@qca.qualcomm.com>
-Date: Sun, 27 Sep 2015 15:51:06 +0300
-In-Reply-To: <1441819724-25344-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Wed, 9 Sep 2015 10:28:44 -0700")
-Message-ID: <87k2rcc9fp.fsf@kamboji.qca.qualcomm.com> (sfid-20150927_145120_871833_0CABB9C6)
+	Wed, 30 Sep 2015 14:56:18 -0400
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: No more posts about ath10k CT firmware for a while.
+Message-ID: <560C3051.10702@candelatech.com> (sfid-20150930_205621_467444_30B965A6)
+Date: Wed, 30 Sep 2015 11:56:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+I've been asked to not post any ath10k CT firmware related info
+to these lists.  Not clear exactly what all I'm requested not to post
+at this time, but until I get this resolved one way or another,
+I at least won't post any firmware release notes.
 
-> The number of pulses per burst on Japan chirp radar is
-> between 1 and 3. The previous value, 20, is representing
-> number of bursts, but since current DFS detector is using
-> pulse detection other than bursts, use the pulse number
-> for correct radar detection.
-> Also using the highest number helps to avoid false detection.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+For those that still want to be notified somehow, for now,
+try adding me to your circle on google+.  I am greearb@gmail.com
+there.  I will post ath10k CT firmware/kernel-patch release notes
+and such there (as well as on my normal ath10k related web page),
+and blessedly few cat pictures.
 
-Thanks, applied.
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
