@@ -1,114 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:16915 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932117AbbIVK7D convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 06:59:03 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
-Date: Tue, 22 Sep 2015 10:58:59 +0000
-Message-ID: <bd6f0967147e436fae399297d295fd34@SC-EXCH04.marvell.com> (sfid-20150922_125907_905348_9E7BA874)
-References: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com>
- <20150921161953.GQ5004@mwanda>
-In-Reply-To: <20150921161953.GQ5004@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13869 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753740AbbI3Jrf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 05:47:35 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/32] staging: wilc1000: rename strRcvdGnrlAsyncInfo
+Date: Wed, 30 Sep 2015 18:44:23 +0900
+Message-ID: <1443606289-25407-6-git-send-email-tony.cho@atmel.com> (sfid-20150930_114737_612785_E91EF293)
+In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+This patch renames strRcvdGnrlAsyncInfo to async_info to avoid CamelCase
+naming convention.
 
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Monday, September 21, 2015 9:50 PM
-> To: Amitkumar Karwar
-> Cc: Nishant Sarmukadam; Kalle Valo; linux-wireless@vger.kernel.org;
-> kernel-janitors@vger.kernel.org
-> Subject: [patch v2] mwifiex: fix mwifiex_rdeeprom_read()
-> 
-> There were several bugs here.
-> 
-> 1)  The done label was in the wrong place so we didn't copy any
->     information out when there was no command given.
-> 
-> 2)  We were using PAGE_SIZE as the size of the buffer instead of
->     "PAGE_SIZE - pos".
-> 
-> 3)  snprintf() returns the number of characters that would have been
->     printed if there were enough space.  If there was not enough space
->     (and we had fixed the memory corruption bug #2) then it would result
->     in an information leak when we do simple_read_from_buffer().  I've
->     changed it to use scnprintf() instead.
-> 
-> I also removed the initialization at the start of the function, because
-> I thought it made the code a little more clear.
-> 
-> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell
-> mwifiex driver')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> v2:  My first part introduced a bug.  :(
-> 
-> Sorry for the delay on this.
-> 
-> diff --git a/drivers/net/wireless/mwifiex/debugfs.c
-> b/drivers/net/wireless/mwifiex/debugfs.c
-> index 5a0636d4..5583856 100644
-> --- a/drivers/net/wireless/mwifiex/debugfs.c
-> +++ b/drivers/net/wireless/mwifiex/debugfs.c
-> @@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
-> *ubuf,
->  		(struct mwifiex_private *) file->private_data;
->  	unsigned long addr = get_zeroed_page(GFP_KERNEL);
->  	char *buf = (char *) addr;
-> -	int pos = 0, ret = 0, i;
-> +	int pos, ret, i;
->  	u8 value[MAX_EEPROM_DATA];
-> 
->  	if (!buf)
-> @@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
-> *ubuf,
-> 
->  	if (saved_offset == -1) {
->  		/* No command has been given */
-> -		pos += snprintf(buf, PAGE_SIZE, "0");
-> +		pos = snprintf(buf, PAGE_SIZE, "0");
->  		goto done;
->  	}
-> 
-> @@ -748,17 +748,17 @@ mwifiex_rdeeprom_read(struct file *file, char
-> __user *ubuf,
->  				  (u16) saved_bytes, value);
->  	if (ret) {
->  		ret = -EINVAL;
-> -		goto done;
-> +		goto out_free;
->  	}
-> 
-> -	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
-> saved_bytes);
-> +	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
-> saved_bytes);
-> 
->  	for (i = 0; i < saved_bytes; i++)
-> -		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ",
-> value[i]);
-> -
-> -	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
-> +		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ",
-> value[i]);
-> 
->  done:
-> +	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
-> +out_free:
->  	free_page(addr);
->  	return ret;
->  }
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8a93112..b24c022 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -417,7 +417,7 @@ union message_body {
+ 	struct scan_attr scan_info;
+ 	struct connect_attr con_info;
+ 	struct rcvd_net_info net_info;
+-	struct rcvd_async_info strRcvdGnrlAsyncInfo;
++	struct rcvd_async_info async_info;
+ 	struct key_attr strHostIFkeyAttr;
+ 	struct cfg_param_attr strHostIFCfgParamAttr;
+ 	struct set_channel strHostIFSetChan;
+@@ -4115,7 +4115,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
+-			Handle_RcvdGnrlAsyncInfo(msg.drvHandler, &msg.body.strRcvdGnrlAsyncInfo);
++			Handle_RcvdGnrlAsyncInfo(msg.drvHandler, &msg.body.async_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_KEY:
+@@ -6359,9 +6359,9 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.drvHandler = pstrWFIDrv;
+ 
+ 
+-	msg.body.strRcvdGnrlAsyncInfo.u32Length = u32Length;
+-	msg.body.strRcvdGnrlAsyncInfo.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
+-	memcpy(msg.body.strRcvdGnrlAsyncInfo.pu8Buffer,
++	msg.body.async_info.u32Length = u32Length;
++	msg.body.async_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
++	memcpy(msg.body.async_info.pu8Buffer,
+ 		    pu8Buffer, u32Length);
+ 
+ 	/* send the message */
+-- 
+1.9.1
 
-Regards,
-Amitkumar
