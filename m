@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34732 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbbIJTQA (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34580 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470AbbI3MnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:16:00 -0400
-Received: by padhy16 with SMTP id hy16so50970929pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:59 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	Wed, 30 Sep 2015 08:43:18 -0400
+Date: Wed, 30 Sep 2015 18:12:50 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 26/31] staging: wilc1000: rename WILC_WFI_cancel_remain_on_channel
-Date: Fri, 11 Sep 2015 04:14:25 +0900
-Message-Id: <1441912470-3371-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211853_816351_30E62DFA)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Replace message queue
+ with standard Linux lists
+Message-ID: <20150930124250.GB4704@gcs-HP-Notebook> (sfid-20150930_144334_930161_A4DFD63C)
+References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+ <20150929023152.GD7289@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150929023152.GD7289@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_cancel_remain_on_channel with
-wilc_cancel_remain_on_channel to avoid CamelCase.
+On Tue, Sep 29, 2015 at 05:31:53AM +0300, Dan Carpenter wrote:
+> On Mon, Sep 28, 2015 at 11:43:55PM +0530, Chandra S Gorentla wrote:
+> >  - The message queue is replaced with standard Linux linked list
+> >  - kmem_cache is used for list members
+> >  - A check for return value of receive method is added
+> >  - GFP_ATOMIC is changed to GFP_KERNEL
+> >  - A few other related minor changes
+> 
+> These should be listed and explained.
+OK.  I will try to send seperate patches.
+> 
+> >  
+> >  	while (1) {
+> > -		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
+> > +		ret = wilc_mq_recv(&gMsgQHostIF, &msg,
+> > +					sizeof(struct host_if_msg), &u32Ret);
+> > +		if (ret)
+> > +			continue;
+> > +
+> 
+> I asked before if this was a forever loop and never got a response.
+> Also what does this have to do with list macros?
+The only exit condition of this loop is to receive a message
+'HOST_IF_MSG_EXIT'.  If this check is not there and 'wilc_mq_recv'
+returns an error, the switch case below it will be executed for
+the previously received message.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 824fba0..6b84821 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2444,7 +2444,7 @@ static int  wilc_remain_on_channel(struct wiphy *wiphy,
- }
- 
- /**
-- *  @brief      WILC_WFI_cancel_remain_on_channel
-+ *  @brief      wilc_cancel_remain_on_channel
-  *  @details    Cancel an on-going remain-on-channel operation.
-  *                      This allows the operation to be terminated prior to timeout based on
-  *                      the duration value.
-@@ -2456,9 +2456,9 @@ static int  wilc_remain_on_channel(struct wiphy *wiphy,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int   WILC_WFI_cancel_remain_on_channel(struct wiphy *wiphy,
--					       struct wireless_dev *wdev,
--					       u64 cookie)
-+static int   wilc_cancel_remain_on_channel(struct wiphy *wiphy,
-+					   struct wireless_dev *wdev,
-+					   u64 cookie)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	struct WILC_WFI_priv *priv;
-@@ -3588,7 +3588,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.flush_pmksa = wilc_flush_pmksa,
- #ifdef WILC_P2P
- 	.remain_on_channel = wilc_remain_on_channel,
--	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
-+	.cancel_remain_on_channel = wilc_cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
- 	.mgmt_tx = WILC_WFI_mgmt_tx,
- 	.mgmt_frame_register = WILC_WFI_frame_register,
--- 
-2.5.1
-
+I will send this change in a different patch.
+> 
+> regards,
+> dan carpenter
