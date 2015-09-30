@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45909 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13973 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753158AbbIRJPI (ORCPT
+	with ESMTP id S1753378AbbI3JsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:15:08 -0400
+	Wed, 30 Sep 2015 05:48:22 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,69 +12,55 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 30/34] staging: wilc1000: remove typedef from the struct tstrHostIfRegisterFrame
-Date: Fri, 18 Sep 2015 18:11:32 +0900
-Message-ID: <1442567496-29331-30-git-send-email-tony.cho@atmel.com> (sfid-20150918_111514_298349_AF491361)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 08/32] staging: wilc1000: rename strHostIFCfgParamAttr
+Date: Wed, 30 Sep 2015 18:44:25 +0900
+Message-ID: <1443606289-25407-8-git-send-email-tony.cho@atmel.com> (sfid-20150930_114825_038995_C633E3D9)
+In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIfRegisterFrame and
-renames it to reg_frame in order to comply with the Linux coding style.
+This patch renames strHostIFCfgParamAttr to cfg_info to avoid CamelCase
+naming convention.
 
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 +++--
- drivers/staging/wilc1000/host_interface.h | 7 ++-----
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 59b2308..ce4384c 100644
+index d4e8122..76e82e6 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -439,7 +439,7 @@ union message_body {
- 	struct get_mac_addr strHostIfGetMacAddress;
- 	struct ba_session_info strHostIfBASessionInfo;
- 	struct remain_ch strHostIfRemainOnChan;
--	tstrHostIfRegisterFrame strHostIfRegisterFrame;
-+	struct reg_frame strHostIfRegisterFrame;
- 	char *pUserData;
- 	tstrHostIFDelAllSta strHostIFDelAllSta;
- };
-@@ -3890,7 +3890,8 @@ ERRORHANDLER:
-  *  @date
-  *  @version	1.0
-  */
--static int Handle_RegisterFrame(tstrWILC_WFIDrv *drvHandler, tstrHostIfRegisterFrame *pstrHostIfRegisterFrame)
-+static int Handle_RegisterFrame(tstrWILC_WFIDrv *drvHandler,
-+				struct reg_frame *pstrHostIfRegisterFrame)
- {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 59f83f5..1da1d2d 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -288,14 +288,11 @@ struct remain_ch {
- 	u32 u32ListenSessionID;
- };
+@@ -419,7 +419,7 @@ union message_body {
+ 	struct rcvd_net_info net_info;
+ 	struct rcvd_async_info async_info;
+ 	struct key_attr key_info;
+-	struct cfg_param_attr strHostIFCfgParamAttr;
++	struct cfg_param_attr cfg_info;
+ 	struct set_channel strHostIFSetChan;
+ 	struct get_channel strHostIFGetChan;
+ 	struct set_beacon strHostIFSetBeacon;
+@@ -4124,7 +4124,7 @@ static int hostIFthread(void *pvArg)
  
--typedef struct {
--
-+struct reg_frame {
- 	bool bReg;
- 	u16 u16FrameType;
- 	u8 u8Regid;
--
--
--} tstrHostIfRegisterFrame;
-+};
+ 		case HOST_IF_MSG_CFG_PARAMS:
  
+-			Handle_CfgParam(msg.drvHandler, &msg.body.strHostIFCfgParamAttr);
++			Handle_CfgParam(msg.drvHandler, &msg.body.cfg_info);
+ 			break;
  
- #define ACTION			0xD0
+ 		case HOST_IF_MSG_SET_CHANNEL:
+@@ -5854,7 +5854,7 @@ s32 hif_set_cfg(tstrWILC_WFIDrv *hWFIDrv, tstrCfgParamVal *pstrCfgParamVal)
+ 	/* prepare the WiphyParams Message */
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_CFG_PARAMS;
+-	msg.body.strHostIFCfgParamAttr.pstrCfgParamVal = *pstrCfgParamVal;
++	msg.body.cfg_info.pstrCfgParamVal = *pstrCfgParamVal;
+ 	msg.drvHandler = hWFIDrv;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
 -- 
 1.9.1
 
