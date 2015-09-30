@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33085 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933384AbbIVNr6 (ORCPT
+Received: from mail-io0-f182.google.com ([209.85.223.182]:36535 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673AbbI3RCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 09:47:58 -0400
-Received: by pacex6 with SMTP id ex6so10024271pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 06:47:58 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/9] staging: wilc1000: replace kmalloc with kzalloc
-Date: Tue, 22 Sep 2015 22:47:39 +0900
-Message-Id: <1442929665-19709-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_154801_490483_4F3A94C1)
-In-Reply-To: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442929665-19709-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 30 Sep 2015 13:02:54 -0400
+MIME-Version: 1.0
+Date: Wed, 30 Sep 2015 13:02:53 -0400
+Message-ID: <CA+5PVA4yaLG2NtJ_Bg5-BQzR-Wa5ABxPb-cLxF7bjSsf-P1_5Q@mail.gmail.com> (sfid-20150930_190316_251750_D94A662B)
+Subject: Rate limiting AP bandwidth change messages in ieee80211_config_bw?
+From: Josh Boyer <jwboyer@fedoraproject.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces kmalloc with kzalloc because it is initialized by 0
-immediately after allcating memory.
+Hi Johannes,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+We've seen a handful of reports that seem to have verbose output from
+the ieee80211_config_bw function in net/mac80211/mlme.c.  It looks
+similar to this:
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3813767..d8b8c3d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -439,12 +439,10 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
- 		u32 u32Tsf_Lo;
- 		u32 u32Tsf_Hi;
- 
--		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
-+		pstrNetworkInfo = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
- 		if (!pstrNetworkInfo)
- 			return -ENOMEM;
- 
--		memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
--
- 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
- 
- 		/* Assign a pointer to msa "Mac Header Start Address" */
-@@ -559,12 +557,10 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
- 	u8 *pu8IEs = NULL;
- 	u16 u16IEsLen = 0;
- 
--	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
-+	pstrConnectRespInfo = kzalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
- 	if (!pstrConnectRespInfo)
- 		return -ENOMEM;
- 
--	memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
--
- 	/* u16AssocRespLen = pu8Buffer[0]; */
- 	u16AssocRespLen = (u16)u32BufferLen;
- 
--- 
-2.5.1
+[   66.578652] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   68.522437] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   69.548353] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   70.568677] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   71.489416] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   72.512917] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   73.535866] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   81.777530] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   82.540576] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   94.513467] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   95.634855] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   97.474767] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[   98.498036] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[   99.520472] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[  100.551344] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
+[  101.571100] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 1 (2437/0 MHz)
+[  102.490708] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+is 2437 MHz, width 2 (2447/0 MHz)
 
+Essentially, this looks like the AP is changing the bandwidth (and
+only the width) every second or so.  Why it is doing this, I'm not
+sure.  However, this doesn't seem to actually be an error case yet the
+kernel logs are getting spammed with this message.
+
+I'm wondering if we could either change this message to use sdata_dbg
+instead of sdata_info, or if we could possibly ratelimit it somehow.
+I'd be happy to come up with a patch for either, but I wanted to get
+your feedback on it before I started.  Do you have any objections or
+preference?
+
+josh
