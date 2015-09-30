@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:36143 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843AbbIIQsM (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:31682 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181AbbI3KFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 12:48:12 -0400
-Received: by ioii196 with SMTP id i196so29105655ioi.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2015 09:48:11 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 2/3] ath10k: check for encryption before adding MIC_LEN
-Date: Wed,  9 Sep 2015 12:47:35 -0400
-Message-Id: <1441817256-3997-2-git-send-email-me@bobcopeland.com> (sfid-20150909_184815_043904_5BD6B3BE)
-In-Reply-To: <1441817256-3997-1-git-send-email-me@bobcopeland.com>
-References: <1441817256-3997-1-git-send-email-me@bobcopeland.com>
+	Wed, 30 Sep 2015 06:05:22 -0400
+Date: Wed, 30 Sep 2015 13:05:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 32/32] staging: wilc1000: fix kernel fail after ifconfig
+ wlan0 up
+Message-ID: <20150930100512.GE7340@mwanda> (sfid-20150930_120531_131036_3A2A6272)
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+ <1443606914-25563-10-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443606914-25563-10-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the case of raw mode without nohwcrypt parameter, we
-should still make sure the frame is protected before
-adding MIC_LEN to avoid skb_under_panic errors.
+Ugh...  No.  Just do this:
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index ea53c21..eb5ba9b 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -564,7 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	} else if (!skb_cb->htt.nohwcrypt &&
--		   skb_cb->txmode == ATH10K_HW_TXRX_RAW) {
-+		   skb_cb->txmode == ATH10K_HW_TXRX_RAW &&
-+		   ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	}
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 869736a..52d8f95 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -102,6 +102,8 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
  
--- 
-2.1.4
-
+ 	up(&pHandle->hSem);
+ 
++	return 0;
++
+ ERRORHANDLER:
+ 	/* error occured, free any allocations */
+ 	if (pstrMessage) {
