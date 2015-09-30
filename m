@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51636 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932885AbbI3Sac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 14:30:32 -0400
-Message-ID: <1443637830.1859.17.camel@sipsolutions.net> (sfid-20150930_203036_792474_D5ECDC68)
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Date: Wed, 30 Sep 2015 20:30:30 +0200
-In-Reply-To: <560C19F3.6070903@candelatech.com>
-References: <5605D228.7050609@candelatech.com>
-	 (sfid-20150926_010105_789618_F93D668E) <1443595615.1859.2.camel@sipsolutions.net>
-	 <560BFABC.8090504@candelatech.com>
-	 <1443626224.1859.9.camel@sipsolutions.net>
-	 <560C036C.7000401@candelatech.com>
-	 <1443633267.1859.11.camel@sipsolutions.net>
-	 <560C19F3.6070903@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47087 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989AbbI3J4M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 05:56:12 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 29/32] staging: wilc1000: rename strHostIfRegisterFrame
+Date: Wed, 30 Sep 2015 18:55:11 +0900
+Message-ID: <1443606914-25563-7-git-send-email-tony.cho@atmel.com> (sfid-20150930_115624_399992_038AA8C3)
+In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-30 at 10:20 -0700, Ben Greear wrote:
-> 
-> Yes, it is a transmitter side problem, and A-MSDU on IBSS
-> is disabled by default in all ath10k firmware versions that I am aware of.
+This patch renames strHostIfRegisterFrame to reg_f to avoid CamelCase
+naming convention.
 
-Right.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-> I was hoping there might be a way to allow A-MSDU + IBSS + ath10k
-> to work in future kernels without applying out-of-tree
-> kernel hacks.  This would let people with appropriate firmware
-> enable IBSS + A-MSDU for added performance in cases where they
-> knew the peer could support the needed work-around.
-> 
-> I don't think it is worth a lot of effort, but if it were relatively
-> simple to fix, then maybe it is worth it.
-> 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9dac906..79957f9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -391,7 +391,7 @@ union message_body {
+ 	struct get_mac_addr get_mac_info;
+ 	struct ba_session_info session_info;
+ 	struct remain_ch remain_on_ch;
+-	struct reg_frame strHostIfRegisterFrame;
++	struct reg_frame reg_f;
+ 	char *pUserData;
+ 	struct del_all_sta strHostIFDelAllSta;
+ };
+@@ -4191,7 +4191,7 @@ static int hostIFthread(void *pvArg)
+ 
+ 		case HOST_IF_MSG_REGISTER_FRAME:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_REGISTER_FRAME\n");
+-			Handle_RegisterFrame(msg.drvHandler, &msg.body.strHostIfRegisterFrame);
++			Handle_RegisterFrame(msg.drvHandler, &msg.body.reg_f);
+ 			break;
+ 
+ 		case HOST_IF_MSG_LISTEN_TIMER_FIRED:
+@@ -6489,20 +6489,20 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
+ 	switch (u16FrameType) {
+ 	case ACTION:
+ 		PRINT_D(HOSTINF_DBG, "ACTION\n");
+-		msg.body.strHostIfRegisterFrame.u8Regid = ACTION_FRM_IDX;
++		msg.body.reg_f.u8Regid = ACTION_FRM_IDX;
+ 		break;
+ 
+ 	case PROBE_REQ:
+ 		PRINT_D(HOSTINF_DBG, "PROBE REQ\n");
+-		msg.body.strHostIfRegisterFrame.u8Regid = PROBE_REQ_IDX;
++		msg.body.reg_f.u8Regid = PROBE_REQ_IDX;
+ 		break;
+ 
+ 	default:
+ 		PRINT_D(HOSTINF_DBG, "Not valid frame type\n");
+ 		break;
+ 	}
+-	msg.body.strHostIfRegisterFrame.u16FrameType = u16FrameType;
+-	msg.body.strHostIfRegisterFrame.bReg = bReg;
++	msg.body.reg_f.u16FrameType = u16FrameType;
++	msg.body.reg_f.bReg = bReg;
+ 	msg.drvHandler = hWFIDrv;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+-- 
+1.9.1
 
-Had it been a receiver-side issue, then it'd seem reasonable to work
-around it. But it being a transmitter-side issue it doesn't really seem
-so - *every* possible peer would have to be adjusted, and some might
-not even be able to get adjusted (e.g. devices that have A-MSDU
-deaggregation in hardware/firmware) ...
-
-So to do that properly you'd have to advertise some sort of quirk
-vendor IE, and all that, which seems excessive given the limited use.
-
-johannes
