@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:38675 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbbILSLL (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:58181 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753922AbbI3INn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 14:11:11 -0400
-Received: by wiclk2 with SMTP id lk2so89648402wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:10 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/11] staging: vt6655: remove and move vt6655_init_info
-Date: Sat, 12 Sep 2015 19:10:33 +0100
-Message-Id: <1442081438-3485-6-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201139_494140_7D755453)
-In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
-References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Sep 2015 04:13:43 -0400
+Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+References: <5605D228.7050609@candelatech.com>
+From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
+Message-ID: <560B99AA.5060401@green-communications.fr> (sfid-20150930_101349_746217_ED2DB93B)
+Date: Wed, 30 Sep 2015 10:13:30 +0200
+MIME-Version: 1.0
+In-Reply-To: <5605D228.7050609@candelatech.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move code to vt6655_probe.
+On 26/09/2015 01:00, Ben Greear wrote:
+> It seems that ath10k ar988X hardware has a bug where the BSSID
+> for IBSS AMSDU frames is all zeros.  The 'main' 636 ath10k firmware
+> does not seem to use AMSDUs for IBSS, and when I enable it in my CT
+> firmware, then I see the breakage.  So, I suspect it is not
+> just a simple software/firmware bug.
+> 
+> If I simply ignore the bssid_match check in ieee80211_accept_frame,
+> then it seems everything runs fine.
+> 
+> So, I'm curious if anyone knows what sorts of bad things could happen
+> if the bssid_match check is ignored?  Maybe bcast/mcast frames could
+> be accepted when they shouldn't be in certain cases?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+Given that all it takes for an IBSS station to be added as a neighbor
+is to see a frame from an unknown station with the same BSSID
+(ieee80211_ibss_rx_no_sta(), just 10 lines below), your ath10k chip
+will consider all stations for neighboring IBSS to be part of this BSS.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 03cc52e..ce2df37 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -28,7 +28,6 @@
-  *
-  *   vt6655_probe - module initial (insmod) driver entry
-  *   vt6655_remove - module remove entry
-- *   vt6655_init_info - device structure resource allocation function
-  *   device_free_info - device structure resource free function
-  *   device_get_pci_info - get allocated pci io/mem resource
-  *   device_print_info - print out resource
-@@ -136,8 +135,6 @@ static const struct pci_device_id vt6655_pci_id_table[] = {
- /*---------------------  Static Functions  --------------------------*/
- 
- static int  vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent);
--static void vt6655_init_info(struct pci_dev *pcid,
--			     struct vnt_private **ppDevice);
- static void device_free_info(struct vnt_private *pDevice);
- static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
- static void device_print_info(struct vnt_private *pDevice);
-@@ -436,14 +433,6 @@ static void device_print_info(struct vnt_private *pDevice)
- 		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
- }
- 
--static void vt6655_init_info(struct pci_dev *pcid,
--			     struct vnt_private **ppDevice)
--{
--	(*ppDevice)->pcid = pcid;
--
--	spin_lock_init(&((*ppDevice)->lock));
--}
--
- static bool device_get_pci_info(struct vnt_private *pDevice,
- 				struct pci_dev *pcid)
- {
-@@ -1643,8 +1632,9 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	}
- 
- 	priv = hw->priv;
-+	priv->pcid = pcid;
- 
--	vt6655_init_info(pcid, &priv);
-+	spin_lock_init(&priv->lock);
- 
- 	priv->hw = hw;
- 
--- 
-2.5.0
+If RSN is used, or any other protocol/program that watches the list of
+neighbors, then your station will try to communicate with them.  Good
+(those who don't ignore bssid checks) neighbors will normally drop the
+frames. But if you deploy several machines ignoring the bssid check,
+then they cannot run two concurrent IBSS networks.
 
+Also, if there is a limit on how much stations the ath10k hardware can
+handle, then that limit have a higher chance of being reached.
