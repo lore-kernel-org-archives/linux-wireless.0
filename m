@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36097 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490AbbINDZZ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47128 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754899AbbI3J4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:25:25 -0400
-Received: by padhk3 with SMTP id hk3so129792839pad.3
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:25 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 16/31] staging: wilc1000: rename WILC_WFI_del_station
-Date: Mon, 14 Sep 2015 12:24:16 +0900
-Message-Id: <1442201071-16155-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054652_939922_5642FD77)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 30 Sep 2015 05:56:25 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 31/32] staging: wilc1000: rename strHostIFDelAllSta
+Date: Wed, 30 Sep 2015 18:55:13 +0900
+Message-ID: <1443606914-25563-9-git-send-email-tony.cho@atmel.com> (sfid-20150930_115631_513970_09DA83D6)
+In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_del_station with del_station to avoid
-CamelCase.
+This patch renames strHostIFDelAllSta to del_all_sta_info to avoid
+CamelCase naming convention.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-V3: remove "wilc_" prefix
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 72bcdc9..5bdd111 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3384,7 +3384,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3769595..aad0f5d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -393,7 +393,7 @@ union message_body {
+ 	struct remain_ch remain_on_ch;
+ 	struct reg_frame reg_f;
+ 	char *data;
+-	struct del_all_sta strHostIFDelAllSta;
++	struct del_all_sta del_all_sta_info;
+ };
  
- /**
-- *  @brief      WILC_WFI_del_station
-+ *  @brief      del_station
-  *  @details    Remove a station; @mac may be NULL to remove all stations.
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3392,8 +3392,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_del_station(struct wiphy *wiphy, struct net_device *dev,
--				struct station_del_parameters *params)
-+static int del_station(struct wiphy *wiphy, struct net_device *dev,
-+		       struct station_del_parameters *params)
- {
- 	const u8 *mac = params->mac;
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3575,7 +3575,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_beacon = change_beacon,
- 	.stop_ap = stop_ap,
- 	.add_station = add_station,
--	.del_station = WILC_WFI_del_station,
-+	.del_station = del_station,
- 	.change_station = WILC_WFI_change_station,
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	.get_station = WILC_WFI_get_station,
+ /*!
+@@ -4212,7 +4212,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_ALL_STA:
+-			Handle_DelAllSta(msg.drvHandler, &msg.body.strHostIFDelAllSta);
++			Handle_DelAllSta(msg.drvHandler, &msg.body.del_all_sta_info);
+ 			break;
+ 
+ 		default:
+@@ -6726,7 +6726,7 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
+ 	s32 s32Error = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	struct del_all_sta *pstrDelAllStationMsg = &msg.body.strHostIFDelAllSta;
++	struct del_all_sta *pstrDelAllStationMsg = &msg.body.del_all_sta_info;
+ 	u8 au8Zero_Buff[ETH_ALEN] = {0};
+ 	u32 i;
+ 	u8 u8AssocNumb = 0;
 -- 
-2.5.1
+1.9.1
 
