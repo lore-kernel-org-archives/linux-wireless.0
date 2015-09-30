@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:41562 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752103AbbILH20 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 03:28:26 -0400
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>
-Subject: [[linux-nfc] PATCH v1.0 1/3] NFC: digital: Type4A tags support
-Date: Sat, 12 Sep 2015 03:21:33 -0400
-Message-ID: <1442042495-2407-2-git-send-email-shikha.singh@st.com> (sfid-20150912_092829_930150_04AAE85C)
-In-Reply-To: <1442042495-2407-1-git-send-email-shikha.singh@st.com>
-References: <1442042495-2407-1-git-send-email-shikha.singh@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:51643 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932495AbbI3ScV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 14:32:21 -0400
+Message-ID: <1443637937.1859.19.camel@sipsolutions.net> (sfid-20150930_203253_594716_3CF517AD)
+Subject: Re: Rate limiting AP bandwidth change messages in
+ ieee80211_config_bw?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Date: Wed, 30 Sep 2015 20:32:17 +0200
+In-Reply-To: <CA+5PVA4yaLG2NtJ_Bg5-BQzR-Wa5ABxPb-cLxF7bjSsf-P1_5Q@mail.gmail.com> (sfid-20150930_190254_762697_55F052FA)
+References: <CA+5PVA4yaLG2NtJ_Bg5-BQzR-Wa5ABxPb-cLxF7bjSsf-P1_5Q@mail.gmail.com>
+	 (sfid-20150930_190254_762697_55F052FA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The definition of DIGITAL_PROTO_NFCA_RF_TECH is modified to support
-ISO14443 Type4A tags. Without this change it is not possible to start
-polling for ISO14443 Type4A tags from the initiator side.
+On Wed, 2015-09-30 at 13:02 -0400, Josh Boyer wrote:
+> Hi Johannes,
+> 
+> We've seen a handful of reports that seem to have verbose output from
+> the ieee80211_config_bw function in net/mac80211/mlme.c.  It looks
+> similar to this:
+> 
+> [   66.578652] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+> is 2437 MHz, width 2 (2447/0 MHz)
+> [   68.522437] wlp3s0: AP xx:xx:xx:xx:xx changed bandwidth, new config
+> is 2437 MHz, width 1 (2437/0 MHz)
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
----
- net/nfc/digital_core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Essentially, this looks like the AP is changing the bandwidth (and
+> only the width) every second or so.  Why it is doing this, I'm not
+> sure.  However, this doesn't seem to actually be an error case yet the
+> kernel logs are getting spammed with this message.
+> 
+> I'm wondering if we could either change this message to use sdata_dbg
+> instead of sdata_info, or if we could possibly ratelimit it somehow.
+> I'd be happy to come up with a patch for either, but I wanted to get
+> your feedback on it before I started.  Do you have any objections or
+> preference?
+> 
 
-diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
-index 009bcf3..7067970 100644
---- a/net/nfc/digital_core.c
-+++ b/net/nfc/digital_core.c
-@@ -20,7 +20,8 @@
- #include "digital.h"
- 
- #define DIGITAL_PROTO_NFCA_RF_TECH \
--	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | NFC_PROTO_NFC_DEP_MASK)
-+	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | \
-+	NFC_PROTO_NFC_DEP_MASK | NFC_PROTO_ISO14443_MASK)
- 
- #define DIGITAL_PROTO_NFCB_RF_TECH	NFC_PROTO_ISO14443_B_MASK
- 
--- 
-1.8.2.1
+I'm not sure ratelimiting it would even work - it's not *that* high
+frequency? Not really sure though.
 
+I think we can do either, it's not such a terribly important message as
+far as I can tell.
+
+johannes
