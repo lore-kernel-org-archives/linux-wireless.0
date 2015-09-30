@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31682 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755181AbbI3KFW (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:31616 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932293AbbI3NWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 06:05:22 -0400
-Date: Wed, 30 Sep 2015 13:05:12 +0300
+	Wed, 30 Sep 2015 09:22:42 -0400
+Date: Wed, 30 Sep 2015 16:22:07 +0300
 From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+To: Chandra Gorentla <csgorentla@gmail.com>
+Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
 	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 32/32] staging: wilc1000: fix kernel fail after ifconfig
- wlan0 up
-Message-ID: <20150930100512.GE7340@mwanda> (sfid-20150930_120531_131036_3A2A6272)
-References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
- <1443606914-25563-10-git-send-email-tony.cho@atmel.com>
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Replace message queue
+ with standard Linux lists
+Message-ID: <20150930132207.GH7340@mwanda> (sfid-20150930_152259_454127_C90D7408)
+References: <1443464037-3591-1-git-send-email-csgorentla@gmail.com>
+ <20150929023152.GD7289@mwanda>
+ <20150930124250.GB4704@gcs-HP-Notebook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443606914-25563-10-git-send-email-tony.cho@atmel.com>
+In-Reply-To: <20150930124250.GB4704@gcs-HP-Notebook>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ugh...  No.  Just do this:
+On Wed, Sep 30, 2015 at 06:12:50PM +0530, Chandra Gorentla wrote:
+> > >  	while (1) {
+> > > -		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
+> > > +		ret = wilc_mq_recv(&gMsgQHostIF, &msg,
+> > > +					sizeof(struct host_if_msg), &u32Ret);
+> > > +		if (ret)
+> > > +			continue;
+> > > +
+> > 
+> > I asked before if this was a forever loop and never got a response.
+> > Also what does this have to do with list macros?
+> The only exit condition of this loop is to receive a message
+> 'HOST_IF_MSG_EXIT'.  If this check is not there and 'wilc_mq_recv'
+> returns an error, the switch case below it will be executed for
+> the previously received message.
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 869736a..52d8f95 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -102,6 +102,8 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 
- 	up(&pHandle->hSem);
- 
-+	return 0;
-+
- ERRORHANDLER:
- 	/* error occured, free any allocations */
- 	if (pstrMessage) {
+Oh, hm...  It looks like wilc_mq_recv() can return -EFAULT, -EOVERFLOW
+or success here.  If it returns -EFUALT is calling wilc_mq_recv() again
+really the right thing?  I suspect we should break in that case.  We
+should probably at least sleep for a bit intsead of looping so tightly
+if it returns -EOVERFLOW?
+
+I'm not sure.
+
+regards,
+dan carpenter
+
