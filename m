@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:42040
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753361AbbIXM74 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13826 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505AbbI3JrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 08:59:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 4.3 2/2] mac80211: fix handling of PS filtering with fast-xmit
-Date: Thu, 24 Sep 2015 14:59:49 +0200
-Message-Id: <1443099589-69793-2-git-send-email-nbd@openwrt.org> (sfid-20150924_150001_043155_50DE3E09)
-In-Reply-To: <1443099589-69793-1-git-send-email-nbd@openwrt.org>
-References: <1443099589-69793-1-git-send-email-nbd@openwrt.org>
+	Wed, 30 Sep 2015 05:47:09 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/32] staging: wilc1000: rename strRcvdNetworkInfo
+Date: Wed, 30 Sep 2015 18:44:22 +0900
+Message-ID: <1443606289-25407-5-git-send-email-tony.cho@atmel.com> (sfid-20150930_114726_097138_C93B5225)
+In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes dropped packets in the tx path in case a non-PS station triggers
-the tx filter.
+This patch renames strRcvdNetworkInfo to net_info to avoid CamelCase
+naming convention.
 
-Cc: stable@vger.kernel.org # 4.2
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/mac80211/status.c | 1 +
- net/mac80211/tx.c     | 7 +++++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 8ba5832..3ed7ddf 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -101,6 +101,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 	 * when it wakes up for the next time.
- 	 */
- 	set_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT);
-+	ieee80211_clear_fast_xmit(sta);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 96f0b69..8a93112 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -416,7 +416,7 @@ struct sta_inactive_t {
+ union message_body {
+ 	struct scan_attr scan_info;
+ 	struct connect_attr con_info;
+-	struct rcvd_net_info strRcvdNetworkInfo;
++	struct rcvd_net_info net_info;
+ 	struct rcvd_async_info strRcvdGnrlAsyncInfo;
+ 	struct key_attr strHostIFkeyAttr;
+ 	struct cfg_param_attr strHostIFCfgParamAttr;
+@@ -4111,7 +4111,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
  
- 	/*
- 	 * This code races in the following way:
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index af058eb..77a7726 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1218,8 +1218,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 		case HOST_IF_MSG_RCVD_NTWRK_INFO:
+-			Handle_RcvdNtwrkInfo(msg.drvHandler, &msg.body.strRcvdNetworkInfo);
++			Handle_RcvdNtwrkInfo(msg.drvHandler, &msg.body.net_info);
+ 			break;
  
- 	if (!tx->sta)
- 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
--	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT))
-+	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT)) {
- 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+		ieee80211_check_fast_xmit(tx->sta);
-+	}
+ 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
+@@ -6302,9 +6302,9 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.id = HOST_IF_MSG_RCVD_NTWRK_INFO;
+ 	msg.drvHandler = pstrWFIDrv;
  
- 	info->flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
+-	msg.body.strRcvdNetworkInfo.u32Length = u32Length;
+-	msg.body.strRcvdNetworkInfo.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
+-	memcpy(msg.body.strRcvdNetworkInfo.pu8Buffer,
++	msg.body.net_info.u32Length = u32Length;
++	msg.body.net_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL); /* will be deallocated by the receiving thread */
++	memcpy(msg.body.net_info.pu8Buffer,
+ 		    pu8Buffer, u32Length);
  
-@@ -2451,7 +2453,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
- 
- 	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
- 	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
--	    test_sta_flag(sta, WLAN_STA_PS_DELIVER))
-+	    test_sta_flag(sta, WLAN_STA_PS_DELIVER) ||
-+	    test_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT))
- 		goto out;
- 
- 	if (sdata->noack_map)
+ 	/* send the message */
 -- 
-2.2.2
+1.9.1
 
