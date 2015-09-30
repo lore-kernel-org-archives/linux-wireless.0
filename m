@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out22.sjc.mx.trendmicro.com ([216.99.131.79]:62845 "EHLO
-	out22.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752187AbbIILRz (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:53070 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933029AbbI3L1I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 07:17:55 -0400
-Received: from out03.sjc.mx.trendmicro.com (unknown [216.99.131.7])
-	by out22.sjc.mx.trendmicro.com (Postfix) with ESMTP id 68D7FB015B2
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:28 +0000 (UTC)
-Received: from relay09.sjc.mx.trendmicro.com (unknown [10.30.239.24])
-	by out03.sjc.mx.trendmicro.com (Postfix) with ESMTP id 9C77998042A
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:27 +0000 (UTC)
-Received: from thinktube.com (unknown [111.68.225.247])
-	by relay09.sjc.mx.trendmicro.com (Postfix) with ESMTP id 0B082980436
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:26 +0000 (UTC)
-Received: from unknown (HELO [192.168.5.9]) (br1@[188.86.86.230])
-          (envelope-sender <br1@thinktube.com>)
-          by 111.68.225.247 (qmail-ldap-1.03) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 9 Sep 2015 10:51:26 -0000
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for
- rtl8188[cr]u/rtl8192cu/rtl8723au
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
- <87y4gjfw10.fsf@kamboji.qca.qualcomm.com> <55EC71DB.7060007@lwfinger.net>
- <wrfjvbbkaams.fsf@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-From: Bruno Randolf <br1@thinktube.com>
-Message-ID: <55F00F29.2090608@thinktube.com> (sfid-20150909_131758_558936_D4A72006)
-Date: Wed, 9 Sep 2015 11:51:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <wrfjvbbkaams.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+	Wed, 30 Sep 2015 07:27:08 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: netdev@vger.kernel.org
+Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 06/12] mac80211: use ktime_get_seconds
+Date: Wed, 30 Sep 2015 13:26:36 +0200
+Message-Id: <1443612402-3000775-7-git-send-email-arnd@arndb.de> (sfid-20150930_133158_293350_9B2A1F64)
+In-Reply-To: <1443612402-3000775-1-git-send-email-arnd@arndb.de>
+References: <1443612402-3000775-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/2015 10:01 PM, Jes Sorensen wrote:
-> I do not fully agree on this. In my testing I found rtl8192cu rather
-> unstable, to the point of not being usable. It would lock up for me
-> after a short while. I have seen this happen with mulitple different
-> adapters. I suspect this is the reason why drivers/staging/rtl8192u is
-> still sitting in the kernel tree.
+The mac80211 code uses ktime_get_ts to measure the connected time.
+As this uses monotonic time, it is y2038 safe on 32-bit systems,
+but we still want to deprecate the use of 'timespec' because most
+other users are broken.
 
-I second this. Problems with rtc8192cu have been mentioned on this list
-before: http://www.spinics.net/lists/linux-wireless/msg138538.html
-I recently saw similar problems in STA mode as well.
+This changes the code to use ktime_get_seconds() instead, which
+avoids the timespec structure and is slightly more efficient.
 
-> My take is that the majority of users mostly care about station support
-> and for them rtl8xxxu will be much preferred to rtl8192cu.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+---
+ net/mac80211/sta_info.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-Right. Users who need AP or IBSS mode can usually be expected to be able
-to change kernel configurations or blacklist modules.
-
-Also we hope that rtl8xxxu will be extended in the future to support
-IBSS and AP mode as well! :)
-
-bruno
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 64f1936350c6..c3644458e2ee 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -303,7 +303,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct sta_info *sta;
+-	struct timespec uptime;
+ 	int i;
+ 
+ 	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
+@@ -339,8 +338,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	/* Mark TID as unreserved */
+ 	sta->reserved_tid = IEEE80211_TID_UNRESERVED;
+ 
+-	ktime_get_ts(&uptime);
+-	sta->last_connected = uptime.tv_sec;
++	sta->last_connected = ktime_get_seconds();
+ 	ewma_signal_init(&sta->avg_signal);
+ 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
+ 		ewma_signal_init(&sta->chain_signal_avg[i]);
+@@ -1813,7 +1811,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct rate_control_ref *ref = NULL;
+-	struct timespec uptime;
+ 	u32 thr = 0;
+ 	int i, ac;
+ 
+@@ -1838,8 +1835,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			 BIT(NL80211_STA_INFO_RX_DROP_MISC) |
+ 			 BIT(NL80211_STA_INFO_BEACON_LOSS);
+ 
+-	ktime_get_ts(&uptime);
+-	sinfo->connected_time = uptime.tv_sec - sta->last_connected;
++	sinfo->connected_time = ktime_get_seconds() - sta->last_connected;
+ 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+ 
+ 	if (!(sinfo->filled & (BIT(NL80211_STA_INFO_TX_BYTES64) |
+-- 
+2.1.0.rc2
 
