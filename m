@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:28681 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402AbbIAOzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 10:55:17 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v2 5/9] nfc: nci: Do not call post_setup when setup fails
-Date: Tue,  1 Sep 2015 17:54:24 +0300
-Message-Id: <1441119268-30654-6-git-send-email-robert.dolca@intel.com> (sfid-20150901_165723_494835_7B2749B0)
-In-Reply-To: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
-References: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14202 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606AbbI3Jte (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 05:49:34 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 19/32] staging: wilc1000: rename strPowerMgmtparam
+Date: Wed, 30 Sep 2015 18:44:36 +0900
+Message-ID: <1443606289-25407-19-git-send-email-tony.cho@atmel.com> (sfid-20150930_121655_729781_8284FE22)
+In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver should know that it can continue with post setup where
-setup left off. Being able to execute post_setup when setup fails may
-force the developer to keep this state in the driver.
+This patch renames strPowerMgmtparam to pwr_mgmt_info to avoid CamelCase
+naming convention.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/nfc/nci/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index e2bd5f4..29607f9 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -402,9 +402,8 @@ static int nci_open_device(struct nci_dev *ndev)
- 				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7d51122..de64bd2 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -381,7 +381,7 @@ union message_body {
+ 	struct add_sta_param add_sta_info;
+ 	struct del_sta del_sta_info;
+ 	struct add_sta_param edit_sta_info;
+-	struct power_mgmt_param strPowerMgmtparam;
++	struct power_mgmt_param pwr_mgmt_info;
+ 	struct sta_inactive_t strHostIfStaInactiveT;
+ 	struct set_ip_addr strHostIfSetIP;
+ 	struct drv_handler strHostIfSetDrvHandler;
+@@ -4154,7 +4154,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
  
--	if (ndev->ops->post_setup) {
-+	if (!rc && ndev->ops->post_setup)
- 		rc = ndev->ops->post_setup(ndev);
--	}
+ 		case HOST_IF_MSG_POWER_MGMT:
+-			Handle_PowerManagement(msg.drvHandler, &msg.body.strPowerMgmtparam);
++			Handle_PowerManagement(msg.drvHandler, &msg.body.pwr_mgmt_info);
+ 			break;
  
- 	if (!rc) {
- 		rc = __nci_request(ndev, nci_init_complete_req, 0,
+ 		case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+@@ -6826,7 +6826,7 @@ s32 host_int_set_power_mgmt(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u32 u32Ti
+ 	s32 s32Error = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.strPowerMgmtparam;
++	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.pwr_mgmt_info;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", bIsEnabled);
+ 
 -- 
 1.9.1
 
