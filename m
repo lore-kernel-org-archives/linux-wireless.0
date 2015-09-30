@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.245]:58462 "EHLO
-	DVREDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751429AbbIJCIF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 22:08:05 -0400
-Subject: Re: [PATCH 3/4] staging: wilc1000: delete wilc_oswrapper.h and
- wilc_platform.h
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1441782493-11338-1-git-send-email-tony.cho@atmel.com>
- <1441782493-11338-3-git-send-email-tony.cho@atmel.com>
- <20150909181912.GA30669@kroah.com>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <55F0E619.5000808@atmel.com> (sfid-20150910_040828_971951_BF8308ED)
-Date: Thu, 10 Sep 2015 11:08:25 +0900
-MIME-Version: 1.0
-In-Reply-To: <20150909181912.GA30669@kroah.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:51626 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932630AbbI3S2r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 14:28:47 -0400
+Message-ID: <1443637722.1859.15.camel@sipsolutions.net> (sfid-20150930_202852_081219_8BBC8C75)
+Subject: Re: Low latency communication over wifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Bastian Bittorf <bittorf@bluebottle.com>, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Date: Wed, 30 Sep 2015 20:28:42 +0200
+In-Reply-To: <20150930172440.GA11160@amd>
+References: <20150926102403.GA21555@amd>
+	 <1443426103.2401.1.camel@sipsolutions.net> <20150930172440.GA11160@amd>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+On Wed, 2015-09-30 at 19:24 +0200, Pavel Machek wrote:
+> On Mon 2015-09-28 09:41:43, Johannes Berg wrote:
+> > On Sat, 2015-09-26 at 12:24 +0200, Pavel Machek wrote:
+> > > 
+> > > That would be equivalent to ping -Q, right? It does not seem to have
+> > > any effect :-(. I'd expect at least local machine to use shorter waits
+> > > for medium, and thus drop packets instead of waiting.
+> > 
+> > Correct. But it won't *drop* packets, it just increases the chances of
+> > getting medium access.
+> 
+> Increases chances of medium access, but limits number of retries, so
+> it should drop sooner, no?
 
-I want to make sure one thing before moving further. Are you saying the errorsupport.h file as the os wrapper remaining in the oswrapper.h file?
-If not, can you let me know what you point out as remaining os wrapper in the oswrapper.h file?
-If yes, I have been already replacing all of error values defined in the errorsupport.h file so that I send you the next patch when done.
+No, assigning VO AC by itself won't (typically) limit the number of
+retries.
 
-Thanks,
-Tony.
+> This should send the second  ping to the priority queue based on -Q,
+> but I don't see an effect against one access point.... and it seems to
+> work somehow against second one. Good!
+> 
+Well it depends on whether or not your AP supports WMM/QoS to start
+with :)
 
-On 2015년 09월 10일 03:19, Greg KH wrote:
-> On Wed, Sep 09, 2015 at 04:08:12PM +0900, Tony Cho wrote:
->> From: Glen Lee <glen.lee@atmel.com>
->>
->> wilc1000 driver runs on Linux. No need to have oswrapper or platform
->> dependent files.
->> Before delete two header files, move two structures in wilc_platform.h to
->> wilc_msgqueue.h where it is used. Include linux header files where is needs
->> since wilc_platform is deleted.
->> Finally, remove wilc_oswrapper.h and wilc_platform.h.
-> That's a lot of different things to be doing all in one patch.  Please
-> break this up into individual patches.
->
-> And you can't just delete the oswrapper.h file, you still have things in
-> it, don't move it for no reason, get rid of those wrapper functions
-> properly first, making the file empty, and then you can delete it.
-> Moving them to a different .h file just hides the fact that this work
-> still needs to be done.
->
-> thanks,
->
-> greg k-h
-
+johannes
