@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from r00tworld.com ([212.85.137.150]:51740 "EHLO r00tworld.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935119AbbI2Pd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 11:33:28 -0400
-From: "PaX Team" <pageexec@freemail.hu>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 29 Sep 2015 17:21:28 +0200
+Received: from aserp1040.oracle.com ([141.146.126.69]:18482 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754317AbbI3LAf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 07:00:35 -0400
+Date: Wed, 30 Sep 2015 14:00:20 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 29/32] staging: wilc1000: rename strHostIfRegisterFrame
+Message-ID: <20150930105857.GF7340@mwanda> (sfid-20150930_130038_286379_594F2C5A)
+References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
+ <1443606914-25563-7-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Subject: question about potential integer truncation in mwifiex_set_wapi_ie and mwifiex_set_wps_ie
-Reply-to: pageexec@freemail.hu
-CC: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	re.emese@gmail.com, spender@grsecurity.net
-Message-ID: <560AAC78.14106.6193CAA9@pageexec.freemail.hu> (sfid-20150929_173437_941244_F44E1CCD)
-Content-type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443606914-25563-7-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi all,
+On Wed, Sep 30, 2015 at 06:55:11PM +0900, Tony Cho wrote:
+> This patch renames strHostIfRegisterFrame to reg_f to avoid CamelCase
+> naming convention.
 
-in drivers/net/wireless/mwifiex/sta_ioctl.c the following functions
+Could we go with "reg_frame"?  f is very ambigous.
 
-	mwifiex_set_wpa_ie_helper
-	mwifiex_set_wapi_ie
-	mwifiex_set_wps_ie
-
-can truncate the incoming ie_len argument from u16 to u8 when it gets
-stored in mwifiex_private.wpa_ie_len, mwifiex_private.wapi_ie_len and
-mwifiex_private.wps_ie_len, respectively. based on some light code
-reading it seems a length value of 256 is valid (IEEE_MAX_IE_SIZE and
-MWIFIEX_MAX_VSIE_LEN seem to limit it) and thus would get truncated
-to 0 when stored in those u8 fields. the question is whether this is
-intentional or a bug somewhere.
-
-FTR, this issue was detected with the upcoming version of the size overflow
-plugin we have in PaX/grsecurity and there're a handful of similar cases in
-the tree where potentially unwanted or unnecessary integer truncations occur,
-this being one of these. any opinion/help is welcome!
-
-cheers,
-  PaX Team
+regards,
+dan carpenter
 
