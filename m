@@ -1,43 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48649 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752975AbbJWQJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 12:09:10 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <562A3103.705@gmail.com> <wrfj37x1it1n.fsf@redhat.com>
-Date: Fri, 23 Oct 2015 12:09:08 -0400
-In-Reply-To: <wrfj37x1it1n.fsf@redhat.com> (Jes Sorensen's message of "Fri, 23
-	Oct 2015 10:00:20 -0400")
-Message-ID: <wrfjegglefdn.fsf@redhat.com> (sfid-20151023_180918_375752_4E6E3510)
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37314 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbbI3X1l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 19:27:41 -0400
+Received: by wicfx3 with SMTP id fx3so4732098wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 16:27:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150930231613.GC20220@us.netrek.org>
+References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
+	<20150930231613.GC20220@us.netrek.org>
+Date: Thu, 1 Oct 2015 01:27:40 +0200
+Message-ID: <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com> (sfid-20151001_012744_989069_B3421ADE)
+Subject: Re: [PATCH] iw: Memory leak in error condition
+From: Ola Olsson <ola1olsson@gmail.com>
+To: James Cameron <quozl@laptop.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
->> Jes Sorensen wrote:
+Oh yes! :)
+Suddenly valgrind was happy as well.
+
+>From 2724dd259f2bf61a2b7c85a70a70fd640a583453 Mon Sep 17 00:00:00 2001
+From: Ola Olsson <ola.olsson@sonymobile.com>
+Date: Thu, 1 Oct 2015 00:43:06 +0200
+Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola Olsson
+ <ola.olsson@sonymobile.com>
+
+---
+ scan.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/scan.c b/scan.c
+index e959c1b..f3441a7 100644
+--- a/scan.c
++++ b/scan.c
+@@ -445,8 +445,11 @@ static int handle_scan(struct nl80211_state *state,
+
+        if (ies || meshid) {
+                tmpies = (unsigned char *) malloc(ies_len + meshid_len);
+-               if (!tmpies)
++               if (!tmpies) {
++                       free(ies);
++                       free(meshid);
+                        goto nla_put_failure;
++               }
+                if (ies) {
+                        memcpy(tmpies, ies, ies_len);
+                        free(ies);
+-- 
+1.7.9.5
+
+On Thu, Oct 1, 2015 at 1:16 AM, James Cameron <quozl@laptop.org> wrote:
+> On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
+>> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
+>> From: Ola Olsson <ola.olsson@sonymobile.com>
+>> Date: Thu, 1 Oct 2015 00:43:06 +0200
+>> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
+>>  Olsson <ola.olsson@sonymobile.com>
 >>
->>> This is an alternate driver for a number of Realtek WiFi USB devices,
->>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
->>> It was written from scratch utilizing the Linux mac80211 stack.
->>>[...]
->>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
->>> 0xff, 0xff),
->>>[...]
->>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
->>> 0xff, 0xff),
->>>[...]
+>> ---
+>>  scan.c |    2 ++
+>>  1 file changed, 2 insertions(+)
 >>
->> This device was duplicated. Delete one of them.
+>> diff --git a/scan.c b/scan.c
+>> index e959c1b..f248981 100644
+>> --- a/scan.c
+>> +++ b/scan.c
+>> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
+>>         if (ies || meshid) {
+>>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
+>>                 if (!tmpies)
+>> +                       free(ies);
+>> +                       free(meshid);
+>>                         goto nla_put_failure;
 >
-> You could just have sent me a patch instead of this.
-
-I've fixed this in my devel branch.
-
-Jes
+> Braces?  { }
+>
+>
+>>                 if (ies) {
+>>                         memcpy(tmpies, ies, ies_len);
+>> --
+>> 1.7.9.5
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> James Cameron
+> http://quozl.linux.org.au/
