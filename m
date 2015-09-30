@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13973 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbbI3JsW (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58581 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753675AbbI3RUw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:48:22 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/32] staging: wilc1000: rename strHostIFCfgParamAttr
-Date: Wed, 30 Sep 2015 18:44:25 +0900
-Message-ID: <1443606289-25407-8-git-send-email-tony.cho@atmel.com> (sfid-20150930_114825_038995_C633E3D9)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+	Wed, 30 Sep 2015 13:20:52 -0400
+Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+References: <5605D228.7050609@candelatech.com>
+ (sfid-20150926_010105_789618_F93D668E)
+ <1443595615.1859.2.camel@sipsolutions.net> <560BFABC.8090504@candelatech.com>
+ <1443626224.1859.9.camel@sipsolutions.net> <560C036C.7000401@candelatech.com>
+ <1443633267.1859.11.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <560C19F3.6070903@candelatech.com> (sfid-20150930_192107_313707_2C1A34F5)
+Date: Wed, 30 Sep 2015 10:20:51 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1443633267.1859.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFCfgParamAttr to cfg_info to avoid CamelCase
-naming convention.
+On 09/30/2015 10:14 AM, Johannes Berg wrote:
+> On Wed, 2015-09-30 at 08:44 -0700, Ben Greear wrote:
+>>
+>> Any idea how this could be done in the stack instead of the driver?
+>
+> I don't see why it should be?
+>
+>> The problem is that this is a receiver-side issue, so even if I manage
+>> to hack the ath10k firmware or driver rx logic, it would not fix any other
+>> IBSS peer connected to ath10k peer.
+>>
+>
+> You mean it's a transmitter-side issue? In that case you should
+> probably simply disable aggregation on the broken transmitter ...
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Yes, it is a transmitter side problem, and A-MSDU on IBSS
+is disabled by default in all ath10k firmware versions that I am aware of.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d4e8122..76e82e6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -419,7 +419,7 @@ union message_body {
- 	struct rcvd_net_info net_info;
- 	struct rcvd_async_info async_info;
- 	struct key_attr key_info;
--	struct cfg_param_attr strHostIFCfgParamAttr;
-+	struct cfg_param_attr cfg_info;
- 	struct set_channel strHostIFSetChan;
- 	struct get_channel strHostIFGetChan;
- 	struct set_beacon strHostIFSetBeacon;
-@@ -4124,7 +4124,7 @@ static int hostIFthread(void *pvArg)
- 
- 		case HOST_IF_MSG_CFG_PARAMS:
- 
--			Handle_CfgParam(msg.drvHandler, &msg.body.strHostIFCfgParamAttr);
-+			Handle_CfgParam(msg.drvHandler, &msg.body.cfg_info);
- 			break;
- 
- 		case HOST_IF_MSG_SET_CHANNEL:
-@@ -5854,7 +5854,7 @@ s32 hif_set_cfg(tstrWILC_WFIDrv *hWFIDrv, tstrCfgParamVal *pstrCfgParamVal)
- 	/* prepare the WiphyParams Message */
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_CFG_PARAMS;
--	msg.body.strHostIFCfgParamAttr.pstrCfgParamVal = *pstrCfgParamVal;
-+	msg.body.cfg_info.pstrCfgParamVal = *pstrCfgParamVal;
- 	msg.drvHandler = hWFIDrv;
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+I was hoping there might be a way to allow A-MSDU + IBSS + ath10k
+to work in future kernels without applying out-of-tree
+kernel hacks.  This would let people with appropriate firmware
+enable IBSS + A-MSDU for added performance in cases where they
+knew the peer could support the needed work-around.
+
+I don't think it is worth a lot of effort, but if it were relatively
+simple to fix, then maybe it is worth it.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
