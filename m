@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:52659 "EHLO hauke-m.de"
+Received: from r00tworld.com ([212.85.137.150]:35895 "EHLO r00tworld.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934462AbbIVTOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 15:14:14 -0400
-Subject: Re: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
-To: Johannes Berg <johannes@sipsolutions.net>,
-	emmanuel.grumbach@intel.com
-References: <1442659190-6060-1-git-send-email-hauke@hauke-m.de>
- (sfid-20150919_124007_995516_62A820AE)
- <1442911476.2018.2.camel@sipsolutions.net>
- (sfid-20150922_104447_027012_36D311B0)
- <1442911617.2018.3.camel@sipsolutions.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <5601A883.1010209@hauke-m.de> (sfid-20150922_211426_011461_64340ED0)
-Date: Tue, 22 Sep 2015 21:14:11 +0200
+	id S1751492AbbI3POM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2015 11:14:12 -0400
+From: "PaX Team" <pageexec@freemail.hu>
+To: James Cameron <quozl@laptop.org>
+Date: Wed, 30 Sep 2015 17:13:28 +0200
 MIME-Version: 1.0
-In-Reply-To: <1442911617.2018.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: question about potential integer truncation in mwifiex_set_wapi_ie and mwifiex_set_wps_ie
+Reply-to: pageexec@freemail.hu
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	re.emese@gmail.com, spender@grsecurity.net
+Message-ID: <560BFC18.4389.66B2D5EB@pageexec.freemail.hu> (sfid-20150930_171420_366442_4B348AF9)
+In-reply-to: <20150929231038.GG8613@us.netrek.org>
+References: <560AAC78.14106.6193CAA9@pageexec.freemail.hu>, <20150929231038.GG8613@us.netrek.org>
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/2015 10:46 AM, Johannes Berg wrote:
-> On Tue, 2015-09-22 at 10:44 +0200, Johannes Berg wrote:
->> On Sat, 2015-09-19 at 12:39 +0200, Hauke Mehrtens wrote:
->>> modinfo iwlwifi showed the following required firmware:
->>> firmware: iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
->>
->> This is obviously wrong.
->>
->>>
->>>  MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
->>> -MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
->>> +MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3165_UCODE_API_OK));
->>>
->> But this is also wrong, it should be 7260, and there should be a
->> separate entry for 3165. I'll get a patch on the way to fix it.
->>
+On 30 Sep 2015 at 9:10, James Cameron wrote:
+
+> On Tue, Sep 29, 2015 at 05:21:28PM +0200, PaX Team wrote:
+> > hi all,
+> > 
+> > in drivers/net/wireless/mwifiex/sta_ioctl.c the following functions
+> > 
+> > 	mwifiex_set_wpa_ie_helper
+> > 	mwifiex_set_wapi_ie
+> > 	mwifiex_set_wps_ie
+> > 
+> > can truncate the incoming ie_len argument from u16 to u8 when it gets
+> > stored in mwifiex_private.wpa_ie_len, mwifiex_private.wapi_ie_len and
+> > mwifiex_private.wps_ie_len, respectively. based on some light code
+> > reading it seems a length value of 256 is valid (IEEE_MAX_IE_SIZE and
+> > MWIFIEX_MAX_VSIE_LEN seem to limit it) and thus would get truncated
+> > to 0 when stored in those u8 fields. the question is whether this is
+> > intentional or a bug somewhere.
 > 
-> Actually, no, there shouldn't be another entry since 3165 uses the same
-> firmware as 7265-D.
+> i agree, while there is a test to ensure ie_len is not greater than
+> 256, there is a possibility that it will be exactly 256, which means
+> 256 bytes will be given to memcpy but
+> mwifiex_private.{wpa,wapi,wps}_ie_len will be zero.
 > 
-> johannes
+> i suggest changing the lengths to u16.  not tested.
 
-Should I change something?
+while this is probably a necessary first step you'll also have to verify
+all loads from these fields for integer truncation that can occur now
+(the stores were checked by the plugin i mentioned above). based on a
+naive grep the code seems to be fine but someone with actual knowledge
+of the code had better verify it ;).
 
-iwl3165 uses iwl3160 firmware, but support for that was added in rev 13
-of that firmware. That's the information I got from the driver and the
-linux-firmware commit messages.
+> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+> index fe12560..b66e9a7 100644
+> --- a/drivers/net/wireless/mwifiex/main.h
+> +++ b/drivers/net/wireless/mwifiex/main.h
+> @@ -512,14 +512,14 @@ struct mwifiex_private {
+>   struct mwifiex_wep_key wep_key[NUM_WEP_KEYS];
+>   u16 wep_key_curr_index;
+>   u8 wpa_ie[256];
+> -	u8 wpa_ie_len;
+> +	u16 wpa_ie_len;
+>   u8 wpa_is_gtk_set;
+>   struct host_cmd_ds_802_11_key_material aes_key;
+>   struct host_cmd_ds_802_11_key_material_v2 aes_key_v2;
+>   u8 wapi_ie[256];
+> -	u8 wapi_ie_len;
+> +	u16 wapi_ie_len;
+>   u8 *wps_ie;
+> -	u8 wps_ie_len;
+> +	u16 wps_ie_len;
+>   u8 wmm_required;
+>   u8 wmm_enabled;
+>   u8 wmm_qosinfo;
+> 
+> -- 
+> James Cameron
+> http://quozl.linux.org.au/
+> 
 
-Hauke
+
+
