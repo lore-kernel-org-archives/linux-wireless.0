@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33904 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbbJYWea (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60611 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696AbbJAROv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 18:34:30 -0400
-Received: by lfaz124 with SMTP id z124so129698682lfa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 15:34:28 -0700 (PDT)
-Subject: Re: [PATCH] net: tso: add support for IPv6
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	netdev@vger.kernel.org
-References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, egrumbach@gmail.com
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <562D58F2.40407@cogentembedded.com> (sfid-20151025_233438_452169_44A4E747)
-Date: Mon, 26 Oct 2015 01:34:26 +0300
+	Thu, 1 Oct 2015 13:14:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-10-01
+Date: Thu, 01 Oct 2015 20:14:44 +0300
+Message-ID: <87oagi5x4r.fsf@kamboji.qca.qualcomm.com> (sfid-20151001_191515_941557_C774B858)
 MIME-Version: 1.0
-In-Reply-To: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Hi Dave,
 
-On 10/25/2015 10:58 PM, Emmanuel Grumbach wrote:
+few very small fixes I would like to get to 4.3, nothing really special.
+Please let me know if you have any problems.
 
-> Adding IPv6 for the TSO helper API is trivial:
-> * Don't play with the id (which doesn't exist in IPv6)
-> * Correctly update the payload_len (don't include the
->    length of the IP header itself)
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->   net/core/tso.c | 17 ++++++++++++-----
->   1 file changed, 12 insertions(+), 5 deletions(-)
->
-> diff --git a/net/core/tso.c b/net/core/tso.c
-> index 630b30b..ece4605 100644
-> --- a/net/core/tso.c
-> +++ b/net/core/tso.c
-> @@ -14,18 +14,25 @@ EXPORT_SYMBOL(tso_count_descs);
->   void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
->   		   int size, bool is_last)
->   {
-> -	struct iphdr *iph;
->   	struct tcphdr *tcph;
->   	int hdr_len = skb_transport_offset(skb) + tcp_hdrlen(skb);
->   	int mac_hdr_len = skb_network_offset(skb);
->
->   	memcpy(hdr, skb->data, hdr_len);
-> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
-> -	iph->id = htons(tso->ip_id);
-> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-> +	if (skb->protocol == htons(ETH_P_IP)) {
-> +		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
-> +
-> +		iph->id = htons(tso->ip_id);
-> +		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-> +		tso->ip_id++;
-> +	}
-> +	if (skb->protocol == htons(ETH_P_IPV6)) {
+Kalle
 
-    *else* needed.
+The following changes since commit bdb06cbf77cb01911694cc9076ffa8196b7b9b61:
 
-> +		struct ipv6hdr *iph = (void *)(hdr + mac_hdr_len);
-> +
-> +		iph->payload_len = htons(size + tcp_hdrlen(skb));
-> +	}
+  net: Fix panic in icmp_route_lookup (2015-09-25 21:44:02 -0700)
 
-    The above asks to be a *switch* statement.
+are available in the git repository at:
 
-[...]
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-10-01
 
-MBR, Sergei
+for you to fetch changes up to 76d164f582150fd0259ec0fcbc485470bcd8033e:
 
+  ath10k: fix DMA related firmware crashes on multiple devices (2015-09-26 20:48:25 +0300)
+
+----------------------------------------------------------------
+ath9k:
+
+* declare required extra tx headroom
+
+ath10k:
+
+* fix DMA related firmware crashes on multiple devices
+
+rt2800usb:
+
+* add usb ID 1b75:3070 for Airlive WT-2000USB
+
+b43:
+
+* probe bcma core (device) rev 0x15
+
+----------------------------------------------------------------
+Felix Fietkau (2):
+      ath9k: declare required extra tx headroom
+      ath10k: fix DMA related firmware crashes on multiple devices
+
+Rafał Miłecki (1):
+      b43: probe bcma core (device) rev 0x15
+
+Stanislaw Gruszka (1):
+      rt2800usb: add usb ID 1b75:3070 for Airlive WT-2000USB
+
+ drivers/net/wireless/ath/ath10k/hw.h    |    4 ++--
+ drivers/net/wireless/ath/ath9k/init.c   |    1 +
+ drivers/net/wireless/b43/main.c         |    1 +
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ 4 files changed, 5 insertions(+), 2 deletions(-)
+
+-- 
+Kalle Valo
