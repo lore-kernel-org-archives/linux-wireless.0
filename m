@@ -1,107 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35051 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753357AbbJNTea (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36860 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbbJAPmQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 15:34:30 -0400
-Received: by padcn9 with SMTP id cn9so31501584pad.2
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 12:34:30 -0700 (PDT)
-From: Eric Caruso <ejcaruso@google.com>
-To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, leizh@broadcom.com,
-	joe@perches.com, Eric Caruso <ejcaruso@google.com>
-Subject: [PATCH v3] brcm80211: Add support for brcm4371
-Date: Wed, 14 Oct 2015 12:34:11 -0700
-Message-Id: <1444851251-25368-1-git-send-email-ejcaruso@google.com> (sfid-20151014_213434_125686_99FABD83)
+	Thu, 1 Oct 2015 11:42:16 -0400
+Subject: Re: rtl8821ae bisected regression between 4.1 and 4.2
+To: =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com>
+Cc: Vincent Fann <vincent_fann@realtek.com>,
+	Shao Fu <shaofu@realtek.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stable <stable@vger.kernel.org>,
+	Daniel Drake <drake@endlessm.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <560D5455.8060400@lwfinger.net> (sfid-20151001_174220_928835_85E36087)
+Date: Thu, 1 Oct 2015 10:42:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------040702090205060700050408"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a new Broadcom chip and we should be able to recognize it.
+This is a multi-part message in MIME format.
+--------------040702090205060700050408
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Signed-off-by: Eric Caruso <ejcaruso@google.com>
+On 10/01/2015 08:17 AM, João Paulo Rechi Vita wrote:
+> Hello linux-wirelless (cc'ing stable since the original patch had
+> cc:stable as well),
+>
+> I'm experiencing a CPU soft lockup while downloading when rtl8821ae is
+> loaded (even when downloading through other adapters) on a vanilla 4.2
+> kernel. The problem did not happen on vanilla 4.1. Bisecting shows the
+> first bad commit being "rtlwifi: Remove the clear interrupt routine
+> from all drivers" (1277fa2ab2f9a624a4b0177119ca13b5fd65edd0).
+> Reverting that commit makes the problem go away.
+>
+> The system is perfectly stable until I start downloading, when the UI
+> becomes unresponsive, sometimes leading to a complete freeze. When the
+> system does not completely freezes and I'm able to kill the download,
+> everything seems to go back to normal after killing it, and I am able
+> to continue to use the computer as long as I do not download anything.
+> Most of the time either a soft or a hard lockup is detected, but not
+> always, although the freeze always occurs.
+>
+> This is the kernel log with lockdep enabled (although sometimes the
+> problem does not occur with lockdep enabled):
+> https://gist.github.com/jprvita/3aa2c0c9a66793e1fad1
+>
+> I have the laptop where this happens as a test machine sitting on my
+> desk, so I'm available to test any patches or gather more information
+> if needed. Please advise on how I can help debugging this further.
+
+I cannot duplicate your result, and neither can the Realtek team; however, I 
+have prepared and attached a patch to temporarily re-add the interrupt clear 
+routine for rtl8821ae. Please try it and report the results.
+
+Larry
+
+
+
+--------------040702090205060700050408
+Content-Type: text/x-patch;
+ name="0001-rtlwifi-rtl8821ae-Trial-patch-to-reinstall-interrupt.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-rtlwifi-rtl8821ae-Trial-patch-to-reinstall-interrupt.pa";
+ filename*1="tch"
+
+>From 97ecd2789dc71b158467fc57d0326641a4581f0d Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Thu, 1 Oct 2015 10:37:49 -0500
+Subject: [PATCH] rtlwifi: rtl8821ae: Trial patch to reinstall interrupt clear
+ routine
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-v2: rebased.
-v3: added back break that got lost in v2.
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
- drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
- 3 files changed, 12 insertions(+)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index ffc3ace..f04833d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -682,6 +682,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_43570_CHIP_ID:
- 	case BRCM_CC_4358_CHIP_ID:
- 	case BRCM_CC_43602_CHIP_ID:
-+	case BRCM_CC_4371_CHIP_ID:
- 		return 0x180000;
- 	case BRCM_CC_4365_CHIP_ID:
- 	case BRCM_CC_4366_CHIP_ID:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 30baf35..ebd7f2d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -59,6 +59,8 @@ enum brcmf_pcie_state {
- #define BRCMF_PCIE_4365_NVRAM_NAME		"brcm/brcmfmac4365b-pcie.txt"
- #define BRCMF_PCIE_4366_FW_NAME			"brcm/brcmfmac4366b-pcie.bin"
- #define BRCMF_PCIE_4366_NVRAM_NAME		"brcm/brcmfmac4366b-pcie.txt"
-+#define BRCMF_PCIE_4371_FW_NAME			"brcm/brcmfmac4371-pcie.bin"
-+#define BRCMF_PCIE_4371_NVRAM_NAME		"brcm/brcmfmac4371-pcie.txt"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index b7f18e21..6d2caa8 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -2253,11 +2253,27 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
  
- #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
++static void rtl8821ae_clear_interrupt(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 tmp = rtl_read_dword(rtlpriv, REG_HISR);
++
++	rtl_write_dword(rtlpriv, REG_HISR, tmp);
++
++	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
++	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
++
++	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
++	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
++}
++
+ void rtl8821ae_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
  
-@@ -212,6 +214,8 @@ MODULE_FIRMWARE(BRCMF_PCIE_4365_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4365_NVRAM_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4366_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4366_NVRAM_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4371_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4371_NVRAM_NAME);
- 
- 
- struct brcmf_pcie_console {
-@@ -1456,6 +1460,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
- 		fw_name = BRCMF_PCIE_4366_FW_NAME;
- 		nvram_name = BRCMF_PCIE_4366_NVRAM_NAME;
- 		break;
-+	case BRCM_CC_4371_CHIP_ID:
-+		fw_name = BRCMF_PCIE_4371_FW_NAME;
-+		nvram_name = BRCMF_PCIE_4371_NVRAM_NAME;
-+		break;
- 	default:
- 		brcmf_err("Unsupported chip 0x%04x\n", devinfo->ci->chip);
- 		return -ENODEV;
-@@ -1995,6 +2003,7 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_2G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_5G_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4371_DEVICE_ID),
- 	{ /* end: all zeroes */ }
- };
- 
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index d823734..aa06ea2 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -50,6 +50,7 @@
- #define BRCM_CC_43602_CHIP_ID		43602
- #define BRCM_CC_4365_CHIP_ID		0x4365
- #define BRCM_CC_4366_CHIP_ID		0x4366
-+#define BRCM_CC_4371_CHIP_ID		0x4371
- 
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-@@ -75,6 +76,7 @@
- #define BRCM_PCIE_4366_DEVICE_ID	0x43c3
- #define BRCM_PCIE_4366_2G_DEVICE_ID	0x43c4
- #define BRCM_PCIE_4366_5G_DEVICE_ID	0x43c5
-+#define BRCM_PCIE_4371_DEVICE_ID	0x440d
- 
- 
- /* brcmsmac IDs */
++	rtl8821ae_clear_interrupt(hw);/*clear it here first*/
++
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+ 	rtlpci->irq_enabled = true;
 -- 
-2.6.0.rc2.230.g3dd15c0
+2.1.4
 
+
+--------------040702090205060700050408--
