@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20828 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757067AbbJ3DIw (ORCPT
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:36795 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755600AbbJANSW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:08:52 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/17] staging: wilc1000: chip_sleep_manually: add argument struct net_device
-Date: Fri, 30 Oct 2015 12:10:37 +0900
-Message-ID: <1446174642-28570-12-git-send-email-glen.lee@atmel.com> (sfid-20151030_040948_672434_325A702F)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+	Thu, 1 Oct 2015 09:18:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Thu, 1 Oct 2015 09:17:42 -0400
+Message-ID: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com> (sfid-20151001_151834_830136_5247D206)
+Subject: rtl8821ae bisected regression between 4.1 and 4.2
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Vincent Fann <vincent_fann@realtek.com>,
+	Shao Fu <shaofu@realtek.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stable <stable@vger.kernel.org>,
+	Daniel Drake <drake@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add new argument struct net_device and pass dev to the function
-as well.
+Hello linux-wirelless (cc'ing stable since the original patch had
+cc:stable as well),
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c      | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h      | 1 +
- 3 files changed, 4 insertions(+), 3 deletions(-)
+I'm experiencing a CPU soft lockup while downloading when rtl8821ae is
+loaded (even when downloading through other adapters) on a vanilla 4.2
+kernel. The problem did not happen on vanilla 4.1. Bisecting shows the
+first bad commit being "rtlwifi: Remove the clear interrupt routine
+from all drivers" (1277fa2ab2f9a624a4b0177119ca13b5fd65edd0).
+Reverting that commit makes the problem go away.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3a4fdc0..1263b5e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -271,7 +271,6 @@ static struct host_if_drv *join_req_drv;
- 
- static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
- 
--extern void chip_sleep_manually(u32 u32SleepTime);
- extern int linux_wlan_get_num_conn_ifcs(void);
- 
- static int add_handler_in_list(struct host_if_drv *handler)
-@@ -2993,7 +2992,8 @@ static int hostIFthread(void *pvArg)
- 			PRINT_D(HOSTINF_DBG, "scan completed successfully\n");
- 
- 			if (!linux_wlan_get_num_conn_ifcs())
--				chip_sleep_manually(INFINITE_SLEEP_TIME);
-+				chip_sleep_manually(hif_drv->priv->dev,
-+						    INFINITE_SLEEP_TIME);
- 
- 			Handle_ScanDone(msg.drv, SCAN_EVENT_DONE);
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e8afa6b..93fae34 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -810,7 +810,7 @@ static inline void chip_wakeup(void)
- 	genuChipPSstate = CHIP_WAKEDUP;
- }
- #endif
--void chip_sleep_manually(u32 u32SleepTime)
-+void chip_sleep_manually(struct net_device *dev, u32 u32SleepTime)
- {
- 	if (genuChipPSstate != CHIP_WAKEDUP) {
- 		/* chip is already sleeping. Do nothing */
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 194c24c..c948c25 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -311,4 +311,5 @@ int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			       u32 buffer_size, wilc_tx_complete_func_t func);
-+void chip_sleep_manually(struct net_device *dev, u32 u32SleepTime);
- #endif
--- 
-1.9.1
+The system is perfectly stable until I start downloading, when the UI
+becomes unresponsive, sometimes leading to a complete freeze. When the
+system does not completely freezes and I'm able to kill the download,
+everything seems to go back to normal after killing it, and I am able
+to continue to use the computer as long as I do not download anything.
+Most of the time either a soft or a hard lockup is detected, but not
+always, although the freeze always occurs.
 
+This is the kernel log with lockdep enabled (although sometimes the
+problem does not occur with lockdep enabled):
+https://gist.github.com/jprvita/3aa2c0c9a66793e1fad1
+
+I have the laptop where this happens as a test machine sitting on my
+desk, so I'm available to test any patches or gather more information
+if needed. Please advise on how I can help debugging this further.
+
+Regards,
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
