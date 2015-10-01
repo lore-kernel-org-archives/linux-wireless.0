@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:57741 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753192AbbJSJkE (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34061 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933013AbbJANog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 05:40:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Thu, 1 Oct 2015 09:44:36 -0400
+Received: by padhy16 with SMTP id hy16so75404254pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:36 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] staging/wilc: fix Kconfig dependencies, second try
-Date: Mon, 19 Oct 2015 11:39:31 +0200
-Message-ID: <4253270.hGxaSY0VLA@wuerfel> (sfid-20151019_114024_219876_27731E3B)
-In-Reply-To: <5624A1AF.8080607@atmel.com>
-References: <5446980.8Rmykv9Tt3@wuerfel> <5624A1AF.8080607@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/12] staging: wilc1000: set_channel: remove blank line after open brace
+Date: Thu,  1 Oct 2015 22:43:56 +0900
+Message-Id: <1443707039-18433-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154439_509365_6AE7822C)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 October 2015 16:54:23 Tony Cho wrote:
-> Hi Arnd Bergmann,
-> 
-> When I apply this patch, I cannot make WILC1000 module (wilc1000.ko) because CONFIG_WILC1000 is y and also I can see some link errors for the cfg80211 APIs.
-> 
-> Can you consider this patch?
+This patch removes blank line after open brace '{' found by
+checkpatch.pl
 
-Ah, you are right. I see the same thing now and don't know what caused me
-to send the patch in an incomplete state.
+CHECK: Blank lines aren't necessary after an open brace '{'
+drivers/staging/wilc1000/wilc_wfi_cfgoperations.c:664:
 
-I hope this snippet is the last missing piece:
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-index ee51b4278088..e3f109655be4 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -1,6 +1,7 @@
- config WILC1000_DRIVER
--	bool "WILC1000 support (WiFi only)"
-+	tristate "WILC1000 support (WiFi only)"
- 	depends on CFG80211 && WEXT_CORE && INET
-+	depends on MMC || SPI
- 	---help---
- 	  This module only support IEEE 802.11n WiFi.
- 
-@@ -35,7 +36,7 @@ choice
- 
- config WILC1000_SDIO
- 	bool "SDIO support"
--	depends on MMC
-+	depends on MMC=y || (MMC=m && WILC1000_DRIVER=m)
- 	select WILC1000
- 	---help---
- 	  This module adds support for the SDIO interface of adapters using
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 56c97c9..732d631 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -661,7 +661,6 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+ static int set_channel(struct wiphy *wiphy,
+ 		       struct cfg80211_chan_def *chandef)
+ {
+-
+ 	u32 channelnum = 0;
+ 	struct wilc_priv *priv;
+ 	s32 s32Error = 0;
+-- 
+2.6.0
 
-I'll do a few hundred more randconfig builds with this on top and submit
-it once it succeeds.
-
-	Arnd
