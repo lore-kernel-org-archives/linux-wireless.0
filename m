@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752229AbbJYMBl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:41 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/16] iwlwifi: avoid read/write operations if the bus is dead
-Date: Sun, 25 Oct 2015 14:01:10 +0200
-Message-Id: <1445774476-24792-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130144_748835_C9414706)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35119 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755267AbbJAG57 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2015 02:57:59 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v3 5/5] wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
+Date: Thu,  1 Oct 2015 14:57:47 +0800
+Message-Id: <1443682667-29814-6-git-send-email-wens@csie.org> (sfid-20151001_085809_441367_D57579BF)
+In-Reply-To: <1443682667-29814-1-git-send-email-wens@csie.org>
+References: <1443682667-29814-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Following the amendment of FCC part 15E and U-NII regulations effective
+2014/06/02, and the opening up of 5150 ~ 5250 MHz and 5600 ~ 5650 MHz
+spectrum in Taiwan, vendors have asked whether Taiwan's regulations
+would be updated to match the new FCC rules, when this would happen,
+and what to do in the interim.
 
-Recovery takes too much time if the bus is dead (each timeout
-is 2000ms, etc.).
-Explicitly skip fw dump in this case, as it will result in
-garbage data (and might take signifcant time)
+The NCC, Taiwan's regulatory body has officially replied that new
+amendments are under way, and the goal is to match the FCC rules.
+Until the amendments come through, vendors are free to test and
+submit applications using the new FCC rules for transmission power
+limits and DFS requirements, though unintended / unwanted emissions
+must still conform to the current standard, LP0002. [1][2]
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This has been confirmed via a phone call to the NCC.
+
+[1] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
+[2] Proposal #10312260 (p.6, Chinese),
+    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
+
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h    | 2 ++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 6 ++++++
- 2 files changed, 8 insertions(+)
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index bb51b6f..6f76525 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -409,6 +409,7 @@ enum iwl_d3_status {
-  * @STATUS_TRANS_GOING_IDLE: shutting down the trans, only special commands
-  *	are sent
-  * @STATUS_TRANS_IDLE: the trans is idle - general commands are not to be sent
-+ * @STATUS_TRANS_DEAD: trans is dead - avoid any read/write operation
-  */
- enum iwl_trans_status {
- 	STATUS_SYNC_HCMD_ACTIVE,
-@@ -419,6 +420,7 @@ enum iwl_trans_status {
- 	STATUS_FW_ERROR,
- 	STATUS_TRANS_GOING_IDLE,
- 	STATUS_TRANS_IDLE,
-+	STATUS_TRANS_DEAD,
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 5ce29ff..8e69ab2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1137,6 +1137,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	/* there's no point in fw dump if the bus is dead */
-+	if (test_bit(STATUS_TRANS_DEAD, &mvm->trans->status)) {
-+		IWL_ERR(mvm, "Skip fw error dump since bus is dead\n");
-+		return;
-+	}
-+
- 	if (mvm->fw_dump_trig &&
- 	    mvm->fw_dump_trig->mode & IWL_FW_DBG_TRIGGER_MONITOR_ONLY)
- 		monitor_dump_only = true;
+diff --git a/db.txt b/db.txt
+index 3f5268b..4409516 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1125,7 +1125,7 @@ country TT: DFS-FCC
+ # LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
+ #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+ #   (section 3.10.1, 4.7)
+-country TW: DFS-JP
++country TW: DFS-FCC
+ 	(2400 - 2483.5 @ 40), (30)
+ 	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
+ 	(5150 - 5250 @ 80), (23), AUTO-BW
 -- 
-2.1.4
+2.5.3
 
