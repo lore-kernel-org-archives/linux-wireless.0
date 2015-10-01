@@ -1,91 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f195.google.com ([209.85.212.195]:33575 "EHLO
-	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbbJSQCj (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:33541 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754929AbbJADrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 12:02:39 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
-	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
-	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
-	cengelma@gmx.at, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] net: wireless: b43: Coding Style
-Date: Mon, 19 Oct 2015 17:02:22 +0100
-Message-Id: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com> (sfid-20151019_180327_073166_B94BA3A4)
-In-Reply-To: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
-References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+	Wed, 30 Sep 2015 23:47:48 -0400
+Received: by obbbh8 with SMTP id bh8so48110684obb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 20:47:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20151001025432.GA1664@localhost>
+References: <1443445192-30464-1-git-send-email-me@bobcopeland.com>
+	<56097882.4090004@codeaurora.org>
+	<20151001025432.GA1664@localhost>
+Date: Thu, 1 Oct 2015 11:47:47 +0800
+Message-ID: <CAEFj985BcE1paTH73iiA2BSq3yVSeba-tkyR+wyXLecpJuV9YA@mail.gmail.com> (sfid-20151001_054751_758479_94487EF2)
+Subject: Re: [PATCH] ath10k: only advertise mesh support in raw mode
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Peter Oh <poh@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed Pointer Coding Style
+>
+> I would think a small change to ath10k firmware could fix this though,
+> vendor willing.
+>
++1 for this. Or even coming out with mesh mode instead of using AP
+mode in ath10k firmware.
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 ---
- drivers/net/wireless/b43/main.c | 6 +++---
- drivers/net/wireless/b43/main.h | 2 +-
- drivers/net/wireless/b43/xmit.h | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2849070..040caa4 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -364,7 +364,7 @@ static struct ieee80211_supported_band b43_band_2ghz_limited = {
- 
- static void b43_wireless_core_exit(struct b43_wldev *dev);
- static int b43_wireless_core_init(struct b43_wldev *dev);
--static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
-+static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev);
- static int b43_wireless_core_start(struct b43_wldev *dev);
- static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
-@@ -989,7 +989,7 @@ static void do_key_write(struct b43_wldev *dev,
- 		 * 0xffffffff and let's b43_op_update_tkip_key provide a
- 		 * correct pair.
- 		 */
--		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16*)buf);
-+		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16 *)buf);
- 	} else if (index >= pairwise_keys_start) /* clear it */
- 		rx_tkip_phase1_write(dev, index, 0, NULL);
- 	if (key)
-@@ -4334,7 +4334,7 @@ out_unlock:
- /* Locking: wl->mutex
-  * Returns the current dev. This might be different from the passed in dev,
-  * because the core might be gone away while we unlocked the mutex. */
--static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev)
-+static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl;
- 	struct b43_wldev *orig_dev;
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index c46430c..fa56b22 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -73,7 +73,7 @@ static inline int b43_is_ofdm_rate(int rate)
- u8 b43_ieee80211_antenna_sanitize(struct b43_wldev *dev,
- 				  u8 antenna_nr);
- 
--void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
-+void b43_tsf_read(struct b43_wldev *dev, u64 *tsf);
- void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
- 
- u32 b43_shm_read32(struct b43_wldev *dev, u16 routing, u16 offset);
-diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
-index ba61153..fed8657 100644
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -203,7 +203,7 @@ size_t b43_txhdr_size(struct b43_wldev *dev)
- 
- 
- int b43_generate_txhdr(struct b43_wldev *dev,
--		       u8 * txhdr,
-+		       u8 *txhdr,
- 		       struct sk_buff *skb_frag,
- 		       struct ieee80211_tx_info *txctl, u16 cookie);
- 
--- 
-2.6.1
-
+Chun-Yeow
