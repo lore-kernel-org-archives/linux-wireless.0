@@ -1,38 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4263 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbbJFLsK (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:32949 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755282AbbJANoP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2015 07:48:10 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: use Rx decap mode configured when driver registered
-References: <1443042740-31928-1-git-send-email-poh@qca.qualcomm.com>
-Date: Tue, 6 Oct 2015 14:47:59 +0300
-In-Reply-To: <1443042740-31928-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Wed, 23 Sep 2015 14:12:20 -0700")
-Message-ID: <878u7g2p74.fsf@kamboji.qca.qualcomm.com> (sfid-20151006_134813_916759_03A5D102)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 1 Oct 2015 09:44:15 -0400
+Received: by pacex6 with SMTP id ex6so75444770pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:14 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/12] staging: wilc1000: remove commented codes
+Date: Thu,  1 Oct 2015 22:43:49 +0900
+Message-Id: <1443707039-18433-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154417_699329_CE4784EF)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+This patch removes commented codes that is not used in this driver.
 
-> ath10k is using Native WiFi mode as default mode for both of
-> Tx and Rx path, but it could be changed when driver registers
-> with a module parameter for specific purpose such as mesh.
->
-> The Rx decap mode sent to firmware during WMI initialization should
-> use the same mode that driver configured at its registration stage
-> in case of using raw mode, so that host driver receives MAC frame
-> header containing necessary fields such as QoS and Mesh Control
-> and uses them in right way to make data traffic work.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 3 ---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ drivers/staging/wilc1000/wilc_wlan.c          | 4 ----
+ drivers/staging/wilc1000/wilc_wlan_if.h       | 3 ---
+ 4 files changed, 11 deletions(-)
 
-Thanks, applied.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 701d317..bd83da1 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1967,9 +1967,6 @@ static void __exit exit_wilc_driver(void)
+ 		}
+ 	}
+ 
+-	/* WILC_WFI_deinit_mon_interface(); */
+-
+-	/* if(g_linux_wlan->open_ifcs==0) */
+ 	{
+ 	#ifndef WILC_SDIO
+ 		PRINT_D(INIT_DBG, "SPI unregsiter...\n");
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index d3a03c6..4878f12 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -185,7 +185,6 @@ typedef struct {
+ 	struct task_struct *txq_thread;
+ 
+ 	unsigned char eth_src_address[NUM_CONCURRENT_IFC][6];
+-	/* unsigned char eth_dst_address[6]; */
+ 
+ 	const struct firmware *wilc_firmware;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 428e94f..de70c59 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -142,7 +142,6 @@ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
+ {
+ 
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+-	/* unsigned long flags; */
+ 	if (tqe == p->txq_head)	{
+ 
+ 		p->txq_head = tqe->next;
+@@ -848,8 +847,6 @@ static int wilc_wlan_handle_txq(u32 *pu32TxqCount)
+ 		i = 0;
+ 		sum = 0;
+ 		do {
+-			/* if ((tqe != NULL) && (i < (8)) && */
+-			/* if ((tqe != NULL) && (i < (WILC_VMM_TBL_SIZE-1)) && */
+ 			if ((tqe != NULL) && (i < (WILC_VMM_TBL_SIZE - 1)) /* reserve last entry to 0 */) {
+ 
+ 				if (tqe->type == WILC_CFG_PKT) {
+@@ -972,7 +969,6 @@ static int wilc_wlan_handle_txq(u32 *pu32TxqCount)
+ 					 *      Get the entries
+ 					 **/
+ 					entries = ((reg >> 3) & 0x3f);
+-					/* entries = ((reg>>3)&0x2f); */
+ 					break;
+ 				} else {
+ 					release_bus(RELEASE_ALLOW_SLEEP);
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 7aa317d..75c1ebc 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -10,9 +10,6 @@
+ #ifndef WILC_WLAN_IF_H
+ #define WILC_WLAN_IF_H
+ 
+-/* #define MEMORY_STATIC */
+-/* #define USE_OLD_SPI_SW */
+-
+ #include <linux/semaphore.h>
+ #include "linux_wlan_common.h"
+ 
 -- 
-Kalle Valo
+2.6.0
+
