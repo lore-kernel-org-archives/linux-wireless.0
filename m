@@ -1,121 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:36860 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844AbbJAPmQ (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35103 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbbJAG55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 11:42:16 -0400
-Subject: Re: rtl8821ae bisected regression between 4.1 and 4.2
-To: =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com>
-Cc: Vincent Fann <vincent_fann@realtek.com>,
-	Shao Fu <shaofu@realtek.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stable <stable@vger.kernel.org>,
-	Daniel Drake <drake@endlessm.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <560D5455.8060400@lwfinger.net> (sfid-20151001_174220_928835_85E36087)
-Date: Thu, 1 Oct 2015 10:42:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------040702090205060700050408"
+	Thu, 1 Oct 2015 02:57:57 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v3 0/5] wireless-regdb: Update TW and US rules to latest regulations
+Date: Thu,  1 Oct 2015 14:57:42 +0800
+Message-Id: <1443682667-29814-1-git-send-email-wens@csie.org> (sfid-20151001_085811_269619_2335DA41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040702090205060700050408
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Hi Seth,
 
-On 10/01/2015 08:17 AM, João Paulo Rechi Vita wrote:
-> Hello linux-wirelless (cc'ing stable since the original patch had
-> cc:stable as well),
->
-> I'm experiencing a CPU soft lockup while downloading when rtl8821ae is
-> loaded (even when downloading through other adapters) on a vanilla 4.2
-> kernel. The problem did not happen on vanilla 4.1. Bisecting shows the
-> first bad commit being "rtlwifi: Remove the clear interrupt routine
-> from all drivers" (1277fa2ab2f9a624a4b0177119ca13b5fd65edd0).
-> Reverting that commit makes the problem go away.
->
-> The system is perfectly stable until I start downloading, when the UI
-> becomes unresponsive, sometimes leading to a complete freeze. When the
-> system does not completely freezes and I'm able to kill the download,
-> everything seems to go back to normal after killing it, and I am able
-> to continue to use the computer as long as I do not download anything.
-> Most of the time either a soft or a hard lockup is detected, but not
-> always, although the freeze always occurs.
->
-> This is the kernel log with lockdep enabled (although sometimes the
-> problem does not occur with lockdep enabled):
-> https://gist.github.com/jprvita/3aa2c0c9a66793e1fad1
->
-> I have the laptop where this happens as a test machine sitting on my
-> desk, so I'm available to test any patches or gather more information
-> if needed. Please advise on how I can help debugging this further.
+This is v3 of my TW/US 5GHz updates series. Sorry for the long delay.
 
-I cannot duplicate your result, and neither can the Realtek team; however, I 
-have prepared and attached a patch to temporarily re-add the interrupt clear 
-routine for rtl8821ae. Please try it and report the results.
+Changes since v2:
 
-Larry
+  - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
+
+  - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
+    side of 250mW
 
 
+Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
+the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
+weather radars. The transmission power limit is also corrected to
+match the regulations.
 
---------------040702090205060700050408
-Content-Type: text/x-patch;
- name="0001-rtlwifi-rtl8821ae-Trial-patch-to-reinstall-interrupt.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-rtlwifi-rtl8821ae-Trial-patch-to-reinstall-interrupt.pa";
- filename*1="tch"
+Patch 2 changes the boundary frequencies for each rule for Taiwan to
+match the frequency allocation table. The "regulation" database shouldn't
+care about artificial channel boundaries.
 
->From 97ecd2789dc71b158467fc57d0326641a4581f0d Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Thu, 1 Oct 2015 10:37:49 -0500
-Subject: [PATCH] rtlwifi: rtl8821ae: Trial patch to reinstall interrupt clear
- routine
+Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
+the US.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-index b7f18e21..6d2caa8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-@@ -2253,11 +2253,27 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
- 	}
- }
- 
-+static void rtl8821ae_clear_interrupt(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 tmp = rtl_read_dword(rtlpriv, REG_HISR);
-+
-+	rtl_write_dword(rtlpriv, REG_HISR, tmp);
-+
-+	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
-+	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
-+
-+	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
-+	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
-+}
-+
- void rtl8821ae_enable_interrupt(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
-+	rtl8821ae_clear_interrupt(hw);/*clear it here first*/
-+
- 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
- 	rtlpci->irq_enabled = true;
+Patch 5 updates the transmission power limits for Taiwan, per the NCC's
+official reply. This patch may be slightly controversial, as there is
+no official English document. Either someone will have to independently
+verify this, or translate the Chinese document.
+
+
+Regards
+ChenYu
+
+
+Chen-Yu Tsai (5):
+  wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan
+    (TW)
+  wireless-regdb: Update regulatory rule boundary frequencies for Taiwan
+    (TW)
+  wireless-regdb: Update 5GHz rules for US
+  wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
+  wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
+
+ db.txt | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
 -- 
-2.1.4
+2.5.3
 
-
---------------040702090205060700050408--
