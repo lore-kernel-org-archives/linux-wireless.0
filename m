@@ -1,199 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38697 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751782AbbJON62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:58:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 04/12] cfg80211: reg: search built-in database directly
-Date: Thu, 15 Oct 2015 15:58:15 +0200
-Message-Id: <1444917503-19118-4-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155848_048897_A160FB2F)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:57010 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932409AbbJAKvL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2015 06:51:11 -0400
+Subject: [PATCH 4/6] ath10k: remove void function return statements
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 01 Oct 2015 13:51:07 +0300
+Message-ID: <20151001105106.8770.67070.stgit@potku.adurom.net> (sfid-20151001_125114_068378_05A0E615)
+In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
+References: <20151001105001.8770.96252.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+drivers/net/wireless/ath/ath10k/wmi.c:3023: void function return statements are not generally useful
 
-Instead of searching the built-in database only in the worker,
-search it directly and return an error if the entry cannot be
-found (or memory cannot be allocated.) This means that builtin
-database queries no longer rely on the timeout.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/wireless/reg.c | 102 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 58 insertions(+), 44 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4e14804ef51f..18b990426e13 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -453,65 +453,70 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- }
- 
- #ifdef CONFIG_CFG80211_INTERNAL_REGDB
--struct reg_regdb_search_request {
--	char alpha2[2];
-+struct reg_regdb_apply_request {
- 	struct list_head list;
-+	const struct ieee80211_regdomain *regdom;
- };
- 
--static LIST_HEAD(reg_regdb_search_list);
--static DEFINE_MUTEX(reg_regdb_search_mutex);
-+static LIST_HEAD(reg_regdb_apply_list);
-+static DEFINE_MUTEX(reg_regdb_apply_mutex);
- 
--static void reg_regdb_search(struct work_struct *work)
-+static void reg_regdb_apply(struct work_struct *work)
- {
--	struct reg_regdb_search_request *request;
--	const struct ieee80211_regdomain *curdom, *regdom = NULL;
--	int i;
-+	struct reg_regdb_apply_request *request;
- 
- 	rtnl_lock();
- 
--	mutex_lock(&reg_regdb_search_mutex);
--	while (!list_empty(&reg_regdb_search_list)) {
--		request = list_first_entry(&reg_regdb_search_list,
--					   struct reg_regdb_search_request,
-+	mutex_lock(&reg_regdb_apply_mutex);
-+	while (!list_empty(&reg_regdb_apply_list)) {
-+		request = list_first_entry(&reg_regdb_apply_list,
-+					   struct reg_regdb_apply_request,
- 					   list);
- 		list_del(&request->list);
- 
--		for (i = 0; i < reg_regdb_size; i++) {
--			curdom = reg_regdb[i];
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0c7a233a223c..186b363c8b35 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3018,8 +3018,6 @@ static void ath10k_wmi_update_noa(struct ath10k *ar, struct ath10k_vif *arvif,
+ 			memcpy(skb_put(bcn, arvif->u.ap.noa_len),
+ 			       arvif->u.ap.noa_data,
+ 			       arvif->u.ap.noa_len);
 -
--			if (alpha2_equal(request->alpha2, curdom->alpha2)) {
--				regdom = reg_copy_regd(curdom);
--				break;
--			}
--		}
--
-+		set_regdom(request->regdom, REGD_SOURCE_INTERNAL_DB);
- 		kfree(request);
- 	}
--	mutex_unlock(&reg_regdb_search_mutex);
--
--	if (!IS_ERR_OR_NULL(regdom))
--		set_regdom(regdom, REGD_SOURCE_INTERNAL_DB);
-+	mutex_unlock(&reg_regdb_apply_mutex);
- 
- 	rtnl_unlock();
+-	return;
  }
  
--static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
-+static DECLARE_WORK(reg_regdb_work, reg_regdb_apply);
- 
--static void reg_regdb_query(const char *alpha2)
-+static int reg_regdb_query(const char *alpha2)
- {
--	struct reg_regdb_search_request *request;
-+	const struct ieee80211_regdomain *regdom = NULL;
-+	struct reg_regdb_apply_request *request;
-+	unsigned int i;
-+
-+	for (i = 0; i < reg_regdb_size; i++) {
-+		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
-+			regdom = reg_regdb[i];
-+			break;
-+		}
-+	}
-+
-+	if (!regdom)
-+		return -ENODATA;
- 
--	request = kzalloc(sizeof(struct reg_regdb_search_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
- 	if (!request)
--		return;
-+		return -ENOMEM;
- 
--	memcpy(request->alpha2, alpha2, 2);
-+	request->regdom = reg_copy_regd(regdom);
-+	if (IS_ERR_OR_NULL(request->regdom)) {
-+		kfree(request);
-+		return -ENOMEM;
-+	}
- 
--	mutex_lock(&reg_regdb_search_mutex);
--	list_add_tail(&request->list, &reg_regdb_search_list);
--	mutex_unlock(&reg_regdb_search_mutex);
-+	mutex_lock(&reg_regdb_apply_mutex);
-+	list_add_tail(&request->list, &reg_regdb_apply_list);
-+	mutex_unlock(&reg_regdb_apply_mutex);
- 
- 	schedule_work(&reg_regdb_work);
-+
-+	return 0;
- }
- 
- /* Feel free to add any other sanity checks here */
-@@ -522,7 +527,10 @@ static void reg_regdb_size_check(void)
- }
- #else
- static inline void reg_regdb_size_check(void) {}
--static inline void reg_regdb_query(const char *alpha2) {}
-+static inline int reg_regdb_query(const char *alpha2)
-+{
-+	return -ENODATA;
-+}
- #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
- 
- /*
-@@ -533,13 +541,11 @@ static int call_crda(const char *alpha2)
- {
- 	char country[12];
- 	char *env[] = { country, NULL };
-+	int ret;
- 
- 	snprintf(country, sizeof(country), "COUNTRY=%c%c",
- 		 alpha2[0], alpha2[1]);
- 
--	/* query internal regulatory database (if it exists) */
--	reg_regdb_query(alpha2);
--
- 	if (reg_crda_timeouts > REG_MAX_CRDA_TIMEOUTS) {
- 		pr_debug("Exceeded CRDA call max attempts. Not calling CRDA\n");
- 		return -EINVAL;
-@@ -551,17 +557,25 @@ static int call_crda(const char *alpha2)
- 	else
- 		pr_debug("Calling CRDA to update world regulatory domain\n");
- 
--	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
-+	ret = kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
-+	if (ret)
-+		return ret;
-+
-+	queue_delayed_work(system_power_efficient_wq,
-+			   &reg_timeout, msecs_to_jiffies(3142));
-+	return 0;
- }
- 
- static bool reg_query_database(struct regulatory_request *request)
- {
--	if (call_crda(request->alpha2))
--		return false;
-+	/* query internal regulatory database (if it exists) */
-+	if (reg_regdb_query(request->alpha2) == 0)
-+		return true;
- 
--	queue_delayed_work(system_power_efficient_wq,
--			   &reg_timeout, msecs_to_jiffies(3142));
--	return true;
-+	if (call_crda(request->alpha2) == 0)
-+		return true;
-+
-+	return false;
- }
- 
- bool reg_is_valid_request(const char *alpha2)
--- 
-2.5.1
+ static int ath10k_wmi_op_pull_swba_ev(struct ath10k *ar, struct sk_buff *skb,
 
