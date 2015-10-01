@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42640 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375AbbJ1TB5 (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35987 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933013AbbJANod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 15:01:57 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v2] mwifiex: toggle carrier state in start_ap/stop_ap.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1445838841-20253-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Marty Faltesek <mfaltesek@google.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20151028190157.29F141415A7@smtp.codeaurora.org> (sfid-20151028_200201_067739_A8BDDD3F)
-Date: Wed, 28 Oct 2015 19:01:57 +0000 (UTC)
+	Thu, 1 Oct 2015 09:44:33 -0400
+Received: by pablk4 with SMTP id lk4so74731579pab.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:33 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
+Date: Thu,  1 Oct 2015 22:43:55 +0900
+Message-Id: <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154436_297338_5AEAB4C6)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces int8_t with s8 that is a preferred type.
 
-> From: Marty Faltesek <mfaltesek@google.com>
-> 
-> In uap mode the carrier is not enabled until after the first STA joins.
-> The carrier triggers the bridge to start its state machine, and if STP
-> is enabled, it takes 4 seconds as it transitions from disabled to
-> forwarding. During this time the bridge drops all traffic, and the EAPOL
-> handshake times out after 3 seconds, preventing stations from joining.
-> 
-> Follow the logic used in mac80211 and start the carrier in start_ap
-> and disable it in stop_ap. This has a nice benefit of allowing the
-> first station connection time to be reduced by up to 75% when STP is
-> in use.
-> 
-> Signed-off-by: Martin Faltesek <mfaltesek@google.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks, applied to wireless-drivers-next.git.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d781003..56c97c9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
+ 	g_obtainingIP = false;
+ }
+ 
+-int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
++s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+ {
+-	int8_t state = -1;
++	s8 state = -1;
+ 	int i;
+ 
+ 	if (u32LastScannedNtwrksCountShadow == 0) {
+@@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+ 
+ void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
+ {
+-	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
++	s8 ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+ 	u32 ap_index = 0;
+ 	u8 rssi_index = 0;
+ 
+-- 
+2.6.0
 
-Kalle Valo
