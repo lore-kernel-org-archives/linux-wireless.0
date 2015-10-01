@@ -1,392 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38712 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752853AbbJON6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:58:43 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/2] cfg80211: support loading regulatory database as firmware file
-Date: Thu, 15 Oct 2015 15:58:38 +0200
-Message-Id: <1444917519-19169-1-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155906_249277_407866C1)
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:36099 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbbJAXKV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2015 19:10:21 -0400
+Received: by vkgp185 with SMTP id p185so4047130vkg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 16:10:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20151001154015.GJ7340@mwanda>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+	<1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
+	<20151001154015.GJ7340@mwanda>
+Date: Fri, 2 Oct 2015 07:56:28 +0900
+Message-ID: <CAKV=isutNb+AeLyZPO9x=h90FeQr8+JfTOFka0bY7SoWofwLbQ@mail.gmail.com> (sfid-20151002_011025_772488_4C44C4CD)
+Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Oct 2, 2015 at 12:40 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> On Thu, Oct 01, 2015 at 10:43:55PM +0900, Chaehyun Lim wrote:
+>> This patch replaces int8_t with s8 that is a preferred type.
+>>
+>
+> It would be better to just use int.
 
-As the current regulatory database is only about 4k big, and already
-difficult to extend, we decided that overall it would be better to
-get rid of the complications with CRDA and load the database into the
-kernel directly, but in a new format that is extensible.
+I always appreciate your comment. I've sent a patch before after
+changing by int, but it was rejected.
+At that time I had a suggestion to be careful to change data type, so
+I just change by s8 now.
 
-The new file format can be extended since it carries a length field
-on all the structs that need to be extensible.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/networking/regulatory.txt |   8 +
- net/wireless/Kconfig                    |   3 +-
- net/wireless/reg.c                      | 260 +++++++++++++++++++++++++++++---
- 3 files changed, 248 insertions(+), 23 deletions(-)
-
-diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.txt
-index 356f791af574..753f912185eb 100644
---- a/Documentation/networking/regulatory.txt
-+++ b/Documentation/networking/regulatory.txt
-@@ -19,6 +19,14 @@ core regulatory domain all wireless devices should adhere to.
- How to get regulatory domains to the kernel
- -------------------------------------------
- 
-+When the regulatory domain is first set up, the kernel will request a
-+database file (regulatory.db) containing all the regulatory rules. It
-+will then use that database when it needs to look up the rules for a
-+given country.
-+
-+How to get regulatory domains to the kernel (old CRDA solution)
-+---------------------------------------------------------------
-+
- Userspace gets a regulatory domain in the kernel by having
- a userspace agent build it and send it via nl80211. Only
- expected regulatory domains will be respected by the kernel.
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index ab7017951083..063b29f15a70 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -180,7 +180,8 @@ config CFG80211_CRDA_SUPPORT
- 	depends on CFG80211
- 	help
- 	  You should enable this option unless you know for sure you have no
--	  need for it, for example when using internal regdb (above.)
-+	  need for it, for example when using internal regdb (above) or the
-+	  database loaded as a firmware file.
- 
- 	  If unsure, say Y.
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c8f43a8f850b..82b394bddfc3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -53,6 +53,7 @@
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
- #include <linux/moduleparam.h>
-+#include <linux/firmware.h>
- #include <net/cfg80211.h>
- #include "core.h"
- #include "reg.h"
-@@ -106,7 +107,7 @@ static struct regulatory_request core_request_world = {
- static struct regulatory_request __rcu *last_request =
- 	(void __force __rcu *)&core_request_world;
- 
--/* To trigger userspace events */
-+/* To trigger userspace events and load firmware */
- static struct platform_device *reg_pdev;
- 
- /*
-@@ -449,7 +450,6 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- 	return regd;
- }
- 
--#ifdef CONFIG_CFG80211_INTERNAL_REGDB
- struct reg_regdb_apply_request {
- 	struct list_head list;
- 	const struct ieee80211_regdomain *regdom;
-@@ -481,41 +481,44 @@ static void reg_regdb_apply(struct work_struct *work)
- 
- static DECLARE_WORK(reg_regdb_work, reg_regdb_apply);
- 
--static int reg_query_builtin(const char *alpha2)
-+static int reg_schedule_apply(const struct ieee80211_regdomain *regdom)
- {
--	const struct ieee80211_regdomain *regdom = NULL;
- 	struct reg_regdb_apply_request *request;
--	unsigned int i;
--
--	for (i = 0; i < reg_regdb_size; i++) {
--		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
--			regdom = reg_regdb[i];
--			break;
--		}
--	}
--
--	if (!regdom)
--		return -ENODATA;
- 
- 	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
--	if (!request)
--		return -ENOMEM;
--
--	request->regdom = reg_copy_regd(regdom);
--	if (IS_ERR_OR_NULL(request->regdom)) {
--		kfree(request);
-+	if (!request) {
-+		kfree(regdom);
- 		return -ENOMEM;
- 	}
- 
-+	request->regdom = regdom;
-+
- 	mutex_lock(&reg_regdb_apply_mutex);
- 	list_add_tail(&request->list, &reg_regdb_apply_list);
- 	mutex_unlock(&reg_regdb_apply_mutex);
- 
- 	schedule_work(&reg_regdb_work);
--
- 	return 0;
- }
- 
-+#ifdef CONFIG_CFG80211_INTERNAL_REGDB
-+static int reg_query_builtin(const char *alpha2)
-+{
-+	const struct ieee80211_regdomain *regdom = NULL;
-+	unsigned int i;
-+
-+	for (i = 0; i < reg_regdb_size; i++) {
-+		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
-+			regdom = reg_copy_regd(reg_regdb[i]);
-+			break;
-+		}
-+	}
-+	if (!regdom)
-+		return -ENODATA;
-+
-+	return reg_schedule_apply(regdom);
-+}
-+
- /* Feel free to add any other sanity checks here */
- static void reg_regdb_size_check(void)
- {
-@@ -605,12 +608,222 @@ static inline int call_crda(const char *alpha2)
- }
- #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
- 
-+/* code to directly load a firmware database through request_firmware */
-+static const struct firmware *regdb;
-+static unsigned int fwregdb_attempts = 10;
-+
-+struct fwdb_country {
-+	u8 alpha2[2];
-+	__be16 coll_ptr;
-+} __packed __aligned(4);
-+
-+struct fwdb_collection {
-+	__be16 len;
-+	__be16 n_rules;
-+	u8 dfs_region;
-+	u8 pad_reserved;
-+	__be16 rules_ptr[];
-+} __packed __aligned(4);
-+
-+struct fwdb_rule {
-+	__be16 len;
-+	__be16 flags;
-+	__be32 start, end, max_bw;
-+	__be32 cac_timeout;
-+	__be16 max_ant_gain;
-+	__be16 max_eirp;
-+} __packed __aligned(4);
-+
-+#define FWDB_MAGIC 0x52474442
-+#define FWDB_VERSION 20
-+
-+struct fwdb_header {
-+	__be32 magic;
-+	__be32 version;
-+	struct fwdb_country country[];
-+} __packed __aligned(4);
-+
-+static bool valid_rule(const struct firmware *db, u16 rule_ptr)
-+{
-+	struct fwdb_rule *rule = (void *)(db->data + (rule_ptr << 2));
-+
-+	if ((u8 *)rule + sizeof(rule->len) > db->data + db->size)
-+		return false;
-+
-+	/* mandatory fields */
-+	if (be16_to_cpu(rule->len) < 24)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool valid_country(const struct firmware *db,
-+			  const struct fwdb_country *country)
-+{
-+	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
-+	struct fwdb_collection *coll = (void *)(db->data + ptr);
-+	unsigned int i;
-+
-+	if ((u8 *)coll + sizeof(coll->len) > db->data + db->size)
-+		return false;
-+
-+	if ((u8 *)coll + be16_to_cpu(coll->len) > db->data + db->size)
-+		return false;
-+
-+	/* mandatory fields */
-+	if (be16_to_cpu(coll->len) < 6)
-+		return false;
-+
-+	if (be16_to_cpu(coll->len) < 6 + 2 * be16_to_cpu(coll->n_rules))
-+		return false;
-+
-+	for (i = 0; i < be16_to_cpu(coll->n_rules); i++) {
-+		u16 rule_ptr = be16_to_cpu(coll->rules_ptr[i]);
-+
-+		if (!valid_rule(db, rule_ptr))
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool valid_regdb(const struct firmware *db)
-+{
-+	const struct fwdb_header *hdr = (void *)db->data;
-+	const struct fwdb_country *country;
-+
-+	if (db->size < sizeof(*hdr))
-+		return false;
-+
-+	if (hdr->magic != cpu_to_be32(FWDB_MAGIC))
-+		return false;
-+
-+	if (hdr->version != cpu_to_be32(FWDB_VERSION))
-+		return false;
-+
-+	country = &hdr->country[0];
-+	while ((u8 *)(country + 1) <= db->data + db->size) {
-+		if (!country->coll_ptr)
-+			break;
-+		if (!valid_country(db, country))
-+			return false;
-+		country++;
-+	}
-+
-+	return true;
-+}
-+
-+static int regdb_query_country(const struct firmware *db,
-+			       const struct fwdb_country *country)
-+{
-+	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
-+	struct fwdb_collection *coll = (void *)(db->data + ptr);
-+	struct ieee80211_regdomain *regdom;
-+	unsigned int size_of_regd;
-+	unsigned int i;
-+
-+	size_of_regd =
-+		sizeof(struct ieee80211_regdomain) +
-+		be16_to_cpu(coll->n_rules) * sizeof(struct ieee80211_reg_rule);
-+
-+	regdom = kzalloc(size_of_regd, GFP_KERNEL);
-+	if (!regdom)
-+		return -ENOMEM;
-+
-+	regdom->n_reg_rules = be16_to_cpu(coll->n_rules);
-+	regdom->alpha2[0] = country->alpha2[0];
-+	regdom->alpha2[1] = country->alpha2[1];
-+	regdom->dfs_region = coll->dfs_region;
-+
-+	for (i = 0; i < regdom->n_reg_rules; i++) {
-+		unsigned int rule_ptr = be16_to_cpu(coll->rules_ptr[i]) << 2;
-+		struct fwdb_rule *rule = (void *)(db->data + rule_ptr);
-+		struct ieee80211_reg_rule *rrule = &regdom->reg_rules[i];
-+
-+		rrule->freq_range.start_freq_khz = be32_to_cpu(rule->start);
-+		rrule->freq_range.end_freq_khz = be32_to_cpu(rule->end);
-+		rrule->freq_range.max_bandwidth_khz = be32_to_cpu(rule->max_bw);
-+
-+		rrule->power_rule.max_antenna_gain =
-+			be16_to_cpu(rule->max_ant_gain);
-+		rrule->power_rule.max_eirp = be16_to_cpu(rule->max_eirp);
-+
-+		rrule->flags = be16_to_cpu(rule->flags);
-+		rrule->dfs_cac_ms = be32_to_cpu(rule->cac_timeout);
-+	}
-+
-+	return reg_schedule_apply(regdom);
-+}
-+
-+static int query_regdb(const char *alpha2)
-+{
-+	const struct fwdb_header *hdr;
-+	const struct fwdb_country *country;
-+
-+	if (IS_ERR(regdb))
-+		return PTR_ERR(regdb);
-+
-+	hdr = (void *)regdb->data;
-+	country = &hdr->country[0];
-+	while (country->coll_ptr) {
-+		if (alpha2_equal(alpha2, country->alpha2))
-+			return regdb_query_country(regdb, country);
-+		country++;
-+	}
-+
-+	return -ENODATA;
-+}
-+
-+static void regdb_fw_cb(const struct firmware *fw, void *context)
-+{
-+	if (!fw) {
-+		pr_info("failed to load regulatory.db\n");
-+		if (fwregdb_attempts-- == 0)
-+			regdb = ERR_PTR(-ENODATA);
-+		goto restore;
-+	}
-+
-+	if (!valid_regdb(fw)) {
-+		release_firmware(fw);
-+		regdb = ERR_PTR(-EINVAL);
-+		goto restore;
-+	}
-+
-+	regdb = fw;
-+	if (query_regdb(context))
-+		goto restore;
-+	goto free;
-+ restore:
-+	rtnl_lock();
-+	restore_regulatory_settings(true);
-+	rtnl_unlock();
-+ free:
-+	kfree(context);
-+}
-+
-+static int query_regdb_file(const char *alpha2)
-+{
-+	if (regdb)
-+		return query_regdb(alpha2);
-+
-+	alpha2 = kmemdup(alpha2, 2, GFP_KERNEL);
-+	if (!alpha2)
-+		return -ENOMEM;
-+
-+	return request_firmware_nowait(THIS_MODULE, true, "regulatory.db",
-+				       &reg_pdev->dev, GFP_KERNEL,
-+				       (void *)alpha2, regdb_fw_cb);
-+}
-+
- static bool reg_query_database(struct regulatory_request *request)
- {
- 	/* query internal regulatory database (if it exists) */
- 	if (reg_query_builtin(request->alpha2) == 0)
- 		return true;
- 
-+	if (query_regdb_file(request->alpha2) == 0)
-+		return true;
-+
- 	if (call_crda(request->alpha2) == 0)
- 		return true;
- 
-@@ -3276,4 +3489,7 @@ void regulatory_exit(void)
- 		list_del(&reg_request->list);
- 		kfree(reg_request);
- 	}
-+
-+	if (!IS_ERR_OR_NULL(regdb))
-+		release_firmware(regdb);
- }
--- 
-2.5.1
-
+Thanks
+Chaehyun Lim
+>
+> regards,
+> dan carpenter
+>
