@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23081 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbbJVLRU (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33350 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933013AbbJANom (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 07:17:20 -0400
-Date: Thu, 22 Oct 2015 14:17:04 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2 03/12] staging: wilc1000: rename strInterfaceInfo in
- the sturct wilc
-Message-ID: <20151022111704.GN7340@mwanda> (sfid-20151022_131724_085761_7D94E276)
-References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
- <1445318816-21686-4-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445318816-21686-4-git-send-email-tony.cho@atmel.com>
+	Thu, 1 Oct 2015 09:44:42 -0400
+Received: by pacex6 with SMTP id ex6so75454711pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:42 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/12] staging: wilc1000: set_channel: rename s32Error
+Date: Thu,  1 Oct 2015 22:43:58 +0900
+Message-Id: <1443707039-18433-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154654_017350_4A741AA2)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 02:26:47PM +0900, Tony Cho wrote:
-> This patch renames strInterfaceInfo in the struct wilc to the vif. In
-> addition, unnecessary print statements around it are removed in this patch.
-> 
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c             | 91 +++++++++++------------
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 72 +++++++++---------
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
->  3 files changed, 80 insertions(+), 85 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 2bea103..971b99a 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -366,24 +366,21 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
->  	Bssid  = pMacHeader + 10;
->  	Bssid1 = pMacHeader + 4;
->  
-> -	for (i = 0; i < g_linux_wlan->vif_num; i++) {
-> -		if (!memcmp(Bssid1, g_linux_wlan->strInterfaceInfo[i].aBSSID, ETH_ALEN) ||
-> -		    !memcmp(Bssid, g_linux_wlan->strInterfaceInfo[i].aBSSID, ETH_ALEN))	{
-> -			return g_linux_wlan->strInterfaceInfo[i].wilc_netdev;
-> -		}
-> -	}
-> +	for (i = 0; i < g_linux_wlan->vif_num; i++)
-> +		if (!memcmp(Bssid1, g_linux_wlan->vif[i].aBSSID, ETH_ALEN) ||
-> +		    !memcmp(Bssid, g_linux_wlan->vif[i].aBSSID, ETH_ALEN))
-> +			return g_linux_wlan->vif[i].wilc_netdev;
-> +
+This patch replaces s32Error with result to avoid camelcase.
 
-Removing the curly braces was wrong.  Multi-line indents get curly
-braces for readability even though the compiler does not insist on them.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3b32a6c..6db1325 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -663,7 +663,7 @@ static int set_channel(struct wiphy *wiphy,
+ {
+ 	u32 channelnum = 0;
+ 	struct wilc_priv *priv;
+-	int s32Error = 0;
++	int result = 0;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+@@ -671,12 +671,12 @@ static int set_channel(struct wiphy *wiphy,
+ 	PRINT_D(CFG80211_DBG, "Setting channel %d with frequency %d\n", channelnum, chandef->chan->center_freq);
+ 
+ 	u8CurrChannel = channelnum;
+-	s32Error   = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
++	result = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
+ 
+-	if (s32Error != 0)
++	if (result != 0)
+ 		PRINT_ER("Error in setting channel %d\n", channelnum);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ /**
+-- 
+2.6.0
 
