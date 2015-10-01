@@ -1,163 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41897 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083AbbJ1G7p (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:32992 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755951AbbJANoS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:59:45 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 21/80] staging: wilc1000: rename hSemTestKeyBlock of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:41 +0900
-Message-ID: <1446015640-29398-21-git-send-email-glen.lee@atmel.com> (sfid-20151028_081657_246916_5B871CA9)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 1 Oct 2015 09:44:18 -0400
+Received: by pacex6 with SMTP id ex6so75445874pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:17 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/12] staging: wilc1000: remove if defined codes of USE_OLD_SPI_SW
+Date: Thu,  1 Oct 2015 22:43:50 +0900
+Message-Id: <1443707039-18433-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154421_332923_7E01505B)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch removes if defined codes of USE_OLD_SPI_SW.
+This macro is deleted because it is commented out.
 
-This patch renames hSemTestKeyBlock of struct host_if_drv to sem_test_key_block
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
- drivers/staging/wilc1000/host_interface.h |  3 +--
- 2 files changed, 13 insertions(+), 14 deletions(-)
+ drivers/staging/wilc1000/wilc_spi.c | 125 ------------------------------------
+ 1 file changed, 125 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 85c376a..c35a6e3 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1792,7 +1792,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			result = send_config_pkt(SET_CFG, &wid, 1,
- 						 get_id_from_handler(hif_drv));
- 		}
--		up(&hif_drv->hSemTestKeyBlock);
-+		up(&hif_drv->sem_test_key_block);
- 		break;
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 0e06fc2..8acf648 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -756,22 +756,6 @@ static int spi_internal_write(u32 adr, u32 dat)
+ {
+ 	int result;
  
- 	case WPARxGtk:
-@@ -1826,7 +1826,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 						 get_id_from_handler(hif_drv));
- 
- 			kfree(pu8keybuf);
--			up(&hif_drv->hSemTestKeyBlock);
-+			up(&hif_drv->sem_test_key_block);
- 		}
- 
- 		if (pstrHostIFkeyAttr->action & ADDKEY) {
-@@ -1860,7 +1860,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 						 get_id_from_handler(hif_drv));
- 
- 			kfree(pu8keybuf);
--			up(&hif_drv->hSemTestKeyBlock);
-+			up(&hif_drv->sem_test_key_block);
- 		}
- _WPARxGtk_end_case_:
- 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
-@@ -1898,7 +1898,7 @@ _WPARxGtk_end_case_:
- 			result = send_config_pkt(SET_CFG, strWIDList, 2,
- 						 get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
--			up(&hif_drv->hSemTestKeyBlock);
-+			up(&hif_drv->sem_test_key_block);
- 		}
- 		if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
-@@ -1921,7 +1921,7 @@ _WPARxGtk_end_case_:
- 			result = send_config_pkt(SET_CFG, &wid, 1,
- 						 get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
--			up(&hif_drv->hSemTestKeyBlock);
-+			up(&hif_drv->sem_test_key_block);
- 		}
- 
- _WPAPtk_end_case_:
-@@ -3077,7 +3077,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -3104,7 +3104,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("Error in sending message queue : Default key index\n");
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -3136,7 +3136,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("Error in sending message queue :WEP Key\n");
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -3178,7 +3178,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 
- 	if (result)
- 		PRINT_ER("Error in sending message queue :WEP Key\n");
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -3243,7 +3243,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
- 	if (result)
- 		PRINT_ER("Error in sending message queue:  PTK Key\n");
- 
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -3305,7 +3305,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	if (result)
- 		PRINT_ER("Error in sending message queue:  RX GTK\n");
- 
--	down(&hif_drv->hSemTestKeyBlock);
-+	down(&hif_drv->sem_test_key_block);
- 
- 	return result;
- }
-@@ -4104,7 +4104,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 		sema_init(&hif_sema_deinit, 1);
+-#if defined USE_OLD_SPI_SW
+-	/**
+-	 *      Command
+-	 **/
+-	result = spi_cmd(CMD_INTERNAL_WRITE, adr, dat, 4, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed internal write cmd...\n");
+-		return 0;
+-	}
+-
+-	result = spi_cmd_rsp(CMD_INTERNAL_WRITE, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed internal write cmd response...\n");
+-	}
+-#else
+-
+ #ifdef BIG_ENDIAN
+ 	dat = BYTE_SWAP(dat);
+ #endif
+@@ -780,7 +764,6 @@ static int spi_internal_write(u32 adr, u32 dat)
+ 		PRINT_ER("[wilc spi]: Failed internal write cmd...\n");
  	}
  
--	sema_init(&hif_drv->hSemTestKeyBlock, 0);
-+	sema_init(&hif_drv->sem_test_key_block, 0);
- 	sema_init(&hif_drv->hSemTestDisconnectBlock, 0);
- 	sema_init(&hif_drv->hSemGetRSSI, 0);
- 	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 700b80a..846a636 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -305,8 +305,7 @@ struct host_if_drv {
- 	struct cfg_param_val cfg_values;
+-#endif
+ 	return result;
+ }
  
- 	struct semaphore sem_cfg_values;
--	struct semaphore hSemTestKeyBlock;
+@@ -788,35 +771,11 @@ static int spi_internal_read(u32 adr, u32 *data)
+ {
+ 	int result;
+ 
+-#if defined USE_OLD_SPI_SW
+-	result = spi_cmd(CMD_INTERNAL_READ, adr, 0, 4, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed internal read cmd...\n");
+-		return 0;
+-	}
 -
-+	struct semaphore sem_test_key_block;
- 	struct semaphore hSemTestDisconnectBlock;
- 	struct semaphore hSemGetRSSI;
- 	struct semaphore hSemGetLINKSPEED;
+-	result = spi_cmd_rsp(CMD_INTERNAL_READ, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed internal read cmd response...\n");
+-		return 0;
+-	}
+-
+-	/**
+-	 *      Data
+-	 **/
+-	result = spi_data_read((u8 *)data, 4);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed internal read data...\n");
+-		return 0;
+-	}
+-#else
+ 	result = spi_cmd_complete(CMD_INTERNAL_READ, adr, (u8 *)data, 4, 0);
+ 	if (result != N_OK) {
+ 		PRINT_ER("[wilc spi]: Failed internal read cmd...\n");
+ 		return 0;
+ 	}
+-#endif
+-
+ 
+ #ifdef BIG_ENDIAN
+ 	*data = BYTE_SWAP(*data);
+@@ -837,24 +796,6 @@ static int spi_write_reg(u32 addr, u32 data)
+ 	u8 cmd = CMD_SINGLE_WRITE;
+ 	u8 clockless = 0;
+ 
+-
+-#if defined USE_OLD_SPI_SW
+-	{
+-		result = spi_cmd(cmd, addr, data, 4, 0);
+-		if (result != N_OK) {
+-			PRINT_ER("[wilc spi]: Failed cmd, write reg (%08x)...\n", addr);
+-			return 0;
+-		}
+-
+-		result = spi_cmd_rsp(cmd, 0);
+-		if (result != N_OK) {
+-			PRINT_ER("[wilc spi]: Failed cmd response, write reg (%08x)...\n", addr);
+-			return 0;
+-		}
+-
+-		return 1;
+-	}
+-#else
+ #ifdef BIG_ENDIAN
+ 	data = BYTE_SWAP(data);
+ #endif
+@@ -870,8 +811,6 @@ static int spi_write_reg(u32 addr, u32 data)
+ 	}
+ 
+ 	return result;
+-#endif
+-
+ }
+ 
+ static int spi_write(u32 addr, u8 *buf, u32 size)
+@@ -885,28 +824,11 @@ static int spi_write(u32 addr, u8 *buf, u32 size)
+ 	if (size <= 4)
+ 		return 0;
+ 
+-#if defined USE_OLD_SPI_SW
+-	/**
+-	 *      Command
+-	 **/
+-	result = spi_cmd(cmd, addr, 0, size, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed cmd, write block (%08x)...\n", addr);
+-		return 0;
+-	}
+-
+-	result = spi_cmd_rsp(cmd, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi ]: Failed cmd response, write block (%08x)...\n", addr);
+-		return 0;
+-	}
+-#else
+ 	result = spi_cmd_complete(cmd, addr, NULL, size, 0);
+ 	if (result != N_OK) {
+ 		PRINT_ER("[wilc spi]: Failed cmd, write block (%08x)...\n", addr);
+ 		return 0;
+ 	}
+-#endif
+ 
+ 	/**
+ 	 *      Data
+@@ -925,24 +847,6 @@ static int spi_read_reg(u32 addr, u32 *data)
+ 	u8 cmd = CMD_SINGLE_READ;
+ 	u8 clockless = 0;
+ 
+-#if defined USE_OLD_SPI_SW
+-	result = spi_cmd(cmd, addr, 0, 4, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed cmd, read reg (%08x)...\n", addr);
+-		return 0;
+-	}
+-	result = spi_cmd_rsp(cmd, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed cmd response, read reg (%08x)...\n", addr);
+-		return 0;
+-	}
+-
+-	result = spi_data_read((u8 *)data, 4);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed data read...\n");
+-		return 0;
+-	}
+-#else
+ 	if (addr < 0x30) {
+ 		/* PRINT_ER("***** read addr %d\n\n", addr); */
+ 		/* Clockless register*/
+@@ -955,8 +859,6 @@ static int spi_read_reg(u32 addr, u32 *data)
+ 		PRINT_ER("[wilc spi]: Failed cmd, read reg (%08x)...\n", addr);
+ 		return 0;
+ 	}
+-#endif
+-
+ 
+ #ifdef BIG_ENDIAN
+ 	*data = BYTE_SWAP(*data);
+@@ -973,38 +875,11 @@ static int spi_read(u32 addr, u8 *buf, u32 size)
+ 	if (size <= 4)
+ 		return 0;
+ 
+-#if defined USE_OLD_SPI_SW
+-	/**
+-	 *      Command
+-	 **/
+-	result = spi_cmd(cmd, addr, 0, size, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed cmd, read block (%08x)...\n", addr);
+-		return 0;
+-	}
+-
+-	result = spi_cmd_rsp(cmd, 0);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed cmd response, read block (%08x)...\n", addr);
+-		return 0;
+-	}
+-
+-	/**
+-	 *      Data
+-	 **/
+-	result = spi_data_read(buf, size);
+-	if (result != N_OK) {
+-		PRINT_ER("[wilc spi]: Failed block data read...\n");
+-		return 0;
+-	}
+-#else
+ 	result = spi_cmd_complete(cmd, addr, buf, size, 0);
+ 	if (result != N_OK) {
+ 		PRINT_ER("[wilc spi]: Failed cmd, read block (%08x)...\n", addr);
+ 		return 0;
+ 	}
+-#endif
+-
+ 
+ 	return 1;
+ }
 -- 
-1.9.1
+2.6.0
 
