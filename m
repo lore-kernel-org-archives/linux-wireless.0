@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62405 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792AbbJWEWl (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33082 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932526AbbJANoY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 00:22:41 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Yan Bellavance <ybellavance@tamaggo.com>
-CC: "ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>,
-	"c_manoha@qca.qualcomm.com" <c_manoha@qca.qualcomm.com>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-	Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: QCA6174, is it ath6kl or ath10k?
-References: <BY2PR15MB0197D5CFB773E0A3F4B6062FA3380@BY2PR15MB0197.namprd15.prod.outlook.com>
-	<87wpuf8l94.fsf@kamboji.qca.qualcomm.com>
-	<BLUPR15MB01957142BACE26716CCB0841A3270@BLUPR15MB0195.namprd15.prod.outlook.com>
-Date: Fri, 23 Oct 2015 07:22:23 +0300
-In-Reply-To: <BLUPR15MB01957142BACE26716CCB0841A3270@BLUPR15MB0195.namprd15.prod.outlook.com>
-	(Yan Bellavance's message of "Thu, 22 Oct 2015 21:01:06 +0000")
-Message-ID: <87pp0643k0.fsf@kamboji.qca.qualcomm.com> (sfid-20151023_062245_093159_729D937B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 1 Oct 2015 09:44:24 -0400
+Received: by pacex6 with SMTP id ex6so75448073pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:23 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/12] staging: wilc1000: remove #if 1 and #endif
+Date: Thu,  1 Oct 2015 22:43:52 +0900
+Message-Id: <1443707039-18433-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154427_155745_7EC3C7D5)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yan Bellavance <ybellavance@tamaggo.com> writes:
+This patch removes #if 1 and #endif, which is encapsulated
+some codes.
 
-> Thanks for prompt reply.  Frankly, I'm still trying to figure what
-> driver we have really.  It's called qcaqcld2.0 but I see references to
-> ath6kl in the various folders relating to the wifi. So that is why I
-> presumed it was based on a ath6kl driver. What exactly is the
-> qcaqcld2.0 driver?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-That's the vendor driver. In these lists we don't give any support to
-that, we only support upstream drivers like ath10k.
-
-> I know support for ath10k starts with kernel 4.0 and we have kernel
-> 3.10 but I don't see anything that would tell me that a backport has
-> been applied. And we've been having some issues so that is how I got
-> here.
-
-You can always use backports project to get latest ath10k to an older
-kernel.
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/backports
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 755a817..d781003 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3415,7 +3415,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+ 	struct wilc_priv *priv;
+ 
+ 	priv = wiphy_priv(wiphy);
+-#if 1
+ 	switch (changed) {
+ 
+ 	case WILC_WFI_RX_PKT:
+@@ -3438,7 +3437,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+ 	default:
+ 		break;
+ 	}
+-#endif
+ 	return 0;
+ }
+ 
 -- 
-Kalle Valo
+2.6.0
+
