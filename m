@@ -1,67 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43270 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759428AbbJ3KfG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3396 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951AbbJAHEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 06:35:06 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dan Williams <dcbw@redhat.com>
-CC: Julien Cubizolles <j.cubizolles@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: mwifiex problem: incompatible network settings
-Date: Fri, 30 Oct 2015 10:34:03 +0000
-Message-ID: <9dcd041192ae4fc780d20ada979de5a2@SC-EXCH04.marvell.com> (sfid-20151030_113512_862176_DC28C414)
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	 <87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
-	 <87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
-	 <87vb9qsmg1.fsf@free.fr>
-	 <b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
- <1446131804.15968.3.camel@redhat.com>
-In-Reply-To: <1446131804.15968.3.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 1 Oct 2015 03:04:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/12] staging: wilc1000: remove function pointer wlan_start
+Date: Thu, 1 Oct 2015 16:03:33 +0900
+Message-ID: <1443683023-6498-2-git-send-email-tony.cho@atmel.com> (sfid-20151001_090409_326859_FD6B0BE1)
+In-Reply-To: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
+References: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuLA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBb
-bWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFs
-ZiBPZiBEYW4gV2lsbGlhbXMNCj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMjksIDIwMTUgODo0
-NyBQTQ0KPiBUbzogQW1pdGt1bWFyIEthcndhcg0KPiBDYzogSnVsaWVuIEN1Yml6b2xsZXM7IGxp
-bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTmlzaGFudA0KPiBTYXJtdWthZGFtDQo+IFN1
-YmplY3Q6IFJlOiBtd2lmaWV4IHByb2JsZW06IGluY29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdz
-DQo+IA0KPiBPbiBUaHUsIDIwMTUtMTAtMjkgYXQgMTI6MjcgKzAwMDAsIEFtaXRrdW1hciBLYXJ3
-YXIgd3JvdGU6DQo+ID4gSGkgSnVsaWVuLA0KPiA+DQo+ID4gPiBGcm9tOiBKdWxpZW4gQ3ViaXpv
-bGxlcyBbbWFpbHRvOmouY3ViaXpvbGxlc0BmcmVlLmZyXQ0KPiA+ID4gU2VudDogVGh1cnNkYXks
-IE9jdG9iZXIgMjksIDIwMTUgMzowOSBBTQ0KPiA+ID4gVG86IERhbiBXaWxsaWFtcw0KPiA+ID4g
-Q2M6IEFtaXRrdW1hciBLYXJ3YXI7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+
-ID4gU3ViamVjdDogUmU6IG13aWZpZXggcHJvYmxlbTogaW5jb21wYXRpYmxlIG5ldHdvcmsgc2V0
-dGluZ3MNCj4gPiA+DQo+ID4gPiBEYW4gV2lsbGlhbXMgPGRjYndAcmVkaGF0LmNvbT4gd3JpdGVz
-Og0KPiA+ID4NCj4gPiA+ID4gSGUgYWN0dWFsbHkgbWVhbnQgdGhlIHdwYV9zdXBwbGljYW50IGNv
-bmZpZ3VyYXRpb24gZmlsZSwgbm90IHRoZQ0KPiA+ID4gPiBzdXBwbGljYW50J3MgZGJ1cyBjb25m
-aWcgZmlsZS4gIEJ1dCB3aGVuIGRyaXZlbiBieSBOZXR3b3JrTWFuYWdlciwNCj4gPiA+ID4gdGhl
-cmUgaXMgbm8gc3VwcGxpY2FudCBjb25maWd1cmF0aW9uIGZpbGUuDQo+ID4gPg0KPiA+ID4gU29y
-cnkgYWJvdXQgdGhhdC4NCj4gPiA+DQo+ID4gPiA+IEluc3RlYWQsIHlvdSBjYW4gZmluZCBvdXQg
-d2hhdCBjb25maWcgTk0gaXMgcHVzaGluZyB0byB0aGUNCj4gPiA+ID4gc3VwcGxpY2FudCBieSBj
-aGVja2luZyB0aGUgTmV0d29ya01hbmFnZXIgbG9ncywgd2hlcmUgTk0gd2lsbCBsb2cNCj4gbGlu
-ZXMgbGlrZToNCj4gPiA+DQo+ID4gPiBIZXJlIGFyZSB0aGUgcmVsZXZhbnQgZW50cmllcyBmcm9t
-IHRoZSBzeXNsb2cgZmlsZToNCj4gPiA+DQo+ID4gPiBJIGluY2x1ZGVkIHRoZSBmYWlsZWQgYXR0
-ZW1wdCB0byBjb25uZWN0IHRvIHRoZSBXUEEgcHJvdGVjdGVkDQo+ID4gPiBuZXR3b3JrIG5hbWVk
-ICJzb3V0aGNlbnRyYWwiIGFuZCB0aGUgc3VjY2Vzc2Z1bCBvbmUgdG8gYSBub24NCj4gPiA+IHBy
-b3RlY3RlZCBvbmUgbmFtZWQgIkZyZWVXaWZpIi4NCj4gPiA+DQo+ID4NCj4gPiBUaGFua3MgZm9y
-IHRoZSBsb2dzLiBJIGNvbXBhcmVkIHlvdXIgbmV0d29yayBtYW5hZ2VyIGxvZyB3aXRoIHRoZSBv
-bmUNCj4gb24gbXkgc2V0dXAuIEJvdGggYXJlIHNhbWUuIEJhc2ljYWxseSBuZXR3b3JrIG1hbmFn
-ZXIgbG9nIGRvZXNuJ3Qgc2hvdw0KPiBzZWN1cml0eSBpbmZvIChXUEEvV1BBMiwgZW5jcnlwdGlv
-biBtb2RlIGV0YykuIFNvIHdlIGNhbid0IHJlbHkgb24gdGhhdC4NCj4gDQo+IE5ldHdvcmtNYW5h
-Z2VyIGxlYXZlcyB0aGUgJ3Byb3RvcycgZmllbGQgZW1wdHksIHdoaWNoIGFsbG93cyB0aGUNCj4g
-c3VwcGxpY2FudCB0byBjaG9vc2UgdGhlIGNvcnJlY3QgV1BBL1dQQTIgbW9kZSBkZXBlbmRpbmcg
-b24gZHJpdmVyDQo+IHN1cHBvcnQuICBXaGF0IHlvdSBzZWUgaW4gdGhlIE5NIGxvZ3MgaXMgZXhh
-Y3RseSB3aGF0IGdldHMgcHVzaGVkIHRvIHRoZQ0KPiBzdXBwbGljYW50IGluIHRoZSBuZXR3b3Jr
-IGJsb2NrLiAgU28gaWYgeW91IGRvbid0IHNlZSAicHJvdG8iIG9yDQo+ICJwYWlyd2lzZSIgb3Ig
-Imdyb3VwIiBpbiB0aGUgTk0gbG9ncywgdGhlbiBpdCBkb2Vzbid0IGdldCBwdXNoZWQgdG8gdGhl
-DQo+IHN1cHBsaWNhbnQsIGFuZCB0aGUgc3VwcGxpY2FudCB1c2VzIGl0cyBkZWZhdWx0IGJlaGF2
-aW9yLCB3aGljaCBzaG91bGQNCj4gYmU6DQo+IA0KPiBwcm90bz1XUEEgUlNODQo+IHBhaXJ3aXNl
-PUNDTVAgVEtJUA0KPiBncm91cD1DQ01QIFRLSVAgV0VQMTA0IFdFUDQwDQo+IA0KDQpUaGFua3Mg
-Zm9yIHRoZSBpbnB1dHMuIEkgd2Fzbid0IGF3YXJlIGFib3V0IHRoaXMuIExvZyB3aXRoIGRlYnVn
-IHBhdGNoIHdvdWxkIG1ha2UgdGhlIHBpY3R1cmUgY2xlYXIgYnkgZHVtcGluZyBleGFjdCBjb25m
-aWd1cmF0aW9uIHJlY2VpdmVkIGJ5IGRyaXZlci4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
+From: Glen Lee <glen.lee@atmel.com>
+
+This patch removes function pointer wlan_start and just call
+the function wilc_wlan_start. Remove static from the function also.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c   | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c    | 3 +--
+ drivers/staging/wilc1000/wilc_wlan.h    | 1 +
+ drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
+ 4 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d7909d3..f515fca 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -622,7 +622,7 @@ static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
+ 	int ret = 0;
+ 	/* start firmware */
+ 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
+-	ret = g_linux_wlan->oup.wlan_start();
++	ret = wilc_wlan_start();
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to start Firmware\n");
+ 		goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 5e9a4c2..6e2bf4c 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1471,7 +1471,7 @@ _fail_1:
+  *      Common
+  *
+  ********************************************/
+-static int wilc_wlan_start(void)
++int wilc_wlan_start(void)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	u32 reg = 0;
+@@ -2027,7 +2027,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
+ 	/**
+ 	 *      export functions
+ 	 **/
+-	oup->wlan_start = wilc_wlan_start;
+ 	oup->wlan_stop = wilc_wlan_stop;
+ 	oup->wlan_add_to_tx_que = wilc_wlan_txq_add_net_pkt;
+ 	oup->wlan_handle_tx_que = wilc_wlan_handle_txq;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 72d2ebf..15ae9ae 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -306,4 +306,5 @@ typedef struct {
+ } wilc_cfg_func_t;
+ 
+ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
++int wilc_wlan_start(void);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index e481446..e752092 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -122,7 +122,6 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
+ #define WILC_TX_ERR_NO_BUF	(-2)
+ 
+ typedef struct {
+-	int (*wlan_start)(void);
+ 	int (*wlan_stop)(void);
+ 	int (*wlan_add_to_tx_que)(void *, u8 *, u32, wilc_tx_complete_func_t);
+ 	int (*wlan_handle_tx_que)(u32 *);
+-- 
+1.9.1
+
