@@ -1,102 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52454 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbbJPEkD (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:54826 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654AbbJAKut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:40:03 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 17/40] staging: wilc1000: rename variable g_hPeriodicRSSI
-Date: Fri, 16 Oct 2015 13:37:47 +0900
-Message-ID: <1444970290-17609-17-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_655891_B5730A4B)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Thu, 1 Oct 2015 06:50:49 -0400
+Subject: [PATCH 1/6] ath10k: fix checkpatch warning about logical continuations
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 01 Oct 2015 13:50:45 +0300
+Message-ID: <20151001105045.8770.44227.stgit@potku.adurom.net> (sfid-20151001_125051_655492_6793C19E)
+In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
+References: <20151001105001.8770.96252.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+checkpatch found:
 
-This patch renames variable g_hPeriodicRSSI to periodic_rssi
-to avoid CamelCase naming convention.
+drivers/net/wireless/ath/ath9k/core.c:490: Logical continuations should be on the previous line
 
-Add to static because follow warning reported by kbuild system.
- - drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol
-   'periodic_rssi' was not declared. Should it be static?
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5900972..8c529d1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -245,9 +245,7 @@ static struct semaphore hif_sema_thread;
- static struct semaphore hif_sema_driver;
- static struct semaphore hif_sema_wait_response;
- static struct semaphore hif_sema_deinit;
--struct timer_list g_hPeriodicRSSI;
--
--
-+static struct timer_list periodic_rssi;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 879625adc63a..87ad2e998a94 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -486,8 +486,8 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
  
- u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- 
-@@ -4207,8 +4205,8 @@ static void GetPeriodicRSSI(unsigned long arg)
- 			return;
- 		}
+ 	if (!(skip_otp || test_bit(ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
+-				   ar->fw_features))
+-	    && result != 0) {
++				   ar->fw_features)) &&
++	    result != 0) {
+ 		ath10k_err(ar, "otp calibration failed: %d", result);
+ 		return -EINVAL;
  	}
--	g_hPeriodicRSSI.data = (unsigned long)hif_drv;
--	mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
-+	periodic_rssi.data = (unsigned long)hif_drv;
-+	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- }
- 
- 
-@@ -4276,9 +4274,9 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 			result = -EFAULT;
- 			goto _fail_mq_;
- 		}
--		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
-+		setup_timer(&periodic_rssi, GetPeriodicRSSI,
- 			    (unsigned long)hif_drv);
--		mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
-+		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- 	}
- 
- 	setup_timer(&hif_drv->hScanTimer, TimerCB_Scan, 0);
-@@ -4346,10 +4344,8 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
- 	}
- 
--
--	if (del_timer_sync(&g_hPeriodicRSSI)) {
-+	if (del_timer_sync(&periodic_rssi))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
--	}
- 
- 	del_timer_sync(&hif_drv->hRemainOnChannel);
- 
-@@ -4370,9 +4366,9 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	if (clients_count == 1)	{
--		if (del_timer_sync(&g_hPeriodicRSSI)) {
-+		if (del_timer_sync(&periodic_rssi))
- 			PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
--		}
-+
- 		msg.id = HOST_IF_MSG_EXIT;
- 		msg.drv = hif_drv;
- 
--- 
-1.9.1
 
