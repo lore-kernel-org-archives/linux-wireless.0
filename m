@@ -1,118 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:44438 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751918AbbJUXHu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 19:07:50 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:32903 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752961AbbJANoM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2015 09:44:12 -0400
+Received: by pacex6 with SMTP id ex6so75443643pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:11 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] staging: wilc1000: return -ENOMEM when kmalloc failed
-Date: Thu, 22 Oct 2015 00:07:36 +0100
-Message-Id: <1445468856-18931-1-git-send-email-luisbg@osg.samsung.com> (sfid-20151022_010808_403118_7C6FBB73)
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/12] staging: wilc1000: remove wilc_platform.h
+Date: Thu,  1 Oct 2015 22:43:48 +0900
+Message-Id: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154414_975690_0E63487A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver is using -1 instead of the -ENOMEM defined macro to specify that
-a buffer allocation failed.
+This patch removes wilc_platform.h file that is not used anywhere.
 
-Fixes smatch warning and similars:
-drivers/staging/wilc1000/host_interface.c:1782 Handle_Key() warn:
-returning -1 instead of -ENOMEM is sloppy
-
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/wilc_platform.h | 28 ----------------------------
+ 1 file changed, 28 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/wilc_platform.h
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 38fead4..ec47a28 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1756,7 +1756,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send Key\n");
--				return -1;
-+				return -ENOMEM;
- 			}
- 
- 			kfree(pstrHostIFkeyAttr->attr.wep.key);
-@@ -1779,7 +1779,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send Key\n");
--				return -1;
-+				return -ENOMEM;
- 			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
-@@ -1826,7 +1826,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send RxGTK Key\n");
--				ret = -1;
-+				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
- 
-@@ -1861,7 +1861,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send RxGTK Key\n");
--				ret = -1;
-+				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
- 
-@@ -1890,7 +1890,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- _WPARxGtk_end_case_:
- 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
- 		kfree(pstrHostIFkeyAttr->attr.wpa.seq);
--		if (ret == -1)
-+		if (ret)
- 			return ret;
- 
- 		break;
-@@ -1905,7 +1905,7 @@ _WPARxGtk_end_case_:
- 
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send PTK Key\n");
--				ret = -1;
-+				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 
- 			}
-@@ -1940,7 +1940,7 @@ _WPARxGtk_end_case_:
- 
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send PTK Key\n");
--				ret = -1;
-+				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 
- 			}
-@@ -1963,7 +1963,7 @@ _WPARxGtk_end_case_:
- 
- _WPAPtk_end_case_:
- 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
--		if (ret == -1)
-+		if (ret)
- 			return ret;
- 
- 		break;
-@@ -1976,7 +1976,7 @@ _WPAPtk_end_case_:
- 		pu8keybuf = kmalloc((pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
- 		if (pu8keybuf == NULL) {
- 			PRINT_ER("No buffer to send PMKSA Key\n");
--			return -1;
-+			return -ENOMEM;
- 		}
- 
- 		pu8keybuf[0] = pstrHostIFkeyAttr->attr.pmkid.numpmkid;
+diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
+deleted file mode 100644
+index 6ec1aa3..0000000
+--- a/drivers/staging/wilc1000/wilc_platform.h
++++ /dev/null
+@@ -1,28 +0,0 @@
+-#ifndef __WILC_platform_H__
+-#define __WILC_platform_H__
+-
+-#include <linux/kthread.h>
+-#include <linux/semaphore.h>
+-#include <linux/module.h>
+-#include <linux/slab.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/stat.h>
+-#include <linux/time.h>
+-#include <linux/version.h>
+-#include "linux/string.h"
+-/******************************************************************
+- *      OS specific types
+- *******************************************************************/
+-
+-
+-
+-
+-
+-
+-/*******************************************************************
+- *      others
+- ********************************************************************/
+-
+-#endif
 -- 
-2.5.1
+2.6.0
 
