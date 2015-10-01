@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:32683 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbbJHBuT (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:37610 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbbJAPkg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 21:50:19 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/14] staging: wilc1000: remove unused struct cfg_param_t
-Date: Thu, 8 Oct 2015 10:49:14 +0900
-Message-ID: <1444268961-7551-7-git-send-email-tony.cho@atmel.com> (sfid-20151008_035024_492138_690C39D7)
-In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+	Thu, 1 Oct 2015 11:40:36 -0400
+Date: Thu, 1 Oct 2015 18:40:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
+Message-ID: <20151001154015.GJ7340@mwanda> (sfid-20151001_174040_266239_0D7692A9)
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+ <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, Oct 01, 2015 at 10:43:55PM +0900, Chaehyun Lim wrote:
+> This patch replaces int8_t with s8 that is a preferred type.
+> 
 
-This patch removes unused the struct cfg_param_t.
+It would be better to just use int.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 1b3dbc5..b4cc164 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -57,12 +57,6 @@
- #define SCAN_EVENT_DONE_ABORTED
- #define NUM_CONCURRENT_IFC			2
- 
--typedef struct {
--	u16 cfg_wid;
--	enum WID_TYPE cfg_type;
--	s8     *pu8Para;
--} cfg_param_t;
--
- typedef struct _tstrStatistics {
- 	u8 u8LinkSpeed;
- 	s8 s8RSSI;
--- 
-1.9.1
+regards,
+dan carpenter
 
