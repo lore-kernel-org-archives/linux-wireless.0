@@ -1,153 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:37103 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbbJDVIl (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36111 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780AbbJAV0a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 17:08:41 -0400
-Received: by wicfx3 with SMTP id fx3so89916363wic.0
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2015 14:08:40 -0700 (PDT)
+	Thu, 1 Oct 2015 17:26:30 -0400
+Received: by ioii196 with SMTP id i196so100502676ioi.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 14:26:30 -0700 (PDT)
+Date: Thu, 1 Oct 2015 16:26:01 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 0/5] wireless-regdb: Update TW and US rules to latest
+ regulations
+Message-ID: <20151001212601.GE101875@ubuntu-hedt> (sfid-20151001_232634_540813_A7E5B2CA)
+References: <1443682667-29814-1-git-send-email-wens@csie.org>
 MIME-Version: 1.0
-Date: Sun, 4 Oct 2015 23:08:39 +0200
-Message-ID: <CABAco3Boow_64N33s=mSu0=K38D00a=OsoSQRJUoMN1_qP_3_A@mail.gmail.com> (sfid-20151004_230847_042944_D63F4E60)
-Subject: [PATCH] Remove superfluous header files
-From: Ola Olsson <ola1olsson@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443682667-29814-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if.h only contains if_nametoindex and the reverse.
-Lets remove the inclusion in the source files where
-these functions are not called.
+On Thu, Oct 01, 2015 at 02:57:42PM +0800, Chen-Yu Tsai wrote:
+> Hi Seth,
+> 
+> This is v3 of my TW/US 5GHz updates series. Sorry for the long delay.
+> 
+> Changes since v2:
+> 
+>   - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
+> 
+>   - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
+>     side of 250mW
+> 
+> 
+> Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
+> the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
+> weather radars. The transmission power limit is also corrected to
+> match the regulations.
+> 
+> Patch 2 changes the boundary frequencies for each rule for Taiwan to
+> match the frequency allocation table. The "regulation" database shouldn't
+> care about artificial channel boundaries.
+> 
+> Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
+> the US.
+> 
+> Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
+> 
+> Patch 5 updates the transmission power limits for Taiwan, per the NCC's
+> official reply. This patch may be slightly controversial, as there is
+> no official English document. Either someone will have to independently
+> verify this, or translate the Chinese document.
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
----
- coalesce.c  |    1 -
- hwsim.c     |    1 -
- info.c      |    1 -
- interface.c |    1 -
- mesh.c      |    1 -
- ocb.c       |    1 -
- p2p.c       |    1 -
- phy.c       |    1 -
- reg.c       |    1 -
- roc.c       |    1 -
- vendor.c    |    1 -
- wowlan.c    |    1 -
- 12 files changed, 12 deletions(-)
+This description doesn't quite match the patches. Patch 4 both adds the
+5150-5250 MHz band and increases the power limits for 5250-5350 MHz,
+whereas patch 5 changes the DFS master region to DFS-FCC. Previously the
+increased power limit for 5250-5350 MHz was part of patch 5 - perhaps
+you accidentally moved that part to patch 4 when you were updating the
+patches?
 
-diff --git a/coalesce.c b/coalesce.c
-index 6cdc469..fabf44a 100644
---- a/coalesce.c
-+++ b/coalesce.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
- #include <stdio.h>
-diff --git a/hwsim.c b/hwsim.c
-index faa197b..6f82207 100644
---- a/hwsim.c
-+++ b/hwsim.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
+So patches 1-3 look fine to me. I suspect you'll want to move the power
+limit increase from patch 4 to 5. I'm also going to take a look at a
+machine translation of the Chinese document, and if that looks to be in
+agreement with your patches then I should be able to apply them next
+week sometime.
 
-diff --git a/info.c b/info.c
-index c23e378..8e87397 100644
---- a/info.c
-+++ b/info.c
-@@ -1,6 +1,5 @@
- #include <stdbool.h>
- #include <errno.h>
--#include <net/if.h>
-
- #include <netlink/genl/genl.h>
- #include <netlink/genl/family.h>
-diff --git a/interface.c b/interface.c
-index 4f0821d..87d86cc 100644
---- a/interface.c
-+++ b/interface.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
- #include <stdbool.h>
-diff --git a/mesh.c b/mesh.c
-index 0090530..290b8c2 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
-
-diff --git a/ocb.c b/ocb.c
-index fc48ecf..d28da7f 100644
---- a/ocb.c
-+++ b/ocb.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
-
-diff --git a/p2p.c b/p2p.c
-index bcfa01c..2067916 100644
---- a/p2p.c
-+++ b/p2p.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
-
-diff --git a/phy.c b/phy.c
-index 39b68c4..6d4139e 100644
---- a/phy.c
-+++ b/phy.c
-@@ -1,6 +1,5 @@
- #include <stdbool.h>
- #include <errno.h>
--#include <net/if.h>
- #include <strings.h>
- #include <sys/param.h>
- #include <sys/stat.h>
-diff --git a/reg.c b/reg.c
-index ee607a5..1dca13a 100644
---- a/reg.c
-+++ b/reg.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
- #include <stdbool.h>
-diff --git a/roc.c b/roc.c
-index ef2bf16..c6eda10 100644
---- a/roc.c
-+++ b/roc.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
-
-diff --git a/vendor.c b/vendor.c
-index 5a69375..d0b4f9e 100644
---- a/vendor.c
-+++ b/vendor.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
-
-diff --git a/wowlan.c b/wowlan.c
-index d3b565c..e1d3750 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -1,4 +1,3 @@
--#include <net/if.h>
- #include <errno.h>
- #include <string.h>
- #include <stdio.h>
--- 
-1.7.9.5
+Thanks,
+Seth
