@@ -1,92 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:38036 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904AbbJHJLv (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:55463 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779AbbJAKvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 05:11:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/11] staging: wilc1000: rename strHostIFpmkidAttr of union host_if_key_attr
-Date: Thu, 8 Oct 2015 18:10:51 +0900
-Message-ID: <1444295456-25818-6-git-send-email-tony.cho@atmel.com> (sfid-20151008_111154_676367_E4D9DA30)
-In-Reply-To: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
-References: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+	Thu, 1 Oct 2015 06:51:04 -0400
+Subject: [PATCH 3/6] ath10k: brace style fixes
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 01 Oct 2015 13:50:59 +0300
+Message-ID: <20151001105059.8770.12429.stgit@potku.adurom.net> (sfid-20151001_125107_491721_49184F47)
+In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
+References: <20151001105001.8770.96252.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFpmkidAttr of union host_if_key_attr to
-pmkid to avoid CamelCase naming convention.
+drivers/net/wireless/ath/ath10k/htt_tx.c:457: braces {} are not necessary for single statement blocks
+drivers/net/wireless/ath/ath10k/htt_tx.c:545: braces {} are not necessary for single statement blocks
+drivers/net/wireless/ath/ath10k/mac.c:200: braces {} are not necessary for single statement blocks
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    8 ++++----
+ drivers/net/wireless/ath/ath10k/mac.c    |    3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b8899d7..31c6644 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -127,7 +127,7 @@ struct host_if_wep_attr {
- union host_if_key_attr {
- 	struct host_if_wep_attr wep;
- 	struct host_if_wpa_attr wpa;
--	struct host_if_pmkid_attr strHostIFpmkidAttr;
-+	struct host_if_pmkid_attr pmkid;
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index eb5ba9bb8b4d..a31d508fc397 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -454,9 +454,9 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
+ 	spin_unlock_bh(&htt->tx_lock);
+-	if (res < 0) {
++	if (res < 0)
+ 		goto err_tx_dec;
+-	}
++
+ 	msdu_id = res;
  
- /*!
-@@ -2650,24 +2650,24 @@ _WPAPtk_end_case_:
+ 	txdesc = ath10k_htc_alloc_skb(ar, len);
+@@ -542,9 +542,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
+ 	spin_unlock_bh(&htt->tx_lock);
+-	if (res < 0) {
++	if (res < 0)
+ 		goto err_tx_dec;
+-	}
++
+ 	msdu_id = res;
  
- 		PRINT_D(HOSTINF_DBG, "Handling PMKSA key\n");
- 
--		pu8keybuf = kmalloc((pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
-+		pu8keybuf = kmalloc((pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
- 		if (pu8keybuf == NULL) {
- 			PRINT_ER("No buffer to send PMKSA Key\n");
- 			return -1;
- 		}
- 
--		pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid;
-+		pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid;
- 
--		for (i = 0; i < pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid; i++) {
-+		for (i = 0; i < pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid; i++) {
- 
--			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].bssid, ETH_ALEN);
--			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].pmkid, PMKID_LEN);
-+			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
-+			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
- 		}
- 
- 		strWID.id = (u16)WID_PMKID_INFO;
- 		strWID.type = WID_STR;
- 		strWID.val = (s8 *)pu8keybuf;
--		strWID.size = (pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid * PMKSA_KEY_LEN) + 1;
-+		strWID.size = (pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
- 
- 		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
- 					   get_id_from_handler(hif_drv));
-@@ -4525,10 +4525,10 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
- 
- 	for (i = 0; i < pu8PmkidInfoArray->numpmkid; i++) {
- 
--		memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
-+		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
- 			    ETH_ALEN);
- 
--		memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
-+		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
- 			    PMKID_LEN);
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1b4b53b9ffc1..3316aec16043 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -197,9 +197,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 		return -EOPNOTSUPP;
  	}
  
--- 
-1.9.1
+-	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
++	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-	}
+ 
+ 	if (cmd == DISABLE_KEY) {
+ 		arg.key_cipher = WMI_CIPHER_NONE;
 
