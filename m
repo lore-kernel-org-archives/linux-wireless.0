@@ -1,115 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:37238 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbbJUH2J convert rfc822-to-8bit (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45112 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932409AbbJAKvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 03:28:09 -0400
-Received: by wicfv8 with SMTP id fv8so61209352wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 00:28:08 -0700 (PDT)
+	Thu, 1 Oct 2015 06:51:17 -0400
+Subject: [PATCH 5/6] ath10k: fix whitespace usage
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 01 Oct 2015 13:51:14 +0300
+Message-ID: <20151001105114.8770.28029.stgit@potku.adurom.net> (sfid-20151001_125120_334106_4A869EC1)
+In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
+References: <20151001105001.8770.96252.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <56273D3F.6080804@gmail.com>
-References: <20151020112513.14879.47438.stgit@potku.adurom.net>
-	<5625E6BD.6020307@gmail.com>
-	<CA+BoTQnSQmdCCqF43+Q5cxyVVLrM_BxRMT+Ydpfe6_5yRV2+Lw@mail.gmail.com>
-	<56273D3F.6080804@gmail.com>
-Date: Wed, 21 Oct 2015 09:28:08 +0200
-Message-ID: <CA+BoTQ=y3-AmpTbpurCvEd2RxQHmMjbU+r7Gy57oz9LsC3VR1Q@mail.gmail.com> (sfid-20151021_092813_894026_4763FA37)
-Subject: Re: [PATCH v2] ath10k: add FW API support to test mode
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Manikanta <manikanta.pubbisetty@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2015 at 09:22, Manikanta <manikanta.pubbisetty@gmail.com> wrote:
-> On Wednesday 21 October 2015 12:36 PM, Michal Kazior wrote:
->> On 20 October 2015 at 09:01, Manikanta Pubbisetty
->> <manikanta.pubbisetty@gmail.com> wrote:
->>> On 10/20/2015 04:55 PM, Kalle Valo wrote:
->>>>
->>>> From: Alan Liu <alanliu@qca.qualcomm.com>
->>>>
->>>> Add WMI-TLV and FW API support in ath10k testmode.
->>>> Ath10k can get right wmi command format from UTF image
->>>> to communicate UTF firmware.
->>>>
->>>> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
->>>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->>>> ---
-[...]
->>>> +       /* loop elements */
->>>> +       while (len > sizeof(struct ath10k_fw_ie)) {
->>>> +               hdr = (struct ath10k_fw_ie *)data;
->>>> +
->>>> +               ie_id = le32_to_cpu(hdr->id);
->>>> +               ie_len = le32_to_cpu(hdr->len);
->>>> +
->>>> +               len -= sizeof(*hdr);
->>>> +               data += sizeof(*hdr);
->>>> +
->>>> +               if (len < ie_len) {
->>>> +                       ath10k_err(ar, "invalid length for FW IE %d (%zu
->>>> <
->>>> %zu)\n",
->>>> +                                  ie_id, len, ie_len);
->>>> +                       ret = -EINVAL;
->>>> +                       goto err;
->>>> +               }
->>>> +
->>>> +               switch (ie_id) {
->>>> +               case ATH10K_FW_IE_FW_VERSION:
->>>
->>>
->>> Something like ATH10K_UTF_IE_FW_VERSION or ATH10K_TESTMODE_IE_FW_VERSION
->>> would be less confusing and better, isn't it?
->>
->> I don't really see a reason to. UTF is just another main program to
->> run on the device.
->>
->> If anything I would suggest to unify the FW API parsing logic to work
->> with a dedicated structure instead of `struct ath10k` directly, i.e.
->>
->>    struct ath10k_fw {
->>      void *data;
->>      size_t data_len;
->>      enum wmi_op_version wmi_op_version;
->>      // ...
->>    };
->>
->>    int ath10k_core_fw_api_parse(struct ath10k *ar,
->>                                 struct ath10k_fw *arfw,
->>                                 struct firmware *fw)
->>     {
->>       // parse and fill in `arfw`
->>     }
->>
->>    struct ath10k {
->>      // ...
->>      struct ath10k_fw fw_normal;
->>      struct ath10k_fw fw_utf;
->>      // ...
->>    };
->>
->>
->> Michał
->
-> Hmmm, this way we will have a unified firmware parsing logic. Is this a task
-> which can be taken up easily or any other hidden complexities are invloved
-> ?.
+checkpatch found:
 
-Decoupling the parsing logic should be rather easy. I don't think
-there are any gotchas.
+drivers/net/wireless/ath/ath10k/core.c:574: Blank lines aren't necessary before a close brace '}'
+drivers/net/wireless/ath/ath10k/mac.c:4067: Missing a blank line after declarations
+drivers/net/wireless/ath/ath10k/mac.c:4083: Missing a blank line after declarations
+drivers/net/wireless/ath/ath10k/mac.c:4084: spaces required around that '>>=' (ctx:WxV)
+drivers/net/wireless/ath/ath10k/pci.c:1507: Missing a blank line after declarations
 
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    1 -
+ drivers/net/wireless/ath/ath10k/mac.c  |    4 +++-
+ drivers/net/wireless/ath/ath10k/pci.c  |    1 +
+ 3 files changed, 4 insertions(+), 2 deletions(-)
 
-> I mean can we do the changes for current parsing logic and then rework the
-> test mode patch ? what is your suggestion ?
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 12fef599debe..c295c919568b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -570,7 +570,6 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	ar->firmware_len = 0;
+ 
+ 	ar->cal_file = NULL;
+-
+ }
+ 
+ static int ath10k_fetch_cal_file(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3316aec16043..ab0864feb514 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4064,6 +4064,7 @@ static u32 get_nss_from_chainmask(u16 chain_mask)
+ static int ath10k_mac_get_vht_cap_bf_sts(struct ath10k *ar)
+ {
+ 	int nsts = ar->vht_cap_info;
++
+ 	nsts &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
+ 	nsts >>= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
+ 
+@@ -4080,8 +4081,9 @@ static int ath10k_mac_get_vht_cap_bf_sts(struct ath10k *ar)
+ static int ath10k_mac_get_vht_cap_bf_sound_dim(struct ath10k *ar)
+ {
+ 	int sound_dim = ar->vht_cap_info;
++
+ 	sound_dim &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
+-	sound_dim >>=IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
++	sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
+ 
+ 	/* If the sounding dimension is not advertised by the firmware,
+ 	 * let's use a default value of 1
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 08cc4304001e..61df93e2e1c9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1504,6 +1504,7 @@ static void ath10k_pci_irq_enable(struct ath10k *ar)
+ static int ath10k_pci_hif_start(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
+ 
+ 	ath10k_pci_irq_enable(ar);
 
-If you want to do the unified parsing logic approach you should first
-decouple the logic (i.e. make it not fill `struct ath10k` directly)
-and then rework the testmode patch on top of that.
-
-
-Michał
