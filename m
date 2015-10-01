@@ -1,191 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:36163 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965096AbbJ1IZK (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33919 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932526AbbJANo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 04:25:10 -0400
-Received: by qgad10 with SMTP id d10so100232qga.3
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 01:25:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <562C454B.4070307@linaro.org>
-References: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
-	<562C454B.4070307@linaro.org>
-Date: Wed, 28 Oct 2015 08:25:09 +0000
-Message-ID: <CAFSJ42YSNUSTTn1Sq1mdOEfMy43BYh04LR8gVQj+jxiiCxTqDg@mail.gmail.com> (sfid-20151028_092517_814278_9BA30F54)
-Subject: Re: [PATCH] wcn36xx: introduce per-channel ring buffer locks
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: yfw <fengwei.yin@linaro.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Oct 2015 09:44:27 -0400
+Received: by padhy16 with SMTP id hy16so75400873pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:26 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/12] staging: wilc1000: remove unnecessary comment
+Date: Thu,  1 Oct 2015 22:43:53 +0900
+Message-Id: <1443707039-18433-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154430_531559_F0D1911B)
+In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks good to me!
+This patch removes unnecessary comment.
 
-2015-10-25 2:58 GMT+00:00 yfw <fengwei.yin@linaro.org>:
-> Hi Bob,
->
->
-> On 2015/10/25 1:42, Bob Copeland wrote:
->>
->> wcn36xx implements a ring buffer for transmitted frames for each
->> (high and low priority) DMA channel.  The ring buffers are lockless:
->> new frames are inserted at the head of the queue, while finished
->> packets are reaped from the tail.
->>
->> Unfortunately, the list manipulations are missing any kind of barriers
->> so are susceptible to various races: for example, a TX completion
->> handler might read an updated desc->ctrl before the head has actually
->> advanced, and then null out the ctl->skb pointer while it is still
->> being used in the TX path.
->>
->> Simplify things here by adding a spin lock when traversing the ring.
->> This change increased stability for me without adding any noticeable
->> overhead on my platform (xperia z).
->>
->> Signed-off-by: Bob Copeland <me@bobcopeland.com>
->> ---
->>   drivers/net/wireless/ath/wcn36xx/dxe.c | 27 +++++++++++++++++++--------
->>   drivers/net/wireless/ath/wcn36xx/dxe.h |  1 +
->>   2 files changed, 20 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c
->> b/drivers/net/wireless/ath/wcn36xx/dxe.c
->> index 086549b..26085f7 100644
->> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
->> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
->> @@ -79,6 +79,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct
->> wcn36xx_dxe_ch *ch)
->>         struct wcn36xx_dxe_ctl *cur_ctl = NULL;
->>         int i;
->>
->> +       spin_lock_init(&ch->lock);
->>         for (i = 0; i < ch->desc_num; i++) {
->>                 cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
->>                 if (!cur_ctl)
->> @@ -345,7 +346,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32
->> status)
->>
->>   static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
->>   {
->> -       struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
->> +       struct wcn36xx_dxe_ctl *ctl;
->>         struct ieee80211_tx_info *info;
->>         unsigned long flags;
->>
->> @@ -354,6 +355,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
->> wcn36xx_dxe_ch *ch)
->>          * completely full head and tail are pointing to the same element
->>          * and while-do will not make any cycles.
->>          */
->> +       spin_lock_irqsave(&ch->lock, flags);
->> +       ctl = ch->tail_blk_ctl;
->>         do {
->>                 if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
->>                         break;
->> @@ -365,12 +368,12 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
->> wcn36xx_dxe_ch *ch)
->>                                 /* Keep frame until TX status comes */
->>                                 ieee80211_free_txskb(wcn->hw, ctl->skb);
->>                         }
->> -                       spin_lock_irqsave(&ctl->skb_lock, flags);
->> +                       spin_lock(&ctl->skb_lock);
->>                         if (wcn->queues_stopped) {
->>                                 wcn->queues_stopped = false;
->>                                 ieee80211_wake_queues(wcn->hw);
->>                         }
->> -                       spin_unlock_irqrestore(&ctl->skb_lock, flags);
->> +                       spin_unlock(&ctl->skb_lock);
->>
->>                         ctl->skb = NULL;
->>                 }
->> @@ -379,6 +382,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
->> wcn36xx_dxe_ch *ch)
->>                !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
->>
->>         ch->tail_blk_ctl = ctl;
->> +       spin_unlock_irqrestore(&ch->lock, flags);
->>   }
->>
->>   static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
->> @@ -596,12 +600,14 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->>         struct wcn36xx_dxe_desc *desc = NULL;
->>         struct wcn36xx_dxe_ch *ch = NULL;
->>         unsigned long flags;
->> +       int ret;
->>
->>         ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
->>
->> +       spin_lock_irqsave(&ch->lock, flags);
->>         ctl = ch->head_blk_ctl;
->>
->> -       spin_lock_irqsave(&ctl->next->skb_lock, flags);
->> +       spin_lock(&ctl->next->skb_lock);
->>
->>         /*
->>          * If skb is not null that means that we reached the tail of the
->> ring
->> @@ -611,10 +617,11 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->>         if (NULL != ctl->next->skb) {
->>                 ieee80211_stop_queues(wcn->hw);
->>                 wcn->queues_stopped = true;
->> -               spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
->> +               spin_unlock(&ctl->next->skb_lock);
->> +               spin_unlock_irqrestore(&ch->lock, flags);
->>                 return -EBUSY;
->>         }
->> -       spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
->> +       spin_unlock(&ctl->next->skb_lock);
->>
->>         ctl->skb = NULL;
->>         desc = ctl->desc;
->> @@ -640,7 +647,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->>         desc = ctl->desc;
->>         if (ctl->bd_cpu_addr) {
->>                 wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
->> -               return -EINVAL;
->> +               ret = -EINVAL;
->> +               goto unlock;
->>         }
->>
->>         desc->src_addr_l = dma_map_single(NULL,
->> @@ -679,7 +687,10 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->>                         ch->reg_ctrl, ch->def_ctrl);
->>         }
->>
->> -       return 0;
->> +       ret = 0;
->> +unlock:
->> +       spin_unlock_irqrestore(&ch->lock, flags);
->> +       return ret;
->>   }
->>
->>   int wcn36xx_dxe_init(struct wcn36xx *wcn)
->> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h
->> b/drivers/net/wireless/ath/wcn36xx/dxe.h
->> index 35ee7e9..3eca4f9 100644
->> --- a/drivers/net/wireless/ath/wcn36xx/dxe.h
->> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
->> @@ -243,6 +243,7 @@ struct wcn36xx_dxe_ctl {
->>   };
->>
->>   struct wcn36xx_dxe_ch {
->> +       spinlock_t                      lock;   /* protects head/tail ptrs
->> */
->>         enum wcn36xx_dxe_ch_type        ch_type;
->>         void                            *cpu_addr;
->>         dma_addr_t                      dma_addr;
->>
->
-> The patch looks great to me.
->
-> Regards
-> Yin, Fengwei
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c     |  6 ------
+ drivers/staging/wilc1000/host_interface.h     | 16 ++++------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 23 ++++++++++-------------
+ drivers/staging/wilc1000/wilc_wlan.c          |  2 --
+ 4 files changed, 14 insertions(+), 33 deletions(-)
 
-
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index be01de5..49823c1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -12,9 +12,6 @@ extern u8 connecting;
+ extern struct timer_list hDuringIpTimer;
+ 
+ extern u8 g_wilc_initialized;
+-/*****************************************************************************/
+-/*								Macros                                       */
+-/*****************************************************************************/
+ 
+ /* Message types of the Host IF Message Queue*/
+ #define HOST_IF_MSG_SCAN                        0
+@@ -63,9 +60,6 @@ extern u8 g_wilc_initialized;
+ #define BA_SESSION_DEFAULT_BUFFER_SIZE          16
+ #define BA_SESSION_DEFAULT_TIMEOUT              1000
+ #define BLOCK_ACK_REQ_SIZE                      0x14
+-/*****************************************************************************/
+-/*								Type Definitions							 */
+-/*****************************************************************************/
+ 
+ /*!
+  *  @struct             cfg_param_attr
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 56ba042..fb5cb8a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -11,9 +11,6 @@
+ #define HOST_INT_H
+ 
+ #include "coreconfigurator.h"
+-/*****************************************************************************/
+-/*								Macros                                       */
+-/*****************************************************************************/
+ 
+ #define IP_ALEN  4
+ 
+@@ -38,10 +35,10 @@
+ #define REMOVEKEY				0x2
+ #define DEFAULTKEY				0x4
+ #define ADDKEY_AP				0x8
+-#define MAX_NUM_SCANNED_NETWORKS		100 /* 30		// rachel */
++#define MAX_NUM_SCANNED_NETWORKS		100
+ #define MAX_NUM_SCANNED_NETWORKS_SHADOW		130
+-#define MAX_NUM_PROBED_SSID			10  /*One more than the number of scanned ssids*/
+-#define CHANNEL_SCAN_TIME			250 /* 250 */
++#define MAX_NUM_PROBED_SSID			10
++#define CHANNEL_SCAN_TIME			250
+ 
+ #define TX_MIC_KEY_LEN				8
+ #define RX_MIC_KEY_LEN				8
+@@ -56,7 +53,7 @@
+ #define PMKID_LEN				16
+ #define WILC_MAX_NUM_PMKIDS			16
+ #define WILC_SUPP_MCS_SET_SIZE			16
+-#define WILC_ADD_STA_LENGTH			40 /* Not including the rates field cause it has variable length*/
++#define WILC_ADD_STA_LENGTH			40
+ #define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
+ 
+@@ -1202,9 +1199,4 @@ void host_int_freeJoinParams(void *pJoinParams);
+ 
+ s32 host_int_get_statistics(tstrWILC_WFIDrv *hWFIDrv, tstrStatistics *pstrStatistics);
+ 
+-/*****************************************************************************/
+-/*																			 */
+-/*									EOF										 */
+-/*																			 */
+-/*****************************************************************************/
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 4878f12..b8a0d56 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -8,12 +8,10 @@
+ #ifndef WILC_WFI_NETDEVICE
+ #define WILC_WFI_NETDEVICE
+ 
+-/* These are the flags in the statusword */
+ #define WILC_WFI_RX_INTR 0x0001
+ #define WILC_WFI_TX_INTR 0x0002
+ 
+-/* Default timeout period */
+-#define WILC_WFI_TIMEOUT 5   /* In jiffies */
++#define WILC_WFI_TIMEOUT 5
+ #define WILC_MAX_NUM_PMKIDS  16
+ #define PMKID_LEN  16
+ #define PMKID_FOUND 1
+@@ -24,16 +22,16 @@
+ #include <linux/moduleparam.h>
+ #include <linux/sched.h>
+ #include <linux/kernel.h>
+-#include <linux/slab.h> /* kmalloc() */
+-#include <linux/errno.h>  /* error codes */
+-#include <linux/types.h>  /* size_t */
+-#include <linux/interrupt.h> /* mark_bh */
++#include <linux/slab.h>
++#include <linux/errno.h>
++#include <linux/types.h>
++#include <linux/interrupt.h>
+ #include <linux/time.h>
+ #include <linux/in.h>
+-#include <linux/netdevice.h>   /* struct device, and other headers */
+-#include <linux/etherdevice.h> /* eth_type_trans */
+-#include <linux/ip.h>          /* struct iphdr */
+-#include <linux/tcp.h>         /* struct tcphdr */
++#include <linux/netdevice.h>
++#include <linux/etherdevice.h>
++#include <linux/ip.h>
++#include <linux/tcp.h>
+ #include <linux/skbuff.h>
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
+@@ -45,12 +43,11 @@
+ #include <asm/checksum.h>
+ #include "host_interface.h"
+ #include "wilc_wlan.h"
+-#include <linux/wireless.h>     /* tony, 2013-06-12 */
++#include <linux/wireless.h>
+ 
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+ 
+-/*iftype*/
+ enum stats_flags {
+ 	WILC_WFI_RX_PKT = BIT(0),
+ 	WILC_WFI_TX_PKT = BIT(1),
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index de70c59..e4e1eb2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1164,7 +1164,6 @@ static void wilc_wlan_handle_rxq(void)
+ 				break;
+ 			}
+ 
+-/*bug 3887: [AP] Allow Management frames to be passed to the host*/
+ 			#define IS_MANAGMEMENT				0x100
+ 			#define IS_MANAGMEMENT_CALLBACK			0x080
+ 			#define IS_MGMT_STATUS_SUCCES			0x040
+@@ -1176,7 +1175,6 @@ static void wilc_wlan_handle_rxq(void)
+ 
+ 				WILC_WFI_mgmt_rx(&buffer[offset + HOST_HDR_OFFSET], pkt_len);
+ 			}
+-			/* BUG4530 fix */
+ 			else
+ 			{
+ 
 -- 
-Best regards,
-Eugene
+2.6.0
+
