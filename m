@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55583 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbbJHKF3 (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34829 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568AbbJBMph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 06:05:29 -0400
-Date: Thu, 8 Oct 2015 10:57:38 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, austin.shin@atmel.com,
-	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 1/6] staging: wilc1000: remove typedef from
- tstrWILC_WFIDrv
-Message-ID: <20151008095738.GA32258@kroah.com> (sfid-20151008_120620_921669_EB5101D9)
-References: <1444040894-18709-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444040894-18709-1-git-send-email-tony.cho@atmel.com>
+	Fri, 2 Oct 2015 08:45:37 -0400
+Received: by pacfv12 with SMTP id fv12so108316842pac.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 05:45:37 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/10] staging: wilc1000: remove blank lines before close brace
+Date: Fri,  2 Oct 2015 21:44:56 +0900
+Message-Id: <1443789896-7082-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_144540_789890_D8BCBFCF)
+In-Reply-To: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 05, 2015 at 07:28:09PM +0900, Tony Cho wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch removes typedef from the struct tstrWILC_WFIDrv and
-> rename it to host_if_drv.
-> This patch includes the removal of the comment for tstrWILC_WFIDrv as well.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c         | 362 +++++++++++-----------
->  drivers/staging/wilc1000/host_interface.h         | 108 +++----
->  drivers/staging/wilc1000/linux_wlan.c             |  16 +-
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  24 +-
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   4 +-
->  5 files changed, 253 insertions(+), 261 deletions(-)
+This patch removes blank lines before close brace '}'
 
-This patch fails to apply :(
+CHECK: Blank lines aren't necessary before a close brace '}'
+drivers/staging/wilc1000/host_interface.c:5366:
 
-Please rebase and resend the whole series.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 79014ab..e9b58c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -5362,7 +5362,6 @@ int host_int_wait_msg_queue_idle(void)
+ 	down(&hWaitResponse);
+ 
+ 	return result;
+-
+ }
+ 
+ s32 host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
+-- 
+2.6.0
 
-greg k-h
