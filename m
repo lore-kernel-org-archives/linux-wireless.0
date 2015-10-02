@@ -1,52 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35397 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbbJ2MaN (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9820 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbbJBFXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:30:13 -0400
-Received: by pasz6 with SMTP id z6so40016799pas.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:30:13 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/12] staging: use kmemdup in host_int_add_station
-Date: Thu, 29 Oct 2015 21:29:27 +0900
-Message-Id: <1446121768-4953-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_134654_769301_75BB8BD3)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 2 Oct 2015 01:23:20 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/10] staging: wilc1000: remove function pointer rx_indicate
+Date: Fri, 2 Oct 2015 14:22:10 +0900
+Message-ID: <1443763332-7330-8-git-send-email-tony.cho@atmel.com> (sfid-20151002_073152_765188_4DDD33CD)
+In-Reply-To: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
+References: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces kmalloc followed by memcpy with kmemdup.
+From: Glen Lee <glen.lee@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch removes function pointer rx_indicate and just call the function
+wilc_wlan_cfg_indicate_rx instead. Remove static from the function
+declration.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c     | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h     | 1 -
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 1 +
+ 4 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3c5de75..6b804e6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4537,12 +4537,12 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a9a8d24..cd4598a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1198,7 +1198,7 @@ static void wilc_wlan_handle_rxq(void)
  
- 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
- 	if (add_sta_info->u8NumRates > 0) {
--		u8 *rates = kmalloc(add_sta_info->u8NumRates, GFP_KERNEL);
--
-+		u8 *rates = kmemdup(sta_param->pu8Rates,
-+				    add_sta_info->u8NumRates,
-+				    GFP_KERNEL);
- 		if (!rates)
- 			return -ENOMEM;
  
--		memcpy(rates, sta_param->pu8Rates, add_sta_info->u8NumRates);
- 		add_sta_info->pu8Rates = rates;
- 	}
  
+-					mac_cfg.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
++					wilc_wlan_cfg_indicate_rx(&buffer[pkt_offset + offset], pkt_len, &rsp);
+ 					if (rsp.type == WILC_CFG_RSP) {
+ 						/**
+ 						 *      wake up the waiting task...
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 9386939..5099cf0 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -296,7 +296,6 @@ typedef struct {
+ } wilc_cfg_rsp_t;
+ 
+ typedef struct {
+-	int (*rx_indicate)(u8 *, int, wilc_cfg_rsp_t *);
+ 	int (*cfg_init)(wilc_debug_func);
+ } wilc_cfg_func_t;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 55d2083..2916d45 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -505,7 +505,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 	return ret;
+ }
+ 
+-static int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
++int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
+ {
+ 	int ret = 1;
+ 	u8 msg_type;
+@@ -566,6 +566,5 @@ static int wilc_wlan_cfg_init(wilc_debug_func func)
+ }
+ 
+ wilc_cfg_func_t mac_cfg = {
+-	wilc_wlan_cfg_indicate_rx,
+ 	wilc_wlan_cfg_init,
+ };
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index 0efa2c5..fe2c0382 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -33,5 +33,6 @@ typedef struct {
+ int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
+ int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
+ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
++int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp);
+ 
+ #endif
 -- 
-2.6.1
+1.9.1
 
