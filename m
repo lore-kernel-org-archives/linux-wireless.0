@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:47018 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932779AbbI3XQg (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:35344 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbbJBWXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 19:16:36 -0400
-Date: Thu, 1 Oct 2015 09:16:13 +1000
-From: James Cameron <quozl@laptop.org>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: Memory leak in error condition
-Message-ID: <20150930231613.GC20220@us.netrek.org> (sfid-20151001_011649_203990_1FB3CDCC)
-References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
+	Fri, 2 Oct 2015 18:23:00 -0400
+Received: by ykdz138 with SMTP id z138so123987255ykd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 15:22:59 -0700 (PDT)
+Received: from silver.lan ([181.194.57.211])
+        by smtp.googlemail.com with ESMTPSA id f133sm9365120ywa.27.2015.10.02.15.22.58
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 02 Oct 2015 15:22:59 -0700 (PDT)
+Message-ID: <1443824577.3468.5.camel@gmail.com> (sfid-20151003_002307_012399_8C32F1E7)
+Subject: BCM4352 [14e4:4315] can't provide stable connection.
+From: Wolter Hellmund <wolterh6@gmail.com>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 02 Oct 2015 16:22:57 -0600
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
-> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
-> From: Ola Olsson <ola.olsson@sonymobile.com>
-> Date: Thu, 1 Oct 2015 00:43:06 +0200
-> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
->  Olsson <ola.olsson@sonymobile.com>
-> 
-> ---
->  scan.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/scan.c b/scan.c
-> index e959c1b..f248981 100644
-> --- a/scan.c
-> +++ b/scan.c
-> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
->         if (ies || meshid) {
->                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
->                 if (!tmpies)
-> +                       free(ies);
-> +                       free(meshid);
->                         goto nla_put_failure;
+This card comes preinstalled in the new Lenovo Edge 15 at least. 
 
-Braces?  { }
+I have recorded some important information (problem detailed
+description and dmesg logs) in a post to the archlinux forums [1], and
+I wanted to see how could I help to make this device work in linux.
 
+(I am not subscribed to this list, please reply-all)
 
->                 if (ies) {
->                         memcpy(tmpies, ies, ies_len);
-> -- 
-> 1.7.9.5
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-James Cameron
-http://quozl.linux.org.au/
+[1]: https://bbs.archlinux.org/viewtopic.php?id=202711
