@@ -1,89 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4727 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbbJMLCe (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:37244 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbbJBF2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:02:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 47/54] staging: wilc1000: rename u32count of struct set_multicast
-Date: Tue, 13 Oct 2015 20:02:05 +0900
-Message-ID: <1444734132-17858-2-git-send-email-tony.cho@atmel.com> (sfid-20151013_130236_994923_2DB749FF)
-In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+	Fri, 2 Oct 2015 01:28:44 -0400
+Received: from mail-io0-f179.google.com (mail-io0-f179.google.com [209.85.223.179])
+	(Authenticated sender: b93043)
+	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id 33C10207ED
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2015 13:28:43 +0800 (CST)
+Received: by iow1 with SMTP id 1so72494683iow.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 22:28:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151001212601.GE101875@ubuntu-hedt>
+References: <1443682667-29814-1-git-send-email-wens@csie.org> <20151001212601.GE101875@ubuntu-hedt>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Fri, 2 Oct 2015 13:28:22 +0800
+Message-ID: <CAGb2v67RBbzo-Q1S4xo63=TFqkLxMtN_FHiSa7Yi=ahKw9xi-g@mail.gmail.com> (sfid-20151002_072854_936120_78E23DBB)
+Subject: Re: [PATCH v3 0/5] wireless-regdb: Update TW and US rules to latest regulations
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	wireless-regdb <wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, Oct 2, 2015 at 5:26 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Thu, Oct 01, 2015 at 02:57:42PM +0800, Chen-Yu Tsai wrote:
+>> Hi Seth,
+>>
+>> This is v3 of my TW/US 5GHz updates series. Sorry for the long delay.
+>>
+>> Changes since v2:
+>>
+>>   - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
+>>
+>>   - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
+>>     side of 250mW
+>>
+>>
+>> Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
+>> the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
+>> weather radars. The transmission power limit is also corrected to
+>> match the regulations.
+>>
+>> Patch 2 changes the boundary frequencies for each rule for Taiwan to
+>> match the frequency allocation table. The "regulation" database shouldn't
+>> care about artificial channel boundaries.
+>>
+>> Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
+>> the US.
+>>
+>> Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
+>>
+>> Patch 5 updates the transmission power limits for Taiwan, per the NCC's
+>> official reply. This patch may be slightly controversial, as there is
+>> no official English document. Either someone will have to independently
+>> verify this, or translate the Chinese document.
+>
+> This description doesn't quite match the patches. Patch 4 both adds the
+> 5150-5250 MHz band and increases the power limits for 5250-5350 MHz,
+> whereas patch 5 changes the DFS master region to DFS-FCC. Previously the
+> increased power limit for 5250-5350 MHz was part of patch 5 - perhaps
+> you accidentally moved that part to patch 4 when you were updating the
+> patches?
 
-This patch renames u32count of struct set_multicast to cnt to
-avoid CamelCase naming convention.
+Indeed. I squashed a fixup into the wrong patch, and tried to fix it.
+Obviously that didn't work out so well.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+> So patches 1-3 look fine to me. I suspect you'll want to move the power
+> limit increase from patch 4 to 5. I'm also going to take a look at a
+> machine translation of the Chinese document, and if that looks to be in
+> agreement with your patches then I should be able to apply them next
+> week sometime.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7ea9e01..9cd42f7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -141,7 +141,7 @@ struct beacon_attr {
- 
- struct set_multicast {
- 	bool enabled;
--	u32 u32count;
-+	u32 cnt;
- };
- 
- struct del_all_sta {
-@@ -2790,7 +2790,7 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 
- 	strWID.id = (u16)WID_SETUP_MULTICAST_FILTER;
- 	strWID.type = WID_BIN;
--	strWID.size = sizeof(struct set_multicast) + ((strHostIfSetMulti->u32count) * ETH_ALEN);
-+	strWID.size = sizeof(struct set_multicast) + ((strHostIfSetMulti->cnt) * ETH_ALEN);
- 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
- 	if (strWID.val == NULL)
- 		goto ERRORHANDLER;
-@@ -2801,13 +2801,13 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
- 
--	*pu8CurrByte++ = (strHostIfSetMulti->u32count & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->u32count >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->u32count >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->u32count >> 24) & 0xFF);
-+	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 16) & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
- 
--	if ((strHostIfSetMulti->u32count) > 0)
--		memcpy(pu8CurrByte, gau8MulticastMacAddrList, ((strHostIfSetMulti->u32count) * ETH_ALEN));
-+	if ((strHostIfSetMulti->cnt) > 0)
-+		memcpy(pu8CurrByte, gau8MulticastMacAddrList, ((strHostIfSetMulti->cnt) * ETH_ALEN));
- 
- 	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
- 				   get_id_from_handler(hif_drv));
-@@ -4913,7 +4913,7 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hif_drv,
- 	msg.drv = hif_drv;
- 
- 	pstrMulticastFilterParam->enabled = bIsEnabled;
--	pstrMulticastFilterParam->u32count = u32count;
-+	pstrMulticastFilterParam->cnt = u32count;
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
--- 
-1.9.1
+Do you want me to send a new version now, or wait for you to go through
+the translation first?
 
+Thanks.
+
+ChenYu
