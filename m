@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46412 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757887AbbJVO3o convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35389 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbbJBHmC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 10:29:44 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Eric Dumazet <eric.dumazet@gmail.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"ido@wizery.com" <ido@wizery.com>
-Subject: Re: [RFC v4 1/2] iwlwifi: pcie: allow to build an A-MSDU using TSO
- core
-Date: Thu, 22 Oct 2015 14:29:39 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8ACBF7@hasmsx107.ger.corp.intel.com> (sfid-20151022_162952_625556_30BA1108)
-References: <1445519232-11111-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 2 Oct 2015 03:42:02 -0400
+Received: by pacfv12 with SMTP id fv12so101966998pac.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:42:01 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 11/12] staging: wilc1000: set_channel: rename s32Error
+Date: Fri,  2 Oct 2015 16:41:20 +0900
+Message-Id: <1443771681-15540-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094654_035178_A61D45C9)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces s32Error with result to avoid camelcase.
 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 08/12 patch is changed.
 
-On 10/22/2015 04:08 PM, Grumbach, Emmanuel wrote:
-> When the op_mode sends an skb whose payload is bigger than
-> MSS, PCIe will create an A-MSDU out of it. PCIe assumes
-> that the skb that is coming from the op_mode can fit in one
-> A-MSDU. It is the op_mode's responsibility to make sure
-> that this guarantee holds.
-> 
-> Additional headers need to be built for the subframes.
-> The TSO core code takes care of the IP / TCP headers and
-> the driver takes care of the 802.11 subframe headers.
-> 
-> These headers are stored on a per-cpu page that is re-used
-> for all the packets handled on that same CPU. Each skb
-> holds a reference to that page and releases the page when
-> it is reclaimed. When the page gets full, it is released
-> and a new one is allocated.
-> 
-> Since any SKB that doesn't go through the fast-xmit path
-> of mac80211 will be segmented, we can assume here that the
-> packet is not WEP / TKIP and has a proper SNAP header.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
-> v4: * Create a helper to free the skb's ref to the hdr page
->     * add comment on that clarifies that the headers fit in a page
->     * return -ENOMEM if the per_cpu variable allocation failed
->     * don't zero the per_cpu struct after allocation
-> ---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Meh... Someone internally founds a few bugs... Don't waste your time on
-this one. V5 will come later tonight.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 692fef5..1b31fec 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -663,7 +663,7 @@ static int set_channel(struct wiphy *wiphy,
+ {
+ 	u32 channelnum = 0;
+ 	struct wilc_priv *priv;
+-	int s32Error = 0;
++	int result = 0;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+@@ -671,12 +671,12 @@ static int set_channel(struct wiphy *wiphy,
+ 	PRINT_D(CFG80211_DBG, "Setting channel %d with frequency %d\n", channelnum, chandef->chan->center_freq);
+ 
+ 	u8CurrChannel = channelnum;
+-	s32Error   = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
++	result = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
+ 
+-	if (s32Error != 0)
++	if (result != 0)
+ 		PRINT_ER("Error in setting channel %d\n", channelnum);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ /**
+-- 
+2.6.0
+
