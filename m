@@ -1,168 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33101 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778AbbJYC60 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8402 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbbJBIC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2015 22:58:26 -0400
-Received: by pabrc13 with SMTP id rc13so152834324pab.0
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2015 19:58:26 -0700 (PDT)
-Subject: Re: [PATCH] wcn36xx: introduce per-channel ring buffer locks
-To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-References: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
-Cc: wcn36xx@lists.infradead.org, k.eugene.e@gmail.com
-From: yfw <fengwei.yin@linaro.org>
-Message-ID: <562C454B.4070307@linaro.org> (sfid-20151025_035843_456102_9D2E32A5)
-Date: Sun, 25 Oct 2015 10:58:19 +0800
+	Fri, 2 Oct 2015 04:02:29 -0400
+Message-ID: <560E3A11.2040200@broadcom.com> (sfid-20151002_100333_789256_69DF3950)
+Date: Fri, 2 Oct 2015 10:02:25 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Chaehyun Lim <chaehyun.lim@gmail.com>, <gregkh@linuxfoundation.org>
+CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
+	<chris.park@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>
+Subject: Re: [PATCH V2 08/12] staging: wilc1000: use int instead of int8_t
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com> <1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+On 10/02/2015 09:41 AM, Chaehyun Lim wrote:
+> This patch replaces int8_t with int.
+> The int8_t should be int. It's used as an index into an array
+> or -1 for not found.
 
-On 2015/10/25 1:42, Bob Copeland wrote:
-> wcn36xx implements a ring buffer for transmitted frames for each
-> (high and low priority) DMA channel.  The ring buffers are lockless:
-> new frames are inserted at the head of the queue, while finished
-> packets are reaped from the tail.
->
-> Unfortunately, the list manipulations are missing any kind of barriers
-> so are susceptible to various races: for example, a TX completion
-> handler might read an updated desc->ctrl before the head has actually
-> advanced, and then null out the ctl->skb pointer while it is still
-> being used in the TX path.
->
-> Simplify things here by adding a spin lock when traversing the ring.
-> This change increased stability for me without adding any noticeable
-> overhead on my platform (xperia z).
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Please consider using bool instead. See my previous emails.
+
+Regards,
+Arend
+
+> Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 > ---
->   drivers/net/wireless/ath/wcn36xx/dxe.c | 27 +++++++++++++++++++--------
->   drivers/net/wireless/ath/wcn36xx/dxe.h |  1 +
->   2 files changed, 20 insertions(+), 8 deletions(-)
+> V2: replaces s8 with int suggested by dan.
 >
-> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-> index 086549b..26085f7 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-> @@ -79,6 +79,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
->   	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
+>   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index d781003..3c8c2e1 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
+>   	g_obtainingIP = false;
+>   }
+>
+> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+> +int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+>   {
+> -	int8_t state = -1;
+> +	int state = -1;
 >   	int i;
 >
-> +	spin_lock_init(&ch->lock);
->   	for (i = 0; i < ch->desc_num; i++) {
->   		cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
->   		if (!cur_ctl)
-> @@ -345,7 +346,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
+>   	if (u32LastScannedNtwrksCountShadow == 0) {
+> @@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
 >
->   static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>   void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
 >   {
-> -	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
-> +	struct wcn36xx_dxe_ctl *ctl;
->   	struct ieee80211_tx_info *info;
->   	unsigned long flags;
+> -	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+> +	int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+>   	u32 ap_index = 0;
+>   	u8 rssi_index = 0;
 >
-> @@ -354,6 +355,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
->   	 * completely full head and tail are pointing to the same element
->   	 * and while-do will not make any cycles.
->   	 */
-> +	spin_lock_irqsave(&ch->lock, flags);
-> +	ctl = ch->tail_blk_ctl;
->   	do {
->   		if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
->   			break;
-> @@ -365,12 +368,12 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
->   				/* Keep frame until TX status comes */
->   				ieee80211_free_txskb(wcn->hw, ctl->skb);
->   			}
-> -			spin_lock_irqsave(&ctl->skb_lock, flags);
-> +			spin_lock(&ctl->skb_lock);
->   			if (wcn->queues_stopped) {
->   				wcn->queues_stopped = false;
->   				ieee80211_wake_queues(wcn->hw);
->   			}
-> -			spin_unlock_irqrestore(&ctl->skb_lock, flags);
-> +			spin_unlock(&ctl->skb_lock);
->
->   			ctl->skb = NULL;
->   		}
-> @@ -379,6 +382,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
->   	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
->
->   	ch->tail_blk_ctl = ctl;
-> +	spin_unlock_irqrestore(&ch->lock, flags);
->   }
->
->   static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
-> @@ -596,12 +600,14 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->   	struct wcn36xx_dxe_desc *desc = NULL;
->   	struct wcn36xx_dxe_ch *ch = NULL;
->   	unsigned long flags;
-> +	int ret;
->
->   	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
->
-> +	spin_lock_irqsave(&ch->lock, flags);
->   	ctl = ch->head_blk_ctl;
->
-> -	spin_lock_irqsave(&ctl->next->skb_lock, flags);
-> +	spin_lock(&ctl->next->skb_lock);
->
->   	/*
->   	 * If skb is not null that means that we reached the tail of the ring
-> @@ -611,10 +617,11 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->   	if (NULL != ctl->next->skb) {
->   		ieee80211_stop_queues(wcn->hw);
->   		wcn->queues_stopped = true;
-> -		spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
-> +		spin_unlock(&ctl->next->skb_lock);
-> +		spin_unlock_irqrestore(&ch->lock, flags);
->   		return -EBUSY;
->   	}
-> -	spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
-> +	spin_unlock(&ctl->next->skb_lock);
->
->   	ctl->skb = NULL;
->   	desc = ctl->desc;
-> @@ -640,7 +647,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->   	desc = ctl->desc;
->   	if (ctl->bd_cpu_addr) {
->   		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
-> -		return -EINVAL;
-> +		ret = -EINVAL;
-> +		goto unlock;
->   	}
->
->   	desc->src_addr_l = dma_map_single(NULL,
-> @@ -679,7 +687,10 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
->   			ch->reg_ctrl, ch->def_ctrl);
->   	}
->
-> -	return 0;
-> +	ret = 0;
-> +unlock:
-> +	spin_unlock_irqrestore(&ch->lock, flags);
-> +	return ret;
->   }
->
->   int wcn36xx_dxe_init(struct wcn36xx *wcn)
-> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-> index 35ee7e9..3eca4f9 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-> @@ -243,6 +243,7 @@ struct wcn36xx_dxe_ctl {
->   };
->
->   struct wcn36xx_dxe_ch {
-> +	spinlock_t			lock;	/* protects head/tail ptrs */
->   	enum wcn36xx_dxe_ch_type	ch_type;
->   	void				*cpu_addr;
->   	dma_addr_t			dma_addr;
 >
 
-The patch looks great to me.
-
-Regards
-Yin, Fengwei
