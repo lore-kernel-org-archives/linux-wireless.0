@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from authsmtp10.register.it ([81.88.48.60]:33466 "EHLO
-	authsmtp.register.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932245AbbJUIxJ (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64199 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751843AbbJBHps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 04:53:09 -0400
-Subject: Re: hostapd mailinglist gone?
-To: Matthias May <matthias.may@neratec.com>,
-	linux-wireless@vger.kernel.org
-References: <56260BD6.4020304@neratec.com>
-From: Francesco Zanella <francesco.zanella@inthegra.it>
-Message-ID: <56275078.4000204@inthegra.it> (sfid-20151021_105318_789673_4FFECD31)
-Date: Wed, 21 Oct 2015 10:44:40 +0200
+	Fri, 2 Oct 2015 03:45:48 -0400
+Message-ID: <560E3628.4000105@broadcom.com> (sfid-20151002_094559_005891_A69ED075)
+Date: Fri, 2 Oct 2015 09:45:44 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <56260BD6.4020304@neratec.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Chaehyun Lim <chaehyun.lim@gmail.com>, <gregkh@linuxfoundation.org>
+CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
+	<chris.park@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com> <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-> Hi
-> This might be the wrong mailing list.
-> Is the hostapd mailinglist gone?
-> It used to be at http://lists.shmoo.com/mailman/listinfo/hostap
-> One is currently greeted with the message: "No such list hostap"
+On 10/01/2015 03:43 PM, Chaehyun Lim wrote:
+> This patch replaces int8_t with s8 that is a preferred type.
 >
-> Best regards
-> Matthias
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
 >
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index d781003..56c97c9 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
+>   	g_obtainingIP = false;
+>   }
+>
+> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+> +s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
 
-Hi,
-so it seems.
-I subscribe to it on 16 Oct, I received the last message on 17 Oct (and 
-no response to my question ... doh).
-I would like news too.
+It seems to make more sense to use bool type here.
 
-Francesco
+>   {
+> -	int8_t state = -1;
+> +	s8 state = -1;
+
+You can actually get rid of the state variable. Just replace the 
+statement 'state = i;' by 'return true;' and replace 'return state;' by 
+'return false;'.
+
+>   	int i;
+>
+>   	if (u32LastScannedNtwrksCountShadow == 0) {
+> @@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+>
+>   void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
+>   {
+> -	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+> +	s8 ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+
+And here as well.
+
+Regards,
+Arend
+
+>   	u32 ap_index = 0;
+>   	u8 rssi_index = 0;
+>
+>
+
