@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5953 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873AbbJOE0G (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33112 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbbJBHlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:26:06 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/40] staging: wilc1000: rename u8Count of struct join_bss_param
-Date: Thu, 15 Oct 2015 13:24:46 +0900
-Message-ID: <1444883121-31757-5-git-send-email-tony.cho@atmel.com> (sfid-20151015_062647_658640_7846DE5E)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 2 Oct 2015 03:41:52 -0400
+Received: by pacex6 with SMTP id ex6so100070067pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:52 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 08/12] staging: wilc1000: use int instead of int8_t
+Date: Fri,  2 Oct 2015 16:41:17 +0900
+Message-Id: <1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094155_512854_2CC21F5A)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch replaces int8_t with int.
+The int8_t should be int. It's used as an index into an array
+or -1 for not found.
 
-This patch renames u8Count of struct join_bss_param to cnt
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
+V2: replaces s8 with int suggested by dan.
+
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 07c5213..e8a35d3 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -222,7 +222,7 @@ struct join_bss_param {
- 	u8 noa_enabled;
- 	u8 opp_enabled;
- 	u8 ct_window;
--	u8 u8Count;
-+	u8 cnt;
- 	u8 u8Index;
- 	u8 au8Duration[4];
- 	u8 au8Interval[4];
-@@ -1200,7 +1200,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		if (ptstrJoinBssParam->opp_enabled)
- 			*(pu8CurrByte++) = ptstrJoinBssParam->ct_window;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d781003..3c8c2e1 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
+ 	g_obtainingIP = false;
+ }
  
--		*(pu8CurrByte++) = ptstrJoinBssParam->u8Count;
-+		*(pu8CurrByte++) = ptstrJoinBssParam->cnt;
+-int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
++int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+ {
+-	int8_t state = -1;
++	int state = -1;
+ 	int i;
  
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Duration, sizeof(ptstrJoinBssParam->au8Duration));
+ 	if (u32LastScannedNtwrksCountShadow == 0) {
+@@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
  
-@@ -4997,7 +4997,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				for (i = 0; i < pu8IEs[index + 7]; i++)
- 					PRINT_D(GENERIC_DBG, " %x\n", pu8IEs[index + 9 + i]);
+ void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
+ {
+-	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
++	int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
+ 	u32 ap_index = 0;
+ 	u8 rssi_index = 0;
  
--				pNewJoinBssParam->u8Count = pu8IEs[index + 11];
-+				pNewJoinBssParam->cnt = pu8IEs[index + 11];
- 				u16P2P_count = index + 12;
- 
- 				memcpy(pNewJoinBssParam->au8Duration, pu8IEs + u16P2P_count, 4);
 -- 
-1.9.1
+2.6.0
 
