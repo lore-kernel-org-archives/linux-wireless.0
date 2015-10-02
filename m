@@ -1,223 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13528 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbbJLIAS (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33952 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbbJBHlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 04:00:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 34/41] staging: wilc1000: rename strHostIFwepAttr of union host_if_key_attr
-Date: Mon, 12 Oct 2015 16:56:08 +0900
-Message-ID: <1444636575-2486-34-git-send-email-tony.cho@atmel.com> (sfid-20151012_100046_027630_2E6098B5)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 2 Oct 2015 03:41:39 -0400
+Received: by padhy16 with SMTP id hy16so99942689pad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:39 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 04/12] staging: wilc1000: fix indentation level
+Date: Fri,  2 Oct 2015 16:41:13 +0900
+Message-Id: <1443771681-15540-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094142_120486_54756809)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFwepAttr of union host_if_key_attr to wep to
-avoid CamelCase naming convention.
+This patch removes unnecessary block braces and fix indentation.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 71 ++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 40 deletions(-)
+V2: resend because 08/12 patch is changed.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d905e17..d03643d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -126,7 +126,7 @@ struct host_if_wep_attr {
-  *  @version		1.0
-  */
- union host_if_key_attr {
--	struct host_if_wep_attr strHostIFwepAttr;
-+	struct host_if_wep_attr wep;
- 	struct host_if_wpa_attr strHostIFwpaAttr;
- 	struct host_if_pmkid_attr strHostIFpmkidAttr;
- };
-@@ -2349,25 +2349,25 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY_AP)	{
+ drivers/staging/wilc1000/linux_wlan.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index bd83da1..a6642d4 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1967,28 +1967,26 @@ static void __exit exit_wilc_driver(void)
+ 		}
+ 	}
  
- 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
--			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
-+			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
- 			strWIDList[0].id = (u16)WID_11I_MODE;
- 			strWIDList[0].type = WID_CHAR;
- 			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8mode));
-+			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8mode));
+-	{
+-	#ifndef WILC_SDIO
+-		PRINT_D(INIT_DBG, "SPI unregsiter...\n");
+-		spi_unregister_driver(&wilc_bus);
+-	#else
+-		PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
+-		sdio_unregister_driver(&wilc_bus);
+-	#endif
++#ifndef WILC_SDIO
++	PRINT_D(INIT_DBG, "SPI unregsiter...\n");
++	spi_unregister_driver(&wilc_bus);
++#else
++	PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
++	sdio_unregister_driver(&wilc_bus);
++#endif
  
- 			strWIDList[1].id = WID_AUTH_TYPE;
- 			strWIDList[1].type = WID_CHAR;
- 			strWIDList[1].size = sizeof(char);
--			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.tenuAuth_type));
-+			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.tenuAuth_type));
+-		if (g_linux_wlan != NULL) {
+-			kfree(g_linux_wlan);
+-			g_linux_wlan = NULL;
+-		}
+-		printk("Module_exit Done.\n");
++	if (g_linux_wlan != NULL) {
++		kfree(g_linux_wlan);
++		g_linux_wlan = NULL;
++	}
++	printk("Module_exit Done.\n");
  
- 			strWIDList[2].id = (u16)WID_KEY_ID;
- 			strWIDList[2].type = WID_CHAR;
+ #if defined(WILC_DEBUGFS)
+-		wilc_debugfs_remove();
++	wilc_debugfs_remove();
+ #endif
  
--			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
-+			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
- 			strWIDList[2].size = sizeof(char);
- 
- 
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, GFP_KERNEL);
- 
- 
- 			if (pu8keybuf == NULL) {
-@@ -2375,15 +2375,15 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 				return -1;
- 			}
- 
--			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen);
-+			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey,
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
- 
- 
--			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey);
-+			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey);
- 
- 			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
- 			strWIDList[3].type = WID_STR;
--			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen;
-+			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen;
- 			strWIDList[3].val = (s8 *)pu8keybuf;
- 
- 
-@@ -2396,24 +2396,24 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY) {
- 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen + 2, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send Key\n");
- 				return -1;
- 			}
--			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx;
-+			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
- 
--			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen, 1);
-+			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, 1);
- 
--			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen);
-+			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey,
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
- 
--			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey);
-+			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey);
- 
- 			strWID.id = (u16)WID_ADD_WEP_KEY;
- 			strWID.type = WID_STR;
- 			strWID.val = (s8 *)pu8keybuf;
--			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen + 2;
-+			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2;
- 
- 			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
- 						   get_id_from_handler(hif_drv));
-@@ -2424,7 +2424,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWID.id = (u16)WID_REMOVE_WEP_KEY;
- 			strWID.type = WID_STR;
- 
--			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx;
-+			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
- 			strWID.val = s8idxarray;
- 			strWID.size = 1;
- 
-@@ -2433,7 +2433,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 		} else {
- 			strWID.id = (u16)WID_KEY_ID;
- 			strWID.type = WID_CHAR;
--			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
-+			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
- 			strWID.size = sizeof(char);
- 
- 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
-@@ -4092,9 +4092,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	msg.body.key_info.enuKeyType = WEP;
- 	msg.body.key_info.u8KeyAction = REMOVEKEY;
- 	msg.drv = hif_drv;
--
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = index;
-+	msg.body.key_info.uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = index;
- 
- 	/* send the message */
- 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-@@ -4139,8 +4137,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
- 	msg.drv = hif_drv;
- 
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Index;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Index;
- 
- 	/* send the message */
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-@@ -4196,17 +4193,15 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 
- 
- 	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
-+	uniHostIFkeyAttr.wep.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
- 
--	memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
-+	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.pu8WepKey,
- 		    pu8WepKey, u8WepKeylen);
- 
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Keyidx;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
- 	/* send the message */
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-@@ -4266,24 +4261,20 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 
- 
- 	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
-+	uniHostIFkeyAttr.wep.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
- 
- 
--	memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
-+	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.pu8WepKey,
- 		    pu8WepKey, (u8WepKeylen));
- 
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Keyidx;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8mode = u8mode;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.u8mode = u8mode;
- 
--	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.tenuAuth_type = tenuAuth_type;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.tenuAuth_type = tenuAuth_type;
- 	/* send the message */
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+-		linux_wlan_device_detection(0);
+-		linux_wlan_device_power(0);
+-	}
++	linux_wlan_device_detection(0);
++	linux_wlan_device_power(0);
+ }
+ module_exit(exit_wilc_driver);
  
 -- 
-1.9.1
+2.6.0
 
