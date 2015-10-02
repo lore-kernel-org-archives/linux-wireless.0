@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33264 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275AbbJVC0t (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:30053 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170AbbJBLhP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 22:26:49 -0400
-Message-ID: <1445480807.22974.91.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20151022_042657_320564_AB8ADF0F)
-Subject: Re: [RFC v3 1/2] iwlwifi: pcie: allow to build an A-MSDU using TSO
- core
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"ido@wizery.com" <ido@wizery.com>
-Date: Wed, 21 Oct 2015 19:26:47 -0700
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AB280@hasmsx107.ger.corp.intel.com>
-References: <1445452464-19525-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1445452464-19525-2-git-send-email-emmanuel.grumbach@intel.com>
-	 <1445470211.22974.86.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8AB280@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Oct 2015 07:37:15 -0400
+Date: Fri, 2 Oct 2015 14:37:01 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, gregkh@linuxfoundation.org,
+	johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
+Message-ID: <20151002113701.GN7289@mwanda> (sfid-20151002_133720_521721_212B6743)
+References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+ <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
+ <560E3628.4000105@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <560E3628.4000105@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-10-22 at 00:14 +0000, Grumbach, Emmanuel wrote:
-
+On Fri, Oct 02, 2015 at 09:45:44AM +0200, Arend van Spriel wrote:
+> On 10/01/2015 03:43 PM, Chaehyun Lim wrote:
+> >This patch replaces int8_t with s8 that is a preferred type.
+> >
+> >Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> >---
+> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> >index d781003..56c97c9 100644
+> >--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> >+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> >@@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
+> >  	g_obtainingIP = false;
+> >  }
+> >
+> >-int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+> >+s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
 > 
-> Well. I guess I should at least check, but even with very small MSS, our
-> device supports up to 20 pointers for the same 802.11 packet: 2 are for
-> metadata. So basically, so leaves me only 18 pointers. for each MSS I
-> need at least 2 (one for the headers and one for the payload), so I will
-> have at most 9 of these for one packet, even with a tiny MSS.
-> 
+> It seems to make more sense to use bool type here.
 
-I did not see in your patch where you made the checks about 18 segs in a
-TSO packet ?
+That doesn't work, but you're right that the function is poorly named.
 
-> I agree that all this should be added to the code in a comment.
-> Speaking of which...
-> int tso_count_descs(struct sk_buff *skb)
-> {
->         /* The Marvell Way */
->         return skb_shinfo(skb)->gso_segs * 2 + skb_shinfo(skb)->nr_frags;
-> }
-> 
-> What if there is some payload in the header?
-> To me it sounds safer to return:
-> 
-> skb_shinfo(skb)->gso_segs * 2 + skb_shinfo(skb)->nr_frags + 1;
-> 
-> or maybe to test if there is some payload in the header and then add 1?
-> If there is payload in the header, it should be considered as another
-> frag, shouldn't it?
+It could be renamed to get_ap_index_or_something() in a later patch.
+Returning directly is also a good idea.
 
-Minimal count is gso_segs (one per MSS)
-
-Then you have to add extra for the cases we have a mss spanning a frag
-in skb.
-
-Thats a max of (skb_shinfo(skb)->nr_frags - 1) + (data_in_head() ? 1 :
-0);
-
-So I believe formula would be correct.
-
+regards,
+dan carpenter
 
