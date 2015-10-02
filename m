@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35920 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029AbbJEKf6 (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34275 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbbJBHl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:58 -0400
-Received: by pablk4 with SMTP id lk4so172813742pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:58 -0700 (PDT)
+	Fri, 2 Oct 2015 03:41:59 -0400
+Received: by padhy16 with SMTP id hy16so99950097pad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:58 -0700 (PDT)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 16/20] staging: wilc1000: rename s32Error in host_int_remove_wep_key
-Date: Mon,  5 Oct 2015 19:35:00 +0900
-Message-Id: <1444041304-7727-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123601_682146_D7A98546)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH V2 10/12] staging: wilc1000: set_channel: fix data type of s32Error
+Date: Fri,  2 Oct 2015 16:41:19 +0900
+Message-Id: <1443771681-15540-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094201_861068_43ACDD14)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces s32Error with result in host_int_remove_wep_key to
-avoid camelcase.
+This patch changes data type of s32Error variable from s32 to int
+because return type of this function is int.
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+V2: resend because 08/12 patch is changed.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ca0e8e3..c02a007 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4293,15 +4293,15 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress)
-  */
- int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f98a807..692fef5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -663,7 +663,7 @@ static int set_channel(struct wiphy *wiphy,
  {
--	int s32Error = 0;
-+	int result = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)wfi_drv;
- 	struct host_if_msg msg;
+ 	u32 channelnum = 0;
+ 	struct wilc_priv *priv;
+-	s32 s32Error = 0;
++	int s32Error = 0;
  
+ 	priv = wiphy_priv(wiphy);
  
- 	if (pstrWFIDrv == NULL) {
--		s32Error = -EFAULT;
-+		result = -EFAULT;
- 		PRINT_ER("Failed to send setup multicast config packet\n");
--		return s32Error;
-+		return result;
- 	}
- 
- 	/* prepare the Remove Wep Key Message */
-@@ -4319,12 +4319,12 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
- 	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = index;
- 
- 	/* send the message */
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
--	if (s32Error)
-+	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	if (result)
- 		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
- 	down(&(pstrWFIDrv->hSemTestKeyBlock));
- 
--	return s32Error;
-+	return result;
- }
- 
- /**
 -- 
 2.6.0
 
