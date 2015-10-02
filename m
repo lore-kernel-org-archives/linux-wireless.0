@@ -1,73 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57474 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751393AbbJRSYM (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34388 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbbJBHmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 14:24:12 -0400
-Message-ID: <1445192636.31451.74.camel@decadent.org.uk> (sfid-20151018_202416_133447_2397BAFE)
-Subject: Re: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Sun, 18 Oct 2015 19:23:56 +0100
-In-Reply-To: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-vdJEA4LPcNMYdiDMFA4s"
-Mime-Version: 1.0
+	Fri, 2 Oct 2015 03:42:05 -0400
+Received: by padhy16 with SMTP id hy16so99952607pad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:42:05 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 12/12] staging: wilc1000: rename u8CurrChannel
+Date: Fri,  2 Oct 2015 16:41:21 +0900
+Message-Id: <1443771681-15540-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094654_489806_BC667299)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces u8CurrChannel with curr_channel to avoid camelcase.
 
---=-vdJEA4LPcNMYdiDMFA4s
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 08/12 patch is changed.
 
-On Thu, 2015-10-15 at 13:40 +0300, Kalle Valo wrote:
-> In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.bin=
-") I
-> forgot to commit board.bin file and that's why it was not included in the
-> commit even I had added an entry to WHENCE. Add that now.
->=20
-> At the same time also add Version field for firmware-4.bin.
->=20
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-[...]
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-I've applied this and the following 4 patches. =C2=A0However, I'm not
-entirely happy with copyright acknowledgements going into the
-notice_ath10k*.txt files which aren't referenced anywhere. =C2=A0It would b=
-e
-easy for downstream distributors to miss that they should be packaged
-along with the firmware blobs they relate to. =C2=A0Please can you combine
-these with the QCA licence file or add references to these files from
-WHENCE?
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1b31fec..f1e2d06 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -97,7 +97,7 @@ struct p2p_mgmt_data {
+ /*Global variable used to state the current  connected STA channel*/
+ u8 u8WLANChannel = INVALID_CHANNEL;
+ 
+-u8 u8CurrChannel;
++u8 curr_channel;
+ 
+ u8 u8P2P_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+ u8 u8P2Plocalrandom = 0x01;
+@@ -670,7 +670,7 @@ static int set_channel(struct wiphy *wiphy,
+ 	channelnum = ieee80211_frequency_to_channel(chandef->chan->center_freq);
+ 	PRINT_D(CFG80211_DBG, "Setting channel %d with frequency %d\n", channelnum, chandef->chan->center_freq);
+ 
+-	u8CurrChannel = channelnum;
++	curr_channel = channelnum;
+ 	result = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
+ 
+ 	if (result != 0)
+@@ -996,7 +996,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_INFO(CFG80211_DBG, "Group encryption value = %s\n Cipher Group = %s\n WPA version = %s\n",
+ 		   pcgroup_encrypt_val, pccipher_group, pcwpa_version);
+ 
+-	u8CurrChannel = pstrNetworkInfo->u8channel;
++	curr_channel = pstrNetworkInfo->u8channel;
+ 
+ 	if (!pstrWFIDrv->u8P2PConnect) {
+ 		u8WLANChannel = pstrNetworkInfo->u8channel;
+@@ -2093,7 +2093,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 		PRINT_D(GENERIC_DBG, "Rx Frame Type:%x\n", buff[FRAME_TYPE_ID]);
+ 
+ 		/*Upper layer is informed that the frame is received on this freq*/
+-		s32Freq = ieee80211_channel_to_frequency(u8CurrChannel, IEEE80211_BAND_2GHZ);
++		s32Freq = ieee80211_channel_to_frequency(curr_channel, IEEE80211_BAND_2GHZ);
+ 
+ 		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
+ 			PRINT_D(GENERIC_DBG, "Rx Action Frame Type: %x %x\n", buff[ACTION_SUBTYPE_ID], buff[P2P_PUB_ACTION_SUBTYPE]);
+@@ -2273,7 +2273,7 @@ static int remain_on_channel(struct wiphy *wiphy,
+ 		return s32Error;
+ 	}
+ 
+-	u8CurrChannel = chan->hw_value;
++	curr_channel = chan->hw_value;
+ 
+ 	/*Setting params needed by WILC_WFI_RemainOnChannelExpired()*/
+ 	priv->strRemainOnChanParams.pstrListenChan = chan;
+@@ -2394,7 +2394,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 			PRINT_D(GENERIC_DBG, "Setting channel: %d\n", chan->hw_value);
+ 			host_int_set_mac_chnl_num(priv->hWILCWFIDrv, chan->hw_value);
+ 			/*Save the current channel after we tune to it*/
+-			u8CurrChannel = chan->hw_value;
++			curr_channel = chan->hw_value;
+ 		} else if (ieee80211_is_action(mgmt->frame_control))   {
+ 			PRINT_D(GENERIC_DBG, "ACTION FRAME:%x\n", (u16)mgmt->frame_control);
+ 
+@@ -2409,7 +2409,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 					PRINT_D(GENERIC_DBG, "Setting channel: %d\n", chan->hw_value);
+ 					host_int_set_mac_chnl_num(priv->hWILCWFIDrv, chan->hw_value);
+ 					/*Save the current channel after we tune to it*/
+-					u8CurrChannel = chan->hw_value;
++					curr_channel = chan->hw_value;
+ 				}
+ 				switch (buf[ACTION_SUBTYPE_ID])	{
+ 				case GAS_INTIAL_REQ:
+-- 
+2.6.0
 
-Ben.
-
---=20
-Ben Hutchings
-A free society is one where it is safe to be unpopular. - Adlai Stevenson
---=-vdJEA4LPcNMYdiDMFA4s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAViPjvOe/yOyVhhEJAQo/oQ//dzw4c4bjNVcTg7r2PxHNUgPTFmQFCIUL
-rJN3ZYLeqzlF5c9Fs49DfMhTJ9uSem/x2zOpTlch0wZfBWL/H2l3F2EPJZsaBfzx
-ymDnrO5A0Kf45sUiuEkR5dLG5PMziiQpYKyRWVNymREtTypOyy2FeB42GvVP3r9H
-uXR/NAXehfLwHYoE9XWv8QXSiZy+uFNrY9A3+qK3wXlOWkFkWdqgWnLu47Eck64p
-MS3HsSDmUAgAQw0Q/kT681ynBcNBpyuHgwkn17IVQqx2F+ofeAG+m0A78/0wul1F
-edlF6eHa7UBl6dWrgclE/BrN2HjhOUbhlMwfOprEhdW96C+YDSlChK9IBWZdMUD6
-bBbx0UyZy/TLMVib3ffiq4moTWYVh3ymoz5WXGq45QLsMY7j0V2aPlxNo18IdT61
-7/eZnSqYj7k0XWtP/3qoGoTW1lno0yLzzrplxrYud3OwplVvwcFs169mvTqrc0qv
-bsvFjox9DdD+4XmwMeifB5QAKBEwyf6LJ7CRSosgdJdnHYO2zP+X87PDz1tduBqm
-pBwGaKxlB/VTiNN15d461RLyhQ/WttvcvXmGoLdw8AtMpUhbqYZJgvk6k7Jfur/i
-GBIuOe+di1GRAi2SFWhAkAs/Qw6r0tzHKEHUL4KIx+QiwWbGLb4fNhizpyVTBq0x
-aWsrw7ksMZI=
-=S6fM
------END PGP SIGNATURE-----
-
---=-vdJEA4LPcNMYdiDMFA4s--
