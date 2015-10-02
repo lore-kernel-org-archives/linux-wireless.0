@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8680 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbbJEG0f (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35270 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbbJBNS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:26:35 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/18] staging: wilc1000: remove typedef from tenuKeyType
-Date: Mon, 5 Oct 2015 15:25:40 +0900
-Message-ID: <1444026353-29024-5-git-send-email-tony.cho@atmel.com> (sfid-20151005_082638_162357_64DE1E94)
-In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 2 Oct 2015 09:18:28 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, dan.carpenter@oracle.com,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH 2/3] drivers: staging: wilc1000: Remove ineffective code
+Date: Fri,  2 Oct 2015 18:47:36 +0530
+Message-Id: <1443791857-7837-2-git-send-email-csgorentla@gmail.com> (sfid-20151002_151858_687455_5ACC633A)
+In-Reply-To: <1443791857-7837-1-git-send-email-csgorentla@gmail.com>
+References: <1443791857-7837-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The value of 'result' is not modified from 0 after initialization.
+Hence no need to check it.
 
-This patch remove typedef from the enum tenuKeyType.
-And rename it to KEY_TYPE.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bcfbb91..2e71505 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -142,7 +142,7 @@ typedef union _tuniHostIFkeyAttr {
-  *  @version		1.0
-  */
- struct key_attr {
--	tenuKeyType enuKeyType;
-+	enum KEY_TYPE enuKeyType;
- 	u8 u8KeyAction;
- 	tuniHostIFkeyAttr uniHostIFkeyAttr;
- };
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 779ff99..856cab0 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -172,12 +172,12 @@ typedef enum {
- 	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
- } tenuConnDisconnEvent;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 1b73b63..a9c28ad 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -145,11 +145,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 	down(&pHandle->hSem);
  
--typedef enum {
-+enum KEY_TYPE {
- 	WEP,
- 	WPARxGtk,
- 	WPAPtk,
- 	PMKSA,
--} tenuKeyType;
-+};
- 
- 
- /*Scan callBack function definition*/
+ 	/* other non-timeout scenarios */
+-	if (result) {
+-		PRINT_ER("Non-timeout\n");
+-		return result;
+-	}
+-
+ 	if (pHandle->bExiting) {
+ 		PRINT_ER("pHandle fail\n");
+ 		return -EFAULT;
 -- 
-1.9.1
+2.1.4
 
