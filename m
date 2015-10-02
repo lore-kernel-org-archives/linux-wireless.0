@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42676 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbbJLJAF (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:32951 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbbJBNSV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 05:00:05 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
-References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>
-Date: Mon, 12 Oct 2015 11:59:55 +0300
-In-Reply-To: <201510090203.zZSsJ7qb%fengguang.wu@intel.com> (kbuild test
-	robot's message of "Fri, 9 Oct 2015 02:59:31 +0800")
-Message-ID: <87wpuspilw.fsf@kamboji.qca.qualcomm.com> (sfid-20151012_110009_546889_3D8B2553)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 2 Oct 2015 09:18:21 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, dan.carpenter@oracle.com,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH 1/3] drivers: staging: wilc1000: Check for errors before kfree
+Date: Fri,  2 Oct 2015 18:47:35 +0530
+Message-Id: <1443791857-7837-1-git-send-email-csgorentla@gmail.com> (sfid-20151002_151942_575556_29FB6839)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+During the clean-up of the function, it is need to check if
+errors occurred, not the memory pointer.
 
-> Hi Arend,
->
-> [auto build test ERROR on next-20151008 -- if it's inappropriate base, please ignore]
->
-> config: x86_64-randconfig-x011-201540 (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
->     void brcmf_debugfs_init(void)
->          ^
->    In file included from drivers/net/wireless/brcm80211/brcmfmac/bus.h:20:0,
->                     from drivers/net/wireless/brcm80211/brcmfmac/debug.c:24:
->    drivers/net/wireless/brcm80211/brcmfmac/debug.h:118:20: note: previous definition of 'brcmf_debugfs_init' was here
->     static inline void brcmf_debugfs_init(void)
->                        ^
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Arend, are the kbuild errors valid? I would guess they are as
-wireless-drivers-next should be in linux-next.
-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index d5ebd6d..1b73b63 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -105,7 +105,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ ERRORHANDLER:
+ 	/* error occured, free any allocations */
+-	if (pstrMessage) {
++	if (result) {
+ 		kfree(pstrMessage->pvBuffer);
+ 		kfree(pstrMessage);
+ 	}
 -- 
-Kalle Valo
+2.1.4
+
