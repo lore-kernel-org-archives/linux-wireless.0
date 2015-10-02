@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32377 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbbJBGGh (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33752 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbbJBHl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 02:06:37 -0400
-Date: Fri, 2 Oct 2015 09:06:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
-Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-Message-ID: <20151002060622.GK7340@mwanda> (sfid-20151002_080640_853953_FF3B95CB)
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
- <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
- <20151001154015.GJ7340@mwanda>
- <CAKV=isutNb+AeLyZPO9x=h90FeQr8+JfTOFka0bY7SoWofwLbQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKV=isutNb+AeLyZPO9x=h90FeQr8+JfTOFka0bY7SoWofwLbQ@mail.gmail.com>
+	Fri, 2 Oct 2015 03:41:29 -0400
+Received: by pacex6 with SMTP id ex6so100061377pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:29 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 01/12] staging: wilc1000: remove wilc_platform.h
+Date: Fri,  2 Oct 2015 16:41:10 +0900
+Message-Id: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094132_698886_727664A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 07:56:28AM +0900, Chaehyun Lim wrote:
-> On Fri, Oct 2, 2015 at 12:40 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> > On Thu, Oct 01, 2015 at 10:43:55PM +0900, Chaehyun Lim wrote:
-> >> This patch replaces int8_t with s8 that is a preferred type.
-> >>
-> >
-> > It would be better to just use int.
-> 
-> I always appreciate your comment. I've sent a patch before after
-> changing by int, but it was rejected.
+This patch removes wilc_platform.h file that is not used anywhere.
 
-Probably your changelog was bad.  Using s8 is hopefully a sign that you
-are doing something very hardware specific.  In this case, it is just a
-index.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 08/12 patch is changed.
 
-Write the changelog.  "The int8_t should just be int.  It's used as an
-index into an array or -1 for not found."
+ drivers/staging/wilc1000/wilc_platform.h | 28 ----------------------------
+ 1 file changed, 28 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/wilc_platform.h
 
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
+deleted file mode 100644
+index 6ec1aa3..0000000
+--- a/drivers/staging/wilc1000/wilc_platform.h
++++ /dev/null
+@@ -1,28 +0,0 @@
+-#ifndef __WILC_platform_H__
+-#define __WILC_platform_H__
+-
+-#include <linux/kthread.h>
+-#include <linux/semaphore.h>
+-#include <linux/module.h>
+-#include <linux/slab.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/stat.h>
+-#include <linux/time.h>
+-#include <linux/version.h>
+-#include "linux/string.h"
+-/******************************************************************
+- *      OS specific types
+- *******************************************************************/
+-
+-
+-
+-
+-
+-
+-/*******************************************************************
+- *      others
+- ********************************************************************/
+-
+-#endif
+-- 
+2.6.0
 
