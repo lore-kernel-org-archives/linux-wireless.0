@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57170 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750826AbbJEPB2 (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35820 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568AbbJBMpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:43 +0300
-Message-Id: <1444055820-27506-12-git-send-email-luca@coelho.fi> (sfid-20151005_170131_573292_6AACC93F)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 12/29] iwlwifi: mvm: remove PHY RX from handlers
+	Fri, 2 Oct 2015 08:45:34 -0400
+Received: by pacfv12 with SMTP id fv12so108315995pac.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 05:45:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/10] staging: wilc1000: use pr_err in host_int_wait_msg_queue_idle
+Date: Fri,  2 Oct 2015 21:44:55 +0900
+Message-Id: <1443789896-7082-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_144538_336845_3CB14655)
+In-Reply-To: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch changes PRINT_ER by pr_err.
+It would be better to use netdev_err, but it cannot use it in this
+function, so just use pr_err.
 
-Treat PHY RX specially, since it's actually pretty frequent,
-doesn't need all the notication etc. code, and will have a
-different handler in future hardware.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/ops.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 23825ff..1c38e45 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -222,7 +222,6 @@ struct iwl_rx_handlers {
-  * called from a worker with mvm->mutex held.
-  */
- static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
--	RX_HANDLER(REPLY_RX_PHY_CMD, iwl_mvm_rx_rx_phy_cmd, false),
- 	RX_HANDLER(TX_CMD, iwl_mvm_rx_tx_cmd, false),
- 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, false),
- 
-@@ -730,6 +729,9 @@ static void iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
- 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD)) {
- 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
- 		return;
-+	} else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD) {
-+		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
-+		return;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 69a4e79..79014ab 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -5354,7 +5354,7 @@ int host_int_wait_msg_queue_idle(void)
+ 	msg.id = HOST_IF_MSG_Q_IDLE;
+ 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("wilc mq send fail\n");
++		pr_err("wilc mq send fail\n");
+ 		result = -EINVAL;
  	}
  
- 	iwl_mvm_rx_check_trigger(mvm, pkt);
 -- 
-2.5.3
+2.6.0
 
