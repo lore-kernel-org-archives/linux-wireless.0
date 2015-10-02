@@ -1,63 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35981 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbbJOCHK (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:34003 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbbJBQol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:10 -0400
-Received: by pabws5 with SMTP id ws5so7323210pab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:09 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/33] staging: wilc1000: fix return type of host_int_set_WEPDefaultKeyID
-Date: Thu, 15 Oct 2015 11:06:30 +0900
-Message-Id: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040714_768120_4CDC27FD)
+	Fri, 2 Oct 2015 12:44:41 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: Fix system lockups on boot
+Date: Fri,  2 Oct 2015 11:44:30 -0500
+Message-Id: <1443804270-3830-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151002_184446_534793_D77A60E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_set_WEPDefaultKeyID from s32
-to int. s32Error gets return value from wilc_mq_send that has return
-type of int. It should be changed return type by int as well as data
-type of s32Error.
+In commit 1277fa2ab2f9, the code that cleared all interrupt enable
+bits before setting them was removed for all PCI drivers. This fixed an
+issue that caused TX to be blocked for 3-5 seconds. On some RTL8821AE units,
+this change causes soft lockups to occur on boot. For that reason, the portion
+of the earlier commit that applied to rtl8821ae is reverted. Kernels 4.1 and
+newer are affected.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+See http://marc.info/?l=linux-wireless&m=144373370103285&w=2 and
+https://bugzilla.opensuse.org/show_bug.cgi?id=944978 for two cases where
+this regression affected user systems. Note that this bug does not appear on
+any of the developer's setups. For those users whose systems are affected
+by the TX blockage, but do not lock up on boot, a module parameter is added
+to disable the interrupt clear
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V4.1+]
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 04f3bc2..d30cfa4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3196,9 +3196,9 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	return result;
+Kalle,
+
+If possible, please send this patch upstream for inclusion in kernel 4.3.
+As noted, the bug affects kernels 4.1 and newer.
+
+This patch applies to wireless-drivers-next, and assumes that the patch that
+moved all the Realtek drivers into drivers/net/wireless/realtek has NOT been
+applied.
+
+Thanks,
+
+Larry
+---
+ drivers/net/wireless/rtlwifi/pci.h          |  2 ++
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 17 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8821ae/sw.c |  5 +++++
+ drivers/net/wireless/rtlwifi/wifi.h         |  3 +++
+ 4 files changed, 27 insertions(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
+index d4567d1..5da6703 100644
+--- a/drivers/net/wireless/rtlwifi/pci.h
++++ b/drivers/net/wireless/rtlwifi/pci.h
+@@ -247,6 +247,8 @@ struct rtl_pci {
+ 	/* MSI support */
+ 	bool msi_support;
+ 	bool using_msi;
++	/* interrupt clear before set */
++	bool int_clear;
+ };
+ 
+ struct mp_adapter {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index b7f18e21..6e9418e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -2253,11 +2253,28 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
  }
  
--s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
-+int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
++static void rtl8821ae_clear_interrupt(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 tmp = rtl_read_dword(rtlpriv, REG_HISR);
++
++	rtl_write_dword(rtlpriv, REG_HISR, tmp);
++
++	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
++	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
++
++	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
++	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
++}
++
+ void rtl8821ae_enable_interrupt(struct ieee80211_hw *hw)
  {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
  
++	if (!rtlpci->int_clear)
++		rtl8821ae_clear_interrupt(hw);/*clear it here first*/
++
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+ 	rtlpci->irq_enabled = true;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
+index a4988121..8ee141a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
+@@ -96,6 +96,7 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 146a60f..a125233 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -384,7 +384,7 @@ int host_int_remove_wep_key(struct host_if_drv *wfi_drv, u8 index);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hWFIDrv, u8 u8Index);
-+int host_int_set_WEPDefaultKeyID(struct host_if_drv *hWFIDrv, u8 u8Index);
+ 	rtl8821ae_bt_reg_init(hw);
+ 	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
++	rtlpci->int_clear = rtlpriv->cfg->mod_params->int_clear;
+ 	rtlpriv->btcoexist.btc_ops = rtl_btc_get_ops_pointer();
  
- /**
-  *  @brief              sets WEP deafault key
+ 	rtlpriv->dm.dm_initialgain_enable = 1;
+@@ -167,6 +168,7 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
+ 	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
++	rtlpci->msi_support = rtlpriv->cfg->mod_params->int_clear;
+ 	if (rtlpriv->cfg->mod_params->disable_watchdog)
+ 		pr_info("watchdog disabled\n");
+ 	rtlpriv->psc.reg_fwctrl_lps = 3;
+@@ -308,6 +310,7 @@ static struct rtl_mod_params rtl8821ae_mod_params = {
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+ 	.msi_support = true,
++	.int_clear = true,
+ 	.debug = DBG_EMERG,
+ 	.disable_watchdog = 0,
+ };
+@@ -437,6 +440,7 @@ module_param_named(fwlps, rtl8821ae_mod_params.fwctrl_lps, bool, 0444);
+ module_param_named(msi, rtl8821ae_mod_params.msi_support, bool, 0444);
+ module_param_named(disable_watchdog, rtl8821ae_mod_params.disable_watchdog,
+ 		   bool, 0444);
++module_param_named(int_clear, rtl8821ae_mod_params.int_clear, bool, 0444);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+@@ -444,6 +448,7 @@ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
++MODULE_PARM_DESC(int_clear, "Set to 1 to disable interrupt clear before set (default 0)\n");
+ 
+ static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index b90ca61..4544752 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -2249,6 +2249,9 @@ struct rtl_mod_params {
+ 
+ 	/* default 0: 1 means disable */
+ 	bool disable_watchdog;
++
++	/* default 0: 1 means do not disable interrupts */
++	bool int_clear;
+ };
+ 
+ struct rtl_hal_usbint_cfg {
 -- 
-2.6.1
+2.1.4
 
