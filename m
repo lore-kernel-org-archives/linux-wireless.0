@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42203 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755530AbbJ1MpI (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:32939 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbbJBHlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 08:45:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-10-25
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-Date: Wed, 28 Oct 2015 14:45:02 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Sun, 25 Oct 2015 11:58:03 +0000")
-Message-ID: <87mvv3tb5d.fsf@kamboji.qca.qualcomm.com> (sfid-20151028_134512_888847_9ABF8DA9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 2 Oct 2015 03:41:42 -0400
+Received: by pacex6 with SMTP id ex6so100066193pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:42 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 05/12] staging: wilc1000: remove #if 1 and #endif
+Date: Fri,  2 Oct 2015 16:41:14 +0900
+Message-Id: <1443771681-15540-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094145_211597_DC7B50D7)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+This patch removes #if 1 and #endif, which is encapsulated
+some codes.
 
-> Last (obviously) pull request for 4.4.
-> I came back from a long vacation and took maintenance over back from Luca.
-> Please note that you'll have to merge mac80211-next/master (or net-next)
-> before you pull from me. I created this pull request giving
-> mac80211-next/master
-> as the start point to have the correct output.
-> I hope it will still make it.
->
-> Details in the tag.
->
-> Thank!
->
-> The following changes since commit e5a9f8d04660da7ef3a98260aa74c3976f9cb4cd:
->
->   mac80211: move station statistics into sub-structs (2015-10-21
-> 10:08:22 +0200)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 08/12 patch is changed.
 
-I don't see the tag name in your pull request, but I'm going to assume
-that you meant iwlwifi-next-for-kalle-2015-10-25:
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-next.git/tag/?h=iwlwifi-next-for-kalle-2015-10-25
-
-Please let me know ASAP if that's not the case.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 755a817..d781003 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3415,7 +3415,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+ 	struct wilc_priv *priv;
+ 
+ 	priv = wiphy_priv(wiphy);
+-#if 1
+ 	switch (changed) {
+ 
+ 	case WILC_WFI_RX_PKT:
+@@ -3438,7 +3437,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+ 	default:
+ 		break;
+ 	}
+-#endif
+ 	return 0;
+ }
+ 
 -- 
-Kalle Valo
+2.6.0
+
