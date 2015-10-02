@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34657 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbbJPJYY (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:30040 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbbJBNjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:24:24 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/13] staging: wilc1000: wilc_mgmt_frame_register: use netdev private wilc
-Date: Fri, 16 Oct 2015 18:23:07 +0900
-Message-ID: <1444987389-14151-11-git-send-email-tony.cho@atmel.com> (sfid-20151016_112430_414303_1B1C40D9)
-In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+	Fri, 2 Oct 2015 09:39:31 -0400
+Date: Fri, 2 Oct 2015 16:39:11 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Chandra S Gorentla <csgorentla@gmail.com>
+Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] drivers: staging: wilc1000: Check for errors before
+ kfree
+Message-ID: <20151002133911.GP7289@mwanda> (sfid-20151002_153952_986529_87DE3E11)
+References: <1443791857-7837-1-git-send-email-csgorentla@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443791857-7837-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On Fri, Oct 02, 2015 at 06:47:35PM +0530, Chandra S Gorentla wrote:
+> During the clean-up of the function, it is need to check if
+> errors occurred, not the memory pointer.
+>
 
-Use netdev private data member wilc instead of global variable wl.
+The bug here is that we have a use after free on the success path.  It
+should have been mentioned in the changelog.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Anyway, this patch is buggy.  If result == -EFAULT then it will crash.
+Also this patch is really ugly.  There is someone who is going to send a
+correct fix (just add a return 0).
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 7599457..00ce76f 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2396,12 +2396,12 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- 	struct wilc_priv *priv;
- 	perInterface_wlan_t *nic;
--
-+	struct wilc *wl;
- 
- 	priv = wiphy_priv(wiphy);
- 	nic = netdev_priv(priv->wdev->netdev);
- 
--
-+	wl = nic->wilc;
- 
- 	if (!frame_type)
- 		return;
--- 
-1.9.1
+This driver usese "do everything" style error handling.  It is a bug
+prone anti-pattern because doing everything is more complicated than
+doing one thing.  You can easily see it is bug prone, because it made
+you introduce a bug, right?
+
+Instead the error handling should look like this:
+
+	return 0;
+
+err_free_msg:
+	kfree(pstrMessage);
+
+	return ret;
+
+There are no error paths where we need to free "pstrMessage->pvBuffer"
+but if we were to add one it would look like this:
+
+	return 0;
+
+err_pvbuffer:
+	kfree(pstrMessage->pvBuffer);
+err_msg:
+	kfree(pstrMessage);
+
+	return ret;
+
+This is a minimal, uncomplicated, no indenting, no if statement way of
+unwinding.
+
+regards,
+dan carpenter
 
