@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56701 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030341AbbJ3JpY (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33057 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbbJBHlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:45:24 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 10/17] staging: wilc1000: remove unused function wilc_wlan_global_reset
-Date: Fri, 30 Oct 2015 18:47:16 +0900
-Message-ID: <1446198443-6623-10-git-send-email-glen.lee@atmel.com> (sfid-20151030_104527_870254_9F544226)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 2 Oct 2015 03:41:49 -0400
+Received: by pacex6 with SMTP id ex6so100068790pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:48 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 07/12] staging: wilc1000: use ARRAY_SIZE macro
+Date: Fri,  2 Oct 2015 16:41:16 +0900
+Message-Id: <1443771681-15540-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094151_958560_BD5FF1AA)
+In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused function wilc_wlan_global_reset.
+This patch uses ARRAY_SIZE macro found by checkpatch.pl
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+WARNING: Prefer ARRAY_SIZE(wb)
+drivers/staging/wilc1000/wilc_spi.c:400
+drivers/staging/wilc1000/wilc_spi.c:402
+
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 9 ---------
- 1 file changed, 9 deletions(-)
+V2: resend because 08/12 patch is changed.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index d4eef3d..c464cd7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1589,15 +1589,6 @@ int wilc_wlan_start(void)
- 	return (ret < 0) ? ret : 0;
- }
+ drivers/staging/wilc1000/wilc_spi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 8acf648..599508b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -397,9 +397,9 @@ static int spi_cmd_complete(u8 cmd, u32 adr, u8 *b, u32 sz, u8 clockless)
+ 	}
+ #undef NUM_DUMMY_BYTES
  
--void wilc_wlan_global_reset(void)
--{
--
--	wilc_wlan_dev_t *p = &g_wlan;
--
--	acquire_bus(ACQUIRE_AND_WAKEUP);
--	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, 0x0);
--	release_bus(RELEASE_ONLY);
--}
- int wilc_wlan_stop(struct net_device *dev)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
+-	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
++	if (len2 > ARRAY_SIZE(wb)) {
+ 		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%zu)\n",
+-			 len2, (sizeof(wb) / sizeof(wb[0])));
++			 len2, ARRAY_SIZE(wb));
+ 		result = N_FAIL;
+ 		return result;
+ 	}
 -- 
-1.9.1
+2.6.0
 
