@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:32933 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753728AbbJPQiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 12:38:09 -0400
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Jan Kaisrlik <kaisrja1@fel.cvut.cz>,
-	wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
-	jan-niklas.meier@volkswagen.de, s.sander@nordsys.de
-Subject: Re: [RFC PATCH 1/2] cfg80211: Add support for ITS-G5 band (5.9 GHz)
-In-Reply-To: <1444997197.2370.22.camel@sipsolutions.net>
-References: <1444994885-21825-1-git-send-email-kaisrja1@fel.cvut.cz> <1444997197.2370.22.camel@sipsolutions.net>
-Date: Fri, 16 Oct 2015 18:38:04 +0200
-Message-ID: <87h9lqeplf.fsf@steelpick.2x.cz> (sfid-20151016_183813_236927_25793D6A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33817 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbbJCTan (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Oct 2015 15:30:43 -0400
+Received: by wicfx3 with SMTP id fx3so71872002wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2015 12:30:42 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/6] staging: vt6655: device_alloc_rx_buf replace pRDInfo with rd_info.
+Date: Sat,  3 Oct 2015 20:30:24 +0100
+Message-Id: <1443900627-2924-3-git-send-email-tvboxspy@gmail.com> (sfid-20151003_213055_339606_09071021)
+In-Reply-To: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
+References: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Removing camel case.
 
-(I added wireless-regdb@lists.infradead.org to recipients, the original
-mail is at http://marc.info/?l=linux-wireless&m=144499490005262)
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-On Fri, Oct 16 2015, Johannes Berg wrote:
-> On Fri, 2015-10-16 at 13:28 +0200, Jan Kaisrlik wrote:
->> The patch adds support for Intelligent Transportation System (ITS-G5)
->> band as defined by ETSI EN 302 663 standard. This band is enabled by
->> a new configuration option CFG80211_REG_ITSG5_BAND, which depends on
->> CFG80211_CERTIFICATION_ONUS.
->
-> That Kconfig option seems unnecessary - after all, the regulatory
-> database still has a say in this?
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 41c08b3..b330379 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -732,15 +732,15 @@ static int device_rx_srv(struct vnt_private *priv, unsigned int uIdx)
+ static bool device_alloc_rx_buf(struct vnt_private *priv,
+ 				struct vnt_rx_desc *pRD)
+ {
+-	struct vnt_rd_info *pRDInfo = pRD->rd_info;
++	struct vnt_rd_info *rd_info = pRD->rd_info;
+ 
+-	pRDInfo->skb = dev_alloc_skb((int)priv->rx_buf_sz);
+-	if (pRDInfo->skb == NULL)
++	rd_info->skb = dev_alloc_skb((int)priv->rx_buf_sz);
++	if (rd_info->skb == NULL)
+ 		return false;
+ 
+-	pRDInfo->skb_dma =
++	rd_info->skb_dma =
+ 		dma_map_single(&priv->pcid->dev,
+-			       skb_put(pRDInfo->skb, skb_tailroom(pRDInfo->skb)),
++			       skb_put(rd_info->skb, skb_tailroom(rd_info->skb)),
+ 			       priv->rx_buf_sz, DMA_FROM_DEVICE);
+ 
+ 	*((unsigned int *)&pRD->rd0) = 0; /* FIX cast */
+@@ -748,7 +748,7 @@ static bool device_alloc_rx_buf(struct vnt_private *priv,
+ 	pRD->rd0.res_count = cpu_to_le16(priv->rx_buf_sz);
+ 	pRD->rd0.owner = OWNED_BY_NIC;
+ 	pRD->rd1.req_count = cpu_to_le16(priv->rx_buf_sz);
+-	pRD->buff_addr = cpu_to_le32(pRDInfo->skb_dma);
++	pRD->buff_addr = cpu_to_le32(rd_info->skb_dma);
+ 
+ 	return true;
+ }
+-- 
+2.5.0
 
-I thought that the regdb is for unlicensed bands with unrestricted use.
-The 5.9 GHz band is not licensed but it is restricted for ITS
-applications. In http://marc.info/?l=linux-wireless&m=140183393707445&w=2
-Luis Rodriguez suggested that having a Kconfig option may be the way to
-go, but we may misread what he was saying.
-
-I assume that if this band will be in regdb, it will be too easy to use
-this band (e.g. by mistake) for non-ITS applications.
-
-> Even the NL80211_RRF_ITSG5 flag seems somewhat unnecessary - if the
-> regulatory database did in fact provide information on these channels,
-> then we can assume they're usable, no?
->
-> IOW - I don't really see the point of this patch - can't we treat these
-> channels just like regular ones, and rely on the regulatory information
-> to prevent their use in all but special scenarios (where the integrator
-> is providing a proper database)?
-
-Our goal is to make it easier for people to experiment with ITS in
-controlled environment (e.g. in a university lab). So you suggest that
-this should be enabled by providing custom regdb rather than recompiling
-the kernel with CFG80211_CERTIFICATION_ONUS?
-
--Michal
