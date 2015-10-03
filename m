@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47269 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752384AbbJRFHJ convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:32780 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859AbbJCCOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 01:07:09 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Helmut Heubel <heubelmail@gmail.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [linuxwifi] Wireless card not working
-Date: Sun, 18 Oct 2015 05:07:03 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8A3742@hasmsx107.ger.corp.intel.com> (sfid-20151018_070714_325090_10A173C0)
-References: <20151017193826.4a266ae3@UX305FA>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 2 Oct 2015 22:14:32 -0400
+Date: Sat, 3 Oct 2015 07:41:13 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] drivers: staging: wilc1000: Check for errors before
+ kfree
+Message-ID: <20151003021112.GA9115@gcs-HP-Notebook> (sfid-20151003_041452_109913_6A80FCE1)
+References: <1443791857-7837-1-git-send-email-csgorentla@gmail.com>
+ <20151002133911.GP7289@mwanda>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151002133911.GP7289@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Oct 02, 2015 at 04:39:11PM +0300, Dan Carpenter wrote:
+> On Fri, Oct 02, 2015 at 06:47:35PM +0530, Chandra S Gorentla wrote:
+> > During the clean-up of the function, it is need to check if
+> > errors occurred, not the memory pointer.
+> >
+> 
+> The bug here is that we have a use after free on the success path.  It
+> should have been mentioned in the changelog.
+> 
+> Anyway, this patch is buggy.  If result == -EFAULT then it will crash.
+> Also this patch is really ugly.  There is someone who is going to send a
+> correct fix (just add a return 0).
+> 
+> This driver usese "do everything" style error handling.  It is a bug
+> prone anti-pattern because doing everything is more complicated than
+> doing one thing.  You can easily see it is bug prone, because it made
+> you introduce a bug, right?
+> 
+> Instead the error handling should look like this:
+> 
+> 	return 0;
+> 
+> err_free_msg:
+> 	kfree(pstrMessage);
+> 
+> 	return ret;
+> 
+> There are no error paths where we need to free "pstrMessage->pvBuffer"
+> but if we were to add one it would look like this:
+> 
+> 	return 0;
+> 
+> err_pvbuffer:
+> 	kfree(pstrMessage->pvBuffer);
+> err_msg:
+> 	kfree(pstrMessage);
+> 
+> 	return ret;
+> 
+> This is a minimal, uncomplicated, no indenting, no if statement way of
+> unwinding.
+> 
+> regards,
+> dan carpenter
+> 
+OK.  There is a problem in this patch.  I will correct it, reorganize the
+patch series.
 
-On 10/18/2015 01:38 AM, Helmut Heubel wrote:
-> 
-> Hi, I have an Asus UX305FA notebook and I am facing some problems with
-> the Intel 7265 wireless card, sometimes it works and sometimes not
-> (lately it is more frequent that it does not work at all what forces
-> me to always use the ethernet USB adaptor and cable).
-> 
+Thank you,
+chandra
 
-please share  your dmesg output as a start.
-> ==================================================
-> # sudo lshw -C network
-> 
->   *-network               
->        description: Wireless interface
->        product: Wireless 7265
->        vendor: Intel Corporation
->        physical id: 0
->        bus info: pci@0000:02:00.0
->        logical name: wlan0
->        version: 59
->        serial: 34:02:86:60:cd:3b
->        width: 64 bits
->        clock: 33MHz
->        capabilities: pm msi pciexpress bus_master cap_list ethernet
->   physical wireless configuration: broadcast=yes driver=iwlwifi
->   driverversion=3.19.0-30-generic firmware=25.17.12.0 ip=192.168.101.20
->   latency=0 link=yes multicast=yes wireless=IEEE 802.11abgn resources:
->   irq:50 memory:f7000000-f7001fff
-> ==================================================
-
-> ==================================================
-> # cat /etc/modprobe.d/iwlwifi.conf
-> 
-> # /etc/modprobe.d/iwlwifi.conf
-> # iwlwifi will dyamically load either iwldvm or iwlmvm depending on the
-> # microcode file installed on the system.  When removing iwlwifi, first
-> # remove the iwl?vm module and then iwlwifi.
-> remove iwlwifi (/sbin/lsmod | grep -o -e ^iwlmvm -e ^iwldvm -e ^iwlwifi
-> | xargs /sbin/rmmod) && /sbin/modprobe -r mac80211
-> options iwlwifi 11n_disable=1
-> options iwlwifi 11n_disable=8
-> options iwlwifi wd_disable=1
-> ==================================================
-> 
-
-Please remove all these options.
-
-> My latest attempt was to download this firmware but I don't know how to
-> load it correctly:
-> 
-> https://wireless.wiki.kernel.org/_media/en/users/drivers/iwlwifi-7265-ucode-25.17.12.0.tgz
-> 
-
-You already have the correct firmware for this kernel. No need to update
-anything.
