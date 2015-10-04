@@ -1,87 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:55473 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753241AbbJTWsJ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57531 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305AbbJDKTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 18:48:09 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-wireless@vger.kernel.org
-Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 00/19] staging/wilc1000 cleanups
-Date: Wed, 21 Oct 2015 00:47:19 +0200
-Message-Id: <1445381258-1455986-1-git-send-email-arnd@arndb.de> (sfid-20151021_005350_232622_C5A24916)
+	Sun, 4 Oct 2015 06:19:22 -0400
+Date: Sun, 4 Oct 2015 11:19:18 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chandra Gorentla <csgorentla@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Move spin lock to the
+ start of critical section
+Message-ID: <20151004101918.GA13898@kroah.com> (sfid-20151004_122015_712782_ABDB986D)
+References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+ <20151004084335.GA24589@kroah.com>
+ <20151004100713.GA27051@gcs-HP-Notebook>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151004100713.GA27051@gcs-HP-Notebook>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After I screwed up two or three times trying to get the dependencies
-with the SPI and SDIO backends right, I ended up taking the time
-to do the real fix and make both coexist.
+On Sun, Oct 04, 2015 at 03:37:13PM +0530, Chandra Gorentla wrote:
+> On Sun, Oct 04, 2015 at 09:43:35AM +0100, Greg KH wrote:
+> > On Sat, Oct 03, 2015 at 02:57:29PM +0530, Chandra S Gorentla wrote:
+> > > The spin_lock_irqsave is moved to just beginning of critical section.
+> > > This change moves a couple of return statements out of the lock.
+> > > 
+> > > Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+> > > ---
+> > >  drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > > index d5ebd6d..284a3f5 100644
+> > > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> > > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > > @@ -72,8 +72,6 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+> > >  		goto ERRORHANDLER;
+> > >  	}
+> > >  
+> > > -	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+> > > -
+> > >  	/* construct a new message */
+> > >  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+> > 
+> > As you have moved the lock, can you also change this to GFP_KERNEL as
+> > well because we do not have a lock held?
+> Can 'the change to GFP_KERNEL' be done in a separate patch?
 
-This is a series of patches that address various issues with the
-driver, but is mainly targetted at splitting out the spi and sdio
-backends into separate drivers that can be built independent of
-one another.
+Yes.
 
-The last patch is more experimental than the others, hence the
-[RFC] annotation.
+> The lock is to protect linked list manipulations; in this function items
+> are added to the list.
 
-Please review and test.
+Ok, please add that description to the patch so we know what is going
+on, and that you know what is going on as well :)
 
-	Arnd
+thanks,
 
-Arnd Bergmann (19):
-  staging/wilc1000: remove unused functions
-  staging/wilc1000: make symbols static if possible
-  staging/wilc1000: use proper naming for global symbols
-  staging/wilc1000: move extern declarations to headers
-  staging/wilc1000: use NO_SECURITY instead of NO_ENCRYPT
-  staging/wilc1000: avoid static definitions in header
-  staging/wilc1000: remove linux_wlan_{device_power,device_detection}
-  staging/wilc1000: move wilc_wlan_inp_t into struct wilc
-  staging/wilc1000: move init/exit functions to driver files
-  staging/wilc1000: unify device pointer
-  staging/wilc1000: move wilc1000_ops to drivers
-  staging/wilc1000: use device pointer for phy creation
-  staging/wilc1000: move COMPLEMENT_BOOT code to linux_wlan_sdio.c
-  staging/wilc1000: get rid of WILC_SDIO_IRQ_GPIO
-  staging/wilc1000: turn enable_irq/disable_irq into callbacks
-  staging/wilc1000: remove WILC_SDIO/WILC_SPI macros
-  staging/wilc1000: pass hif operations through initialization
-  staging/wilc1000: split out bus specific modules
-  [RFC] staging/wilc1000: use more regular probing
-
- drivers/staging/wilc1000/Kconfig                  |  66 +-
- drivers/staging/wilc1000/Makefile                 |  16 +-
- drivers/staging/wilc1000/coreconfigurator.c       |  12 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  12 +-
- drivers/staging/wilc1000/host_interface.c         | 501 +++-------------
- drivers/staging/wilc1000/host_interface.h         | 349 ++---------
- drivers/staging/wilc1000/linux_mon.c              |  11 +-
- drivers/staging/wilc1000/linux_wlan.c             | 695 +++++++---------------
- drivers/staging/wilc1000/linux_wlan_common.h      |  18 +-
- drivers/staging/wilc1000/linux_wlan_sdio.c        | 202 +++++--
- drivers/staging/wilc1000/linux_wlan_sdio.h        |  14 -
- drivers/staging/wilc1000/linux_wlan_spi.c         | 119 ++--
- drivers/staging/wilc1000/linux_wlan_spi.h         |   8 -
- drivers/staging/wilc1000/wilc_debugfs.c           |  20 +-
- drivers/staging/wilc1000/wilc_sdio.c              | 213 +++----
- drivers/staging/wilc1000/wilc_spi.c               | 276 +--------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 495 +++++++--------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  87 +--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  21 +-
- drivers/staging/wilc1000/wilc_wlan.c              | 180 +++---
- drivers/staging/wilc1000/wilc_wlan.h              |  49 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
- drivers/staging/wilc1000/wilc_wlan_if.h           |  23 +-
- 23 files changed, 1171 insertions(+), 2222 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
-
--- 
-2.1.0.rc2
-
+greg k-h
