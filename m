@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:16830 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbbJTIOS (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41085 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbbJDUyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 04:14:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/13] staging: wilc1000: add wilc to netdev private data structure
-Date: Tue, 20 Oct 2015 17:13:51 +0900
-Message-ID: <1445328843-32247-1-git-send-email-tony.cho@atmel.com> (sfid-20151020_101424_144761_F82E8E8E)
+	Sun, 4 Oct 2015 16:54:41 -0400
+Message-ID: <5611920D.60500@broadcom.com> (sfid-20151004_225501_741668_A756414A)
+Date: Sun, 4 Oct 2015 22:54:37 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Nicholas Krause <xerofoify@gmail.com>, <brudley@broadcom.com>
+CC: <frankyl@broadcom.com>, <meuleman@broadcom.com>,
+	<kvalo@codeaurora.org>, <pieterpg@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211:Fix locking region in the function  brcmf_sdio_sendfromq
+References: <1443889148-22678-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1443889148-22678-1-git-send-email-xerofoify@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On 10/03/2015 06:19 PM, Nicholas Krause wrote:
+> This fixes the locking region in the function brcmf_sdio_sendfromq
+> to properly lock around the call to the function brcmrf_sdio_txpkt
+> in order to avoid concurrent access issues when calling this
+> function as stated in the function's comments about the caller
+> being required to lock around the call to this particular function.
+>
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> index f990e3d..da59683 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> @@ -2388,11 +2388,11 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+>   				break;
+>   			__skb_queue_tail(&pktq, pkt);
+>   		}
+> -		spin_unlock_bh(&bus->txq_lock);
+>   		if (i == 0)
+>   			break;
 
-This patch add wilc to struct perInterface_wlan_t which is netdev private
-data to access wilc via netdev_priv function. Assign wilc to nic->wilc.
-The global variable g_linux_wlan will be replaced with netdev private data
-member wilc step by step.
+So what if we break here. Seems you need to do unlock if i == 0 here.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 1 +
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+Regards,
+Arend
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 5701e58..8fa6b7c 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1662,6 +1662,7 @@ int wilc_netdev_init(struct wilc **wilc)
- 
- 		nic->u8IfIdx = g_linux_wlan->vif_num;
- 		nic->wilc_netdev = ndev;
-+		nic->wilc = *wilc;
- 		g_linux_wlan->vif[g_linux_wlan->vif_num].ndev = ndev;
- 		g_linux_wlan->vif_num++;
- 		ndev->netdev_ops = &wilc_netdev_ops;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index e0c66bc..40a44f8 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -199,7 +199,7 @@ typedef struct {
- 	struct_frame_reg g_struct_frame_reg[num_reg_frame];
- 	struct net_device *wilc_netdev;
- 	struct net_device_stats netstats;
--
-+	struct wilc *wilc;
- } perInterface_wlan_t;
- 
- struct WILC_WFI_mon_priv {
--- 
-1.9.1
+>
+>   		ret = brcmf_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
+> +		spin_unlock_bh(&bus->txq_lock);
+>
+>   		cnt += i;
+>
+>
 
