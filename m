@@ -1,73 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6094 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbbJOE0p (ORCPT
+Received: from mail-io0-f181.google.com ([209.85.223.181]:36523 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835AbbJDXvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:26:45 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/40] staging: wilc1000: rename variable HostIFthreadHandler
-Date: Thu, 15 Oct 2015 13:24:52 +0900
-Message-ID: <1444883121-31757-11-git-send-email-tony.cho@atmel.com> (sfid-20151015_062651_010637_25DB0809)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+	Sun, 4 Oct 2015 19:51:45 -0400
+Received: by ioii196 with SMTP id i196so168795666ioi.3
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2015 16:51:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1443789896-7082-8-git-send-email-chaehyun.lim@gmail.com>
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com> <1443789896-7082-8-git-send-email-chaehyun.lim@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 5 Oct 2015 10:51:24 +1100
+Message-ID: <CAGRGNgXZZupj_H1yc4QZXZVmXPTW6CmFcdaGFUVPsbUHZg9q8g@mail.gmail.com> (sfid-20151005_015147_469017_1D71581E)
+Subject: Re: [PATCH 08/10] staging: wilc1000: rename s32Error in host_int_wait_msg_queue_idle
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, glen.lee@atmel.com,
+	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Chaehyun,
 
-This patch renames variable HostIFthreadHandler to hif_thread_handler
-to avoid CamelCase naming convention.
+On Fri, Oct 2, 2015 at 10:44 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+> This patch replaces s32Error with result to avoid camelcase.
+>
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index e5b7689..69a4e79 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -5344,7 +5344,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *wfi_drv, u8 channel)
+>
+>  int host_int_wait_msg_queue_idle(void)
+>  {
+> -       int s32Error = 0;
+> +       int result = 0;
+>
+>         struct host_if_msg msg;
+>
+> @@ -5352,16 +5352,16 @@ int host_int_wait_msg_queue_idle(void)
+>
+>         memset(&msg, 0, sizeof(struct host_if_msg));
+>         msg.id = HOST_IF_MSG_Q_IDLE;
+> -       s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+> -       if (s32Error) {
+> +       result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+> +       if (result) {
+>                 PRINT_ER("wilc mq send fail\n");
+> -               s32Error = -EINVAL;
+> +               result = -EINVAL;
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Same comments here: Why not
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ad7c102..4f24a05 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -239,7 +239,7 @@ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
- struct host_if_drv *terminated_handle;
- bool g_obtainingIP;
- u8 P2P_LISTEN_STATE;
--static struct task_struct *HostIFthreadHandler;
-+static struct task_struct *hif_thread_handler;
- static WILC_MsgQueueHandle gMsgQHostIF;
- static struct semaphore hSemHostIFthrdEnd;
- 
-@@ -4271,8 +4271,10 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 			PRINT_ER("Failed to creat MQ\n");
- 			goto _fail_;
- 		}
--		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
--		if (IS_ERR(HostIFthreadHandler)) {
-+
-+		hif_thread_handler = kthread_run(hostIFthread, NULL, "WILC_kthread");
-+
-+		if (IS_ERR(hif_thread_handler)) {
- 			PRINT_ER("Failed to creat Thread\n");
- 			result = -EFAULT;
- 			goto _fail_mq_;
-@@ -4316,7 +4318,7 @@ _fail_timer_2:
- 	up(&hif_drv->gtOsCfgValuesSem);
- 	del_timer_sync(&hif_drv->hConnectTimer);
- 	del_timer_sync(&hif_drv->hScanTimer);
--	kthread_stop(HostIFthreadHandler);
-+	kthread_stop(hif_thread_handler);
- _fail_mq_:
- 	wilc_mq_destroy(&gMsgQHostIF);
- _fail_:
+return -EINVAL;
+
+>         }
+>
+>         /* wait untill MSG Q is empty */
+>         down(&hWaitResponse);
+>
+> -       return s32Error;
+> +       return result;
+
+and
+
+return 0;
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
