@@ -1,112 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43385 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964794AbbJ1HGl (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36484 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbbJDW0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:06:41 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 74/80] staging: wilc1000: rename u32TxBeamformingCap of struct add_sta_param
-Date: Wed, 28 Oct 2015 16:07:19 +0900
-Message-ID: <1446016045-32154-24-git-send-email-glen.lee@atmel.com> (sfid-20151028_081701_323321_5CE3ADEA)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+	Sun, 4 Oct 2015 18:26:41 -0400
+Received: by igcrk20 with SMTP id rk20so49257336igc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2015 15:26:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABAco3Boow_64N33s=mSu0=K38D00a=OsoSQRJUoMN1_qP_3_A@mail.gmail.com>
+References: <CABAco3Boow_64N33s=mSu0=K38D00a=OsoSQRJUoMN1_qP_3_A@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 5 Oct 2015 09:26:21 +1100
+Message-ID: <CAGRGNgWW3ffJotN9h7nxN-wofOvCpuPtmwtDWs6nE7CRgxCE5g@mail.gmail.com> (sfid-20151005_002644_717320_F1278484)
+Subject: Re: [PATCH] Remove superfluous header files
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Ola,
 
-This patch renames u32TxBeamformingCap of struct add_sta_param to ht_tx_bf_cap
-to avoid CamelCase naming convention.
+On Mon, Oct 5, 2015 at 8:08 AM, Ola Olsson <ola1olsson@gmail.com> wrote:
+> if.h only contains if_nametoindex and the reverse.
+> Lets remove the inclusion in the source files where
+> these functions are not called.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c         |  8 ++++----
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 11 insertions(+), 9 deletions(-)
+Minor note: in the future, you might want to include the name of the
+project ("iw") in your subject line, i.e.
+[PATCH] iw: Remove superfluous header files
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fa45327..77454fd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2333,10 +2333,10 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	*pu8CurrByte++ = pstrStationParam->ht_ext_params & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->ht_ext_params >> 8) & 0xFF;
- 
--	*pu8CurrByte++ = pstrStationParam->u32TxBeamformingCap & 0xFF;
--	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 8) & 0xFF;
--	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 16) & 0xFF;
--	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 24) & 0xFF;
-+	*pu8CurrByte++ = pstrStationParam->ht_tx_bf_cap & 0xFF;
-+	*pu8CurrByte++ = (pstrStationParam->ht_tx_bf_cap >> 8) & 0xFF;
-+	*pu8CurrByte++ = (pstrStationParam->ht_tx_bf_cap >> 16) & 0xFF;
-+	*pu8CurrByte++ = (pstrStationParam->ht_tx_bf_cap >> 24) & 0xFF;
- 
- 	*pu8CurrByte++ = pstrStationParam->u8ASELCap;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6fcbbc6..8a5b8a0 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -297,7 +297,7 @@ struct add_sta_param {
- 	u8 ht_ampdu_params;
- 	u8 ht_supp_mcs_set[16];
- 	u16 ht_ext_params;
--	u32 u32TxBeamformingCap;
-+	u32 ht_tx_bf_cap;
- 	u8 u8ASELCap;
- 	u16 u16FlagsMask;
- 	u16 u16FlagsSet;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 38ab0e7..d04d2b6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3029,7 +3029,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			       &params->ht_capa->mcs,
- 			       WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
--			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-+			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
- 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
- 		}
- 
-@@ -3044,7 +3044,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
- 			strStaParams.ht_ext_params);
--		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
-+		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
-+			strStaParams.ht_tx_bf_cap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
- 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
-@@ -3149,7 +3150,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			       &params->ht_capa->mcs,
- 			       WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
--			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-+			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
- 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
- 
- 		}
-@@ -3165,7 +3166,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
- 			strStaParams.ht_ext_params);
--		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
-+		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
-+			strStaParams.ht_tx_bf_cap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
- 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
