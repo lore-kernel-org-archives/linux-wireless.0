@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5890 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535AbbJOEZp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbJDHX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:25:45 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/40] staging: wilc1000: rename u8NoaEnbaled of struct join_bss_param
-Date: Thu, 15 Oct 2015 13:24:43 +0900
-Message-ID: <1444883121-31757-2-git-send-email-tony.cho@atmel.com> (sfid-20151015_062550_306805_5794347D)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 4 Oct 2015 03:23:57 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 08/10] wil6210: ratelimit Tx error message
+Date: Sun,  4 Oct 2015 10:23:25 +0300
+Message-Id: <1443943407-6663-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092402_245055_5EA11B6D)
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Situations observed when IP stack schedules lots of
+frames for Tx while no connection (connection lost,
+for example). In this case, dmesg bloated with error
+message "FW not connected", printed for every frame.
 
-This patch renames u8NoaEnbaled of struct join_bss_param to noa_enabled
-to avoid CamelCase naming convention.
+Ratelimit this error message to avoid dmesg pollution.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e2588ef..2b8e412 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -219,7 +219,7 @@ struct join_bss_param {
- 	u8 rsn_auth_policy[3];
- 	u8 rsn_cap[2];
- 	u32 tsf;
--	u8 u8NoaEnbaled;
-+	u8 noa_enabled;
- 	u8 u8OppEnable;
- 	u8 u8CtWindow;
- 	u8 u8Count;
-@@ -1184,9 +1184,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	pu8CurrByte += sizeof(ptstrJoinBssParam->rsn_cap);
- 
- 	*(pu8CurrByte++) = REAL_JOIN_REQ;
-+	*(pu8CurrByte++) = ptstrJoinBssParam->noa_enabled;
- 
--	*(pu8CurrByte++) = ptstrJoinBssParam->u8NoaEnbaled;
--	if (ptstrJoinBssParam->u8NoaEnbaled) {
-+	if (ptstrJoinBssParam->noa_enabled) {
- 		PRINT_D(HOSTINF_DBG, "NOA present\n");
- 
- 		*(pu8CurrByte++) = (ptstrJoinBssParam->tsf) & 0xFF;
-@@ -4984,7 +4984,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				u16 u16P2P_count;
- 
- 				pNewJoinBssParam->tsf = ptstrNetworkInfo->u32Tsf;
--				pNewJoinBssParam->u8NoaEnbaled = 1;
-+				pNewJoinBssParam->noa_enabled = 1;
- 				pNewJoinBssParam->u8Index = pu8IEs[index + 9];
- 
- 				if (pu8IEs[index + 10] & BIT(7)) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index c530c79..0f8b687 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1667,7 +1667,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		goto drop;
+ 	}
+ 	if (unlikely(!test_bit(wil_status_fwconnected, wil->status))) {
+-		wil_err(wil, "FW not connected\n");
++		wil_err_ratelimited(wil, "FW not connected\n");
+ 		goto drop;
+ 	}
+ 	if (unlikely(wil->wdev->iftype == NL80211_IFTYPE_MONITOR)) {
 -- 
-1.9.1
+2.1.4
 
