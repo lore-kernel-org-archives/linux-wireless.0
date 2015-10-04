@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6339 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131AbbJOE2Q (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37641 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764AbbJDIk4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:28:16 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 25/40] staging: wilc1000: rename variable gu32InactiveTime
-Date: Thu, 15 Oct 2015 13:25:06 +0900
-Message-ID: <1444883121-31757-25-git-send-email-tony.cho@atmel.com> (sfid-20151015_064658_862785_6EE8C990)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+	Sun, 4 Oct 2015 04:40:56 -0400
+Date: Sun, 4 Oct 2015 09:40:53 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 04/10] staging: wilc1000: replace PRINT_ER with pr_err
+Message-ID: <20151004084053.GA21313@kroah.com> (sfid-20151004_104104_498564_73BAB7AE)
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
+ <1443789896-7082-4-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443789896-7082-4-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, Oct 02, 2015 at 09:44:50PM +0900, Chaehyun Lim wrote:
+> This patch replaces PRINT_ER with pr_err.
+> It would be better to use netdev_err, but it cannot use it in this
+> function, so just use pr_err.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 566e618..802d87a 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -5322,7 +5322,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
+>  	struct host_if_msg msg;
+>  
+>  	if (!pstrWFIDrv) {
+> -		PRINT_ER("driver is null\n");
+> +		pr_err("driver is null\n");
+>  		return -EFAULT;
+>  	}
 
-This patch renames variable gu32InactiveTime to inactive_time
-to avoid CamelCase naming convention.
+I don't see how this check will ever trigger, do you?  If not, it should
+just be removed.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index cf21ee20..6f4158f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -258,7 +258,7 @@ static s8 link_speed;
- static u8 ch_no;
- static u8 set_ip[2][4];
- static u8 get_ip[2][4];
--static u32 gu32InactiveTime;
-+static u32 inactive_time;
- static u8 gu8DelBcn;
- static u32 gu32WidConnRstHack;
- 
-@@ -2287,7 +2287,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
- 
- 	strWID.id = (u16)WID_GET_INACTIVE_TIME;
- 	strWID.type = WID_INT;
--	strWID.val = (s8 *)&gu32InactiveTime;
-+	strWID.val = (s8 *)&inactive_time;
- 	strWID.size = sizeof(u32);
- 
- 
-@@ -2299,8 +2299,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
- 		return -EFAULT;
- 	}
- 
--
--	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", gu32InactiveTime);
-+	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
- 
- 	up(&hif_drv->hSemInactiveTime);
- 
-@@ -3885,7 +3884,7 @@ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
- 
- 	down(&hif_drv->hSemInactiveTime);
- 
--	*pu32InactiveTime = gu32InactiveTime;
-+	*pu32InactiveTime = inactive_time;
- 
- 	return s32Error;
- }
--- 
-1.9.1
+>  
+> @@ -5334,7 +5334,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
+>  
+>  	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+>  	if (result) {
+> -		PRINT_ER("wilc mq send fail\n");
+> +		pr_err("wilc mq send fail\n");
 
+You should have a network device pointer somewhere here, dig around, it
+should be possible to use netdev_err().
+
+thanks,
+
+greg k-h
