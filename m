@@ -1,40 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59969 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38497 "EHLO
 	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965271AbbJ0Tky (ORCPT
+	with ESMTP id S1751290AbbJDIpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:40:54 -0400
-Date: Wed, 28 Oct 2015 04:40:51 +0900
+	Sun, 4 Oct 2015 04:45:00 -0400
+Date: Sun, 4 Oct 2015 09:44:57 +0100
 From: Greg KH <gregkh@linuxfoundation.org>
-To: Punit Vara <punitvara@gmail.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, johnny.kim@atmel.com
-Subject: Re: [PATCH v2] Staging: wilc1000: Prefer eth_broadcast_addr over
- memset()
-Message-ID: <20151027194051.GA1537@kroah.com> (sfid-20151027_204114_366339_1730E415)
-References: <1445966499-6175-1-git-send-email-punitvara@gmail.com>
+To: Chandra S Gorentla <csgorentla@gmail.com>
+Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] drivers: staging: wilc1000: Call kfree only for
+ error cases
+Message-ID: <20151004084457.GB24589@kroah.com> (sfid-20151004_104533_908291_0A15228E)
+References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+ <1443864450-18167-2-git-send-email-csgorentla@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445966499-6175-1-git-send-email-punitvara@gmail.com>
+In-Reply-To: <1443864450-18167-2-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 27, 2015 at 10:51:39PM +0530, Punit Vara wrote:
-> This patch is to the host_interface.c that fixes up following
-> warning by checkpatch:
+On Sat, Oct 03, 2015 at 02:57:30PM +0530, Chandra S Gorentla wrote:
+>  - kfree is being called for the members of the queue without
+>    de-queuing them; they are just inserted within this function;
+>    they are supposed to be de-queued and freed in a function
+>    for receiving the queue items
+>  - goto statements are removed
+>  - After kfree correction, there is no need for target block
+>    of goto statement; hence it is removed
 > 
-> -prefer eth_broadcast_addr() over memset()
-> 
-> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 > ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/staging/wilc1000/wilc_msgqueue.c | 22 ++++++----------------
+>  1 file changed, 6 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> index 284a3f5..eae90be 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> @@ -56,32 +56,30 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+>  int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>  			     const void *pvSendBuffer, u32 u32SendBufferSize)
+>  {
+> -	int result = 0;
+>  	unsigned long flags;
+>  	Message *pstrMessage = NULL;
+>  
+>  	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+>  		PRINT_ER("pHandle or pvSendBuffer is null\n");
+> -		result = -EFAULT;
+> -		goto ERRORHANDLER;
+> +		return -EFAULT;
+>  	}
+>  
+>  	if (pHandle->bExiting) {
+>  		PRINT_ER("pHandle fail\n");
+> -		result = -EFAULT;
+> -		goto ERRORHANDLER;
+> +		return -EFAULT;
+>  	}
+>  
+>  	/* construct a new message */
+>  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+>  	if (!pstrMessage)
+>  		return -ENOMEM;
+> +
+>  	pstrMessage->u32Length = u32SendBufferSize;
+>  	pstrMessage->pstrNext = NULL;
+>  	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
+>  	if (!pstrMessage->pvBuffer) {
+> -		result = -ENOMEM;
+> -		goto ERRORHANDLER;
+> +		kfree(pstrMessage);
+> +		return -ENOMEM;
+>  	}
+>  	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+>  
+> @@ -102,15 +100,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>  	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+>  
+>  	up(&pHandle->hSem);
+> -
+> -ERRORHANDLER:
+> -	/* error occured, free any allocations */
+> -	if (pstrMessage) {
+> -		kfree(pstrMessage->pvBuffer);
+> -		kfree(pstrMessage);
+> -	}
+> -
+> -	return result;
+> +	return 0;
 
-What changed from v1?
-
-Always put that information here below the --- line so that we know.
-
-Please fix up and resend.
+Aren't you now leaking memory as you aren't freeing pstrMessage and the
+buffer on the "normal" return path?
 
 thanks,
 
