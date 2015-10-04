@@ -1,73 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52232 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088AbbJ2NmT (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39059 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbbJDIsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 09:42:19 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 1/3] ath10k: Add new service defines for 10.4
-Date: Thu, 29 Oct 2015 19:11:32 +0530
-Message-ID: <1446126094-30880-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151029_144221_848269_6D9FDA1F)
-In-Reply-To: <1446126094-30880-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1446126094-30880-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Sun, 4 Oct 2015 04:48:12 -0400
+Date: Sun, 4 Oct 2015 09:48:08 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jacob Kiefer <jtk54@cornell.edu>
+Cc: "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	"open list:STAGING - REALTEK RTL8723U WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
+	open list <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: rtl8723au: Fix Sparse errors in rtl8723a_cmd.c
+Message-ID: <20151004084808.GA30827@kroah.com> (sfid-20151004_104837_733709_94F38F5C)
+References: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional changes, adds new wmi service bits for
-10.4 firmware to be sync with 10.4 firmware.
+On Fri, Oct 02, 2015 at 08:36:28PM -0400, Jacob Kiefer wrote:
+> From: Jacob Kiefer <jtk54@cornell.edu>
+> 
+> This patch fixes the following sparse errors:
+> 
+> 
+>   CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> ...
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: warning: incorrect type in assignment (different base types)
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    got restricted __le32 [usertype] <noident>
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: warning: incorrect type in assignment (different base types)
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    expected unsigned int [unsigned] [usertype] mask
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    got restricted __le32 [usertype] <noident>
+>   CC [M]  drivers/staging/rtl8723au/hal/rtl8723a_cmd.o
+> 
+> Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> index 9733aa6..111a24d 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> @@ -115,9 +115,11 @@ exit:
+>  
+>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+>  {
+> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+> +	__le32 leparam;
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Why __le32?  Does this variable go across the user/kernel boundry
+somehow?  If not, just use le32.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index cec887a..103dd8c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -175,6 +175,8 @@ enum wmi_service {
- 	WMI_SERVICE_AUX_SPECTRAL_INTF,
- 	WMI_SERVICE_AUX_CHAN_LOAD_INTF,
- 	WMI_SERVICE_BSS_CHANNEL_INFO_64,
-+	WMI_SERVICE_EXT_RES_CFG_SUPPORT,
-+	WMI_SERVICE_MESH,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -286,6 +288,8 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_AUX_SPECTRAL_INTF,
- 	WMI_10_4_SERVICE_AUX_CHAN_LOAD_INTF,
- 	WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
-+	WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
-+	WMI_10_4_SERVICE_MESH,
- };
- 
- static inline char *wmi_service_name(int service_id)
-@@ -375,6 +379,8 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_AUX_SPECTRAL_INTF);
- 	SVCSTR(WMI_SERVICE_AUX_CHAN_LOAD_INTF);
- 	SVCSTR(WMI_SERVICE_BSS_CHANNEL_INFO_64);
-+	SVCSTR(WMI_SERVICE_EXT_RES_CFG_SUPPORT);
-+	SVCSTR(WMI_SERVICE_MESH);
- 	default:
- 		return NULL;
- 	}
-@@ -600,6 +606,10 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_AUX_CHAN_LOAD_INTF, len);
- 	SVCMAP(WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
- 	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
-+	SVCMAP(WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
-+	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
-+	SVCMAP(WMI_10_4_SERVICE_MESH,
-+	       WMI_SERVICE_MESH, len);
- }
- 
- #undef SVCMAP
--- 
-1.9.1
+>  
+> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+> +	leparam = cpu_to_le32(*((u32 *)param));
+> +
+> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&leparam);
 
+At first glance, you aren't doing ths same logic in this function as the
+original did, please look at this very closely again and verify that you
+are doing this correctly.
+
+Don't just blindly quiet tools like sparse, it is warning for a reason,
+but be careful about your fix.
+
+thanks,
+
+greg k-h
