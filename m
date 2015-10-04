@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:61824 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932809AbbJHNu4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbJDHXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 09:50:56 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH] mac80211: Fix hwflags debugfs file format
-Date: Thu, 8 Oct 2015 19:20:14 +0530
-Message-ID: <1444312214-10669-1-git-send-email-mohammed@qti.qualcomm.com> (sfid-20151008_155108_269433_35A37DEB)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 4 Oct 2015 03:23:48 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Lior David <liord@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 03/10] wil6210: log firmware crash information
+Date: Sun,  4 Oct 2015 10:23:20 +0300
+Message-Id: <1443943407-6663-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092352_802576_3DDB2B29)
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Print firmware and ucode assert codes when firmware crashed.
 
-Commit 30686bf7f5b3 ("mac80211: convert HW flags to unsigned long
-bitmap") accidentally removed the newline delimiter from the hwflags
-debugfs file. Fix this by adding back the newline between the HW flags.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-[fix commit log]
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Lior David <liord@qti.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/mac80211/debugfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 7 ++++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 4 ++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 3636b45..4d2aaeb 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -151,7 +151,7 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index a371f036..f651994 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -347,7 +347,12 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ 	wil6210_mask_irq_misc(wil);
  
- 	for (i = 0; i < NUM_IEEE80211_HW_FLAGS; i++) {
- 		if (test_bit(i, local->hw.flags))
--			pos += scnprintf(pos, end - pos, "%s",
-+			pos += scnprintf(pos, end - pos, "%s\n",
- 					 hw_flag_names[i]);
- 	}
+ 	if (isr & ISR_MISC_FW_ERROR) {
+-		wil_err(wil, "Firmware error detected\n");
++		u32 fw_assert_code = wil_r(wil, RGF_FW_ASSERT_CODE);
++		u32 ucode_assert_code = wil_r(wil, RGF_UCODE_ASSERT_CODE);
++
++		wil_err(wil,
++			"Firmware error detected, assert codes FW 0x%08x, UCODE 0x%08x\n",
++			fw_assert_code, ucode_assert_code);
+ 		clear_bit(wil_status_fwready, wil->status);
+ 		/*
+ 		 * do not clear @isr here - we do 2-nd part in thread
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index e405bef..525ce2c 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -246,6 +246,10 @@ struct RGF_ICR {
+ #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
+ 	#define JTAG_DEV_ID_SPARROW_B0	(0x2632072f)
  
++/* crash codes for FW/Ucode stored here */
++#define RGF_FW_ASSERT_CODE		(0x91f020)
++#define RGF_UCODE_ASSERT_CODE		(0x91f028)
++
+ enum {
+ 	HW_VER_UNKNOWN,
+ 	HW_VER_SPARROW_B0, /* JTAG_DEV_ID_SPARROW_B0 */
 -- 
-1.7.9.5
+2.1.4
 
