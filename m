@@ -1,96 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2593 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbbJMKvg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbJDHXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:51:36 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/54] staging: wilc1000: rename u8keyidx of struct host_if_wpa_attr
-Date: Tue, 13 Oct 2015 19:49:34 +0900
-Message-ID: <1444733419-17679-9-git-send-email-tony.cho@atmel.com> (sfid-20151013_125139_554003_E2C478A0)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 4 Oct 2015 03:23:54 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 06/10] wil6210: support BAR (BlockAck Req)
+Date: Sun,  4 Oct 2015 10:23:23 +0300
+Message-Id: <1443943407-6663-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092357_985637_5BEF0247)
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+BAR frames delivered to the host via Rx path; whole BAR frame
+get delivered. Advance sequence in the reorder buffer and release
+old frames, as per IEEE802.11 spec.
 
-This patch renames u8keyidx of struct host_if_wpa_attr to index to
-avoid CamelCase naming convention.
+Firmware will reply to BAR, driver responsibility is only reorder
+buffer management.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 26 +++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c       | 40 +++++++++++++++++++++++----
+ drivers/net/wireless/ath/wil6210/txrx.h       |  7 +++++
+ 3 files changed, 67 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5c8af19..2521987 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -70,7 +70,7 @@ struct host_if_wpa_attr {
- 	const u8 *mac_addr;
- 	u8 *seq;
- 	u8 seq_len;
--	u8 u8keyidx;
-+	u8 index;
- 	u8 u8Keylen;
- 	u8 u8Ciphermode;
- };
-@@ -1889,7 +1889,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			if (pstrHostIFkeyAttr->attr.wpa.seq != NULL)
- 				memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 9238c1a..e3d1be8 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -205,6 +205,32 @@ out:
+ 	spin_unlock(&sta->tid_rx_lock);
+ }
  
--			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
-+			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
- 			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
- 			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
-@@ -1929,7 +1929,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 				PRINT_ER("Couldn't handle WPARxGtk while enuHostIFstate is not HOST_IF_CONNECTED\n");
- 
- 			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
--			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
-+			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
- 			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
- 			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
-@@ -1969,7 +1969,7 @@ _WPARxGtk_end_case_:
- 			}
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
--			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
-+			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.index, 1);
- 			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
- 			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
-@@ -3347,7 +3347,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
- 	msg.body.key_info.type = WPAPtk;
- 	if (mode == AP_MODE) {
- 		msg.body.key_info.action = ADDKEY_AP;
--		msg.body.key_info.attr.wpa.u8keyidx = u8Idx;
-+		msg.body.key_info.attr.wpa.index = u8Idx;
++/* process BAR frame, called in NAPI context */
++void wil_rx_bar(struct wil6210_priv *wil, u8 cid, u8 tid, u16 seq)
++{
++	struct wil_sta_info *sta = &wil->sta[cid];
++	struct wil_tid_ampdu_rx *r;
++
++	spin_lock(&sta->tid_rx_lock);
++
++	r = sta->tid_rx[tid];
++	if (!r) {
++		wil_err(wil, "BAR for non-existing CID %d TID %d\n", cid, tid);
++		goto out;
++	}
++	if (seq_less(seq, r->head_seq_num)) {
++		wil_err(wil, "BAR Seq 0x%03x preceding head 0x%03x\n",
++			seq, r->head_seq_num);
++		goto out;
++	}
++	wil_dbg_txrx(wil, "BAR: CID %d TID %d Seq 0x%03x head 0x%03x\n",
++		     cid, tid, seq, r->head_seq_num);
++	wil_release_reorder_frames(wil, r, seq);
++
++out:
++	spin_unlock(&sta->tid_rx_lock);
++}
++
+ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 						int size, u16 ssn)
+ {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 8ba271f..c530c79 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -358,6 +358,13 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
  	}
- 	if (mode == STATION_MODE)
- 		msg.body.key_info.action = ADDKEY;
-@@ -3434,7 +3434,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
+ }
+ 
++/* similar to ieee80211_ version, but FC contain only 1-st byte */
++static inline int wil_is_back_req(u8 fc)
++{
++	return (fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
++	       (IEEE80211_FTYPE_CTL | IEEE80211_STYPE_BACK_REQ);
++}
++
+ /**
+  * reap 1 frame from @swhead
+  *
+@@ -411,7 +418,7 @@ again:
+ 
+ 	trace_wil6210_rx(i, d);
+ 	wil_dbg_txrx(wil, "Rx[%3d] : %d bytes\n", i, dmalen);
+-	wil_hex_dump_txrx("Rx ", DUMP_PREFIX_NONE, 32, 4,
++	wil_hex_dump_txrx("RxD ", DUMP_PREFIX_NONE, 32, 4,
+ 			  (const void *)d, sizeof(*d), false);
+ 
+ 	cid = wil_rxdesc_cid(d);
+@@ -441,23 +448,44 @@ again:
+ 	/* no extra checks if in sniffer mode */
+ 	if (ndev->type != ARPHRD_ETHER)
+ 		return skb;
+-	/*
+-	 * Non-data frames may be delivered through Rx DMA channel (ex: BAR)
++	/* Non-data frames may be delivered through Rx DMA channel (ex: BAR)
+ 	 * Driver should recognize it by frame type, that is found
+ 	 * in Rx descriptor. If type is not data, it is 802.11 frame as is
+ 	 */
+ 	ftype = wil_rxdesc_ftype(d) << 2;
+ 	if (unlikely(ftype != IEEE80211_FTYPE_DATA)) {
+-		wil_dbg_txrx(wil, "Non-data frame ftype 0x%08x\n", ftype);
+-		/* TODO: process it */
++		u8 fc1 = wil_rxdesc_fc1(d);
++		int mid = wil_rxdesc_mid(d);
++		int tid = wil_rxdesc_tid(d);
++		u16 seq = wil_rxdesc_seq(d);
++
++		wil_dbg_txrx(wil,
++			     "Non-data frame FC[7:0] 0x%02x MID %d CID %d TID %d Seq 0x%03x\n",
++			     fc1, mid, cid, tid, seq);
+ 		stats->rx_non_data_frame++;
++		if (wil_is_back_req(fc1)) {
++			wil_dbg_txrx(wil,
++				     "BAR: MID %d CID %d TID %d Seq 0x%03x\n",
++				     mid, cid, tid, seq);
++			wil_rx_bar(wil, cid, tid, seq);
++		} else {
++			/* print again all info. One can enable only this
++			 * without overhead for printing every Rx frame
++			 */
++			wil_dbg_txrx(wil,
++				     "Unhandled non-data frame FC[7:0] 0x%02x MID %d CID %d TID %d Seq 0x%03x\n",
++				     fc1, mid, cid, tid, seq);
++			wil_hex_dump_txrx("RxD ", DUMP_PREFIX_NONE, 32, 4,
++					  (const void *)d, sizeof(*d), false);
++			wil_hex_dump_txrx("Rx ", DUMP_PREFIX_OFFSET, 16, 1,
++					  skb->data, skb_headlen(skb), false);
++		}
+ 		kfree_skb(skb);
+ 		goto again;
  	}
  
--	msg.body.key_info.attr.wpa.u8keyidx = u8KeyIdx;
-+	msg.body.key_info.attr.wpa.index = u8KeyIdx;
- 	msg.body.key_info.attr.wpa.u8Keylen = u8KeyLen;
- 	msg.body.key_info.attr.wpa.seq_len = u32KeyRSClen;
+ 	if (unlikely(skb->len < ETH_HLEN + snaplen)) {
+ 		wil_err(wil, "Short frame, len = %d\n", skb->len);
+-		/* TODO: process it (i.e. BAR) */
+ 		stats->rx_short_frame++;
+ 		kfree_skb(skb);
+ 		goto again;
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 82a8f9a..ee7c7b4 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -464,6 +464,12 @@ static inline int wil_rxdesc_subtype(struct vring_rx_desc *d)
+ 	return WIL_GET_BITS(d->mac.d0, 12, 15);
+ }
  
++/* 1-st byte (with frame type/subtype) of FC field */
++static inline u8 wil_rxdesc_fc1(struct vring_rx_desc *d)
++{
++	return (u8)(WIL_GET_BITS(d->mac.d0, 10, 15) << 2);
++}
++
+ static inline int wil_rxdesc_seq(struct vring_rx_desc *d)
+ {
+ 	return WIL_GET_BITS(d->mac.d0, 16, 27);
+@@ -501,6 +507,7 @@ static inline struct vring_rx_desc *wil_skb_rxdesc(struct sk_buff *skb)
+ 
+ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev);
+ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb);
++void wil_rx_bar(struct wil6210_priv *wil, u8 cid, u8 tid, u16 seq);
+ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 						int size, u16 ssn);
+ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
 -- 
-1.9.1
+2.1.4
 
