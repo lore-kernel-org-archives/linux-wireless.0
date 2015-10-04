@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f194.google.com ([209.85.212.194]:33506 "EHLO
-	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbbJQXBv (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:32952 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbbJDKHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 19:01:51 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, johannes.berg@intel.com,
-	davem@davemloft.net, joe@perches.com, m@bues.ch,
-	mike.looijmans@topic.nl, cengelma@gmx.at, khoroshilov@ispras.ru,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] net: wireless: rsi: Coding Spaces
-Date: Sun, 18 Oct 2015 00:01:36 +0100
-Message-Id: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com> (sfid-20151018_010238_986981_CBCF6894)
+	Sun, 4 Oct 2015 06:07:30 -0400
+Date: Sun, 4 Oct 2015 15:37:13 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Move spin lock to the
+ start of critical section
+Message-ID: <20151004100713.GA27051@gcs-HP-Notebook> (sfid-20151004_120747_080644_55C98C70)
+References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+ <20151004084335.GA24589@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151004084335.GA24589@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed space before that ','
-
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 40d7231..8fa241b 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -435,7 +435,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 				} else {
- 					rsi_dbg(ERR_ZONE,
- 						"%s: Firmware Status is 0x%x\n",
--						__func__ , fw_status);
-+						__func__, fw_status);
- 					rsi_sdio_ack_intr(common->priv,
- 							  (1 << FW_ASSERT_IND));
- 				}
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 3741173..3d4eddd 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -173,9 +173,9 @@ enum cmd_frame_type {
- 	AUTO_RATE_IND,
- 	BOOTUP_PARAMS_REQUEST,
- 	VAP_CAPABILITIES,
--	EEPROM_READ_TYPE ,
-+	EEPROM_READ_TYPE,
- 	EEPROM_WRITE,
--	GPIO_PIN_CONFIG ,
-+	GPIO_PIN_CONFIG,
- 	SET_RX_FILTER,
- 	AMPDU_IND,
- 	STATS_REQUEST_FRAME,
--- 
-2.6.1
-
+On Sun, Oct 04, 2015 at 09:43:35AM +0100, Greg KH wrote:
+> On Sat, Oct 03, 2015 at 02:57:29PM +0530, Chandra S Gorentla wrote:
+> > The spin_lock_irqsave is moved to just beginning of critical section.
+> > This change moves a couple of return statements out of the lock.
+> > 
+> > Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+> > ---
+> >  drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > index d5ebd6d..284a3f5 100644
+> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > @@ -72,8 +72,6 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+> >  		goto ERRORHANDLER;
+> >  	}
+> >  
+> > -	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+> > -
+> >  	/* construct a new message */
+> >  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+> 
+> As you have moved the lock, can you also change this to GFP_KERNEL as
+> well because we do not have a lock held?
+Can 'the change to GFP_KERNEL' be done in a separate patch?
+The lock is to protect linked list manipulations; in this function items
+are added to the list.
+> 
+> And how have you tested that this is ok?  What is this lock trying to
+> protect?
+I load this module on a notebook computer.   I added some code to
+wilc_debugfs.c to invoke the functions in the file wilc_msgqueue.c
+> 
+> thanks,
+> 
+> greg k-h
