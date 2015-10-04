@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49634 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754689AbbJOHTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 03:19:06 -0400
-Date: Thu, 15 Oct 2015 15:18:34 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: [RFC PATCH] staging: wilc1000: mode_11i can be static
-Message-ID: <20151015071834.GA9659@xian> (sfid-20151015_091912_136703_2F2C8C6C)
-References: <201510151552.WMKP1tMV%fengguang.wu@intel.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37710 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258AbbJDImB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Oct 2015 04:42:01 -0400
+Date: Sun, 4 Oct 2015 09:41:58 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 06/10] staging: wilc1000: rename hWFIDrv of
+ host_int_set_mac_chnl_num
+Message-ID: <20151004084158.GB21313@kroah.com> (sfid-20151004_104210_914277_F7EF2376)
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
+ <1443789896-7082-6-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-30-git-send-email-tony.cho@atmel.com>
+In-Reply-To: <1443789896-7082-6-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 02, 2015 at 09:44:52PM +0900, Chaehyun Lim wrote:
+> This patch replaces hWFIDrv with wfi_drv that is first argument of
+> host_int_set_mac_chnl_num to avoid camelcase.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 6 +++---
+>  drivers/staging/wilc1000/host_interface.h | 2 +-
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 133bb2d..d23d2dd 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -5315,10 +5315,10 @@ s32 host_int_get_rx_power_level(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8RxPowerLevel,
+>   *  @date		8 March 2012
+>   *  @version		1.0
+>   */
+> -int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 channel)
+> +int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *wfi_drv, u8 channel)
+>  {
+>  	int result = 0;
+> -	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+> +	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)wfi_drv;
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- host_interface.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Not the issue here, but in the future, why is this cast needed?  Heck,
+why is this local variable even needed, why not just use wifi_drv
+everywhere in this function?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 778d9b3..3b86b97 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -263,7 +263,7 @@ static u8 del_beacon;
- 
- u8 *join_req;
- u8 *info_element;
--u8 mode_11i;
-+static u8 mode_11i;
- u8 gu8FlushedAuthType;
- u32 gu32FlushedJoinReqSize;
- u32 gu32FlushedInfoElemAsocSize;
+thanks,
+
+greg k-h
