@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8077 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880AbbJOHdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 03:33:31 -0400
-Date: Thu, 15 Oct 2015 15:32:32 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	austin.shin@atmel.com, adel.noureldin@atmel.com,
-	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 32/40] staging: wilc1000: rename variable
- gu32FlushedJoinReqSize
-Message-ID: <201510151523.DqFcAa9E%fengguang.wu@intel.com> (sfid-20151015_093334_725617_773C7F8D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-32-git-send-email-tony.cho@atmel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbJDHXz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Oct 2015 03:23:55 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 07/10] wil6210: capture all frames in sniffer mode
+Date: Sun,  4 Oct 2015 10:23:24 +0300
+Message-Id: <1443943407-6663-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092359_938783_5252D4C7)
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+For the sniffer (monitor) mode, capture either control only or both
+control and data PHY.
 
-[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
+It used to be control only or data only PHY due to firmware
+issues with configuration for PHY auto-detection; but now
+it is resolved.
 
-url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'mode_11i' was not declared. Should it be static?
->> drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'join_req_size' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2213:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2353:38: sparse: incompatible types for operation (>)
-   drivers/staging/wilc1000/host_interface.c:2353:38:    left side has type unsigned char [usertype] *tail
-   drivers/staging/wilc1000/host_interface.c:2353:38:    right side has type int
-
-Please review and possibly fold the followup patch.
-
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 2f35d4c..6112189 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1120,7 +1120,7 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 			cpu_to_le32(ndev->type == ARPHRD_IEEE80211_RADIOTAP);
+ 		cmd.sniffer_cfg.phy_support =
+ 			cpu_to_le32((wil->monitor_flags & MONITOR_FLAG_CONTROL)
+-				    ? WMI_SNIFFER_CP : WMI_SNIFFER_DP);
++				    ? WMI_SNIFFER_CP : WMI_SNIFFER_BOTH_PHYS);
+ 	} else {
+ 		/* Initialize offload (in non-sniffer mode).
+ 		 * Linux IP stack always calculates IP checksum
+-- 
+2.1.4
+
