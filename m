@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33487 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbbJULrM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbJDHXp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 07:47:12 -0400
-Date: Wed, 21 Oct 2015 14:47:03 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: fix the bug on copying bssid
-Message-ID: <20151021114703.GH7340@mwanda> (sfid-20151021_134725_413659_101CF2D7)
-References: <1445328646-32178-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445328646-32178-1-git-send-email-tony.cho@atmel.com>
+	Sun, 4 Oct 2015 03:23:45 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 01/10] wil6210: fix warning in system power management code
+Date: Sun,  4 Oct 2015 10:23:18 +0300
+Message-Id: <1443943407-6663-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092348_838565_3291A577)
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 05:10:46PM +0900, Tony Cho wrote:
-> This patch reverts the commit, d79fd35b8c5d927695b48fa35aa586919818cce9.
-> 
-> The WID_JOIN_REQ_EXTENDED among WIDs needs two parameters for the request to
-> be sent to the firmware, which are the SA and the BSSID. For this case, both
-> is the same bssid in the handle_connect function. So, it's required to be
-> copied twice.
-> 
+Fix compilation warning where CONFIG_PM defined while
+CONFIG_PM_SLEEP is not defined
 
-I forsaw this, but I should have been more explicit when I complained
-about d79fd35b8c5d927695b48fa35aa586919818cce9...
+Report follows:
 
-regards,
-dan carpenter
+tree:   git://github.com/kvalo/ath pending
+head:   941145fc5e5afbb120271e5dfaf37213ddb55807
+commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
+config: xtensa-allyesconfig (attached as .config)
+reproduce:
+  wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+  chmod +x ~/bin/make.cross
+  git checkout df596be39294d9712e5d568063a48448031e0a9f
+  # save the attached .config to linux build tree
+  make.cross ARCH=xtensa
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
+    static int wil6210_suspend(struct device *dev, bool is_runtime)
+               ^
+>> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
+    static int wil6210_resume(struct device *dev, bool is_runtime)
+               ^
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index feff1ef..1a3142c3 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -260,6 +260,7 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
+ MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
+ 
+ #ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ 
+ static int wil6210_suspend(struct device *dev, bool is_runtime)
+ {
+@@ -307,7 +308,6 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
+ 	return rc;
+ }
+ 
+-#ifdef CONFIG_PM_SLEEP
+ static int wil6210_pm_suspend(struct device *dev)
+ {
+ 	return wil6210_suspend(dev, false);
+-- 
+2.1.4
 
