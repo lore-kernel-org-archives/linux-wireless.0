@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:32774 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965180AbbJVS5w (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35788 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835AbbJDXu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 14:57:52 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@codeaurora.org
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sergei.shtylyov@cogentembedded.com, jirislaby@gmail.com,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH v5 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
-Date: Fri, 23 Oct 2015 00:27:34 +0530
-Message-Id: <1445540254-4207-1-git-send-email-punitvara@gmail.com> (sfid-20151022_205840_146856_A0ECE3B5)
+	Sun, 4 Oct 2015 19:50:27 -0400
+Received: by igbkq10 with SMTP id kq10so49706021igb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2015 16:50:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1443789896-7082-3-git-send-email-chaehyun.lim@gmail.com>
+References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com> <1443789896-7082-3-git-send-email-chaehyun.lim@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 5 Oct 2015 10:50:07 +1100
+Message-ID: <CAGRGNgVbs1jBdLbGurCwcxZmV4-szfU5gs8fsmk9ZxAN_Z-EPA@mail.gmail.com> (sfid-20151005_015053_155067_A709657B)
+Subject: Re: [PATCH 03/10] staging: wilc1000: rename s32Error in host_int_set_mac_chnl_num
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, glen.lee@atmel.com,
+	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove empty line suggested by Sergei
+Hi Chaehyun,
 
-This patch is to the ath5k/eeprom.c that fixes up warning caught by
-coccicheck:
+On Fri, Oct 2, 2015 at 10:44 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+> This patch replaces s32Error with result to avoid camelcase.
+>
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 65bd325..566e618 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -5317,7 +5317,7 @@ s32 host_int_get_rx_power_level(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8RxPowerLevel,
+>   */
+>  int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
+>  {
+> -       int s32Error = 0;
+> +       int result = 0;
+>         tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+>         struct host_if_msg msg;
+>
+> @@ -5332,13 +5332,13 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
+>         msg.body.channel_info.u8SetChan = u8ChNum;
+>         msg.drvHandler = hWFIDrv;
+>
+> -       s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+> -       if (s32Error) {
+> +       result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+> +       if (result) {
+>                 PRINT_ER("wilc mq send fail\n");
+> -               s32Error = -EINVAL;
+> +               result = -EINVAL;
 
-Unneeded variable: "ret". Return "0" on line 980
+Why not just have
 
-Remove unneeded variable ret created to return zero.
+return -EINVAL;
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+here?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 900e72a..94bcc08 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- {
--	int ret = 0;
--
- 	static const u32 cipher_suites[] = {
- 		WLAN_CIPHER_SUITE_WEP40,
- 		WLAN_CIPHER_SUITE_WEP104,
-@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
- 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
- 
--	return ret;
-+	return 0;
- }
- 
- static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+>         }
+>
+> -       return s32Error;
+> +       return result;
+
+and
+
+return 0;
+
+here?
+
+Thanks,
+
 -- 
-2.5.3
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
