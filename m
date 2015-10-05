@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:22845 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8696 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbbJTF1S (ORCPT
+	with ESMTP id S1751693AbbJEG0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 01:27:18 -0400
+	Mon, 5 Oct 2015 02:26:41 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 00/12] WILC1000 V2 for the g_linux_wlan
-Date: Tue, 20 Oct 2015 14:26:44 +0900
-Message-ID: <1445318816-21686-1-git-send-email-tony.cho@atmel.com> (sfid-20151020_072721_673210_CEC3A9EB)
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/18] staging: wilc1000: remove typedef from tuniHostIFkeyAttr
+Date: Mon, 5 Oct 2015 15:25:41 +0900
+Message-ID: <1444026353-29024-6-git-send-email-tony.cho@atmel.com> (sfid-20151005_082644_230534_3F1DEE51)
+In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The series of V2 restore the global variable, wl to g_linux_wlan which is its
-original name becasue it will be replaced with local structure and deleted.
+From: Leo Kim <leo.kim@atmel.com>
 
-Tony Cho (12):
-  staging: wilc1000: change the type of wilc1000_initialized
-  staging: wilc1000: rename u8NoIfcs in the struct wilc
-  staging: wilc1000: rename strInterfaceInfo in the sturct wilc
-  staging: wilc1000: rename aSrcAddress in the struct wilc_vif
-  staging: wilc1000: rename aBSSID in the sturct wilc_vif
-  staging: wilc1000: rename drvHandler in the struct wilc_vif
-  staging: wilc1000: rename wilc_netdev in the struct wilc_vif
-  staging: wilc1000: move clean up codes into wl_wlan_cleanup function
-  staging: wilc1000: rename wilc_firmware in the struct wilc
-  staging: wilc1000: remove COMPLEMENT_BOOT
-  staging: wilc1000: introduce struct wilc_sdio for sdio data
-  staging: wilc1000: assign pointer of g_linux_wlan to sdio device data
+This patch remove typedef from the union tuniHostIFkeyAttr.
+And rename it to host_if_key_attr.
 
- drivers/staging/wilc1000/linux_wlan.c             | 331 +++++++---------------
- drivers/staging/wilc1000/linux_wlan_sdio.c        |  33 ++-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  87 +++---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  19 +-
- drivers/staging/wilc1000/wilc_wlan.c              |  18 --
- 5 files changed, 169 insertions(+), 319 deletions(-)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2e71505..f4c5ec3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -116,7 +116,7 @@ typedef struct _tstrHostIFwepAttr {
+ } tstrHostIFwepAttr;
+ 
+ /*!
+- *  @struct             tuniHostIFkeyAttr
++ *  @struct             host_if_key_attr
+  *  @brief		Structure to hold Host IF Scan Attributes
+  *  @details
+  *  @todo
+@@ -125,11 +125,11 @@ typedef struct _tstrHostIFwepAttr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef union _tuniHostIFkeyAttr {
++union host_if_key_attr {
+ 	tstrHostIFwepAttr strHostIFwepAttr;
+ 	tstrHostIFwpaAttr strHostIFwpaAttr;
+ 	tstrHostIFpmkidAttr strHostIFpmkidAttr;
+-} tuniHostIFkeyAttr;
++};
+ 
+ /*!
+  *  @struct             key_attr
+@@ -144,7 +144,7 @@ typedef union _tuniHostIFkeyAttr {
+ struct key_attr {
+ 	enum KEY_TYPE enuKeyType;
+ 	u8 u8KeyAction;
+-	tuniHostIFkeyAttr uniHostIFkeyAttr;
++	union host_if_key_attr uniHostIFkeyAttr;
+ };
+ 
+ 
 -- 
 1.9.1
 
