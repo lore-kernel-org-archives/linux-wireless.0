@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47154 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753175AbbJWRxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 13:53:25 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: overlap of devices in rtl8xxxu and rtl8192cu
-References: <562A2711.9040700@gmail.com> <wrfj7fmdit3l.fsf@redhat.com>
-	<87ziz91xag.fsf@kamboji.qca.qualcomm.com>
-	<wrfj611xhda9.fsf@redhat.com>
-	<87oafp1pk6.fsf@kamboji.qca.qualcomm.com>
-	<87k2qd1ooy.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 23 Oct 2015 13:53:23 -0400
-In-Reply-To: <87k2qd1ooy.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Fri, 23 Oct 2015 20:26:21 +0300")
-Message-ID: <wrfj1tcleajw.fsf@redhat.com> (sfid-20151023_195331_118200_A525EA31)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:57096 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751530AbbJEOhN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 10:37:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 17:36:37 +0300
+Message-Id: <1444055820-27506-6-git-send-email-luca@coelho.fi> (sfid-20151005_163811_997609_73B0E74E)
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
+References: <1444050759.27220.15.camel@coelho.fi>
+Subject: [PATCH 06/29] iwlwifi: mvm: fix default disabled aggs in sta
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Like I said earlier in rtl8xxxu review, I don't want to have two drivers
->> supporting the same device. So either rtl8xxxu or rtlwifi supports the
->> devices above, not both. And to my knowledge rtl8xxxu is still lacking
->> in features, and it's a new driver, so it's best that rtlwifi continues
->> to support these for the time being. Once rtl8xxxu catches up and we
->> have a clear consensus we can make the switch.
->>
->> I'll send a patch in a jiffy, merge window is getting closer so we don't
->> have any extra time.
->
-> Heh, having hilarious problems with my patch:
->
-> <linux-wireless@vger.kernel.org>: host vger.kernel.org[209.132.180.67] said:
->     550 5.7.1 Content-Policy reject msg: The capital Triple-X in subject is way
->     too often associated with junk email, please rephrase.
->
-> The subject was:
->
-> Subject: [PATCH] rtl8xxxu: move devices supported by rtlwifi under
->  CONFIG_RTL8XXXU_UNTESTED
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-This seems a reasonable workaround for now.
+For the ADD_STA command, when the flag for aggregation
+disabling is set, there is a bitmap indicated what TIDs
+are disabling aggregations and what aren't. Currently, by
+default, all TIDs allow for aggregations since the value
+we begin with is 0.
 
-Next time just add some extra buzzwords to the subject line and I am
-sure it will go through :)
+Change this default value to 0xffff so all TIDs don't
+allow aggregations until explicitly turned on.
 
-Jes
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index fe2f538..18ca030 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -292,7 +292,7 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 
+ 	/* HW restart, don't assume the memory has been zeroed */
+ 	atomic_set(&mvm->pending_frames[sta_id], 0);
+-	mvm_sta->tid_disable_agg = 0;
++	mvm_sta->tid_disable_agg = 0xffff; /* No aggs at first */
+ 	mvm_sta->tfd_queue_msk = 0;
+ 
+ 	/* allocate new queues for a TDLS station */
+-- 
+2.5.3
+
