@@ -1,77 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:33834 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbbJCTap (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23409 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbJELXe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Oct 2015 15:30:45 -0400
-Received: by wicfx3 with SMTP id fx3so71872590wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2015 12:30:44 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/6] staging: vt6655: device_main replace pTDInfo with td_info.
-Date: Sat,  3 Oct 2015 20:30:26 +0100
-Message-Id: <1443900627-2924-5-git-send-email-tvboxspy@gmail.com> (sfid-20151003_213049_661608_6E7C2CA9)
-In-Reply-To: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
-References: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 5 Oct 2015 07:23:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Geliang Tang <geliangtang@163.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: drop unlikely behind WARN_ON()
+References: <88184946efc981b4cba84cf21418954423ca11a4.1443942486.git.geliangtang@163.com>
+	<1444027933.1875.0.camel@sipsolutions.net>
+Date: Mon, 5 Oct 2015 14:23:18 +0300
+In-Reply-To: <1444027933.1875.0.camel@sipsolutions.net> (Johannes Berg's
+	message of "Mon, 5 Oct 2015 08:52:13 +0200")
+Message-ID: <87si5p4l09.fsf@kamboji.qca.qualcomm.com> (sfid-20151005_132349_185881_B3D92112)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+> The subject is entirely wrong - this is not a cfg80211 patch.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 7e76176..ff329bd 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -678,9 +678,9 @@ static void device_free_td0_ring(struct vnt_private *priv)
- 
- 	for (i = 0; i < priv->sOpts.nTxDescs[0]; i++) {
- 		struct vnt_tx_desc *desc = &priv->apTD0Rings[i];
--		struct vnt_td_info *pTDInfo = desc->td_info;
-+		struct vnt_td_info *td_info = desc->td_info;
- 
--		dev_kfree_skb(pTDInfo->skb);
-+		dev_kfree_skb(td_info->skb);
- 		kfree(desc->td_info);
- 	}
- }
-@@ -691,9 +691,9 @@ static void device_free_td1_ring(struct vnt_private *priv)
- 
- 	for (i = 0; i < priv->sOpts.nTxDescs[1]; i++) {
- 		struct vnt_tx_desc *desc = &priv->apTD1Rings[i];
--		struct vnt_td_info *pTDInfo = desc->td_info;
-+		struct vnt_td_info *td_info = desc->td_info;
- 
--		dev_kfree_skb(pTDInfo->skb);
-+		dev_kfree_skb(td_info->skb);
- 		kfree(desc->td_info);
- 	}
- }
-@@ -892,14 +892,14 @@ static void device_error(struct vnt_private *priv, unsigned short status)
- static void device_free_tx_buf(struct vnt_private *priv,
- 			       struct vnt_tx_desc *desc)
- {
--	struct vnt_td_info *pTDInfo = desc->td_info;
--	struct sk_buff *skb = pTDInfo->skb;
-+	struct vnt_td_info *td_info = desc->td_info;
-+	struct sk_buff *skb = td_info->skb;
- 
- 	if (skb)
- 		ieee80211_tx_status_irqsafe(priv->hw, skb);
- 
--	pTDInfo->skb = NULL;
--	pTDInfo->flags = 0;
-+	td_info->skb = NULL;
-+	td_info->flags = 0;
- }
- 
- static void vnt_check_bb_vga(struct vnt_private *priv)
+Yes, please use prefix "ath6kl: ".
+
 -- 
-2.5.0
-
+Kalle Valo
