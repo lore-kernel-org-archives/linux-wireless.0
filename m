@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33942 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368AbbJOCHZ (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44551 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbbJEQPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:25 -0400
-Received: by payp3 with SMTP id p3so23377853pay.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:24 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/33] staging: wilc1000: fix return type of host_int_get_inactive_time
-Date: Thu, 15 Oct 2015 11:06:35 +0900
-Message-Id: <1444874822-31152-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040731_918735_1981234A)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 5 Oct 2015 12:15:21 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 1/5] wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan (TW)
+Date: Tue,  6 Oct 2015 00:14:54 +0800
+Message-Id: <1444061698-16384-2-git-send-email-wens@csie.org> (sfid-20151005_181532_815369_55DDFE0A)
+In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
+References: <1444061698-16384-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_get_inactive_time from s32
-int. s32Error gets return value from wilc_mq_send that has return type
-of int. It should be changed return type by int as well as data type of
-s32Error.
+Taiwan's Ministry of Transportation and Communications revised its
+frequency allocation rules [1] on 2014/11/17, allowing usage of 5600 ~
+5650 MHz, previously allocated to weather radars, to U-NII applications
+with DFS support.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Also, the technical regulations [2] show that for 5470 ~ 5725 MHz U-NII
+applications, the peak transmit power shall not exceed the lesser of
+250 mW (slightly less than 24 dBm) or 11 dBm + 10log B, where B is the
+26dB emission bandwidth in MHz. This is slightly more than 23 dBm for
+20 MHz channels.
+
+This patch updates both. Also add links to the two documents into the
+database.
+
+[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
+[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ db.txt | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 482dc55..191d840 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3871,10 +3871,10 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+diff --git a/db.txt b/db.txt
+index d57ea84..e081634 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1118,11 +1118,17 @@ country TT: DFS-FCC
+ 	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
  
- }
- 
--s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
-+int host_int_get_inactive_time(struct host_if_drv *hif_drv,
- 			       const u8 *mac, u32 *pu32InactiveTime)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 
- 	if (!hif_drv) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c9ab99d..b660eec 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -453,7 +453,7 @@ int host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk, u8 u8PtkKeyl
-  *  @date		15 April 2013
-  *  @version		1.0
-  */
--s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac, u32 *pu32InactiveTime);
-+int host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac, u32 *pu32InactiveTime);
- 
- /**
-  *  @brief              adds Rx GTk Key
++# Source:
++# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
++#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
++#      filedisplay=Table+of+radio+frequency+allocation.doc
++# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
++#   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
++#   (section 3.10.1, 4.7)
+ country TW: DFS-JP
+ 	(2402 - 2472 @ 40), (30)
+ 	(5270 - 5330 @ 40), (17), DFS
+-	(5490 - 5590 @ 80), (30), DFS
+-	(5650 - 5710 @ 40), (30), DFS
++	(5470 - 5725 @ 160), (23), DFS
+ 	(5735 - 5835 @ 80), (30)
+  
+ country TZ:
 -- 
-2.6.1
+2.5.3
 
