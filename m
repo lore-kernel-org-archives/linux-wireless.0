@@ -1,119 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14973 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754289AbbJ0MWo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:54551 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbbJEDXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 08:22:44 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/4] ath10k: reload HT/VHT capabilities on antenna change
-Date: Tue, 27 Oct 2015 17:51:14 +0530
-Message-ID: <1445948474-16738-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151027_132247_187404_BD41B60F)
-In-Reply-To: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Sun, 4 Oct 2015 23:23:43 -0400
+Subject: Re: [PATCH 2/2] drivers: staging: wilc1000: Call kfree only for error
+ cases
+To: Chandra Gorentla <csgorentla@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+ <1443864450-18167-2-git-send-email-csgorentla@gmail.com>
+ <20151004084457.GB24589@kroah.com> <20151004102859.GB27051@gcs-HP-Notebook>
+CC: <dan.carpenter@oracle.com>, <johnny.kim@atmel.com>,
+	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+	<linux-kernel@vger.kernel.org>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <5611ED2C.7080002@atmel.com> (sfid-20151005_052428_430187_AF789789)
+Date: Mon, 5 Oct 2015 12:23:24 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151004102859.GB27051@gcs-HP-Notebook>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To reflect configured antenna settings in HT/VHT MCS map,
-reload the HT/VHT capabilities upon antenna change.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 39 +++++++++++++++++++++++++----------
- 1 file changed, 28 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2217494..5782ec9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3897,6 +3897,29 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
- 	return ht_cap;
- }
- 
-+static void ath10k_mac_setup_ht_vht_cap(struct ath10k *ar)
-+{
-+	struct ieee80211_supported_band *band;
-+	struct ieee80211_sta_vht_cap vht_cap;
-+	struct ieee80211_sta_ht_cap ht_cap;
-+
-+	ht_cap = ath10k_get_ht_cap(ar);
-+	vht_cap = ath10k_create_vht_cap(ar);
-+
-+	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY) {
-+		band = &ar->mac.sbands[IEEE80211_BAND_2GHZ];
-+		band->ht_cap = ht_cap;
-+
-+		/* Enable the VHT support at 2.4 GHz */
-+		band->vht_cap = vht_cap;
-+	}
-+	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
-+		band = &ar->mac.sbands[IEEE80211_BAND_5GHZ];
-+		band->ht_cap = ht_cap;
-+		band->vht_cap = vht_cap;
-+	}
-+}
-+
- static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
- {
- 	int ret;
-@@ -3929,6 +3952,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
- 		return ret;
- 	}
- 
-+	/* Reload HT/VHT capability */
-+	ath10k_mac_setup_ht_vht_cap(ar);
-+
- 	return 0;
- }
- 
-@@ -7090,8 +7116,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 		WLAN_CIPHER_SUITE_AES_CMAC,
- 	};
- 	struct ieee80211_supported_band *band;
--	struct ieee80211_sta_vht_cap vht_cap;
--	struct ieee80211_sta_ht_cap ht_cap;
- 	void *channels;
- 	int ret;
- 
-@@ -7099,9 +7123,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 
- 	SET_IEEE80211_DEV(ar->hw, ar->dev);
- 
--	ht_cap = ath10k_get_ht_cap(ar);
--	vht_cap = ath10k_create_vht_cap(ar);
--
- 	BUILD_BUG_ON((ARRAY_SIZE(ath10k_2ghz_channels) +
- 		      ARRAY_SIZE(ath10k_5ghz_channels)) !=
- 		     ATH10K_NUM_CHANS);
-@@ -7120,10 +7141,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 		band->channels = channels;
- 		band->n_bitrates = ath10k_g_rates_size;
- 		band->bitrates = ath10k_g_rates;
--		band->ht_cap = ht_cap;
--
--		/* Enable the VHT support at 2.4 GHz */
--		band->vht_cap = vht_cap;
- 
- 		ar->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = band;
- 	}
-@@ -7142,11 +7159,11 @@ int ath10k_mac_register(struct ath10k *ar)
- 		band->channels = channels;
- 		band->n_bitrates = ath10k_a_rates_size;
- 		band->bitrates = ath10k_a_rates;
--		band->ht_cap = ht_cap;
--		band->vht_cap = vht_cap;
- 		ar->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = band;
- 	}
- 
-+	ath10k_mac_setup_ht_vht_cap(ar);
-+
- 	ar->hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_AP) |
--- 
-2.6.2
+On 2015년 10월 04일 19:28, Chandra Gorentla wrote:
+> On Sun, Oct 04, 2015 at 09:44:57AM +0100, Greg KH wrote:
+>> On Sat, Oct 03, 2015 at 02:57:30PM +0530, Chandra S Gorentla wrote:
+>>>   - kfree is being called for the members of the queue without
+>>>     de-queuing them; they are just inserted within this function;
+>>>     they are supposed to be de-queued and freed in a function
+>>>     for receiving the queue items
+>>>   - goto statements are removed
+>>>   - After kfree correction, there is no need for target block
+>>>     of goto statement; hence it is removed
+>>>
+>>> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+>>> ---
+>>>   drivers/staging/wilc1000/wilc_msgqueue.c | 22 ++++++----------------
+>>>   1 file changed, 6 insertions(+), 16 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+>>> index 284a3f5..eae90be 100644
+>>> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+>>> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+>>> @@ -56,32 +56,30 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+>>>   int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>>>   			     const void *pvSendBuffer, u32 u32SendBufferSize)
+>>>   {
+>>> -	int result = 0;
+>>>   	unsigned long flags;
+>>>   	Message *pstrMessage = NULL;
+>>>   
+>>>   	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+>>>   		PRINT_ER("pHandle or pvSendBuffer is null\n");
+>>> -		result = -EFAULT;
+>>> -		goto ERRORHANDLER;
+>>> +		return -EFAULT;
+>>>   	}
+>>>   
+>>>   	if (pHandle->bExiting) {
+>>>   		PRINT_ER("pHandle fail\n");
+>>> -		result = -EFAULT;
+>>> -		goto ERRORHANDLER;
+>>> +		return -EFAULT;
+>>>   	}
+>>>   
+>>>   	/* construct a new message */
+>>>   	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+>>>   	if (!pstrMessage)
+>>>   		return -ENOMEM;
+>>> +
+>>>   	pstrMessage->u32Length = u32SendBufferSize;
+>>>   	pstrMessage->pstrNext = NULL;
+>>>   	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
+>>>   	if (!pstrMessage->pvBuffer) {
+>>> -		result = -ENOMEM;
+>>> -		goto ERRORHANDLER;
+>>> +		kfree(pstrMessage);
+>>> +		return -ENOMEM;
+>>>   	}
+>>>   	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+>>>   
+>>> @@ -102,15 +100,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>>>   	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+>>>   
+>>>   	up(&pHandle->hSem);
+>>> -
+>>> -ERRORHANDLER:
+>>> -	/* error occured, free any allocations */
+>>> -	if (pstrMessage) {
+>>> -		kfree(pstrMessage->pvBuffer);
+>>> -		kfree(pstrMessage);
+>>> -	}
+>>> -
+>>> -	return result;
+>>> +	return 0;
+>> Aren't you now leaking memory as you aren't freeing pstrMessage and the
+>> buffer on the "normal" return path?
+> In the normal path kfree is called in a separate (wilc_mq_recv) function.
+> The purpose of the currently modified function (wilc_mq_send) is to post
+> a message to a queue by allocating memory for the message.  The receiver
+> function is supposed to remove the message from the queue and free the
+> memory.
+>
+This patch is reasonable and normal free is done in recv function as Chandra said.
+
+Thanks,
+
+Tony.
+
+>> thanks,
+>>
+>> greg k-h
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
