@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964982AbbJVJMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:31 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 08/10] nfc: nci: fix possible crash in nci_core_conn_create
-Date: Thu, 22 Oct 2015 12:11:40 +0300
-Message-Id: <1445505102-16639-9-git-send-email-robert.dolca@intel.com> (sfid-20151022_111805_543690_739E1D21)
-In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
-References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33353 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029AbbJEKft (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 06:35:49 -0400
+Received: by pacex6 with SMTP id ex6so173832650pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:48 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/20] staging: wilc1000: fix return type of host_int_remove_wep_key
+Date: Mon,  5 Oct 2015 19:34:57 +0900
+Message-Id: <1444041304-7727-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123553_890876_8DE9E896)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the number of destination speific parameters supplied is 0 the call
-will fail. If the first destination specific parameter does not have a
-value, curr_id will be set to 0.
+This patch changes return type of host_int_remove_wep_key from s32 to
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type by int as well as data type of
+s32Error.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/nfc/nci/core.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index f66a5da..9d5f7a2 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -602,12 +602,19 @@ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
- 	if (!cmd)
- 		return -ENOMEM;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f217b62..c19fb23 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4291,9 +4291,9 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress)
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-s32 host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
++int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	struct host_if_msg msg;
  
-+	if (!number_destination_params)
-+		return -EINVAL;
-+
- 	cmd->destination_type = destination_type;
- 	cmd->number_destination_params = number_destination_params;
- 	memcpy(cmd->params, params, params_len);
- 
- 	data.cmd = cmd;
--	ndev->cur_id = params->value[DEST_SPEC_PARAMS_ID_INDEX];
-+
-+	if (params->length > 0)
-+		ndev->cur_id = params->value[DEST_SPEC_PARAMS_ID_INDEX];
-+	else
-+		ndev->cur_id = 0;
- 
- 	r = __nci_request(ndev, nci_core_conn_create_req,
- 			  (unsigned long)&data,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c94bebc..d3d05fc 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -407,7 +407,7 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-s32 host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8Index);
++int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8Index);
+ /**
+  *  @brief              sets WEP deafault key
+  *  @details    Sets the index of the WEP encryption key in use,
 -- 
-1.9.1
+2.6.0
 
