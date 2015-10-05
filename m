@@ -1,113 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39488 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbbJYVcW (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34513 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753001AbbJEKfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 17:32:22 -0400
-Date: Mon, 26 Oct 2015 06:32:17 +0900
-From: Greg KH <gregkh@linuxfoundation.org>
-To: punit vara <punitvara@gmail.com>
+	Mon, 5 Oct 2015 06:35:52 -0400
+Received: by padhy16 with SMTP id hy16so33474627pad.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:51 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] staging: wilc1000: Remove reference preceded by free
-Message-ID: <20151025213217.GA7842@kroah.com> (sfid-20151025_223255_465128_A4A27B5C)
-References: <1445725885-25995-1-git-send-email-punitvara@gmail.com>
- <1445725885-25995-2-git-send-email-punitvara@gmail.com>
- <20151025191249.GB23928@kroah.com>
- <CABXAfNKL_Z0T7k-1ONkQbXdK6SX6A9ou+2uMMsKGObackaqsdA@mail.gmail.com>
- <CABXAfN+feLnS2nNDQPhwchmX=oqtCFUPr27StPsTG-w3JSzgHw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABXAfN+feLnS2nNDQPhwchmX=oqtCFUPr27StPsTG-w3JSzgHw@mail.gmail.com>
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 14/20] staging: wilc1000: rename hWFIDrv in host_int_remove_wep_key
+Date: Mon,  5 Oct 2015 19:34:58 +0900
+Message-Id: <1444041304-7727-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123555_631799_F5ED9A4E)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 26, 2015 at 01:29:42AM +0530, punit vara wrote:
-> On Mon, Oct 26, 2015 at 1:01 AM, punit vara <punitvara@gmail.com> wrote:
-> > On Mon, Oct 26, 2015 at 12:42 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> >> On Sun, Oct 25, 2015 at 04:01:23AM +0530, Punit Vara wrote:
-> >>> This patch is to the wilc_wfi_cfgoperations.c file that fixes up
-> >>> following error reported by coccicheck:
-> >>>
-> >>> ERROR: reference preceded by free on line 1219
-> >>>
-> >>> For (params->seq_len) <= 0 memory is already freed when
-> >>> (params->seq_len) >0 then memory was alloted. So there is no need to use
-> >>> kfree whenever params->seq_len <=0 remove it and place kfree inside
-> >>> (params->seq_len) >0 condition.
-> >>>
-> >>> Signed-off-by: Punit Vara <punitvara@gmail.com>
-> >>> ---
-> >>>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 7 +++----
-> >>>  1 file changed, 3 insertions(+), 4 deletions(-)
-> >>>
-> >>> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >>> index bcbf1bd..9b3cf04 100644
-> >>> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >>> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >>> @@ -1216,11 +1216,10 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
-> >>>
-> >>>                               priv->wilc_ptk[key_index]->key = kmalloc(params->key_len, GFP_KERNEL);
-> >>>
-> >>> -                             kfree(priv->wilc_ptk[key_index]->seq);
-> >>> -
-> >>> -                             if ((params->seq_len) > 0)
-> >>> +                             if ((params->seq_len) > 0) {
-> >>> +                                     kfree(priv->wilc_ptk[key_index]->seq);
-> >>>                                       priv->wilc_ptk[key_index]->seq = kmalloc(params->seq_len, GFP_KERNEL);
-> >>> -
-> >>> +                             }
-> >>
-> >> Are you sure about this?  It seems like you are changing the logic
-> >> here...
-> >>
-> > Yes this time I am quite confident here . On This file line no 1177
-> > already freed the allocation of memory ..On the following line if
-> > (params->seq_len) > 0 then memory is allotted but if it is not then
-> > memory allocation remains free only. So here kfree is not required
-> > outside of the if condition. It should be inside the if condition
-> > because for   (params->seq_len) > 0 memory is already allotted at line
-> > followed by 1177. Kindly look at it once.
-> >
-> > Thanks :-)
-> Again I went back thinking Greg who is stable kernel maintainer who
-> doubts about logic .So I again go through these code , you are right .
-> What you ignore this change and apply this patch ?
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 9b3cf04..3ab7d3e 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -1174,9 +1174,9 @@ static int add_key(struct wiphy *wiphy, struct
-> net_device *netdev, u8 key_index,
->                                 memcpy(priv->wilc_gtk[key_index]->key,
-> params->key, params->key_len);
-> 
->                                 /* if there has been previous
-> allocation for the same index through its seq, free that memory and
-> allocate again*/
-> -                               kfree(priv->wilc_gtk[key_index]->seq);
-> 
->                                 if ((params->seq_len) > 0) {
-> +                                       kfree(priv->wilc_gtk[key_index]->seq);
->                                         priv->wilc_gtk[key_index]->seq
-> = kmalloc(params->seq_len, GFP_KERNEL);
-> 
-> memcpy(priv->wilc_gtk[key_index]->seq, params->seq, params->seq_len);
->                                 }
-> 
-> 
-> ?? May send this patch ? I think it will not change the logic .
-> Comment me if I am wrong
+This patch replaces hWFIDrv with wfi_drv that is first argument of
+host_int_remove_wep_key to avoid camelcase.
 
-I don't really see the need for this change at all.  It's not fixing
-anything, and the kfree call is "free" we don't need to worry about
-that, so please, just leave it as-is for now, there is _so_ many other
-real things to do to fix up this driver than to worry about
-non-optimizing things like this.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c19fb23..cfeb81b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4291,10 +4291,10 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress)
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
++int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8keyIdx)
+ {
+ 	int s32Error = 0;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
++	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)wfi_drv;
+ 	struct host_if_msg msg;
+ 
+ 
+@@ -4311,7 +4311,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
+ 	msg.id = HOST_IF_MSG_KEY;
+ 	msg.body.key_info.enuKeyType = WEP;
+ 	msg.body.key_info.u8KeyAction = REMOVEKEY;
+-	msg.drvHandler = hWFIDrv;
++	msg.drvHandler = wfi_drv;
+ 
+ 
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d3d05fc..372acb7 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -407,7 +407,7 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8Index);
++int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8Index);
+ /**
+  *  @brief              sets WEP deafault key
+  *  @details    Sets the index of the WEP encryption key in use,
+-- 
+2.6.0
 
-greg k-h
