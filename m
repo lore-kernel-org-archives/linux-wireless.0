@@ -1,58 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:36032 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbbJQXCB (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33303 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029AbbJEKfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 19:02:01 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, johannes.berg@intel.com,
-	davem@davemloft.net, joe@perches.com, m@bues.ch,
-	mike.looijmans@topic.nl, cengelma@gmx.at, khoroshilov@ispras.ru,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] net: wireless: b43: statics Don't init to 0
-Date: Sun, 18 Oct 2015 00:01:38 +0100
-Message-Id: <1445122898-5810-3-git-send-email-paulmcquad@gmail.com> (sfid-20151018_010254_014087_C9E05399)
-In-Reply-To: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
-References: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
+	Mon, 5 Oct 2015 06:35:46 -0400
+Received: by pacex6 with SMTP id ex6so173831511pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 12/20] staging: wilc1000: remove host_int_set_RSNAConfigPSKPassPhrase
+Date: Mon,  5 Oct 2015 19:34:56 +0900
+Message-Id: <1444041304-7727-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123551_765561_DB79E132)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't turn statics to 0 or NULL
+This function is defined but never used anywhere,
+so just delete it.
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/b43/main.c   | 2 +-
- drivers/net/wireless/b43/phy_lp.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 31 -------------------------------
+ drivers/staging/wilc1000/host_interface.h | 16 ----------------
+ 2 files changed, 47 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 040caa4..2b50650 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -109,7 +109,7 @@ int b43_modparam_verbose = B43_VERBOSITY_DEFAULT;
- module_param_named(verbose, b43_modparam_verbose, int, 0644);
- MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 99375ba..f217b62 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4765,37 +4765,6 @@ s32 host_int_set_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, tstrHostIFpmkidAttr *pu8Pm
+ 	return s32Error;
+ }
  
--static int b43_modparam_pio = 0;
-+static int b43_modparam_pio;
- module_param_named(pio, b43_modparam_pio, int, 0644);
- MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+-
+-/**
+- *  @brief              sets the pass phrase
+- *  @details    AP/STA mode. This function gives the pass phrase used to
+- *                              generate the Pre-Shared Key when WPA/WPA2 is enabled
+- *                              The length of the field can vary from 8 to 64 bytes,
+- *                              the lower layer should get the
+- *  @param[in,out] handle to the wifi driver,
+- *  @param[in]   String containing PSK
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-s32 host_int_set_RSNAConfigPSKPassPhrase(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8PassPhrase,
+-						 u8 u8Psklength)
+-{
+-	s32 s32Error = 0;
+-	tstrWID strWID;
+-
+-	/*validating psk length*/
+-	if ((u8Psklength > 7) && (u8Psklength < 65)) {
+-		strWID.u16WIDid	= (u16)WID_11I_PSK;
+-		strWID.enuWIDtype	= WID_STR;
+-		strWID.ps8WidVal	= pu8PassPhrase;
+-		strWID.s32ValueSize = u8Psklength;
+-	}
+-
+-	return s32Error;
+-}
+ /**
+  *  @brief              host_int_get_MacAddress
+  *  @details	gets mac address
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 64a3de5..c94bebc 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -554,22 +554,6 @@ s32 host_int_add_tx_gtk(tstrWILC_WFIDrv *hWFIDrv, u8 u8KeyLen, u8 *pu8TxGtk, u8
+ s32 host_int_set_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, tstrHostIFpmkidAttr *pu8PmkidInfoArray);
  
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 058a9f2..086f0ba 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -2502,7 +2502,7 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
- {
- 	struct ssb_bus *bus = dev->dev->sdev->bus;
- 
--	static const struct b206x_channel *chandata = NULL;
-+	static const struct b206x_channel *chandata;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
- 	u32 freqref, vco_freq, val1, val2, val3, timeout, timeoutref, count;
- 	u16 old_comm15, scale;
+ /**
+- *  @brief              sets the pass phrase
+- *  @details    AP/STA mode. This function gives the pass phrase used to
+- *                              generate the Pre-Shared Key when WPA/WPA2 is enabled
+- *                              The length of the field can vary from 8 to 64 bytes,
+- *                              the lower layer should get the
+- *  @param[in,out] handle to the wifi driver,
+- *  @param[in]   String containing PSK
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-s32 host_int_set_RSNAConfigPSKPassPhrase(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8PassPhrase,
+-						 u8 u8Psklength);
+-/**
+  *  @brief              gets the pass phrase
+  *  @details    AP/STA mode. This function gets the pass phrase used to
+  *                              generate the Pre-Shared Key when WPA/WPA2 is enabled
 -- 
-2.6.1
+2.6.0
 
