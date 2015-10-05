@@ -1,98 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9805 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbbJBFXO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56877 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751730AbbJELlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 01:23:14 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/10] staging: wilc1000: remove function pointer cfg_wid_get_val
-Date: Fri, 2 Oct 2015 14:22:09 +0900
-Message-ID: <1443763332-7330-7-git-send-email-tony.cho@atmel.com> (sfid-20151002_073240_780720_8A206C2C)
-In-Reply-To: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
-References: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 07:41:00 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>, <stable@vger.kernel.org>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 14:40:45 +0300
+Message-Id: <1444045246-9946-7-git-send-email-luca@coelho.fi> (sfid-20151005_134110_313514_EFBD0CA7)
+In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
+References: <1444044666.27220.5.camel@coelho.fi>
+Subject: [PATCH 7/8] iwlwifi: mvm: init card correctly on ctkill exit check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-This patch removes cfg_wid_get_val and call the function
-wilc_wlan_cfg_get_wid_value. Remove static from the function declaration.
+During the CT-kill exit flow, the card is powered up and partially
+initialized to check if the temperature is already low enough.
+Unfortunately the init bails early because the CT-kill flag is set.
+Make the code bail early only for HW RF-kill, as was intended by the
+author. CT-kill is self-imposed and is not really RF-kill.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Fixes: 31b8b343e019 ("iwlwifi: fix RFkill while calibrating")
+Cc: <stable@vger.kernel.org> [3.18+]
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c     | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h     | 1 -
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 1 +
- 4 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/fw.c  | 4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h | 5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index fbc0829..a9a8d24 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1833,7 +1833,7 @@ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size)
- {
- 	int ret;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 4a0ce83..5c7f7cc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -703,7 +703,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	 * abort after reading the nvm in case RF Kill is on, we will complete
+ 	 * the init seq later when RF kill will switch to off
+ 	 */
+-	if (iwl_mvm_is_radio_killed(mvm)) {
++	if (iwl_mvm_is_radio_hw_killed(mvm)) {
+ 		IWL_DEBUG_RF_KILL(mvm,
+ 				  "jump over all phy activities due to RF kill\n");
+ 		iwl_remove_notification(&mvm->notif_wait, &calib_wait);
+@@ -736,7 +736,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	ret = iwl_wait_notification(&mvm->notif_wait, &calib_wait,
+ 			MVM_UCODE_CALIB_TIMEOUT);
  
--	ret = mac_cfg.cfg_wid_get_val((u16)wid, buffer, buffer_size);
-+	ret = wilc_wlan_cfg_get_wid_value((u16)wid, buffer, buffer_size);
- 
- 	return ret;
- }
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index bbf3e02..9386939 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -296,7 +296,6 @@ typedef struct {
- } wilc_cfg_rsp_t;
- 
- typedef struct {
--	int (*cfg_wid_get_val)(u16, u8 *, u32);
- 	int (*rx_indicate)(u8 *, int, wilc_cfg_rsp_t *);
- 	int (*cfg_init)(wilc_debug_func);
- } wilc_cfg_func_t;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 7007381..55d2083 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -426,7 +426,7 @@ int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id)
- 	return 2;
+-	if (ret && iwl_mvm_is_radio_killed(mvm)) {
++	if (ret && iwl_mvm_is_radio_hw_killed(mvm)) {
+ 		IWL_DEBUG_RF_KILL(mvm, "RFKILL while calibrating.\n");
+ 		ret = 1;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index b95a07e..c754051 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -860,6 +860,11 @@ static inline bool iwl_mvm_is_radio_killed(struct iwl_mvm *mvm)
+ 	       test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status);
  }
  
--static int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
-+int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- {
- 	u32 type = (wid >> 12) & 0xf;
- 	int i, ret = 0;
-@@ -566,7 +566,6 @@ static int wilc_wlan_cfg_init(wilc_debug_func func)
- }
- 
- wilc_cfg_func_t mac_cfg = {
--	wilc_wlan_cfg_get_wid_value,
- 	wilc_wlan_cfg_indicate_rx,
- 	wilc_wlan_cfg_init,
- };
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 2edd749..0efa2c5 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -32,5 +32,6 @@ typedef struct {
- 
- int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
-+int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
- 
- #endif
++static inline bool iwl_mvm_is_radio_hw_killed(struct iwl_mvm *mvm)
++{
++	return test_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status);
++}
++
+ /* Must be called with rcu_read_lock() held and it can only be
+  * released when mvmsta is not needed anymore.
+  */
 -- 
-1.9.1
+2.5.3
 
