@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f195.google.com ([209.85.212.195]:36469 "EHLO
-	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950AbbJ0TDv (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44550 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752266AbbJEQPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:03:51 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Punit Vara <punitvara@gmail.com>
-Subject: [RESEND PATCH 03/10] net: wireless: rtwifi: Remove duplicated arguments to |
-Date: Wed, 28 Oct 2015 00:32:38 +0530
-Message-Id: <1445972565-14963-3-git-send-email-punitvara@gmail.com> (sfid-20151027_200713_374070_0F9259B1)
-In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
-References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+	Mon, 5 Oct 2015 12:15:21 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 2/5] wireless-regdb: Update regulatory rule boundary frequencies for Taiwan (TW)
+Date: Tue,  6 Oct 2015 00:14:55 +0800
+Message-Id: <1444061698-16384-3-git-send-email-wens@csie.org> (sfid-20151005_181527_523669_B18E265C)
+In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
+References: <1444061698-16384-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove uncessary repeated arguments COMP_EFUSE, COMP_REGD, COMP_CHAN
- with OR(|)
+Taiwan's frequency allocation rules [1] list the following frequency
+ranges available for low power RF devices:
 
-This is patch to the debug.c file that removes following warning
-reported by coccicheck:
+  - 2400 ~ 2483.5 MHz
+  - 5150 ~ 5250 MHz
+  - 5250 ~ 5350 MHz
+  - 5470 ~ 5725 MHz
+  - 5725 ~ 5850 MHz
 
--duplicated argument to & or |
+Update the rules to match. Since 5250 ~ 5350 MHz is wide enough for
+VHT80, and there are no regulations against it, enable it as well.
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
+[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
+[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 ---
- drivers/net/wireless/rtlwifi/debug.c | 6 +++---
+ db.txt | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/debug.c b/drivers/net/wireless/rtlwifi/debug.c
-index fd25aba..b8f5540 100644
---- a/drivers/net/wireless/rtlwifi/debug.c
-+++ b/drivers/net/wireless/rtlwifi/debug.c
-@@ -37,9 +37,9 @@ void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
- 	    COMP_BEACON | COMP_RATE | COMP_RXDESC | COMP_DIG | COMP_TXAGC |
- 	    COMP_POWER | COMP_POWER_TRACKING | COMP_BB_POWERSAVING | COMP_SWAS |
- 	    COMP_RF | COMP_TURBO | COMP_RATR | COMP_CMD |
--	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_REGD | COMP_CHAN |
--	    COMP_EASY_CONCURRENT | COMP_EFUSE | COMP_QOS | COMP_MAC80211 |
--	    COMP_REGD | COMP_CHAN | COMP_BT_COEXIST;
-+	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_CHAN |
-+	    COMP_EASY_CONCURRENT | COMP_QOS | COMP_MAC80211 |
-+	    COMP_REGD | COMP_BT_COEXIST;
- 
- 
- 	for (i = 0; i < DBGP_TYPE_MAX; i++)
+diff --git a/db.txt b/db.txt
+index e081634..f6607bc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1126,10 +1126,10 @@ country TT: DFS-FCC
+ #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+ #   (section 3.10.1, 4.7)
+ country TW: DFS-JP
+-	(2402 - 2472 @ 40), (30)
+-	(5270 - 5330 @ 40), (17), DFS
++	(2400 - 2483.5 @ 40), (30)
++	(5250 - 5350 @ 80), (17), DFS
+ 	(5470 - 5725 @ 160), (23), DFS
+-	(5735 - 5835 @ 80), (30)
++	(5725 - 5850 @ 80), (30)
+  
+ country TZ:
+ 	(2402 - 2482 @ 40), (20)
 -- 
 2.5.3
 
