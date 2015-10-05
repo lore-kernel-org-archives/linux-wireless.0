@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:26074 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751515AbbJTEuy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 00:50:54 -0400
-Date: Tue, 20 Oct 2015 06:50:49 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: nfcwilink: Drop a useless static qualifier
-Message-ID: <20151020045049.GF9764@zurbaran.home> (sfid-20151020_065258_271680_89B19E8A)
-References: <1444717864-7109-1-git-send-email-christophe.jaillet@wanadoo.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444717864-7109-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Received: from paleale.coelho.fi ([176.9.41.70]:57170 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750826AbbJEPB2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 11:01:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 17:36:43 +0300
+Message-Id: <1444055820-27506-12-git-send-email-luca@coelho.fi> (sfid-20151005_170131_573292_6AACC93F)
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
+References: <1444050759.27220.15.camel@coelho.fi>
+Subject: [PATCH 12/29] iwlwifi: mvm: remove PHY RX from handlers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christophe,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Tue, Oct 13, 2015 at 08:31:04AM +0200, Christophe JAILLET wrote:
-> There is no need to have the 'struct nfcwilink *drv' variable static in the
-> probe function.
-> It only wastes a few bytes of memory.
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/nfc/nfcwilink.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-Applied, thanks a lot.
+Treat PHY RX specially, since it's actually pretty frequent,
+doesn't need all the notication etc. code, and will have a
+different handler in future hardware.
 
-Cheers,
-Samuel.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 23825ff..1c38e45 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -222,7 +222,6 @@ struct iwl_rx_handlers {
+  * called from a worker with mvm->mutex held.
+  */
+ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+-	RX_HANDLER(REPLY_RX_PHY_CMD, iwl_mvm_rx_rx_phy_cmd, false),
+ 	RX_HANDLER(TX_CMD, iwl_mvm_rx_tx_cmd, false),
+ 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, false),
+ 
+@@ -730,6 +729,9 @@ static void iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
+ 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD)) {
+ 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
+ 		return;
++	} else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD) {
++		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
++		return;
+ 	}
+ 
+ 	iwl_mvm_rx_check_trigger(mvm, pkt);
+-- 
+2.5.3
+
