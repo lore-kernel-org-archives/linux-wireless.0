@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12755 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224AbbJLH6Z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56922 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751189AbbJEMSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:58:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 17/41] staging: wilc1000: remove typedef from tstrWILC_UsrScanReq
-Date: Mon, 12 Oct 2015 16:55:51 +0900
-Message-ID: <1444636575-2486-17-git-send-email-tony.cho@atmel.com> (sfid-20151012_095829_358314_53659FDD)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 08:18:54 -0400
+Message-ID: <1444047527.27220.7.camel@coelho.fi> (sfid-20151005_141857_411391_27594B0D)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>, emmanuel.grumbach@intel.com
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Date: Mon, 05 Oct 2015 15:18:47 +0300
+In-Reply-To: <1442949387.2018.50.camel@sipsolutions.net>
+References: <1442659190-6060-1-git-send-email-hauke@hauke-m.de>
+	 (sfid-20150919_124007_995516_62A820AE) <1442911476.2018.2.camel@sipsolutions.net>
+	 (sfid-20150922_104447_027012_36D311B0) <1442911617.2018.3.camel@sipsolutions.net>
+	 <5601A883.1010209@hauke-m.de> <1442949387.2018.50.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: fix requested firmware name for iwlwifi-3160
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Tue, 2015-09-22 at 21:16 +0200, Johannes Berg wrote:
+> > 
+> > Should I change something?
+> 
+> No, I already created a different patch to make it simply use the
+> 7260
+> number instead of the 3165 one. I also made one, in fact, to get rid
+> of
+> the 3165 since that has the same values anyway.
+> 
+> > iwl3165 uses iwl3160 firmware, but support for that was added in
+> > rev 
+> > 13 of that firmware. That's the information I got from the driver
+> > and
+> > the linux-firmware commit messages.
+> > 
+> 
+> Ah. it may be that we have changed this internally vs. upstream, need
+> to check on that. Actually, Luca will just find out when he tries to
+> upstream my changes :)
 
-This patch removes typedef from the struct tstrWILC_UsrScanReq with
-related comments and renames it to user_scan_req.
+Just saw this now because... I'm preparing our patches for upstreaming.
+:)
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+But I didn't notice anything regarding this when I cherry-picked your
+patch for upstreaming.  Did I miss something?
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 3ab9220..b718598 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -225,7 +225,7 @@ struct hidden_network {
- 	u8 u8ssidnum;
- };
- 
--typedef struct {
-+struct user_scan_req {
- 	/* Scan user call back function */
- 	wilc_scan_result pfUserScanResult;
- 
-@@ -234,7 +234,7 @@ typedef struct {
- 
- 	u32 u32RcvdChCount;
- 	tstrFoundNetworkInfo astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
--} tstrWILC_UsrScanReq;
-+};
- 
- typedef struct {
- 	u8 *pu8bssid;
-@@ -304,8 +304,7 @@ enum p2p_listen_state {
- };
- 
- struct host_if_drv {
--	/* Scan user structure */
--	tstrWILC_UsrScanReq strWILC_UsrScanReq;
-+	struct user_scan_req strWILC_UsrScanReq;
- 
- 	/* Connect User structure */
- 	tstrWILC_UsrConnReq strWILC_UsrConnReq;
--- 
-1.9.1
-
+--
+Luca.
