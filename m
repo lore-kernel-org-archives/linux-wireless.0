@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7198 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750765AbbJRSjC convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8728 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684AbbJEG0s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 14:39:02 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Ben Hutchings <ben@decadent.org.uk>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Subject: Re: [PATCH] iwlwifi: Fix module firmware information for 3160
-Date: Sun, 18 Oct 2015 18:38:58 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8A5AFF@hasmsx107.ger.corp.intel.com> (sfid-20151018_203907_162765_AA72EF1D)
-References: <1445190425.31451.70.camel@decadent.org.uk>
- <1445193191.31451.79.camel@decadent.org.uk>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 5 Oct 2015 02:26:48 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/18] staging: wilc1000: remove typedef from tstrHostIFwepAttr
+Date: Mon, 5 Oct 2015 15:25:42 +0900
+Message-ID: <1444026353-29024-7-git-send-email-tony.cho@atmel.com> (sfid-20151005_082650_480682_E89A24C2)
+In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Leo Kim <leo.kim@atmel.com>
 
-On 10/18/2015 09:33 PM, Ben Hutchings wrote:
-> On Sun, 2015-10-18 at 18:47 +0100, Ben Hutchings wrote:
->> IWL3160_UCODE_API_OK is no longer defined, so we end up with this
->> in the module information:
->>
->> firmware:       iwlwifi-3160-IWL3160_UCODE_API_OK.ucode
->>
->> It looks like IWL7260_UCODE_API_OK should be used instead now.
-> [...]
-> 
-> Somewhat relatedly, I noticed that iwlwifi is now requesting firmware
-> files that aren't yet in linux-firmware.git.  Please can you submit
-> them for inclusion?
-> 
+This patch removes typedef from the struct tstrHostIFwepAttr.
+And rename it to host_if_wep_attr.
 
-This is a good point but the firmware filename is now changing too
-rapidly (every 6 weeks) to include all of them into linux-firmware.git.
-So we chose the firmware version that are the most stable and that
-correspond to a certain kernel. E.g. I won't upstream -16.ucode since
-4.2 can handle 15 and 4.3 can already handle 17.
-That's the compromise we found.
-Note that all the firmware versions are available in our
-linux-firmware.git clone.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Right now, I am waiting for -17.ucode to stabilize before upstreaming it.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f4c5ec3..87866c4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -97,7 +97,7 @@ typedef struct _tstrHostIFwpaAttr {
+ 
+ 
+ /*!
+- *  @struct             tstrHostIFwepAttr
++ *  @struct             host_if_wep_attr
+  *  @brief		Structure to hold Host IF Scan Attributes
+  *  @details
+  *  @todo
+@@ -106,14 +106,13 @@ typedef struct _tstrHostIFwpaAttr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFwepAttr {
++struct host_if_wep_attr {
+ 	u8 *pu8WepKey;
+ 	u8 u8WepKeylen;
+ 	u8 u8Wepidx;
+ 	u8 u8mode;
+ 	enum AUTHTYPE tenuAuth_type;
+-
+-} tstrHostIFwepAttr;
++};
+ 
+ /*!
+  *  @struct             host_if_key_attr
+@@ -126,7 +125,7 @@ typedef struct _tstrHostIFwepAttr {
+  *  @version		1.0
+  */
+ union host_if_key_attr {
+-	tstrHostIFwepAttr strHostIFwepAttr;
++	struct host_if_wep_attr strHostIFwepAttr;
+ 	tstrHostIFwpaAttr strHostIFwpaAttr;
+ 	tstrHostIFpmkidAttr strHostIFpmkidAttr;
+ };
+-- 
+1.9.1
+
