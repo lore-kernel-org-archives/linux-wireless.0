@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4927 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C6V (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56871 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751619AbbJELk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:21 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 20/64] staging: wilc1000: rename pRemainOnChanReady of struct remain_ch
-Date: Thu, 29 Oct 2015 11:58:43 +0900
-Message-ID: <1446087567-16728-20-git-send-email-glen.lee@atmel.com> (sfid-20151029_035824_134740_4255EDED)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 07:40:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>, <stable@vger.kernerl.org>
+Date: Mon,  5 Oct 2015 14:40:44 +0300
+Message-Id: <1444045246-9946-6-git-send-email-luca@coelho.fi> (sfid-20151005_134112_446561_646161D3)
+In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
+References: <1444044666.27220.5.camel@coelho.fi>
+Subject: [PATCH 6/8] iwlwifi: pci: add a few more PCI subvendor IDs for the 7265 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This patch renames pRemainOnChanReady of struct remain_ch to ready
-to avoid CamelCase naming convention.
+Add 3 new subdevice IDs for the 0x095A device ID and 2 for the 0x095B
+device ID.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Cc: <stable@vger.kernerl.org> [3.13+]
+Reported-by: Jeremy <jeremy.bomkamp@gmail.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e0ba720..c49bbbf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2482,7 +2482,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	if (!hif_drv->remain_on_ch_pending) {
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
- 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
--		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
-+		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
- 	} else {
-@@ -2536,8 +2536,8 @@ ERRORHANDLER:
- 			  jiffies +
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index b0825c4..644b58b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -414,6 +414,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x095A, 0x5590, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5290, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5490, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5F10, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5212, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x520A, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9000, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9400, iwl7265_2ac_cfg)},
  
--		if (hif_drv->remain_on_ch.pRemainOnChanReady)
--			hif_drv->remain_on_ch.pRemainOnChanReady(hif_drv->remain_on_ch.pVoid);
-+		if (hif_drv->remain_on_ch.ready)
-+			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
- 
- 		if (hif_drv->remain_on_ch_pending)
- 			hif_drv->remain_on_ch_pending = 0;
-@@ -4370,7 +4370,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
--	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
-+	msg.body.remain_on_ch.ready = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 3a9f08c..d3dafc6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -239,7 +239,7 @@ struct remain_ch {
- 	u16 ch;
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired expired;
--	wilc_remain_on_chan_ready pRemainOnChanReady;
-+	wilc_remain_on_chan_ready ready;
- 	void *pVoid;
- 	u32 u32ListenSessionID;
- };
+ /* 8000 Series */
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
 -- 
-1.9.1
+2.5.3
 
