@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27425 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8774 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662AbbJLCOt (ORCPT
+	with ESMTP id S1751693AbbJEG0z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2015 22:14:49 -0400
-Subject: Re: [PATCH 08/14] staging: wilc1000: remove typedef from
- tstrStatistics
-To: Dan Carpenter <dan.carpenter@oracle.com>
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
- <1444268961-7551-8-git-send-email-tony.cho@atmel.com>
- <20151009081628.GP7340@mwanda>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
-	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
-	<adham.abozaeid@atmel.com>
+	Mon, 5 Oct 2015 02:26:55 -0400
 From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <561B1788.6090400@atmel.com> (sfid-20151012_041452_276875_B34944F8)
-Date: Mon, 12 Oct 2015 11:14:32 +0900
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/18] staging: wilc1000: remove typedef from tstrHostIFwpaAttr
+Date: Mon, 5 Oct 2015 15:25:43 +0900
+Message-ID: <1444026353-29024-8-git-send-email-tony.cho@atmel.com> (sfid-20151005_082657_525745_5C388B39)
+In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151009081628.GP7340@mwanda>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Leo Kim <leo.kim@atmel.com>
 
-I will find much clearer naming rules when sending version 2 for them.
+This patch removes typedef from the struct tstrHostIFwpaAttr.
+And rename it to host_if_wpa_attr.
 
-Thanks for your opinion,
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Tony.
-
-
-On 2015년 10월 09일 17:16, Dan Carpenter wrote:
-> I feel like the name 'statistics' is very vague.  I guess it's so vague
-> that it's unlikely anyone else will try use it...
->
-> regards,
-> dan carpenter
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 87866c4..b5de66a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -76,7 +76,7 @@ struct cfg_param_attr {
+ };
+ 
+ /*!
+- *  @struct             tstrHostIFwpaAttr
++ *  @struct             host_if_wpa_attr
+  *  @brief		Structure to hold Host IF Scan Attributes
+  *  @details
+  *  @todo
+@@ -85,7 +85,7 @@ struct cfg_param_attr {
+  *  @date		25 March 2012
+  *  @version		1.0
+  */
+-typedef struct _tstrHostIFwpaAttr {
++struct host_if_wpa_attr {
+ 	u8 *pu8key;
+ 	const u8 *pu8macaddr;
+ 	u8 *pu8seq;
+@@ -93,7 +93,7 @@ typedef struct _tstrHostIFwpaAttr {
+ 	u8 u8keyidx;
+ 	u8 u8Keylen;
+ 	u8 u8Ciphermode;
+-} tstrHostIFwpaAttr;
++};
+ 
+ 
+ /*!
+@@ -126,7 +126,7 @@ struct host_if_wep_attr {
+  */
+ union host_if_key_attr {
+ 	struct host_if_wep_attr strHostIFwepAttr;
+-	tstrHostIFwpaAttr strHostIFwpaAttr;
++	struct host_if_wpa_attr strHostIFwpaAttr;
+ 	tstrHostIFpmkidAttr strHostIFpmkidAttr;
+ };
+ 
+-- 
+1.9.1
 
