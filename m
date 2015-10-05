@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8615 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbbJEG0J (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56868 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751340AbbJELk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:26:09 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/18] staging: wilc1000: rename tWILCpfScanResult
-Date: Mon, 5 Oct 2015 15:25:36 +0900
-Message-ID: <1444026353-29024-1-git-send-email-tony.cho@atmel.com> (sfid-20151005_082613_551989_01961B42)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 07:40:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 14:40:43 +0300
+Message-Id: <1444045246-9946-5-git-send-email-luca@coelho.fi> (sfid-20151005_134103_231188_2AEA2AE6)
+In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
+References: <1444044666.27220.5.camel@coelho.fi>
+Subject: [PATCH 5/8] iwlwifi: fix firmware filename for 3160
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames tWILCpfScanResult to wilc_scan_result.
+The MODULE_FIRMWARE() for 3160 should be using the 7260 version as
+it's done in the device configuration struct instead of referencing
+IWL3160_UCODE_API_OK which doesn't even exist.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Cc: <stable@vger.kernel.org> [3.8+]
+Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9f715cf..86fa968 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -167,7 +167,7 @@ struct scan_attr {
- 	u8 u8ChnlListLen;
- 	u8 *pu8IEs;
- 	size_t IEsLen;
--	tWILCpfScanResult pfScanResult;
-+	wilc_scan_result pfScanResult;
- 	void *pvUserArg;
- 	tstrHiddenNetwork strHiddenNetwork;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 6951aba..3fb327d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -348,6 +348,6 @@ const struct iwl_cfg iwl7265d_n_cfg = {
  };
-@@ -5715,7 +5715,7 @@ s32 host_int_get_statistics(tstrWILC_WFIDrv *hWFIDrv, tstrStatistics *pstrStatis
- s32 host_int_scan(tstrWILC_WFIDrv *hWFIDrv, u8 u8ScanSource,
- 			  u8 u8ScanType, u8 *pu8ChnlFreqList,
- 			  u8 u8ChnlListLen, const u8 *pu8IEs,
--			  size_t IEsLen, tWILCpfScanResult ScanResult,
-+			  size_t IEsLen, wilc_scan_result ScanResult,
- 			  void *pvUserArg, tstrHiddenNetwork  *pstrHiddenNetwork)
- {
- 	s32 s32Error = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bc8acde..c9ea34e 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -181,7 +181,7 @@ typedef enum {
  
- 
- /*Scan callBack function definition*/
--typedef void (*tWILCpfScanResult)(tenuScanEvent, tstrNetworkInfo *, void *, void *);
-+typedef void (*wilc_scan_result)(tenuScanEvent, tstrNetworkInfo *, void *, void *);
- 
- /*Connect callBack function definition*/
- typedef void (*tWILCpfConnectResult)(tenuConnDisconnEvent,
-@@ -228,7 +228,7 @@ typedef struct _tstrHiddenNetwork {
- 
- typedef struct {
- 	/* Scan user call back function */
--	tWILCpfScanResult pfUserScanResult;
-+	wilc_scan_result pfUserScanResult;
- 
- 	/* User specific parameter to be delivered through the Scan User Callback function */
- 	void *u32UserScanPvoid;
-@@ -872,7 +872,7 @@ s32 host_int_get_link_speed(tstrWILC_WFIDrv *hWFIDrv, s8 *ps8lnkspd);
- s32 host_int_scan(tstrWILC_WFIDrv *hWFIDrv, u8 u8ScanSource,
- 			  u8 u8ScanType, u8 *pu8ChnlFreqList,
- 			  u8 u8ChnlListLen, const u8 *pu8IEs,
--			  size_t IEsLen, tWILCpfScanResult ScanResult,
-+			  size_t IEsLen, wilc_scan_result ScanResult,
- 			  void *pvUserArg, tstrHiddenNetwork *pstrHiddenNetwork);
- /**
-  *  @brief              sets configuration wids values
+ MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+-MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
++MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL7265D_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
 -- 
-1.9.1
+2.5.3
 
