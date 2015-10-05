@@ -1,120 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbbJYMBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/16] iwlwifi: mvm: use short timeouts in P2P low latency if supported
-Date: Sun, 25 Oct 2015 14:01:06 +0200
-Message-Id: <1445774476-24792-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130136_118791_8CAC736B)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22331 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbbJEIBr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 04:01:47 -0400
+From: Hante Meuleman <meuleman@broadcom.com>
+To: Nicholas Krause <xerofoify@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>
+CC: Arend Van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCHv2] brcm80211:Fix locking region in the function
+ brcmf_sdio_sendfromq
+Date: Mon, 5 Oct 2015 08:01:45 +0000
+Message-ID: <F51492713EF10846800D8C0ED37A7DCE01995CBF@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20151005_100231_739508_D5B82F47)
+References: <1444000277-25694-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1444000277-25694-1-git-send-email-xerofoify@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Nicholas, 
 
-Those timeouts are used for AM-to-PSM transition.
-We already have those pairs defined for default and WOWLAN use cases.
-We expect that by using shorter threshold for low latency P2P,
-e.g. for Miracast video scenario, we might save a considerable amount of power.
+I can understand that if you read the comment that there is supposed to be a lock taken, but why would you assume that it is the txq_lock? Two things:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+1) The comment that a look should have been taken is wrong. Once upon a time a packet could be transmitted/handled from two paths. To protect for concurrency the callee of brcmf_sdio_txpkt was assumed to have take some sort of lock to protect against this. 
+2) Nowadays all frames are put on the txq and then pulled from that queue in the DPC. This queue is protected with a lock and therefor a lock is taken around the dequeueing of txq in dpc. Also the reason for the chosen var name txq_lock. This lock protects for concurrent access to the txq and the lock should be taken as short as possible, and therefor this patch could possible result in throughput degradation and does not solve anything.
+
+Please do not submit this patch, if anything then remove the comment from the function brcmf_sdio_txpkt.
+
+Regards,
+Hante
+
+-----Original Message-----
+From: Nicholas Krause [mailto:xerofoify@gmail.com] 
+Sent: Monday, October 05, 2015 1:11 AM
+To: Brett Rudley
+Cc: Arend Van Spriel; Franky (Zhenhui) Lin; Hante Meuleman; kvalo@codeaurora.org; Pieter-Paul Giesberts; linux-wireless@vger.kernel.org; brcm80211-dev-list; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCHv2] brcm80211:Fix locking region in the function brcmf_sdio_sendfromq
+
+This fixes the locking region in the function brcmf_sdio_sendfromq
+to properly lock around the call to the function brcmrf_sdio_txpkt
+in order to avoid concurrent access issues when calling this
+function as stated in the function's comments about the caller
+being required to lock around the call to this particular function.
+
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h   |  2 ++
- drivers/net/wireless/iwlwifi/mvm/constants.h |  3 +++
- drivers/net/wireless/iwlwifi/mvm/power.c     | 26 +++++++++++++++++++-------
- 3 files changed, 24 insertions(+), 7 deletions(-)
+v2
+Fix issue with deadlock occurrence due to not unlocking before
+break in for loop if the variable i is equal to zero
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 847d58b..08303db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -307,6 +307,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
-  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
-  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
-+ * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -332,6 +333,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
- 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
-+	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index f990e3d..260f063 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -2388,11 +2388,13 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 				break;
+ 			__skb_queue_tail(&pktq, pkt);
+ 		}
+-		spin_unlock_bh(&bus->txq_lock);
+-		if (i == 0)
++		if (i == 0) {
++			spin_unlock_bh(&bus->txq_lock);
+ 			break;
++		}
  
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index aa9ae1d..5c21231 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -71,6 +71,9 @@
- #define IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT	(100 * USEC_PER_MSEC)
- #define IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
- #define IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
-+#define IWL_MVM_SHORT_PS_TX_DATA_TIMEOUT	(2 * 1024) /* defined in TU */
-+#define IWL_MVM_SHORT_PS_RX_DATA_TIMEOUT	(40 * 1024) /* defined in TU */
-+#define IWL_MVM_P2P_LOWLATENCY_PS_ENABLE	0
- #define IWL_MVM_UAPSD_RX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
- #define IWL_MVM_UAPSD_TX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
- #define IWL_MVM_UAPSD_QUEUES		(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO |\
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 7c354fe..bed9696 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -377,8 +377,13 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 		ret = brcmf_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
++		spin_unlock_bh(&bus->txq_lock);
  
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
+ 		cnt += i;
  
--	if (!vif->bss_conf.ps || !mvmvif->pm_enabled ||
--	    (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p))
-+	if (!vif->bss_conf.ps || !mvmvif->pm_enabled)
-+		return;
-+
-+	if (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p &&
-+	    (!fw_has_capa(&mvm->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS) ||
-+	     !IWL_MVM_P2P_LOWLATENCY_PS_ENABLE))
- 		return;
- 
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
-@@ -392,16 +397,23 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 
- 	iwl_mvm_power_config_skip_dtim(mvm, vif, cmd, host_awake);
- 
--	if (host_awake) {
-+	if (!host_awake) {
- 		cmd->rx_data_timeout =
--			cpu_to_le32(IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT);
-+			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
- 		cmd->tx_data_timeout =
--			cpu_to_le32(IWL_MVM_DEFAULT_PS_TX_DATA_TIMEOUT);
-+			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
-+	} else if (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p &&
-+		   fw_has_capa(&mvm->fw->ucode_capa,
-+			       IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS)) {
-+		cmd->tx_data_timeout =
-+			cpu_to_le32(IWL_MVM_SHORT_PS_TX_DATA_TIMEOUT);
-+		cmd->rx_data_timeout =
-+			cpu_to_le32(IWL_MVM_SHORT_PS_RX_DATA_TIMEOUT);
- 	} else {
- 		cmd->rx_data_timeout =
--			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
-+			cpu_to_le32(IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT);
- 		cmd->tx_data_timeout =
--			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
-+			cpu_to_le32(IWL_MVM_DEFAULT_PS_TX_DATA_TIMEOUT);
- 	}
- 
- 	if (iwl_mvm_power_allow_uapsd(mvm, vif))
 -- 
 2.1.4
 
