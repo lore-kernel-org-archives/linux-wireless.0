@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4773 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbbJMLCr (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33919 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854AbbJEKfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:02:47 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 49/54] staging: wilc1000: rename bIsEnabled of struct power_mgmt_param
-Date: Tue, 13 Oct 2015 20:02:07 +0900
-Message-ID: <1444734132-17858-4-git-send-email-tony.cho@atmel.com> (sfid-20151013_130249_798200_F5A6634C)
-In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 06:35:17 -0400
+Received: by padhy16 with SMTP id hy16so33460845pad.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:16 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/20] staging: wilc1000: rename s32Error in host_int_set_wfi_drv_handler
+Date: Mon,  5 Oct 2015 19:34:47 +0900
+Message-Id: <1444041304-7727-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123525_313050_A24363C5)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch replaces s32Error with result to avoid camelcase.
 
-This patch renames bIsEnabled of struct power_mgmt_param to enabled to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4f7ebdc..0c44fd0 100644
+index f8206a2..ea618e5 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -154,8 +154,7 @@ struct del_sta {
- };
+@@ -5364,7 +5364,7 @@ int host_int_wait_msg_queue_idle(void)
  
- struct power_mgmt_param {
--
--	bool bIsEnabled;
-+	bool enabled;
- 	u32 u32Timeout;
- };
+ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
+ {
+-	int s32Error = 0;
++	int result = 0;
  
-@@ -2763,7 +2762,7 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
+ 	struct host_if_msg msg;
  
- 	strWID.id = (u16)WID_POWER_MANAGEMENT;
+@@ -5375,13 +5375,13 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
+ 	msg.body.drv.u32Address = get_id_from_handler(u32address);
+ 	msg.drvHandler = u32address;
  
--	if (strPowerMgmtParam->bIsEnabled == true)
-+	if (strPowerMgmtParam->enabled == true)
- 		s8PowerMode = MIN_FAST_PS;
- 	else
- 		s8PowerMode = NO_POWERSAVE;
-@@ -4881,7 +4880,7 @@ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_POWER_MGMT;
- 	msg.drv = hif_drv;
+-	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("wilc mq send fail\n");
+-		s32Error = -EINVAL;
++		result = -EINVAL;
+ 	}
  
--	pstrPowerMgmtParam->bIsEnabled = bIsEnabled;
-+	pstrPowerMgmtParam->enabled = bIsEnabled;
- 	pstrPowerMgmtParam->u32Timeout = u32Timeout;
+-	return s32Error;
++	return result;
+ }
  
- 
+ s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
 -- 
-1.9.1
+2.6.0
 
