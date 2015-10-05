@@ -1,100 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6209 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbbJOE1Z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56858 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751355AbbJELkx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:27:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 17/40] staging: wilc1000: rename variable g_hPeriodicRSSI
-Date: Thu, 15 Oct 2015 13:24:58 +0900
-Message-ID: <1444883121-31757-17-git-send-email-tony.cho@atmel.com> (sfid-20151015_062727_644632_5A8D4A3D)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 07:40:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 14:40:40 +0300
+Message-Id: <1444045246-9946-2-git-send-email-luca@coelho.fi> (sfid-20151005_134058_631139_CF8F37AC)
+In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
+References: <1444044666.27220.5.camel@coelho.fi>
+Subject: [PATCH 2/8] iwlwifi: dvm: fix D3 firmware PN programming
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames variable g_hPeriodicRSSI to periodic_rssi
-to avoid CamelCase naming convention.
+The code to send the RX PN data (for each TID) to the firmware
+has a devastating bug: it overwrites the data for TID 0 with
+all the TID data, leaving the remaining TIDs zeroed. This will
+allow replays to actually be accepted by the firmware, which
+could allow waking up the system.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Cc: <stable@vger.kernel.org> [3.1+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index acb8379d..3c1110c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -245,9 +245,7 @@ static struct semaphore hif_sema_thread;
- struct semaphore hif_sema_driver;
- static struct semaphore hif_sema_wait_response;
- struct semaphore hif_sema_deinit;
--struct timer_list g_hPeriodicRSSI;
--
--
-+struct timer_list periodic_rssi;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
+index ab45819..e18629a 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
+@@ -1020,7 +1020,7 @@ static void iwlagn_wowlan_program_keys(struct ieee80211_hw *hw,
+ 			u8 *pn = seq.ccmp.pn;
  
- u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- 
-@@ -4207,8 +4205,8 @@ static void GetPeriodicRSSI(unsigned long arg)
- 			return;
- 		}
- 	}
--	g_hPeriodicRSSI.data = (unsigned long)hif_drv;
--	mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
-+	periodic_rssi.data = (unsigned long)hif_drv;
-+	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- }
- 
- 
-@@ -4276,9 +4274,9 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 			result = -EFAULT;
- 			goto _fail_mq_;
- 		}
--		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
-+		setup_timer(&periodic_rssi, GetPeriodicRSSI,
- 			    (unsigned long)hif_drv);
--		mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
-+		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- 	}
- 
- 	setup_timer(&hif_drv->hScanTimer, TimerCB_Scan, 0);
-@@ -4346,10 +4344,8 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
- 	}
- 
--
--	if (del_timer_sync(&g_hPeriodicRSSI)) {
-+	if (del_timer_sync(&periodic_rssi))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
--	}
- 
- 	del_timer_sync(&hif_drv->hRemainOnChannel);
- 
-@@ -4370,9 +4366,9 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	if (clients_count == 1)	{
--		if (del_timer_sync(&g_hPeriodicRSSI)) {
-+		if (del_timer_sync(&periodic_rssi))
- 			PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
--		}
-+
- 		msg.id = HOST_IF_MSG_EXIT;
- 		msg.drv = hif_drv;
- 
+ 			ieee80211_get_key_rx_seq(key, i, &seq);
+-			aes_sc->pn = cpu_to_le64(
++			aes_sc[i].pn = cpu_to_le64(
+ 					(u64)pn[5] |
+ 					((u64)pn[4] << 8) |
+ 					((u64)pn[3] << 16) |
 -- 
-1.9.1
+2.5.3
 
