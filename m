@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:32538 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752223AbbJHBti (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:57168 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752235AbbJEPB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 21:49:38 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/14] staging: wilc1000: remove typedef from tstrWILC_UsrScanReq
-Date: Thu, 8 Oct 2015 10:49:08 +0900
-Message-ID: <1444268961-7551-1-git-send-email-tony.cho@atmel.com> (sfid-20151008_034942_412765_6D59F9B3)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 11:01:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 17:36:53 +0300
+Message-Id: <1444055820-27506-22-git-send-email-luca@coelho.fi> (sfid-20151005_170130_334280_70EC0679)
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
+References: <1444050759.27220.15.camel@coelho.fi>
+Subject: [PATCH 22/29] iwlwifi: remove IWL3165_UCODE_API_OK and _MIN
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch removes typedef from the struct tstrWILC_UsrScanReq with
-related comments and renames it to user_scan_req.
+As the 3165 device uses the same firmware as 7265-D and currently
+all 7000 series (including 3160/3165) use the same API versions
+remove IWL3165_UCODE_API_OK and _MIN. We might have to put them
+back if firmware support ever splits, but in that case might also
+have to add a different MODULE_FIRMWARE statement.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 2ca6a6e..0b3b4dc 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -225,7 +225,7 @@ struct hidden_network {
- 	u8 u8ssidnum;
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 5b25f36..d561181 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -73,11 +73,9 @@
  
--typedef struct {
-+struct user_scan_req {
- 	/* Scan user call back function */
- 	wilc_scan_result pfUserScanResult;
+ /* Oldest version we won't warn about */
+ #define IWL7260_UCODE_API_OK	13
+-#define IWL3165_UCODE_API_OK	13
  
-@@ -234,7 +234,7 @@ typedef struct {
+ /* Lowest firmware API version supported */
+ #define IWL7260_UCODE_API_MIN	13
+-#define IWL3165_UCODE_API_MIN	13
  
- 	u32 u32RcvdChCount;
- 	tstrFoundNetworkInfo astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
--} tstrWILC_UsrScanReq;
-+};
- 
- typedef struct {
- 	u8 *pu8bssid;
-@@ -304,8 +304,7 @@ enum p2p_listen_state {
- };
- 
- struct host_if_drv {
--	/* Scan user structure */
--	tstrWILC_UsrScanReq strWILC_UsrScanReq;
-+	struct user_scan_req strWILC_UsrScanReq;
- 
- 	/* Connect User structure */
- 	tstrWILC_UsrConnReq strWILC_UsrConnReq;
+ /* NVM versions */
+ #define IWL7260_NVM_VERSION		0x0a1d
+@@ -269,11 +267,6 @@ const struct iwl_cfg iwl3165_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 3165",
+ 	.fw_name_pre = IWL7265D_FW_PRE,
+ 	IWL_DEVICE_7000,
+-	/* sparse doens't like the re-assignment but it is safe */
+-#ifndef __CHECKER__
+-	.ucode_api_ok = IWL3165_UCODE_API_OK,
+-	.ucode_api_min = IWL3165_UCODE_API_MIN,
+-#endif
+ 	.ht_params = &iwl7000_ht_params,
+ 	.nvm_ver = IWL3165_NVM_VERSION,
+ 	.nvm_calib_ver = IWL3165_TX_POWER_VERSION,
 -- 
-1.9.1
+2.5.3
 
