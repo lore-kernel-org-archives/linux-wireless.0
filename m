@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37503 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752297AbbJOJrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 05:47:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:57224 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751872AbbJEPB7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 11:01:59 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/6] cfg80211: reg: remove useless reg_timeout scheduling
-Date: Thu, 15 Oct 2015 11:46:56 +0200
-Message-Id: <1444902418-25668-4-git-send-email-johannes@sipsolutions.net> (sfid-20151015_114717_772010_A111B53F)
-In-Reply-To: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
-References: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 17:36:50 +0300
+Message-Id: <1444055820-27506-19-git-send-email-luca@coelho.fi> (sfid-20151005_170205_062609_0697B5D1)
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
+References: <1444050759.27220.15.camel@coelho.fi>
+Subject: [PATCH 19/29] iwlwifi: mvm: rs: remove overflowing debug message
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Eyal Shapira <eyal@wizery.com>
 
-When the functions reg_set_rd_driver() and reg_set_rd_country_ie()
-return with an error, the calling function already restores data
-by calling restore_regulatory_settings(), so there's no need to
-also schedule a timeout (which would lead to other side effects
-such as indicating CRDA failed, which clearly isn't true.) Remove
-the scheduling.
+This message isn't very useful and creates clutter.
+Remove it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/reg.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6ad01b264eb0..3c4363be6bb0 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2885,11 +2885,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 98f4d78..49cf311 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2584,7 +2584,6 @@ static struct rs_rate *rs_get_optimal_rate(struct iwl_mvm *mvm,
+ 		}
  	}
  
- 	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
--	if (!request_wiphy) {
--		queue_delayed_work(system_power_efficient_wq,
--				   &reg_timeout, 0);
-+	if (!request_wiphy)
- 		return -ENODEV;
--	}
+-	rs_dump_rate(mvm, rate, "OPTIMAL RATE");
+ 	return rate;
+ }
  
- 	if (!driver_request->intersect) {
- 		if (request_wiphy->regd)
-@@ -2946,11 +2943,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
- 	}
- 
- 	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
--	if (!request_wiphy) {
--		queue_delayed_work(system_power_efficient_wq,
--				   &reg_timeout, 0);
-+	if (!request_wiphy)
- 		return -ENODEV;
--	}
- 
- 	if (country_ie_request->intersect)
- 		return -EINVAL;
 -- 
-2.5.1
+2.5.3
 
