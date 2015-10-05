@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33082 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932526AbbJANoY (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36085 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029AbbJEKgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:24 -0400
-Received: by pacex6 with SMTP id ex6so75448073pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:23 -0700 (PDT)
+	Mon, 5 Oct 2015 06:36:08 -0400
+Received: by pablk4 with SMTP id lk4so172817445pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:36:07 -0700 (PDT)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/12] staging: wilc1000: remove #if 1 and #endif
-Date: Thu,  1 Oct 2015 22:43:52 +0900
-Message-Id: <1443707039-18433-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154427_155745_7EC3C7D5)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 19/20] staging: wilc1000: fix NULL comparison in host_int_remove_wep_key
+Date: Mon,  5 Oct 2015 19:35:03 +0900
+Message-Id: <1444041304-7727-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123611_900191_6C1FD535)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes #if 1 and #endif, which is encapsulated
-some codes.
+This patch fixes NULL comparison style in host_int_remove_wep_key found
+by checkpatch.
+
+CHECK: Comparison to NULL could be written "!wfi_drv"
+FILE: drivers/staging/wilc1000/host_interface.c:4300
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 755a817..d781003 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3415,7 +3415,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
- 	struct wilc_priv *priv;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6936bff..ade9be02 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4296,7 +4296,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
+ 	int result = 0;
+ 	struct host_if_msg msg;
  
- 	priv = wiphy_priv(wiphy);
--#if 1
- 	switch (changed) {
- 
- 	case WILC_WFI_RX_PKT:
-@@ -3438,7 +3437,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
- 	default:
- 		break;
- 	}
--#endif
- 	return 0;
- }
- 
+-	if (wfi_drv == NULL) {
++	if (!wfi_drv) {
+ 		result = -EFAULT;
+ 		PRINT_ER("Failed to send setup multicast config packet\n");
+ 		return result;
 -- 
 2.6.0
 
