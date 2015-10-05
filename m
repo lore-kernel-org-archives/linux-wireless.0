@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13774 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbbJLIBA (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:34853 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbbJEOCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 04:01:00 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 40/41] staging: wilc1000: rename u8mode of struct host_if_wep_attr
-Date: Mon, 12 Oct 2015 16:56:14 +0900
-Message-ID: <1444636575-2486-40-git-send-email-tony.cho@atmel.com> (sfid-20151012_100104_018657_0BBEAD28)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+	Mon, 5 Oct 2015 10:02:46 -0400
+Received: by ioiz6 with SMTP id z6so185877424ioi.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 07:02:45 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Seth Forshee <seth.forshee@canonical.com>,
+	=?UTF-8?q?Karl=20M=C3=B6ller?= <karl@excors.net>
+Subject: [PATCH] wireless-regdb: Update ZA rules for 5490-5710 MHz
+Date: Mon,  5 Oct 2015 09:02:02 -0500
+Message-Id: <1444053722-33852-1-git-send-email-seth.forshee@canonical.com> (sfid-20151005_160249_377327_533ABCCF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8mode of struct host_if_wep_attr to mode to avoid
-CamelCase naming convention.
+The Radio Frequency Spectrum Regulations 2015 [1] drops the
+requirement for DFS and TPC in the 5490-5710 MHz range. Update
+the database to remove DFS for this range and remove the 3dB drop
+in the transmit power limit for TPC.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+[1] http://www.ellipsis.co.za/wp-content/uploads/2014/12/Radio-Frequency-Spectrum-Regulations-2015.pdf
+
+Cc: Karl Möller <karl@excors.net>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c808f92..edea265 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -111,7 +111,7 @@ struct host_if_wep_attr {
- 	u8 *key;
- 	u8 key_len;
- 	u8 index;
--	u8 u8mode;
-+	u8 mode;
- 	enum AUTHTYPE tenuAuth_type;
- };
+diff --git a/db.txt b/db.txt
+index d57ea84..721b081 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1242,7 +1242,7 @@ country ZA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+-	(5490 - 5710 @ 160), (27), DFS
++	(5490 - 5710 @ 160), (30)
  
-@@ -2353,7 +2353,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWIDList[0].id = (u16)WID_11I_MODE;
- 			strWIDList[0].type = WID_CHAR;
- 			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8mode));
-+			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.mode));
- 
- 			strWIDList[1].id = WID_AUTH_TYPE;
- 			strWIDList[1].type = WID_CHAR;
-@@ -4272,7 +4272,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Keyidx;
- 
--	msg.body.key_info.uniHostIFkeyAttr.wep.u8mode = u8mode;
-+	msg.body.key_info.uniHostIFkeyAttr.wep.mode = u8mode;
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.tenuAuth_type = tenuAuth_type;
- 	/* send the message */
+ country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
 1.9.1
 
