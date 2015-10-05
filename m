@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:38399 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965394AbbJVSsJ (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36342 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbbJEKfX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 14:48:09 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: jirislaby@gmail.com
-Cc: mickflemm@gmail.com, mcgrof@do-not-panic.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sergei.shtylyov@cogentembedded.com,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH v4 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
-Date: Fri, 23 Oct 2015 00:17:50 +0530
-Message-Id: <1445539670-4018-1-git-send-email-punitvara@gmail.com> (sfid-20151022_204850_428084_C897C18F)
+	Mon, 5 Oct 2015 06:35:23 -0400
+Received: by pablk4 with SMTP id lk4so172800062pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:23 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/20] staging: wilc1000: fix return type of host_int_set_operation_mode
+Date: Mon,  5 Oct 2015 19:34:49 +0900
+Message-Id: <1444041304-7727-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123528_143162_8B446991)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove black line suggested by Sergei
+This patch changes return type of host_int_set_operation_mode from s32
+to int. s32Error gets return value from wilc_mq_send that has return
+type of int. It should be changed return type by int as well as data
+type of s32Error.
 
-This patch is to the ath5k/eeprom.c that fixes up warning caught by
-coccicheck:
-
-Unneeded variable: "ret". Return "0" on line 980
-
-Remove unneeded variable ret created to return zero.
-
-Signed-off-by: Punit Vara <punitvara@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 900e72a..94bcc08 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- {
--	int ret = 0;
--
- 	static const u32 cipher_suites[] = {
- 		WLAN_CIPHER_SUITE_WEP40,
- 		WLAN_CIPHER_SUITE_WEP104,
-@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
- 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
- 
--	return ret;
-+	return 0;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7c617f7..092ecf5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -5384,9 +5384,9 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address)
+ 	return result;
  }
  
- static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+-s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
++int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 
+ 	struct host_if_msg msg;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 341c2f3..e9db06c 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -1187,7 +1187,7 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
+  *  @version	1.0
+  */
+ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address);
+-s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
++int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
+ 
+ static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent);
+ 
 -- 
-2.5.3
+2.6.0
 
