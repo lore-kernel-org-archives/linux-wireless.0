@@ -1,105 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9688 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbbJBFWd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:57110 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752072AbbJEOhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 01:22:33 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/10] staging: wilc1000: remove typedef from enum
-Date: Fri, 2 Oct 2015 14:22:03 +0900
-Message-ID: <1443763332-7330-1-git-send-email-tony.cho@atmel.com> (sfid-20151002_072245_540154_A7125630)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 10:37:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Gregory Greenman <gregory.greenman@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Oct 2015 17:36:41 +0300
+Message-Id: <1444055820-27506-10-git-send-email-luca@coelho.fi> (sfid-20151005_163728_459918_76AE6C28)
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
+References: <1444050759.27220.15.camel@coelho.fi>
+Subject: [PATCH 10/29] iwlwifi: mvm: ToF - fill bssid of responder configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from enumerated types defined in
-coreconfigurator.c file and also changes their names to avoid CamelCase
-naming convention as shown:
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-- tenuBasicFrmType to basic_frame_type
-- tenuFrmSubtype to sub_frame_type
-- tenuInfoElemID to info_element_id
+The command needs to have the AP interfaces BSSID (which corresponds
+to its address).
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/tof.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 136d207..63fde5b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -18,16 +18,16 @@
- 							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tof.c b/drivers/net/wireless/iwlwifi/mvm/tof.c
+index 7ae0bd8..4007f1d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tof.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tof.c
+@@ -185,6 +185,7 @@ int iwl_mvm_tof_responder_cmd(struct iwl_mvm *mvm,
+ 	}
  
- /* Basic Frame Type Codes (2-bit) */
--typedef enum {
-+enum basic_frame_type {
- 	FRAME_TYPE_CONTROL     = 0x04,
- 	FRAME_TYPE_DATA        = 0x08,
- 	FRAME_TYPE_MANAGEMENT  = 0x00,
- 	FRAME_TYPE_RESERVED    = 0x0C,
- 	FRAME_TYPE_FORCE_32BIT = 0xFFFFFFFF
--} tenuBasicFrmType;
-+};
- 
- /* Frame Type and Subtype Codes (6-bit) */
--typedef enum {
-+enum sub_frame_type {
- 	ASSOC_REQ             = 0x00,
- 	ASSOC_RSP             = 0x10,
- 	REASSOC_REQ           = 0x20,
-@@ -64,10 +64,10 @@ typedef enum {
- 	BLOCKACK_REQ          = 0x84,
- 	BLOCKACK              = 0x94,
- 	FRAME_SUBTYPE_FORCE_32BIT  = 0xFFFFFFFF
--} tenuFrmSubtype;
-+};
- 
- /* Element ID  of various Information Elements */
--typedef enum {
-+enum info_element_id {
- 	ISSID               = 0,   /* Service Set Identifier         */
- 	ISUPRATES           = 1,   /* Supported Rates                */
- 	IFHPARMS            = 2,   /* FH parameter set               */
-@@ -108,7 +108,7 @@ typedef enum {
- 	IWMM                = 221, /* WMM parameters                 */
- 	IWPAELEMENT         = 221, /* WPA Information Element        */
- 	INFOELEM_ID_FORCE_32BIT  = 0xFFFFFFFF
--} tenuInfoElemID;
-+};
- 
- 
- typedef struct {
-@@ -159,9 +159,9 @@ static inline u32 get_beacon_timestamp_hi(u8 *data)
- /* This function extracts the 'frame type and sub type' bits from the MAC    */
- /* header of the input frame.                                                */
- /* Returns the value in the LSB of the returned value.                       */
--static inline tenuFrmSubtype get_sub_type(u8 *header)
-+static inline enum sub_frame_type get_sub_type(u8 *header)
- {
--	return ((tenuFrmSubtype)(header[0] & 0xFC));
-+	return ((enum sub_frame_type)(header[0] & 0xFC));
- }
- 
- /* This function extracts the 'to ds' bit from the MAC header of the input   */
-@@ -245,7 +245,7 @@ static inline u16 get_cap_info(u8 *data)
- {
- 	u16 cap_info = 0;
- 	u16 index    = MAC_HDR_LEN;
--	tenuFrmSubtype st;
-+	enum sub_frame_type st;
- 
- 	st = get_sub_type(data);
- 
+ 	cmd->sta_id = mvmvif->bcast_sta.sta_id;
++	memcpy(cmd->bssid, vif->addr, ETH_ALEN);
+ 	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(TOF_CMD,
+ 						    IWL_ALWAYS_LONG_GROUP, 0),
+ 				    0, sizeof(*cmd), cmd);
 -- 
-1.9.1
+2.5.3
 
