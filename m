@@ -1,117 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14636 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755932AbbJVPIH (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34360 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753014AbbJEKfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:08:07 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/4] ath10k: remove shadow copy of CE descriptors for source ring
-Date: Thu, 22 Oct 2015 20:36:42 +0530
-Message-ID: <1445526402-28522-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151022_170811_512191_88B57D75)
-In-Reply-To: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 06:35:42 -0400
+Received: by padhy16 with SMTP id hy16so33471170pad.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:42 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/20] staging: wilc1000: remove host_int_get_pmkid_info
+Date: Mon,  5 Oct 2015 19:34:55 +0900
+Message-Id: <1444041304-7727-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123545_635810_768FA844)
+In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the messages from host to target, shadow copy of CE descriptors
-are maintained in source ring. Before writing actual CE descriptor,
-first shadow copy is filled and then it is copied to CE address space.
-To optimize in download path and to reduce d-cache pressure, removing
-shadow copy of CE descriptors. This will also reduce driver memory
-consumption by 33KB during on device probing.
+This function is defined but never used anywhere,
+so just delete it.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  | 22 ----------------------
- drivers/net/wireless/ath/ath10k/ce.h  |  6 ------
- drivers/net/wireless/ath/ath10k/pci.c |  5 -----
- 3 files changed, 33 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 35 -------------------------------
+ drivers/staging/wilc1000/host_interface.h | 25 ----------------------
+ 2 files changed, 60 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 52021a9..edf3629 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -921,27 +921,6 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			src_ring->base_addr_ce_space_unaligned,
- 			CE_DESC_RING_ALIGN);
- 
--	/*
--	 * Also allocate a shadow src ring in regular
--	 * mem to use for faster access.
--	 */
--	src_ring->shadow_base_unaligned =
--		kmalloc((nentries * sizeof(struct ce_desc) +
--			 CE_DESC_RING_ALIGN), GFP_KERNEL);
--	if (!src_ring->shadow_base_unaligned) {
--		dma_free_coherent(ar->dev,
--				  (nentries * sizeof(struct ce_desc) +
--				   CE_DESC_RING_ALIGN),
--				  src_ring->base_addr_owner_space,
--				  src_ring->base_addr_ce_space);
--		kfree(src_ring);
--		return ERR_PTR(-ENOMEM);
--	}
--
--	src_ring->shadow_base = PTR_ALIGN(
--			src_ring->shadow_base_unaligned,
--			CE_DESC_RING_ALIGN);
--
- 	return src_ring;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 40001fa..99375ba 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4765,41 +4765,6 @@ s32 host_int_set_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, tstrHostIFpmkidAttr *pu8Pm
+ 	return s32Error;
  }
  
-@@ -1120,7 +1099,6 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ar_pci->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
--		kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc) +
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 67f90ec..47b734c 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -100,12 +100,6 @@ struct ath10k_ce_ring {
- 
- 	/* CE address space */
- 	u32 base_addr_ce_space;
--	/*
--	 * Start of shadow copy of descriptors, within regular memory.
--	 * Aligned to descriptor-size boundary.
--	 */
--	void *shadow_base_unaligned;
--	struct ce_desc *shadow_base;
- 
- 	/* keep last */
- 	void *per_transfer_context[0];
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8100025..4a65385 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1594,7 +1594,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 	struct ath10k_pci *ar_pci;
- 	struct ath10k_ce_pipe *ce_pipe;
- 	struct ath10k_ce_ring *ce_ring;
--	struct ce_desc *ce_desc;
- 	struct sk_buff *skb;
- 	int i;
- 
-@@ -1609,10 +1608,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 	if (!pci_pipe->buf_sz)
- 		return;
- 
--	ce_desc = ce_ring->shadow_base;
--	if (WARN_ON(!ce_desc))
--		return;
+-/**
+- *  @brief              gets the cached the pmkid info
+- *  @details    valid only in BSS STA mode if External Supplicant
+- *                              support is enabled. This Function sets the PMKID in firmware
+- *                              when host drivr receives the corresponding request from NDIS.
+- *                              The firmware then includes theset PMKID in the appropriate
+- *                              management frames
+- *  @param[in,out] handle to the wifi driver,
+- *                                message containing PMKID Info in the following format
+- *|-----------------------------------------------------------------|
+- *|NumEntries |	BSSID[1] | PMKID[1] |  ...	| BSSID[K] | PMKID[K] |
+- *|-----------|------------|----------|-------|----------|----------|
+- |	   1	|		6	 |   16		|  ...	|	 6	   |	16	  |
+- ||-----------------------------------------------------------------|
+- *  @param[in]
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-s32 host_int_get_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8PmkidInfoArray,
+-				    u32 u32PmkidInfoLen)
+-{
+-	s32 s32Error = 0;
+-	tstrWID strWID;
+-	/* tstrWILC_WFIDrv * pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv; */
 -
- 	for (i = 0; i < ce_ring->nentries; i++) {
- 		skb = ce_ring->per_transfer_context[i];
- 		if (!skb)
+-	strWID.u16WIDid	= (u16)WID_PMKID_INFO;
+-	strWID.enuWIDtype	= WID_STR;
+-	strWID.s32ValueSize = u32PmkidInfoLen;
+-	strWID.ps8WidVal = pu8PmkidInfoArray;
+-
+-	return s32Error;
+-}
+ 
+ /**
+  *  @brief              sets the pass phrase
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 8f77ccb..64a3de5 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -552,31 +552,6 @@ s32 host_int_add_tx_gtk(tstrWILC_WFIDrv *hWFIDrv, u8 u8KeyLen, u8 *pu8TxGtk, u8
+  */
+ 
+ s32 host_int_set_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, tstrHostIFpmkidAttr *pu8PmkidInfoArray);
+-/**
+- *  @brief              gets the cached the pmkid info
+- *  @details    valid only in BSS STA mode if External Supplicant
+- *                              support is enabled. This Function sets the PMKID in firmware
+- *                              when host drivr receives the corresponding request from NDIS.
+- *                              The firmware then includes theset PMKID in the appropriate
+- *                              management frames
+- *  @param[in,out] handle to the wifi driver,
+- *
+- *                                message containing PMKID Info in the following format
+- *|-----------------------------------------------------------------|
+- *|NumEntries |	BSSID[1] | PMKID[1] |  ...	| BSSID[K] | PMKID[K] |
+- *|-----------|------------|----------|-------|----------|----------|
+- |	   1	|		6	 |   16		|  ...	|	 6	   |	16	  |
+- ||-----------------------------------------------------------------|
+- *  @param[in]
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-
+-s32 host_int_get_pmkid_info(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8PmkidInfoArray,
+-				    u32 u32PmkidInfoLen);
+ 
+ /**
+  *  @brief              sets the pass phrase
 -- 
-2.6.1
+2.6.0
 
