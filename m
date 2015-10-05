@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:49986 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbbJVMYI (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44548 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbbJEQPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 08:24:08 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: glen lee <glen.lee@atmel.com>
-Cc: linux-wireless@vger.kernel.org, Rachel Kim <rachel.kim@atmel.com>,
-	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH 00/19] staging/wilc1000 cleanups
-Date: Thu, 22 Oct 2015 14:23:53 +0200
-Message-ID: <4948909.qZ1ebjqtXf@wuerfel> (sfid-20151022_142448_414037_CD638500)
-In-Reply-To: <562763BC.5030107@atmel.com>
-References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <562763BC.5030107@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 5 Oct 2015 12:15:21 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 0/5] wireless-regdb: Update TW and US rules to latest regulations
+Date: Tue,  6 Oct 2015 00:14:53 +0800
+Message-Id: <1444061698-16384-1-git-send-email-wens@csie.org> (sfid-20151005_181529_613549_61B32649)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 October 2015 19:06:52 glen lee wrote:
-> Hi arnd,
-> 
-> Thanks for the all the patches. 
-> About the patch ( use proper naming for global symbols ),
-> We are planning to use this driver not only for wilc1000 but also for
-> other atmel wireless driver. I'd appreciate if you could use wl instead of wilc1000.
-> 
-> And the global variable g_linux_wlan will be placed in netdevice private data
-> and finally it will be removed. I already posted some of those patches.
+Hi Seth,
 
-I couldn't find the patches anywhere, but I've updated my series now
-to rename the symbols to wilc_* and to remove most but not all references to
-g_linux_wlan (or wilc_dev after my rename). Do you want me to post those
-so you can integrate them, or should I have a look at what you sent first
-(please send me a copy then).
+This is v4 of my TW/US 5GHz updates series. Hopefully this one will go
+in without further work.
 
-	Arnd
+Changes since v3:
+
+  - Moved power limit increase of 5250 ~ 5350 MHz band from patch 4 to
+    patch 5.
+
+Changes since v2:
+
+  - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
+
+  - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
+    side of 250mW
+
+
+Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
+the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
+weather radars. The transmission power limit is also corrected to
+match the regulations.
+
+Patch 2 changes the boundary frequencies for each rule for Taiwan to
+match the frequency allocation table. The "regulation" database shouldn't
+care about artificial channel boundaries.
+
+Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
+the US.
+
+Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
+
+Patch 5 updates the transmission power limits for Taiwan, per the NCC's
+official reply. This patch may be slightly controversial, as there is
+no official English document. Either someone will have to independently
+verify this, or translate the Chinese document.
+
+
+Regards
+ChenYu
+
+
+Chen-Yu Tsai (5):
+  wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan
+    (TW)
+  wireless-regdb: Update regulatory rule boundary frequencies for Taiwan
+    (TW)
+  wireless-regdb: Update 5GHz rules for US
+  wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
+  wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
+
+ db.txt | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+-- 
+2.5.3
+
