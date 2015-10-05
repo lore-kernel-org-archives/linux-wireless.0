@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60611 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbbJAROv convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8924 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166AbbJEG11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 13:14:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-10-01
-Date: Thu, 01 Oct 2015 20:14:44 +0300
-Message-ID: <87oagi5x4r.fsf@kamboji.qca.qualcomm.com> (sfid-20151001_191515_941557_C774B858)
+	Mon, 5 Oct 2015 02:27:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/18] staging: wilc1000: remove typedef from CURRENT_TX_RATE_T
+Date: Mon, 5 Oct 2015 15:25:48 +0900
+Message-ID: <1444026353-29024-13-git-send-email-tony.cho@atmel.com> (sfid-20151005_082744_717095_12839E4D)
+In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Leo Kim <leo.kim@atmel.com>
 
-few very small fixes I would like to get to 4.3, nothing really special.
-Please let me know if you have any problems.
+This patch remove typedef from the enum CURRENT_TX_RATE_T.
+And rename it to CURRENT_TXRATE.
 
-Kalle
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-The following changes since commit bdb06cbf77cb01911694cc9076ffa8196b7b9b61:
-
-  net: Fix panic in icmp_route_lookup (2015-09-25 21:44:02 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-10-01
-
-for you to fetch changes up to 76d164f582150fd0259ec0fcbc485470bcd8033e:
-
-  ath10k: fix DMA related firmware crashes on multiple devices (2015-09-26 20:48:25 +0300)
-
-----------------------------------------------------------------
-ath9k:
-
-* declare required extra tx headroom
-
-ath10k:
-
-* fix DMA related firmware crashes on multiple devices
-
-rt2800usb:
-
-* add usb ID 1b75:3070 for Airlive WT-2000USB
-
-b43:
-
-* probe bcma core (device) rev 0x15
-
-----------------------------------------------------------------
-Felix Fietkau (2):
-      ath9k: declare required extra tx headroom
-      ath10k: fix DMA related firmware crashes on multiple devices
-
-Rafał Miłecki (1):
-      b43: probe bcma core (device) rev 0x15
-
-Stanislaw Gruszka (1):
-      rt2800usb: add usb ID 1b75:3070 for Airlive WT-2000USB
-
- drivers/net/wireless/ath/ath10k/hw.h    |    4 ++--
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/b43/main.c         |    1 +
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- 4 files changed, 5 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 073a724..4dbb970 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1155,7 +1155,7 @@ static s32 Handle_CfgParam(tstrWILC_WFIDrv *drvHandler,
+ 		u8WidCnt++;
+ 	}
+ 	if (strHostIFCfgParamAttr->pstrCfgParamVal.u32SetCfgFlag & CURRENT_TX_RATE) {
+-		CURRENT_TX_RATE_T curr_tx_rate = strHostIFCfgParamAttr->pstrCfgParamVal.curr_tx_rate;
++		enum CURRENT_TXRATE curr_tx_rate = strHostIFCfgParamAttr->pstrCfgParamVal.curr_tx_rate;
+ 		/*----------------------------------------------------------------------*/
+ 		/*Rates:		1   2   5.5   11   6  9  12  18  24  36  48   54  Auto	*/
+ 		/*InputValues:	1   2     3    4   5  6   7   8   9  10  11   12  0		*/
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 1ed21a2..5993cd8 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -93,7 +93,7 @@ struct host_if_pmkid_attr {
+ 	struct host_if_pmkid pmkidlist[WILC_MAX_NUM_PMKIDS];
+ };
+ 
+-typedef enum {
++enum CURRENT_TXRATE {
+ 	AUTORATE	= 0,
+ 	MBPS_1		= 1,
+ 	MBPS_2		= 2,
+@@ -107,7 +107,7 @@ typedef enum {
+ 	MBPS_36		= 36,
+ 	MBPS_48		= 48,
+ 	MBPS_54		= 54
+-} CURRENT_TX_RATE_T;
++};
+ 
+ struct cfg_param_val {
+ 	u32 u32SetCfgFlag;
+@@ -130,7 +130,7 @@ struct cfg_param_val {
+ 	u8 scan_source;
+ 	u16 active_scan_time;
+ 	u16 passive_scan_time;
+-	CURRENT_TX_RATE_T curr_tx_rate;
++	enum CURRENT_TXRATE curr_tx_rate;
+ 
+ };
+ 
 -- 
-Kalle Valo
+1.9.1
+
