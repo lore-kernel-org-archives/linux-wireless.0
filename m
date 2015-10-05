@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753522AbbJVJMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:18 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 03/10] nfc: nci: Introduce new core opcodes
-Date: Thu, 22 Oct 2015 12:11:35 +0300
-Message-Id: <1445505102-16639-4-git-send-email-robert.dolca@intel.com> (sfid-20151022_113628_749093_37D19A19)
-In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
-References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:65041 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbbJETM7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2015 15:12:59 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] wireless-regdb: Add VHT channel bandwidth for Russia (RU)
+Date: Mon, 5 Oct 2015 22:11:59 +0300
+Message-ID: <1444072321-20728-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20151005_211304_141435_EBEA52AE)
+In-Reply-To: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add NCI_OP_CORE_GET_CONFIG_CMD, NCI_OP_CORE_GET_CONFIG_RSP
-and NCI_OP_CORE_RESET_NTF.
+Source is QCA's regulatory team's efforts.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- include/net/nfc/nci.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ db.txt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/nfc/nci.h b/include/net/nfc/nci.h
-index 75d2e18..b495825 100644
---- a/include/net/nfc/nci.h
-+++ b/include/net/nfc/nci.h
-@@ -315,6 +315,8 @@ struct nci_nfcee_mode_set_cmd {
- 	__u8	nfcee_mode;
- } __packed;
+diff --git a/db.txt b/db.txt
+index 2f2e460..93242ec 100644
+--- a/db.txt
++++ b/db.txt
+@@ -995,10 +995,10 @@ country RS: DFS-ETSI
  
-+#define NCI_OP_CORE_GET_CONFIG_CMD	nci_opcode_pack(NCI_GID_CORE, 0x03)
-+
- /* ----------------------- */
- /* ---- NCI Responses ---- */
- /* ----------------------- */
-@@ -375,6 +377,9 @@ struct nci_nfcee_discover_rsp {
- } __packed;
+ country RU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5650 - 5730 @ 40), (30), DFS
+-	(5735 - 5835 @ 40), (30)
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5650 - 5730 @ 80), (30), DFS
++	(5735 - 5835 @ 80), (30)
+ 	# 60 GHz band channels 1-4, ref: Changes to NLA 124_Order №129_22042015.pdf
+ 	(57000 - 66000 @ 2160), (40)
  
- #define NCI_OP_NFCEE_MODE_SET_RSP nci_opcode_pack(NCI_GID_NFCEE_MGMT, 0x01)
-+
-+#define NCI_OP_CORE_GET_CONFIG_RSP	nci_opcode_pack(NCI_GID_CORE, 0x03)
-+
- /* --------------------------- */
- /* ---- NCI Notifications ---- */
- /* --------------------------- */
-@@ -528,4 +533,6 @@ struct nci_nfcee_discover_ntf {
- 	struct nci_nfcee_information_tlv	information_tlv;
- } __packed;
- 
-+#define NCI_OP_CORE_RESET_NTF		nci_opcode_pack(NCI_GID_CORE, 0x00)
-+
- #endif /* __NCI_H */
 -- 
 1.9.1
 
