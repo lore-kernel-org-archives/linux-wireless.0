@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from limerock01.mail.cornell.edu ([128.84.13.241]:40162 "EHLO
-	limerock01.mail.cornell.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751525AbbJDTlh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20503 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbbJETMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 15:41:37 -0400
-Date: Sun, 4 Oct 2015 15:26:18 -0400
-From: Jacob Kiefer <jtk54@cornell.edu>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	"open list:STAGING - REALTEK RTL8723U WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au: Fix Sparse errors in rtl8723a_cmd.c
-Message-ID: <20151004192618.GA2938@jtk54-Q550LF> (sfid-20151004_214202_313861_4EA2EAC3)
-References: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
+	Mon, 5 Oct 2015 15:12:47 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/5] wireless-regdb: Add 160 MHz channel bandwidth for Greenland (GL)
+Date: Mon, 5 Oct 2015 22:11:57 +0300
+Message-ID: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20151005_211250_301891_D67F6442)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+This extends regulatory rules for Greenland to allow 160 MHz VHT
+channels. This was missed in the earlier set of patches that added 160
+MHz for large number of countries.
 
-Thanks for the response! It's always good to get notes on a patch.
-Some responses to your points:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> Why __le32?  Does this variable go across the user/kernel boundry
-> somehow?  If not, just use le32.
+diff --git a/db.txt b/db.txt
+index d57ea84..226057e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -455,9 +455,9 @@ country GH: DFS-FCC
+ 
+ country GL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country GP: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.9.1
 
-Good point, this should probably have been le32.
-
-> At first glance, you aren't doing ths same logic in this function as the
-> original did, please look at this very closely again and verify that you
-> are doing this correctly.
->
-> Don't just blindly quiet tools like sparse, it is warning for a reason,
-> but be careful about your fix.
-
-On a second, closer look at the code I am not doing this correctly: the
-buffer I am converting to le32 needs to persist (which a local variable
-would not). On my first glance at this code I saw the same buffer being
-used for both little- and big-endian storage of the same data -- it's
-correct, but a little ugly.
-
-I am going to leave this code as is, since it was functioning properly
-before my patch.
-
-Thanks,
-Jake
