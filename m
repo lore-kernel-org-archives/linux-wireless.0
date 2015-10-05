@@ -1,30 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39769 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756179AbbJIIQx (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:39301 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbbJELOW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 04:16:53 -0400
-Date: Fri, 9 Oct 2015 11:16:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 08/14] staging: wilc1000: remove typedef from
- tstrStatistics
-Message-ID: <20151009081628.GP7340@mwanda> (sfid-20151009_101702_321359_BE00C2B4)
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
- <1444268961-7551-8-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444268961-7551-8-git-send-email-tony.cho@atmel.com>
+	Mon, 5 Oct 2015 07:14:22 -0400
+Date: Mon, 05 Oct 2015 04:30:00 -0700 (PDT)
+Message-Id: <20151005.043000.459896259241842412.davem@davemloft.net> (sfid-20151005_131443_540528_ABF593A7)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2015-10-01
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87oagi5x4r.fsf@kamboji.qca.qualcomm.com>
+References: <87oagi5x4r.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I feel like the name 'statistics' is very vague.  I guess it's so vague
-that it's unlikely anyone else will try use it...
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 01 Oct 2015 20:14:44 +0300
 
-regards,
-dan carpenter
+> few very small fixes I would like to get to 4.3, nothing really special.
+> Please let me know if you have any problems.
+
+Pulled, thanks.
