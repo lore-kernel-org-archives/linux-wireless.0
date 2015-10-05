@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58589 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674AbbJ0J1d (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29778 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbbJETNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:27:33 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 25/27] staging: wilc1000: mac_xmit: use netdev private wilc instead of g_linux_wlan
-Date: Tue, 27 Oct 2015 18:28:01 +0900
-Message-ID: <1445938083-20445-25-git-send-email-glen.lee@atmel.com> (sfid-20151027_102741_572494_B88D8E25)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Mon, 5 Oct 2015 15:13:11 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/5] wireless-regdb: Update regulatory rules for Malaysia (MY)
+Date: Mon, 5 Oct 2015 22:12:01 +0300
+Message-ID: <1444072321-20728-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20151005_211314_985443_225C1DC9)
+In-Reply-To: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses netdev private data member wilc instead of g_linux_wlan.
+Source is QCA's regulatory team's efforts.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ db.txt | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d839f3b..9a105ceb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1366,8 +1366,10 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	char *pu8UdpBuffer;
- 	struct iphdr *ih;
- 	struct ethhdr *eth_h;
-+	struct wilc *wilc;
+diff --git a/db.txt b/db.txt
+index 7917263..bb8346a 100644
+--- a/db.txt
++++ b/db.txt
+@@ -827,9 +827,10 @@ country MX: DFS-FCC
  
- 	nic = netdev_priv(ndev);
-+	wilc = nic->wilc;
+ country MY: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17), AUTO-BW
+-	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+-	(5735 - 5835 @ 80), (30)
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5650 @ 160), (24), DFS
++	(5735 - 5835 @ 80), (24)
  
- 	PRINT_D(TX_DBG, "Sending packet just received from TCP/IP\n");
- 
-@@ -1410,14 +1412,14 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
- 	nic->netstats.tx_packets++;
- 	nic->netstats.tx_bytes += tx_data->size;
--	tx_data->pBssid = g_linux_wlan->vif[nic->u8IfIdx].bssid;
-+	tx_data->pBssid = wilc->vif[nic->u8IfIdx].bssid;
- 	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
- 					       tx_data->size,
- 					       linux_wlan_tx_complete);
- 
- 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
--		netif_stop_queue(g_linux_wlan->vif[0].ndev);
--		netif_stop_queue(g_linux_wlan->vif[1].ndev);
-+		netif_stop_queue(wilc->vif[0].ndev);
-+		netif_stop_queue(wilc->vif[1].ndev);
- 	}
- 
- 	return 0;
+ country NG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
 1.9.1
 
