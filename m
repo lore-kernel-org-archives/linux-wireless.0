@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38821 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932981AbbJIL1U (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56848 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750901AbbJELbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 07:27:20 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t99BKBD9004491
-	for <linux-wireless@vger.kernel.org>; Fri, 9 Oct 2015 04:27:20 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1xaehjnyfa-2
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2015 04:27:20 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/3] mwifiex: fix AP VHT behaviour
-Date: Fri, 9 Oct 2015 04:26:33 -0700
-Message-ID: <1444389995-4869-1-git-send-email-akarwar@marvell.com> (sfid-20151009_132733_711763_AF4F7AAC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Oct 2015 07:31:11 -0400
+Message-ID: <1444044666.27220.5.camel@coelho.fi> (sfid-20151005_133115_114660_F09DFF2A)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: egrumbach@gmail.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 05 Oct 2015 14:31:06 +0300
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2015-10-05
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+Hi Kalle,
 
-Even if hostapd configuration file contains VHT parameters,
-they were not getting reflected in beacons. The reason is
-we are resetting them before starting AP. This patch removes
-redundant BSS_STOP and SYS_RESET firmware commands before
-starting AP to fix the problem.
+Here's a pull request for 4.3.  There are 8 patches, including a fix
+for a kernel panic, some serious PN programming issues, a thermal
+monitor fix and some new vendor IDs.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/uap_cmd.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+Let me know if there are any issues.
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 4d5a6e3..759a6ad 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -846,22 +846,6 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- {
- 	enum state_11d_t state_11d;
- 
--	if (mwifiex_del_mgmt_ies(priv))
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "Failed to delete mgmt IEs!\n");
--
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
--			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
--		return -1;
--	}
--
--	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
--			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
--		return -1;
--	}
--
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
- 			     HostCmd_ACT_GEN_SET,
- 			     UAP_BSS_PARAMS_I, bss_cfg, false)) {
--- 
-1.8.1.4
+Luca.
 
+The following changes since commit dd5cdb48edfd34401799056a9acf61078d773f90:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-09-03 08:08:17 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-10-05
+
+for you to fetch changes up to dbf73d4a8bb8f4e1d1f3edd3be825692279e2ef3:
+
+  iwlwifi: mvm: flush fw_dump_wk when mvm fails to start (2015-10-05 14:04:16 +0300)
+
+----------------------------------------------------------------
+* some fixes for PN key programming when entering D3;
+* fix for CSA when the AP is stopped during a channel switch;
+* fix firmware name for 3160 devices;
+* add some new PCI IDs for 7265 devices;
+* fix CT-kill entry;
+* fix kernel panic when a sysassert occurs in the init ucode flow;
+
+----------------------------------------------------------------
+Andrei Otcheretianski (1):
+      iwlwifi: mvm: flush fw_dump_wk when mvm fails to start
+
+Arik Nemtsov (1):
+      iwlwifi: mvm: init card correctly on ctkill exit check
+
+Avraham Stern (1):
+      iwlwifi: mvm: clear csa countdown when AP is stopped
+
+Johannes Berg (4):
+      iwlwifi: mvm: fix D3 CCMP TX PN assignment
+      iwlwifi: dvm: fix D3 firmware PN programming
+      iwlwifi: mvm: fix D3 firmware PN programming
+      iwlwifi: fix firmware filename for 3160
+
+Luca Coelho (1):
+      iwlwifi: pci: add a few more PCI subvendor IDs for the 7265 series
+
+ drivers/net/wireless/iwlwifi/dvm/lib.c      |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-7000.c     |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/d3.c       | 27 +++++++++++----------------
+ drivers/net/wireless/iwlwifi/mvm/fw.c       |  4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  5 +++++
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  1 +
+ drivers/net/wireless/iwlwifi/pcie/drv.c     |  5 +++++
+ 8 files changed, 27 insertions(+), 20 deletions(-)
