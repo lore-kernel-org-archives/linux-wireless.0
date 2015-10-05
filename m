@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f193.google.com ([209.85.213.193]:34158 "EHLO
-	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbbJVGyT (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44557 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbbJEQPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 02:54:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
-References: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
-Date: Thu, 22 Oct 2015 09:54:18 +0300
-Message-ID: <CAB3XZEfGy4_WS-v5KAXWRfCRW5aBy5P2-HX6YXoEdSgf_FLRWw@mail.gmail.com> (sfid-20151022_085455_343638_34B62101)
-Subject: Re: [PATCH v2 05/15] net: wireless: ti: Return flow can be simplified
- for wl1271_cmd_interrogate
-From: Eliad Peller <eliad@wizery.com>
-To: Punit Vara <punitvara@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, jslaby@suse.cz,
-	lkp@intel.com
-Content-Type: text/plain; charset=UTF-8
+	Mon, 5 Oct 2015 12:15:21 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 5/5] wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
+Date: Tue,  6 Oct 2015 00:14:58 +0800
+Message-Id: <1444061698-16384-6-git-send-email-wens@csie.org> (sfid-20151005_181534_408548_50670728)
+In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
+References: <1444061698-16384-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 10:07 PM, Punit Vara <punitvara@gmail.com> wrote:
-> Remove int ret suggested by kbuild test robot
->
-> This patch is to the wlcore/acx.c file that fixes up warning
-> reported by coccicheck:
->
-> WARNING: end returns can be simplified if negative or 0 value
->
-> Prefer direct return value instead of writing 2-3 more sentence.
->
-> Signed-off-by: Punit Vara <punitvara@gmail.com>
-> ---
->  drivers/net/wireless/ti/wlcore/acx.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-> index f28fa3b..6b566d9 100644
-> --- a/drivers/net/wireless/ti/wlcore/acx.c
-> +++ b/drivers/net/wireless/ti/wlcore/acx.c
-> @@ -158,16 +158,11 @@ out:
->  int wl1271_acx_mem_map(struct wl1271 *wl, struct acx_header *mem_map,
->                        size_t len)
->  {
-> -       int ret;
->
->         wl1271_debug(DEBUG_ACX, "acx mem map");
->
-> -       ret = wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map,
-> +       return wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map,
->                                      sizeof(struct acx_header), len);
-> -       if (ret < 0)
-> -               return ret;
-> -
-> -       return 0;
->  }
->
-this changes the return value in case of positive values.
-have you verified it can't happen / won't affect the code flow?
-i'm not sure you really want to blindly patch it...
+Following the amendment of FCC part 15E and U-NII regulations effective
+2014/06/02, and the opening up of 5150 ~ 5250 MHz and 5600 ~ 5650 MHz
+spectrum in Taiwan, vendors have asked whether Taiwan's regulations
+would be updated to match the new FCC rules, when this would happen,
+and what to do in the interim.
 
-Eliad.
+The NCC, Taiwan's regulatory body has officially replied that new
+amendments are under way, and the goal is to match the FCC rules.
+Until the amendments come through, vendors are free to test and
+submit applications using the new FCC rules for transmission power
+limits and DFS requirements, though unintended / unwanted emissions
+must still conform to the current standard, LP0002. [1][2]
+
+This has been confirmed via a phone call to the NCC.
+
+[1] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
+[2] Proposal #10312260 (p.6, Chinese),
+    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
+
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index cea78d8..4409516 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1125,11 +1125,11 @@ country TT: DFS-FCC
+ # LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
+ #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+ #   (section 3.10.1, 4.7)
+-country TW: DFS-JP
++country TW: DFS-FCC
+ 	(2400 - 2483.5 @ 40), (30)
+ 	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
+ 	(5150 - 5250 @ 80), (23), AUTO-BW
+-	(5250 - 5350 @ 80), (17), DFS, AUTO-BW
++	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (23), DFS
+ 	(5725 - 5850 @ 80), (30)
+  
+-- 
+2.5.3
+
