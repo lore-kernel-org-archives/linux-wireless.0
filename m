@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:23128 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753349AbbJSJKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 05:10:14 -0400
-Subject: Re: FCC DFS support
-To: Tim Harvey <tharvey@gateworks.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+Received: from smtp.codeaurora.org ([198.145.29.96]:42858 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbbJFOQW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2015 10:16:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	nbd@openwrt.org, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-References: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com>
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Message-ID: <5624B374.5080209@neratec.com> (sfid-20151019_111020_918220_CB19D7D6)
-Date: Mon, 19 Oct 2015 11:10:12 +0200
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+Date: Tue, 06 Oct 2015 17:16:14 +0300
+In-Reply-To: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+	(Martin Blumenstingl's message of "Wed, 22 Jul 2015 10:42:43 +0200")
+Message-ID: <87mvvw13rl.fsf@kamboji.qca.qualcomm.com> (sfid-20151006_161625_466712_6185B767)
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/16/2015 06:53 PM, Tim Harvey wrote:
-> Greetings,
-> 
-> Is FCC DFS support (from the updated rules released in Aug 2014) fully
-> supported in ath10k by the driver/firmware/cards?
-> 
-> The linux-wireless DFS page [1] has some great info but doesn't really
-> list what is currently in place and working and doesn't mention ath10k
-> specifically and I didn't see anything on the ath10k page either [2].
-> 
-> Thanks for any info!
-> 
-> Regards,
-> 
-> Tim
-> 
-> [1] - https://wireless.wiki.kernel.org/en/developers/dfs
-> [2] - https://wireless.wiki.kernel.org/en/users/drivers/ath10k
-> --
-> 
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Hi Tim,
+> The FreeBSD driver [0] uses the same 2G values as for the AR9280 chips.
+> Using the same values in ath9k results in much better throughput for me.
+>
+> Before this patch I had a huge amount of packet loss (sometimes up to
+> 40%) and the max transfer speed was somewhere around 5Mbit/s. With this
+> patch applied I have zero packet loss and ten times the throughput.
+> My device uses a AR9227 which is the PCI variant of the AR9287.
+>
+> [0] http://bxr.su/FreeBSD/sys/dev/ath/ath_hal/ar9002/ar9287.h
+>
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 
-you're right, unfortunately the DFS documentation in [1] is quite outdated -
-basically in its initial state from 2011 when ath10k was unknown. It took around
-four years to get the work done, and since numerous parties contributed at
-different times and different modules (driver, mac/cfg, hostapd), the
-documentation has not always been updated accordingly.
+So what should I do with this patch? Is this good to apply?
 
-But the more important fact is: yes, ath10 and ath9k today fully support FCC.
+Discussion here:
 
-We certified one of our ath9k based products for FCC and ETSI some months ago, and
-I got confirmations that ath10k also passed certification testing for FCC.
+https://patchwork.kernel.org/patch/6841051/
 
-It is relevant to note that both drivers use the same radar pattern detector (and
-all upper layers anyway), so that if ath9k passed, ath10k most probably will also
-do (and vice versa).
-
-
-Hth,
-Zefir
-
-
+-- 
+Kalle Valo
