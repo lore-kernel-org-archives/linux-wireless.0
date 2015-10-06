@@ -1,79 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13148 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbbJLH7a (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:45216 "EHLO
+	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbbJFNq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:59:30 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 27/41] staging: wilc1000: remove typedef from tenuConnDisconnEvent
-Date: Mon, 12 Oct 2015 16:56:01 +0900
-Message-ID: <1444636575-2486-27-git-send-email-tony.cho@atmel.com> (sfid-20151012_095935_837030_B7E1DD1A)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+	Tue, 6 Oct 2015 09:46:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+ boundary="=_c509aa6f7f81ea58a6f3ec94db863b44"
+Date: Tue, 06 Oct 2015 15:36:36 +0200
+From: Michael Braun <michael.braun@fem.tu-ilmenau.de>
+To: johannes@sipsolutions.net
+Cc: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org
+Subject: Deadlock in mac80211 running 3.18.11 + compat-wireless 2015-03-09
+Reply-To: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org
+Message-ID: <b2436c41bd887b5970dfa3bd0368d8a7@fami-braun.de> (sfid-20151006_154631_223032_4B497D74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+--=_c509aa6f7f81ea58a6f3ec94db863b44
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 
-This patch removes typedef from the enum tenuConnDisconnEvent and
-renames it to conn_event.
+Dear Maintainer,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h         | 6 +++---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+I'm running a custom version of OpenWRT based on Linux 3.18.11 with 
+compat-wireless 2015-03-09 and am sometimes experiencing deadlock 
+warnings on P1020WLAN (PPC).
+Thought, I think I have reason to believe that the modifications do not 
+affect the deadlock; I currently do not have to opportunity to test an 
+unmodified kernel.
+Please find a backtrace attached. It makes more sense when replacing 
+minstrel_remove_sta_debugfs with minstrel_ht_get_rate -> 
+minstrel_aggr_check and
+ieee80211_proberesp_get, ieee80211_get_buffered_bc with ieee80211_xmit 
+and ieee80211_tx_h_rate_ctrl.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index ad4c1c4..a88fd82 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -160,11 +160,11 @@ enum scan_event {
- 	SCAN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
- };
- 
--typedef enum {
-+enum conn_event {
- 	CONN_DISCONN_EVENT_CONN_RESP		= 0,
- 	CONN_DISCONN_EVENT_DISCONN_NOTIF	= 1,
- 	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
--} tenuConnDisconnEvent;
-+};
- 
- enum KEY_TYPE {
- 	WEP,
-@@ -179,7 +179,7 @@ typedef void (*wilc_scan_result)(enum scan_event, tstrNetworkInfo *,
- 				  void *, void *);
- 
- /*Connect callBack function definition*/
--typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
-+typedef void (*wilc_connect_result)(enum conn_event,
- 				     tstrConnectInfo *,
- 				     u8,
- 				     tstrDisconnectNotifInfo *,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 45a10c5..11f9d46 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -531,7 +531,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID);
-  */
- int connecting;
- 
--static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
-+static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 			     tstrConnectInfo *pstrConnectInfo,
- 			     u8 u8MacStatus,
- 			     tstrDisconnectNotifInfo *pstrDisconnectNotifInfo,
--- 
-1.9.1
+This occurs while running infrastructure (AP) mode and IBSS 
+simultaneously.
+
+The important part (stack):
+
+CPU 0
+   1. ieee80211_subif_start_xmit
+   2. ieee80211_get_buffered_bc
+   3. ieee80211_proberesp_get
+   4. rate_control_get_rate         -> acquires sta->rate_lock
+   5. minstrel_ht_get_rate
+   6. minstrel_aggr_check
+   7. ieee80211_start_tx_ba_session -> wait for sta->lock
+
+CPU 1
+    1. ieee80211_ibss_leave
+    2. ieee80211_stop_tx_ba_cb       -> acquires sta->lock
+    3. ieee80211_send_delba
+    4. ieee80211_tx_skb
+    5. ieee80211_tx_skb_tid
+    6. __ieee80211_tx_skb_tid_band
+    7. ieee80211_xmit
+    8. ieee80211_tx
+    9. invoke_tx_handlers
+   10. ieee80211_tx_h_rate_ctrl
+   11. rate_control_get_rate         -> wait for sta->rate_lock
+
+I'm unsure how to address this. Replacing sta->rate_lock with sta->lock 
+breaks due to spinlock nesting and might be overkill.
+If there are patches I could test them.
+If you believe that this is not valid upstream issue, please let me 
+know.
+
+Thanks,
+  M. Braun
+
+--=_c509aa6f7f81ea58a6f3ec94db863b44
+Content-Transfer-Encoding: base64
+Content-Type: text/plain;
+ name=deadlock-trace.txt
+Content-Disposition: attachment;
+ filename=deadlock-trace.txt;
+ size=6231
+
+WyA5NzUwLjk3NTk5OV0gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09IApbIDk3NTAuOTgyMTcxXSBbIElORk86IHBvc3NpYmxlIGNpcmN1bGFyIGxv
+Y2tpbmcgZGVwZW5kZW5jeSBkZXRlY3RlZCBdIApbIDk3NTAuOTg4NDM0XSAzLjE4LjExICMyIE5v
+dCB0YWludGVkIApbIDk3NTAuOTkxODI4XSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIApbIDk3NTAuOTk4MDg4XSBrd29ya2VyL3U0OjAvNDAx
+OCBpcyB0cnlpbmcgdG8gYWNxdWlyZSBsb2NrOiAKWyA5NzUxLjAwMzM5Ml0gKCYoJnN0YS0+cmF0
+ZV9jdHJsX2xvY2spLT5ybG9jayl7Ky4tLi4ufSwgYXQ6IFs8ZjM5NzA5ZDQ+XSByYXRlX2NvbnRy
+b2xfZ2V0X3JhdGUrMHhiMC8weDE0OCBbbWFjODAyMTFdIApbIDk3NTEuMDEzOTA1XSAKYnV0IHRh
+c2sgaXMgYWxyZWFkeSBob2xkaW5nIGxvY2s6IApbIDk3NTEuMDE5NzMxXSAoJigmc3RhLT5sb2Nr
+KS0+cmxvY2speysuLS4uLn0sIGF0OiBbPGYzOTY3MzcwPl0gaWVlZTgwMjExX3N0b3BfdHhfYmFf
+Y2IrMHg3MC8weDE5MCBbbWFjODAyMTFdIApbIDk3NTEuMDI5NDk2XSAKd2hpY2ggbG9jayBhbHJl
+YWR5IGRlcGVuZHMgb24gdGhlIG5ldyBsb2NrLiAKClsgOTc1MS4wMzc2NjldIAp0aGUgZXhpc3Rp
+bmcgZGVwZW5kZW5jeSBjaGFpbiAoaW4gcmV2ZXJzZSBvcmRlcikgaXM6IApbIDk3NTEuMDQ1MTQ0
+XSAKLT4gIzEgKCYoJnN0YS0+bG9jayktPnJsb2NrKXsrLi0uLi59OiAKWyA5NzUxLjA1MDAzMF0g
+WzxjMDM1YTU1OD5dIF9yYXdfc3Bpbl9sb2NrX2JoKzB4NDQvMHg1YyAKWyA5NzUxLjA1NTYxNV0g
+WzxmMzk2NjU1OD5dIGllZWU4MDIxMV9zdGFydF90eF9iYV9zZXNzaW9uKzB4ZDAvMHgyNjggW21h
+YzgwMjExXSAKWyA5NzUxLjA2MzI4MV0gWzxmMzlhOTYyMD5dIG1pbnN0cmVsX3JlbW92ZV9zdGFf
+ZGVidWdmcysweDc4NC8weDFjNjggW21hYzgwMjExXSAKWyA5NzUxLjA3MDk0OF0gWzxmMzk3MDlm
+ND5dIHJhdGVfY29udHJvbF9nZXRfcmF0ZSsweGQwLzB4MTQ4IFttYWM4MDIxMV0gClsgOTc1MS4w
+Nzc5MjFdIFs8ZjM5ODAzMzg+XSBpZWVlODAyMTFfcHJvYmVyZXNwX2dldCsweDExNTQvMHgyYzQ4
+IFttYWM4MDIxMV0gClsgOTc1MS4wODUzMjhdIFs8ZjM5ODJhNjQ+XSBpZWVlODAyMTFfZ2V0X2J1
+ZmZlcmVkX2JjKzB4MjM0LzB4MjY4IFttYWM4MDIxMV0gClsgOTc1MS4wOTI3MzVdIFs8ZjM5ODM2
+NDA+XSBfX2llZWU4MDIxMV9zdWJpZl9zdGFydF94bWl0KzB4MzU0LzB4M2Y0IFttYWM4MDIxMV0g
+ClsgOTc1MS4xMDA0MDJdIFs8ZjM5ODM2ZjQ+XSBpZWVlODAyMTFfc3ViaWZfc3RhcnRfeG1pdCsw
+eDE0LzB4MjggW21hYzgwMjExXSAKWyA5NzUxLjEwNzcyMl0gWzxjMDJiNzY1MD5dIGRldl9oYXJk
+X3N0YXJ0X3htaXQrMHgyZDQvMHgzOGMgClsgOTc1MS4xMTM2NDZdIFs8YzAyZDI0MWM+XSBzY2hf
+ZGlyZWN0X3htaXQrMHg5OC8weDIwMCAKWyA5NzUxLjExOTEzNV0gWzxjMDJiN2E2ND5dIF9fZGV2
+X3F1ZXVlX3htaXQrMHgzNWMvMHg2MmMgClsgOTc1MS4xMjQ3OTNdIFs8ZjMzYjMzMjA+XSBicl9k
+ZXZfcXVldWVfcHVzaF94bWl0KzB4MWU4LzB4MjMwIFticmlkZ2VdIApbIDk3NTEuMTMxNzk3XSBb
+PGYzM2IzNTA4Pl0gYnJfZGVsaXZlcisweDkwLzB4MzI4IFticmlkZ2VdIApbIDk3NTEuMTM3NjM4
+XSBbPGYzM2I0Nzg4Pl0gYnJfaGFuZGxlX2ZyYW1lX2ZpbmlzaCsweDE1MC8weDFkMCBbYnJpZGdl
+XSAKWyA5NzUxLjE0NDYwNl0gWzxmMzNiNGFjND5dIGJyX2hhbmRsZV9mcmFtZSsweDJiYy8weGMy
+NCBbYnJpZGdlXSAKWyA5NzUxLjE1MDk2NV0gWzxjMDJiMjJmYz5dIF9fbmV0aWZfcmVjZWl2ZV9z
+a2JfY29yZSsweDU0OC8weDdjMCAKWyA5NzUxLjE1NzMxOV0gWzxjMDJiNTkyND5dIHByb2Nlc3Nf
+YmFja2xvZysweGE0LzB4MTc4IApbIDk3NTEuMTYyODA1XSBbPGMwMmI1MTE0Pl0gbmV0X3J4X2Fj
+dGlvbisweDk0LzB4MWE0IApbIDk3NTEuMTY4MTE2XSBbPGMwMDJjNmY0Pl0gX19kb19zb2Z0aXJx
+KzB4MTAwLzB4MjQ0IApbIDk3NTEuMTczNDMzXSBbPGMwMDBjYzVjPl0gY2FsbF9kb19zb2Z0aXJx
+KzB4MjQvMHgzYyAKWyA5NzUxLjE3ODgzMl0gWzxjMDAwNDhhND5dIGRvX3NvZnRpcnFfb3duX3N0
+YWNrKzB4NDQvMHg3YyAKWyA5NzUxLjE4NDY2N10gWzxjMDAyYzkxYz5dIGRvX3NvZnRpcnErMHg1
+OC8weDk0IApbIDk3NTEuMTg5NjMwXSBbPGMwMmIxYzQ0Pl0gbmV0aWZfcnhfbmkrMHg0OC8weDYw
+IApbIDk3NTEuMTk0NjgwXSBbPGYzMTdmMjEwPl0gdHVuX2dldF9zb2NrZXQrMHgxMGE0LzB4Mzdh
+YyBbdHVuXSAKWyA5NzUxLjIwMDg4NV0gWzxmMzE3ZjVhYz5dIHR1bl9nZXRfc29ja2V0KzB4MTQ0
+MC8weDM3YWMgW3R1bl0gClsgOTc1MS4yMDcwNzFdIFs8YzAwZGFiOTA+XSBkb19zeW5jX3dyaXRl
+KzB4NzAvMHhhNCAKWyA5NzUxLjIxMjMwM10gWzxjMDBkYjdjOD5dIHZmc193cml0ZSsweGIwLzB4
+MWJjIApbIDk3NTEuMjE3MjY3XSBbPGMwMGRiZDFjPl0gU3lTX3dyaXRlKzB4NGMvMHhhNCAKWyA5
+NzUxLjIyMjE0NF0gWzxjMDAwZTRlOD5dIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4M2MgClsgOTc1
+MS4yMjc1NDRdIAotPiAjMCAoJigmc3RhLT5yYXRlX2N0cmxfbG9jayktPnJsb2NrKXsrLi0uLi59
+OiAKWyA5NzUxLjIzMzMwMF0gWzxjMDA2MGZiMD5dIGxvY2tfYWNxdWlyZSsweDUwLzB4NmMgClsg
+OTc1MS4yMzg0MzldIFs8YzAzNWE1NTg+XSBfcmF3X3NwaW5fbG9ja19iaCsweDQ0LzB4NWMgClsg
+OTc1MS4yNDQwMTVdIFs8ZjM5NzA5ZDQ+XSByYXRlX2NvbnRyb2xfZ2V0X3JhdGUrMHhiMC8weDE0
+OCBbbWFjODAyMTFdIApbIDk3NTEuMjUxMDA0XSBbPGYzOTgwMzM4Pl0gaWVlZTgwMjExX3Byb2Jl
+cmVzcF9nZXQrMHgxMTU0LzB4MmM0OCBbbWFjODAyMTFdIApbIDk3NTEuMjU4NDExXSBbPGYzOTgy
+YTY0Pl0gaWVlZTgwMjExX2dldF9idWZmZXJlZF9iYysweDIzNC8weDI2OCBbbWFjODAyMTFdIApb
+IDk3NTEuMjY1ODE4XSBbPGYzOTgzYWU4Pl0gX19pZWVlODAyMTFfdHhfc2tiX3RpZF9iYW5kKzB4
+N2MvMHg3MjggW21hYzgwMjExXSAKWyA5NzUxLjI3MzMxMV0gWzxmMzk2NTliYz5dIGllZWU4MDIx
+MV9zZW5kX2RlbGJhKzB4MmJjLzB4MmU0IFttYWM4MDIxMV0gClsgOTc1MS4yODAyODNdIFs8ZjM5
+NjczYjg+XSBpZWVlODAyMTFfc3RvcF90eF9iYV9jYisweGI4LzB4MTkwIFttYWM4MDIxMV0gClsg
+OTc1MS4yODc0MjddIFs8ZjM5NmM5ZDQ+XSBpZWVlODAyMTFfaWJzc19sZWF2ZSsweGIwOC8weDE3
+ZDAgW21hYzgwMjExXSAKWyA5NzUxLjI5NDQ4NF0gWzxjMDAzZmE5OD5dIHByb2Nlc3Nfb25lX3dv
+cmsrMHgyMTAvMHgzYTAgClsgOTc1MS4zMDAxNDRdIFs8YzAwNDAxNTQ+XSB3b3JrZXJfdGhyZWFk
+KzB4MjcwLzB4NDI4IApbIDk3NTEuMzA1NTQxXSBbPGMwMDQ0MTk0Pl0ga3RocmVhZCsweGQwLzB4
+ZDQgClsgOTc1MS4zMTAyNDhdIFs8YzAwMGU2MzQ+XSByZXRfZnJvbV9rZXJuZWxfdGhyZWFkKzB4
+NWMvMHg2NCAKWyA5NzUxLjMxNjI1NV0gCm90aGVyIGluZm8gdGhhdCBtaWdodCBoZWxwIHVzIGRl
+YnVnIHRoaXM6IAoKWyA5NzUxLjMyNDI1NV0gUG9zc2libGUgdW5zYWZlIGxvY2tpbmcgc2NlbmFy
+aW86IAoKWyA5NzUxLjMzMDE2OV0gQ1BVMCBDUFUxIApbIDk3NTEuMzM0NjkxXSAtLS0tIC0tLS0g
+ClsgOTc1MS4zMzkyMTJdIGxvY2soJigmc3RhLT5sb2NrKS0+cmxvY2spOyAKWyA5NzUxLjM0MzIy
+MV0gbG9jaygmKCZzdGEtPnJhdGVfY3RybF9sb2NrKS0+cmxvY2spOyAKWyA5NzUxLjM1MDYxNV0g
+bG9jaygmKCZzdGEtPmxvY2spLT5ybG9jayk7IApbIDk3NTEuMzU3MTQyXSBsb2NrKCYoJnN0YS0+
+cmF0ZV9jdHJsX2xvY2spLT5ybG9jayk7IApbIDk3NTEuMzYyMDE5XSAKICoqKiBERUFETE9DSyAq
+KiogCgpbIDk3NTEuMzY3OTM4XSA2IGxvY2tzIGhlbGQgYnkga3dvcmtlci91NDowLzQwMTg6IApb
+IDk3NTEuMzcyMzc0XSAjMDogKCIlcyJ3aXBoeV9uYW1lKGxvY2FsLT5ody53aXBoeSkpeysrKysu
+K30sIGF0OiBbPGMwMDNmYTI4Pl0gcHJvY2Vzc19vbmVfd29yaysweDFhMC8weDNhMCAKWyA5NzUx
+LjM4MjA0NV0gIzE6ICgoJnNkYXRhLT53b3JrKSl7Ky4rLisufSwgYXQ6IFs8YzAwM2ZhMjg+XSBw
+cm9jZXNzX29uZV93b3JrKzB4MWEwLzB4M2EwIApbIDk3NTEuMzkwMjM5XSAjMjogKCZsb2NhbC0+
+c3RhX210eCl7Ky4rLisufSwgYXQ6IFs8ZjM5NjczMzg+XSBpZWVlODAyMTFfc3RvcF90eF9iYV9j
+YisweDM4LzB4MTkwIFttYWM4MDIxMV0gClsgOTc1MS40MDAwMDldICMzOiAoJnN0YS0+YW1wZHVf
+bWxtZS5tdHgpeysuKy4rLn0sIGF0OiBbPGYzOTY3MzY0Pl0gaWVlZTgwMjExX3N0b3BfdHhfYmFf
+Y2IrMHg2NC8weDE5MCBbbWFjODAyMTFdIApbIDk3NTEuNDEwMjA5XSAjNDogKCYoJnN0YS0+bG9j
+ayktPnJsb2NrKXsrLi0uLi59LCBhdDogWzxmMzk2NzM3MD5dIGllZWU4MDIxMV9zdG9wX3R4X2Jh
+X2NiKzB4NzAvMHgxOTAgW21hYzgwMjExXSAKWyA5NzUxLjQyMDQxM10gIzU6IChyY3VfcmVhZF9s
+b2NrKXsuLi4uLi59LCBhdDogWzxmMzk2NThmND5dIGllZWU4MDIxMV9zZW5kX2RlbGJhKzB4MWY0
+LzB4MmU0IFttYWM4MDIxMV0gClsgOTc1MS40Mjk4MzNdIApzdGFjayBiYWNrdHJhY2U6IApbIDk3
+NTEuNDM0MTkwXSBDUFU6IDAgUElEOiA0MDE4IENvbW06IGt3b3JrZXIvdTQ6MCBOb3QgdGFpbnRl
+ZCAzLjE4LjExICMyIApbIDk3NTEuNDQwNzI2XSBXb3JrcXVldWU6IHBoeTAgaWVlZTgwMjExX2li
+c3NfbGVhdmUgW21hYzgwMjExXSAKWyA5NzUxLjQ0NjI5Ml0gW3N0YWNrXSBDYWxsIFRyYWNlOiAK
+WyA5NzUxLjQ0OTQzNF0gW3N0YWNrXSBbZWNlYmRiMzBdIFtjMDM1ZTA1NF0gZHVtcF9zdGFjaysw
+eDc4LzB4YTAgKHVucmVsaWFibGUpIApbIDk3NTEuNDU2Mzk4XSBbc3RhY2tdIFtlY2ViZGI0MF0g
+W2MwMzVjNDMwXSBwcmludF9jaXJjdWxhcl9idWcrMHgzMjAvMHgzMzggClsgOTc1MS40NjMwOThd
+IFtzdGFja10gW2VjZWJkYjcwXSBbYzAwNjAwY2NdIF9fbG9ja19hY3F1aXJlKzB4MTFhYy8weDE5
+Y2MgClsgOTc1MS40Njk2MjRdIFtzdGFja10gW2VjZWJkYzAwXSBbYzAwNjBmYjBdIGxvY2tfYWNx
+dWlyZSsweDUwLzB4NmMgClsgOTc1MS40NzU2MzNdIFtzdGFja10gW2VjZWJkYzIwXSBbYzAzNWE1
+NThdIF9yYXdfc3Bpbl9sb2NrX2JoKzB4NDQvMHg1YyAKWyA5NzUxLjQ4MjA4NV0gW3N0YWNrXSBb
+ZWNlYmRjMzBdIFtmMzk3MDlkNF0gcmF0ZV9jb250cm9sX2dldF9yYXRlKzB4YjAvMHgxNDggW21h
+YzgwMjExXSAKWyA5NzUxLjQ4OTkyN10gW3N0YWNrXSBbZWNlYmRjNjBdIFtmMzk4MDMzOF0gaWVl
+ZTgwMjExX3Byb2JlcmVzcF9nZXQrMHgxMTU0LzB4MmM0OCBbbWFjODAyMTFdIApbIDk3NTEuNDk4
+MjAzXSBbc3RhY2tdIFtlY2ViZGNmMF0gW2YzOTgyYTY0XSBpZWVlODAyMTFfZ2V0X2J1ZmZlcmVk
+X2JjKzB4MjM0LzB4MjY4IFttYWM4MDIxMV0gClsgOTc1MS41MDY0NzddIFtzdGFja10gW2VjZWJk
+ZDYwXSBbZjM5ODNhZThdIF9faWVlZTgwMjExX3R4X3NrYl90aWRfYmFuZCsweDdjLzB4NzI4IFtt
+YWM4MDIxMV0gClsgOTc1MS41MTQ4MzddIFtzdGFja10gW2VjZWJkZDgwXSBbZjM5NjU5YmNdIGll
+ZWU4MDIxMV9zZW5kX2RlbGJhKzB4MmJjLzB4MmU0IFttYWM4MDIxMV0gClsgOTc1MS41MjI2Nzhd
+IFtzdGFja10gW2VjZWJkZGIwXSBbZjM5NjczYjhdIGllZWU4MDIxMV9zdG9wX3R4X2JhX2NiKzB4
+YjgvMHgxOTAgW21hYzgwMjExXSAKWyA5NzUxLjUzMDY5MV0gW3N0YWNrXSBbZWNlYmRkZTBdIFtm
+Mzk2YzlkNF0gaWVlZTgwMjExX2lic3NfbGVhdmUrMHhiMDgvMHgxN2QwIFttYWM4MDIxMV0gClsg
+OTc1MS41Mzg2MDddIFtzdGFja10gW2VjZWJkZTQwXSBbYzAwM2ZhOThdIHByb2Nlc3Nfb25lX3dv
+cmsrMHgyMTAvMHgzYTAgClsgOTc1MS41NDUxMzRdIFtzdGFja10gW2VjZWJkZTcwXSBbYzAwNDAx
+NTRdIHdvcmtlcl90aHJlYWQrMHgyNzAvMHg0MjggClsgOTc1MS41NTE0MDJdIFtzdGFja10gW2Vj
+ZWJkZWIwXSBbYzAwNDQxOTRdIGt0aHJlYWQrMHhkMC8weGQ0IApbIDk3NTEuNTU2OTc3XSBbc3Rh
+Y2tdIFtlY2ViZGY0MF0gW2MwMDBlNjM0XSByZXRfZnJvbV9rZXJuZWxfdGhyZWFkKzB4NWMvMHg2
+NCAKWyA5NzUxLjU2Mzg0OF0gW3N0YWNrXSAtLS0gaW50ZXJydXB0OiAwIGF0IChudWxsKSAKW3N0
+YWNrXSBMUiA9IChudWxsKSAK
+--=_c509aa6f7f81ea58a6f3ec94db863b44--
 
