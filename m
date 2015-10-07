@@ -1,95 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4902 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C6K (ORCPT
+Received: from limerock04.mail.cornell.edu ([128.84.13.244]:48773 "EHLO
+	limerock04.mail.cornell.edu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752667AbbJGCkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:10 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 18/64] staging: wilc1000: rename u16Channel of struct remain_ch
-Date: Thu, 29 Oct 2015 11:58:41 +0900
-Message-ID: <1446087567-16728-18-git-send-email-glen.lee@atmel.com> (sfid-20151029_035814_010951_1DCC0F31)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	Tue, 6 Oct 2015 22:40:40 -0400
+Date: Tue, 6 Oct 2015 22:40:29 -0400
+From: Jacob Kiefer <jtk54@cornell.edu>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	"open list:STAGING - REALTEK RTL8723U WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] staging: rtl8723au: Fix sparse errors in
+ rtl8723a_cmd.c
+Message-ID: <20151007024028.GA2478@jtk54-Q550LF> (sfid-20151007_044058_113625_C60D40B0)
+References: <1444105958-32087-1-git-send-email-jtk54@cornell.edu>
+ <20151006231134.GV22011@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151006231134.GV22011@ZenIV.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, Oct 07, 2015 at 12:11:34AM +0100, Al Viro wrote:
+> On Tue, Oct 06, 2015 at 12:32:28AM -0400, Jacob Kiefer wrote:
+> 
+> >  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+> >  {
+> > -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+> > +	__le32 leparam;
+> > 
+> > -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+> > +	leparam = cpu_to_le32(*((u32 *)param));
+> > +
+> > +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&leparam);
+> 
+> Why not fill the thing we are passing already with little-endian?  There's
+> only one caller, after all...
+> 
 
-This patch renames u16Channel of struct remain_ch to ch
-to avoid CamelCase naming convention.
+This is a good point. Adding to that, I looked at the one caller: they
+take a u32, dereference it and convert it to a u8 pointer and then pass
+it into rtl8723a_set_rssi_cmd -- it seems that the u8 *param passed should just
+be a __le32 or little-endian u32, and then get deferenced and cast for
+FillH2CCmd.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 11 ++++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+rtl8723a_set_rssi_cmd caller code for reference:
+> for (i = 0; i < sta_cnt; i++) {
+>     if (PWDB_rssi[i] != (0))
+>     rtl8723a_set_rssi_cmd(Adapter, (u8 *)&PWDB_rssi[i]);
+> }
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 12e0d21..99958f4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2483,10 +2483,10 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
- 		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
- 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
--		hif_drv->remain_on_ch.u16Channel = pstrHostIfRemainOnChan->u16Channel;
-+		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
- 	} else {
--		pstrHostIfRemainOnChan->u16Channel = hif_drv->remain_on_ch.u16Channel;
-+		pstrHostIfRemainOnChan->ch = hif_drv->remain_on_ch.ch;
- 	}
- 
- 	if (hif_drv->usr_scan_req.pfUserScanResult) {
-@@ -2507,7 +2507,8 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		goto ERRORHANDLER;
- 	}
- 
--	PRINT_D(HOSTINF_DBG, "Setting channel :%d\n", pstrHostIfRemainOnChan->u16Channel);
-+	PRINT_D(HOSTINF_DBG, "Setting channel :%d\n",
-+		pstrHostIfRemainOnChan->ch);
- 
- 	u8remain_on_chan_flag = true;
- 	wid.id = (u16)WID_REMAIN_ON_CHAN;
-@@ -2520,7 +2521,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	}
- 
- 	wid.val[0] = u8remain_on_chan_flag;
--	wid.val[1] = (s8)pstrHostIfRemainOnChan->u16Channel;
-+	wid.val[1] = (s8)pstrHostIfRemainOnChan->ch;
- 
- 	result = send_config_pkt(SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
-@@ -4367,7 +4368,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
--	msg.body.remain_on_ch.u16Channel = chan;
-+	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6cca6e0..dc68711 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -236,7 +236,7 @@ struct ba_session_info {
- };
- 
- struct remain_ch {
--	u16 u16Channel;
-+	u16 ch;
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired pRemainOnChanExpired;
- 	wilc_remain_on_chan_ready pRemainOnChanReady;
--- 
-1.9.1
 
+> >  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
+> >  {
+> >  	u8 buf[5];
+> > +	__le32 lemask;
+> > 
+> >  	memset(buf, 0, 5);
+> > -	mask = cpu_to_le32(mask);
+> > -	memcpy(buf, &mask, 4);
+> > +	lemask = cpu_to_le32(mask);
+> > +	memcpy(buf, &lemask, 4);
+> >  	buf[4]  = arg;
+> > 
+> >  	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
+> 
+> Ugh...
+> 	struct macid_config_eid {__le32 mask; u8 arg;} buf = {
+> 		.mask = cpu_to_le32(mask), .arg = arg
+> 	};
+> 
+> 	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, &buf);
+> 
+> Why bother with memcpy/memset/whatnot when all you are trying to do is to
+> initialize a temporary structure?  And no, it's not going to have any gaps...
+
+This is also a good point -- we can definitely avoid the memcpy/memsets
+this way. Additionally, there are only two callers to rtl8723a_set_raid_cmd;
+there's no reason the u32 mask can't be passed in as little-endian
+__le32 or u32.
+
+One question -- which is preferable: a u32 that we know is
+little-endian, or an explicit __le32? __le32 would not cause sparse
+errors, so I'm inclined to go that route, is there something wrong with
+this?
+
+Going forward, I'm going to split this up into two patches, one for
+each function. In each I'll change the interface to take a __le32
+instead of what is going on here and make the caller do the le32
+conversion. I'll also update the caller references and the .h file
+for each. I'll submit them as a patch set later this week.
+
+Let me know your thoughts on this.
+
+Jake
