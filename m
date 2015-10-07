@@ -1,78 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8774 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbbJEG0z (ORCPT
+Received: from mail-yk0-f181.google.com ([209.85.160.181]:36284 "EHLO
+	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773AbbJGSvF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:26:55 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/18] staging: wilc1000: remove typedef from tstrHostIFwpaAttr
-Date: Mon, 5 Oct 2015 15:25:43 +0900
-Message-ID: <1444026353-29024-8-git-send-email-tony.cho@atmel.com> (sfid-20151005_082657_525745_5C388B39)
-In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+	Wed, 7 Oct 2015 14:51:05 -0400
+Received: by ykba192 with SMTP id a192so23087014ykb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2015 11:51:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Ramprasad Vempati <ramprasad.vempati@gmail.com>
+Date: Thu, 8 Oct 2015 00:20:44 +0530
+Message-ID: <CAB6w8enLcU8LZfL=Uzpi5x6od_VExUdTW2PT9norQ=8POGNFcw@mail.gmail.com> (sfid-20151007_205109_347694_FA066B23)
+Subject: How to enforce Wireless Mode of Station?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch removes typedef from the struct tstrHostIFwpaAttr.
-And rename it to host_if_wpa_attr.
+I've been trying to find how to control wireless mode, i.e. 802.11b or
+802.11g or 802.11ng or 802.11a etc for Station mode. In general for
+Station mode, the connection happens with AP based AP mode. But for
+test purpose, if I would like to control mode of a wireless station,
+is it possible?  I mean when AP is 11bgn mode, if I want STA to
+associate in 11b mode?
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I understand "iw" can be used to set rate mask. But I've tried with
+ath9k or intel chipsets. I've not been able to get it working as most
+of the vendors didn't implement this.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 87866c4..b5de66a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -76,7 +76,7 @@ struct cfg_param_attr {
- };
- 
- /*!
-- *  @struct             tstrHostIFwpaAttr
-+ *  @struct             host_if_wpa_attr
-  *  @brief		Structure to hold Host IF Scan Attributes
-  *  @details
-  *  @todo
-@@ -85,7 +85,7 @@ struct cfg_param_attr {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFwpaAttr {
-+struct host_if_wpa_attr {
- 	u8 *pu8key;
- 	const u8 *pu8macaddr;
- 	u8 *pu8seq;
-@@ -93,7 +93,7 @@ typedef struct _tstrHostIFwpaAttr {
- 	u8 u8keyidx;
- 	u8 u8Keylen;
- 	u8 u8Ciphermode;
--} tstrHostIFwpaAttr;
-+};
- 
- 
- /*!
-@@ -126,7 +126,7 @@ struct host_if_wep_attr {
-  */
- union host_if_key_attr {
- 	struct host_if_wep_attr strHostIFwepAttr;
--	tstrHostIFwpaAttr strHostIFwpaAttr;
-+	struct host_if_wpa_attr strHostIFwpaAttr;
- 	tstrHostIFpmkidAttr strHostIFpmkidAttr;
- };
- 
--- 
-1.9.1
+Is there a different way to enforce specific wireless mode on station?
 
+Thanks,
+Ram
