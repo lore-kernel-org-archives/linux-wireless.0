@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:62104 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754518AbbJOGXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 02:23:09 -0400
-Date: Thu, 15 Oct 2015 14:21:32 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	austin.shin@atmel.com, adel.noureldin@atmel.com,
-	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
-Subject: [RFC PATCH] staging: wilc1000: hif_sema_deinit can be static
-Message-ID: <20151015062132.GA90448@xian> (sfid-20151015_082313_779501_16261DF7)
-References: <201510151431.u3oU2Yok%fengguang.wu@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60483 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752318AbbJGJQf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2015 05:16:35 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: egrumbach@gmail.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: iwlwifi-next 2015-10-05
+References: <1444050759.27220.15.camel@coelho.fi>
+Date: Wed, 07 Oct 2015 12:16:27 +0300
+In-Reply-To: <1444050759.27220.15.camel@coelho.fi> (Luca Coelho's message of
+	"Mon, 05 Oct 2015 16:12:39 +0300")
+Message-ID: <87wpuzyr6c.fsf@kamboji.qca.qualcomm.com> (sfid-20151007_111647_086309_168C2CCC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-16-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- host_interface.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> (oops! now with Kalle's correct email address)
+>
+> Hi Kalle,
+>
+> Here's our second pull request for 4.4.  Nothing really stands out,
+> just the usual series of improvements, bugfixes and clean-ups.
+>
+> There doesn't seem to be any conflict with the fixes pull request I
+> just sent, but if you find any problems, let me know.
+>
+> Luca.
+>
+> The following changes since commit
+> 8f6c5b079cb37f01463a643182815c00aa5263f2:
+>
+>   Merge tag 'iwlwifi-next-for-kalle-2015-09-21' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next
+> (2015-09-26 21:25:18 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi
+> -next.git tags/iwlwifi-next-for-kalle-2015-10-05
+>
+> for you to fetch changes up to
+> 0316d30ea3e66379cd30ed70a114bc282159bb4c:
+>
+>   iwlwifi: mvm: add minimal multi-RXQ infrastructure (2015-10-05
+> 14:34:51 +0300)
+>
+> ----------------------------------------------------------------
+> * more clean-ups towards multiple RX queues;
+> * some rate scaling fixes and improvements;
+> * some time-of-flight fixes;
+> * other generic improvements and clean-ups;
+>
+> ----------------------------------------------------------------
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index acb8379d..aa5c9d7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -244,7 +244,7 @@ static WILC_MsgQueueHandle hif_msg_q;
- static struct semaphore hif_sema_thread;
- struct semaphore hif_sema_driver;
- static struct semaphore hif_sema_wait_response;
--struct semaphore hif_sema_deinit;
-+static struct semaphore hif_sema_deinit;
- struct timer_list g_hPeriodicRSSI;
- 
- 
+Pulled, thanks.
+
+-- 
+Kalle Valo
