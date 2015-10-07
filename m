@@ -1,81 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41935 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122AbbJ1G74 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39898 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbbJGFKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:59:56 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 23/80] staging: wilc1000: rename hSemGetRSSI of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:43 +0900
-Message-ID: <1446015640-29398-23-git-send-email-glen.lee@atmel.com> (sfid-20151028_081656_364369_EBD9D117)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+	Wed, 7 Oct 2015 01:10:09 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH] Revert "mac80211: remove exposing 'mfp' to drivers"
+Date: Wed, 7 Oct 2015 10:40:04 +0530
+Message-ID: <1444194604-12637-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20151007_071014_721690_B2B8A820)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-This patch renames hSemGetRSSI of struct host_if_drv to sem_get_rssi
-to avoid CamelCase naming convention.
+This reverts commit 5c48f1201744233d4f235c7dd916d5196ed20716.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Some device drivers (ath10k) offload part of aggregation including AddBA/DelBA
+negotiations to firmware. In such scenario, the PMF configuration of
+the station needs to be provided to driver to enable encryption of
+AddBA/DelBA action frames.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Notes:
+	> ath10k change using this mfp configuration will follow.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0dfec3c..04b3056 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2100,7 +2100,7 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
- 		result = -EFAULT;
+ include/net/mac80211.h |    2 ++
+ net/mac80211/cfg.c     |    1 +
+ net/mac80211/mlme.c    |    6 +++++-
+ 3 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4ec6fed..1bb2a2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1683,6 +1683,7 @@ struct ieee80211_sta_rates {
+  * @tdls: indicates whether the STA is a TDLS peer
+  * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
+  *	valid if the STA is a TDLS peer in the first place.
++ * @mfp: indicates whether the STA uses management frame protection or not.
+  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
+  */
+ struct ieee80211_sta {
+@@ -1700,6 +1701,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_rates __rcu *rates;
+ 	bool tdls;
+ 	bool tdls_initiator;
++	bool mfp;
+ 
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 68e551e..63d03da 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1138,6 +1138,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
  	}
  
--	up(&hif_drv->hSemGetRSSI);
-+	up(&hif_drv->sem_get_rssi);
- }
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
++		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
+ 		if (set & BIT(NL80211_STA_FLAG_MFP))
+ 			set_sta_flag(sta, WLAN_STA_MFP);
+ 		else
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 56ef9a8..9c450ff 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3044,8 +3044,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
  
- static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
-@@ -3812,7 +3812,7 @@ s32 host_int_get_rssi(struct host_if_drv *hif_drv, s8 *ps8Rssi)
- 		return -EFAULT;
- 	}
+ 	rate_control_rate_init(sta);
  
--	down(&hif_drv->hSemGetRSSI);
-+	down(&hif_drv->sem_get_rssi);
+-	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
++	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
+ 		set_sta_flag(sta, WLAN_STA_MFP);
++		sta->sta.mfp = true;
++	} else {
++		sta->sta.mfp = false;
++	}
  
- 	if (!ps8Rssi) {
- 		PRINT_ER("RSS pointer value is null");
-@@ -4106,7 +4106,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	sta->sta.wme = elems.wmm_param && local->hw.queues >= IEEE80211_NUM_ACS;
  
- 	sema_init(&hif_drv->sem_test_key_block, 0);
- 	sema_init(&hif_drv->sem_test_disconn_block, 0);
--	sema_init(&hif_drv->hSemGetRSSI, 0);
-+	sema_init(&hif_drv->sem_get_rssi, 0);
- 	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
- 	sema_init(&hif_drv->hSemGetCHNL, 0);
- 	sema_init(&hif_drv->hSemInactiveTime, 0);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index ff13be4..b18ed17 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -307,7 +307,7 @@ struct host_if_drv {
- 	struct semaphore sem_cfg_values;
- 	struct semaphore sem_test_key_block;
- 	struct semaphore sem_test_disconn_block;
--	struct semaphore hSemGetRSSI;
-+	struct semaphore sem_get_rssi;
- 	struct semaphore hSemGetLINKSPEED;
- 	struct semaphore hSemGetCHNL;
- 	struct semaphore hSemInactiveTime;
 -- 
-1.9.1
+1.7.9.5
 
