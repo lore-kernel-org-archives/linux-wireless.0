@@ -1,71 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52738 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbbJPElX (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32426 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551AbbJGFQI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:41:23 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 31/40] staging: wilc1000: rename variable gu8FlushedAuthType
-Date: Fri, 16 Oct 2015 13:38:01 +0900
-Message-ID: <1444970290-17609-31-git-send-email-tony.cho@atmel.com> (sfid-20151016_064701_928850_5EBF65BE)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Wed, 7 Oct 2015 01:16:08 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>,
+	Manikanta pubbisetty <c_mpubbi@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: set peer MFP flag in peer assoc command
+Date: Wed, 7 Oct 2015 10:46:01 +0530
+Message-ID: <1444194961-12777-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20151007_071727_363598_9184C7B5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-This patch renames variable gu8FlushedAuthType to auth_type
-to avoid CamelCase naming convention.
+Set peer's management frame protection flag in peer assoc command,
+this setting will enable/disable encrytion of management frames in fw.
 
-Add to static because follow warning reported by kbuild system.
- - drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol
-   'auth_type' was not declared. Should it be static?
+Setting of this flag is based on whether MFP is enabled/disabled at STA
+and a firmware feature flag ATH10K_FW_FEATURE_MFP_SUPPORT. This is because
+only firmwares 10.1.561 and above have support for MFP.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Signed-off-by: Manikanta pubbisetty <c_mpubbi@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Notes:
+	This patch has dependency of following patch.
+	Revert "mac80211: remove exposing 'mfp' to drivers"
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e15aeb1..f06280b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -264,7 +264,7 @@ static u8 del_beacon;
- static u8 *join_req;
- static u8 *info_element;
- static u8 mode_11i;
--u8 gu8FlushedAuthType;
-+static u8 auth_type;
- u32 gu32FlushedJoinReqSize;
- u32 gu32FlushedInfoElemAsocSize;
- struct host_if_drv *gu8FlushedJoinReqDrvHandler;
-@@ -1100,7 +1100,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	u32WidsCount++;
+ drivers/net/wireless/ath/ath10k/core.c   |    1 +
+ drivers/net/wireless/ath/ath10k/core.h   |    3 +++
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    7 +++++++
+ drivers/net/wireless/ath/ath10k/mac.c    |    8 +++++++-
+ 4 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 879625a..6a2dd34 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -151,6 +151,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING] = "no-4addr-pad",
+ 	[ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT] = "skip-clock-init",
+ 	[ATH10K_FW_FEATURE_RAW_MODE_SUPPORT] = "raw-mode",
++	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
+ };
  
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
--		gu8FlushedAuthType = (u8)hif_drv->strWILC_UsrConnReq.tenuAuth_type;
-+		auth_type = (u8)hif_drv->strWILC_UsrConnReq.tenuAuth_type;
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3e4668e..0e23400 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -469,6 +469,9 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_RAW_MODE_SUPPORT = 10,
  
- 	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", hif_drv->strWILC_UsrConnReq.tenuAuth_type);
- 	PRINT_D(HOSTINF_DBG, "Connecting to network of SSID %s on channel %d\n",
-@@ -1317,7 +1317,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
- 	strWIDList[u32WidsCount].type = WID_CHAR;
- 	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)(&gu8FlushedAuthType);
-+	strWIDList[u32WidsCount].val = (s8 *)(&auth_type);
- 	u32WidsCount++;
++	/* Firmware supports management frame protection */
++	ATH10K_FW_FEATURE_MFP_SUPPORT = 11,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index eb5ba9b..cd72860 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -459,6 +459,13 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	}
+ 	msdu_id = res;
  
- 	strWIDList[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
++	if ((ieee80211_is_action(hdr->frame_control) ||
++	     ieee80211_is_deauth(hdr->frame_control) ||
++	     ieee80211_is_disassoc(hdr->frame_control)) &&
++	     ieee80211_has_protected(hdr->frame_control)) {
++		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
++	}
++
+ 	txdesc = ath10k_htc_alloc_skb(ar, len);
+ 	if (!txdesc) {
+ 		res = -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index dc80d0b..71cba8c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1968,6 +1968,7 @@ static void ath10k_peer_assoc_h_basic(struct ath10k *ar,
+ 
+ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
+ 				       struct ieee80211_vif *vif,
++				       struct ieee80211_sta *sta,
+ 				       struct wmi_peer_assoc_complete_arg *arg)
+ {
+ 	struct ieee80211_bss_conf *info = &vif->bss_conf;
+@@ -2009,6 +2010,11 @@ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
+ 		ath10k_dbg(ar, ATH10K_DBG_WMI, "%s: wpa ie found\n", __func__);
+ 		arg->peer_flags |= ar->wmi.peer_flags->need_gtk_2_way;
+ 	}
++
++	if (sta->mfp &&
++	    test_bit(ATH10K_FW_FEATURE_MFP_SUPPORT, ar->fw_features)) {
++		arg->peer_flags |= ar->wmi.peer_flags->pmf;
++	}
+ }
+ 
+ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
+@@ -2479,7 +2485,7 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	memset(arg, 0, sizeof(*arg));
+ 
+ 	ath10k_peer_assoc_h_basic(ar, vif, sta, arg);
+-	ath10k_peer_assoc_h_crypto(ar, vif, arg);
++	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
 -- 
-1.9.1
+1.7.9.5
 
