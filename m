@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52715 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbbJPElR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10143 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbbJGI71 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:41:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 30/40] staging: wilc1000: rename variable gu8Flushed11iMode
-Date: Fri, 16 Oct 2015 13:38:00 +0900
-Message-ID: <1444970290-17609-30-git-send-email-tony.cho@atmel.com> (sfid-20151016_064701_428942_06A833FD)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Wed, 7 Oct 2015 04:59:27 -0400
+From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	kbuild test robot <lkp@intel.com>
+CC: Manikanta pubbisetty <c_mpubbi@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"kbuild-all@01.org" <kbuild-all@01.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: RE: [PATCH 2/2] ath10k: set peer MFP flag in peer assoc command
+Date: Wed, 7 Oct 2015 08:59:14 +0000
+Message-ID: <65097485604c466b8ed93105627e5d14@aphydexm01f.ap.qualcomm.com> (sfid-20151007_105934_291187_8034C7F0)
+References: <201510071317.0ndTjHKZ%fengguang.wu@intel.com>
+ <87612j1427.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87612j1427.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+kbuild test robot <lkp@intel.com> writes:
 
-This patch renames variable gu8Flushed11iMode to mode_11i
-to avoid CamelCase naming convention.
+>> Hi Tamizh,
+>>
+>> [auto build test ERROR on next-20151006 -- if it's inappropriate base, please ignore]
+>>
+>> config: xtensa-allyesconfig (attached as .config)
+>> reproduce:
+> >        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>>         chmod +x ~/bin/make.cross
+>>         # save the attached .config to linux build tree
+>>         make.cross ARCH=xtensa 
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>>    drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_peer_assoc_h_crypto':
+>>>> drivers/net/wireless/ath/ath10k/mac.c:2014:9: error: 'struct ieee80211_sta' has no member named 'mfp'
+>>      if (sta->mfp &&
 
-Add to static because follow warning reported by kbuild system.
- - drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol
-   'mode_11i' was not declared. Should it be static?
+>This is expected as the patch depends on not yet commited patch 'Revert
+>"mac80211: remove exposing 'mfp' to drivers"'.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index db63886..e15aeb1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -263,7 +263,7 @@ static u8 del_beacon;
- 
- static u8 *join_req;
- static u8 *info_element;
--u8 gu8Flushed11iMode;
-+static u8 mode_11i;
- u8 gu8FlushedAuthType;
- u32 gu32FlushedJoinReqSize;
- u32 gu32FlushedInfoElemAsocSize;
-@@ -1088,7 +1088,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
--		gu8Flushed11iMode = hif_drv->strWILC_UsrConnReq.u8security;
-+		mode_11i = hif_drv->strWILC_UsrConnReq.u8security;
- 
- 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", hif_drv->strWILC_UsrConnReq.u8security);
- 
-@@ -1309,7 +1309,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
- 	strWIDList[u32WidsCount].type = WID_CHAR;
- 	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)(&(gu8Flushed11iMode));
-+	strWIDList[u32WidsCount].val = (s8 *)(&(mode_11i));
- 	u32WidsCount++;
- 
- 
+Yes, I have mention about the dependency in commit log notes. I have sent the required patch previous to this patch sets. 
 -- 
-1.9.1
-
+Tamizh.
