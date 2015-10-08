@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:34742 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbbJ1HRy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32596 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718AbbJHBt7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:17:54 -0400
-Received: by qgem9 with SMTP id m9so165227645qge.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 00:17:53 -0700 (PDT)
+	Wed, 7 Oct 2015 21:49:59 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/14] staging: wilc1000: remove typedef from tstrFoundNetworkInfo
+Date: Thu, 8 Oct 2015 10:49:11 +0900
+Message-ID: <1444268961-7551-4-git-send-email-tony.cho@atmel.com> (sfid-20151008_035002_792520_E194FDC4)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Reply-To: srikanth007m@gmail.com
-Date: Wed, 28 Oct 2015 12:47:53 +0530
-Message-ID: <CANKSX+FQZpzz4KvYP3mwb3YJKUqCi-_sxSBpd1+13KtswSjsPw@mail.gmail.com> (sfid-20151028_081758_020985_4659B905)
-Subject: Wifi test suite
-From: "$rik@nth " <srikanth007m@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Leo Kim <leo.kim@atmel.com>
 
-I am new to wireless developing. Before submitting the patches i would
-like to test on my workstation. So is there any test suite or
-regression suite available for WiFi or BT in order to check the
-changes aren't breaking the basic workflow.
+This patch removes typedef from the struct tstrFoundNetworkInfo and
+rename it to found_net_info.
 
-I've tried to get the listed ones on [1]. But those git links are
-broken. It would be great if someone points to any existing one is
-available.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-[1] http://linuxwireless.org/en/developers/Testing/wifi-test/#Wifi-test
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 5026500..408bd48 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -155,10 +155,10 @@ typedef enum {
+ 	HT_ENABLE		= BIT(18),
+ } tenuCfgParam;
+ 
+-typedef struct {
++struct found_net_info {
+ 	u8 au8bssid[6];
+ 	s8 s8rssi;
+-} tstrFoundNetworkInfo;
++};
+ 
+ typedef enum {SCAN_EVENT_NETWORK_FOUND  = 0,
+ 	      SCAN_EVENT_DONE = 1,
+@@ -232,7 +232,7 @@ struct user_scan_req {
+ 	void *u32UserScanPvoid;
+ 
+ 	u32 u32RcvdChCount;
+-	tstrFoundNetworkInfo astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
++	struct found_net_info astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
+ };
+ 
+ struct user_conn_req {
 -- 
-Thanks & Regards,
-M.Srikanth Kumar.
+1.9.1
+
