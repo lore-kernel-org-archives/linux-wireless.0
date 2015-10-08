@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:35553 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbbJWTbh (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32552 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223AbbJHBtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 15:31:37 -0400
-Received: by oifu63 with SMTP id u63so28751656oif.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 12:31:36 -0700 (PDT)
-Subject: Re: overlap of devices in rtl8xxxu and rtl8192cu
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <562A2711.9040700@gmail.com> <wrfj7fmdit3l.fsf@redhat.com>
- <87ziz91xag.fsf@kamboji.qca.qualcomm.com> <wrfj611xhda9.fsf@redhat.com>
- <87oafp1pk6.fsf@kamboji.qca.qualcomm.com>
- <87k2qd1ooy.fsf@kamboji.qca.qualcomm.com> <wrfj1tcleajw.fsf@redhat.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <562A8B21.2020803@lwfinger.net> (sfid-20151023_213140_469582_42759878)
-Date: Fri, 23 Oct 2015 14:31:45 -0500
+	Wed, 7 Oct 2015 21:49:45 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/14] staging: wilc1000: remove typedef from tstrWILC_UsrConnReq
+Date: Thu, 8 Oct 2015 10:49:09 +0900
+Message-ID: <1444268961-7551-2-git-send-email-tony.cho@atmel.com> (sfid-20151008_034948_846049_344E13B2)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <wrfj1tcleajw.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/2015 12:53 PM, Jes Sorensen wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> Like I said earlier in rtl8xxxu review, I don't want to have two drivers
->>> supporting the same device. So either rtl8xxxu or rtlwifi supports the
->>> devices above, not both. And to my knowledge rtl8xxxu is still lacking
->>> in features, and it's a new driver, so it's best that rtlwifi continues
->>> to support these for the time being. Once rtl8xxxu catches up and we
->>> have a clear consensus we can make the switch.
->>>
->>> I'll send a patch in a jiffy, merge window is getting closer so we don't
->>> have any extra time.
->>
->> Heh, having hilarious problems with my patch:
->>
->> <linux-wireless@vger.kernel.org>: host vger.kernel.org[209.132.180.67] said:
->>      550 5.7.1 Content-Policy reject msg: The capital Triple-X in subject is way
->>      too often associated with junk email, please rephrase.
->>
->> The subject was:
->>
->> Subject: [PATCH] rtl8xxxu: move devices supported by rtlwifi under
->>   CONFIG_RTL8XXXU_UNTESTED
->
-> This seems a reasonable workaround for now.
->
-> Next time just add some extra buzzwords to the subject line and I am
-> sure it will go through :)
+From: Leo Kim <leo.kim@atmel.com>
 
-Well, when you try to send porn, the system will complain. :)
+This patch removes typedef from the struct tstrWILC_UsrConnReq with the
+related comments and renames it to user_conn_req.
 
-I agree that this is a sensible workaround.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.h | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Larry
-
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0b3b4dc..73d9509 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -236,7 +236,7 @@ struct user_scan_req {
+ 	tstrFoundNetworkInfo astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
+ };
+ 
+-typedef struct {
++struct user_conn_req {
+ 	u8 *pu8bssid;
+ 	u8 *pu8ssid;
+ 	u8 u8security;
+@@ -249,7 +249,7 @@ typedef struct {
+ 	bool IsHTCapable;
+ 	/* User specific parameter to be delivered through the Connect User Callback function */
+ 	void *u32UserConnectPvoid;
+-} tstrWILC_UsrConnReq;
++};
+ 
+ struct drv_handler {
+ 	u32 u32Address;
+@@ -305,9 +305,7 @@ enum p2p_listen_state {
+ 
+ struct host_if_drv {
+ 	struct user_scan_req strWILC_UsrScanReq;
+-
+-	/* Connect User structure */
+-	tstrWILC_UsrConnReq strWILC_UsrConnReq;
++	struct user_conn_req strWILC_UsrConnReq;
+ 
+ 	/*Remain on channel struvture*/
+ 	struct remain_ch strHostIfRemainOnChan;
+-- 
+1.9.1
 
