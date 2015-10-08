@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40216 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbbJNLOl (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32306 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755355AbbJHSdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:14:41 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 8 Oct 2015 14:33:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 04/11] brcmfmac: remove conversational comment
+Date: Thu, 8 Oct 2015 20:33:14 +0200
+Message-ID: <1444329201-3696-5-git-send-email-arend@broadcom.com> (sfid-20151008_203339_226669_4A52A1CA)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: remove USB8897 chipset support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1441895254-28890-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Message-Id: <20151014111441.5E9C6141C4F@smtp.codeaurora.org> (sfid-20151014_131444_670101_B306D052)
-Date: Wed, 14 Oct 2015 11:14:41 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removing a comment that was only useful during the review of
+the change that introduced it and which should never have been
+submitted.
 
-> We don't have any customer using this chipset via USB
-> interface. if both mwifiex_pcie and mwifiex_usb modules
-> are enabled by user, sometimes mwifiex_usb wins the race
-> even if user wants wlan interface to be on PCIe and
-> USB for bluetooth. This patch solves the problem.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Frank Huang <frankh@marvell.com>
-> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 7eff9de..44e618f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -873,9 +873,6 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	commonring = msgbuf->flowrings[flowid];
+ 	atomic_dec(&commonring->outstanding_tx);
+ 
+-	/* Hante: i believe this was a bug as tx_status->msg.ifidx was used
+-	 * in brcmf_txfinalize as index in drvr->iflist. Can you confirm/deny?
+-	 */
+ 	brcmf_txfinalize(brcmf_get_ifp(msgbuf->drvr, tx_status->msg.ifidx),
+ 			 skb, true);
+ }
+-- 
+1.9.1
 
-60a188a2715f mwifiex: remove USB8897 chipset support
-ce03966a16b0 mwifiex: correction in USB8997 chipset's product ID
-
-Kalle Valo
