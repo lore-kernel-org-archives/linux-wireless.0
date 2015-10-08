@@ -1,201 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7815 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbbJYI77 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 04:59:59 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/10] mac80211: don't reconfigure sched scan in case of wowlan
-Date: Sun, 25 Oct 2015 10:59:33 +0200
-Message-Id: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100005_109671_E9CCDC99)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:37933 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544AbbJHJLi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 05:11:38 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/11] staging: wilc1000: rename strHostIFwepAttr of union host_if_key_attr
+Date: Thu, 8 Oct 2015 18:10:49 +0900
+Message-ID: <1444295456-25818-4-git-send-email-tony.cho@atmel.com> (sfid-20151008_111141_560506_0CA0D4A3)
+In-Reply-To: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+References: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+This patch renames strHostIFwepAttr of union host_if_key_attr to wep to
+avoid CamelCase naming convention.
 
-Scheduled scan has to be reconfigured only if wowlan wasn't
-configured, since otherwise it should continue to run (with
-the 'any' trigger) or be aborted.
-
-The current code will end up asking the driver to start a new
-scheduled scan without stopping the previous one, and leaking
-some memory (from the previous request.)
-
-Fix this by doing the abort/restart under the proper conditions.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/mac80211/cfg.c         |  6 +++---
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/pm.c          | 11 +++++++++++
- net/mac80211/scan.c        | 12 +++++++-----
- net/mac80211/util.c        | 49 ++++++++++++++++++++++------------------------
- 5 files changed, 45 insertions(+), 35 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 70 ++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 39 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 713cdbf..c2bd1b6 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2010,12 +2010,12 @@ ieee80211_sched_scan_start(struct wiphy *wiphy,
- static int
- ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 67b7f0b..7d05754 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -125,7 +125,7 @@ struct host_if_wep_attr {
+  *  @version		1.0
+  */
+ union host_if_key_attr {
+-	struct host_if_wep_attr strHostIFwepAttr;
++	struct host_if_wep_attr wep;
+ 	struct host_if_wpa_attr strHostIFwpaAttr;
+ 	struct host_if_pmkid_attr strHostIFpmkidAttr;
+ };
+@@ -2350,25 +2350,25 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY_AP)	{
  
--	if (!sdata->local->ops->sched_scan_stop)
-+	if (!local->ops->sched_scan_stop)
- 		return -EOPNOTSUPP;
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+-			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
++			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8mode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8mode));
  
--	return ieee80211_request_sched_scan_stop(sdata);
-+	return ieee80211_request_sched_scan_stop(local);
- }
+ 			strWIDList[1].id = WID_AUTH_TYPE;
+ 			strWIDList[1].type = WID_CHAR;
+ 			strWIDList[1].size = sizeof(char);
+-			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.tenuAuth_type));
++			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.tenuAuth_type));
  
- static int ieee80211_auth(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 62f2a97..68680ad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1573,7 +1573,7 @@ __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 				     struct cfg80211_sched_scan_request *req);
- int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 				       struct cfg80211_sched_scan_request *req);
--int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
-+int ieee80211_request_sched_scan_stop(struct ieee80211_local *local);
- void ieee80211_sched_scan_end(struct ieee80211_local *local);
- void ieee80211_sched_scan_stopped_work(struct work_struct *work);
+ 			strWIDList[2].id = (u16)WID_KEY_ID;
+ 			strWIDList[2].type = WID_CHAR;
  
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index ad88ad4..00a43a7 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -6,6 +6,13 @@
- #include "driver-ops.h"
- #include "led.h"
+-			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
++			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
+ 			strWIDList[2].size = sizeof(char);
  
-+static void ieee80211_sched_scan_cancel(struct ieee80211_local *local)
-+{
-+	if (ieee80211_request_sched_scan_stop(local))
-+		return;
-+	cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
-+}
-+
- int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-@@ -34,6 +41,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		mutex_unlock(&local->sta_mtx);
- 	}
  
-+	/* keep sched_scan only in case of 'any' trigger */
-+	if (!(wowlan && wowlan->any))
-+		ieee80211_sched_scan_cancel(local);
-+
- 	ieee80211_stop_queues_by_reason(hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index b64fd2b..4aeca4b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -1140,10 +1140,10 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
+-			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen, GFP_KERNEL);
++			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, GFP_KERNEL);
  
--int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
-+int ieee80211_request_sched_scan_stop(struct ieee80211_local *local)
- {
--	struct ieee80211_local *local = sdata->local;
--	int ret = 0;
-+	struct ieee80211_sub_if_data *sched_scan_sdata;
-+	int ret = -ENOENT;
  
- 	mutex_lock(&local->mtx);
+ 			if (pu8keybuf == NULL) {
+@@ -2376,15 +2376,15 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 				return -1;
+ 			}
  
-@@ -1155,8 +1155,10 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
- 	/* We don't want to restart sched scan anymore. */
- 	RCU_INIT_POINTER(local->sched_scan_req, NULL);
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen);
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey,
++				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
  
--	if (rcu_access_pointer(local->sched_scan_sdata)) {
--		ret = drv_sched_scan_stop(local, sdata);
-+	sched_scan_sdata = rcu_dereference_protected(local->sched_scan_sdata,
-+						lockdep_is_held(&local->mtx));
-+	if (sched_scan_sdata) {
-+		ret = drv_sched_scan_stop(local, sched_scan_sdata);
- 		if (!ret)
- 			RCU_INIT_POINTER(local->sched_scan_sdata, NULL);
- 	}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8274c86..13b07ed 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1996,6 +1996,29 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		if (ieee80211_sdata_running(sdata))
- 			ieee80211_enable_keys(sdata);
  
-+	/* Reconfigure sched scan if it was interrupted by FW restart */
-+	mutex_lock(&local->mtx);
-+	sched_scan_sdata = rcu_dereference_protected(local->sched_scan_sdata,
-+						lockdep_is_held(&local->mtx));
-+	sched_scan_req = rcu_dereference_protected(local->sched_scan_req,
-+						lockdep_is_held(&local->mtx));
-+	if (sched_scan_sdata && sched_scan_req)
-+		/*
-+		 * Sched scan stopped, but we don't want to report it. Instead,
-+		 * we're trying to reschedule. However, if more than one scan
-+		 * plan was set, we cannot reschedule since we don't know which
-+		 * scan plan was currently running (and some scan plans may have
-+		 * already finished).
-+		 */
-+		if (sched_scan_req->n_scan_plans > 1 ||
-+		    __ieee80211_request_sched_scan_start(sched_scan_sdata,
-+							 sched_scan_req))
-+			sched_scan_stopped = true;
-+	mutex_unlock(&local->mtx);
-+
-+	if (sched_scan_stopped)
-+		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
-+
-  wake_up:
- 	local->in_reconfig = false;
- 	barrier();
-@@ -2031,32 +2054,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 					false);
+-			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey);
++			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey);
  
- 	/*
--	 * Reconfigure sched scan if it was interrupted by FW restart or
--	 * suspend.
--	 */
--	mutex_lock(&local->mtx);
--	sched_scan_sdata = rcu_dereference_protected(local->sched_scan_sdata,
--						lockdep_is_held(&local->mtx));
--	sched_scan_req = rcu_dereference_protected(local->sched_scan_req,
--						lockdep_is_held(&local->mtx));
--	if (sched_scan_sdata && sched_scan_req)
--		/*
--		 * Sched scan stopped, but we don't want to report it. Instead,
--		 * we're trying to reschedule. However, if more than one scan
--		 * plan was set, we cannot reschedule since we don't know which
--		 * scan plan was currently running (and some scan plans may have
--		 * already finished).
--		 */
--		if (sched_scan_req->n_scan_plans > 1 ||
--		    __ieee80211_request_sched_scan_start(sched_scan_sdata,
--							 sched_scan_req))
--			sched_scan_stopped = true;
--	mutex_unlock(&local->mtx);
--
--	if (sched_scan_stopped)
--		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
--
--	/*
- 	 * If this is for hw restart things are still running.
- 	 * We may want to change that later, however.
- 	 */
+ 			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
+ 			strWIDList[3].type = WID_STR;
+-			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen;
++			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen;
+ 			strWIDList[3].val = (s8 *)pu8keybuf;
+ 
+ 
+@@ -2397,24 +2397,24 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 
+ 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY) {
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+-			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen + 2, GFP_KERNEL);
++			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
+ 			}
+-			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx;
++			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
+ 
+-			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen, 1);
++			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, 1);
+ 
+-			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen);
++			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey,
++				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
+ 
+-			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey);
++			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.pu8WepKey);
+ 
+ 			strWID.id = (u16)WID_ADD_WEP_KEY;
+ 			strWID.type = WID_STR;
+ 			strWID.val = (s8 *)pu8keybuf;
+-			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen + 2;
++			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2;
+ 
+ 			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+@@ -2425,7 +2425,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.id = (u16)WID_REMOVE_WEP_KEY;
+ 			strWID.type = WID_STR;
+ 
+-			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx;
++			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
+ 			strWID.val = s8idxarray;
+ 			strWID.size = 1;
+ 
+@@ -2434,7 +2434,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		} else {
+ 			strWID.id = (u16)WID_KEY_ID;
+ 			strWID.type = WID_CHAR;
+-			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx));
++			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
+ 			strWID.size = sizeof(char);
+ 
+ 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
+@@ -4099,8 +4099,7 @@ s32 host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 u8keyIdx)
+ 
+ 
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8keyIdx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8keyIdx;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4145,8 +4144,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ 	msg.drv = hif_drv;
+ 
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Index;
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Index;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4202,17 +4200,15 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 
+ 
+ 	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
++	uniHostIFkeyAttr.wep.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
+ 
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
++	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.pu8WepKey,
+ 		    pu8WepKey, u8WepKeylen);
+ 
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen = (u8WepKeylen);
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Keyidx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4272,24 +4268,20 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 
+ 
+ 	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
++	uniHostIFkeyAttr.wep.pu8WepKey = kmalloc(u8WepKeylen, GFP_KERNEL);
+ 
+ 
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFwepAttr.pu8WepKey,
++	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.pu8WepKey,
+ 		    pu8WepKey, (u8WepKeylen));
+ 
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8WepKeylen = (u8WepKeylen);
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8Keyidx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.u8mode = u8mode;
++	msg.body.key_info.uniHostIFkeyAttr.wep.u8mode = u8mode;
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.strHostIFwepAttr.tenuAuth_type = tenuAuth_type;
++	msg.body.key_info.uniHostIFkeyAttr.wep.tenuAuth_type = tenuAuth_type;
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 
 -- 
-2.1.4
+1.9.1
 
