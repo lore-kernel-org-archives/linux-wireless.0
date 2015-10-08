@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56868 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751340AbbJELk5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 07:40:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 14:40:43 +0300
-Message-Id: <1444045246-9946-5-git-send-email-luca@coelho.fi> (sfid-20151005_134103_231188_2AEA2AE6)
-In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
-References: <1444044666.27220.5.camel@coelho.fi>
-Subject: [PATCH 5/8] iwlwifi: fix firmware filename for 3160
+Received: from s3.sipsolutions.net ([5.9.151.49]:47565 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755285AbbJHJh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 05:37:26 -0400
+Message-ID: <1444297044.2131.16.camel@sipsolutions.net> (sfid-20151008_113729_465279_3F7C3D87)
+Subject: Re: [PATCH] iw: Memory leak in error condition
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>, James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 08 Oct 2015 11:37:24 +0200
+In-Reply-To: <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com> (sfid-20151001_012741_497176_47BF5EB7)
+References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
+	 <20150930231613.GC20220@us.netrek.org>
+	 <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com>
+	 (sfid-20151001_012741_497176_47BF5EB7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2015-10-01 at 01:27 +0200, Ola Olsson wrote:
+> Oh yes! :)
+> Suddenly valgrind was happy as well.
+> 
+> From 2724dd259f2bf61a2b7c85a70a70fd640a583453 Mon Sep 17 00:00:00 
+> 2001
+> From: Ola Olsson <ola.olsson@sonymobile.com>
+> Date: Thu, 1 Oct 2015 00:43:06 +0200
+> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: 
+> Ola Olsson
+>  <ola.olsson@sonymobile.com>
 
-The MODULE_FIRMWARE() for 3160 should be using the 7260 version as
-it's done in the device configuration struct instead of referencing
-IWL3160_UCODE_API_OK which doesn't even exist.
+This got picked up as a new patch by patchwork, but please resend.
 
-Cc: <stable@vger.kernel.org> [3.8+]
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As I mentioned on the other patch, you have whitespace issues (tabs
+replaced by space, so the patch doesn't apply)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 6951aba..3fb327d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -348,6 +348,6 @@ const struct iwl_cfg iwl7265d_n_cfg = {
- };
- 
- MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
- MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
- MODULE_FIRMWARE(IWL7265D_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--- 
-2.5.3
+Also, on this particular patch you forgot the Signed-off-by.
 
+Please also reword the subject to indicate that you fixed something, it
+seems a bit strange to me to write just "memory leak" :)
+
+Your "MHZ" patch also has the same whitespace issues, while the if.h
+patch applied fine (though it wasn't changing any indented code, so
+whitespace wouldn't have mattered)
+
+Please resend this patch, the return values one and the MHz one.
+
+Thanks,
+johannes
+
+> ---
+>  scan.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/scan.c b/scan.c
+> index e959c1b..f3441a7 100644
+> --- a/scan.c
+> +++ b/scan.c
+> @@ -445,8 +445,11 @@ static int handle_scan(struct nl80211_state 
+> *state,
+> 
+>         if (ies || meshid) {
+>                 tmpies = (unsigned char *) malloc(ies_len + 
+> meshid_len);
+> -               if (!tmpies)
+> +               if (!tmpies) {
+> +                       free(ies);
+> +                       free(meshid);
+>                         goto nla_put_failure;
+> +               }
+>                 if (ies) {
+>                         memcpy(tmpies, ies, ies_len);
+>                         free(ies);
