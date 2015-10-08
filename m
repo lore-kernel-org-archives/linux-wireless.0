@@ -1,121 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbbJYMBY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:24 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Golan Ben-Ami <golan.ben.ami@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/16] iwlwifi: mvm: Dump FW's virtual image in the case of a NIC error
-Date: Sun, 25 Oct 2015 14:01:02 +0200
-Message-Id: <1445774476-24792-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130127_311773_41CAC59C)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54408 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755609AbbJHSd1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 14:33:27 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 11/11] brcmfmac: Properly set carrier state of netdev.
+Date: Thu, 8 Oct 2015 20:33:21 +0200
+Message-ID: <1444329201-3696-12-git-send-email-arend@broadcom.com> (sfid-20151008_203342_869266_72D82342)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-When paging is enabled the driver stores part of the FW's
-image in the DRAM.
+Use the netif_carrier api to correctly set carrier state on the
+different modes.
 
-Dump FW's virtual image in the case of a NIC error.
-
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 16 ++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 27 ++++++++++++++++++++++++
- 2 files changed, 43 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  4 ++++
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     | 25 ++++++++++++++++++----
+ drivers/net/wireless/brcm80211/brcmfmac/core.h     |  8 +++++--
+ 3 files changed, 31 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index af5b320..9dbe19c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -86,6 +86,8 @@
-  *	Structured as &struct iwl_fw_error_dump_trigger_desc.
-  * @IWL_FW_ERROR_DUMP_RB: the content of an RB structured as
-  *	&struct iwl_fw_error_dump_rb
-+ * @IWL_FW_ERROR_PAGING: UMAC's image memory segments which were
-+ *	paged to the DRAM.
-  */
- enum iwl_fw_error_dump_type {
- 	/* 0 is deprecated */
-@@ -100,6 +102,7 @@ enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_MEM = 9,
- 	IWL_FW_ERROR_DUMP_ERROR_INFO = 10,
- 	IWL_FW_ERROR_DUMP_RB = 11,
-+	IWL_FW_ERROR_DUMP_PAGING = 12,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index ddb4e74..deb5f78 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -4251,6 +4251,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_dbg(TRACE, "GO mode configuration complete\n");
+ 	}
+ 	set_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
++	brcmf_net_setcarrier(ifp, true);
  
- 	IWL_FW_ERROR_DUMP_MAX,
- };
-@@ -240,6 +243,19 @@ struct iwl_fw_error_dump_rb {
+ exit:
+ 	if ((err) && (!mbss)) {
+@@ -4315,6 +4316,7 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 	brcmf_set_mpc(ifp, 1);
+ 	brcmf_configure_arp_offload(ifp, true);
+ 	clear_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
++	brcmf_net_setcarrier(ifp, false);
+ 
+ 	return err;
+ }
+@@ -5024,6 +5026,7 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 				&ifp->vif->sme_state);
+ 		} else
+ 			brcmf_bss_connect_done(cfg, ndev, e, true);
++		brcmf_net_setcarrier(ifp, true);
+ 	} else if (brcmf_is_linkdown(e)) {
+ 		brcmf_dbg(CONN, "Linkdown\n");
+ 		if (!brcmf_is_ibssmode(ifp->vif)) {
+@@ -5033,6 +5036,7 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 		brcmf_init_prof(ndev_to_prof(ndev));
+ 		if (ndev != cfg_to_ndev(cfg))
+ 			complete(&cfg->vif_disabled);
++		brcmf_net_setcarrier(ifp, false);
+ 	} else if (brcmf_is_nonetwork(cfg, e)) {
+ 		if (brcmf_is_ibssmode(ifp->vif))
+ 			clear_bit(BRCMF_VIF_STATUS_CONNECTING,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 6e39121..b5ab98e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -635,8 +635,7 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_cfg80211_down(ndev);
+ 
+-	/* Set state and stop OS transmissions */
+-	netif_stop_queue(ndev);
++	brcmf_net_setcarrier(ifp, false);
+ 
+ 	return 0;
+ }
+@@ -670,8 +669,8 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 		return -EIO;
+ 	}
+ 
+-	/* Allow transmit calls */
+-	netif_start_queue(ndev);
++	/* Clear, carrier, set when connected or AP mode. */
++	netif_carrier_off(ndev);
+ 	return 0;
+ }
+ 
+@@ -736,6 +735,24 @@ static void brcmf_net_detach(struct net_device *ndev)
+ 		brcmf_cfg80211_free_netdev(ndev);
+ }
+ 
++void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on)
++{
++	struct net_device *ndev;
++
++	brcmf_dbg(TRACE, "Enter, idx=%d carrier=%d\n", ifp->bssidx, on);
++
++	ndev = ifp->ndev;
++	brcmf_txflowblock_if(ifp, BRCMF_NETIF_STOP_REASON_DISCONNECTED, !on);
++	if (on) {
++		if (!netif_carrier_ok(ndev))
++			netif_carrier_on(ndev);
++
++	} else {
++		if (netif_carrier_ok(ndev))
++			netif_carrier_off(ndev);
++	}
++}
++
+ static int brcmf_net_p2p_open(struct net_device *ndev)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+index f10fc37..2f9101b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+@@ -154,10 +154,13 @@ struct brcmf_fws_mac_descriptor;
+  *	netif stopped due to firmware signalling flow control.
+  * @BRCMF_NETIF_STOP_REASON_FLOW:
+  *	netif stopped due to flowring full.
++ * @BRCMF_NETIF_STOP_REASON_DISCONNECTED:
++ *	netif stopped due to not being connected (STA mode).
+  */
+ enum brcmf_netif_stop_reason {
+-	BRCMF_NETIF_STOP_REASON_FWS_FC = 1,
+-	BRCMF_NETIF_STOP_REASON_FLOW = 2
++	BRCMF_NETIF_STOP_REASON_FWS_FC = BIT(0),
++	BRCMF_NETIF_STOP_REASON_FLOW = BIT(1),
++	BRCMF_NETIF_STOP_REASON_DISCONNECTED = BIT(2)
  };
  
  /**
-+ * struct iwl_fw_error_dump_paging - content of the UMAC's image page
-+ *	block on DRAM
-+ * @index: the index of the page block
-+ * @reserved:
-+ * @data: the content of the page block
-+ */
-+struct iwl_fw_error_dump_paging {
-+	__le32 index;
-+	__le32 reserved;
-+	u8 data[];
-+};
-+
-+/**
-  * iwl_fw_error_next_data - advance fw error dump data pointer
-  * @data: previous data block
-  * Returns: next data block
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 8443e14..aaffb54 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1192,6 +1192,13 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	if (sram2_len)
- 		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + sram2_len;
+@@ -213,5 +216,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
++void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
  
-+	/* Make room for fw's virtual image pages, if it exists */
-+	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size)
-+		file_len += mvm->num_of_paging_blk *
-+			(sizeof(*dump_data) +
-+			 sizeof(struct iwl_fw_error_dump_paging) +
-+			 PAGING_BLOCK_SIZE);
-+
- 	/* If we only want a monitor dump, reset the file length */
- 	if (monitor_dump_only) {
- 		file_len = sizeof(*dump_file) + sizeof(*dump_data) +
-@@ -1302,6 +1309,26 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 					 dump_mem->data, IWL8260_ICCM_LEN);
- 	}
- 
-+	/* Dump fw's virtual image */
-+	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size) {
-+		u32 i;
-+
-+		for (i = 1; i < mvm->num_of_paging_blk + 1; i++) {
-+			struct iwl_fw_error_dump_paging *paging;
-+			struct page *pages =
-+				mvm->fw_paging_db[i].fw_paging_block;
-+
-+			dump_data = iwl_fw_error_next_data(dump_data);
-+			dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PAGING);
-+			dump_data->len = cpu_to_le32(sizeof(*paging) +
-+						     PAGING_BLOCK_SIZE);
-+			paging = (void *)dump_data->data;
-+			paging->index = cpu_to_le32(i);
-+			memcpy(paging->data, page_address(pages),
-+			       PAGING_BLOCK_SIZE);
-+		}
-+	}
-+
- dump_trans_data:
- 	fw_error_dump->trans_ptr = iwl_trans_dump_data(mvm->trans,
- 						       mvm->fw_dump_trig);
+ #endif /* BRCMFMAC_CORE_H */
 -- 
-2.1.4
+1.9.1
 
