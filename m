@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:35456 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950AbbJ0TE2 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46600 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbbJHSr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:04:28 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Punit Vara <punitvara@gmail.com>
-Subject: [RESEND PATCH 09/10] net: wireless: brcm80211: Remove unneeded variable ret_code returning 0
-Date: Wed, 28 Oct 2015 00:32:44 +0530
-Message-Id: <1445972565-14963-9-git-send-email-punitvara@gmail.com> (sfid-20151027_200518_696681_55ECEDA2)
-In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
-References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+	Thu, 8 Oct 2015 14:47:27 -0400
+Date: Thu, 8 Oct 2015 14:47:24 -0400
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: staging: wilc1000: WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+Message-ID: <20151008184724.GA11027@kroah.com> (sfid-20151008_204743_971409_AF4AFFF4)
+References: <5616B60F.7040804@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5616B60F.7040804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the brcmsmac/stf.c that fixes up warning caught by
-coccicheck:
+On Thu, Oct 08, 2015 at 09:29:35PM +0300, Stanislav Kholmanskikh wrote:
+> Hi!
+> 
+> I noticed that drivers/staging/wilc1000/Kconfic defines:
+> 
+> config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+>         bool "Dynamically allocate memory in real time"
+>         ---help---
+>           This choice supports dynamic allocation of the memory
+>           for the receive buffer. The driver will allocate the RX buffer
+>           when it is required.
+> 
+> 
+> "MEMROY" looks suspicious. Is it a typo (MEMORY?) or by intent?
 
--Unneeded variable: "ret_code". Return "0" on line 328
+Probably a typo, but be sure to see if it lines up with what the code
+expects before changing anything.
 
-Remove unneccesary variable ret_code created to return zero.
+Ideally in the end this option should be removed as the driver should
+only do dynamic allocation, no static allocation should be needed.
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/stf.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/stf.c b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-index dd91627..71ddf42 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-@@ -306,7 +306,6 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
-  */
- int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
- {
--	int ret_code = 0;
- 	u8 prev_stf_ss;
- 	u8 upd_stf_ss;
- 
-@@ -325,7 +324,7 @@ int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
- 				    PHY_TXC1_MODE_SISO : PHY_TXC1_MODE_CDD;
- 	} else {
- 		if (wlc->band != band)
--			return ret_code;
-+			return 0;
- 		upd_stf_ss = (wlc->stf->txstreams == 1) ?
- 				PHY_TXC1_MODE_SISO : band->band_stf_ss_mode;
- 	}
-@@ -334,7 +333,7 @@ int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
- 		brcms_b_band_stf_ss_set(wlc->hw, upd_stf_ss);
- 	}
- 
--	return ret_code;
-+	return 0;
- }
- 
- int brcms_c_stf_attach(struct brcms_c_info *wlc)
--- 
-2.5.3
-
+greg k-h
