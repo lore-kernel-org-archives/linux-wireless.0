@@ -1,71 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36089 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbbJOCHQ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:37893 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544AbbJHJLb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:16 -0400
-Received: by pabws5 with SMTP id ws5so7325741pab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:15 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 03/33] staging: wilc1000: fix return type of host_int_add_wep_key_bss_ap
-Date: Thu, 15 Oct 2015 11:06:32 +0900
-Message-Id: <1444874822-31152-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040722_207132_BE08102E)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 8 Oct 2015 05:11:31 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/11] staging: wilc1000: rename u32SetCfgFlag of struct cfg_param_val
+Date: Thu, 8 Oct 2015 18:10:48 +0900
+Message-ID: <1444295456-25818-3-git-send-email-tony.cho@atmel.com> (sfid-20151008_111135_156628_576B259C)
+In-Reply-To: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+References: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_add_wep_key_bss_ap from s32
-to int. s32Error gets return value from wilc_mq_send that has return
-type of int. It should be changed return type by int as well as data
-type of s32Error.
+This patch renames u32SetCfgFlag of struct cfg_param_val to flag to
+avoid CamelCase naming convention.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 36 +++++++++++------------
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++----
+ 3 files changed, 24 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index aed259e..88a461e 100644
+index 0d4b076..67b7f0b 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3261,7 +3261,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+@@ -846,7 +846,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
  
- }
+ 	PRINT_D(HOSTINF_DBG, "Setting CFG params\n");
  
--s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				const u8 *pu8WepKey,
- 				u8 u8WepKeylen,
- 				u8 u8Keyidx,
-@@ -3269,7 +3269,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				enum AUTHTYPE tenuAuth_type)
- {
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & BSS_TYPE) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & BSS_TYPE) {
+ 		/*----------------------------------------------------------*/
+ 		/*Input Value:	INFRASTRUCTURE = 1,							*/
+ 		/*				INDEPENDENT= 2,								*/
+@@ -866,7 +866,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & AUTH_TYPE) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & AUTH_TYPE) {
+ 		/*------------------------------------------------------*/
+ 		/*Input Values: OPEN_SYSTEM     = 0,					*/
+ 		/*				SHARED_KEY      = 1,					*/
+@@ -886,7 +886,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & AUTHEN_TIMEOUT) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & AUTHEN_TIMEOUT) {
+ 		/* range is 1 to 65535. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.auth_timeout > 0 && strHostIFCfgParamAttr->cfg_attr_info.auth_timeout < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_AUTH_TIMEOUT;
+@@ -901,7 +901,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & POWER_MANAGEMENT) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & POWER_MANAGEMENT) {
+ 		/*-----------------------------------------------------------*/
+ 		/*Input Values:	NO_POWERSAVE     = 0,						*/
+ 		/*				MIN_FAST_PS      = 1,						*/
+@@ -922,7 +922,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & RETRY_SHORT) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RETRY_SHORT) {
+ 		/* range from 1 to 256 */
+ 		if ((strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit > 0) && (strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit < 256))	{
+ 			strWIDList[u8WidCnt].id = WID_SHORT_RETRY_LIMIT;
+@@ -937,7 +937,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & RETRY_LONG) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RETRY_LONG) {
+ 		/* range from 1 to 256 */
+ 		if ((strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit > 0) && (strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit < 256)) {
+ 			strWIDList[u8WidCnt].id = WID_LONG_RETRY_LIMIT;
+@@ -953,7 +953,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & FRAG_THRESHOLD) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & FRAG_THRESHOLD) {
  
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 	u8 i;
- 
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.frag_threshold > 255 && strHostIFCfgParamAttr->cfg_attr_info.frag_threshold < 7937) {
+ 			strWIDList[u8WidCnt].id = WID_FRAG_THRESHOLD;
+@@ -968,7 +968,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & RTS_THRESHOLD) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RTS_THRESHOLD) {
+ 		/* range 256 to 65535 */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.rts_threshold > 255 && strHostIFCfgParamAttr->cfg_attr_info.rts_threshold < 65536)	{
+ 			strWIDList[u8WidCnt].id = WID_RTS_THRESHOLD;
+@@ -983,7 +983,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & PREAMBLE) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & PREAMBLE) {
+ 		/*-----------------------------------------------------*/
+ 		/*Input Values: Short= 0,								*/
+ 		/*				Long= 1,                                */
+@@ -1002,7 +1002,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & SHORT_SLOT_ALLOWED) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SHORT_SLOT_ALLOWED) {
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed < 2) {
+ 			strWIDList[u8WidCnt].id = WID_SHORT_SLOT_ALLOWED;
+ 			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed;
+@@ -1016,7 +1016,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & TXOP_PROT_DISABLE) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & TXOP_PROT_DISABLE) {
+ 		/*Description:	used to Disable RTS-CTS protection for TXOP burst*/
+ 		/*transmission when the acknowledgement policy is No-Ack or Block-Ack	*/
+ 		/* this information is useful for external supplicant                                   */
+@@ -1034,7 +1034,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & BEACON_INTERVAL) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & BEACON_INTERVAL) {
+ 		/* range is 1 to 65535. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.beacon_interval > 0 && strHostIFCfgParamAttr->cfg_attr_info.beacon_interval < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_BEACON_INTERVAL;
+@@ -1049,7 +1049,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & DTIM_PERIOD) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & DTIM_PERIOD) {
+ 		/* range is 1 to 255. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.dtim_period > 0 && strHostIFCfgParamAttr->cfg_attr_info.dtim_period < 256) {
+ 			strWIDList[u8WidCnt].id = WID_DTIM_PERIOD;
+@@ -1064,7 +1064,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & SITE_SURVEY) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SITE_SURVEY) {
+ 		/*----------------------------------------------------------------------*/
+ 		/*Input Values: SITE_SURVEY_1CH    = 0, i.e.: currently set channel		*/
+ 		/*				SITE_SURVEY_ALL_CH = 1,									*/
+@@ -1083,7 +1083,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & SITE_SURVEY_SCAN_TIME) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SITE_SURVEY_SCAN_TIME) {
+ 		/* range is 1 to 65535. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_SITE_SURVEY_SCAN_TIME;
+@@ -1098,7 +1098,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & ACTIVE_SCANTIME) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & ACTIVE_SCANTIME) {
+ 		/* range is 1 to 65535. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.active_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.active_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_ACTIVE_SCAN_TIME;
+@@ -1113,7 +1113,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & PASSIVE_SCANTIME) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & PASSIVE_SCANTIME) {
+ 		/* range is 1 to 65535. */
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_PASSIVE_SCAN_TIME;
+@@ -1128,7 +1128,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.u32SetCfgFlag & CURRENT_TX_RATE) {
++	if (strHostIFCfgParamAttr->cfg_attr_info.flag & CURRENT_TX_RATE) {
+ 		enum CURRENT_TXRATE curr_tx_rate = strHostIFCfgParamAttr->cfg_attr_info.curr_tx_rate;
+ 		/*----------------------------------------------------------------------*/
+ 		/*Rates:		1   2   5.5   11   6  9  12  18  24  36  48   54  Auto	*/
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index e5ba1d0..e2b84ae 100644
+index f9b5362..e9cee20 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -420,7 +420,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hWFIDrv, const u8 *pu8WepKe
-  *  @date		28 Feb 2013
-  *  @version		1.0
-  */
--s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hWFIDrv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hWFIDrv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
+@@ -102,7 +102,7 @@ enum CURRENT_TXRATE {
+ };
  
- /**
-  *  @brief              adds ptk Key
+ struct cfg_param_val {
+-	u32 u32SetCfgFlag;
++	u32 flag;
+ 	u8 ht_enable;
+ 	u8 bss_type;
+ 	u8 auth_type;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 2ad08a7..98229da 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1649,25 +1649,25 @@ static int set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+-	pstrCfgParamVal.u32SetCfgFlag = 0;
++	pstrCfgParamVal.flag = 0;
+ 	PRINT_D(CFG80211_DBG, "Setting Wiphy params\n");
+ 
+ 	if (changed & WIPHY_PARAM_RETRY_SHORT) {
+ 		PRINT_D(CFG80211_DBG, "Setting WIPHY_PARAM_RETRY_SHORT %d\n",
+ 			priv->dev->ieee80211_ptr->wiphy->retry_short);
+-		pstrCfgParamVal.u32SetCfgFlag  |= RETRY_SHORT;
++		pstrCfgParamVal.flag  |= RETRY_SHORT;
+ 		pstrCfgParamVal.short_retry_limit = priv->dev->ieee80211_ptr->wiphy->retry_short;
+ 	}
+ 	if (changed & WIPHY_PARAM_RETRY_LONG) {
+ 
+ 		PRINT_D(CFG80211_DBG, "Setting WIPHY_PARAM_RETRY_LONG %d\n", priv->dev->ieee80211_ptr->wiphy->retry_long);
+-		pstrCfgParamVal.u32SetCfgFlag |= RETRY_LONG;
++		pstrCfgParamVal.flag |= RETRY_LONG;
+ 		pstrCfgParamVal.long_retry_limit = priv->dev->ieee80211_ptr->wiphy->retry_long;
+ 
+ 	}
+ 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
+ 		PRINT_D(CFG80211_DBG, "Setting WIPHY_PARAM_FRAG_THRESHOLD %d\n", priv->dev->ieee80211_ptr->wiphy->frag_threshold);
+-		pstrCfgParamVal.u32SetCfgFlag |= FRAG_THRESHOLD;
++		pstrCfgParamVal.flag |= FRAG_THRESHOLD;
+ 		pstrCfgParamVal.frag_threshold = priv->dev->ieee80211_ptr->wiphy->frag_threshold;
+ 
+ 	}
+@@ -1675,7 +1675,7 @@ static int set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+ 		PRINT_D(CFG80211_DBG, "Setting WIPHY_PARAM_RTS_THRESHOLD %d\n", priv->dev->ieee80211_ptr->wiphy->rts_threshold);
+ 
+-		pstrCfgParamVal.u32SetCfgFlag |= RTS_THRESHOLD;
++		pstrCfgParamVal.flag |= RTS_THRESHOLD;
+ 		pstrCfgParamVal.rts_threshold = priv->dev->ieee80211_ptr->wiphy->rts_threshold;
+ 
+ 	}
 -- 
-2.6.1
+1.9.1
 
