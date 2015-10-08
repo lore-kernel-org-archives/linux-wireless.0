@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30644 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751047AbbJaTMm convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55583 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbbJHKF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2015 15:12:42 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Pushpal Sidhu <psidhu@gateworks.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Intel 7260 - limited in 5GHz spectrum
-Date: Sat, 31 Oct 2015 19:12:38 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com> (sfid-20151031_201245_671086_717A0BBD)
-References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 8 Oct 2015 06:05:29 -0400
+Date: Thu, 8 Oct 2015 10:57:38 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com, austin.shin@atmel.com,
+	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
+	Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 1/6] staging: wilc1000: remove typedef from
+ tstrWILC_WFIDrv
+Message-ID: <20151008095738.GA32258@kroah.com> (sfid-20151008_120620_921669_EB5101D9)
+References: <1444040894-18709-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444040894-18709-1-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 10/30/2015 06:37 PM, Pushpal Sidhu wrote:
-> Hi,
+On Mon, Oct 05, 2015 at 07:28:09PM +0900, Tony Cho wrote:
+> From: Leo Kim <leo.kim@atmel.com>
 > 
-> I've been working with the Intel 7260 card which advertises itself as
-> dual band wireless AC card. However, I cannot get it working in AP
-> mode in the 5GHz range. An $(iw list) shows that the entire 5GHz band
-> has 'no IR' next to it so as not to allow device radiation (please see
-> pastebin here: http://pastebin.com/T4BWnBmn).
+> This patch removes typedef from the struct tstrWILC_WFIDrv and
+> rename it to host_if_drv.
+> This patch includes the removal of the comment for tstrWILC_WFIDrv as well.
 > 
-> After searching around the internet a bit, it seems that the card
-> doesn't allow for this mode (And is thus not really dual band?). I'd
-> like to know if this is a firmware limitation and if there's a fix in
-> place, or if not, why is this card limited to the spectrum it can
-> radiate at?
-> 
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c         | 362 +++++++++++-----------
+>  drivers/staging/wilc1000/host_interface.h         | 108 +++----
+>  drivers/staging/wilc1000/linux_wlan.c             |  16 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  24 +-
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   4 +-
+>  5 files changed, 253 insertions(+), 261 deletions(-)
 
+This patch fails to apply :(
 
-7260 does not (and will not) support AP mode in 5GHz band. This is of
-course not a hardware limitation since it can function as a station in
-this band. The limitation is due to regulatory concerns. Later devices
-(8260) have the ability to be an AP in 5GHz under certain circumstances.
+Please rebase and resend the whole series.
+
+thanks,
+
+greg k-h
