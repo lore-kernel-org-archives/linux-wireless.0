@@ -1,74 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6328 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754376AbbJOE2K (ORCPT
+Received: from mail-lb0-f195.google.com ([209.85.217.195]:35303 "EHLO
+	mail-lb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbbJHSXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:28:10 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 24/40] staging: wilc1000: rename variable gs8GetIP
-Date: Thu, 15 Oct 2015 13:25:05 +0900
-Message-ID: <1444883121-31757-24-git-send-email-tony.cho@atmel.com> (sfid-20151015_064654_562584_F58AE0EE)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 8 Oct 2015 14:23:32 -0400
+From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+To: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Subject: [PATCH 1/2] staging: wilc1000: linux_wlan_spi: correct types
+Date: Thu,  8 Oct 2015 21:23:13 +0300
+Message-Id: <1444328594-10656-1-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20151008_202404_850171_006B7001)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+linux_spi_write(), linux_spi_read(), linux_spi_write_read():
 
-This patch renames variable gs8GetIP to get_ip
-to avoid CamelCase naming convention.
+    nwi->io_func.u.spi.spi_tx = linux_spi_write;
+    nwi->io_func.u.spi.spi_rx = linux_spi_read;
+    nwi->io_func.u.spi.spi_trx = linux_spi_write_read;
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+are expected to accept arguments of 'u8 *', u32 types:
+
+    struct {
+        int (*spi_max_speed)(void);
+        int (*spi_tx)(u8 *, u32);
+        int (*spi_rx)(u8 *, u32);
+        int (*spi_trx)(u8 *, u8 *, u32);
+    } spi;
+
+However, linux_spi_read() and linux_spi_write_read() do not do this,
+they use 'unsigned char *' and 'unsigned long' instead.
+
+Changed the types of their arguments to satisfy the expectations.
+
+Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 12 ++++++------
+ drivers/staging/wilc1000/linux_wlan_spi.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ce94859..cf21ee20 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -257,7 +257,7 @@ static s8 rssi;
- static s8 link_speed;
- static u8 ch_no;
- static u8 set_ip[2][4];
--static u8 gs8GetIP[2][4];
-+static u8 get_ip[2][4];
- static u32 gu32InactiveTime;
- static u8 gu8DelBcn;
- static u32 gu32WidConnRstHack;
-@@ -456,11 +456,11 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 51bbd96..c6c1f6e 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -243,7 +243,7 @@ int linux_spi_write(u8 *b, u32 len)
  
- 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", strWID.val);
+ #if defined(TXRX_PHASE_SIZE)
  
--	memcpy(gs8GetIP[idx], strWID.val, IP_ALEN);
-+	memcpy(get_ip[idx], strWID.val, IP_ALEN);
+-int linux_spi_read(unsigned char *rb, unsigned long rlen)
++int linux_spi_read(u8 *rb, u32 rlen)
+ {
+ 	int ret;
  
- 	kfree(strWID.val);
+@@ -307,7 +307,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
  
--	if (memcmp(gs8GetIP[idx], set_ip[idx], IP_ALEN) != 0)
-+	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
- 		host_int_setup_ipaddress(hif_drv, set_ip[idx], idx);
- 
- 	if (s32Error != 0) {
-@@ -469,7 +469,7 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 		kfree(t_buffer);
+ 	} else {
+-		PRINT_ER("can't read data with the following length: %ld\n", rlen);
++		PRINT_ER("can't read data with the following length: %u\n", rlen);
+ 		ret = -1;
  	}
+ 	/* change return value to match WILC interface */
+@@ -317,7 +317,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
+ }
  
- 	PRINT_INFO(HOSTINF_DBG, "IP address retrieved:: u8IfIdx = %d\n", idx);
--	PRINT_INFO(HOSTINF_DBG, "%pI4\n", gs8GetIP[idx]);
-+	PRINT_INFO(HOSTINF_DBG, "%pI4\n", get_ip[idx]);
- 	PRINT_INFO(HOSTINF_DBG, "\n");
+ #else
+-int linux_spi_read(unsigned char *rb, unsigned long rlen)
++int linux_spi_read(u8 *rb, u32 rlen)
+ {
  
- 	return s32Error;
+ 	int ret;
+@@ -351,7 +351,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
+ 		}
+ 		kfree(t_buffer);
+ 	} else {
+-		PRINT_ER("can't read data with the following length: %ld\n", rlen);
++		PRINT_ER("can't read data with the following length: %u\n", rlen);
+ 		ret = -1;
+ 	}
+ 	/* change return value to match WILC interface */
+@@ -362,7 +362,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
+ 
+ #endif
+ 
+-int linux_spi_write_read(unsigned char *wb, unsigned char *rb, unsigned int rlen)
++int linux_spi_write_read(u8 *wb, u8 *rb, u32 rlen)
+ {
+ 
+ 	int ret;
+@@ -390,7 +390,7 @@ int linux_spi_write_read(unsigned char *wb, unsigned char *rb, unsigned int rlen
+ 			PRINT_ER("SPI transaction failed\n");
+ 		}
+ 	} else {
+-		PRINT_ER("can't read data with the following length: %d\n", rlen);
++		PRINT_ER("can't read data with the following length: %u\n", rlen);
+ 		ret = -1;
+ 	}
+ 	/* change return value to match WILC interface */
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
+index d8eed0f..7356785 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.h
++++ b/drivers/staging/wilc1000/linux_wlan_spi.h
+@@ -9,6 +9,6 @@ int linux_spi_init(void *vp);
+ void linux_spi_deinit(void *vp);
+ int linux_spi_write(u8 *b, u32 len);
+ int linux_spi_read(u8 *rb, u32 rlen);
+-int linux_spi_write_read(unsigned char *wb, unsigned char *rb, unsigned int rlen);
++int linux_spi_write_read(u8 *wb, u8 *rb, u32 rlen);
+ int linux_spi_set_max_speed(void);
+ #endif
 -- 
 1.9.1
 
