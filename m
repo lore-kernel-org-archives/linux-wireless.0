@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34657 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756855AbbJ2XS0 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32306 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753212AbbJHSdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:18:26 -0400
-Received: by padda3 with SMTP id da3so5889237pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:25 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 11/12] staging: wilc1000: use kmemdup in host_int_add_station
-Date: Fri, 30 Oct 2015 08:17:47 +0900
-Message-Id: <1446160668-10747-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001832_339013_418E67C1)
-In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 8 Oct 2015 14:33:24 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 00/11] brcmfmac: cfg80211 callbacks and coredump
+Date: Thu, 8 Oct 2015 20:33:10 +0200
+Message-ID: <1444329201-3696-1-git-send-email-arend@broadcom.com> (sfid-20151008_203328_468089_FC9B3957)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces kmalloc followed by memcpy with kmemdup.
+This series provides following:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: add wilc1000 driver name in commit title
-    because driver name is not included at V1.
+* using netdev carrier state.
+* add and rework some cfg80211 callbacks mainly for AP mode.
+* use devcoredump when triggered by firmware event.
 
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+The series is intended for 4.4 kernel and applies to the
+master branch of wireless-drivers-next repository.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3c5de75..6b804e6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4537,12 +4537,12 @@ int host_int_add_station(struct host_if_drv *hif_drv,
- 
- 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
- 	if (add_sta_info->u8NumRates > 0) {
--		u8 *rates = kmalloc(add_sta_info->u8NumRates, GFP_KERNEL);
--
-+		u8 *rates = kmemdup(sta_param->pu8Rates,
-+				    add_sta_info->u8NumRates,
-+				    GFP_KERNEL);
- 		if (!rates)
- 			return -ENOMEM;
- 
--		memcpy(rates, sta_param->pu8Rates, add_sta_info->u8NumRates);
- 		add_sta_info->pu8Rates = rates;
- 	}
- 
+Arend van Spriel (2):
+  brcmfmac: expose device memory to devcoredump subsystem
+  brcmfmac: remove conversational comment
+
+Franky Lin (1):
+  brcmfmac: rename firmware_path to alternative_fw_path
+
+Hante Meuleman (8):
+  brcmfmac: Fix race condition between USB probe/load and disconnect.
+  brcmfmac: Rework p2p attach, use single method for p2p dev creation.
+  brcmfmac: Fix station info rate information.
+  brcmfmac: Add RSSI information to get_station.
+  brcmfmac: Add dump_station support to cfg80221 ops.
+  brcmfmac: Move brcmf_c_preinit_dcmds prototype to correct file.
+  brcmfmac: Remove unused state AP creating.
+  brcmfmac: Properly set carrier state of netdev.
+
+ drivers/net/wireless/brcm80211/Kconfig             |  1 +
+ drivers/net/wireless/brcm80211/brcmfmac/bus.h      | 21 ++++++
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 86 ++++++++++++++++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h |  3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/common.h   |  3 +
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     | 65 ++++++++--------
+ drivers/net/wireless/brcm80211/brcmfmac/core.h     | 11 +--
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c    | 42 ++++++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/debug.h    |  8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |  1 +
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 13 ++++
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |  3 -
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      | 71 +++---------------
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 65 ++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c     | 49 +++++++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 29 +++++++-
+ 18 files changed, 355 insertions(+), 121 deletions(-)
+
 -- 
-2.6.1
+1.9.1
 
