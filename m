@@ -1,55 +1,387 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31080 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837AbbJSO53 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23091 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755336AbbJHSdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 10:57:29 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: only advertise mesh support in raw mode
-References: <1443445192-30464-1-git-send-email-me@bobcopeland.com>
-Date: Mon, 19 Oct 2015 17:57:12 +0300
-In-Reply-To: <1443445192-30464-1-git-send-email-me@bobcopeland.com> (Bob
-	Copeland's message of "Mon, 28 Sep 2015 08:59:52 -0400")
-Message-ID: <87r3kqgb3r.fsf@kamboji.qca.qualcomm.com> (sfid-20151019_165737_266037_13D38332)
+	Thu, 8 Oct 2015 14:33:24 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
+Date: Thu, 8 Oct 2015 20:33:11 +0200
+Message-ID: <1444329201-3696-2-git-send-email-arend@broadcom.com> (sfid-20151008_203338_601199_693AB746)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+Upon PSM watchdog event received from firmware the driver will obtain
+a memory snapshot of the device and expose it to user-space through
+the devcoredump framework. This will trigger a uevent.
 
-> Rather than always advertising mesh support and then generating
-> an error when the user attempts to bring up the device without
-> rawmode, only advertise it when available: that is, if the module
-> is loaded with rawmode=1, the firmware supports it, and the
-> device/firmware supports an AP virtual interface internally.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
-> Actually, I think this is perhaps worse than just spitting out an
-> error on interface up, but I'm sending anyway because it was requested
-> a couple of times in review.
->
-> The reason this is so ugly is that the structures in question are
-> defined const in the API; when also declared const in the driver,
-> they go into the .rodata section and the interface limit types
-> cannot be changed without causing a fault.  So this patch removes
-> const in a bunch of places and adds casts to const where required.
->
-> Another approach might be changing cfg80211 to silently remove interface
-> types from advertised combinations when the given mode is not also
-> in interface_modes, instead of warning and failing registration as it
-> does today.  But this would make errors here harder to spot.
->
-> Or we can keep it the way it is with the driver failing and showing an
-> error on add interface.  I'm okay with any of these approaches really.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/Kconfig          |  1 +
+ drivers/net/wireless/brcm80211/brcmfmac/bus.h   | 21 ++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/core.c  |  6 +--
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c | 42 ++++++++++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/debug.h |  8 +--
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c  | 65 +++++++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c  | 49 ++++++++++++++++++-
+ 7 files changed, 181 insertions(+), 11 deletions(-)
 
-Yeah, I'm with you. It would be nice to advertise the mesh feature on
-when the firmware supports it, but I think this is just too complicated.
-So I'm dropping this for now, but we can revisit later if there's a need
-for that.
-
+diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+index fe3dc12..ab42b1f 100644
+--- a/drivers/net/wireless/brcm80211/Kconfig
++++ b/drivers/net/wireless/brcm80211/Kconfig
+@@ -82,5 +82,6 @@ config BRCM_TRACING
+ config BRCMDBG
+ 	bool "Broadcom driver debug functions"
+ 	depends on BRCMSMAC || BRCMFMAC
++	select WANT_DEV_COREDUMP
+ 	---help---
+ 	  Selecting this enables additional code for debug purposes.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+index 89e6a4d..230cad7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+@@ -65,6 +65,8 @@ struct brcmf_bus_dcmd {
+  * @rxctl: receive a control response message from dongle.
+  * @gettxq: obtain a reference of bus transmit queue (optional).
+  * @wowl_config: specify if dongle is configured for wowl when going to suspend
++ * @get_ramsize: obtain size of device memory.
++ * @get_memdump: obtain device memory dump in provided buffer.
+  *
+  * This structure provides an abstract interface towards the
+  * bus specific driver. For control messages to common driver
+@@ -79,6 +81,8 @@ struct brcmf_bus_ops {
+ 	int (*rxctl)(struct device *dev, unsigned char *msg, uint len);
+ 	struct pktq * (*gettxq)(struct device *dev);
+ 	void (*wowl_config)(struct device *dev, bool enabled);
++	size_t (*get_ramsize)(struct device *dev);
++	int (*get_memdump)(struct device *dev, void *data, size_t len);
+ };
+ 
+ 
+@@ -185,6 +189,23 @@ void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
+ 		bus->ops->wowl_config(bus->dev, enabled);
+ }
+ 
++static inline size_t brcmf_bus_get_ramsize(struct brcmf_bus *bus)
++{
++	if (!bus->ops->get_ramsize)
++		return 0;
++
++	return bus->ops->get_ramsize(bus->dev);
++}
++
++static inline
++int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
++{
++	if (!bus->ops->get_memdump)
++		return -EOPNOTSUPP;
++
++	return bus->ops->get_memdump(bus->dev, data, len);
++}
++
+ /*
+  * interface functions from common layer
+  */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 8c2a280..a1d39b196 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -957,8 +957,8 @@ int brcmf_attach(struct device *dev)
+ 	drvr->bus_if = dev_get_drvdata(dev);
+ 	drvr->bus_if->drvr = drvr;
+ 
+-	/* create device debugfs folder */
+-	brcmf_debugfs_attach(drvr);
++	/* attach debug facilities */
++	brcmf_debug_attach(drvr);
+ 
+ 	/* Attach and link in the protocol */
+ 	ret = brcmf_proto_attach(drvr);
+@@ -1155,7 +1155,7 @@ void brcmf_detach(struct device *dev)
+ 
+ 	brcmf_proto_detach(drvr);
+ 
+-	brcmf_debugfs_detach(drvr);
++	brcmf_debug_detach(drvr);
+ 	bus_if->drvr = NULL;
+ 	kfree(drvr);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+index 2d6d005..1299dcc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+@@ -16,15 +16,45 @@
+ #include <linux/debugfs.h>
+ #include <linux/netdevice.h>
+ #include <linux/module.h>
++#include <linux/devcoredump.h>
+ 
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include "core.h"
+ #include "bus.h"
++#include "fweh.h"
+ #include "debug.h"
+ 
+ static struct dentry *root_folder;
+ 
++static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
++				      size_t len)
++{
++	void *dump;
++	size_t ramsize;
++
++	ramsize = brcmf_bus_get_ramsize(bus);
++	if (ramsize) {
++		dump = vzalloc(len + ramsize);
++		if (!dump)
++			return -ENOMEM;
++		memcpy(dump, data, len);
++		brcmf_bus_get_memdump(bus, dump + len, ramsize);
++		dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
++	}
++	return 0;
++}
++
++static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
++					   const struct brcmf_event_msg *evtmsg,
++					   void *data)
++{
++	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
++
++	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
++					  evtmsg->datalen);
++}
++
+ void brcmf_debugfs_init(void)
+ {
+ 	root_folder = debugfs_create_dir(KBUILD_MODNAME, NULL);
+@@ -41,7 +71,7 @@ void brcmf_debugfs_exit(void)
+ 	root_folder = NULL;
+ }
+ 
+-int brcmf_debugfs_attach(struct brcmf_pub *drvr)
++int brcmf_debug_attach(struct brcmf_pub *drvr)
+ {
+ 	struct device *dev = drvr->bus_if->dev;
+ 
+@@ -49,12 +79,18 @@ int brcmf_debugfs_attach(struct brcmf_pub *drvr)
+ 		return -ENODEV;
+ 
+ 	drvr->dbgfs_dir = debugfs_create_dir(dev_name(dev), root_folder);
++	if (IS_ERR(drvr->dbgfs_dir))
++		return PTR_ERR(drvr->dbgfs_dir);
+ 
+-	return PTR_ERR_OR_ZERO(drvr->dbgfs_dir);
++
++	return brcmf_fweh_register(drvr, BRCMF_E_PSM_WATCHDOG,
++				   brcmf_debug_psm_watchdog_notify);
+ }
+ 
+-void brcmf_debugfs_detach(struct brcmf_pub *drvr)
++void brcmf_debug_detach(struct brcmf_pub *drvr)
+ {
++	brcmf_fweh_unregister(drvr, BRCMF_E_PSM_WATCHDOG);
++
+ 	if (!IS_ERR_OR_NULL(drvr->dbgfs_dir))
+ 		debugfs_remove_recursive(drvr->dbgfs_dir);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
+index 48648ca..d0d9676 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
+@@ -109,8 +109,8 @@ struct brcmf_pub;
+ #ifdef DEBUG
+ void brcmf_debugfs_init(void);
+ void brcmf_debugfs_exit(void);
+-int brcmf_debugfs_attach(struct brcmf_pub *drvr);
+-void brcmf_debugfs_detach(struct brcmf_pub *drvr);
++int brcmf_debug_attach(struct brcmf_pub *drvr);
++void brcmf_debug_detach(struct brcmf_pub *drvr);
+ struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
+ int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+ 			    int (*read_fn)(struct seq_file *seq, void *data));
+@@ -121,11 +121,11 @@ static inline void brcmf_debugfs_init(void)
+ static inline void brcmf_debugfs_exit(void)
+ {
+ }
+-static inline int brcmf_debugfs_attach(struct brcmf_pub *drvr)
++static inline int brcmf_debug_attach(struct brcmf_pub *drvr)
+ {
+ 	return 0;
+ }
+-static inline void brcmf_debugfs_detach(struct brcmf_pub *drvr)
++static inline void brcmf_debug_detach(struct brcmf_pub *drvr)
+ {
+ }
+ static inline
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 30baf35..36b386a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -448,6 +448,47 @@ brcmf_pcie_copy_mem_todev(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+ }
+ 
+ 
++static void
++brcmf_pcie_copy_dev_tomem(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
++			  void *dstaddr, u32 len)
++{
++	void __iomem *address = devinfo->tcm + mem_offset;
++	__le32 *dst32;
++	__le16 *dst16;
++	u8 *dst8;
++
++	if (((ulong)address & 4) || ((ulong)dstaddr & 4) || (len & 4)) {
++		if (((ulong)address & 2) || ((ulong)dstaddr & 2) || (len & 2)) {
++			dst8 = (u8 *)dstaddr;
++			while (len) {
++				*dst8 = ioread8(address);
++				address++;
++				dst8++;
++				len--;
++			}
++		} else {
++			len = len / 2;
++			dst16 = (__le16 *)dstaddr;
++			while (len) {
++				*dst16 = cpu_to_le16(ioread16(address));
++				address += 2;
++				dst16++;
++				len--;
++			}
++		}
++	} else {
++		len = len / 4;
++		dst32 = (__le32 *)dstaddr;
++		while (len) {
++			*dst32 = cpu_to_le32(ioread32(address));
++			address += 4;
++			dst32++;
++			len--;
++		}
++	}
++}
++
++
+ #define WRITECC32(devinfo, reg, value) brcmf_pcie_write_reg32(devinfo, \
+ 		CHIPCREGOFFS(reg), value)
+ 
+@@ -1352,12 +1393,36 @@ static void brcmf_pcie_wowl_config(struct device *dev, bool enabled)
+ }
+ 
+ 
++static size_t brcmf_pcie_get_ramsize(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
++	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
++
++	return devinfo->ci->ramsize - devinfo->ci->srsize;
++}
++
++
++static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
++	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
++
++	brcmf_dbg(PCIE, "dump at 0x%08X: len=%zu\n", devinfo->ci->rambase, len);
++	brcmf_pcie_copy_dev_tomem(devinfo, devinfo->ci->rambase, data, len);
++	return 0;
++}
++
++
+ static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+ 	.txdata = brcmf_pcie_tx,
+ 	.stop = brcmf_pcie_down,
+ 	.txctl = brcmf_pcie_tx_ctlpkt,
+ 	.rxctl = brcmf_pcie_rx_ctlpkt,
+ 	.wowl_config = brcmf_pcie_wowl_config,
++	.get_ramsize = brcmf_pcie_get_ramsize,
++	.get_memdump = brcmf_pcie_get_memdump,
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 7f574f2..7e74ac3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3539,6 +3539,51 @@ done:
+ 	return err;
+ }
+ 
++static size_t brcmf_sdio_bus_get_ramsize(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++
++	return bus->ci->ramsize - bus->ci->srsize;
++}
++
++static int brcmf_sdio_bus_get_memdump(struct device *dev, void *data,
++				      size_t mem_size)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	int err;
++	int address;
++	int offset;
++	int len;
++
++	brcmf_dbg(INFO, "dump at 0x%08x: size=%zu\n", bus->ci->rambase,
++		  mem_size);
++
++	address = bus->ci->rambase;
++	offset = err = 0;
++	sdio_claim_host(sdiodev->func[1]);
++	while (offset < mem_size) {
++		len = ((offset + MEMBLOCK) < mem_size) ? MEMBLOCK :
++		      mem_size - offset;
++		err = brcmf_sdiod_ramrw(sdiodev, false, address, data, len);
++		if (err) {
++			brcmf_err("error %d on reading %d membytes at 0x%08x\n",
++				  err, len, address);
++			goto done;
++		}
++		data += len;
++		offset += len;
++		address += len;
++	}
++
++done:
++	sdio_release_host(sdiodev->func[1]);
++	return err;
++}
++
+ void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus)
+ {
+ 	if (!bus->dpc_triggered) {
+@@ -3987,7 +4032,9 @@ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.txctl = brcmf_sdio_bus_txctl,
+ 	.rxctl = brcmf_sdio_bus_rxctl,
+ 	.gettxq = brcmf_sdio_bus_gettxq,
+-	.wowl_config = brcmf_sdio_wowl_config
++	.wowl_config = brcmf_sdio_wowl_config,
++	.get_ramsize = brcmf_sdio_bus_get_ramsize,
++	.get_memdump = brcmf_sdio_bus_get_memdump,
+ };
+ 
+ static void brcmf_sdio_firmware_callback(struct device *dev,
 -- 
-Kalle Valo
+1.9.1
+
