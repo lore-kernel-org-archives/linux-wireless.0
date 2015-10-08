@@ -1,51 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34524 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753420AbbJPJXy (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:19595 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755602AbbJHSd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:23:54 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/13] staging: wilc1000: chage_virtual_intf: use netdev private wilc
-Date: Fri, 16 Oct 2015 18:23:02 +0900
-Message-ID: <1444987389-14151-6-git-send-email-tony.cho@atmel.com> (sfid-20151016_112357_697617_F22FAF27)
-In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+	Thu, 8 Oct 2015 14:33:26 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/11] brcmfmac: Add dump_station support to cfg80221 ops.
+Date: Thu, 8 Oct 2015 20:33:18 +0200
+Message-ID: <1444329201-3696-9-git-send-email-arend@broadcom.com> (sfid-20151008_204654_424022_AEDCE005)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Use netdev private data member wilc instead of global variable wl.
+With this feature it becomes possible to request a station
+assoc list.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 30 ++++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h |  1 +
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |  1 +
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 13 ++++++++++
+ 4 files changed, 45 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ebba9d4..b34b7d0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2533,9 +2533,11 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 	u8 interface_type;
- 	u16 TID = 0;
- 	u8 i;
-+	struct wilc *wl;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index ca9d239..1829337 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -2521,6 +2521,35 @@ done:
+ 	return err;
+ }
  
- 	nic = netdev_priv(dev);
- 	priv = wiphy_priv(wiphy);
-+	wl = nic->wilc;
++static int
++brcmf_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *ndev,
++			    int idx, u8 *mac, struct station_info *sinfo)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	s32 err;
++
++	brcmf_dbg(TRACE, "Enter, idx %d\n", idx);
++
++	if (idx == 0) {
++		cfg->assoclist.count = cpu_to_le32(BRCMF_MAX_ASSOCLIST);
++		err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_ASSOCLIST,
++					     &cfg->assoclist,
++					     sizeof(cfg->assoclist));
++		if (err) {
++			brcmf_err("BRCMF_C_GET_ASSOCLIST unsupported, err=%d\n",
++				  err);
++			cfg->assoclist.count = 0;
++			return -EOPNOTSUPP;
++		}
++	}
++	if (idx < le32_to_cpu(cfg->assoclist.count)) {
++		memcpy(mac, cfg->assoclist.mac[idx], ETH_ALEN);
++		return brcmf_cfg80211_get_station(wiphy, ndev, mac, sinfo);
++	}
++	return -ENOENT;
++}
++
+ static s32
+ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
+ 			   bool enabled, s32 timeout)
+@@ -4620,6 +4649,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.join_ibss = brcmf_cfg80211_join_ibss,
+ 	.leave_ibss = brcmf_cfg80211_leave_ibss,
+ 	.get_station = brcmf_cfg80211_get_station,
++	.dump_station = brcmf_cfg80211_dump_station,
+ 	.set_tx_power = brcmf_cfg80211_set_tx_power,
+ 	.get_tx_power = brcmf_cfg80211_get_tx_power,
+ 	.add_key = brcmf_cfg80211_add_key,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
+index 3f5e550..4d95c6e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
+@@ -407,6 +407,7 @@ struct brcmf_cfg80211_info {
+ 	struct brcmu_d11inf d11inf;
+ 	bool wowl_enabled;
+ 	u32 pre_wowl_pmmode;
++	struct brcmf_assoclist_le assoclist;
+ };
  
- 	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
- 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
+ /**
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil.h
+index 5434dcf..b20fc0f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.h
+@@ -72,6 +72,7 @@
+ #define BRCMF_C_GET_BSS_INFO			136
+ #define BRCMF_C_GET_BANDLIST			140
+ #define BRCMF_C_SET_SCB_TIMEOUT			158
++#define BRCMF_C_GET_ASSOCLIST			159
+ #define BRCMF_C_GET_PHYLIST			180
+ #define BRCMF_C_SET_SCAN_CHANNEL_TIME		185
+ #define BRCMF_C_SET_SCAN_UNASSOC_TIME		187
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 297911f..daa427b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -119,6 +119,8 @@
+ #define BRCMF_COUNTRY_BUF_SZ		4
+ #define BRCMF_ANT_MAX			4
+ 
++#define BRCMF_MAX_ASSOCLIST		128
++
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+ 	BRCMF_JOIN_PREF_RSSI = 1,
+@@ -621,4 +623,15 @@ struct brcmf_rev_info_le {
+ 	__le32 nvramrev;
+ };
+ 
++/**
++ * struct brcmf_assoclist_le - request assoc list.
++ *
++ * @count: indicates number of stations.
++ * @mac: MAC addresses of stations.
++ */
++struct brcmf_assoclist_le {
++	__le32 count;
++	u8 mac[BRCMF_MAX_ASSOCLIST][ETH_ALEN];
++};
++
+ #endif /* FWIL_TYPES_H_ */
 -- 
 1.9.1
 
