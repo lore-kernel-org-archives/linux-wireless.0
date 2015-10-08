@@ -1,79 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6134 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbbJOE06 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54408 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755424AbbJHSdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:26:58 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/40] staging: wilc1000: rename variable hSemHostIFthrdEnd
-Date: Thu, 15 Oct 2015 13:24:54 +0900
-Message-ID: <1444883121-31757-13-git-send-email-tony.cho@atmel.com> (sfid-20151015_062701_001626_86C68B84)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+	Thu, 8 Oct 2015 14:33:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/11] brcmfmac: Fix race condition between USB probe/load and disconnect.
+Date: Thu, 8 Oct 2015 20:33:12 +0200
+Message-ID: <1444329201-3696-3-git-send-email-arend@broadcom.com> (sfid-20151008_203340_520698_46E947EB)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This patch renames variable hSemHostIFthrdEnd to hif_sema_thread
-to avoid CamelCase naming convention.
+When a USB device gets disconnected due to for example removal
+then it is possible that it is still in the loading phase due to
+the asynchronous load routines. These routines can then possible
+access memory which has been freed. Fix this by mutex locking the
+device init phase.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c | 29 ++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bb770ab1..a587080 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -241,8 +241,7 @@ bool g_obtainingIP;
- u8 P2P_LISTEN_STATE;
- static struct task_struct *hif_thread_handler;
- static WILC_MsgQueueHandle hif_msg_q;
--static struct semaphore hSemHostIFthrdEnd;
--
-+static struct semaphore hif_sema_thread;
- struct semaphore hSemDeinitDrvHandle;
- static struct semaphore hWaitResponse;
- struct semaphore hSemHostIntDeinit;
-@@ -3123,7 +3122,7 @@ static int hostIFthread(void *pvArg)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index daba86d..689e64d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -144,6 +144,7 @@ struct brcmf_usbdev_info {
+ 
+ 	struct usb_device *usbdev;
+ 	struct device *dev;
++	struct mutex dev_init_lock;
+ 
+ 	int ctl_in_pipe, ctl_out_pipe;
+ 	struct urb *ctl_urb; /* URB for control endpoint */
+@@ -1204,6 +1205,8 @@ static void brcmf_usb_probe_phase2(struct device *dev,
+ 	int ret;
+ 
+ 	brcmf_dbg(USB, "Start fw downloading\n");
++
++	devinfo = bus->bus_priv.usb->devinfo;
+ 	ret = check_file(fw->data);
+ 	if (ret < 0) {
+ 		brcmf_err("invalid firmware\n");
+@@ -1211,7 +1214,6 @@ static void brcmf_usb_probe_phase2(struct device *dev,
+ 		goto error;
  	}
  
- 	PRINT_D(HOSTINF_DBG, "Releasing thread exit semaphore\n");
--	up(&hSemHostIFthrdEnd);
-+	up(&hif_sema_thread);
- 	return 0;
+-	devinfo = bus->bus_priv.usb->devinfo;
+ 	devinfo->image = fw->data;
+ 	devinfo->image_len = fw->size;
+ 
+@@ -1224,9 +1226,11 @@ static void brcmf_usb_probe_phase2(struct device *dev,
+ 	if (ret)
+ 		goto error;
+ 
++	mutex_unlock(&devinfo->dev_init_lock);
+ 	return;
+ error:
+ 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), ret);
++	mutex_unlock(&devinfo->dev_init_lock);
+ 	device_release_driver(dev);
  }
  
-@@ -4250,7 +4249,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 
- 	PRINT_D(HOSTINF_DBG, "Global handle pointer value=%p\n", hif_drv);
- 	if (clients_count == 0)	{
--		sema_init(&hSemHostIFthrdEnd, 0);
-+		sema_init(&hif_sema_thread, 0);
- 		sema_init(&hSemDeinitDrvHandle, 0);
- 		sema_init(&hSemHostIntDeinit, 1);
+@@ -1264,6 +1268,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 		if (ret)
+ 			goto fail;
+ 		/* we are done */
++		mutex_unlock(&devinfo->dev_init_lock);
+ 		return 0;
  	}
-@@ -4383,7 +4382,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		if (s32Error != 0)
- 			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", s32Error);
+ 	bus->chip = bus_pub->devid;
+@@ -1317,6 +1322,12 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
  
--		down(&hSemHostIFthrdEnd);
-+		down(&hif_sema_thread);
+ 	devinfo->usbdev = usb;
+ 	devinfo->dev = &usb->dev;
++	/* Take an init lock, to protect for disconnect while still loading.
++	 * Necessary because of the asynchronous firmware load construction
++	 */
++	mutex_init(&devinfo->dev_init_lock);
++	mutex_lock(&devinfo->dev_init_lock);
++
+ 	usb_set_intfdata(intf, devinfo);
  
- 		wilc_mq_destroy(&hif_msg_q);
- 	}
+ 	/* Check that the device supports only one configuration */
+@@ -1391,6 +1402,7 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	return 0;
+ 
+ fail:
++	mutex_unlock(&devinfo->dev_init_lock);
+ 	kfree(devinfo);
+ 	usb_set_intfdata(intf, NULL);
+ 	return ret;
+@@ -1403,8 +1415,19 @@ brcmf_usb_disconnect(struct usb_interface *intf)
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 	devinfo = (struct brcmf_usbdev_info *)usb_get_intfdata(intf);
+-	brcmf_usb_disconnect_cb(devinfo);
+-	kfree(devinfo);
++
++	if (devinfo) {
++		mutex_lock(&devinfo->dev_init_lock);
++		/* Make sure that devinfo still exists. Firmware probe routines
++		 * may have released the device and cleared the intfdata.
++		 */
++		if (!usb_get_intfdata(intf))
++			goto done;
++
++		brcmf_usb_disconnect_cb(devinfo);
++		kfree(devinfo);
++	}
++done:
+ 	brcmf_dbg(USB, "Exit\n");
+ }
+ 
 -- 
 1.9.1
 
