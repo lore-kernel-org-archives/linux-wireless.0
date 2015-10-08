@@ -1,98 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:32878 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206AbbJTGqX (ORCPT
+Received: from mail-lb0-f196.google.com ([209.85.217.196]:35319 "EHLO
+	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbbJHSXg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:23 -0400
-Received: by lbbec13 with SMTP id ec13so5352093lbb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:22 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 07/16] rtl8xxxu: rtl8192cu: Introduce a pointer to efuse
-Date: Tue, 20 Oct 2015 08:45:37 +0200
-Message-Id: <1445323546-12807-8-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084650_736287_756E1655)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	Thu, 8 Oct 2015 14:23:36 -0400
+From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+To: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Subject: [PATCH 2/2] staging: wilc1000: linux_wlan_spi: include header
+Date: Thu,  8 Oct 2015 21:23:14 +0300
+Message-Id: <1444328594-10656-2-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20151008_202354_451492_8B0C4108)
+In-Reply-To: <1444328594-10656-1-git-send-email-kholmanskikh.s.s@gmail.com>
+References: <1444328594-10656-1-git-send-email-kholmanskikh.s.s@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 29 ++++++++++++------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+A check using 'sparse' shows warnings in linux_wlan_spi.c:
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index a390d75..e1f8c62 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1823,50 +1823,51 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+drivers/staging/wilc1000/linux_wlan_spi.c:43:19: warning: symbol 'wilc_spi_dev' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:71:19: warning: symbol 'wilc_bus' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:95:5: warning: symbol 'linux_spi_init' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:195:5: warning: symbol 'linux_spi_write' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:320:5: warning: symbol 'linux_spi_read' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:365:5: warning: symbol 'linux_spi_write_read' was not declared. Should it be static?
+drivers/staging/wilc1000/linux_wlan_spi.c:402:5: warning: symbol 'linux_spi_set_max_speed' was not declared. Should it be static?
+
+Let's avoid it by including "linux_wlan_spi.h" header.
+
+Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+---
+ drivers/staging/wilc1000/linux_wlan_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index c6c1f6e..760b72a 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -10,6 +10,7 @@
+ #include <linux/spi/spi.h>
  
- static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
-+	struct rtl8192cu_efuse *efuse = &priv->efuse_wifi.efuse8192;
- 	int i;
+ #include "linux_wlan_common.h"
++#include "linux_wlan_spi.h"
  
--	if (priv->efuse_wifi.efuse8192.rtl_id != cpu_to_le16(0x8129))
-+	if (efuse->rtl_id != cpu_to_le16(0x8129))
- 		return -EINVAL;
+ #define USE_SPI_DMA     0       /* johnny add */
  
--	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8192.mac_addr);
-+	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
+@@ -40,7 +41,6 @@
  
- 	memcpy(priv->cck_tx_power_index_A,
--	       priv->efuse_wifi.efuse8192.cck_tx_power_index_A,
-+	       efuse->cck_tx_power_index_A,
- 	       sizeof(priv->cck_tx_power_index_A));
- 	memcpy(priv->cck_tx_power_index_B,
--	       priv->efuse_wifi.efuse8192.cck_tx_power_index_B,
-+	       efuse->cck_tx_power_index_B,
- 	       sizeof(priv->cck_tx_power_index_B));
+ static u32 SPEED = MIN_SPEED;
  
- 	memcpy(priv->ht40_1s_tx_power_index_A,
--	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_A,
-+	       efuse->ht40_1s_tx_power_index_A,
- 	       sizeof(priv->ht40_1s_tx_power_index_A));
- 	memcpy(priv->ht40_1s_tx_power_index_B,
--	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_B,
-+	       efuse->ht40_1s_tx_power_index_B,
- 	       sizeof(priv->ht40_1s_tx_power_index_B));
- 	memcpy(priv->ht40_2s_tx_power_index_diff,
--	       priv->efuse_wifi.efuse8192.ht40_2s_tx_power_index_diff,
-+	       efuse->ht40_2s_tx_power_index_diff,
- 	       sizeof(priv->ht40_2s_tx_power_index_diff));
+-struct spi_device *wilc_spi_dev;
+ void linux_spi_deinit(void *vp);
  
- 	memcpy(priv->ht20_tx_power_index_diff,
--	       priv->efuse_wifi.efuse8192.ht20_tx_power_index_diff,
-+	       efuse->ht20_tx_power_index_diff,
- 	       sizeof(priv->ht20_tx_power_index_diff));
- 	memcpy(priv->ofdm_tx_power_index_diff,
--	       priv->efuse_wifi.efuse8192.ofdm_tx_power_index_diff,
-+	       efuse->ofdm_tx_power_index_diff,
- 	       sizeof(priv->ofdm_tx_power_index_diff));
- 
- 	memcpy(priv->ht40_max_power_offset,
--	       priv->efuse_wifi.efuse8192.ht40_max_power_offset,
-+	       efuse->ht40_max_power_offset,
- 	       sizeof(priv->ht40_max_power_offset));
- 	memcpy(priv->ht20_max_power_offset,
--	       priv->efuse_wifi.efuse8192.ht20_max_power_offset,
-+	       efuse->ht20_max_power_offset,
- 	       sizeof(priv->ht20_max_power_offset));
- 
- 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
--		 priv->efuse_wifi.efuse8192.vendor_name);
-+		 efuse->vendor_name);
- 	dev_info(&priv->udev->dev, "Product: %.20s\n",
--		 priv->efuse_wifi.efuse8192.device_name);
-+		 efuse->device_name);
- 
--	if (priv->efuse_wifi.efuse8192.rf_regulatory & 0x20) {
-+	if (efuse->rf_regulatory & 0x20) {
- 		sprintf(priv->chip_name, "8188RU");
- 		priv->hi_pa = 1;
- 	}
+ static int __init wilc_bus_probe(struct spi_device *spi)
 -- 
-2.1.0
+1.9.1
 
