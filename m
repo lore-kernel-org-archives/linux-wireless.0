@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4886 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32768 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932102AbbJMLDN (ORCPT
+	with ESMTP id S1751531AbbJHBur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:03:13 -0400
+	Wed, 7 Oct 2015 21:50:47 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,11 +12,11 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 53/54] staging: wilc1000: rename u32Length of struct rcvd_net_info
-Date: Tue, 13 Oct 2015 20:02:11 +0900
-Message-ID: <1444734132-17858-8-git-send-email-tony.cho@atmel.com> (sfid-20151013_130321_567341_813DEBA6)
-In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 11/14] staging: wilc1000: remove typedef from tenuConnDisconnEvent
+Date: Thu, 8 Oct 2015 10:49:18 +0900
+Message-ID: <1444268961-7551-11-git-send-email-tony.cho@atmel.com> (sfid-20151008_035050_069923_FFF3A62B)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -24,42 +24,56 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u32Length of struct rcvd_net_info to len to
-avoid CamelCase naming convention.
+This patch removes typedef from the enum tenuConnDisconnEvent and
+renames it to conn_event.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.h         | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 432b275..392bf08 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4439,7 +4439,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.id = HOST_IF_MSG_RCVD_NTWRK_INFO;
- 	msg.drv = hif_drv;
- 
--	msg.body.net_info.u32Length = u32Length;
-+	msg.body.net_info.len = u32Length;
- 	msg.body.net_info.buffer = kmalloc(u32Length, GFP_KERNEL);
- 	memcpy(msg.body.net_info.buffer, pu8Buffer, u32Length);
- 
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 778dbf5..146a60f 100644
+index 20d8a9e..74ddbdd 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -200,7 +200,7 @@ typedef void (*wilc_remain_on_chan_ready)(void *); /*Remain on channel callback
-  */
- struct rcvd_net_info {
- 	u8 *buffer;
--	u32 u32Length;
-+	u32 len;
+@@ -160,11 +160,11 @@ enum scan_event {
+ 	SCAN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
  };
  
- struct hidden_net_info {
+-typedef enum {
++enum conn_event {
+ 	CONN_DISCONN_EVENT_CONN_RESP		= 0,
+ 	CONN_DISCONN_EVENT_DISCONN_NOTIF	= 1,
+ 	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
+-} tenuConnDisconnEvent;
++};
+ 
+ enum KEY_TYPE {
+ 	WEP,
+@@ -179,7 +179,7 @@ typedef void (*wilc_scan_result)(enum scan_event, tstrNetworkInfo *,
+ 				  void *, void *);
+ 
+ /*Connect callBack function definition*/
+-typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
++typedef void (*wilc_connect_result)(enum conn_event,
+ 				     tstrConnectInfo *,
+ 				     u8,
+ 				     tstrDisconnectNotifInfo *,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d39ef0b..d70381d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -531,7 +531,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID);
+  */
+ int connecting;
+ 
+-static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
++static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			     tstrConnectInfo *pstrConnectInfo,
+ 			     u8 u8MacStatus,
+ 			     tstrDisconnectNotifInfo *pstrDisconnectNotifInfo,
 -- 
 1.9.1
 
