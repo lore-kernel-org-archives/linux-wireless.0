@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3246 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32683 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbbJMKyc (ORCPT
+	with ESMTP id S1752717AbbJHBuT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:54:32 -0400
+	Wed, 7 Oct 2015 21:50:19 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,11 +12,11 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 36/54] staging: wilc1000: rename u32Length of struct rcvd_async_info
-Date: Tue, 13 Oct 2015 19:50:01 +0900
-Message-ID: <1444733419-17679-36-git-send-email-tony.cho@atmel.com> (sfid-20151013_125434_865891_68C8CC84)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 07/14] staging: wilc1000: remove unused struct cfg_param_t
+Date: Thu, 8 Oct 2015 10:49:14 +0900
+Message-ID: <1444268961-7551-7-git-send-email-tony.cho@atmel.com> (sfid-20151008_035024_492138_690C39D7)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -24,38 +24,31 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u32Length of struct rcvd_async_info to len to
-avoid CamelCase naming convention.
+This patch removes unused the struct cfg_param_t.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7a91010..3d0796f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -123,7 +123,7 @@ struct connect_attr {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 1b3dbc5..b4cc164 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -57,12 +57,6 @@
+ #define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
  
- struct rcvd_async_info {
- 	u8 *buffer;
--	u32 u32Length;
-+	u32 len;
- };
- 
- struct channel_attr {
-@@ -4482,8 +4482,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.id = HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO;
- 	msg.drv = hif_drv;
- 
+-typedef struct {
+-	u16 cfg_wid;
+-	enum WID_TYPE cfg_type;
+-	s8     *pu8Para;
+-} cfg_param_t;
 -
--	msg.body.async_info.u32Length = u32Length;
-+	msg.body.async_info.len = u32Length;
- 	msg.body.async_info.buffer = kmalloc(u32Length, GFP_KERNEL);
- 	memcpy(msg.body.async_info.buffer, pu8Buffer, u32Length);
- 
+ typedef struct _tstrStatistics {
+ 	u8 u8LinkSpeed;
+ 	s8 s8RSSI;
 -- 
 1.9.1
 
