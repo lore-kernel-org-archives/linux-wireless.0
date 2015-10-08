@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:32825 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbbJTGqS (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32647 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbbJHBuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:18 -0400
-Received: by lbbec13 with SMTP id ec13so5350766lbb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:16 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 02/16] rtl8xxxu: Use REG_EFUSE_TEST register only on multifunctional devices
-Date: Tue, 20 Oct 2015 08:45:32 +0200
-Message-Id: <1445323546-12807-3-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084627_247290_37CADC78)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	Wed, 7 Oct 2015 21:50:13 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/14] staging: wilc1000: remove unused struct WILC_WFIDrvHandle
+Date: Thu, 8 Oct 2015 10:49:13 +0900
+Message-ID: <1444268961-7551-6-git-send-email-tony.cho@atmel.com> (sfid-20151008_035016_502367_9DA21DB6)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8192cu driver doesn't read/write the REG_EFUSE_TEST register.
-Neither does the rtl8188eu driver.  Do it only for RTL8192CU-based
-devices.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+This patch removes unused the struct WILC_WFIDrvHandle with related
+commnets.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 9 ++++++---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 5f90261..a8d7e0a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1704,6 +1704,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 			priv->has_bluetooth = 1;
- 		if (val32 & MULTI_GPS_FUNC_EN)
- 			priv->has_gps = 1;
-+		priv->is_multi_func = 1;
- 	} else if (val32 & SYS_CFG_TYPE_ID) {
- 		bonding = rtl8xxxu_read32(priv, REG_HPON_FSM);
- 		bonding &= HPON_FSM_BONDING_MASK;
-@@ -1934,9 +1935,11 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
- 	if (val8 & EEPROM_BOOT)
- 		priv->boot_eeprom = 1;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 401a7f6..1b3dbc5 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -192,11 +192,6 @@ typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
+ typedef void (*wilc_remain_on_chan_expired)(void *, u32);  /*Remain on channel expiration callback function*/
+ typedef void (*wilc_remain_on_chan_ready)(void *); /*Remain on channel callback function*/
  
--	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
--	val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
--	rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
-+	if (priv->is_multi_func) {
-+		val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
-+		val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
-+		rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
-+	}
- 
- 	dev_dbg(dev, "Booting from %s\n",
- 		priv->boot_eeprom ? "EEPROM" : "EFUSE");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index f2a1bac..622e6f5 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -597,6 +597,7 @@ struct rtl8xxxu_priv {
- 	struct rtl8723au_idx ht20_max_power_offset[3];
- 	u32 chip_cut:4;
- 	u32 rom_rev:4;
-+	u32 is_multi_func:1;
- 	u32 has_wifi:1;
- 	u32 has_bluetooth:1;
- 	u32 enable_bluetooth:1;
+-/* typedef u32 WILC_WFIDrvHandle; */
+-typedef struct {
+-	s32 s32Dummy;
+-} *WILC_WFIDrvHandle;
+-
+ /*!
+  *  @struct             rcvd_net_info
+  *  @brief		Structure to hold Received Asynchronous Network info
 -- 
-2.1.0
+1.9.1
 
