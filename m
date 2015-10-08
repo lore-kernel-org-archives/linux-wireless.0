@@ -1,104 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:23028 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:38255 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbbJTF2c (ORCPT
+	with ESMTP id S1754798AbbJHJMK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 01:28:32 -0400
+	Thu, 8 Oct 2015 05:12:10 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 12/12] staging: wilc1000: assign pointer of g_linux_wlan to sdio device data
-Date: Tue, 20 Oct 2015 14:26:56 +0900
-Message-ID: <1445318816-21686-13-git-send-email-tony.cho@atmel.com> (sfid-20151020_074655_229168_52FB267D)
-In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
-References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/11] staging: wilc1000: rename u8Wepidx of struct host_if_wep_attr
+Date: Thu, 8 Oct 2015 18:10:54 +0900
+Message-ID: <1444295456-25818-9-git-send-email-tony.cho@atmel.com> (sfid-20151008_111223_067642_8379C820)
+In-Reply-To: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+References: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch assigns wl pointer to sdio device data. The global variable
-g_linux_wlan will be removed finally.
+This patch renames u8Wepidx of struct host_if_wep_attr to index to avoid
+CamelCase naming convention.
 
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 5 +++--
- drivers/staging/wilc1000/linux_wlan_sdio.c    | 5 +++--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3cad5b6..5701e58 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1620,9 +1620,8 @@ void wl_wlan_cleanup(void)
- 	linux_wlan_device_power(0);
- }
- 
--int wilc_netdev_init(void)
-+int wilc_netdev_init(struct wilc **wilc)
- {
--
- 	int i;
- 	perInterface_wlan_t *nic;
- 	struct net_device *ndev;
-@@ -1634,6 +1633,8 @@ int wilc_netdev_init(void)
- 	if (!g_linux_wlan)
- 		return -ENOMEM;
- 
-+	*wilc = g_linux_wlan;
-+
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
- 	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 9a45871..1f8d874 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -27,7 +27,6 @@ struct wilc_sdio {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7919851..e99db7d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -109,7 +109,7 @@ struct host_if_wpa_attr {
+ struct host_if_wep_attr {
+ 	u8 *key;
+ 	u8 key_len;
+-	u8 u8Wepidx;
++	u8 index;
+ 	u8 u8mode;
+ 	enum AUTHTYPE tenuAuth_type;
  };
+@@ -2350,7 +2350,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY_AP)	{
  
- struct sdio_func *local_sdio_func;
--extern int wilc_netdev_init(void);
- extern void wilc_handle_isr(void);
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+-			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
++			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+@@ -2364,7 +2364,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWIDList[2].id = (u16)WID_KEY_ID;
+ 			strWIDList[2].type = WID_CHAR;
  
- static unsigned int sdio_default_speed;
-@@ -117,6 +116,7 @@ int linux_sdio_cmd53(sdio_cmd53_t *cmd)
- static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- {
- 	struct wilc_sdio *wl_sdio;
-+	struct wilc *wilc;
+-			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
++			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
+ 			strWIDList[2].size = sizeof(char);
  
- 	PRINT_D(INIT_DBG, "probe function\n");
- 	wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
-@@ -125,12 +125,13 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
  
- 	PRINT_D(INIT_DBG, "Initializing netdev\n");
- 	local_sdio_func = func;
--	if (wilc_netdev_init()) {
-+	if (wilc_netdev_init(&wilc)) {
- 		PRINT_ER("Couldn't initialize netdev\n");
- 		kfree(wl_sdio);
- 		return -1;
- 	}
- 	wl_sdio->func = func;
-+	wl_sdio->wilc = wilc;
- 	sdio_set_drvdata(func, wl_sdio);
+@@ -2402,7 +2402,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
+ 			}
+-			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
++			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index;
  
- 	printk("Driver Initializing success\n");
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 74eb7b6..e0c66bc 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -214,4 +214,5 @@ void linux_wlan_rx_complete(void);
- void linux_wlan_dbg(u8 *buff);
- int linux_wlan_lock_timeout(void *vp, u32 timeout);
- void wl_wlan_cleanup(void);
-+int wilc_netdev_init(struct wilc **wilc);
- #endif
+ 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, 1);
+ 
+@@ -2425,7 +2425,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.id = (u16)WID_REMOVE_WEP_KEY;
+ 			strWID.type = WID_STR;
+ 
+-			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
++			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index;
+ 			strWID.val = s8idxarray;
+ 			strWID.size = 1;
+ 
+@@ -2434,7 +2434,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		} else {
+ 			strWID.id = (u16)WID_KEY_ID;
+ 			strWID.type = WID_CHAR;
+-			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx));
++			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
+ 			strWID.size = sizeof(char);
+ 
+ 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
+@@ -4099,7 +4099,7 @@ s32 host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 u8keyIdx)
+ 
+ 
+ 
+-	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8keyIdx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8keyIdx;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4144,7 +4144,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ 	msg.drv = hif_drv;
+ 
+ 
+-	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Index;
++	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Index;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4208,7 +4208,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 
+ 	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
+ 
+-	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Keyidx;
+ 
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -4277,7 +4277,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 
+ 	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
+ 
+-	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
++	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Keyidx;
+ 
+ 	msg.body.key_info.uniHostIFkeyAttr.wep.u8mode = u8mode;
+ 
 -- 
 1.9.1
 
