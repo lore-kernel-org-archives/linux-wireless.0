@@ -1,114 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53354 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934AbbJXSu7 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32711 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854AbbJHBu0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2015 14:50:59 -0400
-From: Olav Haugan <ohaugan@codeaurora.org>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net, kvalo@codeaurora.org,
-	ath9k-devel@qca.qualcomm.com, Olav Haugan <ohaugan@codeaurora.org>
-Subject: [PATCH 1/2] mac80211: add support to set_coalesce
-Date: Sat, 24 Oct 2015 11:50:51 -0700
-Message-Id: <1445712652-19327-1-git-send-email-ohaugan@codeaurora.org> (sfid-20151024_205102_100784_2A5EA54D)
+	Wed, 7 Oct 2015 21:50:26 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/14] staging: wilc1000: remove typedef from tstrStatistics
+Date: Thu, 8 Oct 2015 10:49:15 +0900
+Message-ID: <1444268961-7551-8-git-send-email-tony.cho@atmel.com> (sfid-20151008_035028_985718_71F09B7A)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ops in mac80211 and corresponding driver calls.
-Add trace event for set_coalesce.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Olav Haugan <ohaugan@codeaurora.org>
+This patch removes typedef from the struct tstrStatistics and
+rename it to statistics.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- include/net/mac80211.h    |  4 ++++
- net/mac80211/cfg.c        |  9 +++++++++
- net/mac80211/driver-ops.h | 12 ++++++++++++
- net/mac80211/trace.h      |  5 +++++
- 4 files changed, 30 insertions(+)
+ drivers/staging/wilc1000/host_interface.c         | 6 +++---
+ drivers/staging/wilc1000/host_interface.h         | 7 +++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index bfc5694..8bd7ccb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3232,6 +3232,8 @@ enum ieee80211_reconfig_type {
-  *	the function call.
-  *
-  * @wake_tx_queue: Called when new packets have been added to the queue.
-+ *
-+ * @set_coalesce: Set coalesce parameters.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3467,6 +3469,8 @@ struct ieee80211_ops {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c370e8d..e6e79c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2973,7 +2973,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *drvHandler)
  
- 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
- 			      struct ieee80211_txq *txq);
-+	int (*set_coalesce)(struct ieee80211_hw *hw,
-+			    struct cfg80211_coalesce *coalesce);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7a77a14..affd8ab 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3810,6 +3810,14 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
- 	return -ENOENT;
  }
  
-+static int ieee80211_set_coalesce(struct wiphy *wiphy,
-+				  struct cfg80211_coalesce *coalesce)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return drv_set_coalesce(local, coalesce);
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3894,4 +3902,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-+	.set_coalesce = ieee80211_set_coalesce,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 02d9133..49856e1 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1355,4 +1355,16 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
- 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+-s32 Handle_GetStatistics(struct host_if_drv *drvHandler, tstrStatistics *pstrStatistics)
++s32 Handle_GetStatistics(struct host_if_drv *drvHandler, struct statistics *pstrStatistics)
+ {
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0, s32Error = 0;
+@@ -3986,7 +3986,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_STATISTICS:
+-			Handle_GetStatistics(msg.drv, (tstrStatistics *)msg.body.data);
++			Handle_GetStatistics(msg.drv, (struct statistics *)msg.body.data);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_CHNL:
+@@ -5533,7 +5533,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hWFIDrv, s8 *ps8lnkspd)
+ 	return s32Error;
  }
  
-+static inline int drv_set_coalesce(struct ieee80211_local *local,
-+				   struct cfg80211_coalesce *coalesce)
-+{
-+	u32 ret = 0;
-+
-+	trace_drv_set_coalesce(local);
-+	if (local->ops->set_coalesce)
-+		ret = local->ops->set_coalesce(&local->hw, coalesce);
-+	trace_drv_return_u32(local, ret);
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 6f14591..ff1173b 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1655,6 +1655,11 @@ TRACE_EVENT(drv_get_expected_throughput,
- 	)
- );
+-s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, tstrStatistics *pstrStatistics)
++s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct statistics *pstrStatistics)
+ {
+ 	s32 s32Error = 0;
+ 	struct host_if_msg msg;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index b4cc164..d01bb8e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -57,14 +57,13 @@
+ #define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
  
-+DEFINE_EVENT(local_only_evt, drv_set_coalesce,
-+	     TP_PROTO(struct ieee80211_local *local),
-+	     TP_ARGS(local)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
+-typedef struct _tstrStatistics {
++struct statistics {
+ 	u8 u8LinkSpeed;
+ 	s8 s8RSSI;
+ 	u32 u32TxCount;
+ 	u32 u32RxCount;
+ 	u32 u32TxFailureCount;
+-
+-} tstrStatistics;
++};
+ 
+ enum host_if_state {
+ 	HOST_IF_IDLE			= 0,
+@@ -1176,6 +1175,6 @@ static s32 Handle_ScanDone(struct host_if_drv *drvHandler, tenuScanEvent enuEven
+ 
+ void host_int_freeJoinParams(void *pJoinParams);
+ 
+-s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, tstrStatistics *pstrStatistics);
++s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct statistics *pstrStatistics);
+ 
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 42219ea..d5b0214 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1576,7 +1576,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (nic->iftype == STATION_MODE) {
+-		tstrStatistics strStatistics;
++		struct statistics strStatistics;
+ 
+ 		host_int_get_statistics(priv->hWILCWFIDrv, &strStatistics);
+ 
 -- 
-2.6.1
+1.9.1
 
