@@ -1,84 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22331 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbbJEIBr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 04:01:47 -0400
-From: Hante Meuleman <meuleman@broadcom.com>
-To: Nicholas Krause <xerofoify@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>
-CC: Arend Van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCHv2] brcm80211:Fix locking region in the function
- brcmf_sdio_sendfromq
-Date: Mon, 5 Oct 2015 08:01:45 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE01995CBF@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20151005_100231_739508_D5B82F47)
-References: <1444000277-25694-1-git-send-email-xerofoify@gmail.com>
-In-Reply-To: <1444000277-25694-1-git-send-email-xerofoify@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from ns.gsystem.sk ([62.176.172.50]:39317 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753589AbbJHSOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 14:14:16 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: [RFC PATCH 2/2] airo: fix scan after SIOCSIWAP (airo_set_wap)
+Date: Thu,  8 Oct 2015 20:14:04 +0200
+Message-Id: <1444328044-13075-2-git-send-email-linux@rainbow-software.org> (sfid-20151008_201447_558018_E66C7DF1)
+In-Reply-To: <1444328044-13075-1-git-send-email-linux@rainbow-software.org>
+References: <1444328044-13075-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Nicholas, 
+SIOCSIWAP (airo_set_wap) affects scan: only the AP specified by
+SIOCSIWAP is present in scan results.
 
-I can understand that if you read the comment that there is supposed to be a lock taken, but why would you assume that it is the txq_lock? Two things:
+This makes NetworkManager work for the first time but then unable to
+find any other APs.
 
-1) The comment that a look should have been taken is wrong. Once upon a time a packet could be transmitted/handled from two paths. To protect for concurrency the callee of brcmf_sdio_txpkt was assumed to have take some sort of lock to protect against this. 
-2) Nowadays all frames are put on the txq and then pulled from that queue in the DPC. This queue is protected with a lock and therefor a lock is taken around the dequeueing of txq in dpc. Also the reason for the chosen var name txq_lock. This lock protects for concurrent access to the txq and the lock should be taken as short as possible, and therefor this patch could possible result in throughput degradation and does not solve anything.
+Clear APList before starting scan and set it back after scan completes
+to work-around the problem.
 
-Please do not submit this patch, if anything then remove the comment from the function brcmf_sdio_txpkt.
-
-Regards,
-Hante
-
------Original Message-----
-From: Nicholas Krause [mailto:xerofoify@gmail.com] 
-Sent: Monday, October 05, 2015 1:11 AM
-To: Brett Rudley
-Cc: Arend Van Spriel; Franky (Zhenhui) Lin; Hante Meuleman; kvalo@codeaurora.org; Pieter-Paul Giesberts; linux-wireless@vger.kernel.org; brcm80211-dev-list; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCHv2] brcm80211:Fix locking region in the function brcmf_sdio_sendfromq
-
-This fixes the locking region in the function brcmf_sdio_sendfromq
-to properly lock around the call to the function brcmrf_sdio_txpkt
-in order to avoid concurrent access issues when calling this
-function as stated in the function's comments about the caller
-being required to lock around the call to this particular function.
-
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
-v2
-Fix issue with deadlock occurrence due to not unlocking before
-break in for loop if the variable i is equal to zero
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/airo.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index f990e3d..260f063 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -2388,11 +2388,13 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 				break;
- 			__skb_queue_tail(&pktq, pkt);
- 		}
--		spin_unlock_bh(&bus->txq_lock);
--		if (i == 0)
-+		if (i == 0) {
-+			spin_unlock_bh(&bus->txq_lock);
- 			break;
-+		}
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 4ef2f98..654a172 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -3037,6 +3037,11 @@ static void airo_process_scan_results (struct airo_info *ai) {
+ 	}
  
- 		ret = brcmf_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
-+		spin_unlock_bh(&bus->txq_lock);
+ out:
++	/* write APList back (we cleared it in airo_set_scan) */
++	disable_MAC(ai, 0);
++	writeAPListRid(ai, &ai->APList, 0);
++	enable_MAC(ai, 0);
++
+ 	ai->scan_timeout = 0;
+ 	clear_bit(JOB_SCAN_RESULTS, &ai->jobs);
+ 	up(&ai->sem);
+@@ -7216,6 +7221,7 @@ static int airo_set_scan(struct net_device *dev,
+ 	Cmd cmd;
+ 	Resp rsp;
+ 	int wake = 0;
++	APListRid APList_rid_empty;
  
- 		cnt += i;
+ 	/* Note : you may have realised that, as this is a SET operation,
+ 	 * this is privileged and therefore a normal user can't
+@@ -7233,6 +7239,13 @@ static int airo_set_scan(struct net_device *dev,
+ 	if (ai->scan_timeout > 0)
+ 		goto out;
  
++	/* Clear APList as it affects scan results */
++	memset(&APList_rid_empty, 0, sizeof(APList_rid_empty));
++	APList_rid_empty.len = cpu_to_le16(sizeof(APList_rid_empty));
++	disable_MAC(ai, 0);
++	writeAPListRid(ai, &APList_rid_empty, 0);
++	enable_MAC(ai, 0);
++
+ 	/* Initiate a scan command */
+ 	ai->scan_timeout = RUN_AT(3*HZ);
+ 	memset(&cmd, 0, sizeof(cmd));
 -- 
-2.1.4
+Ondrej Zary
 
