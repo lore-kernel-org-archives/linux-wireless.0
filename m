@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39258 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276AbbJNLBt (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:32621 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbbJHBuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:01:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: kbuild test robot <lkp@intel.com>, <kbuild-all@01.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
-References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>
-	<87wpuspilw.fsf@kamboji.qca.qualcomm.com>
-	<561C1291.8060607@broadcom.com>
-Date: Wed, 14 Oct 2015 14:01:43 +0300
-In-Reply-To: <561C1291.8060607@broadcom.com> (Arend van Spriel's message of
-	"Mon, 12 Oct 2015 22:05:37 +0200")
-Message-ID: <87lhb5n27c.fsf@kamboji.qca.qualcomm.com> (sfid-20151014_130152_462457_4B2B9E4C)
+	Wed, 7 Oct 2015 21:50:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/14] staging: wilc1000: remove typedef from tstrHiddenNetworkInfo
+Date: Thu, 8 Oct 2015 10:49:12 +0900
+Message-ID: <1444268961-7551-5-git-send-email-tony.cho@atmel.com> (sfid-20151008_035010_766794_51A230FC)
+In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> On 10/12/2015 10:59 AM, Kalle Valo wrote:
->> kbuild test robot <lkp@intel.com> writes:
->>
->>> Hi Arend,
->>>
->>> [auto build test ERROR on next-20151008 -- if it's inappropriate base, please ignore]
->>>
->>> config: x86_64-randconfig-x011-201540 (attached as .config)
->>> reproduce:
->>>          # save the attached .config to linux build tree
->>>          make ARCH=x86_64
->>>
->>> All errors (new ones prefixed by >>):
->>>
->>>     drivers/net/wireless/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
->>>      void brcmf_debugfs_init(void)
->>>           ^
->>>     In file included from drivers/net/wireless/brcm80211/brcmfmac/bus.h:20:0,
->>>                      from drivers/net/wireless/brcm80211/brcmfmac/debug.c:24:
->>>     drivers/net/wireless/brcm80211/brcmfmac/debug.h:118:20: note: previous definition of 'brcmf_debugfs_init' was here
->>>      static inline void brcmf_debugfs_init(void)
->>>                         ^
->>
->> Arend, are the kbuild errors valid? I would guess they are as
->> wireless-drivers-next should be in linux-next.
->
-> Actually they are not. I am not sure about the build infrastructure,
-> but the errors above can only occur when CONFIG_BRCMDBG is set, but
-> DEBUG is not. However, that can not happen as we have following line
-> in drivers/net/wireless/brcm80211/Makefile:
->
-> subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DDEBUG
+This patch removes typedef from the struct tstrHiddenNetworkInfo with
+related comments and renames it to hidden_net_info.
 
-I didn't check the details but I'm still not convinced :) In my opinion
-the code should always compile, with and without -DDEBUG. Anyways, I
-pushed this script to the pending branch to get kbuild test this patch
-once again.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.h | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 408bd48..401a7f6 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -212,15 +212,13 @@ struct rcvd_net_info {
+ 	u32 u32Length;
+ };
+ 
+-typedef struct _tstrHiddenNetworkInfo {
++struct hidden_net_info {
+ 	u8  *pu8ssid;
+ 	u8 u8ssidlen;
+-
+-} tstrHiddenNetworkInfo;
++};
+ 
+ struct hidden_network {
+-	/* MAX_SSID_LEN */
+-	tstrHiddenNetworkInfo *pstrHiddenNetworkInfo;
++	struct hidden_net_info *pstrHiddenNetworkInfo;
+ 	u8 u8ssidnum;
+ };
+ 
 -- 
-Kalle Valo
+1.9.1
+
