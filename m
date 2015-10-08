@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:59026 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754929AbbJ1KXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 06:23:03 -0400
-Subject: Re: [PATCH] Minstrel_ht: use lowest rate last
-To: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>,
-	linux-wireless@vger.kernel.org
-References: <20151026114236.233d1b54e6c08f3ab2b4c41a@ubnt.com>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <5630A1FC.6010309@openwrt.org> (sfid-20151028_112307_492104_A8287592)
-Date: Wed, 28 Oct 2015 11:22:52 +0100
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32060 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbbJHKdf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 06:33:35 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix cleanup in ath10k_thermal_unregister
+Date: Thu, 8 Oct 2015 16:03:03 +0530
+Message-ID: <1444300383-9645-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20151008_123339_202012_98295150)
 MIME-Version: 1.0
-In-Reply-To: <20151026114236.233d1b54e6c08f3ab2b4c41a@ubnt.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-10-26 10:42, Dmitry Ivanov wrote:
-> Minstrel_ht: use lowest rate last as in minstrel.
-> It should improve robustness in environments with non-stationary noise.
-> 
-> Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
-Not using the lowest rate is intentional. Using the lowest rate severely
-limits aggregation. In many cases, dropping a packet is preferrable, as
-trying too hard to retry individual packets can cause extra bufferbloat
-and severely increased latencies.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-NACK from me on this patch. If anything, I think we should probably
-change minstrel to behave in the same way as minstrel_ht.
+First remove the 'cooling_device#n' syslink created
+for ath10k and then unregsiter from the thermal subsystem(cooling)
 
-- Felix
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/thermal.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 1a899d7..60fe562 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -215,6 +215,6 @@ err_cooling_destroy:
+ 
+ void ath10k_thermal_unregister(struct ath10k *ar)
+ {
+-	thermal_cooling_device_unregister(ar->thermal.cdev);
+ 	sysfs_remove_link(&ar->dev->kobj, "cooling_device");
++	thermal_cooling_device_unregister(ar->thermal.cdev);
+ }
+-- 
+1.7.9.5
+
