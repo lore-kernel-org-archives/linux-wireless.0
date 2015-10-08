@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51957 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932359AbbJ0SzV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 14:55:21 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mwifiex problem: incompatible network settings
-Date: Tue, 27 Oct 2015 18:55:17 +0000
-Message-ID: <1445972115005.99995@marvell.com> (sfid-20151027_195524_547238_EB0E08AD)
-References: <87wpu9632c.fsf@free.fr>
- <1445875814.31216.18.camel@redhat.com>,<87twpd8fk4.fsf@free.fr>
-In-Reply-To: <87twpd8fk4.fsf@free.fr>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:47181 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751888AbbJHHuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2015 03:50:14 -0400
+Message-ID: <1444290612.2131.1.camel@sipsolutions.net> (sfid-20151008_095018_619931_9B482EA1)
+Subject: Re: [PATCH] iw: Fix return values when parameters are wrong
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 08 Oct 2015 09:50:12 +0200
+In-Reply-To: <CABAco3A+7-gJ6CZ+8qCnt_vnYA35dyzhjwoA4D+6D4iqi8-U=Q@mail.gmail.com> (sfid-20151007_184503_016326_2C91510D)
+References: <CABAco3A+7-gJ6CZ+8qCnt_vnYA35dyzhjwoA4D+6D4iqi8-U=Q@mail.gmail.com>
+	 (sfid-20151007_184503_016326_2C91510D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julien,
+On Wed, 2015-10-07 at 18:45 +0200, Ola Olsson wrote:
+> According to header file, wrong parameters
+> yield 1 as return value.
+> Also tried to fix the comments since one part
+> of it was unreadable.
+> 
+That seems reasonable, but your patch (this one at least) is completely
+whitespace damaged. Did you submit it through gmail's web interface?
 
->Yes, I'm using NetworkManager, version 1.0.4-ubuntu5, and I'm guessing
->it's using wpa_supplicant. I deleted the configuration for this network
->and created it again. The network is configured for WPA in
->NetworkManager but I still get the same error message.
+There's some help on how to use mailers here:
+https://kernel.org/doc/Documentation/email-clients.txt
 
-Looks like driver has received encryption mode as TKIP, but didn't receive WPA ie. Hence the configuration didn't match with AP. Could you share wpa_supplicant configuration file if possible? Also, check if "sme->ie" is received in mwifiex_cfg80211_assoc() routine. Enable driver debug for the test using "echo 0xffffffff > /sys/kernel/debug/mwifiex/mlan0/debug_mask" and share dmesg logs.
-
-Regards,
-Amitkumar
+johannes
