@@ -1,78 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:32835 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080AbbJHBvH (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23091 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554AbbJHSd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 21:51:07 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 14/14] staging: wilc1000: remove wilc_wlan.c included in wilc_wfi_cfgoperations.c
-Date: Thu, 8 Oct 2015 10:49:21 +0900
-Message-ID: <1444268961-7551-14-git-send-email-tony.cho@atmel.com> (sfid-20151008_035110_900205_89F0E655)
-In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+	Thu, 8 Oct 2015 14:33:26 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/11] brcmfmac: Fix station info rate information.
+Date: Thu, 8 Oct 2015 20:33:16 +0200
+Message-ID: <1444329201-3696-7-git-send-email-arend@broadcom.com> (sfid-20151008_203334_578981_BCD5082B)
+In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes "wilc_wlan.c" from the wilc_wfi_cfgoperation.c file and
-adds wilc_wlan.o into Makefile to compile it because there is few benefits.
-This patch also adds "wilc_wfi_netdevice.h" in the wilc_wlan.c file to avoid
-the compile errors.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Txrate and rxrate in get_station got assigned first with value
+in kbps and then divided by 100 to get it in 100kbps unit. The
+problem with that is that type of rate is u16 which resulted
+in incorrect values for high data rate values.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/Makefile                 | 3 ++-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 -
- drivers/staging/wilc1000/wilc_wlan.c              | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index f495061..64c2f1b 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -21,7 +21,8 @@ ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			wilc_msgqueue.o \
- 			coreconfigurator.o host_interface.o \
--			wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o
-+			wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o \
-+			wilc_wlan.o
- 
- wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o
- wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d70381d..2ad08a7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -11,7 +11,6 @@
-  */
- 
- #include "wilc_wfi_cfgoperations.h"
--#include "wilc_wlan.c"
- #ifdef WILC_SDIO
- #include "linux_wlan_sdio.h"
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e11d3d3..1d23bad 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -8,7 +8,7 @@
- /* //////////////////////////////////////////////////////////////////////////// */
- 
- #include "wilc_wlan_if.h"
--#include "wilc_wlan.h"
-+#include "wilc_wfi_netdevice.h"
- #include "wilc_wlan_cfg.h"
- 
- /********************************************
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 2ee57c0..73eddad 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -2478,13 +2478,13 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 		sinfo->rx_packets += le32_to_cpu(sta_info_le.rx_mcast_pkts);
+ 		if (sinfo->tx_packets) {
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
+-			sinfo->txrate.legacy = le32_to_cpu(sta_info_le.tx_rate);
+-			sinfo->txrate.legacy /= 100;
++			sinfo->txrate.legacy =
++				le32_to_cpu(sta_info_le.tx_rate) / 100;
+ 		}
+ 		if (sinfo->rx_packets) {
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
+-			sinfo->rxrate.legacy = le32_to_cpu(sta_info_le.rx_rate);
+-			sinfo->rxrate.legacy /= 100;
++			sinfo->rxrate.legacy =
++				le32_to_cpu(sta_info_le.rx_rate) / 100;
+ 		}
+ 		if (le16_to_cpu(sta_info_le.ver) >= 4) {
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
 -- 
 1.9.1
 
