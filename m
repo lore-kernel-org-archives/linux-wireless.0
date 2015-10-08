@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35180 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932231AbbJSPJT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31243 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932673AbbJHRmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 11:09:19 -0400
-Date: Mon, 19 Oct 2015 18:09:10 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2 01/40] staging: wilc1000: rename ssidLen of struct
- join_bss_param
-Message-ID: <20151019150910.GX7289@mwanda> (sfid-20151019_170927_386980_99795F70)
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
- <20151017045907.GA6504@kroah.com>
- <5624481A.2050405@atmel.com>
+	Thu, 8 Oct 2015 13:42:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@codeaurora.org>
+CC: Peter Oh <poh@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: use pre-allocated DMA buffer in Tx
+References: <1443117270-16790-1-git-send-email-poh@qca.qualcomm.com>
+	<87fv1lvauk.fsf@kamboji.qca.qualcomm.com>
+	<5616A511.5060705@codeaurora.org>
+Date: Thu, 8 Oct 2015 20:41:48 +0300
+In-Reply-To: <5616A511.5060705@codeaurora.org> (Peter Oh's message of "Thu, 8
+	Oct 2015 10:17:05 -0700")
+Message-ID: <87fv1ltfz7.fsf@kamboji.qca.qualcomm.com> (sfid-20151008_194210_227802_039696EC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5624481A.2050405@atmel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 19, 2015 at 10:32:10AM +0900, Tony Cho wrote:
-> 
-> 
-> On 2015년 10월 17일 13:59, Greg KH wrote:
-> >On Fri, Oct 16, 2015 at 01:37:31PM +0900, Tony Cho wrote:
-> >>From: Leo Kim <leo.kim@atmel.com>
-> >>
-> >>This patch renames ssidLen of struct join_bss_param to ssid_len
-> >>to avoid CamelCase naming convention.
-> >>
-> >>Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> >>Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> >>---
-> >>  drivers/staging/wilc1000/host_interface.c | 4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >Doesn't apply, I missed that you sent this as v2, why did you do that?
-> >What was wrong with v1?
-> 
-> This series of V2 includes Dan's suggestion, we don't have to add one blank line between malloc and null check if-statement.
-> 
+Peter Oh <poh@codeaurora.org> writes:
 
-I said that that patch was fine.  I was intending that you change all of
-them in a later patch.  I really try to not delay progress with small
-review comments.
+> Does it happen after you applied copy engine patchset or even without
+> the patchset? I saw ath10k_pci_htt_tx_cb in backtrace which is not
+> merged to master branch yet. If it only happens after the patchset,
+> I'll apply them and look into it if any possibilities are there.
 
-regards,
-dan carpenter
+Good point. I thought I was able to reproduce the bug with a clean
+master branch, but I now checked the logs and all three cases of this
+warning had ath10k_pci_htt_tx_cb in the stack trace. So I must have
+accidentally tested with a temporary branch where the pending branch was
+merged with master branch.
 
+-- 
+Kalle Valo
