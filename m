@@ -1,64 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbJDHXs (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:18625 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbbJITo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 03:23:48 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Lior David <liord@qti.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 03/10] wil6210: log firmware crash information
-Date: Sun,  4 Oct 2015 10:23:20 +0300
-Message-Id: <1443943407-6663-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092352_802576_3DDB2B29)
-In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 9 Oct 2015 15:44:29 -0400
+Message-ID: <56181918.9010706@broadcom.com> (sfid-20151009_214452_264704_D3F8539C)
+Date: Fri, 9 Oct 2015 21:44:24 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Markus Elfring <elfring@users.sourceforge.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: fix waitqueue_active without memory barrier
+ in brcmfmac driver
+References: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp>
+In-Reply-To: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print firmware and ucode assert codes when firmware crashed.
+On 10/09/2015 02:35 AM, Kosuke Tatsukawa wrote:
+> brcmf_msgbuf_ioctl_resp_wake() seems to be missing a memory barrier
+> which might cause the waker to not notice the waiter and miss sending a
+> wake_up as in the following figure.
 
-Signed-off-by: Lior David <liord@qti.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 7 ++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h   | 4 ++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+My mail reader treats this as HTML format or so. Can you resend it in
+plain text please?
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index a371f036..f651994 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -347,7 +347,12 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
- 	wil6210_mask_irq_misc(wil);
- 
- 	if (isr & ISR_MISC_FW_ERROR) {
--		wil_err(wil, "Firmware error detected\n");
-+		u32 fw_assert_code = wil_r(wil, RGF_FW_ASSERT_CODE);
-+		u32 ucode_assert_code = wil_r(wil, RGF_UCODE_ASSERT_CODE);
-+
-+		wil_err(wil,
-+			"Firmware error detected, assert codes FW 0x%08x, UCODE 0x%08x\n",
-+			fw_assert_code, ucode_assert_code);
- 		clear_bit(wil_status_fwready, wil->status);
- 		/*
- 		 * do not clear @isr here - we do 2-nd part in thread
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e405bef..525ce2c 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -246,6 +246,10 @@ struct RGF_ICR {
- #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
- 	#define JTAG_DEV_ID_SPARROW_B0	(0x2632072f)
- 
-+/* crash codes for FW/Ucode stored here */
-+#define RGF_FW_ASSERT_CODE		(0x91f020)
-+#define RGF_UCODE_ASSERT_CODE		(0x91f028)
-+
- enum {
- 	HW_VER_UNKNOWN,
- 	HW_VER_SPARROW_B0, /* JTAG_DEV_ID_SPARROW_B0 */
--- 
-2.1.4
+Regards,
+Arend
+
+> 
+>    brcmf_msgbuf_ioctl_resp_wake		    brcmf_msgbuf_ioctl_resp_wait
+> ------------------------------------------------------------------------
+> if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+> /* The CPU might reorder the test for
+>     the waitqueue up here, before
+>     prior writes complete */
+>     	   	     	 	       /* wait_event_timeout */
+> 				        /* __wait_event_timeout */
+> 					 /* ___wait_event */
+> 					 prepare_to_wait_event(&wq, &__wait,
+> 					   state);
+> 					 if (msgbuf->ctl_completed)
+> 					 ...
+> msgbuf->ctl_completed = true;
+> 					 schedule_timeout(__ret))
+> ------------------------------------------------------------------------
+> 
+> There are three other place in drivers/net/wireless/brcm80211/brcmfmac/
+> which have similar code.  The attached patch removes the call to
+> waitqueue_active() leaving just wake_up() behind.  This fixes the
+> problem because the call to spin_lock_irqsave() in wake_up() will be an
+> ACQUIRE operation.
+> 
+> I found this issue when I was looking through the linux source code
+> for places calling waitqueue_active() before wake_up*(), but without
+> preceding memory barriers, after sending a patch to fix a similar
+> issue in drivers/tty/n_tty.c  (Details about the original issue can be
+> found here: https://lkml.org/lkml/2015/9/28/849).
+> 
+> Signed-off-by: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |    3 +--
+>   drivers/net/wireless/brcm80211/brcmfmac/sdio.c   |    6 ++----
+>   drivers/net/wireless/brcm80211/brcmfmac/usb.c    |    3 +--
+>   3 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> index 7b2136c..648151e 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> @@ -473,8 +473,7 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
+>   static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
+>   {
+>   	msgbuf->ctl_completed = true;
+> -	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+> -		wake_up(&msgbuf->ioctl_resp_wait);
+> +	wake_up(&msgbuf->ioctl_resp_wait);
+>   }
+>   
+>   
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> index f990e3d..332c4c8 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> @@ -1785,8 +1785,7 @@ static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
+>   
+>   static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
+>   {
+> -	if (waitqueue_active(&bus->dcmd_resp_wait))
+> -		wake_up_interruptible(&bus->dcmd_resp_wait);
+> +	wake_up_interruptible(&bus->dcmd_resp_wait);
+>   
+>   	return 0;
+>   }
+> @@ -2110,8 +2109,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+>   static void
+>   brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
+>   {
+> -	if (waitqueue_active(&bus->ctrl_wait))
+> -		wake_up_interruptible(&bus->ctrl_wait);
+> +	wake_up_interruptible(&bus->ctrl_wait);
+>   	return;
+>   }
+>   
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> index daba86d..7f5889c 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> @@ -184,8 +184,7 @@ static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
+>   
+>   static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
+>   {
+> -	if (waitqueue_active(&devinfo->ioctl_resp_wait))
+> -		wake_up(&devinfo->ioctl_resp_wait);
+> +	wake_up(&devinfo->ioctl_resp_wait);
+>   }
+>   
+>   static void
+> 
 
