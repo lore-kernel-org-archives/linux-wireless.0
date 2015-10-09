@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6823 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754136AbbJVT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 15:28:00 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] cfg80211: add complete data to station add/change tracing
-Date: Thu, 22 Oct 2015 22:27:47 +0300
-Message-Id: <1445542067-8150-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151022_212805_507904_ECD39337)
-In-Reply-To: <1445542067-8150-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445542067-8150-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36659 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934177AbbJIIoX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2015 04:44:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 00/10] wil6210 patches
+References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Fri, 09 Oct 2015 11:44:15 +0300
+In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Sun, 4 Oct 2015 10:23:17 +0300")
+Message-ID: <878u7csa74.fsf@kamboji.qca.qualcomm.com> (sfid-20151009_104433_004679_E2A00018)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-Complete the tracepoint with the missing data - it's not printed
-by default (a lot of it is dynamic arrays) but will be recorded
-and be available during post-processing.
+> New features:
+> - BlockAckReq support
+> - firmware crashdump using devcoredump
+> - capture all frames with sniffer
+>
+> The rest of patches are fixes
+>
+> Hamad Kadmany (1):
+>   wil6210: Do no schedule firmware recovery during reset flow
+>
+> Vladimir Kondratiev (8):
+>   wil6210: fix warning in system power management code
+>   wil6210: Add proper handling for invalid frames on Rx
+>   wil6210: log firmware crash information
+>   wil6210: treat broadcast bssid as "disconnect all"
+>   wil6210: support BAR (BlockAck Req)
+>   wil6210: capture all frames in sniffer mode
+>   wil6210: ratelimit Tx error message
+>   wil6210: dump firmware memory when firmware crashes
+>
+> Vladimir Shulman (1):
+>   wil6210: pmc logger bug fix
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/trace.h | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+Thanks, all 10 applied.
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 62d9b96..5b9139e 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -623,12 +623,24 @@ DECLARE_EVENT_CLASS(station_add_change,
- 		__field(u32, sta_flags_set)
- 		__field(u32, sta_modify_mask)
- 		__field(int, listen_interval)
-+		__field(u16, capability)
- 		__field(u16, aid)
- 		__field(u8, plink_action)
- 		__field(u8, plink_state)
- 		__field(u8, uapsd_queues)
-+		__field(u8, max_sp)
-+		__field(u8, opmode_notif)
-+		__field(bool, opmode_notif_used)
- 		__array(u8, ht_capa, (int)sizeof(struct ieee80211_ht_cap))
-+		__array(u8, vht_capa, (int)sizeof(struct ieee80211_vht_cap))
- 		__array(char, vlan, IFNAMSIZ)
-+		__dynamic_array(u8, supported_rates,
-+				params->supported_rates_len)
-+		__dynamic_array(u8, ext_capab, params->ext_capab_len)
-+		__dynamic_array(u8, supported_channels,
-+				params->supported_channels_len)
-+		__dynamic_array(u8, supported_oper_classes,
-+				params->supported_oper_classes_len)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-@@ -646,9 +658,35 @@ DECLARE_EVENT_CLASS(station_add_change,
- 		if (params->ht_capa)
- 			memcpy(__entry->ht_capa, params->ht_capa,
- 			       sizeof(struct ieee80211_ht_cap));
-+		memset(__entry->vht_capa, 0, sizeof(struct ieee80211_vht_cap));
-+		if (params->vht_capa)
-+			memcpy(__entry->vht_capa, params->vht_capa,
-+			       sizeof(struct ieee80211_vht_cap));
- 		memset(__entry->vlan, 0, sizeof(__entry->vlan));
- 		if (params->vlan)
- 			memcpy(__entry->vlan, params->vlan->name, IFNAMSIZ);
-+		if (params->supported_rates && params->supported_rates_len)
-+			memcpy(__get_dynamic_array(supported_rates),
-+			       params->supported_rates,
-+			       params->supported_rates_len);
-+		if (params->ext_capab && params->ext_capab_len)
-+			memcpy(__get_dynamic_array(ext_capab),
-+			       params->ext_capab,
-+			       params->ext_capab_len);
-+		if (params->supported_channels &&
-+		    params->supported_channels_len)
-+			memcpy(__get_dynamic_array(supported_channels),
-+			       params->supported_channels,
-+			       params->supported_channels_len);
-+		if (params->supported_oper_classes &&
-+		    params->supported_oper_classes_len)
-+			memcpy(__get_dynamic_array(supported_oper_classes),
-+			       params->supported_oper_classes,
-+			       params->supported_oper_classes_len);
-+		__entry->max_sp = params->max_sp;
-+		__entry->capability = params->capability;
-+		__entry->opmode_notif = params->opmode_notif;
-+		__entry->opmode_notif_used = params->opmode_notif_used;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
- 		  ", station flags mask: %u, station flags set: %u, "
 -- 
-2.1.4
-
+Kalle Valo
