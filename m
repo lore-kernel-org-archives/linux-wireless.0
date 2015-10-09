@@ -1,108 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27281 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965285AbbJ2DGO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:06:14 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 61/64] staging: wilc1000: rename u16FlagsSet of struct add_sta_param
-Date: Thu, 29 Oct 2015 12:05:53 +0900
-Message-ID: <1446087956-19054-28-git-send-email-glen.lee@atmel.com> (sfid-20151029_040618_058008_48CA3D64)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22427 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750702AbbJIMFf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2015 08:05:35 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>,
+	PaX Team <pageexec@freemail.hu>
+CC: Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"re.emese@gmail.com" <re.emese@gmail.com>,
+	"spender@grsecurity.net" <spender@grsecurity.net>
+Subject: RE: question about potential integer truncation in
+ mwifiex_set_wapi_ie and mwifiex_set_wps_ie
+Date: Fri, 9 Oct 2015 12:05:01 +0000
+Message-ID: <464d9553bace4971add4c3b448a1255f@SC-EXCH04.marvell.com> (sfid-20151009_140543_246590_4BB6A32E)
+References: <560AAC78.14106.6193CAA9@pageexec.freemail.hu>
+ <20150929231038.GG8613@us.netrek.org>
+In-Reply-To: <20150929231038.GG8613@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi James/PaX Team,
 
-This patch renames u16FlagsSet of struct add_sta_param to flags_set
-to avoid CamelCase naming convention.
+> -----Original Message-----
+> From: quozl@laptop.org [mailto:quozl@laptop.org]
+> Sent: Wednesday, September 30, 2015 4:41 AM
+> To: PaX Team
+> Cc: Amitkumar Karwar; Avinash Patil; Kalle Valo; linux-
+> wireless@vger.kernel.org; netdev@vger.kernel.org; re.emese@gmail.com;
+> spender@grsecurity.net
+> Subject: Re: question about potential integer truncation in
+> mwifiex_set_wapi_ie and mwifiex_set_wps_ie
+> 
+> On Tue, Sep 29, 2015 at 05:21:28PM +0200, PaX Team wrote:
+> > hi all,
+> >
+> > in drivers/net/wireless/mwifiex/sta_ioctl.c the following functions
+> >
+> > 	mwifiex_set_wpa_ie_helper
+> > 	mwifiex_set_wapi_ie
+> > 	mwifiex_set_wps_ie
+> >
+> > can truncate the incoming ie_len argument from u16 to u8 when it gets
+> > stored in mwifiex_private.wpa_ie_len, mwifiex_private.wapi_ie_len and
+> > mwifiex_private.wps_ie_len, respectively. based on some light code
+> > reading it seems a length value of 256 is valid (IEEE_MAX_IE_SIZE and
+> > MWIFIEX_MAX_VSIE_LEN seem to limit it) and thus would get truncated to
+> > 0 when stored in those u8 fields. the question is whether this is
+> > intentional or a bug somewhere.
+> 
+> i agree, while there is a test to ensure ie_len is not greater than 256,
+> there is a possibility that it will be exactly 256, which means
+> 256 bytes will be given to memcpy but
+> mwifiex_private.{wpa,wapi,wps}_ie_len will be zero.
+> 
+> i suggest changing the lengths to u16.  not tested.
+> 
+> diff --git a/drivers/net/wireless/mwifiex/main.h
+> b/drivers/net/wireless/mwifiex/main.h
+> index fe12560..b66e9a7 100644
+> --- a/drivers/net/wireless/mwifiex/main.h
+> +++ b/drivers/net/wireless/mwifiex/main.h
+> @@ -512,14 +512,14 @@ struct mwifiex_private {
+>  	struct mwifiex_wep_key wep_key[NUM_WEP_KEYS];
+>  	u16 wep_key_curr_index;
+>  	u8 wpa_ie[256];
+> -	u8 wpa_ie_len;
+> +	u16 wpa_ie_len;
+>  	u8 wpa_is_gtk_set;
+>  	struct host_cmd_ds_802_11_key_material aes_key;
+>  	struct host_cmd_ds_802_11_key_material_v2 aes_key_v2;
+>  	u8 wapi_ie[256];
+> -	u8 wapi_ie_len;
+> +	u16 wapi_ie_len;
+>  	u8 *wps_ie;
+> -	u8 wps_ie_len;
+> +	u16 wps_ie_len;
+>  	u8 wmm_required;
+>  	u8 wmm_enabled;
+>  	u8 wmm_qosinfo;
+> 
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c         |  4 ++--
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+This change makes sense. Also, we should not typecast the length to v8 while copying to mwifiex_private variable.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 258dabd..34b3455 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2342,8 +2342,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	*pu8CurrByte++ = pstrStationParam->flags_mask & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->flags_mask >> 8) & 0xFF;
- 
--	*pu8CurrByte++ = pstrStationParam->u16FlagsSet & 0xFF;
--	*pu8CurrByte++ = (pstrStationParam->u16FlagsSet >> 8) & 0xFF;
-+	*pu8CurrByte++ = pstrStationParam->flags_set & 0xFF;
-+	*pu8CurrByte++ = (pstrStationParam->flags_set >> 8) & 0xFF;
- 
- 	return pu8CurrByte - pu8Buffer;
- }
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 1422b90..72c4797 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -300,7 +300,7 @@ struct add_sta_param {
- 	u32 ht_tx_bf_cap;
- 	u8 ht_ante_sel;
- 	u16 flags_mask;
--	u16 u16FlagsSet;
-+	u16 flags_set;
- };
- 
- s32 host_int_remove_key(struct host_if_drv *hWFIDrv, const u8 *pu8StaAddress);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0ae47c5..4de27ef 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3024,7 +3024,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 		}
- 
- 		strStaParams.flags_mask = params->sta_flags_mask;
--		strStaParams.u16FlagsSet = params->sta_flags_set;
-+		strStaParams.flags_set = params->sta_flags_set;
- 
- 		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
- 			strStaParams.ht_supported);
-@@ -3040,7 +3040,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ante_sel);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
- 			strStaParams.flags_mask);
--		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
-+		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n",
-+			strStaParams.flags_set);
- 
- 		s32Error = host_int_add_station(priv->hWILCWFIDrv, &strStaParams);
- 		if (s32Error)
-@@ -3147,7 +3148,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 		}
- 
- 		strStaParams.flags_mask = params->sta_flags_mask;
--		strStaParams.u16FlagsSet = params->sta_flags_set;
-+		strStaParams.flags_set = params->sta_flags_set;
- 
- 		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
- 			strStaParams.ht_supported);
-@@ -3163,7 +3164,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ante_sel);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
- 			strStaParams.flags_mask);
--		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
-+		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n",
-+			strStaParams.flags_set);
- 
- 		s32Error = host_int_edit_station(priv->hWILCWFIDrv, &strStaParams);
- 		if (s32Error)
--- 
-1.9.1
+./sta_ioctl.c:761:		priv->wpa_ie_len = (u8) ie_len;
 
+Eventually the length stored in 'wapi_ie_len' is copied to a u16 variable.
+
+/join.c:304:		ie_header.len = cpu_to_le16(priv->wapi_ie_len);
+
+I will submit a patch to fix this.
+
+Regards,
+Amitkumar
