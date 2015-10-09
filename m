@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34423 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509AbbJPJXZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:23:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/13] staging: wilc1000: add wilc to netdev private data structure
-Date: Fri, 16 Oct 2015 18:22:57 +0900
-Message-ID: <1444987389-14151-1-git-send-email-tony.cho@atmel.com> (sfid-20151016_112329_367809_5796BF78)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41687 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965219AbbJILgw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2015 07:36:52 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "y2038@lists.linaro.org" <y2038@lists.linaro.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 04/12] mwifiex: use ktime_get_real for timestamping
+Date: Fri, 9 Oct 2015 11:36:44 +0000
+Message-ID: <89eb0939d50045ff8d248e6f8fd87d1a@SC-EXCH04.marvell.com> (sfid-20151009_133720_996359_37CCC565)
+References: <1443612402-3000775-1-git-send-email-arnd@arndb.de>
+ <1443612402-3000775-5-git-send-email-arnd@arndb.de>
+In-Reply-To: <1443612402-3000775-5-git-send-email-arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+Hi Arnd,
 
-This patch adds struct wilc to struct perInterface_wlan_t which is netdev
-private data to access wilc via netdev_priv function and assigns wilc to
-nic->wilc. The global variable wl will be replaced with netdev private data
-member wilc step by step.
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, September 30, 2015 4:57 PM
+> To: netdev@vger.kernel.org
+> Cc: y2038@lists.linaro.org; linux-kernel@vger.kernel.org; David S.
+> Miller; Arnd Bergmann; Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo;
+> linux-wireless@vger.kernel.org
+> Subject: [PATCH 04/12] mwifiex: use ktime_get_real for timestamping
+> 
+> The mwifiex_11n_aggregate_pkt() function creates a ktime_t from a
+> timeval returned by do_gettimeofday, which is slow and causes an
+> overflow in 2038 on 32-bit architectures.
+> 
+> This solves both problems by using the appropriate ktime_get_real()
+> function.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Cc: Nishant Sarmukadam <nishants@marvell.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> ---
+>  drivers/net/wireless/mwifiex/11n_aggr.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c
+> b/drivers/net/wireless/mwifiex/11n_aggr.c
+> index f7c717253a66..78853c51774d 100644
+> --- a/drivers/net/wireless/mwifiex/11n_aggr.c
+> +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+> @@ -173,7 +173,6 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private
+> *priv,
+>  	int pad = 0, aggr_num = 0, ret;
+>  	struct mwifiex_tx_param tx_param;
+>  	struct txpd *ptx_pd = NULL;
+> -	struct timeval tv;
+>  	int headroom = adapter->iface_type == MWIFIEX_USB ? 0 :
+> INTF_HEADER_LEN;
+> 
+>  	skb_src = skb_peek(&pra_list->skb_head); @@ -203,8 +202,7 @@
+> mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+>  	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
+>  	skb_aggr->priority = skb_src->priority;
+> 
+> -	do_gettimeofday(&tv);
+> -	skb_aggr->tstamp = timeval_to_ktime(tv);
+> +	skb_aggr->tstamp = ktime_get_real();
+> 
+>  	do {
+>  		/* Check if AMSDU can accommodate this MSDU */
+> --
+> 2.1.0.rc2
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 1 +
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+Looks good.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3cc4861..90c39b6 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1658,6 +1658,7 @@ int wilc_netdev_init(struct wilc **wilc)
- 
- 		nic->u8IfIdx = wl->vif_num;
- 		nic->wilc_netdev = ndev;
-+		nic->wilc = *wilc;
- 		wl->vif[wl->vif_num].ndev = ndev;
- 		wl->vif_num++;
- 		ndev->netdev_ops = &wilc_netdev_ops;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 9a9e082..cb23134 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -199,7 +199,7 @@ typedef struct {
- 	struct_frame_reg g_struct_frame_reg[num_reg_frame];
- 	struct net_device *wilc_netdev;
- 	struct net_device_stats netstats;
--
-+	struct wilc *wilc;
- } perInterface_wlan_t;
- 
- struct WILC_WFI_mon_priv {
--- 
-1.9.1
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
+Regards,
+Amitkumar
