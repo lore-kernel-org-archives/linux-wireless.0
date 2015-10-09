@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35338 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931AbbJACyg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38899 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922AbbJIOdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 22:54:36 -0400
-Received: by ioiz6 with SMTP id z6so70317409ioi.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 19:54:35 -0700 (PDT)
-Date: Wed, 30 Sep 2015 22:54:32 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Peter Oh <poh@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: only advertise mesh support in raw mode
-Message-ID: <20151001025432.GA1664@localhost> (sfid-20151001_045440_006942_A4251399)
-References: <1443445192-30464-1-git-send-email-me@bobcopeland.com>
- <56097882.4090004@codeaurora.org>
+	Fri, 9 Oct 2015 10:33:43 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <c_mkenna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Enable adaptive CCA
+References: <1444210033-25901-1-git-send-email-c_mkenna@qti.qualcomm.com>
+Date: Fri, 9 Oct 2015 17:33:28 +0300
+In-Reply-To: <1444210033-25901-1-git-send-email-c_mkenna@qti.qualcomm.com> (c.
+	mkenna's message of "Wed, 7 Oct 2015 14:57:13 +0530")
+Message-ID: <87io6gqfgn.fsf@kamboji.qca.qualcomm.com> (sfid-20151009_163354_422473_11FCCF5F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56097882.4090004@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 28, 2015 at 10:27:30AM -0700, Peter Oh wrote:
-> I prefer the current design to this new approach because drivers already
-> know if it's mesh capable or not at build time, hence adding runtime
-> configuration is redundant.
+<c_mkenna@qti.qualcomm.com> writes:
 
-I do think the proposed patch is a bit overboard, so I suppose my vote is to
-keep it the way it is, even if a little user-unfriendly.
+> From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+>
+> European Union has made it mandatory that all devices working in 2.4 GHz
+> has to adhere to the ETSI specification (ETSI EN 300 328 V1.9.1)
+> beginnig this year. The standard basically speaks about interferences
+> in 2.4Ghz band.
+> For example, when 802.11 device detects interference, TX must be stopped
+> as long as interference is present.
+>
+> Adaptive CCA is a feature, when enabled the device learns from the
+> environment and configures CCA levels adaptively. This will improve
+> detecting interferences and the device can stop trasmissions till the
+> interference is present eventually leading to good performances in
+> varying interference conditions.
+>
+> The patch includes code for enabling adaptive CCA for 10.2.4 firmware on
+> QCA988X.
+>
+> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+> Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
 
-> One more thing we have to think about is enabling mesh in only raw mode.
-> In standard view point, mesh is only available in raw mode on ath10k,
-> however ath10k is also able to run mesh in native WiFi mode in current
-> mac80211 design since mac80211 handles packets per interface. So that
-> mac80211 knows that packets are for mesh without looking at mesh control
-> present bit when they come into mesh interface.
+There are conflicts, please rebase and resend:
 
-This is true, it'll work with mac80211, but it violates the standard
-(802.11-2012 8.2.4.7.3).
-
-For the benefit of others, as I just retested non-rawmode -- the issue is
-that QoS control in nwifi frames is missing the "Mesh Control Present" bit.
-However, it still includes the mesh control field, which is the part
-that has the mesh sequence number and address extension fields.
-
-As a result, a packet parser might misinterpret the mesh control field as
-the LLC header -- the wireshark dissector at least gets confused like this.
-
-I would think a small change to ath10k firmware could fix this though,
-vendor willing.
+Applying: ath10k: Enable adaptive CCA
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/ath/ath10k/wmi.h
+Auto-merging drivers/net/wireless/ath/ath10k/wmi.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.c
+Auto-merging drivers/net/wireless/ath/ath10k/wmi-ops.h
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
+Auto-merging drivers/net/wireless/ath/ath10k/mac.c
+Auto-merging drivers/net/wireless/ath/ath10k/core.h
+Failed to merge in the changes.
+Patch failed at 0001 ath10k: Enable adaptive CCA
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+Kalle Valo
