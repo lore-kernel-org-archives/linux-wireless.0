@@ -1,260 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39839 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933165AbbJIJGy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 05:06:54 -0400
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, nbd@openwrt.org,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3] ath9k: feeding entropy in kernel from ADC capture
-Date: Fri,  9 Oct 2015 17:06:45 +0800
-Message-Id: <1444381605-11065-1-git-send-email-miaoqing@codeaurora.org> (sfid-20151009_110703_105315_35D1DE61)
+Received: from mx1.redhat.com ([209.132.183.28]:43555 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751176AbbJIOct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2015 10:32:49 -0400
+Message-ID: <1444401167.20283.2.camel@redhat.com> (sfid-20151009_163326_119214_B4EDEFB8)
+Subject: Re: [RFC PATCH 2/2] airo: fix scan after SIOCSIWAP (airo_set_wap)
+From: Dan Williams <dcbw@redhat.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Date: Fri, 09 Oct 2015 09:32:47 -0500
+In-Reply-To: <1444328044-13075-2-git-send-email-linux@rainbow-software.org>
+References: <1444328044-13075-1-git-send-email-linux@rainbow-software.org>
+	 <1444328044-13075-2-git-send-email-linux@rainbow-software.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Thu, 2015-10-08 at 20:14 +0200, Ondrej Zary wrote:
+> SIOCSIWAP (airo_set_wap) affects scan: only the AP specified by
+> SIOCSIWAP is present in scan results.
+> 
+> This makes NetworkManager work for the first time but then unable to
+> find any other APs.
+> 
+> Clear APList before starting scan and set it back after scan completes
+> to work-around the problem.
 
-This patch is derived from
-commit 6301566e0b2d ("ath9k: export HW random number generator"),
+Sounds plausible.  But does this cause any problems while the device is
+associated and a scan is requested?  If not then it seems fine.
 
-We evaluated the entropy of the ADC data on QCA9531, QCA9561, QCA955x,
-and AR9340, and it has sufficient quality random data (at least 10 bits
-and up to 22 bits of min-entropy for a 32-bit value). We conservatively
-assume the min-entropy is 10 bits out of 32 bits. Thus, ATH9K_RNG_BUF_SIZE
-is set to 320 (u32) i.e., 1.25 kilobytes of data is inserted to fill up
-the pool as soon as the entropy counter becomes 896/4096 (set by random.c).
-Since ADC was not designed to be a dedicated HW RNG, we do not want to bind
-it to /dev/hwrng framework directly. This patch feeds the entropy directly
-from the WiFi driver to the input pool. The ADC register output is only
-used as a seed for the Linux entropy pool. No conditioning is needed,
-since all the conditioning is performed by the pool itself.
+Dan
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/Kconfig  |  11 ++++
- drivers/net/wireless/ath/ath9k/Makefile |   1 +
- drivers/net/wireless/ath/ath9k/ath9k.h  |  22 +++++++
- drivers/net/wireless/ath/ath9k/main.c   |   4 ++
- drivers/net/wireless/ath/ath9k/rng.c    | 107 ++++++++++++++++++++++++++++++++
- 5 files changed, 145 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> ---
+>  drivers/net/wireless/airo.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index 4ef2f98..654a172 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -3037,6 +3037,11 @@ static void airo_process_scan_results (struct airo_info *ai) {
+>  	}
+>  
+>  out:
+> +	/* write APList back (we cleared it in airo_set_scan) */
+> +	disable_MAC(ai, 0);
+> +	writeAPListRid(ai, &ai->APList, 0);
+> +	enable_MAC(ai, 0);
+> +
+>  	ai->scan_timeout = 0;
+>  	clear_bit(JOB_SCAN_RESULTS, &ai->jobs);
+>  	up(&ai->sem);
+> @@ -7216,6 +7221,7 @@ static int airo_set_scan(struct net_device *dev,
+>  	Cmd cmd;
+>  	Resp rsp;
+>  	int wake = 0;
+> +	APListRid APList_rid_empty;
+>  
+>  	/* Note : you may have realised that, as this is a SET operation,
+>  	 * this is privileged and therefore a normal user can't
+> @@ -7233,6 +7239,13 @@ static int airo_set_scan(struct net_device *dev,
+>  	if (ai->scan_timeout > 0)
+>  		goto out;
+>  
+> +	/* Clear APList as it affects scan results */
+> +	memset(&APList_rid_empty, 0, sizeof(APList_rid_empty));
+> +	APList_rid_empty.len = cpu_to_le16(sizeof(APList_rid_empty));
+> +	disable_MAC(ai, 0);
+> +	writeAPListRid(ai, &APList_rid_empty, 0);
+> +	enable_MAC(ai, 0);
+> +
+>  	/* Initiate a scan command */
+>  	ai->scan_timeout = RUN_AT(3*HZ);
+>  	memset(&cmd, 0, sizeof(cmd));
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index fee0cad..40fa915 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -176,3 +176,14 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_HWRNG
-+	bool "Random number generator support"
-+	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-+	default y
-+	---help---
-+	  This option incorporates the ADC register output as a source of
-+	  randomness into Linux entropy pool (/dev/urandom and /dev/random)
-+
-+	  Say Y, feeds the entropy directly from the WiFi driver to the input
-+	  pool.
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index ecda613..76f9dc3 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
- ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
- ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
- ath9k-$(CONFIG_ATH9K_WOW) += wow.o
-+ath9k-$(CONFIG_ATH9K_HWRNG) += rng.o
- 
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b42f4a9..692873c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -23,6 +23,7 @@
- #include <linux/leds.h>
- #include <linux/completion.h>
- #include <linux/time.h>
-+#include <linux/hw_random.h>
- 
- #include "common.h"
- #include "debug.h"
-@@ -1040,6 +1041,11 @@ struct ath_softc {
- 	u32 wow_intr_before_sleep;
- 	bool force_wow;
- #endif
-+
-+#ifdef CONFIG_ATH9K_HWRNG
-+	u32 rng_last;
-+	struct task_struct *rng_task;
-+#endif
- };
- 
- /********/
-@@ -1062,6 +1068,22 @@ static inline int ath9k_tx99_send(struct ath_softc *sc,
- }
- #endif /* CONFIG_ATH9K_TX99 */
- 
-+/***************************/
-+/* Random Number Generator */
-+/***************************/
-+#ifdef CONFIG_ATH9K_HWRNG
-+void ath9k_rng_start(struct ath_softc *sc);
-+void ath9k_rng_stop(struct ath_softc *sc);
-+#else
-+static inline void ath9k_rng_start(struct ath_softc *sc)
-+{
-+}
-+
-+static inline void ath9k_rng_stop(struct ath_softc *sc)
-+{
-+}
-+#endif
-+
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- {
- 	common->bus_ops->read_cachesize(common, csz);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d184e68..c1b33fd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -739,6 +739,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	ath9k_ps_restore(sc);
- 
-+	ath9k_rng_start(sc);
-+
- 	return 0;
- }
- 
-@@ -828,6 +830,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_deinit_channel_context(sc);
- 
-+	ath9k_rng_stop(sc);
-+
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-new file mode 100644
-index 0000000..c9cb2aa
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -0,0 +1,107 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/hw_random.h>
-+#include <linux/kthread.h>
-+
-+#include "ath9k.h"
-+#include "hw.h"
-+#include "ar9003_phy.h"
-+
-+#define ATH9K_RNG_BUF_SIZE	320
-+#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
-+
-+static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
-+{
-+	int i, j;
-+	u32  v1, v2, rng_last = sc->rng_last;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	ath9k_ps_wakeup(sc);
-+
-+	REG_RMW_FIELD(ah, AR_PHY_TEST, AR_PHY_TEST_BBB_OBS_SEL, 1);
-+	REG_CLR_BIT(ah, AR_PHY_TEST, AR_PHY_TEST_RX_OBS_SEL_BIT5);
-+	REG_RMW_FIELD(ah, AR_PHY_TEST_CTL_STATUS, AR_PHY_TEST_CTL_RX_OBS_SEL, 0);
-+
-+	for (i = 0, j = 0; i < buf_size; i++) {
-+		v1 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+		v2 = REG_READ(ah, AR_PHY_TST_ADC) & 0xffff;
-+
-+		/* wait for data ready */
-+		if (v1 && v2 && rng_last != v1 && v1 != v2 && v1 != 0xffff &&
-+		    v2 != 0xffff)
-+			buf[j++] = (v1 << 16) | v2;
-+
-+		rng_last = v2;
-+	}
-+
-+	ath9k_ps_restore(sc);
-+
-+	sc->rng_last = rng_last;
-+
-+	return j << 2;
-+}
-+
-+static int ath9k_rng_kthread(void *data)
-+{
-+	int bytes_read;
-+	struct ath_softc *sc = data;
-+	u32 *rng_buf;
-+
-+	rng_buf = kmalloc_array(ATH9K_RNG_BUF_SIZE, sizeof(u32), GFP_KERNEL);
-+	if (!rng_buf)
-+		goto out;
-+
-+	while (!kthread_should_stop()) {
-+		bytes_read = ath9k_rng_data_read(sc, rng_buf,
-+						 ATH9K_RNG_BUF_SIZE);
-+		if (unlikely(!bytes_read)) {
-+			msleep_interruptible(10);
-+			continue;
-+		}
-+
-+		/* sleep until entropy bits under write_wakeup_threshold */
-+		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
-+					   ATH9K_RNG_ENTROPY(bytes_read));
-+	}
-+
-+	kfree(rng_buf);
-+out:
-+	sc->rng_task = NULL;
-+
-+	return 0;
-+}
-+
-+void ath9k_rng_start(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (sc->rng_task)
-+		return;
-+
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		return;
-+
-+	sc->rng_task = kthread_run(ath9k_rng_kthread, sc, "ath9k-hwrng");
-+	if (IS_ERR(sc->rng_task))
-+		sc->rng_task = NULL;
-+}
-+
-+void ath9k_rng_stop(struct ath_softc *sc)
-+{
-+	if (sc->rng_task)
-+		kthread_stop(sc->rng_task);
-+}
--- 
-1.9.1
 
