@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34631 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660AbbJPJYS (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:48109 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758374AbbJISYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:24:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/13] staging: wilc1000: del_key: use netdev private wilc instead of wl
-Date: Fri, 16 Oct 2015 18:23:06 +0900
-Message-ID: <1444987389-14151-10-git-send-email-tony.cho@atmel.com> (sfid-20151016_112426_338993_852BD4E5)
-In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+	Fri, 9 Oct 2015 14:24:25 -0400
+Date: Fri, 9 Oct 2015 21:23:26 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: typo in
+ WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+Message-ID: <20151009182326.GV7340@mwanda> (sfid-20151009_202446_038857_1B8801A1)
+References: <20151008184724.GA11027@kroah.com>
+ <1444414747-8049-1-git-send-email-kholmanskikh.s.s@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444414747-8049-1-git-send-email-kholmanskikh.s.s@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On Fri, Oct 09, 2015 at 09:19:07PM +0300, Stanislav Kholmanskikh wrote:
+> Looking at the code, it seems that "MEMROY" in the config option
+> name is a typo. It should be "MEMORY" instead.
+> 
+> Changed the config option name accordingly.
+> 
+> Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
 
-Use netdev private data member wilc instead of global variable wl
+Just delete it and delete -DWILC_NORMAL_ALLOC as well.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index f96f5b8..7599457 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1359,8 +1359,12 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 		   const u8 *mac_addr)
- {
- 	struct wilc_priv *priv;
-+	struct wilc *wl;
-+	perInterface_wlan_t *nic;
- 
- 	priv = wiphy_priv(wiphy);
-+	nic = netdev_priv(netdev);
-+	wl = nic->wilc;
- 
- 	/*delete saved keys, if any*/
- 	if (netdev == wl->vif[0].ndev) {
--- 
-1.9.1
+regards,
+dan carpenter
 
