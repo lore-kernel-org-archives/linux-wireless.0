@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33826 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932526AbbJANoV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:21 -0400
-Received: by padhy16 with SMTP id hy16so75398648pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:20 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 04/12] staging: wilc1000: fix indentation level
-Date: Thu,  1 Oct 2015 22:43:51 +0900
-Message-Id: <1443707039-18433-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154423_959942_8F90B68E)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33333 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965502AbbJILiA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2015 07:38:00 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Geliang Tang <geliangtang@163.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: fix a comment typo
+Date: Fri, 9 Oct 2015 11:37:49 +0000
+Message-ID: <1d4ac22c01e9451f949c1df5343c2229@SC-EXCH04.marvell.com> (sfid-20151009_134031_438096_DDFAE09A)
+References: <53a87c6aae6bae712c079bf17ed27d0f1b381016.1443948331.git.geliangtang@163.com>
+In-Reply-To: <53a87c6aae6bae712c079bf17ed27d0f1b381016.1443948331.git.geliangtang@163.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary block braces and fix indentation.
+> From: Geliang Tang [mailto:geliangtang@163.com]
+> Sent: Sunday, October 04, 2015 2:17 PM
+> To: Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo
+> Cc: Geliang Tang; linux-wireless@vger.kernel.org;
+> netdev@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] mwifiex: fix a comment typo
+> 
+> Just fix a typo in the code comment.
+> 
+> Signed-off-by: Geliang Tang <geliangtang@163.com>
+> ---
+>  drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c
+> b/drivers/net/wireless/mwifiex/cfg80211.c
+> index 30cbafb..b7ac45f 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -2374,7 +2374,7 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy,
+> struct net_device *dev)
+>   * CFG802.11 operation handler for scan request.
+>   *
+>   * This function issues a scan request to the firmware based upon
+> - * the user specified scan configuration. On successfull completion,
+> + * the user specified scan configuration. On successful completion,
+>   * it also informs the results.
+>   */
+>  static int
+> --
+> 2.5.0
+> 
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index bd83da1..a6642d4 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1967,28 +1967,26 @@ static void __exit exit_wilc_driver(void)
- 		}
- 	}
- 
--	{
--	#ifndef WILC_SDIO
--		PRINT_D(INIT_DBG, "SPI unregsiter...\n");
--		spi_unregister_driver(&wilc_bus);
--	#else
--		PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
--		sdio_unregister_driver(&wilc_bus);
--	#endif
-+#ifndef WILC_SDIO
-+	PRINT_D(INIT_DBG, "SPI unregsiter...\n");
-+	spi_unregister_driver(&wilc_bus);
-+#else
-+	PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
-+	sdio_unregister_driver(&wilc_bus);
-+#endif
- 
--		if (g_linux_wlan != NULL) {
--			kfree(g_linux_wlan);
--			g_linux_wlan = NULL;
--		}
--		printk("Module_exit Done.\n");
-+	if (g_linux_wlan != NULL) {
-+		kfree(g_linux_wlan);
-+		g_linux_wlan = NULL;
-+	}
-+	printk("Module_exit Done.\n");
- 
- #if defined(WILC_DEBUGFS)
--		wilc_debugfs_remove();
-+	wilc_debugfs_remove();
- #endif
- 
--		linux_wlan_device_detection(0);
--		linux_wlan_device_power(0);
--	}
-+	linux_wlan_device_detection(0);
-+	linux_wlan_device_power(0);
- }
- module_exit(exit_wilc_driver);
- 
--- 
-2.6.0
-
+Regards,
+Amitkumar
