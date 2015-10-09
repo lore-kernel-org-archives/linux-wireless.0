@@ -1,108 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43366 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509AbbJ1HGf (ORCPT
+Received: from TYO200.gate.nec.co.jp ([210.143.35.50]:61404 "EHLO
+	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760213AbbJIAh7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:06:35 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 73/80] staging: wilc1000: rename u16HTExtParams of struct add_sta_param
-Date: Wed, 28 Oct 2015 16:07:18 +0900
-Message-ID: <1446016045-32154-23-git-send-email-glen.lee@atmel.com> (sfid-20151028_080642_081205_BE65A89D)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+	Thu, 8 Oct 2015 20:37:59 -0400
+From: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
+To: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Markus Elfring <elfring@users.sourceforge.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] brcmfmac: fix waitqueue_active without memory barrier in
+ brcmfmac driver
+Date: Fri, 9 Oct 2015 00:35:46 +0000
+Message-ID: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp> (sfid-20151009_023909_686692_7C06B9F5)
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+brcmf_msgbuf_ioctl_resp_wake() seems to be missing a memory barrier
+which might cause the waker to not notice the waiter and miss sending a
+wake_up as in the following figure.
 
-This patch renames u16HTExtParams of struct add_sta_param to ht_ext_params
-to avoid CamelCase naming convention.
+  brcmf_msgbuf_ioctl_resp_wake		    brcmf_msgbuf_ioctl_resp_wait
+------------------------------------------------------------------------
+if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+/* The CPU might reorder the test for
+   the waitqueue up here, before
+   prior writes complete */
+   	   	     	 	       /* wait_event_timeout */
+				        /* __wait_event_timeout */
+					 /* ___wait_event */
+					 prepare_to_wait_event(&wq, &__wait,
+					   state);
+					 if (msgbuf->ctl_completed)
+					 ...
+msgbuf->ctl_completed = true;
+					 schedule_timeout(__ret))
+------------------------------------------------------------------------
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+There are three other place in drivers/net/wireless/brcm80211/brcmfmac/
+which have similar code.  The attached patch removes the call to
+waitqueue_active() leaving just wake_up() behind.  This fixes the
+problem because the call to spin_lock_irqsave() in wake_up() will be an
+ACQUIRE operation.
+
+I found this issue when I was looking through the linux source code
+for places calling waitqueue_active() before wake_up*(), but without
+preceding memory barriers, after sending a patch to fix a similar
+issue in drivers/tty/n_tty.c  (Details about the original issue can be
+found here: https://lkml.org/lkml/2015/9/28/849).
+
+Signed-off-by: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  4 ++--
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |    3 +--
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c   |    6 ++----
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c    |    3 +--
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 976d432..fa45327 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2330,8 +2330,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	       WILC_SUPP_MCS_SET_SIZE);
- 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 7b2136c..648151e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -473,8 +473,7 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
+ static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
+ {
+ 	msgbuf->ctl_completed = true;
+-	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+-		wake_up(&msgbuf->ioctl_resp_wait);
++	wake_up(&msgbuf->ioctl_resp_wait);
+ }
  
--	*pu8CurrByte++ = pstrStationParam->u16HTExtParams & 0xFF;
--	*pu8CurrByte++ = (pstrStationParam->u16HTExtParams >> 8) & 0xFF;
-+	*pu8CurrByte++ = pstrStationParam->ht_ext_params & 0xFF;
-+	*pu8CurrByte++ = (pstrStationParam->ht_ext_params >> 8) & 0xFF;
  
- 	*pu8CurrByte++ = pstrStationParam->u32TxBeamformingCap & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 8) & 0xFF;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 48ef051..6fcbbc6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -296,7 +296,7 @@ struct add_sta_param {
- 	u16 ht_capa_info;
- 	u8 ht_ampdu_params;
- 	u8 ht_supp_mcs_set[16];
--	u16 u16HTExtParams;
-+	u16 ht_ext_params;
- 	u32 u32TxBeamformingCap;
- 	u8 u8ASELCap;
- 	u16 u16FlagsMask;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c0dbd39..38ab0e7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3028,7 +3028,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			memcpy(strStaParams.ht_supp_mcs_set,
- 			       &params->ht_capa->mcs,
- 			       WILC_SUPP_MCS_SET_SIZE);
--			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
-+			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
- 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
- 		}
-@@ -3042,7 +3042,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_capa_info);
- 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
- 			strStaParams.ht_ampdu_params);
--		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
-+		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
-+			strStaParams.ht_ext_params);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
-@@ -3147,7 +3148,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			memcpy(strStaParams.ht_supp_mcs_set,
- 			       &params->ht_capa->mcs,
- 			       WILC_SUPP_MCS_SET_SIZE);
--			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
-+			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
- 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index f990e3d..332c4c8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -1785,8 +1785,7 @@ static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
  
-@@ -3162,7 +3163,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_capa_info);
- 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
- 			strStaParams.ht_ampdu_params);
--		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
-+		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
-+			strStaParams.ht_ext_params);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
+ static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
+ {
+-	if (waitqueue_active(&bus->dcmd_resp_wait))
+-		wake_up_interruptible(&bus->dcmd_resp_wait);
++	wake_up_interruptible(&bus->dcmd_resp_wait);
+ 
+ 	return 0;
+ }
+@@ -2110,8 +2109,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ static void
+ brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
+ {
+-	if (waitqueue_active(&bus->ctrl_wait))
+-		wake_up_interruptible(&bus->ctrl_wait);
++	wake_up_interruptible(&bus->ctrl_wait);
+ 	return;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index daba86d..7f5889c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -184,8 +184,7 @@ static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
+ 
+ static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
+ {
+-	if (waitqueue_active(&devinfo->ioctl_resp_wait))
+-		wake_up(&devinfo->ioctl_resp_wait);
++	wake_up(&devinfo->ioctl_resp_wait);
+ }
+ 
+ static void
 -- 
-1.9.1
-
+1.7.1
