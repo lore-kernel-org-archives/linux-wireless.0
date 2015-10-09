@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57103 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751530AbbJEOhQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47875 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933867AbbJIIfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:37:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:39 +0300
-Message-Id: <1444055820-27506-8-git-send-email-luca@coelho.fi> (sfid-20151005_163724_516573_6DDBC0CC)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 08/29] iwlwifi: mvm: fix tof.h header guard
+	Fri, 9 Oct 2015 04:35:11 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <c_mkenna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Increase pci wakeup timeout to 30 ms
+References: <1443104640-13965-1-git-send-email-c_mkenna@qti.qualcomm.com>
+Date: Fri, 9 Oct 2015 11:34:53 +0300
+In-Reply-To: <1443104640-13965-1-git-send-email-c_mkenna@qti.qualcomm.com> (c.
+	mkenna's message of "Thu, 24 Sep 2015 19:54:00 +0530")
+Message-ID: <87lhbcsamq.fsf@kamboji.qca.qualcomm.com> (sfid-20151009_103516_798867_A5C8E558)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+<c_mkenna@qti.qualcomm.com> writes:
 
-Commit ce7929186a39 ("iwlwifi: mvm: add basic Time of Flight (802.11mc
-FTM) support") created drivers/net/wireless/iwlwifi/mvm/tof.h with a
-broken header guard:
+> From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+>
+> It is noticed that pci wakeup time is exceeding current timeout (10ms)
+> randomly which is tested on QCA988x. So, the wake up time is increased
+> to 30 ms and added debug prints to log total timeout.
+>
+> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-    #ifndef __tof
-    #define __tof_h__
+Applied, thanks.
 
-    ...
-
-    #endif /* __tof_h__ */
-
-Use __tof_h__ in the first line.
-
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tof.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tof.h b/drivers/net/wireless/iwlwifi/mvm/tof.h
-index 50ae8ad..9beebc3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tof.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/tof.h
-@@ -60,7 +60,7 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
--#ifndef __tof
-+#ifndef __tof_h__
- #define __tof_h__
- 
- #include "fw-api-tof.h"
 -- 
-2.5.3
-
+Kalle Valo
