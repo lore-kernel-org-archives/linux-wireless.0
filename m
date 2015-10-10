@@ -1,74 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out22.sjc.mx.trendmicro.com ([216.99.131.79]:64699 "EHLO
-	out22.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754725AbbJVIXo (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:18586 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbbJJHm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 04:23:44 -0400
-Received: from out17.sjc.mx.trendmicro.com (unknown [216.99.131.74])
-	by out22.sjc.mx.trendmicro.com (Postfix) with ESMTP id EE49F9BB8DA
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:33 +0000 (UTC)
-Received: from relay05.sjc.mx.trendmicro.com (unknown [10.30.239.131])
-	by out17.sjc.mx.trendmicro.com (Postfix) with ESMTP id D10AA98165D
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:32 +0000 (UTC)
-Received: from thinktube.com (unknown [111.68.225.247])
-	by relay05.sjc.mx.trendmicro.com (Postfix) with ESMTP id 71DCF98051B
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:32 +0000 (UTC)
-Received: from unknown (HELO [192.168.5.9]) (br1@[188.85.79.213])
-          (envelope-sender <br1@thinktube.com>)
-          by 111.68.225.247 (qmail-ldap-1.03) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 22 Oct 2015 07:50:31 -0000
-Subject: Re: [PATCH] rtl8xxxu: Enable data frame reception in rtl8xxxu_start
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Bruno Randolf <br1@einfach.org>
-References: <1445462932-23679-1-git-send-email-br1@einfach.org>
- <wrfjoafrrf1s.fsf@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-From: Bruno Randolf <br1@thinktube.com>
-Message-ID: <56289543.1070008@thinktube.com> (sfid-20151022_102351_718422_E4750007)
-Date: Thu, 22 Oct 2015 08:50:27 +0100
+	Sat, 10 Oct 2015 03:42:27 -0400
+Message-ID: <5618C15F.2030706@broadcom.com> (sfid-20151010_094307_561549_F1A45990)
+Date: Sat, 10 Oct 2015 09:42:23 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <wrfjoafrrf1s.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+To: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Markus Elfring <elfring@users.sourceforge.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: fix waitqueue_active without memory barrier
+ in brcmfmac driver
+References: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp>
+In-Reply-To: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2015 12:13 AM, Jes Sorensen wrote:
-> Bruno Randolf <br1@einfach.org> writes:
->> mac80211 documentation says, the ieee80211_ops.start callback "must turn on
->> frame reception (for possibly enabled monitor interfaces.)". If not a single
->> monitor interface does not receive data frames.
->>
->> Similarly we should not change the data reception based on the association
->> state.
->>
->> Signed-off-by: Bruno Randolf <br1@einfach.org>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 12 ++----------
->>  1 file changed, 2 insertions(+), 10 deletions(-)
+On 10/09/2015 02:35 AM, Kosuke Tatsukawa wrote:
+> brcmf_msgbuf_ioctl_resp_wake() seems to be missing a memory barrier
+> which might cause the waker to not notice the waiter and miss sending a
+> wake_up as in the following figure.
 > 
-> Bruno,
+>    brcmf_msgbuf_ioctl_resp_wake		    brcmf_msgbuf_ioctl_resp_wait
+> ------------------------------------------------------------------------
+> if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+> /* The CPU might reorder the test for
+>     the waitqueue up here, before
+>     prior writes complete */
+>     	   	     	 	       /* wait_event_timeout */
+> 				        /* __wait_event_timeout */
+> 					 /* ___wait_event */
+> 					 prepare_to_wait_event(&wq, &__wait,
+> 					   state);
+> 					 if (msgbuf->ctl_completed)
+> 					 ...
+> msgbuf->ctl_completed = true;
+> 					 schedule_timeout(__ret))
+> ------------------------------------------------------------------------
 > 
-> Thanks - I am not 100% convinced about this one. I don't think we should
-> tell the firmware to pass up data frames before we have negotiated the
-> connection.
+> There are three other place in drivers/net/wireless/brcm80211/brcmfmac/
+> which have similar code.  The attached patch removes the call to
+> waitqueue_active() leaving just wake_up() behind.  This fixes the
+> problem because the call to spin_lock_irqsave() in wake_up() will be an
+> ACQUIRE operation.
 > 
-> It's true that for monitor mode, we need to enable it if all packets
-> are requested. Looking at iw there is an option where it only requests
-> control packets, and one for all, etc. However for non monitor mode, we
-> shouldn't pass all data packets up to the stack, resulting and have
-> mac80211 parse them all.
+> I found this issue when I was looking through the linux source code
+> for places calling waitqueue_active() before wake_up*(), but without
+> preceding memory barriers, after sending a patch to fix a similar
+> issue in drivers/tty/n_tty.c  (Details about the original issue can be
+> found here: https://lkml.org/lkml/2015/9/28/849).
 
-But mac80211 requests us to do so - please see include/net/mac80211.h
-line 2576 or
-https://www.kernel.org/doc/htmldocs/80211/API-struct-ieee80211-ops.html
+I prefer to add proper barriers instead of removing waitqueue_active()
+check. We will review your patch and submit it through our upstream process.
 
-I know you are focusing on STA mode at the moment, but
-enabling/disabling data reception on association is not correct for most
-other modes.
+Regards,
+Arend
 
-Also don't be afraid of too many frames being passed. In the initial
-setting (without a monitor interface) the RCR RCR_ACCEPT_AP bit is not
-set and the RCR_CHECK_BSSID_* bits are set as well.
-
-bruno
+> Signed-off-by: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |    3 +--
+>   drivers/net/wireless/brcm80211/brcmfmac/sdio.c   |    6 ++----
+>   drivers/net/wireless/brcm80211/brcmfmac/usb.c    |    3 +--
+>   3 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> index 7b2136c..648151e 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> @@ -473,8 +473,7 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
+>   static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
+>   {
+>   	msgbuf->ctl_completed = true;
+> -	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+> -		wake_up(&msgbuf->ioctl_resp_wait);
+> +	wake_up(&msgbuf->ioctl_resp_wait);
+>   }
+>   
+>   
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> index f990e3d..332c4c8 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> @@ -1785,8 +1785,7 @@ static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
+>   
+>   static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
+>   {
+> -	if (waitqueue_active(&bus->dcmd_resp_wait))
+> -		wake_up_interruptible(&bus->dcmd_resp_wait);
+> +	wake_up_interruptible(&bus->dcmd_resp_wait);
+>   
+>   	return 0;
+>   }
+> @@ -2110,8 +2109,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+>   static void
+>   brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
+>   {
+> -	if (waitqueue_active(&bus->ctrl_wait))
+> -		wake_up_interruptible(&bus->ctrl_wait);
+> +	wake_up_interruptible(&bus->ctrl_wait);
+>   	return;
+>   }
+>   
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> index daba86d..7f5889c 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> @@ -184,8 +184,7 @@ static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
+>   
+>   static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
+>   {
+> -	if (waitqueue_active(&devinfo->ioctl_resp_wait))
+> -		wake_up(&devinfo->ioctl_resp_wait);
+> +	wake_up(&devinfo->ioctl_resp_wait);
+>   }
+>   
+>   static void
+> 
 
