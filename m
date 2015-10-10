@@ -1,47 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20503 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639AbbJETMr (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:33366 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994AbbJJMmB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 15:12:47 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/5] wireless-regdb: Add 160 MHz channel bandwidth for Greenland (GL)
-Date: Mon, 5 Oct 2015 22:11:57 +0300
-Message-ID: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20151005_211250_301891_D67F6442)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 10 Oct 2015 08:42:01 -0400
+From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+To: dan.carpenter@oracle.com, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com, gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Subject: [PATCH] staging: wilc1000: remove WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+Date: Sat, 10 Oct 2015 15:41:54 +0300
+Message-Id: <1444480914-20269-1-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20151010_144229_851147_A82DB68C)
+In-Reply-To: <20151009182326.GV7340@mwanda>
+References: <20151009182326.GV7340@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Greenland to allow 160 MHz VHT
-channels. This was missed in the earlier set of patches that added 160
-MHz for large number of countries.
+The config option in the subject may be removed, because,
+indeed, it only serves as the 'n' value for
+CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
 ---
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/Kconfig  | 15 ++-------------
+ drivers/staging/wilc1000/Makefile |  3 ---
+ 2 files changed, 2 insertions(+), 16 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index d57ea84..226057e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -455,9 +455,9 @@ country GH: DFS-FCC
+diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
+index 59ccecc..2701a01 100644
+--- a/drivers/staging/wilc1000/Kconfig
++++ b/drivers/staging/wilc1000/Kconfig
+@@ -6,27 +6,16 @@ config WILC1000
+ 	---help---
+ 	  This module only support IEEE 802.11n WiFi.
  
- country GL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20)
--	(5250 - 5330 @ 80), (20), DFS
--	(5490 - 5710 @ 80), (27), DFS
-+	(5170 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
+-choice
+-        prompt "Memory Allocation"
+-        depends on WILC1000
+-        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+-
+ config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+ 	bool "Preallocate memory at loading driver"
++	depends on WILC1000
++	default y
+ 	---help---
+ 	  This choice supports static allocation of the memory
+ 	  for the receive buffer. The driver will allocate the RX buffer
+ 	  during initial time. The driver will also free the buffer
+ 	  by calling network device stop.
  
- country GP: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+-config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+-        bool "Dynamically allocate memory in real time"
+-        ---help---
+-	  This choice supports dynamic allocation of the memory
+-	  for the receive buffer. The driver will allocate the RX buffer
+-	  when it is required.
+-endchoice
+-
+ choice
+ 	prompt "Bus Type"
+ 	depends on WILC1000
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index f495061..eb8f51d 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -15,9 +15,6 @@ ccflags-y += -I$(src)/ -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
+ ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
+ 								-DWILC_PREALLOC_AT_INSMOD
+ 
+-ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
+-
+-
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			wilc_msgqueue.o \
+ 			coreconfigurator.o host_interface.o \
 -- 
 1.9.1
 
