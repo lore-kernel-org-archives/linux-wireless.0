@@ -1,85 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:36523 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835AbbJDXvp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 19:51:45 -0400
-Received: by ioii196 with SMTP id i196so168795666ioi.3
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Oct 2015 16:51:44 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:59705 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751319AbbJJVCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Oct 2015 17:02:18 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jacob Kiefer <jtk54@cornell.edu>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	"Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>,
+	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
+	WIRELESS DRIVER),
+	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Subject: Re: [PATCH 1/2 v3] drivers: staging: rtl8723au: Changed rssi_cmd to little-endian param
+References: <1444505324-2924-1-git-send-email-jtk54@cornell.edu>
+Date: Sat, 10 Oct 2015 17:02:14 -0400
+In-Reply-To: <1444505324-2924-1-git-send-email-jtk54@cornell.edu> (Jacob
+	Kiefer's message of "Sat, 10 Oct 2015 15:28:16 -0400")
+Message-ID: <wrfj612ewi7d.fsf@redhat.com> (sfid-20151010_230247_933376_FF13294E)
 MIME-Version: 1.0
-In-Reply-To: <1443789896-7082-8-git-send-email-chaehyun.lim@gmail.com>
-References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com> <1443789896-7082-8-git-send-email-chaehyun.lim@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 5 Oct 2015 10:51:24 +1100
-Message-ID: <CAGRGNgXZZupj_H1yc4QZXZVmXPTW6CmFcdaGFUVPsbUHZg9q8g@mail.gmail.com> (sfid-20151005_015147_469017_1D71581E)
-Subject: Re: [PATCH 08/10] staging: wilc1000: rename s32Error in host_int_wait_msg_queue_idle
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, glen.lee@atmel.com,
-	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chaehyun,
-
-On Fri, Oct 2, 2015 at 10:44 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
-> This patch replaces s32Error with result to avoid camelcase.
+Jacob Kiefer <jtk54@cornell.edu> writes:
+> From: Jacob Kiefer <jtk54@cornell.edu>
 >
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> Changed rssi_cmd interface to accept le32 param instead of
+> unnecessary u8 * conversion. Updated existing calls to rssi_cmd.
+> This patch pushes responsibility to caller to convert to
+> le32. This cleans up the code quite a bit.
+> Also removed magic numbers.
+>
+> This patch fixes the following sparse error:
+>
+>   CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> ...
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
+>   warning: incorrect type in assignment (different base types)
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
+>   expected unsigned int [unsigned] [usertype] <noident>
+> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:  \
+>   got restricted __le32 [usertype] <noident>
+> ...
+>
+> Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
 > ---
->  drivers/staging/wilc1000/host_interface.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index e5b7689..69a4e79 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -5344,7 +5344,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *wfi_drv, u8 channel)
->
->  int host_int_wait_msg_queue_idle(void)
->  {
-> -       int s32Error = 0;
-> +       int result = 0;
->
->         struct host_if_msg msg;
->
-> @@ -5352,16 +5352,16 @@ int host_int_wait_msg_queue_idle(void)
->
->         memset(&msg, 0, sizeof(struct host_if_msg));
->         msg.id = HOST_IF_MSG_Q_IDLE;
-> -       s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-> -       if (s32Error) {
-> +       result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-> +       if (result) {
->                 PRINT_ER("wilc mq send fail\n");
-> -               s32Error = -EINVAL;
-> +               result = -EINVAL;
+> In v3, opted to change the interface rather than just the internal
+> code to clear the sparse errors and make the code more sane.
 
-Same comments here: Why not
-
-return -EINVAL;
-
->         }
->
->         /* wait untill MSG Q is empty */
->         down(&hWaitResponse);
->
-> -       return s32Error;
-> +       return result;
-
-and
-
-return 0;
+I am fine with this code in principle, but has it been tested? This
+stuff will break the driver miserably if it's wrong.
 
 Thanks,
+Jes
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> ---
+>  drivers/staging/rtl8723au/hal/odm.c              | 3 ++-
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 7 +++----
+>  drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
+>  3 files changed, 6 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
+> index 6b9dbef..c7f45c7 100644
+> --- a/drivers/staging/rtl8723au/hal/odm.c
+> +++ b/drivers/staging/rtl8723au/hal/odm.c
+> @@ -1274,7 +1274,8 @@ static void odm_RSSIMonitorCheck(struct dm_odm_t *pDM_Odm)
+>
+>  	for (i = 0; i < sta_cnt; i++) {
+>  		if (PWDB_rssi[i] != (0))
+> -			rtl8723a_set_rssi_cmd(Adapter, (u8 *)&PWDB_rssi[i]);
+> +			rtl8723a_set_rssi_cmd(Adapter,
+> +					cpu_to_le32(PWDB_rssi[i]));
+>  	}
+>
+>  	pdmpriv->EntryMaxUndecoratedSmoothedPWDB = MaxDB;
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> index 9733aa6..97d23c3 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> @@ -25,6 +25,7 @@
+>  #define RTL92C_MAX_CMD_LEN		5
+>  #define MESSAGE_BOX_SIZE		4
+>  #define EX_MESSAGE_BOX_SIZE		2
+> +#define RSSI_CMD_LEN			3
+>
+>  static u8 _is_fw_read_cmd_down(struct rtw_adapter *padapter, u8 msgbox_num)
+>  {
+> @@ -113,11 +114,9 @@ exit:
+>  	return ret;
+>  }
+>
+> -int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+> +int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param)
+>  {
+> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+> -
+> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+> +	FillH2CCmd(padapter, RSSI_SETTING_EID, RSSI_CMD_LEN, (u8 *)&param);
+>
+>  	return _SUCCESS;
+>  }
+> diff --git a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
+> index 014c02e..e281543 100644
+> --- a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
+> +++ b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
+> @@ -149,7 +149,7 @@ void rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(struct rtw_adapter *padapter);
+>  #else
+>  #define rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(padapter) do {} while(0)
+>  #endif
+> -int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param);
+> +int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param);
+>  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg);
+>  void rtl8723a_add_rateatid(struct rtw_adapter *padapter, u32 bitmap, u8 arg, u8 rssi_level);
+>
+> --
+> 1.8.3.2
