@@ -1,108 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20695 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13818 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757191AbbJ3DH6 (ORCPT
+	with ESMTP id S1752035AbbJLIBG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:07:58 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Mon, 12 Oct 2015 04:01:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/17] staging: wilc1000: wilc_wlan_cfg_get: add argument struct net_device
-Date: Fri, 30 Oct 2015 12:10:28 +0900
-Message-ID: <1446174642-28570-3-git-send-email-glen.lee@atmel.com> (sfid-20151030_040802_083337_AB69B79D)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 41/41] staging: wilc1000: rename tenuAuth_type of struct host_if_wep_attr
+Date: Mon, 12 Oct 2015 16:56:15 +0900
+Message-ID: <1444636575-2486-41-git-send-email-tony.cho@atmel.com> (sfid-20151012_100110_147585_E1C3649E)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds argument struct net_device and use netdev private data member wilc
-instead of g_linux_wlan, pass dev to the functions as well.
+This patch renames tenuAuth_type of struct host_if_wep_attr to auth_type
+to avoid CamelCase naming convention.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 3 ++-
- drivers/staging/wilc1000/linux_wlan.c       | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c        | 8 ++++++--
- drivers/staging/wilc1000/wilc_wlan.h        | 3 ++-
- 4 files changed, 11 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3b4a950..530d64a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -595,7 +595,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
- 		for (counter = 0; counter < count; counter++) {
- 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
- 				   (counter == count - 1));
--			if (!wilc_wlan_cfg_get(!counter,
-+			if (!wilc_wlan_cfg_get(dev,
-+					       !counter,
- 					       wids[counter].id,
- 					       (counter == count - 1),
- 					       drv)) {
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d0161cd..4ed324c 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1153,7 +1153,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index edea265..ec04aec 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -112,7 +112,7 @@ struct host_if_wep_attr {
+ 	u8 key_len;
+ 	u8 index;
+ 	u8 mode;
+-	enum AUTHTYPE tenuAuth_type;
++	enum AUTHTYPE auth_type;
+ };
  
- 		wilc_bus_set_max_speed();
+ /*!
+@@ -2358,7 +2358,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWIDList[1].id = WID_AUTH_TYPE;
+ 			strWIDList[1].type = WID_CHAR;
+ 			strWIDList[1].size = sizeof(char);
+-			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.tenuAuth_type));
++			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.auth_type));
  
--		if (wilc_wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
-+		if (wilc_wlan_cfg_get(dev, 1, WID_FIRMWARE_VERSION, 1, 0)) {
- 			int size;
- 			char Firmware_ver[20];
+ 			strWIDList[2].id = (u16)WID_KEY_ID;
+ 			strWIDList[2].type = WID_CHAR;
+@@ -4274,7 +4274,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
  
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 16224ce..768fd30 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1809,12 +1809,16 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 	msg.body.key_info.uniHostIFkeyAttr.wep.mode = u8mode;
  
- 	return ret_size;
- }
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
-+int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
-+		      u32 drvHandler)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 offset;
- 	int ret_size;
-+	perInterface_wlan_t *nic = netdev_priv(dev);
-+	struct wilc *wilc;
+-	msg.body.key_info.uniHostIFkeyAttr.wep.tenuAuth_type = tenuAuth_type;
++	msg.body.key_info.uniHostIFkeyAttr.wep.auth_type = tenuAuth_type;
+ 	/* send the message */
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
  
-+	wilc = nic->wilc;
- 
- 	if (p->cfg_frame_in_use)
- 		return 0;
-@@ -1834,7 +1838,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- 			ret_size = 0;
- 
- 
--		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
-+		if (linux_wlan_lock_timeout(&wilc->cfg_event,
- 					    CFG_PKTS_TIMEOUT)) {
- 			PRINT_D(TX_DBG, "Get Timed Out\n");
- 			ret_size = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 2eb7e20..2879a93 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -305,7 +305,8 @@ void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
-+int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
-+		      u32 drvHandler);
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			       u32 buffer_size, wilc_tx_complete_func_t func);
 -- 
 1.9.1
 
