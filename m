@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:43684 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12167 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932465AbbJNLsR (ORCPT
+	with ESMTP id S1751952AbbJLH5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:48:17 -0400
+	Mon, 12 Oct 2015 03:57:16 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,283 +12,473 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/16] staging: wilc1000: rename wilc_netdev in the struct wilc_vif
-Date: Wed, 14 Oct 2015 20:46:39 +0900
-Message-ID: <1444823204-16736-11-git-send-email-tony.cho@atmel.com> (sfid-20151014_134824_279512_36AA48EB)
-In-Reply-To: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
-References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH V2 07/41] staging: wilc1000: remove typedef from tstrWID
+Date: Mon, 12 Oct 2015 16:55:41 +0900
+Message-ID: <1444636575-2486-7-git-send-email-tony.cho@atmel.com> (sfid-20151012_095719_758594_58389906)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames wilc_netdev in the struct wilc_vif to the ndev.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch removes typedef from the struct tstrWID and
+rename it to wid.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c             | 45 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 34 ++++++++---------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
- 3 files changed, 40 insertions(+), 41 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c |  2 +-
+ drivers/staging/wilc1000/coreconfigurator.h |  7 +--
+ drivers/staging/wilc1000/host_interface.c   | 90 ++++++++++++++---------------
+ 3 files changed, 49 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6e21825..3d02ae7 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -369,7 +369,7 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
- 	for (i = 0; i < wl->vif_num; i++)
- 		if (!memcmp(Bssid1, wl->vif[i].bssid, ETH_ALEN) ||
- 		    !memcmp(Bssid, wl->vif[i].bssid, ETH_ALEN))
--			return wl->vif[i].wilc_netdev;
-+			return wl->vif[i].ndev;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 1d45869..2e063f6 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -595,7 +595,7 @@ s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo)
+  *  @date		1 Mar 2012
+  *  @version	1.0
+  */
+-s32 send_config_pkt(u8 mode, tstrWID *wids, u32 count, u32 drv)
++s32 send_config_pkt(u8 mode, struct wid *wids, u32 count, u32 drv)
+ {
+ 	s32 counter = 0, ret = 0;
  
- 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
- 	for (i = 0; i < 25; i++)
-@@ -379,7 +379,7 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
- 	for (i = 0; i < wl->vif_num; i++)
- 		if (!memcmp(Bssid1, wl->vif[i].bssid, ETH_ALEN) ||
- 		    !memcmp(Bssid, wl->vif[i].bssid, ETH_ALEN))
--			return wl->vif[i].wilc_netdev;
-+			return wl->vif[i].ndev;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 8ba30dc..306efc9 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -70,13 +70,12 @@ typedef enum {
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+ } tenuConnectSts;
  
- 	PRINT_INFO(INIT_DBG, "\n");
- 	return NULL;
-@@ -392,7 +392,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
+-typedef struct {
++struct wid {
+ 	u16 u16WIDid;
+ 	tenuWIDtype enuWIDtype;
+ 	s32 s32ValueSize;
+ 	s8      *ps8WidVal;
+-
+-} tstrWID;
++};
  
- 	PRINT_D(INIT_DBG, "set bssid on[%p]\n", wilc_netdev);
- 	for (i = 0; i < wl->vif_num; i++)
--		if (wl->vif[i].wilc_netdev == wilc_netdev) {
-+		if (wl->vif[i].ndev == wilc_netdev) {
- 			memcpy(wl->vif[i].bssid, pBSSID, 6);
- 			ret = 0;
- 			break;
-@@ -458,10 +458,10 @@ static int linux_wlan_txq_task(void *vp)
- 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD /* && netif_queue_stopped(pd->wilc_netdev)*/) {
- 				PRINT_D(TX_DBG, "Waking up queue\n");
- 				/* netif_wake_queue(pd->wilc_netdev); */
--				if (netif_queue_stopped(wl->vif[0].wilc_netdev))
--					netif_wake_queue(wl->vif[0].wilc_netdev);
--				if (netif_queue_stopped(wl->vif[1].wilc_netdev))
--					netif_wake_queue(wl->vif[1].wilc_netdev);
-+				if (netif_queue_stopped(wl->vif[0].ndev))
-+					netif_wake_queue(wl->vif[0].ndev);
-+				if (netif_queue_stopped(wl->vif[1].ndev))
-+					netif_wake_queue(wl->vif[1].ndev);
- 			}
+ typedef struct {
+ 	u8 u8Full;
+@@ -128,7 +127,7 @@ typedef struct {
+ 	size_t ie_len;
+ } tstrDisconnectNotifInfo;
  
- 			if (ret == WILC_TX_ERR_NO_BUF) { /* failed to allocate buffers in chip. */
-@@ -1311,7 +1311,7 @@ int mac_open(struct net_device *ndev)
+-s32 send_config_pkt(u8 mode, tstrWID *wids, u32 count, u32 drv);
++s32 send_config_pkt(u8 mode, struct wid *wids, u32 count, u32 drv);
+ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
+ s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
  
- 	/* loop through the NUM of supported devices and set the MAC address */
- 	for (i = 0; i < wl->vif_num; i++)
--		if (ndev == wl->vif[i].wilc_netdev) {
-+		if (ndev == wl->vif[i].ndev) {
- 			memcpy(wl->vif[i].src_addr, mac_add, ETH_ALEN);
- 			wl->vif[i].hif_drv = priv->hWILCWFIDrv;
- 			break;
-@@ -1476,8 +1476,8 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 					       linux_wlan_tx_complete);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ad77121..25834cd 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -572,7 +572,7 @@ static s32 Handle_SetChannel(struct host_if_drv *drvHandler,
+ {
  
- 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
--		netif_stop_queue(wl->vif[0].wilc_netdev);
--		netif_stop_queue(wl->vif[1].wilc_netdev);
-+		netif_stop_queue(wl->vif[0].ndev);
-+		netif_stop_queue(wl->vif[1].ndev);
- 	}
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
  
- 	return 0;
-@@ -1681,17 +1681,17 @@ void WILC_WFI_mgmt_rx(u8 *buff, u32 size)
- 	/*Pass the frame on the monitor interface, if any.*/
- 	/*Otherwise, pass it on p2p0 netdev, if registered on it*/
- 	for (i = 0; i < wl->vif_num; i++) {
--		nic = netdev_priv(wl->vif[i].wilc_netdev);
-+		nic = netdev_priv(wl->vif[i].ndev);
- 		if (nic->monitor_flag) {
- 			WILC_WFI_monitor_rx(buff, size);
- 			return;
- 		}
- 	}
+ 	/*prepare configuration packet*/
+@@ -607,7 +607,7 @@ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *drvHandler,
+ {
  
--	nic = netdev_priv(wl->vif[1].wilc_netdev); /* p2p0 */
-+	nic = netdev_priv(wl->vif[1].ndev); /* p2p0 */
- 	if ((buff[0] == nic->g_struct_frame_reg[0].frame_type && nic->g_struct_frame_reg[0].reg) ||
- 	    (buff[0] == nic->g_struct_frame_reg[1].frame_type && nic->g_struct_frame_reg[1].reg))
--		WILC_WFI_p2p_rx(wl->vif[1].wilc_netdev, buff, size);
-+		WILC_WFI_p2p_rx(wl->vif[1].ndev, buff, size);
- }
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = drvHandler;
  
- int wilc_netdev_init(void)
-@@ -1735,7 +1735,7 @@ int wilc_netdev_init(void)
  
- 		nic->u8IfIdx = wl->vif_num;
- 		nic->wilc_netdev = ndev;
--		wl->vif[wl->vif_num].wilc_netdev = ndev;
-+		wl->vif[wl->vif_num].ndev = ndev;
- 		wl->vif_num++;
- 		ndev->netdev_ops = &wilc_netdev_ops;
+@@ -648,7 +648,7 @@ static s32 Handle_SetOperationMode(struct host_if_drv *drvHandler,
+ {
  
-@@ -1830,11 +1830,11 @@ static void __exit exit_wilc_driver(void)
- 	perInterface_wlan_t *nic[NUM_CONCURRENT_IFC] = {NULL,};
- 	#define CLOSE_TIMEOUT (12 * 1000)
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
  
--	if (wl && (wl->vif[0].wilc_netdev || wl->vif[1].wilc_netdev)) {
-+	if (wl && (wl->vif[0].ndev || wl->vif[1].ndev)) {
- 		unregister_inetaddr_notifier(&g_dev_notifier);
  
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
--			nic[i] = netdev_priv(wl->vif[i].wilc_netdev);
-+			nic[i] = netdev_priv(wl->vif[i].ndev);
- 	}
+@@ -690,7 +690,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *drvHandler, u8 *pu8IPAddr, u8 idx)
+ {
  
- 	if (wl && wl->wilc_firmware) {
-@@ -1842,7 +1842,7 @@ static void __exit exit_wilc_driver(void)
- 		wl->wilc_firmware = NULL;
- 	}
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	char firmwareIPAddress[4] = {0};
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
  
--	if (wl && (wl->vif[0].wilc_netdev || wl->vif[1].wilc_netdev)) {
-+	if (wl && (wl->vif[0].ndev || wl->vif[1].ndev)) {
- 		PRINT_D(INIT_DBG, "Waiting for mac_close ....\n");
+@@ -737,7 +737,7 @@ s32 Handle_get_IPAddress(struct host_if_drv *drvHandler, u8 *pu8IPAddr, u8 idx)
+ {
  
- 		if (linux_wlan_lock_timeout(&close_exit_sync, CLOSE_TIMEOUT) < 0)
-@@ -1851,17 +1851,16 @@ static void __exit exit_wilc_driver(void)
- 			PRINT_D(INIT_DBG, "mac_closed\n");
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
  
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
--			if (wl->vif[i].wilc_netdev)
-+			if (wl->vif[i].ndev)
- 				if (nic[i]->mac_opened)
--					mac_close(wl->vif[i].wilc_netdev);
-+					mac_close(wl->vif[i].ndev);
+ 	/*prepare configuration packet*/
+@@ -786,7 +786,7 @@ static s32 Handle_SetMacAddress(struct host_if_drv *drvHandler,
+ {
  
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
--			PRINT_D(INIT_DBG, "Unregistering netdev %p\n", wl->vif[i].wilc_netdev);
--			unregister_netdev(wl->vif[i].wilc_netdev);
-+			unregister_netdev(wl->vif[i].ndev);
- 			PRINT_D(INIT_DBG, "Freeing Wiphy...\n");
--			wilc_free_wiphy(wl->vif[i].wilc_netdev);
-+			wilc_free_wiphy(wl->vif[i].ndev);
- 			PRINT_D(INIT_DBG, "Freeing netdev...\n");
--			free_netdev(wl->vif[i].wilc_netdev);
-+			free_netdev(wl->vif[i].ndev);
- 		}
- 	}
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d7c9279..ebba9d4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -624,9 +624,9 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 			u8WLANChannel = INVALID_CHANNEL;
- 		/*Incase "P2P CLIENT Connected" send deauthentication reason by 3 to force the WPA_SUPPLICANT to directly change
- 		 *      virtual interface to station*/
--		if (pstrWFIDrv->IFC_UP && (dev == wl->vif[1].wilc_netdev))
-+		if (pstrWFIDrv->IFC_UP && (dev == wl->vif[1].ndev))
- 			pstrDisconnectNotifInfo->u16reason = 3;
--		else if (!pstrWFIDrv->IFC_UP && (dev == wl->vif[1].wilc_netdev))
-+		else if (!pstrWFIDrv->IFC_UP && (dev == wl->vif[1].ndev))
- 			pstrDisconnectNotifInfo->u16reason = 1;
+@@ -829,7 +829,7 @@ static s32 Handle_GetMacAddress(struct host_if_drv *drvHandler,
+ {
  
- 		cfg80211_disconnected(dev, pstrDisconnectNotifInfo->u16reason, pstrDisconnectNotifInfo->ie,
-@@ -1253,7 +1253,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
  
- 				/*save keys only on interface 0 (wifi interface)*/
- 				if (!g_gtk_keys_saved &&
--				    netdev == wl->vif[0].wilc_netdev) {
-+				    netdev == wl->vif[0].ndev) {
- 					g_add_gtk_key_params.key_idx = key_index;
- 					g_add_gtk_key_params.pairwise = pairwise;
- 					if (!mac_addr) {
-@@ -1290,7 +1290,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	/*prepare configuration packet*/
+ 	strWID.u16WIDid = (u16)WID_MAC_ADDR;
+@@ -863,7 +863,7 @@ static s32 Handle_CfgParam(struct host_if_drv *drvHandler,
+ 			   struct cfg_param_attr *strHostIFCfgParamAttr)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWIDList[32];
++	struct wid strWIDList[32];
+ 	u8 u8WidCnt = 0;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
  
- 				/*save keys only on interface 0 (wifi interface)*/
- 				if (!g_ptk_keys_saved &&
--				    netdev == wl->vif[0].wilc_netdev) {
-+				    netdev == wl->vif[0].ndev) {
- 					g_add_ptk_key_params.key_idx = key_index;
- 					g_add_ptk_key_params.pairwise = pairwise;
- 					if (!mac_addr) {
-@@ -1355,7 +1355,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 	priv = wiphy_priv(wiphy);
+@@ -1221,7 +1221,7 @@ static s32 Handle_Scan(struct host_if_drv *drvHandler,
+ 		       struct scan_attr *pstrHostIFscanAttr)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWIDList[5];
++	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0;
+ 	u32 i;
+ 	u8 *pu8Buffer;
+@@ -1392,7 +1392,7 @@ static s32 Handle_ScanDone(struct host_if_drv *drvHandler, tenuScanEvent enuEven
  
- 	/*delete saved keys, if any*/
--	if (netdev == wl->vif[0].wilc_netdev) {
-+	if (netdev == wl->vif[0].ndev) {
- 		g_ptk_keys_saved = false;
- 		g_gtk_keys_saved = false;
- 		g_wep_keys_saved = false;
-@@ -2613,15 +2613,15 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
- 					g_key_gtk_params.key[1],
- 					g_key_gtk_params.key[2]);
--				add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--					wl->vif[0].wilc_netdev,
-+				add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+					wl->vif[0].ndev,
- 					g_add_ptk_key_params.key_idx,
- 					g_add_ptk_key_params.pairwise,
- 					g_add_ptk_key_params.mac_addr,
- 					(struct key_params *)(&g_key_ptk_params));
  
--				add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--					wl->vif[0].wilc_netdev,
-+				add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+					wl->vif[0].ndev,
- 					g_add_gtk_key_params.key_idx,
- 					g_add_gtk_key_params.pairwise,
- 					g_add_gtk_key_params.mac_addr,
-@@ -2693,15 +2693,15 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
- 					g_key_gtk_params.key[1],
- 					g_key_gtk_params.key[2]);
--				add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--					wl->vif[0].wilc_netdev,
-+				add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+					wl->vif[0].ndev,
- 					g_add_ptk_key_params.key_idx,
- 					g_add_ptk_key_params.pairwise,
- 					g_add_ptk_key_params.mac_addr,
- 					(struct key_params *)(&g_key_ptk_params));
+ 	u8 u8abort_running_scan;
+-	tstrWID strWID;
++	struct wid strWID;
  
--				add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--					wl->vif[0].wilc_netdev,
-+				add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+					wl->vif[0].ndev,
- 					g_add_gtk_key_params.key_idx,
- 					g_add_gtk_key_params.pairwise,
- 					g_add_gtk_key_params.mac_addr,
-@@ -2811,15 +2811,15 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				g_key_gtk_params.key[1],
- 				g_key_gtk_params.key[2],
- 				g_key_gtk_params.cipher);
--			add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--				wl->vif[0].wilc_netdev,
-+			add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+				wl->vif[0].ndev,
- 				g_add_ptk_key_params.key_idx,
- 				g_add_ptk_key_params.pairwise,
- 				g_add_ptk_key_params.mac_addr,
- 				(struct key_params *)(&g_key_ptk_params));
  
--			add_key(wl->vif[0].wilc_netdev->ieee80211_ptr->wiphy,
--				wl->vif[0].wilc_netdev,
-+			add_key(wl->vif[0].ndev->ieee80211_ptr->wiphy,
-+				wl->vif[0].ndev,
- 				g_add_gtk_key_params.key_idx,
- 				g_add_gtk_key_params.pairwise,
- 				g_add_gtk_key_params.mac_addr,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 64b931b..54b6039 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -152,7 +152,7 @@ struct wilc_vif {
- 	u8 src_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
- 	struct host_if_drv *hif_drv;
--	struct net_device *wilc_netdev;
-+	struct net_device *ndev;
- };
+ 	PRINT_D(HOSTINF_DBG, "in Handle_ScanDone()\n");
+@@ -1446,7 +1446,7 @@ static s32 Handle_Connect(struct host_if_drv *drvHandler,
+ {
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *) drvHandler;
+ 	s32 s32Error = 0;
+-	tstrWID strWIDList[8];
++	struct wid strWIDList[8];
+ 	u32 u32WidsCount = 0, dummyval = 0;
+ 	/* char passphrase[] = "12345678"; */
+ 	u8 *pu8CurrByte = NULL;
+@@ -1807,7 +1807,7 @@ ERRORHANDLER:
+ static s32 Handle_FlushConnect(struct host_if_drv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWIDList[5];
++	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0;
+ 	u8 *pu8CurrByte = NULL;
  
- struct wilc {
+@@ -1867,7 +1867,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+ 	tstrConnectInfo strConnectInfo;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u16 u16DummyReasonCode = 0;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *) drvHandler;
+ 
+@@ -2407,8 +2407,8 @@ static int Handle_Key(struct host_if_drv *drvHandler,
+ 		      struct key_attr *pstrHostIFkeyAttr)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
+-	tstrWID strWIDList[5];
++	struct wid strWID;
++	struct wid strWIDList[5];
+ 	u8 i;
+ 	u8 *pu8keybuf;
+ 	s8 s8idxarray[1];
+@@ -2769,7 +2769,7 @@ _WPAPtk_end_case_:
+  */
+ static void Handle_Disconnect(struct host_if_drv *drvHandler)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	s32 s32Error = 0;
+ 	u16 u16DummyReasonCode = 0;
+@@ -2897,7 +2897,7 @@ static s32 Handle_GetChnl(struct host_if_drv *drvHandler)
+ {
+ 
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_CURRENT_CHANNEL;
+@@ -2936,7 +2936,7 @@ static s32 Handle_GetChnl(struct host_if_drv *drvHandler)
+ static void Handle_GetRssi(struct host_if_drv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_RSSI;
+@@ -2963,7 +2963,7 @@ static void Handle_GetRssi(struct host_if_drv *drvHandler)
+ static void Handle_GetLinkspeed(struct host_if_drv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+ 	gs8lnkspd = 0;
+@@ -2989,7 +2989,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *drvHandler)
+ 
+ s32 Handle_GetStatistics(struct host_if_drv *drvHandler, tstrStatistics *pstrStatistics)
+ {
+-	tstrWID strWIDList[5];
++	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0, s32Error = 0;
+ 
+ 	strWIDList[u32WidsCount].u16WIDid = WID_LINKSPEED;
+@@ -3050,7 +3050,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *drvHandler,
+ 
+ 	s32 s32Error = 0;
+ 	u8 *stamac;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+ 
+@@ -3115,7 +3115,7 @@ static void Handle_AddBeacon(struct host_if_drv *drvHandler,
+ 			     struct beacon_attr *pstrSetBeaconParam)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3183,7 +3183,7 @@ ERRORHANDLER:
+ static void Handle_DelBeacon(struct host_if_drv *drvHandler)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3276,7 +3276,7 @@ static void Handle_AddStation(struct host_if_drv *drvHandler,
+ 			      struct add_sta_param *pstrStationParam)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3317,7 +3317,7 @@ static void Handle_DelAllSta(struct host_if_drv *drvHandler,
+ {
+ 	s32 s32Error = 0;
+ 
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 	u8 i;
+@@ -3372,7 +3372,7 @@ static void Handle_DelStation(struct host_if_drv *drvHandler,
+ 			      struct del_sta *pstrDelStaParam)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3414,7 +3414,7 @@ static void Handle_EditStation(struct host_if_drv *drvHandler,
+ 			       struct add_sta_param *pstrStationParam)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3455,7 +3455,7 @@ static int Handle_RemainOnChan(struct host_if_drv *drvHandler,
+ {
+ 	s32 s32Error = 0;
+ 	u8 u8remain_on_chan_flag;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *) drvHandler;
+ 
+ 	/*If it's a pendig remain-on-channel, don't overwrite gWFiDrvHandle values (since incoming msg is garbbage)*/
+@@ -3541,7 +3541,7 @@ static int Handle_RegisterFrame(struct host_if_drv *drvHandler,
+ 				struct reg_frame *pstrHostIfRegisterFrame)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3590,7 +3590,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *drvHandler,
+ 				     struct remain_ch *pstrHostIfRemainOnChan)
+ {
+ 	u8 u8remain_on_chan_flag;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	s32 s32Error = 0;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *) drvHandler;
+ 
+@@ -3676,7 +3676,7 @@ static void Handle_PowerManagement(struct host_if_drv *drvHandler,
+ 				   struct power_mgmt_param *strPowerMgmtParam)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	s8 s8PowerMode;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -3712,7 +3712,7 @@ static void Handle_SetMulticastFilter(struct host_if_drv *drvHandler,
+ 				      struct set_multicast *strHostIfSetMulti)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setup Multicast Filter\n");
+@@ -3763,7 +3763,7 @@ static s32 Handle_AddBASession(struct host_if_drv *drvHandler,
+ 			       struct ba_session_info *strHostIfBASessionInfo)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	int AddbaTimeout = 100;
+ 	char *ptr = NULL;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+@@ -3852,7 +3852,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *drvHandler,
+ 				     struct ba_session_info *strHostIfBASessionInfo)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	char *ptr = NULL;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)drvHandler;
+ 
+@@ -4159,7 +4159,7 @@ static void TimerCB_Connect(unsigned long arg)
+ /* Check implementation in core adding 9 bytes to the input! */
+ s32 host_int_remove_key(struct host_if_drv *hWFIDrv, const u8 *pu8StaAddress)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid	= (u16)WID_REMOVE_KEY;
+ 	strWID.enuWIDtype	= WID_STR;
+@@ -4676,7 +4676,7 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv, struct host_if_pmkid_at
+ s32 host_int_get_pmkid_info(struct host_if_drv *hWFIDrv, u8 *pu8PmkidInfoArray,
+ 				    u32 u32PmkidInfoLen)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid	= (u16)WID_PMKID_INFO;
+ 	strWID.enuWIDtype	= WID_STR;
+@@ -4703,7 +4703,7 @@ s32 host_int_get_pmkid_info(struct host_if_drv *hWFIDrv, u8 *pu8PmkidInfoArray,
+ s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv, u8 *pu8PassPhrase,
+ 						 u8 u8Psklength)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	/*validating psk length*/
+ 	if ((u8Psklength > 7) && (u8Psklength < 65)) {
+@@ -4798,7 +4798,7 @@ s32 host_int_set_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress)
+ s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
+ 						 u8 *pu8PassPhrase, u8 u8Psklength)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid	= (u16)WID_11I_PSK;
+ 	strWID.enuWIDtype	= WID_STR;
+@@ -4825,7 +4825,7 @@ s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
+  */
+ s32 host_int_set_start_scan_req(struct host_if_drv *hWFIDrv, u8 scanSource)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid = (u16)WID_START_SCAN_REQ;
+ 	strWID.enuWIDtype = WID_CHAR;
+@@ -4853,7 +4853,7 @@ s32 host_int_set_start_scan_req(struct host_if_drv *hWFIDrv, u8 scanSource)
+ 
+ s32 host_int_get_start_scan_req(struct host_if_drv *hWFIDrv, u8 *pu8ScanSource)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid = (u16)WID_START_SCAN_REQ;
+ 	strWID.enuWIDtype = WID_CHAR;
+@@ -5050,7 +5050,7 @@ s32 host_int_disconnect(struct host_if_drv *hWFIDrv, u16 u16ReasonCode)
+  */
+ s32 host_int_disconnect_station(struct host_if_drv *hWFIDrv, u8 assoc_id)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid = (u16)WID_DISCONNECT;
+ 	strWID.enuWIDtype = WID_CHAR;
+@@ -5089,7 +5089,7 @@ s32 host_int_disconnect_station(struct host_if_drv *hWFIDrv, u8 assoc_id)
+ s32 host_int_get_assoc_req_info(struct host_if_drv *hWFIDrv, u8 *pu8AssocReqInfo,
+ 					u32 u32AssocReqInfoLen)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid = (u16)WID_ASSOC_REQ_INFO;
+ 	strWID.enuWIDtype = WID_STR;
+@@ -5114,7 +5114,7 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv, u8 *pu8AssocRespInf
+ 					u32 u32MaxAssocRespInfoLen, u32 *pu32RcvdAssocRespInfoLen)
+ {
+ 	s32 s32Error = 0;
+-	tstrWID strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)hWFIDrv;
+ 
+ 	if (pstrWFIDrv == NULL) {
+@@ -5160,7 +5160,7 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv, u8 *pu8AssocRespInf
+ s32 host_int_get_rx_power_level(struct host_if_drv *hWFIDrv, u8 *pu8RxPowerLevel,
+ 					u32 u32RxPowerLevelLen)
+ {
+-	tstrWID strWID;
++	struct wid strWID;
+ 
+ 	strWID.u16WIDid = (u16)WID_RX_POWER_LEVEL;
+ 	strWID.enuWIDtype = WID_STR;
+@@ -5379,7 +5379,7 @@ s32 host_int_test_get_int_wid(struct host_if_drv *hWFIDrv, u32 *pu32TestMemAddr)
+ {
+ 
+ 	s32 s32Error = 0;
+-	tstrWID	strWID;
++	struct wid strWID;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)hWFIDrv;
+ 
+ 
 -- 
 1.9.1
 
