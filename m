@@ -1,66 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33885 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbbJ2MaA (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38268 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029AbbJLFoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:30:00 -0400
-Received: by padhk11 with SMTP id hk11so40056839pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:30:00 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/12] staging: wilc1000: fix return type of host_int_add_station
-Date: Thu, 29 Oct 2015 21:29:23 +0900
-Message-Id: <1446121768-4953-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_133004_665214_A23E663C)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 12 Oct 2015 01:44:05 -0400
+From: <c_mkenna@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Maharaja <c_mkenna@qti.qualcomm.com>,
+	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+Subject: [PATCHv2] ath10k: Enable adaptive CCA
+Date: Mon, 12 Oct 2015 11:13:18 +0530
+Message-ID: <1444628598-806-1-git-send-email-c_mkenna@qti.qualcomm.com> (sfid-20151012_074412_524724_DC20E2D7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_add_station from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+From: Maharaja <c_mkenna@qti.qualcomm.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+European Union has made it mandatory that all devices working in 2.4 GHz
+has to adhere to the ETSI specification (ETSI EN 300 328 V1.9.1)
+beginnig this year. The standard basically speaks about interferences
+in 2.4Ghz band.
+For example, when 802.11 device detects interference, TX must be stopped
+as long as interference is present.
+
+Adaptive CCA is a feature, when enabled the device learns from the
+environment and configures CCA levels adaptively. This will improve
+detecting interferences and the device can stop trasmissions till the
+interference is present eventually leading to good performances in
+varying interference conditions.
+
+The patch includes code for enabling adaptive CCA for 10.2.4 firmware on
+QCA988X.
+
+Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fe4ccdb..0f36825 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4516,10 +4516,10 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
- 	return result;
+v2:
+	1.Fixed the conflicts present in the files wmi.c and wmi-ops.h
+
+ drivers/net/wireless/ath/ath10k/core.h    |  3 +++
+ drivers/net/wireless/ath/ath10k/mac.c     | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 31 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     | 13 +++++++++++++
+ 5 files changed, 84 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 002de71..f76e6ac 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -497,6 +497,9 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_RAW_MODE_SUPPORT = 10,
+ 
++	/* Firmware Supports Adaptive CCA*/
++	ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA = 11,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7579ace..10057ae 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3905,6 +3905,19 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		goto err_core_stop;
+ 	}
+ 
++	if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA,
++		     ar->fw_features)) {
++		ret =
++		ath10k_wmi_pdev_enable_adaptive_cca(ar, 1,
++						    WMI_CCA_DETECT_LEVEL_AUTO,
++						    WMI_CCA_DETECT_MARGIN_AUTO);
++		if (ret) {
++			ath10k_warn(ar, "failed to enable adaptive cca: %d\n",
++				    ret);
++			goto err_core_stop;
++		}
++	}
++
+ 	ret = ath10k_wmi_pdev_set_param(ar,
+ 					ar->wmi.pdev_param->ani_enable, 1);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index d3bc6df..a7533fd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -179,6 +179,10 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_adaptive_qcs)(struct ath10k *ar, bool enable);
+ 	struct sk_buff *(*gen_pdev_get_tpc_config)(struct ath10k *ar,
+ 						   u32 param);
++	struct sk_buff *(*gen_pdev_enable_adaptive_cca)(struct ath10k *ar,
++							u8 enable,
++							u32 detect_level,
++							u32 detect_margin);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -1289,4 +1293,24 @@ ath10k_wmi_pdev_get_tpc_config(struct ath10k *ar, u32 param)
+ 				   ar->wmi.cmd->pdev_get_tpc_config_cmdid);
  }
  
--s32 host_int_add_station(struct host_if_drv *hif_drv,
-+int host_int_add_station(struct host_if_drv *hif_drv,
- 			 struct add_sta_param *pstrStaParams)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
++static inline int
++ath10k_wmi_pdev_enable_adaptive_cca(struct ath10k *ar, u8 enable,
++				    u32 detect_level, u32 detect_margin)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_pdev_enable_adaptive_cca)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_pdev_enable_adaptive_cca(ar, enable,
++							detect_level,
++							detect_margin);
++
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->pdev_enable_adaptive_cca_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 063469b..6a41f5f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -148,6 +148,7 @@ static struct wmi_cmd_map wmi_cmd_map = {
+ 	.gpio_config_cmdid = WMI_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_enable_adaptive_cca_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
+@@ -313,6 +314,7 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10X_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10X_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_enable_adaptive_cca_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
+@@ -477,6 +479,7 @@ static struct wmi_cmd_map wmi_10_2_4_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10_2_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_10_2_PDEV_GET_TEMPERATURE_CMDID,
++	.pdev_enable_adaptive_cca_cmdid = WMI_10_2_SET_CCA_PARAMS,
+ 	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
+@@ -1407,6 +1410,7 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10_2_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_enable_adaptive_cca_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
+@@ -6621,6 +6625,28 @@ ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config(struct ath10k *ar, u32 param)
+ 	return skb;
+ }
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index be9283f..3fcff7a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -948,7 +948,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
-  *  @date		12 July 2012
-  *  @version		1.0 Description
-  */
--s32 host_int_add_station(struct host_if_drv *hWFIDrv,
-+int host_int_add_station(struct host_if_drv *hWFIDrv,
- 			 struct add_sta_param *pstrStaParams);
++static struct sk_buff *
++ath10k_wmi_op_gen_pdev_enable_adaptive_cca(struct ath10k *ar, u8 enable,
++					   u32 detect_level, u32 detect_margin)
++{
++	struct wmi_pdev_set_adaptive_cca_params *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_pdev_set_adaptive_cca_params *)skb->data;
++	cmd->enable = __cpu_to_le32(enable);
++	cmd->cca_detect_level = __cpu_to_le32(detect_level);
++	cmd->cca_detect_margin = __cpu_to_le32(detect_margin);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi pdev set adaptive cca params enable:%d detection level:%d detection margin:%d\n",
++		   enable, detect_level, detect_margin);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -6683,6 +6709,7 @@ static const struct wmi_ops wmi_ops = {
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
+ 	/* .gen_adaptive_qcs not implemented */
++	/* .gen_pdev_enable_adaptive_cca not implemented */
+ };
  
- /*!
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -6748,6 +6775,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
+ 	/* .gen_adaptive_qcs not implemented */
++	/* .gen_pdev_enable_adaptive_cca not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -6810,6 +6838,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
+ 	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
++	/* .gen_pdev_enable_adaptive_cca not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_2_4_ops = {
+@@ -6872,6 +6901,8 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
+ 	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ 	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
++	.gen_pdev_enable_adaptive_cca =
++		ath10k_wmi_op_gen_pdev_enable_adaptive_cca,
+ 	/* .gen_bcn_tmpl not implemented */
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4c373b2..7b34bdd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -772,6 +772,7 @@ struct wmi_cmd_map {
+ 	u32 mu_cal_start_cmdid;
+ 	u32 set_cca_params_cmdid;
+ 	u32 pdev_bss_chan_info_request_cmdid;
++	u32 pdev_enable_adaptive_cca_cmdid;
+ };
+ 
+ /*
+@@ -1381,6 +1382,9 @@ enum wmi_10_2_cmd_id {
+ 	WMI_10_2_VDEV_ATF_REQUEST_CMDID,
+ 	WMI_10_2_PEER_ATF_REQUEST_CMDID,
+ 	WMI_10_2_PDEV_GET_TEMPERATURE_CMDID,
++	WMI_10_2_MU_CAL_START_CMDID,
++	WMI_10_2_SET_LTEU_CONFIG_CMDID,
++	WMI_10_2_SET_CCA_PARAMS,
+ 	WMI_10_2_PDEV_UTF_CMDID = WMI_10_2_END_CMDID - 1,
+ };
+ 
+@@ -6094,6 +6098,15 @@ enum wmi_txbf_conf {
+ 	WMI_TXBF_CONF_AFTER_ASSOC,
+ };
+ 
++#define	WMI_CCA_DETECT_LEVEL_AUTO	0
++#define	WMI_CCA_DETECT_MARGIN_AUTO	0
++
++struct wmi_pdev_set_adaptive_cca_params {
++	__le32 enable;
++	__le32 cca_detect_level;
++	__le32 cca_detect_margin;
++} __packed;
++
+ struct ath10k;
+ struct ath10k_vif;
+ struct ath10k_fw_stats_pdev;
 -- 
-2.6.1
+1.9.1
 
