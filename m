@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16712 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbbJVPHj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12838 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbbJLH6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:07:39 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: remove send completion validation in diag read/write
-Date: Thu, 22 Oct 2015 20:36:40 +0530
-Message-ID: <1445526402-28522-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151022_170742_096992_1B5C0444)
-In-Reply-To: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Mon, 12 Oct 2015 03:58:38 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 19/41] staging: wilc1000: remove typedef from tenuHostIFstate
+Date: Mon, 12 Oct 2015 16:55:53 +0900
+Message-ID: <1444636575-2486-19-git-send-email-tony.cho@atmel.com> (sfid-20151012_095841_346580_A505DDEE)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CE diag window access is serialized (it has to be by design) so
-there's no way to get a different send completion. so there's no
-need for post completion validation.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+This patch removes typedef from the enum tenuHostIFstate and
+rename it to host_if_state.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 20 --------------------
- 1 file changed, 20 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 5c05b0c..6f3c3e0 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -920,16 +920,6 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 			}
- 		}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 9cf1e99..0460af2 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -72,8 +72,7 @@ typedef struct _tstrStatistics {
  
--		if (nbytes != completed_nbytes) {
--			ret = -EIO;
--			goto done;
--		}
--
--		if (buf != (u32)address) {
--			ret = -EIO;
--			goto done;
--		}
--
- 		i = 0;
- 		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
- 							    &completed_nbytes,
-@@ -1094,16 +1084,6 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 			}
- 		}
+ } tstrStatistics;
  
--		if (nbytes != completed_nbytes) {
--			ret = -EIO;
--			goto done;
--		}
 -
--		if (buf != ce_data) {
--			ret = -EIO;
--			goto done;
--		}
--
- 		i = 0;
- 		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
- 							    &completed_nbytes,
+-typedef enum {
++enum host_if_state {
+ 	HOST_IF_IDLE			= 0,
+ 	HOST_IF_SCANNING		= 1,
+ 	HOST_IF_CONNECTING		= 2,
+@@ -81,7 +80,7 @@ typedef enum {
+ 	HOST_IF_CONNECTED		= 4,
+ 	HOST_IF_P2P_LISTEN		= 5,
+ 	HOST_IF_FORCE_32BIT		= 0xFFFFFFFF
+-} tenuHostIFstate;
++};
+ 
+ struct host_if_pmkid {
+ 	u8 bssid[ETH_ALEN];
+@@ -313,7 +312,7 @@ struct host_if_drv {
+ 	u64 u64P2p_MgmtTimeout;
+ 	u8 u8P2PConnect;
+ 
+-	tenuHostIFstate enuHostIFstate;
++	enum host_if_state enuHostIFstate;
+ 
+ 	u8 au8AssociatedBSSID[ETH_ALEN];
+ 	struct cfg_param_val strCfgValues;
 -- 
-2.6.1
+1.9.1
 
