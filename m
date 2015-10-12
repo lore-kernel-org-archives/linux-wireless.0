@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:35735 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030725AbbJ3KLq (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34306 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751529AbbJLGvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 06:11:46 -0400
-Received: by iofz202 with SMTP id z202so74439487iof.2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2015 03:11:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1446197844.3261.18.camel@sipsolutions.net>
-References: <CABPxzYJNCFzCWgbRYxGbkrf1x6BPupC8+O5R7167FDL1rK+4mA@mail.gmail.com>
- <1446197844.3261.18.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 30 Oct 2015 15:41:26 +0530
-Message-ID: <CABPxzYK8nW2wsmYWxANOGy39JT7n=ypQwaoJ3n9+JaFqqmfjdA@mail.gmail.com> (sfid-20151030_111149_909996_BE59A4D7)
-Subject: Re: Undocumented Sleep Requirements for ieee80211_ops
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 12 Oct 2015 02:51:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Avraham Stern <avraham.stern@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 12 Oct 2015 09:51:35 +0300
+Message-Id: <1444632695-10505-2-git-send-email-luca@coelho.fi> (sfid-20151012_085150_128852_AEA9DD35)
+In-Reply-To: <1444632695-10505-1-git-send-email-luca@coelho.fi>
+References: <1444632695-10505-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 2/2] mac80211: Do not restart scheduled scan if multiple scan plans are set
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 3:07 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2015-10-29 at 12:16 +0530, Krishna Chaitanya wrote:
->> Hi,
->>
->> From the documentation:(mac80211.h) For the ieee80211_ops
->> (un)assign_vif_chanctx, there is no mention of explicit sleep
->> requirements (allowed/disallwoed) for the callback.
->
-> Same goes for drv_switch_vif_chanctx().
-Yes.
->
->> From a quick glance at the code calling the OP, looks like we can
->> sleep (mutexes are used). So how should we handle such OPS? is it ok
->> to sleep in the callback?
->>
->
-> You can sleep, and I'd appreciate if you sent a patch to add
-> might_sleep() to the code and the appropriate documentation.
-Sure, will send a patch.
+From: Avraham Stern <avraham.stern@intel.com>
+
+If multiple scan plans were set for scheduled scan, do not restart
+scheduled scan on reconfig because it is possible that some scan
+plans were already completed and there is no need to run them all
+over again. Instead, notify userspace that scheduled scan stopped
+so it can configure new scan plans for scheduled scan.
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+
+No changes from v1.
+
+net/mac80211/util.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index fb6e511..8f0fa35 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2042,9 +2042,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	if (sched_scan_sdata && sched_scan_req)
+ 		/*
+ 		 * Sched scan stopped, but we don't want to report it. Instead,
+-		 * we're trying to reschedule.
++		 * we're trying to reschedule. However, if more than one scan
++		 * plan was set, we cannot reschedule since we don't know which
++		 * scan plan was currently running (and some scan plans may have
++		 * already finished).
+ 		 */
+-		if (__ieee80211_request_sched_scan_start(sched_scan_sdata,
++		if (sched_scan_req->n_scan_plans > 1 ||
++		    __ieee80211_request_sched_scan_start(sched_scan_sdata,
+ 							 sched_scan_req))
+ 			sched_scan_stopped = true;
+ 	mutex_unlock(&local->mtx);
+-- 
+2.5.3
+
