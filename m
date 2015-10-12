@@ -1,20 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4884 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13148 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C6E (ORCPT
+	with ESMTP id S1752425AbbJLH7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:04 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Mon, 12 Oct 2015 03:59:30 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 17/64] staging: wilc1000: rename u8Regid of struct reg_frame
-Date: Thu, 29 Oct 2015 11:58:40 +0900
-Message-ID: <1446087567-16728-17-git-send-email-glen.lee@atmel.com> (sfid-20151029_035809_028250_8588A61C)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 27/41] staging: wilc1000: remove typedef from tenuConnDisconnEvent
+Date: Mon, 12 Oct 2015 16:56:01 +0900
+Message-ID: <1444636575-2486-27-git-send-email-tony.cho@atmel.com> (sfid-20151012_095935_837030_B7E1DD1A)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,57 +24,56 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u8Regid of struct reg_frame to reg_id
-to avoid CamelCase naming convention.
+This patch removes typedef from the enum tenuConnDisconnEvent and
+renames it to conn_event.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
+ drivers/staging/wilc1000/host_interface.h         | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
  2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3c17912..12e0d21 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2565,7 +2565,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
- 	pu8CurrByte = wid.val;
- 
- 	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
--	*pu8CurrByte++ = pstrHostIfRegisterFrame->u8Regid;
-+	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg_id;
- 	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->frame_type, sizeof(u16));
- 
- 	wid.size = sizeof(u16) + 2;
-@@ -4422,12 +4422,12 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
- 	switch (u16FrameType) {
- 	case ACTION:
- 		PRINT_D(HOSTINF_DBG, "ACTION\n");
--		msg.body.reg_frame.u8Regid = ACTION_FRM_IDX;
-+		msg.body.reg_frame.reg_id = ACTION_FRM_IDX;
- 		break;
- 
- 	case PROBE_REQ:
- 		PRINT_D(HOSTINF_DBG, "PROBE REQ\n");
--		msg.body.reg_frame.u8Regid = PROBE_REQ_IDX;
-+		msg.body.reg_frame.reg_id = PROBE_REQ_IDX;
- 		break;
- 
- 	default:
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index f4239a7..6cca6e0 100644
+index ad4c1c4..a88fd82 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -247,7 +247,7 @@ struct remain_ch {
- struct reg_frame {
- 	bool reg;
- 	u16 frame_type;
--	u8 u8Regid;
-+	u8 reg_id;
+@@ -160,11 +160,11 @@ enum scan_event {
+ 	SCAN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
  };
  
+-typedef enum {
++enum conn_event {
+ 	CONN_DISCONN_EVENT_CONN_RESP		= 0,
+ 	CONN_DISCONN_EVENT_DISCONN_NOTIF	= 1,
+ 	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
+-} tenuConnDisconnEvent;
++};
  
+ enum KEY_TYPE {
+ 	WEP,
+@@ -179,7 +179,7 @@ typedef void (*wilc_scan_result)(enum scan_event, tstrNetworkInfo *,
+ 				  void *, void *);
+ 
+ /*Connect callBack function definition*/
+-typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
++typedef void (*wilc_connect_result)(enum conn_event,
+ 				     tstrConnectInfo *,
+ 				     u8,
+ 				     tstrDisconnectNotifInfo *,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 45a10c5..11f9d46 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -531,7 +531,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID);
+  */
+ int connecting;
+ 
+-static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
++static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			     tstrConnectInfo *pstrConnectInfo,
+ 			     u8 u8MacStatus,
+ 			     tstrDisconnectNotifInfo *pstrDisconnectNotifInfo,
 -- 
 1.9.1
 
