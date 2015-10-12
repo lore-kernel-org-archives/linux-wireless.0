@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:44390 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545AbbJTEua (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 00:50:30 -0400
-Date: Tue, 20 Oct 2015 06:50:24 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	Charles Gorand <charles.gorand@effinnov.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: nxp-nci: constify nxp_nci_phy_ops structure
-Message-ID: <20151020045024.GD9764@zurbaran.home> (sfid-20151020_065046_331071_7F38838F)
-References: <1444562653-4914-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18206 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbbJLM6i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2015 08:58:38 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 4/7] ath10k: export htt tx rx handlers
+Date: Mon, 12 Oct 2015 18:27:03 +0530
+Message-ID: <1444654626-3290-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145857_544398_E1F31C4B)
+In-Reply-To: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444562653-4914-1-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+Some special copy engines delivers messages directly to HTT by
+bypassing HTC layer. Hence exporting tx_completion and rx_handler
+for delivering the data to HTT layer.
 
-On Sun, Oct 11, 2015 at 01:24:13PM +0200, Julia Lawall wrote:
-> The only instance of a nxp_nci_phy_ops structure is never modified.  Thus
-> the declaration of the structure and all references to the structure type
-> can be made const.
-> 
-> Done with the help of Coccinelle.
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
->  drivers/nfc/nxp-nci/core.c    |    3 ++-
->  drivers/nfc/nxp-nci/i2c.c     |    2 +-
->  drivers/nfc/nxp-nci/nxp-nci.h |    5 +++--
->  3 files changed, 6 insertions(+), 4 deletions(-)
-Applied to nfc-next, thanks.
+Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    | 1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 3 files changed, 8 insertions(+)
 
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index db0a99b..2bad50e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1591,6 +1591,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
++void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+ 
+ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 606c1a3..6060dda 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2125,6 +2125,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	/* Free the indication buffer */
+ 	dev_kfree_skb_any(skb);
+ }
++EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
+ 
+ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 5551747..1682397 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -187,6 +187,12 @@ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ 	dev_kfree_skb_any(skb);
+ }
+ 
++void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb)
++{
++	dev_kfree_skb_any(skb);
++}
++EXPORT_SYMBOL(ath10k_htt_hif_tx_complete);
++
+ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+-- 
+2.6.0
+
