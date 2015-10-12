@@ -1,78 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33984 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965336AbbJ2XST (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42418 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390AbbJLM6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:18:19 -0400
-Received: by padhk11 with SMTP id hk11so53972553pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:19 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 09/12] staging: wilc1000: rename pstrStaParams in host_int_add_station
-Date: Fri, 30 Oct 2015 08:17:45 +0900
-Message-Id: <1446160668-10747-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001834_398032_3E9A5CC7)
-In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 12 Oct 2015 08:58:54 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 5/7] ath10k: Configure copy engine 5 for HTT messages
+Date: Mon, 12 Oct 2015 18:27:04 +0530
+Message-ID: <1444654626-3290-6-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145858_556631_050492DC)
+In-Reply-To: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrStaParams to sta_param to avoid camelcase.
+Currently target to host (T2H) HTT messages are received at copy engine 1.
+These messages are processed by HTC layer in both host and target.
+To avoid HTC level processing overhead in both host and target,
+the unused copy engine 5 is being used for receiving HTT T2H messages.
+This will speedup the receive data processing as well as htt tx completion.
+Hence host and target copy engine configuration tables are updated
+to enable CE5 pipe. The in-direction HTT mapping is now pointing to CE5
+for all HTT T2H.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Moreover HTT send completion messages are polled from HTC handler
+as CE 4 is not interrupt-driven. For faster tx completion, CE4 polling
+needs to be done whenever CE pipe which transports HTT Rx (target->host)
+is processed. This avoids overhead of polling HTT messages from HTC
+layer. Servicing CE 4 faster is helping to solve "failed to transmit
+packet, dropping: -105".
+
+Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
-V2: resend because 11/12 patch is changed.
+v2:
+ * fix invalid dma memory access (ATH10K_SKB_RXCB is used instead of
+   ATH10K_SKB_CB in htt_tx_cb)
+ * Process CE 4 send completion first before processing rx
 
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 70 +++++++++++++++++++++++++++++------
+ 1 file changed, 59 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0f36825..57287d4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4517,7 +4517,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index efeb766..447c4c6 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -106,6 +106,8 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar);
+ static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -150,15 +152,16 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = CE_HTT_H2T_MSG_SRC_NENTRIES,
+ 		.src_sz_max = 256,
+ 		.dest_nentries = 0,
+-		.send_cb = ath10k_pci_htc_tx_cb,
++		.send_cb = ath10k_pci_htt_tx_cb,
+ 	},
+ 
+-	/* CE5: unused */
++	/* CE5: target->host HTT (HIF->HTT) */
+ 	{
+ 		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+-		.src_sz_max = 0,
+-		.dest_nentries = 0,
++		.src_sz_max = 512,
++		.dest_nentries = 512,
++		.recv_cb = ath10k_pci_htt_rx_cb,
+ 	},
+ 
+ 	/* CE6: target autonomous hif_memcpy */
+@@ -264,12 +267,12 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 
+ 	/* NB: 50% of src nentries, since tx has 2 frags */
+ 
+-	/* CE5: unused */
++	/* CE5: target->host HTT (HIF->HTT) */
+ 	{
+ 		.pipenum = __cpu_to_le32(5),
+-		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
+ 		.nentries = __cpu_to_le32(32),
+-		.nbytes_max = __cpu_to_le32(2048),
++		.nbytes_max = __cpu_to_le32(512),
+ 		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
+ 		.reserved = __cpu_to_le32(0),
+ 	},
+@@ -403,7 +406,7 @@ static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
+ 	{
+ 		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
+ 		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
+-		__cpu_to_le32(1),
++		__cpu_to_le32(5),
+ 	},
+ 
+ 	/* (Additions here) */
+@@ -1174,8 +1177,9 @@ static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
+ 		ath10k_htc_tx_completion_handler(ar, skb);
  }
  
- int host_int_add_station(struct host_if_drv *hif_drv,
--			 struct add_sta_param *pstrStaParams)
-+			 struct add_sta_param *sta_param)
+-/* Called by lower (CE) layer when data is received from the Target. */
+-static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++static void ath10k_pci_process_rx_cb(struct ath10k_ce_pipe *ce_state,
++				     void (*callback)(struct ath10k *ar,
++						      struct sk_buff *skb))
  {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4535,14 +4535,14 @@ int host_int_add_station(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_ADD_STATION;
- 	msg.drv = hif_drv;
+ 	struct ath10k *ar = ce_state->ar;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -1214,12 +1218,56 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 		ath10k_dbg_dump(ar, ATH10K_DBG_PCI_DUMP, NULL, "pci rx: ",
+ 				skb->data, skb->len);
  
--	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
-+	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
- 	if (pstrAddStationMsg->u8NumRates > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
- 
- 		if (!rates)
- 			return -ENOMEM;
- 
--		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
-+		memcpy(rates, sta_param->pu8Rates, pstrAddStationMsg->u8NumRates);
- 		pstrAddStationMsg->pu8Rates = rates;
+-		ath10k_htc_rx_completion_handler(ar, skb);
++		callback(ar, skb);
  	}
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7c9c4c6..aa92762 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -949,7 +949,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
-  *  @version		1.0 Description
-  */
- int host_int_add_station(struct host_if_drv *hif_drv,
--			 struct add_sta_param *pstrStaParams);
-+			 struct add_sta_param *sta_param);
+ 	ath10k_pci_rx_post_pipe(pipe_info);
+ }
  
- /*!
-  *  @fn		s32 host_int_del_allstation(WILC_WFIDrvHandle hWFIDrv, const u8* pu8MacAddr)
++/* Called by lower (CE) layer when data is received from the Target. */
++static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
++/* Called by lower (CE) layer when a send to HTT Target completes. */
++static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	struct ath10k *ar = ce_state->ar;
++	struct sk_buff *skb;
++	u32 ce_data;
++	unsigned int nbytes;
++	unsigned int transfer_id;
++
++	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb, &ce_data,
++					     &nbytes, &transfer_id) == 0) {
++		/* no need to call tx completion for NULL pointers */
++		if (!skb)
++			continue;
++
++		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
++				 skb->len, DMA_TO_DEVICE);
++		ath10k_htt_hif_tx_complete(ar, skb);
++	}
++}
++
++static void ath10k_pci_htt_rx_deliver(struct ath10k *ar, struct sk_buff *skb)
++{
++	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
++	ath10k_htt_t2h_msg_handler(ar, skb);
++}
++
++/* Called by lower (CE) layer when HTT data is received from the Target. */
++static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	/* CE4 polling needs to be done whenever CE pipe which transports
++	 * HTT Rx (target->host) is processed.
++	 */
++	ath10k_ce_per_engine_service(ce_state->ar, 4);
++
++	ath10k_pci_process_rx_cb(ce_state, ath10k_pci_htt_rx_deliver);
++}
++
+ static int ath10k_pci_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 				struct ath10k_hif_sg_item *items, int n_items)
+ {
 -- 
-2.6.1
+2.6.0
 
