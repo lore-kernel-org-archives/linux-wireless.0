@@ -1,120 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59705 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751319AbbJJVCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2015 17:02:18 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jacob Kiefer <jtk54@cornell.edu>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	"Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>,
-	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
-	WIRELESS DRIVER),
-	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: Re: [PATCH 1/2 v3] drivers: staging: rtl8723au: Changed rssi_cmd to little-endian param
-References: <1444505324-2924-1-git-send-email-jtk54@cornell.edu>
-Date: Sat, 10 Oct 2015 17:02:14 -0400
-In-Reply-To: <1444505324-2924-1-git-send-email-jtk54@cornell.edu> (Jacob
-	Kiefer's message of "Sat, 10 Oct 2015 15:28:16 -0400")
-Message-ID: <wrfj612ewi7d.fsf@redhat.com> (sfid-20151010_230247_933376_FF13294E)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13606 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbJLIAb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2015 04:00:31 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 36/41] staging: wilc1000: rename strHostIFpmkidAttr of union host_if_key_attr
+Date: Mon, 12 Oct 2015 16:56:10 +0900
+Message-ID: <1444636575-2486-36-git-send-email-tony.cho@atmel.com> (sfid-20151012_100038_418349_A2FB083F)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jacob Kiefer <jtk54@cornell.edu> writes:
-> From: Jacob Kiefer <jtk54@cornell.edu>
->
-> Changed rssi_cmd interface to accept le32 param instead of
-> unnecessary u8 * conversion. Updated existing calls to rssi_cmd.
-> This patch pushes responsibility to caller to convert to
-> le32. This cleans up the code quite a bit.
-> Also removed magic numbers.
->
-> This patch fixes the following sparse error:
->
->   CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> ...
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
->   warning: incorrect type in assignment (different base types)
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
->   expected unsigned int [unsigned] [usertype] <noident>
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:  \
->   got restricted __le32 [usertype] <noident>
-> ...
->
-> Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
-> ---
-> In v3, opted to change the interface rather than just the internal
-> code to clear the sparse errors and make the code more sane.
+This patch renames strHostIFpmkidAttr of union host_if_key_attr to
+pmkid to avoid CamelCase naming convention.
 
-I am fine with this code in principle, but has it been tested? This
-stuff will break the driver miserably if it's wrong.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Thanks,
-Jes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 83818b8..3437d8c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -128,7 +128,7 @@ struct host_if_wep_attr {
+ union host_if_key_attr {
+ 	struct host_if_wep_attr wep;
+ 	struct host_if_wpa_attr wpa;
+-	struct host_if_pmkid_attr strHostIFpmkidAttr;
++	struct host_if_pmkid_attr pmkid;
+ };
+ 
+ /*!
+@@ -2649,24 +2649,24 @@ _WPAPtk_end_case_:
+ 
+ 		PRINT_D(HOSTINF_DBG, "Handling PMKSA key\n");
+ 
+-		pu8keybuf = kmalloc((pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
++		pu8keybuf = kmalloc((pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
+ 		if (pu8keybuf == NULL) {
+ 			PRINT_ER("No buffer to send PMKSA Key\n");
+ 			return -1;
+ 		}
+ 
+-		pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid;
++		pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid;
+ 
+-		for (i = 0; i < pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid; i++) {
++		for (i = 0; i < pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid; i++) {
+ 
+-			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].bssid, ETH_ALEN);
+-			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].pmkid, PMKID_LEN);
++			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
++			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
+ 		}
+ 
+ 		strWID.id = (u16)WID_PMKID_INFO;
+ 		strWID.type = WID_STR;
+ 		strWID.val = (s8 *)pu8keybuf;
+-		strWID.size = (pstrHostIFkeyAttr->uniHostIFkeyAttr.strHostIFpmkidAttr.numpmkid * PMKSA_KEY_LEN) + 1;
++		strWID.size = (pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
+ 
+ 		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 					   get_id_from_handler(hif_drv));
+@@ -4518,10 +4518,10 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 
+ 	for (i = 0; i < pu8PmkidInfoArray->numpmkid; i++) {
+ 
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
++		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
+ 			    ETH_ALEN);
+ 
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.strHostIFpmkidAttr.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
++		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
+ 			    PMKID_LEN);
+ 	}
+ 
+-- 
+1.9.1
 
-> ---
->  drivers/staging/rtl8723au/hal/odm.c              | 3 ++-
->  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 7 +++----
->  drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
-> index 6b9dbef..c7f45c7 100644
-> --- a/drivers/staging/rtl8723au/hal/odm.c
-> +++ b/drivers/staging/rtl8723au/hal/odm.c
-> @@ -1274,7 +1274,8 @@ static void odm_RSSIMonitorCheck(struct dm_odm_t *pDM_Odm)
->
->  	for (i = 0; i < sta_cnt; i++) {
->  		if (PWDB_rssi[i] != (0))
-> -			rtl8723a_set_rssi_cmd(Adapter, (u8 *)&PWDB_rssi[i]);
-> +			rtl8723a_set_rssi_cmd(Adapter,
-> +					cpu_to_le32(PWDB_rssi[i]));
->  	}
->
->  	pdmpriv->EntryMaxUndecoratedSmoothedPWDB = MaxDB;
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> index 9733aa6..97d23c3 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> @@ -25,6 +25,7 @@
->  #define RTL92C_MAX_CMD_LEN		5
->  #define MESSAGE_BOX_SIZE		4
->  #define EX_MESSAGE_BOX_SIZE		2
-> +#define RSSI_CMD_LEN			3
->
->  static u8 _is_fw_read_cmd_down(struct rtw_adapter *padapter, u8 msgbox_num)
->  {
-> @@ -113,11 +114,9 @@ exit:
->  	return ret;
->  }
->
-> -int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
-> +int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param)
->  {
-> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
-> -
-> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
-> +	FillH2CCmd(padapter, RSSI_SETTING_EID, RSSI_CMD_LEN, (u8 *)&param);
->
->  	return _SUCCESS;
->  }
-> diff --git a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-> index 014c02e..e281543 100644
-> --- a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-> +++ b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-> @@ -149,7 +149,7 @@ void rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(struct rtw_adapter *padapter);
->  #else
->  #define rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(padapter) do {} while(0)
->  #endif
-> -int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param);
-> +int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param);
->  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg);
->  void rtl8723a_add_rateatid(struct rtw_adapter *padapter, u32 bitmap, u8 arg, u8 rssi_level);
->
-> --
-> 1.8.3.2
