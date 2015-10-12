@@ -1,118 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28286 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323AbbJ2DQr (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2667 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbbJLM7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:16:47 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 10/12] staging: wilc1000: wl_wlan_cleanup: add argument struct wilc
-Date: Thu, 29 Oct 2015 12:18:50 +0900
-Message-ID: <1446088732-12301-10-git-send-email-glen.lee@atmel.com> (sfid-20151029_041649_703504_BC0C6BD5)
-In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+	Mon, 12 Oct 2015 08:59:23 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 7/7] ath10k: remove htc polling for tx completion
+Date: Mon, 12 Oct 2015 18:27:06 +0530
+Message-ID: <1444654626-3290-8-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145925_737219_18F04B6C)
+In-Reply-To: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct wilc and use it instead of g_linux_wlan.
+Since polling for tx completion is handled whenever target to host
+messages are received, removing the unnecessary polling mechanism for
+send completion at HTC level.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 28 +++++++++++++--------------
- drivers/staging/wilc1000/linux_wlan_sdio.c    |  2 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
- 3 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/hif.h |  9 +++------
+ drivers/net/wireless/ath/ath10k/htc.c | 26 +-------------------------
+ drivers/net/wireless/ath/ath10k/htc.h |  1 -
+ drivers/net/wireless/ath/ath10k/pci.c | 14 +++-----------
+ 4 files changed, 7 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 971b154..017799f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1652,39 +1652,39 @@ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
- 		WILC_WFI_p2p_rx(wilc->vif[1].ndev, buff, size);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index 633594c..89e7076 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -58,8 +58,7 @@ struct ath10k_hif_ops {
+ 	void (*stop)(struct ath10k *ar);
  
--void wl_wlan_cleanup(void)
-+void wl_wlan_cleanup(struct wilc *wilc)
+ 	int (*map_service_to_pipe)(struct ath10k *ar, u16 service_id,
+-				   u8 *ul_pipe, u8 *dl_pipe,
+-				   int *ul_is_polled);
++				   u8 *ul_pipe, u8 *dl_pipe);
+ 
+ 	void (*get_default_pipe)(struct ath10k *ar, u8 *ul_pipe, u8 *dl_pipe);
+ 
+@@ -132,12 +131,10 @@ static inline void ath10k_hif_stop(struct ath10k *ar)
+ 
+ static inline int ath10k_hif_map_service_to_pipe(struct ath10k *ar,
+ 						 u16 service_id,
+-						 u8 *ul_pipe, u8 *dl_pipe,
+-						 int *ul_is_polled)
++						 u8 *ul_pipe, u8 *dl_pipe)
  {
- 	int i = 0;
- 	perInterface_wlan_t *nic[NUM_CONCURRENT_IFC];
- 
--	if (g_linux_wlan &&
--	   (g_linux_wlan->vif[0].ndev || g_linux_wlan->vif[1].ndev)) {
-+	if (wilc &&
-+	   (wilc->vif[0].ndev || wilc->vif[1].ndev)) {
- 		unregister_inetaddr_notifier(&g_dev_notifier);
- 
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
--			nic[i] = netdev_priv(g_linux_wlan->vif[i].ndev);
-+			nic[i] = netdev_priv(wilc->vif[i].ndev);
- 	}
- 
--	if (g_linux_wlan && g_linux_wlan->firmware)
--		release_firmware(g_linux_wlan->firmware);
-+	if (wilc && wilc->firmware)
-+		release_firmware(wilc->firmware);
- 
--	if (g_linux_wlan &&
--	   (g_linux_wlan->vif[0].ndev || g_linux_wlan->vif[1].ndev)) {
-+	if (wilc&&
-+	   (wilc->vif[0].ndev || wilc->vif[1].ndev)) {
- 		linux_wlan_lock_timeout(&close_exit_sync, 12 * 1000);
- 
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
--			if (g_linux_wlan->vif[i].ndev)
-+			if (wilc->vif[i].ndev)
- 				if (nic[i]->mac_opened)
--					mac_close(g_linux_wlan->vif[i].ndev);
-+					mac_close(wilc->vif[i].ndev);
- 
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
--			unregister_netdev(g_linux_wlan->vif[i].ndev);
--			wilc_free_wiphy(g_linux_wlan->vif[i].ndev);
--			free_netdev(g_linux_wlan->vif[i].ndev);
-+			unregister_netdev(wilc->vif[i].ndev);
-+			wilc_free_wiphy(wilc->vif[i].ndev);
-+			free_netdev(wilc->vif[i].ndev);
- 		}
- 	}
- 
--	kfree(g_linux_wlan);
-+	kfree(wilc);
- 
- #if defined(WILC_DEBUGFS)
- 	wilc_debugfs_remove();
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 4aff953..bf05e22 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -146,7 +146,7 @@ static void linux_sdio_remove(struct sdio_func *func)
- 	struct wilc_sdio *wl_sdio;
- 
- 	wl_sdio = sdio_get_drvdata(func);
--	wl_wlan_cleanup();
-+	wl_wlan_cleanup(wl_sdio->wilc);
- 	kfree(wl_sdio);
+ 	return ar->hif.ops->map_service_to_pipe(ar, service_id,
+-						ul_pipe, dl_pipe,
+-						ul_is_polled);
++						ul_pipe, dl_pipe);
  }
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 0435cb5..07917ea 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -213,7 +213,7 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
- void linux_wlan_rx_complete(void);
- void linux_wlan_dbg(u8 *buff);
- int linux_wlan_lock_timeout(void *vp, u32 timeout);
--void wl_wlan_cleanup(void);
-+void wl_wlan_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc);
- void wilc1000_wlan_deinit(struct net_device *dev);
- void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ static inline void ath10k_hif_get_default_pipe(struct ath10k *ar,
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 20e0c48..5b3c6bc 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -23,16 +23,6 @@
+ /* Send */
+ /********/
+ 
+-static inline void ath10k_htc_send_complete_check(struct ath10k_htc_ep *ep,
+-						  int force)
+-{
+-	/*
+-	 * Check whether HIF has any prior sends that have finished,
+-	 * have not had the post-processing done.
+-	 */
+-	ath10k_hif_send_complete_check(ep->htc->ar, ep->ul_pipe_id, force);
+-}
+-
+ static void ath10k_htc_control_tx_complete(struct ath10k *ar,
+ 					   struct sk_buff *skb)
+ {
+@@ -328,15 +318,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	ep = &htc->endpoint[eid];
+ 
+-	/*
+-	 * If this endpoint that received a message from the target has
+-	 * a to-target HIF pipe whose send completions are polled rather
+-	 * than interrupt-driven, this is a good point to ask HIF to check
+-	 * whether it has any completed sends to handle.
+-	 */
+-	if (ep->ul_is_polled)
+-		ath10k_htc_send_complete_check(ep, 1);
+-
+ 	payload_len = __le16_to_cpu(hdr->len);
+ 
+ 	if (payload_len + sizeof(*hdr) > ATH10K_HTC_MAX_LEN) {
+@@ -758,8 +739,7 @@ setup:
+ 	status = ath10k_hif_map_service_to_pipe(htc->ar,
+ 						ep->service_id,
+ 						&ep->ul_pipe_id,
+-						&ep->dl_pipe_id,
+-						&ep->ul_is_polled);
++						&ep->dl_pipe_id);
+ 	if (status)
+ 		return status;
+ 
+@@ -768,10 +748,6 @@ setup:
+ 		   htc_service_name(ep->service_id), ep->ul_pipe_id,
+ 		   ep->dl_pipe_id, ep->eid);
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT,
+-		   "boot htc ep %d ul polled %d\n",
+-		   ep->eid, ep->ul_is_polled);
+-
+ 	if (disable_credit_flow_ctrl && ep->tx_credit_flow_enabled) {
+ 		ep->tx_credit_flow_enabled = false;
+ 		ath10k_dbg(ar, ATH10K_DBG_BOOT,
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 2ddd41e..e70aa38 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -312,7 +312,6 @@ struct ath10k_htc_ep {
+ 	int max_ep_message_len;
+ 	u8 ul_pipe_id;
+ 	u8 dl_pipe_id;
+-	int ul_is_polled; /* call HIF to get tx completions */
+ 
+ 	u8 seq_no; /* for debugging */
+ 	int tx_credits;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index a2b384b..77da58a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1451,9 +1451,8 @@ static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ 	del_timer_sync(&ar_pci->rx_post_retry);
+ }
+ 
+-static int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar,
+-					      u16 service_id, u8 *ul_pipe,
+-					      u8 *dl_pipe, int *ul_is_polled)
++static int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar, u16 service_id,
++					      u8 *ul_pipe, u8 *dl_pipe)
+ {
+ 	const struct service_to_pipe *entry;
+ 	bool ul_set = false, dl_set = false;
+@@ -1494,24 +1493,17 @@ static int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar,
+ 	if (WARN_ON(!ul_set || !dl_set))
+ 		return -ENOENT;
+ 
+-	*ul_is_polled =
+-		(host_ce_config_wlan[*ul_pipe].flags & CE_ATTR_DIS_INTR) != 0;
+-
+ 	return 0;
+ }
+ 
+ static void ath10k_pci_hif_get_default_pipe(struct ath10k *ar,
+ 					    u8 *ul_pipe, u8 *dl_pipe)
+ {
+-	int ul_is_polled;
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI, "pci hif get default pipe\n");
+ 
+ 	(void)ath10k_pci_hif_map_service_to_pipe(ar,
+ 						 ATH10K_HTC_SVC_ID_RSVD_CTRL,
+-						 ul_pipe,
+-						 dl_pipe,
+-						 &ul_is_polled);
++						 ul_pipe, dl_pipe);
+ }
+ 
+ static void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
 -- 
-1.9.1
+2.6.0
 
