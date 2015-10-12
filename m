@@ -1,125 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28265 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13016 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323AbbJ2DQl (ORCPT
+	with ESMTP id S1752394AbbJLH7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:16:41 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Mon, 12 Oct 2015 03:59:11 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 09/12] staging: wilc1000: linux_wlan_get_firmware: change argument p_nic with dev
-Date: Thu, 29 Oct 2015 12:18:49 +0900
-Message-ID: <1446088732-12301-9-git-send-email-glen.lee@atmel.com> (sfid-20151029_041643_892506_B364AB67)
-In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 24/41] staging: wilc1000: remove typedef from tstrStatistics
+Date: Mon, 12 Oct 2015 16:55:58 +0900
+Message-ID: <1444636575-2486-24-git-send-email-tony.cho@atmel.com> (sfid-20151012_095916_088040_4102C92C)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes argument perInterface_wlan_t *p_nic with struct net_device
-*dev and use netdev private data nic and it's member wilc instead of
-g_linux_wlan.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch removes typedef from the struct tstrStatistics and
+rename it to rf_info.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c             | 17 ++++++++++-------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  4 +---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
- 3 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 6 +++---
+ drivers/staging/wilc1000/host_interface.h         | 7 +++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 895eb60..971b154 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -518,14 +518,17 @@ void linux_wlan_rx_complete(void)
- 	PRINT_D(RX_DBG, "RX completed\n");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index fdde387..6f4eda6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2974,7 +2974,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *drvHandler)
+ 
  }
  
--int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
-+int linux_wlan_get_firmware(struct net_device *dev)
+-s32 Handle_GetStatistics(struct host_if_drv *drvHandler, tstrStatistics *pstrStatistics)
++s32 Handle_GetStatistics(struct host_if_drv *drvHandler, struct rf_info *pstrStatistics)
  {
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0, s32Error = 0;
+@@ -3987,7 +3987,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_STATISTICS:
+-			Handle_GetStatistics(msg.drv, (tstrStatistics *)msg.body.data);
++			Handle_GetStatistics(msg.drv, (struct rf_info *)msg.body.data);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_CHNL:
+@@ -5480,7 +5480,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hWFIDrv, s8 *ps8lnkspd)
+ 	return s32Error;
+ }
+ 
+-s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, tstrStatistics *pstrStatistics)
++s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct rf_info *pstrStatistics)
+ {
+ 	s32 s32Error = 0;
+ 	struct host_if_msg msg;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c3379ec..1097f10 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -57,14 +57,13 @@
+ #define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
+ 
+-typedef struct _tstrStatistics {
++struct rf_info {
+ 	u8 u8LinkSpeed;
+ 	s8 s8RSSI;
+ 	u32 u32TxCount;
+ 	u32 u32RxCount;
+ 	u32 u32TxFailureCount;
 -
--	perInterface_wlan_t *nic = p_nic;
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
- 	int ret = 0;
- 	const struct firmware *wilc_firmware;
- 	char *firmware;
+-} tstrStatistics;
++};
  
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
-+
- 	if (nic->iftype == AP_MODE)
- 		firmware = AP_FIRMWARE;
- 	else if (nic->iftype == STATION_MODE)
-@@ -550,19 +553,19 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
- 	 *      root file system with the name specified above */
+ enum host_if_state {
+ 	HOST_IF_IDLE			= 0,
+@@ -1176,6 +1175,6 @@ static s32 Handle_ScanDone(struct host_if_drv *drvHandler, tenuScanEvent enuEven
  
- #ifdef WILC_SDIO
--	if (request_firmware(&wilc_firmware, firmware, &g_linux_wlan->wilc_sdio_func->dev) != 0) {
-+	if (request_firmware(&wilc_firmware, firmware, &wilc->wilc_sdio_func->dev) != 0) {
- 		PRINT_ER("%s - firmare not available\n", firmware);
- 		ret = -1;
- 		goto _fail_;
- 	}
- #else
--	if (request_firmware(&wilc_firmware, firmware, &g_linux_wlan->wilc_spidev->dev) != 0) {
-+	if (request_firmware(&wilc_firmware, firmware, &wilc->wilc_spidev->dev) != 0) {
- 		PRINT_ER("%s - firmare not available\n", firmware);
- 		ret = -1;
- 		goto _fail_;
- 	}
+ void host_int_freeJoinParams(void *pJoinParams);
+ 
+-s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, tstrStatistics *pstrStatistics);
++s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct rf_info *pstrStatistics);
+ 
  #endif
--	g_linux_wlan->firmware = wilc_firmware;
-+	wilc->firmware = wilc_firmware;
- 
- _fail_:
- 
-@@ -1126,7 +1129,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		}
- #endif
- 
--		if (linux_wlan_get_firmware(nic)) {
-+		if (linux_wlan_get_firmware(dev)) {
- 			PRINT_ER("Can't get firmware\n");
- 			ret = -EIO;
- 			goto _fail_irq_enable_;
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index cdcf134..32b93d3 100644
+index a5617de..dd96909 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -21,8 +21,6 @@
- #define IS_MGMT_STATUS_SUCCES			0x040
- #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+@@ -1576,7 +1576,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	}
  
--extern int linux_wlan_get_firmware(perInterface_wlan_t *p_nic);
--
- extern int mac_open(struct net_device *ndev);
- extern int mac_close(struct net_device *ndev);
+ 	if (nic->iftype == STATION_MODE) {
+-		tstrStatistics strStatistics;
++		struct rf_info strStatistics;
  
-@@ -2737,7 +2735,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(CORECONFIG_DBG, "priv->hWILCWFIDrv[%p]\n", priv->hWILCWFIDrv);
+ 		host_int_get_statistics(priv->hWILCWFIDrv, &strStatistics);
  
- 		PRINT_D(HOSTAPD_DBG, "Downloading AP firmware\n");
--		linux_wlan_get_firmware(nic);
-+		linux_wlan_get_firmware(dev);
- 		/*If wilc is running, then close-open to actually get new firmware running (serves P2P)*/
- 		if (wl->initialized)	{
- 			nic->iftype = AP_MODE;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 0bfe762..0435cb5 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -218,4 +218,5 @@ int wilc_netdev_init(struct wilc **wilc);
- void wilc1000_wlan_deinit(struct net_device *dev);
- void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
- u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue);
-+int linux_wlan_get_firmware(struct net_device *dev);
- #endif
 -- 
 1.9.1
 
