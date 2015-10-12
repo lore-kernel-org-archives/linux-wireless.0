@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62357 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932929AbbJHQQL (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13194 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752431AbbJLH7h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 12:16:11 -0400
-From: Jeff Johnson <jjohnson@qca.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Jeff Johnson <jjohnson@qca.qualcomm.com>
-Subject: [PATCH] ath10k: Cleanup ath10k_mac_register() error handling
-Date: Thu,  8 Oct 2015 09:15:53 -0700
-Message-Id: <1444320953-2154-1-git-send-email-jjohnson@qca.qualcomm.com> (sfid-20151008_181614_592846_AD7E9CE6)
+	Mon, 12 Oct 2015 03:59:37 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 28/41] staging: wilc1000: remove typedef from tenuScanConnTimer
+Date: Mon, 12 Oct 2015 16:56:02 +0900
+Message-ID: <1444636575-2486-28-git-send-email-tony.cho@atmel.com> (sfid-20151012_095939_716397_FC53067A)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The logic in the error-handling path of ath10k_mac_register() is
-divergent from the logic in ath10k_mac_unregister().  Update the
-ath10k_mac_register() error handling logic to align with the
-ath10k_mac_unregister() logic.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Jeff Johnson <jjohnson@qca.qualcomm.com>
+This patch removes typedef from the enum tenuScanConnTimer and
+renames it to scan_conn_timer.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 79490ad..a37aad3c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7301,7 +7301,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 			    ath10k_reg_notifier);
- 	if (ret) {
- 		ath10k_err(ar, "failed to initialise regulatory: %i\n", ret);
--		goto err_free;
-+		goto err_dfs_detector_exit;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 54b2a61..6826298 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -436,11 +436,11 @@ struct join_bss_param {
+ 	u8 au8StartTime[4];
+ };
  
- 	ar->hw->wiphy->cipher_suites = cipher_suites;
-@@ -7310,7 +7310,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ret = ieee80211_register_hw(ar->hw);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
--		goto err_free;
-+		goto err_dfs_detector_exit;
- 	}
+-typedef enum {
++enum scan_conn_timer {
+ 	SCAN_TIMER = 0,
+ 	CONNECT_TIMER	= 1,
+ 	SCAN_CONNECT_TIMER_FORCE_32BIT = 0xFFFFFFFF
+-} tenuScanConnTimer;
++};
  
- 	if (!ath_is_world_regd(&ar->ath_common.regulatory)) {
-@@ -7324,10 +7324,16 @@ int ath10k_mac_register(struct ath10k *ar)
+ /*****************************************************************************/
+ /*																			 */
+@@ -4872,7 +4872,7 @@ s32 host_int_set_join_req(struct host_if_drv *hWFIDrv, u8 *pu8bssid,
+ 	s32 s32Error = 0;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	tenuScanConnTimer enuScanConnTimer;
++	enum scan_conn_timer enuScanConnTimer;
  
- err_unregister:
- 	ieee80211_unregister_hw(ar->hw);
-+
-+err_dfs_detector_exit:
-+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector)
-+		ar->dfs_detector->exit(ar->dfs_detector);
-+
- err_free:
- 	kfree(ar->mac.sbands[IEEE80211_BAND_2GHZ].channels);
- 	kfree(ar->mac.sbands[IEEE80211_BAND_5GHZ].channels);
+ 	if (pstrWFIDrv == NULL || pfConnectResult == NULL) {
+ 		s32Error = -EFAULT;
+@@ -5530,7 +5530,7 @@ s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
+ 	s32 s32Error = 0;
+ 	struct host_if_drv *pstrWFIDrv = (struct host_if_drv *)hWFIDrv;
+ 	struct host_if_msg msg;
+-	tenuScanConnTimer enuScanConnTimer;
++	enum scan_conn_timer enuScanConnTimer;
  
-+	SET_IEEE80211_DEV(ar->hw, NULL);
- 	return ret;
- }
- 
+ 	if (pstrWFIDrv == NULL || ScanResult == NULL) {
+ 		PRINT_ER("pstrWFIDrv or ScanResult = NULL\n");
 -- 
-1.8.5.2
+1.9.1
 
