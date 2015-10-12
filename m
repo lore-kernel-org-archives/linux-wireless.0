@@ -1,83 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5028 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12119 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964824AbbJ2C6t (ORCPT
+	with ESMTP id S1751965AbbJLH5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:49 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Mon, 12 Oct 2015 03:57:10 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 25/64] staging: wilc1000: rename u16SessionTimeout of struct ba_session_info
-Date: Thu, 29 Oct 2015 11:58:48 +0900
-Message-ID: <1446087567-16728-25-git-send-email-glen.lee@atmel.com> (sfid-20151029_035852_090551_D1EAEC36)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 06/41] staging: wilc1000: change parameter names in send_config_pkt
+Date: Mon, 12 Oct 2015 16:55:40 +0900
+Message-ID: <1444636575-2486-6-git-send-email-tony.cho@atmel.com> (sfid-20151012_095713_759128_C1A1645F)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes the parameter names in send_config_pkt function as
+the followings:
 
-This patch renames u16SessionTimeout of struct ba_session_info to time_out
-to avoid CamelCase naming convention.
+- u8Mode to mode
+- pstrWIDs to wids
+- u32WIDsCount to count
+- drvHandler to drv
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 41 ++++++++++++++---------------
+ drivers/staging/wilc1000/coreconfigurator.h |  3 +--
+ 2 files changed, 21 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 75ad6d0..5bc85dd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2719,7 +2719,7 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
- 		strHostIfBASessionInfo->bssid[1],
- 		strHostIfBASessionInfo->bssid[2],
- 		strHostIfBASessionInfo->buf_size,
--		strHostIfBASessionInfo->u16SessionTimeout,
-+		strHostIfBASessionInfo->time_out,
- 		strHostIfBASessionInfo->tid);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3244e2a..1d45869 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -595,41 +595,40 @@ s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo)
+  *  @date		1 Mar 2012
+  *  @version	1.0
+  */
+-s32 send_config_pkt(u8 u8Mode, tstrWID *pstrWIDs,
+-		    u32 u32WIDsCount, u32 drvHandler)
++s32 send_config_pkt(u8 mode, tstrWID *wids, u32 count, u32 drv)
+ {
+ 	s32 counter = 0, ret = 0;
  
- 	wid.id = (u16)WID_11E_P_ACTION_REQ;
-@@ -2736,8 +2736,8 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
- 	*ptr++ = 1;
- 	*ptr++ = (strHostIfBASessionInfo->buf_size & 0xFF);
- 	*ptr++ = ((strHostIfBASessionInfo->buf_size >> 16) & 0xFF);
--	*ptr++ = (strHostIfBASessionInfo->u16SessionTimeout & 0xFF);
--	*ptr++ = ((strHostIfBASessionInfo->u16SessionTimeout >> 16) & 0xFF);
-+	*ptr++ = (strHostIfBASessionInfo->time_out & 0xFF);
-+	*ptr++ = ((strHostIfBASessionInfo->time_out >> 16) & 0xFF);
- 	*ptr++ = (AddbaTimeout & 0xFF);
- 	*ptr++ = ((AddbaTimeout >> 16) & 0xFF);
- 	*ptr++ = 8;
-@@ -2760,7 +2760,7 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
- 	*ptr++ = strHostIfBASessionInfo->tid;
- 	*ptr++ = 8;
- 	*ptr++ = (strHostIfBASessionInfo->buf_size & 0xFF);
--	*ptr++ = ((strHostIfBASessionInfo->u16SessionTimeout >> 16) & 0xFF);
-+	*ptr++ = ((strHostIfBASessionInfo->time_out >> 16) & 0xFF);
- 	*ptr++ = 3;
- 	result = send_config_pkt(SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index e020a6d..2050fbe 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -232,7 +232,7 @@ struct ba_session_info {
- 	u8 bssid[ETH_ALEN];
- 	u8 tid;
- 	u16 buf_size;
--	u16 u16SessionTimeout;
-+	u16 time_out;
- };
+-	if (u8Mode == GET_CFG) {
+-		for (counter = 0; counter < u32WIDsCount; counter++) {
++	if (mode == GET_CFG) {
++		for (counter = 0; counter < count; counter++) {
+ 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
+-				   (counter == u32WIDsCount - 1));
++				   (counter == count - 1));
+ 			if (!wilc_wlan_cfg_get(!counter,
+-					       pstrWIDs[counter].u16WIDid,
+-					       (counter == u32WIDsCount - 1),
+-					       drvHandler)) {
++					       wids[counter].u16WIDid,
++					       (counter == count - 1),
++					       drv)) {
+ 				ret = -1;
+ 				printk("[Sendconfigpkt]Get Timed out\n");
+ 				break;
+ 			}
+ 		}
+ 		counter = 0;
+-		for (counter = 0; counter < u32WIDsCount; counter++) {
+-			pstrWIDs[counter].s32ValueSize = wilc_wlan_cfg_get_val(
+-					pstrWIDs[counter].u16WIDid,
+-					pstrWIDs[counter].ps8WidVal,
+-					pstrWIDs[counter].s32ValueSize);
++		for (counter = 0; counter < count; counter++) {
++			wids[counter].s32ValueSize = wilc_wlan_cfg_get_val(
++					wids[counter].u16WIDid,
++					wids[counter].ps8WidVal,
++					wids[counter].s32ValueSize);
  
- struct remain_ch {
+ 		}
+-	} else if (u8Mode == SET_CFG) {
+-		for (counter = 0; counter < u32WIDsCount; counter++) {
+-			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", pstrWIDs[counter].u16WIDid);
++	} else if (mode == SET_CFG) {
++		for (counter = 0; counter < count; counter++) {
++			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].u16WIDid);
+ 			if (!wilc_wlan_cfg_set(!counter,
+-					       pstrWIDs[counter].u16WIDid,
+-					       pstrWIDs[counter].ps8WidVal,
+-					       pstrWIDs[counter].s32ValueSize,
+-					       (counter == u32WIDsCount - 1),
+-					       drvHandler)) {
++					       wids[counter].u16WIDid,
++					       wids[counter].ps8WidVal,
++					       wids[counter].s32ValueSize,
++					       (counter == count - 1),
++					       drv)) {
+ 				ret = -1;
+ 				printk("[Sendconfigpkt]Set Timed out\n");
+ 				break;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 4d65088..8ba30dc 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -128,8 +128,7 @@ typedef struct {
+ 	size_t ie_len;
+ } tstrDisconnectNotifInfo;
+ 
+-s32 send_config_pkt(u8 u8Mode, tstrWID *pstrWIDs,
+-		    u32 u32WIDsCount, u32 drvHandler);
++s32 send_config_pkt(u8 mode, tstrWID *wids, u32 count, u32 drv);
+ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
+ s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
+ 
 -- 
 1.9.1
 
