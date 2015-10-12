@@ -1,46 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32306 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755355AbbJHSdZ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12651 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbbJLH6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 14:33:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/11] brcmfmac: remove conversational comment
-Date: Thu, 8 Oct 2015 20:33:14 +0200
-Message-ID: <1444329201-3696-5-git-send-email-arend@broadcom.com> (sfid-20151008_203339_226669_4A52A1CA)
-In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
+	Mon, 12 Oct 2015 03:58:12 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 15/41] staging: wilc1000: remove typedef from tstrJoinBssParam
+Date: Mon, 12 Oct 2015 16:55:49 +0900
+Message-ID: <1444636575-2486-15-git-send-email-tony.cho@atmel.com> (sfid-20151012_095820_962616_A7A42EBE)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing a comment that was only useful during the review of
-the change that introduced it and which should never have been
-submitted.
+From: Leo Kim <leo.kim@atmel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This patch removes typedef from the struct tstrJoinBssParam
+and renames it to join_bss_param.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 7eff9de..44e618f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -873,9 +873,6 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
- 	commonring = msgbuf->flowrings[flowid];
- 	atomic_dec(&commonring->outstanding_tx);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 89b6cdd..0d83351 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -407,7 +407,7 @@ struct host_if_msg {
+ };
  
--	/* Hante: i believe this was a bug as tx_status->msg.ifidx was used
--	 * in brcmf_txfinalize as index in drvr->iflist. Can you confirm/deny?
--	 */
- 	brcmf_txfinalize(brcmf_get_ifp(msgbuf->drvr, tx_status->msg.ifidx),
- 			 skb, true);
+ /*Struct containg joinParam of each AP*/
+-typedef struct _tstrJoinBssParam {
++struct join_bss_param {
+ 	BSSTYPE_T bss_type;
+ 	u8 dtim_period;
+ 	u16 beacon_period;
+@@ -435,7 +435,7 @@ typedef struct _tstrJoinBssParam {
+ 	u8 au8Duration[4];
+ 	u8 au8Interval[4];
+ 	u8 au8StartTime[4];
+-} tstrJoinBssParam;
++};
+ 
+ typedef enum {
+ 	SCAN_TIMER = 0,
+@@ -1438,7 +1438,7 @@ static s32 Handle_Connect(struct host_if_drv *drvHandler,
+ 	u32 u32WidsCount = 0, dummyval = 0;
+ 	/* char passphrase[] = "12345678"; */
+ 	u8 *pu8CurrByte = NULL;
+-	tstrJoinBssParam *ptstrJoinBssParam;
++	struct join_bss_param *ptstrJoinBssParam;
+ 
+ 	PRINT_D(GENERIC_DBG, "Handling connect request\n");
+ 
+@@ -1453,7 +1453,7 @@ static s32 Handle_Connect(struct host_if_drv *drvHandler,
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
+ 
+-	ptstrJoinBssParam = (tstrJoinBssParam *)pstrHostIFconnectAttr->pJoinParams;
++	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->pJoinParams;
+ 	if (ptstrJoinBssParam == NULL) {
+ 		PRINT_ER("Required BSSID not found\n");
+ 		s32Error = -ENOENT;
+@@ -6700,7 +6700,7 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hWFIDrv, bool bIsEnabled
+  *  @version		1.0**/
+ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ {
+-	tstrJoinBssParam *pNewJoinBssParam = NULL;
++	struct join_bss_param *pNewJoinBssParam = NULL;
+ 	u8 *pu8IEs;
+ 	u16 u16IEsLen;
+ 	u16 index = 0;
+@@ -6716,9 +6716,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 	pu8IEs = ptstrNetworkInfo->pu8IEs;
+ 	u16IEsLen = ptstrNetworkInfo->u16IEsLen;
+ 
+-	pNewJoinBssParam = kmalloc(sizeof(tstrJoinBssParam), GFP_KERNEL);
++	pNewJoinBssParam = kmalloc(sizeof(struct join_bss_param), GFP_KERNEL);
+ 	if (pNewJoinBssParam != NULL) {
+-		memset(pNewJoinBssParam, 0, sizeof(tstrJoinBssParam));
++		memset(pNewJoinBssParam, 0, sizeof(struct join_bss_param));
+ 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
+ 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
+ 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
+@@ -6902,8 +6902,8 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 
+ void host_int_freeJoinParams(void *pJoinParams)
+ {
+-	if ((tstrJoinBssParam *)pJoinParams != NULL)
+-		kfree((tstrJoinBssParam *)pJoinParams);
++	if ((struct bss_param *)pJoinParams != NULL)
++		kfree((struct bss_param *)pJoinParams);
+ 	else
+ 		PRINT_ER("Unable to FREE null pointer\n");
  }
 -- 
 1.9.1
