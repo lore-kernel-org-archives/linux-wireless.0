@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3006 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751639AbbJ2JHv (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12601 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819AbbJLH6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 05:07:51 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Chris Kuethe <chris.kuethe@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: problems with mwifiex_usb, hangs under load, firmware in bad
- state
-Date: Thu, 29 Oct 2015 09:07:48 +0000
-Message-ID: <98e25f501c0a4c5191e531feb124cf8d@SC-EXCH04.marvell.com> (sfid-20151029_100817_823517_9F2266BC)
-References: <CAGHP0pK5452ixOHr0uWY=o2S2JvgoqVx8X7r6ZnQ=ezxqNg1UA@mail.gmail.com>
-	<d866527bb2404c9f895960173159744a@SC-EXCH04.marvell.com>
-	<CAGHP0pJEnqvkRgtVprGxBqOd_c9m-ybE9L_9zAtJS=c7=LbckQ@mail.gmail.com>
-	<CAGHP0pLVvi9Q_4__QF4pZx-=HYW7bzmYbd6w6sS7RWcoRPqpfw@mail.gmail.com>
-	<cce89318b3fe4b70a0f3594986035e70@SC-EXCH04.marvell.com>
- <CAGHP0pL90miDhicw1uE0HuZh1HDx4gSTZ-c7WV8L++Gvny=ugA@mail.gmail.com>
-In-Reply-To: <CAGHP0pL90miDhicw1uE0HuZh1HDx4gSTZ-c7WV8L++Gvny=ugA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 12 Oct 2015 03:58:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 14/41] staging: wilc1000: remove unused struct tstrBssTable
+Date: Mon, 12 Oct 2015 16:55:48 +0900
+Message-ID: <1444636575-2486-14-git-send-email-tony.cho@atmel.com> (sfid-20151012_095810_854039_8BF37185)
+In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQ2hyaXMsDQoNCj4+IEJ1dCBpbiBwcmV2aW91cyBlbWFpbCwgeW91IG1lbnRpb25lZCB0aGUg
-b25seSB3YXkgaXMgdG8gcG93ZXIgY3ljbGUgdGhlIGRldmljZSB3aGVuIGZpcm13YXJlIGNyYXNo
-ZXMuDQo+PiBXZSB3aWxsIHJ1biBzb21lIHRlc3RzIGFuZCB0cnkgdG8gcmVjcmVhdGUgdGhpcyBp
-c3N1ZSwgc28gdGhhdCBvdXIgZmlybXdhcmUgZXhwZXJ0cyBjYW4gdGFrZSBhIGxvb2sgaW50byB0
-aGlzLg0KPlRoaXMgaXMgdGhlIGZpcnN0IGNoYW5jZSBJIGhhZCB0byB0ZXN0IGJvdGggYmFuZHMg
-YXQgdGhlIHNhbWUgdGltZS4NCg0KQXMgcGVyIHlvdXIgbG9nLCBzY2FuIGNvbW1hbmQgKDB4Nikg
-Z290IHRpbWVkIG91dC4gV2UgZG9uJ3QgZXhwZWN0IGZ1cnRoZXIgY29tbWFuZHMgdG8gd29yayBh
-ZnRlciB0aGlzLiBJZiBhdmFpbGFibGUsIHBsZWFzZSBzaGFyZSBtZSB0aGUgbG9nIGZvciB0aGUg
-aXNzdWUgaW4gd2hpY2ggeW91IGZhY2VkIGEgcHJvYmxlbSBmb3IgMi40R2h6LCBidXQgNUdoeiB3
-b3JrZWQgZmluZS4NCg0KDQotLS0tLS0tZmFpbHVyZSBsb2ctLS0tLS0tLS0tDQpPY3QgMjggMTE6
-NTE6MDQga2VybmVsOiBbIDEyMjkuMTc1NjI3XSB1c2IgMS0yOiBtd2lmaWV4X2NtZF90aW1lb3V0
-X2Z1bmM6IFRpbWVvdXQgY21kIGlkID0gMHg2LCBhY3QgPSAweDMNCk9jdCAyOCAxMTo1MTowNCBr
-ZXJuZWw6IFsgMTIyOS4xNzU2MzRdIHVzYiAxLTI6IG51bV9kYXRhX2gyY19mYWlsdXJlID0gMA0K
-T2N0IDI4IDExOjUxOjA0IGtlcm5lbDogWyAxMjI5LjE3NTYzN10gdXNiIDEtMjogbnVtX2NtZF9o
-MmNfZmFpbHVyZSA9IDANCk9jdCAyOCAxMTo1MTowNCBrZXJuZWw6IFsgMTIyOS4xNzU2NDBdIHVz
-YiAxLTI6IGlzX2NtZF90aW1lZG91dCA9IDENCk9jdCAyOCAxMTo1MToxOSBrZXJuZWw6IFsgMTI0
-NC43MTIwNzddIHVzYiAxLTI6IElnbm9yZSBzY2FuLiBDYXJkIHJlbW92ZWQgb3IgZmlybXdhcmUg
-aW4gYmFkIHN0YXRlDQpPY3QgMjggMTE6NTE6MTkga2VybmVsOiBbIDEyNDQuNzEyMDc5XSB1c2Ig
-MS0yOiBzY2FuIGZhaWxlZDogLTE0DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0K
-UmVnYXJkcywNCkFtaXRrdW1hcg0K
+From: Leo Kim <leo.kim@atmel.com>
+
+This patch removes struct tstrBssTable with related comment.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 77aefaf..89b6cdd 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -436,12 +436,6 @@ typedef struct _tstrJoinBssParam {
+ 	u8 au8Interval[4];
+ 	u8 au8StartTime[4];
+ } tstrJoinBssParam;
+-/*a linked list table containing needed join parameters entries for each AP found in most recent scan*/
+-typedef struct _tstrBssTable {
+-	u8 u8noBssEntries;
+-	tstrJoinBssParam *head;
+-	tstrJoinBssParam *tail;
+-} tstrBssTable;
+ 
+ typedef enum {
+ 	SCAN_TIMER = 0,
+-- 
+1.9.1
+
