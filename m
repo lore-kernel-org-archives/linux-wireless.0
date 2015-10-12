@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60483 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752318AbbJGJQf (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37762 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbbJLUcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 05:16:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: egrumbach@gmail.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: iwlwifi-next 2015-10-05
-References: <1444050759.27220.15.camel@coelho.fi>
-Date: Wed, 07 Oct 2015 12:16:27 +0300
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi> (Luca Coelho's message of
-	"Mon, 05 Oct 2015 16:12:39 +0300")
-Message-ID: <87wpuzyr6c.fsf@kamboji.qca.qualcomm.com> (sfid-20151007_111647_086309_168C2CCC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 12 Oct 2015 16:32:18 -0400
+Received: by wijq8 with SMTP id q8so762044wij.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2015 13:32:17 -0700 (PDT)
+From: Ola Olsson <ola1olsson@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Subject: [PATCH] iw: Adding helpful hints for vendor cmd
+Date: Mon, 12 Oct 2015 22:32:10 +0200
+Message-Id: <1444681930-25527-1-git-send-email-ola1olsson@gmail.com> (sfid-20151012_223225_121991_F6331593)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Without having access to the source, it was
+hard to know the format of vendor oui and sub
+cmd. This commit fixes that.
 
-> (oops! now with Kalle's correct email address)
->
-> Hi Kalle,
->
-> Here's our second pull request for 4.4.  Nothing really stands out,
-> just the usual series of improvements, bugfixes and clean-ups.
->
-> There doesn't seem to be any conflict with the fixes pull request I
-> just sent, but if you find any problems, let me know.
->
-> Luca.
->
-> The following changes since commit
-> 8f6c5b079cb37f01463a643182815c00aa5263f2:
->
->   Merge tag 'iwlwifi-next-for-kalle-2015-09-21' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next
-> (2015-09-26 21:25:18 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi
-> -next.git tags/iwlwifi-next-for-kalle-2015-10-05
->
-> for you to fetch changes up to
-> 0316d30ea3e66379cd30ed70a114bc282159bb4c:
->
->   iwlwifi: mvm: add minimal multi-RXQ infrastructure (2015-10-05
-> 14:34:51 +0300)
->
-> ----------------------------------------------------------------
-> * more clean-ups towards multiple RX queues;
-> * some rate scaling fixes and improvements;
-> * some time-of-flight fixes;
-> * other generic improvements and clean-ups;
->
-> ----------------------------------------------------------------
+Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+---
+ vendor.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-Pulled, thanks.
-
+diff --git a/vendor.c b/vendor.c
+index d0b4f9e..86c03d1 100644
+--- a/vendor.c
++++ b/vendor.c
+@@ -55,15 +55,19 @@ static int handle_vendor(struct nl80211_state *state,
+ 	FILE *file = NULL;
+ 
+ 	if (argc < 3)
+-		return -EINVAL;
++		return 1;
+ 
+ 	res = sscanf(argv[0], "0x%x", &oui);
+-	if (res != 1)
+-		return -EINVAL;
++	if (res != 1) {
++		printf("Vendor command must start with 0x\n");
++		return 2;
++	}
+ 
+ 	res = sscanf(argv[1], "0x%x", &subcmd);
+-	if (res != 1)
+-		return -EINVAL;
++	if (res != 1) {
++		printf("Sub command must start with 0x\n");
++		return 2;
++	}
+ 
+ 	if (!strcmp(argv[2], "-"))
+ 		file = stdin;
 -- 
-Kalle Valo
+1.7.9.5
+
