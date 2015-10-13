@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34600 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660AbbJPJYM (ORCPT
+Received: from mail-io0-f175.google.com ([209.85.223.175]:35534 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbbJMSzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:24:12 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/13] staging: wilc1000: add_key: use netdev private wilc instead of wl
-Date: Fri, 16 Oct 2015 18:23:05 +0900
-Message-ID: <1444987389-14151-9-git-send-email-tony.cho@atmel.com> (sfid-20151016_112425_752324_E52D3E6B)
-In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+	Tue, 13 Oct 2015 14:55:24 -0400
+Received: by iofl186 with SMTP id l186so31542290iof.2
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 11:55:24 -0700 (PDT)
+Date: Tue, 13 Oct 2015 13:54:24 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/5] wireless-regdb: Add 160 MHz channel bandwidth for
+ Greenland (GL)
+Message-ID: <20151013185424.GE50632@ubuntu-hedt> (sfid-20151013_205528_423631_AB72FC1D)
+References: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
+ <20151013183758.GC50632@ubuntu-hedt>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151013183758.GC50632@ubuntu-hedt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On Tue, Oct 13, 2015 at 01:37:58PM -0500, Seth Forshee wrote:
+> On Mon, Oct 05, 2015 at 10:11:57PM +0300, Jouni Malinen wrote:
+> > This extends regulatory rules for Greenland to allow 160 MHz VHT
+> > channels. This was missed in the earlier set of patches that added 160
+> > MHz for large number of countries.
+> > 
+> > Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> 
+> Applied all 5 patches, thanks.
 
-Use netdev private data member wilc instead of global variable wl.
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 97d9929..f96f5b8 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1083,8 +1083,12 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	u8 u8gmode = NO_ENCRYPT;
- 	u8 u8pmode = NO_ENCRYPT;
- 	enum AUTHTYPE tenuAuth_type = ANY;
-+	struct wilc *wl;
-+	perInterface_wlan_t *nic;
- 
- 	priv = wiphy_priv(wiphy);
-+	nic = netdev_priv(netdev);
-+	wl = nic->wilc;
- 
- 	PRINT_D(CFG80211_DBG, "Adding key with cipher suite = %x\n", params->cipher);
- 
--- 
-1.9.1
-
+Or maybe not. After I pushed out master-2015-10-13 I noticed that I
+somehow missed the first patch. It's applied now, sorry about that.
