@@ -1,65 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52205 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2701 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848AbbJWF23 (ORCPT
+	with ESMTP id S1752688AbbJMKv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:28:29 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 13 Oct 2015 06:51:56 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 26/28] staging: wilc1000: mac_xmit: use netdev private wilc instead of g_linux_wlan
-Date: Fri, 23 Oct 2015 14:28:42 +0900
-Message-ID: <1445578124-31486-26-git-send-email-glen.lee@atmel.com> (sfid-20151023_074700_631831_F778053B)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 12/54] staging: wilc1000: rename u8ScanSource of struct scan_attr
+Date: Tue, 13 Oct 2015 19:49:37 +0900
+Message-ID: <1444733419-17679-12-git-send-email-tony.cho@atmel.com> (sfid-20151013_125158_765942_5DE9414E)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses netdev private data member wilc instead of g_linux_wlan.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames u8ScanSource of struct scan_attr to src to
+avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a2d8053..7a2599a 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1359,8 +1359,10 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	char *pu8UdpBuffer;
- 	struct iphdr *ih;
- 	struct ethhdr *eth_h;
-+	struct wilc *wl;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 14a01ce..9180ea6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -96,7 +96,7 @@ struct key_attr {
+ };
  
- 	nic = netdev_priv(ndev);
-+	wl = nic->wilc;
+ struct scan_attr {
+-	u8 u8ScanSource;
++	u8 src;
+ 	u8 u8ScanType;
+ 	u8 *pu8ChnlFreqList;
+ 	u8 u8ChnlListLen;
+@@ -921,7 +921,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].id = WID_START_SCAN_REQ;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)(&(pstrHostIFscanAttr->u8ScanSource));
++	strWIDList[u32WidsCount].val = (s8 *)(&(pstrHostIFscanAttr->src));
+ 	u32WidsCount++;
  
- 	PRINT_D(TX_DBG, "Sending packet just received from TCP/IP\n");
+ 	if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED)
+@@ -4062,7 +4062,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 		PRINT_D(HOSTINF_DBG, "pstrHiddenNetwork IS EQUAL TO NULL\n");
  
-@@ -1403,14 +1405,14 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
- 	nic->netstats.tx_packets++;
- 	nic->netstats.tx_bytes += tx_data->size;
--	tx_data->pBssid = g_linux_wlan->vif[nic->u8IfIdx].bssid;
-+	tx_data->pBssid = wl->vif[nic->u8IfIdx].bssid;
- 	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
- 					       tx_data->size,
- 					       linux_wlan_tx_complete);
- 
- 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
--		netif_stop_queue(g_linux_wlan->vif[0].ndev);
--		netif_stop_queue(g_linux_wlan->vif[1].ndev);
-+		netif_stop_queue(wl->vif[0].ndev);
-+		netif_stop_queue(wl->vif[1].ndev);
- 	}
- 
- 	return 0;
+ 	msg.drv = hif_drv;
+-	msg.body.scan_info.u8ScanSource = u8ScanSource;
++	msg.body.scan_info.src = u8ScanSource;
+ 	msg.body.scan_info.u8ScanType = u8ScanType;
+ 	msg.body.scan_info.pfScanResult = ScanResult;
+ 	msg.body.scan_info.pvUserArg = pvUserArg;
 -- 
 1.9.1
 
