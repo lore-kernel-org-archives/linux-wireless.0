@@ -1,58 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:36742 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbbJWV36 (ORCPT
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:38764 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbbJMSwG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 17:29:58 -0400
-Received: by oiao187 with SMTP id o187so73015431oia.3
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 14:29:58 -0700 (PDT)
-Subject: Re: [PATCH] rtl8xxxu: Enable data frame reception in rtl8xxxu_start
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Bruno Randolf <br1@einfach.org>
-References: <1445462932-23679-1-git-send-email-br1@einfach.org>
- <wrfjoafrrf1s.fsf@redhat.com> <56289543.1070008@thinktube.com>
- <wrfjtwpjoxqj.fsf@redhat.com> <5628E309.6020203@einfach.org>
- <wrfjk2qfow8r.fsf@redhat.com> <5628E9AB.1060907@einfach.org>
- <wrfj611xba2p.fsf@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <562A608A.9060706@lwfinger.net> (sfid-20151023_233002_415418_958AF431)
-Date: Fri, 23 Oct 2015 11:30:02 -0500
+	Tue, 13 Oct 2015 14:52:06 -0400
+Received: by igsu6 with SMTP id u6so55650igs.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 11:52:05 -0700 (PDT)
+Date: Tue, 13 Oct 2015 13:37:58 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/5] wireless-regdb: Add 160 MHz channel bandwidth for
+ Greenland (GL)
+Message-ID: <20151013183758.GC50632@ubuntu-hedt> (sfid-20151013_205209_660418_FC2D6DC7)
+References: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <wrfj611xba2p.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/2015 03:31 PM, Jes Sorensen wrote:
-> Bruno Randolf <br1@einfach.org> writes:
->> On 10/22/2015 02:42 PM, Jes Sorensen wrote:
->>> Making things work against random kernel versions of OpenWRT is not
->>> particularly "credible". If the driver needs hacks to work with older
->>> kernels, then they should be applied for the older kernels. Linux does
->>> not have a history of carrying hacks in current drivers to accommodate
->>> older kernels.
->>
->> Well forget OpenWRT. The point is that this is not a hack - it's the
->> behavior that mac80211 expects and documents and moreover it does NOT
->> pass more data frames than before.
->>
->> It does not pass more data frames before association because the RCR
->> RCR_ACCEPT_AP bit is not set and the RCR_CHECK_BSSID_* bits are set.
->
-> I have gone back and looked more at the vendor drivers over this issue.
-> Most versions of the vendor driver consistently mess with both FLTMAP*
-> and RCR, and disable packets when they go into a non-assoc state, but
-> non-assoc to the vendor driver also means non-AP, non-monitor, etc.
->
-> I really would like to know more about the difference between RCR and
-> FLTMAP registers - Larry is there a chance you could try and ping your
-> Realtek contacts about this?
+On Mon, Oct 05, 2015 at 10:11:57PM +0300, Jouni Malinen wrote:
+> This extends regulatory rules for Greenland to allow 160 MHz VHT
+> channels. This was missed in the earlier set of patches that added 160
+> MHz for large number of countries.
+> 
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 
-I will try, but please be aware that the USB group generally tends to ignore me. 
-Perhaps the PCI group can help.
-
-Larry
-
-
+Applied all 5 patches, thanks.
