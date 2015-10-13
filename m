@@ -1,101 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42144 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122AbbJ1HAb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:00:31 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 29/80] staging: wilc1000: rename hRemainOnChannel of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:49 +0900
-Message-ID: <1446015640-29398-29-git-send-email-glen.lee@atmel.com> (sfid-20151028_081700_082677_8BD79BFD)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:51475 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373AbbJMInY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 04:43:24 -0400
+Message-ID: <1444725801.1961.5.camel@sipsolutions.net> (sfid-20151013_104329_389745_8F061EC2)
+Subject: Re: [PATCH v2 1/2] cfg80211: Add multiple scan plans for scheduled
+ scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+	Avraham Stern <avraham.stern@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 13 Oct 2015 10:43:21 +0200
+In-Reply-To: <1444632695-10505-1-git-send-email-luca@coelho.fi>
+References: <1444632695-10505-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Mon, 2015-10-12 at 09:51 +0300, Luca Coelho wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> Add the option to configure multiple 'scan plans' for scheduled scan.
+> Each 'scan plan' defines the number of scan cycles and the interval
+> between scans. The scan plans are executed in the order they were
+> configured. The last scan plan will always run infinitely and thus
+> defines only the interval between scans.
+> The maximum number of scan plans supported by the device and the
+> maximum number of iterations in a single scan plan are advertised
+> to userspace so it can configure the scan plans appropriately.
+> 
+> When scheduled scan results are received there is no way to know 
+> which
+> scan plan is being currently executed, so there is no way to know 
+> when
+> the next scan iteration will start. This is not a problem, however.
+> The scan start timestamp is only used for flushing old scan results,
+> and there is no difference between flushing all results received 
+> until
+> the end of the previous iteration or the start of the current one,
+> since no results will be received in between.
+> 
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+> 
+> In v2:
+>    * take care of all drivers that use the 
+> cfg80211_sched_scan_request struct;
+> 
+Both applied.
 
-This patch renames hRemainOnChannel of struct host_if_drv to remain_on_ch_timer
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8ee0a94..b29d651 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2531,8 +2531,8 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- ERRORHANDLER:
- 	{
- 		P2P_LISTEN_STATE = 1;
--		hif_drv->hRemainOnChannel.data = (unsigned long)hif_drv;
--		mod_timer(&hif_drv->hRemainOnChannel,
-+		hif_drv->remain_on_ch_timer.data = (unsigned long)hif_drv;
-+		mod_timer(&hif_drv->remain_on_ch_timer,
- 			  jiffies +
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
- 
-@@ -2629,7 +2629,7 @@ static void ListenTimerCB(unsigned long arg)
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
- 
--	del_timer(&hif_drv->hRemainOnChannel);
-+	del_timer(&hif_drv->remain_on_ch_timer);
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
-@@ -4136,7 +4136,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	setup_timer(&hif_drv->scan_timer, TimerCB_Scan, 0);
- 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
--	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
-+	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
- 
- 	sema_init(&hif_drv->sem_cfg_values, 1);
- 	down(&hif_drv->sem_cfg_values);
-@@ -4199,7 +4199,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 	if (del_timer_sync(&periodic_rssi))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
- 
--	del_timer_sync(&hif_drv->hRemainOnChannel);
-+	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
- 	host_int_set_wfi_drv_handler(NULL);
- 	down(&hif_sema_driver);
-@@ -4388,7 +4388,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
- 		return -EFAULT;
- 	}
- 
--	del_timer(&hif_drv->hRemainOnChannel);
-+	del_timer(&hif_drv->remain_on_ch_timer);
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d149fd5..1a41e3f 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -314,7 +314,7 @@ struct host_if_drv {
- 
- 	struct timer_list scan_timer;
- 	struct timer_list connect_timer;
--	struct timer_list hRemainOnChannel;
-+	struct timer_list remain_on_ch_timer;
- 
- 	bool IFC_UP;
- };
--- 
-1.9.1
-
+johannes
