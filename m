@@ -1,47 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57218 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751900AbbJEPB4 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3401 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932170AbbJMKzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:51 +0300
-Message-Id: <1444055820-27506-20-git-send-email-luca@coelho.fi> (sfid-20151005_170200_743486_845B931F)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 20/29] iwlwifi: mvm: rs: minor indentation fix
+	Tue, 13 Oct 2015 06:55:04 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 41/54] staging: wilc1000: rename pu8Head of struct beacon_attr
+Date: Tue, 13 Oct 2015 19:50:06 +0900
+Message-ID: <1444733419-17679-41-git-send-email-tony.cho@atmel.com> (sfid-20151013_125509_030214_D078FE7C)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Indentation was off a bit. Fix it.
+This patch renames pu8Head of struct beacon_attr to head to
+avoid CamelCase naming convention.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 49cf311..2bf2a08 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -604,8 +604,8 @@ static inline u8 rs_is_valid_ant(u8 valid_antenna, u8 ant_type)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 70ba13f..dd07e11 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -134,7 +134,7 @@ struct beacon_attr {
+ 	u32 interval;
+ 	u32 dtim_period;
+ 	u32 head_len;
+-	u8 *pu8Head;
++	u8 *head;
+ 	u32 u32TailLen;
+ 	u8 *pu8Tail;
+ };
+@@ -2359,7 +2359,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 16) & 0xFF);
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 24) & 0xFF);
+ 
+-	memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Head, pstrSetBeaconParam->head_len);
++	memcpy(pu8CurrByte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
+ 	pu8CurrByte += pstrSetBeaconParam->head_len;
+ 
+ 	*pu8CurrByte++ = (pstrSetBeaconParam->u32TailLen & 0xFF);
+@@ -2378,7 +2378,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 
+ ERRORHANDLER:
+ 	kfree(strWID.val);
+-	kfree(pstrSetBeaconParam->pu8Head);
++	kfree(pstrSetBeaconParam->head);
+ 	kfree(pstrSetBeaconParam->pu8Tail);
  }
  
- static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
--				      struct iwl_lq_sta *lq_data, u8 tid,
--				      struct ieee80211_sta *sta)
-+				     struct iwl_lq_sta *lq_data, u8 tid,
-+				     struct ieee80211_sta *sta)
- {
- 	int ret = -EAGAIN;
+@@ -4644,12 +4644,12 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 	pstrSetBeaconParam->interval = u32Interval;
+ 	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
+ 	pstrSetBeaconParam->head_len = u32HeadLen;
+-	pstrSetBeaconParam->pu8Head = kmalloc(u32HeadLen, GFP_KERNEL);
+-	if (pstrSetBeaconParam->pu8Head == NULL) {
++	pstrSetBeaconParam->head = kmalloc(u32HeadLen, GFP_KERNEL);
++	if (pstrSetBeaconParam->head == NULL) {
+ 		s32Error = -ENOMEM;
+ 		goto ERRORHANDLER;
+ 	}
+-	memcpy(pstrSetBeaconParam->pu8Head, pu8Head, u32HeadLen);
++	memcpy(pstrSetBeaconParam->head, pu8Head, u32HeadLen);
+ 	pstrSetBeaconParam->u32TailLen = u32TailLen;
  
+ 	if (u32TailLen > 0) {
+@@ -4669,8 +4669,8 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 
+ ERRORHANDLER:
+ 	if (s32Error) {
+-		if (pstrSetBeaconParam->pu8Head != NULL)
+-			kfree(pstrSetBeaconParam->pu8Head);
++		if (pstrSetBeaconParam->head != NULL)
++			kfree(pstrSetBeaconParam->head);
+ 
+ 		if (pstrSetBeaconParam->pu8Tail != NULL)
+ 			kfree(pstrSetBeaconParam->pu8Tail);
 -- 
-2.5.3
+1.9.1
 
