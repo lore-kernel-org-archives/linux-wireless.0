@@ -1,224 +1,484 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20879 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2451 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965264AbbJ3DJJ (ORCPT
+	with ESMTP id S1752485AbbJMKvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:09:09 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 13 Oct 2015 06:51:04 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/17] staging: wilc1000: release_bus: add argument struct wilc
-Date: Fri, 30 Oct 2015 12:10:40 +0900
-Message-ID: <1446174642-28570-15-git-send-email-glen.lee@atmel.com> (sfid-20151030_040928_156099_2186E705)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/54] staging: wilc1000: rename uniHostIFkeyAttr of struct key_attr
+Date: Tue, 13 Oct 2015 19:49:29 +0900
+Message-ID: <1444733419-17679-4-git-send-email-tony.cho@atmel.com> (sfid-20151013_125110_552278_44B7D416)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct wilc and use it instead of g_linux_wlan,
-pass wilc to the functions as well.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames uniHostIFkeyAttr of struct key_attr to attr to
+avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 44 ++++++++++++++++++------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 217 +++++++++++-------------------
+ 1 file changed, 82 insertions(+), 135 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a61dbea..898f60e 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -122,13 +122,13 @@ static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 203f870..9fe4ea9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -92,7 +92,7 @@ union host_if_key_attr {
+ struct key_attr {
+ 	enum KEY_TYPE type;
+ 	u8 action;
+-	union host_if_key_attr uniHostIFkeyAttr;
++	union host_if_key_attr attr;
+ };
  
- }
--static inline void release_bus(BUS_RELEASE_T release)
-+static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
- {
- 	#ifdef WILC_OPTIMIZE_SLEEP_INT
- 	if (release == RELEASE_ALLOW_SLEEP)
- 		chip_allow_sleep();
- 	#endif
--	mutex_unlock(&g_linux_wlan->hif_cs);
-+	mutex_unlock(&wilc->hif_cs);
- }
- /********************************************
-  *
-@@ -831,7 +831,7 @@ void chip_sleep_manually(struct net_device *dev, u32 u32SleepTime)
- 	g_wlan.hif_func.hif_write_reg(0x10a8, 1);
+ struct scan_attr {
+@@ -1786,41 +1786,38 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
  
- 	genuChipPSstate = CHIP_SLEEPING_MANUAL;
--	release_bus(RELEASE_ONLY);
-+	release_bus(wilc, RELEASE_ONLY);
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+-			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
++			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", (pstrHostIFkeyAttr->attr.wep.index));
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.mode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wep.mode));
  
- }
+ 			strWIDList[1].id = WID_AUTH_TYPE;
+ 			strWIDList[1].type = WID_CHAR;
+ 			strWIDList[1].size = sizeof(char);
+-			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.auth_type));
++			strWIDList[1].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wep.auth_type));
  
-@@ -954,7 +954,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- 				 *      wait for vmm table is ready
- 				 **/
- 				PRINT_WRN(GENERIC_DBG, "[wilc txq]: warn, vmm table not clear yet, wait...\n");
--				release_bus(RELEASE_ALLOW_SLEEP);
-+				release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 				usleep_range(3000, 3000);
- 				acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 			strWIDList[2].id = (u16)WID_KEY_ID;
+ 			strWIDList[2].type = WID_CHAR;
+ 
+-			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
++			strWIDList[2].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wep.index));
+ 			strWIDList[2].size = sizeof(char);
+ 
+-
+-			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, GFP_KERNEL);
+-
++			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len, GFP_KERNEL);
+ 
+ 			if (pu8keybuf == NULL) {
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
  			}
-@@ -1002,7 +1002,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- 					entries = ((reg >> 3) & 0x3f);
- 					break;
- 				} else {
--					release_bus(RELEASE_ALLOW_SLEEP);
-+					release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 					usleep_range(3000, 3000);
- 					acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 					PRINT_WRN(GENERIC_DBG, "Can't get VMM entery - reg = %2x\n", reg);
-@@ -1047,7 +1047,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
  
- 		/* since copying data into txb takes some time, then
- 		 * allow the bus lock to be released let the RX task go. */
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
+-
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wep.key,
++				    pstrHostIFkeyAttr->attr.wep.key_len);
  
- 		/**
- 		 *      Copy data to the TX buffer
-@@ -1126,7 +1126,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+-			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
++			kfree(pstrHostIFkeyAttr->attr.wep.key);
  
- _end_:
+ 			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
+ 			strWIDList[3].type = WID_STR;
+-			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len;
++			strWIDList[3].size = pstrHostIFkeyAttr->attr.wep.key_len;
+ 			strWIDList[3].val = (s8 *)pu8keybuf;
  
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 		if (ret != 1)
- 			break;
- 	} while (0);
-@@ -1412,7 +1412,7 @@ void wilc_handle_isr(void *wilc)
- #endif
- 		wilc_unknown_isr_ext();
- 	}
--	release_bus(RELEASE_ALLOW_SLEEP);
-+	release_bus(wilc, RELEASE_ALLOW_SLEEP);
- }
  
- /********************************************
-@@ -1473,7 +1473,7 @@ int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
- 			offset += size2;
- 			size -= size2;
+@@ -1833,24 +1830,21 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+-			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2, GFP_KERNEL);
++			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
+ 			}
+-			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index;
+-
+-			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, 1);
+-
+-			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
+-
+-			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
++			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
++			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
++			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
++				    pstrHostIFkeyAttr->attr.wep.key_len);
++			kfree(pstrHostIFkeyAttr->attr.wep.key);
+ 
+ 			strWID.id = (u16)WID_ADD_WEP_KEY;
+ 			strWID.type = WID_STR;
+ 			strWID.val = (s8 *)pu8keybuf;
+-			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2;
++			strWID.size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
+ 
+ 			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+@@ -1861,7 +1855,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.id = (u16)WID_REMOVE_WEP_KEY;
+ 			strWID.type = WID_STR;
+ 
+-			s8idxarray[0] = (s8)pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index;
++			s8idxarray[0] = (s8)pstrHostIFkeyAttr->attr.wep.index;
+ 			strWID.val = s8idxarray;
+ 			strWID.size = 1;
+ 
+@@ -1870,7 +1864,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		} else {
+ 			strWID.id = (u16)WID_KEY_ID;
+ 			strWID.type = WID_CHAR;
+-			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.index));
++			strWID.val = (s8 *)(&(pstrHostIFkeyAttr->attr.wep.index));
+ 			strWID.size = sizeof(char);
+ 
+ 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
+@@ -1892,20 +1886,18 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 
+ 			memset(pu8keybuf, 0, RX_MIC_KEY_MSG_LEN);
+ 
+-			if (pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8seq != NULL)
+-				memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8seq, 8);
++			if (pstrHostIFkeyAttr->attr.wpa.pu8seq != NULL)
++				memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.pu8seq, 8);
+ 
++			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
++			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
++			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.pu8key,
++				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
+ 
+-			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8keyidx, 1);
+-
+-			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen, 1);
+-
+-			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen);
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Ciphermode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.u8Ciphermode));
+ 
+ 			strWIDList[1].id = (u16)WID_ADD_RX_GTK;
+ 			strWIDList[1].type = WID_STR;
+@@ -1936,13 +1928,11 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			else
+ 				PRINT_ER("Couldn't handle WPARxGtk while enuHostIFstate is not HOST_IF_CONNECTED\n");
+ 
+-			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8seq, 8);
+-
+-			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8keyidx, 1);
+-
+-			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen, 1);
+-			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen);
++			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.pu8seq, 8);
++			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
++			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
++			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.pu8key,
++				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
+ 
+ 			strWID.id = (u16)WID_ADD_RX_GTK;
+ 			strWID.type = WID_STR;
+@@ -1956,8 +1946,8 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			up(&hif_drv->hSemTestKeyBlock);
  		}
--		release_bus(RELEASE_ONLY);
-+		release_bus(wilc, RELEASE_ONLY);
- 
- 		if (!ret) {
- 			/*EIO	5*/
-@@ -1522,7 +1522,7 @@ int wilc_wlan_start(struct net_device *dev)
- 	ret = p->hif_func.hif_write_reg(WILC_VMM_CORE_CFG, reg);
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail write reg vmm_core_cfg...\n");
--		release_bus(RELEASE_ONLY);
-+		release_bus(wilc, RELEASE_ONLY);
- 		/* EIO  5*/
- 		ret = -5;
- 		return ret;
-@@ -1563,7 +1563,7 @@ int wilc_wlan_start(struct net_device *dev)
- 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_1, reg);
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail write WILC_GP_REG_1 ...\n");
--		release_bus(RELEASE_ONLY);
-+		release_bus(wilc, RELEASE_ONLY);
- 		/* EIO  5*/
- 		ret = -5;
- 		return ret;
-@@ -1577,7 +1577,7 @@ int wilc_wlan_start(struct net_device *dev)
- 	ret = p->hif_func.hif_read_reg(0x1000, &chipid);
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail read reg 0x1000 ...\n");
--		release_bus(RELEASE_ONLY);
-+		release_bus(wilc, RELEASE_ONLY);
- 		/* EIO  5*/
- 		ret = -5;
- 		return ret;
-@@ -1598,7 +1598,7 @@ int wilc_wlan_start(struct net_device *dev)
- 	reg |= BIT(10);
- 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
- 	p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
--	release_bus(RELEASE_ONLY);
-+	release_bus(wilc, RELEASE_ONLY);
- 
- 	return (ret < 0) ? ret : 0;
- }
-@@ -1621,7 +1621,7 @@ int wilc_wlan_stop(struct net_device *dev)
- 	ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
- 	if (!ret) {
- 		PRINT_ER("Error while reading reg\n");
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 		return ret;
- 	}
- 
-@@ -1631,7 +1631,7 @@ int wilc_wlan_stop(struct net_device *dev)
- 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
- 	if (!ret) {
- 		PRINT_ER("Error while writing reg\n");
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 		return ret;
- 	}
- 
-@@ -1641,7 +1641,7 @@ int wilc_wlan_stop(struct net_device *dev)
- 		ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
- 		if (!ret) {
- 			PRINT_ER("Error while reading reg\n");
--			release_bus(RELEASE_ALLOW_SLEEP);
-+			release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ _WPARxGtk_end_case_:
+-		kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key);
+-		kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8seq);
++		kfree(pstrHostIFkeyAttr->attr.wpa.pu8key);
++		kfree(pstrHostIFkeyAttr->attr.wpa.pu8seq);
+ 		if (ret == -1)
  			return ret;
- 		}
- 		PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
-@@ -1656,7 +1656,7 @@ int wilc_wlan_stop(struct net_device *dev)
- 			ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
- 			if (!ret) {
- 				PRINT_ER("Error while reading reg\n");
--				release_bus(RELEASE_ALLOW_SLEEP);
-+				release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 				return ret;
+ 
+@@ -1978,17 +1968,16 @@ _WPARxGtk_end_case_:
+ 
  			}
- 			PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
-@@ -1672,7 +1672,7 @@ int wilc_wlan_stop(struct net_device *dev)
  
- 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8macaddr, 6);
+-			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8keyidx, 1);
+-			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen, 1);
+-			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen);
+-
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
++			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
++			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
++			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.pu8key,
++				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
  
--	release_bus(RELEASE_ALLOW_SLEEP);
-+	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Ciphermode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.u8Ciphermode));
  
- 	return ret;
- }
-@@ -1726,15 +1726,15 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 	ret = p->hif_func.hif_read_reg(WILC_GP_REG_0, &reg);
- 	if (!ret) {
- 		PRINT_ER("Error while reading reg\n");
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 			strWIDList[1].id = (u16)WID_ADD_PTK;
+ 			strWIDList[1].type = WID_STR;
+@@ -2014,11 +2003,10 @@ _WPARxGtk_end_case_:
+ 
+ 			}
+ 
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8macaddr, 6);
+-			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen, 1);
+-			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key,
+-				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.u8Keylen);
+-
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
++			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
++			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->attr.wpa.pu8key,
++				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
+ 
+ 			strWID.id = (u16)WID_ADD_PTK;
+ 			strWID.type = WID_STR;
+@@ -2032,7 +2020,7 @@ _WPARxGtk_end_case_:
+ 		}
+ 
+ _WPAPtk_end_case_:
+-		kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wpa.pu8key);
++		kfree(pstrHostIFkeyAttr->attr.wpa.pu8key);
+ 		if (ret == -1)
+ 			return ret;
+ 
+@@ -2043,24 +2031,23 @@ _WPAPtk_end_case_:
+ 
+ 		PRINT_D(HOSTINF_DBG, "Handling PMKSA key\n");
+ 
+-		pu8keybuf = kmalloc((pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
++		pu8keybuf = kmalloc((pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
+ 		if (pu8keybuf == NULL) {
+ 			PRINT_ER("No buffer to send PMKSA Key\n");
+ 			return -1;
+ 		}
+ 
+-		pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid;
++		pu8keybuf[0] = pstrHostIFkeyAttr->attr.pmkid.numpmkid;
+ 
+-		for (i = 0; i < pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid; i++) {
+-
+-			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
+-			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
++		for (i = 0; i < pstrHostIFkeyAttr->attr.pmkid.numpmkid; i++) {
++			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
++			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
+ 		}
+ 
+ 		strWID.id = (u16)WID_PMKID_INFO;
+ 		strWID.type = WID_STR;
+ 		strWID.val = (s8 *)pu8keybuf;
+-		strWID.size = (pstrHostIFkeyAttr->uniHostIFkeyAttr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
++		strWID.size = (pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
+ 
+ 		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 					   get_id_from_handler(hif_drv));
+@@ -3213,7 +3200,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = REMOVEKEY;
+ 	msg.drv = hif_drv;
+-	msg.body.key_info.uniHostIFkeyAttr.wep.index = index;
++	msg.body.key_info.attr.wep.index = index;
+ 
+ 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+@@ -3242,9 +3229,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = DEFAULTKEY;
+ 	msg.drv = hif_drv;
+-
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Index;
++	msg.body.key_info.attr.wep.index = u8Index;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
+@@ -3276,18 +3261,10 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY;
+ 	msg.drv = hif_drv;
+-
+-
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
+-
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.key,
+-		    pu8WepKey, u8WepKeylen);
+-
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Keyidx;
++	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
++	memcpy(msg.body.key_info.attr.wep.key, pu8WepKey, u8WepKeylen);
++	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
++	msg.body.key_info.attr.wep.index = u8Keyidx;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
+@@ -3326,23 +3303,12 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY_AP;
+ 	msg.drv = hif_drv;
+-
+-
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
+-
+-
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.wep.key,
+-		    pu8WepKey, (u8WepKeylen));
+-
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.index = u8Keyidx;
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.mode = u8mode;
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wep.auth_type = tenuAuth_type;
++	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
++	memcpy(msg.body.key_info.attr.wep.key, pu8WepKey, (u8WepKeylen));
++	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
++	msg.body.key_info.attr.wep.index = u8Keyidx;
++	msg.body.key_info.attr.wep.mode = u8mode;
++	msg.body.key_info.attr.wep.auth_type = tenuAuth_type;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 
+@@ -3381,22 +3347,16 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	msg.body.key_info.type = WPAPtk;
+ 	if (mode == AP_MODE) {
+ 		msg.body.key_info.action = ADDKEY_AP;
+-		msg.body.key_info.uniHostIFkeyAttr.wpa.u8keyidx = u8Idx;
++		msg.body.key_info.attr.wpa.u8keyidx = u8Idx;
  	}
- 	PRINT_ER("Writing ABORT reg\n");
- 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_0, (reg | ABORT_INT));
- 	if (!ret) {
- 		PRINT_ER("Error while writing reg\n");
--		release_bus(RELEASE_ALLOW_SLEEP);
-+		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
+ 
+-
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.wpa.pu8key = kmalloc(u8PtkKeylen, GFP_KERNEL);
+-
+-
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key,
+-		    pu8Ptk, u8PtkKeylen);
++	msg.body.key_info.attr.wpa.pu8key = kmalloc(u8PtkKeylen, GFP_KERNEL);
++	memcpy(msg.body.key_info.attr.wpa.pu8key, pu8Ptk, u8PtkKeylen);
+ 
+ 	if (pu8RxMic != NULL) {
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key + 16,
++		memcpy(msg.body.key_info.attr.wpa.pu8key + 16,
+ 			    pu8RxMic, RX_MIC_KEY_LEN);
+ 		if (INFO) {
+ 			for (i = 0; i < RX_MIC_KEY_LEN; i++)
+@@ -3404,8 +3364,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 		}
  	}
--	release_bus(RELEASE_ALLOW_SLEEP);
-+	release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 	/**
- 	 *      io clean up
- 	 **/
-@@ -1931,7 +1931,7 @@ u32 init_chip(struct net_device *dev)
+ 	if (pu8TxMic != NULL) {
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key + 24,
++		memcpy(msg.body.key_info.attr.wpa.pu8key + 24,
+ 			    pu8TxMic, TX_MIC_KEY_LEN);
+ 		if (INFO) {
+ 			for (i = 0; i < TX_MIC_KEY_LEN; i++)
+@@ -3413,10 +3372,9 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
  		}
  	}
  
--	release_bus(RELEASE_ONLY);
-+	release_bus(wilc, RELEASE_ONLY);
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.u8Keylen = u8KeyLen;
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.u8Ciphermode = u8Ciphermode;
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.pu8macaddr = mac_addr;
++	msg.body.key_info.attr.wpa.u8Keylen = u8KeyLen;
++	msg.body.key_info.attr.wpa.u8Ciphermode = u8Ciphermode;
++	msg.body.key_info.attr.wpa.pu8macaddr = mac_addr;
+ 	msg.drv = hif_drv;
  
- 	return ret;
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -3453,10 +3411,8 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 		u8KeyLen += TX_MIC_KEY_LEN;
+ 	if (KeyRSC != NULL) {
+ 		msg.body.key_info.
+-		uniHostIFkeyAttr.wpa.pu8seq = kmalloc(u32KeyRSClen, GFP_KERNEL);
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8seq,
+-			    KeyRSC, u32KeyRSClen);
++		attr.wpa.pu8seq = kmalloc(u32KeyRSClen, GFP_KERNEL);
++		memcpy(msg.body.key_info.attr.wpa.pu8seq,KeyRSC, u32KeyRSClen);
+ 	}
+ 
+ 
+@@ -3466,35 +3422,28 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 
+ 	if (mode == AP_MODE) {
+ 		msg.body.key_info.action = ADDKEY_AP;
+-		msg.body.key_info.uniHostIFkeyAttr.wpa.u8Ciphermode = u8Ciphermode;
++		msg.body.key_info.attr.wpa.u8Ciphermode = u8Ciphermode;
+ 	}
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
+ 
++	msg.body.key_info.attr.wpa.pu8key = kmalloc(u8KeyLen, GFP_KERNEL);
+ 
+-	msg.body.key_info.
+-	uniHostIFkeyAttr.wpa.pu8key = kmalloc(u8KeyLen, GFP_KERNEL);
+-
+-	memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key,
++	memcpy(msg.body.key_info.attr.wpa.pu8key,
+ 		    pu8RxGtk, u8GtkKeylen);
+ 
+ 	if (pu8RxMic != NULL) {
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key + 16,
++		memcpy(msg.body.key_info.attr.wpa.pu8key + 16,
+ 			    pu8RxMic, RX_MIC_KEY_LEN);
+-
+ 	}
+ 	if (pu8TxMic != NULL) {
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.wpa.pu8key + 24,
++		memcpy(msg.body.key_info.attr.wpa.pu8key + 24,
+ 			    pu8TxMic, TX_MIC_KEY_LEN);
+-
+ 	}
+ 
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.u8keyidx = u8KeyIdx;
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.u8Keylen = u8KeyLen;
+-
+-	msg.body.key_info.uniHostIFkeyAttr.wpa.u8seqlen = u32KeyRSClen;
++	msg.body.key_info.attr.wpa.u8keyidx = u8KeyIdx;
++	msg.body.key_info.attr.wpa.u8Keylen = u8KeyLen;
++	msg.body.key_info.attr.wpa.u8seqlen = u32KeyRSClen;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
+@@ -3526,11 +3475,9 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 	msg.drv = hif_drv;
+ 
+ 	for (i = 0; i < pu8PmkidInfoArray->numpmkid; i++) {
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
++		memcpy(msg.body.key_info.attr.pmkid.pmkidlist[i].bssid, &pu8PmkidInfoArray->pmkidlist[i].bssid,
+ 			    ETH_ALEN);
+-
+-		memcpy(msg.body.key_info.uniHostIFkeyAttr.pmkid.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
++		memcpy(msg.body.key_info.attr.pmkid.pmkidlist[i].pmkid, &pu8PmkidInfoArray->pmkidlist[i].pmkid,
+ 			    PMKID_LEN);
+ 	}
  
 -- 
 1.9.1
