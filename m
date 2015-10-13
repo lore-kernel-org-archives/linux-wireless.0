@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28377 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbbJGGYU (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2502 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093AbbJMKvQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 02:24:20 -0400
-Date: Wed, 7 Oct 2015 09:23:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Vincent =?iso-8859-1?Q?Stehl=E9?= <vincent.stehle@laposte.net>
-Cc: devel@driverdev.osuosl.org, Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Nicolas Ferre <nicolas.ferre@atmel.com>,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH next] staging: wilc1000: avoid NULL pointer dereference
- on error
-Message-ID: <20151007062358.GN7340@mwanda> (sfid-20151007_082513_060456_C8B6A56A)
-References: <1444194505-31080-1-git-send-email-vincent.stehle@laposte.net>
+	Tue, 13 Oct 2015 06:51:16 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/54] staging: wilc1000: rename pu8macaddr of struct host_if_wpa_attr
+Date: Tue, 13 Oct 2015 19:49:31 +0900
+Message-ID: <1444733419-17679-6-git-send-email-tony.cho@atmel.com> (sfid-20151013_125120_241084_8A3053DB)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1444194505-31080-1-git-send-email-vincent.stehle@laposte.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 07:08:25AM +0200, Vincent Stehlé wrote:
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 2cf82b2..2fe3023 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -6017,7 +6017,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
->  	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
->  	if (!pstrWFIDrv) {
->  		result = -ENOMEM;
-> -		goto _fail_timer_2;
-> +		goto _fail_;
+From: Leo Kim <leo.kim@atmel.com>
 
-Fair enough.  I would have prefered a direct return, but his also works.
+This patch renames pu8macaddr of struct host_if_wpa_attr to mac_addr to
+avoid CamelCase naming convention.
 
-The error handling in this function is still very bad and nonsensical.
-You have fixed the first goto but all the others are buggy as well.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-if add_handler_in_list() fails we should "goto free_pstrWFIDrv" (except
-the label name should have Hungarian notation or CamelCase).  Instead of
-freeing the current code unlocks a lock which is not initialiazed and
-frees some timers which are also not initialized.
-
-TODO: wilc1000: fix error handling in host_int_init()
-
-regards,
-dan carpenter
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 18a2723..29bd5bf 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -67,7 +67,7 @@ struct cfg_param_attr {
+ 
+ struct host_if_wpa_attr {
+ 	u8 *key;
+-	const u8 *pu8macaddr;
++	const u8 *mac_addr;
+ 	u8 *pu8seq;
+ 	u8 u8seqlen;
+ 	u8 u8keyidx;
+@@ -1968,7 +1968,7 @@ _WPARxGtk_end_case_:
+ 
+ 			}
+ 
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+ 			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
+ 			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
+ 			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
+@@ -2003,7 +2003,7 @@ _WPARxGtk_end_case_:
+ 
+ 			}
+ 
+-			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
++			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+ 			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
+ 			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->attr.wpa.key,
+ 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
+@@ -3372,7 +3372,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 
+ 	msg.body.key_info.attr.wpa.u8Keylen = u8KeyLen;
+ 	msg.body.key_info.attr.wpa.u8Ciphermode = u8Ciphermode;
+-	msg.body.key_info.attr.wpa.pu8macaddr = mac_addr;
++	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
+ 	msg.drv = hif_drv;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+-- 
+1.9.1
 
