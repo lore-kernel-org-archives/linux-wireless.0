@@ -1,20 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4744 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2829 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756426AbbJ2C5R (ORCPT
+	with ESMTP id S932235AbbJMKw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:57:17 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 13 Oct 2015 06:52:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 09/64] staging: wilc1000: rename hSemGetCHNL of struct host_if_drv
-Date: Thu, 29 Oct 2015 11:58:32 +0900
-Message-ID: <1446087567-16728-9-git-send-email-glen.lee@atmel.com> (sfid-20151029_035720_263906_1645BE67)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 17/54] staging: wilc1000: rename pu8IEs of struct scan_attr
+Date: Tue, 13 Oct 2015 19:49:42 +0900
+Message-ID: <1444733419-17679-17-git-send-email-tony.cho@atmel.com> (sfid-20151013_125230_516087_8EB664B2)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,60 +24,62 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames hSemGetCHNL of struct host_if_drv to sem_get_chnl
-to avoid CamelCase naming convention.
+This patch renames pu8IEs of struct scan_attr to ies to
+avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7b654c5..b59551a 100644
+index 205be22..4a33d16 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2075,7 +2075,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
- 		result = -EFAULT;
+@@ -100,7 +100,7 @@ struct scan_attr {
+ 	u8 type;
+ 	u8 *ch_freq_list;
+ 	u8 ch_list_len;
+-	u8 *pu8IEs;
++	u8 *ies;
+ 	size_t IEsLen;
+ 	wilc_scan_result pfScanResult;
+ 	void *pvUserArg;
+@@ -891,7 +891,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	{
+ 		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
+ 		strWIDList[u32WidsCount].type = WID_BIN_DATA;
+-		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->pu8IEs;
++		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->ies;
+ 		strWIDList[u32WidsCount].size = pstrHostIFscanAttr->IEsLen;
+ 		u32WidsCount++;
+ 	}
+@@ -948,9 +948,9 @@ ERRORHANDLER:
+ 		pstrHostIFscanAttr->ch_freq_list = NULL;
  	}
  
--	up(&hif_drv->hSemGetCHNL);
-+	up(&hif_drv->sem_get_chnl);
+-	if (pstrHostIFscanAttr->pu8IEs != NULL)	{
+-		kfree(pstrHostIFscanAttr->pu8IEs);
+-		pstrHostIFscanAttr->pu8IEs = NULL;
++	if (pstrHostIFscanAttr->ies != NULL) {
++		kfree(pstrHostIFscanAttr->ies);
++		pstrHostIFscanAttr->ies = NULL;
+ 	}
+ 	if (pstrHostIFscanAttr->strHiddenNetwork.pstrHiddenNetworkInfo != NULL)	{
+ 		kfree(pstrHostIFscanAttr->strHiddenNetwork.pstrHiddenNetworkInfo);
+@@ -4067,9 +4067,8 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	memcpy(msg.body.scan_info.ch_freq_list, pu8ChnlFreqList, u8ChnlListLen);
  
- 	return result;
- }
-@@ -3737,7 +3737,7 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("wilc mq send fail\n");
--	down(&hif_drv->hSemGetCHNL);
-+	down(&hif_drv->sem_get_chnl);
+ 	msg.body.scan_info.IEsLen = IEsLen;
+-	msg.body.scan_info.pu8IEs = kmalloc(IEsLen, GFP_KERNEL);
+-	memcpy(msg.body.scan_info.pu8IEs,
+-		    pu8IEs, IEsLen);
++	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
++	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
  
- 	*pu8ChNo = ch_no;
- 
-@@ -4111,7 +4111,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	sema_init(&hif_drv->sem_test_disconn_block, 0);
- 	sema_init(&hif_drv->sem_get_rssi, 0);
- 	sema_init(&hif_drv->sem_get_link_speed, 0);
--	sema_init(&hif_drv->hSemGetCHNL, 0);
-+	sema_init(&hif_drv->sem_get_chnl, 0);
- 	sema_init(&hif_drv->hSemInactiveTime, 0);
- 
- 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index a603e84..8d12099 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -309,7 +309,7 @@ struct host_if_drv {
- 	struct semaphore sem_test_disconn_block;
- 	struct semaphore sem_get_rssi;
- 	struct semaphore sem_get_link_speed;
--	struct semaphore hSemGetCHNL;
-+	struct semaphore sem_get_chnl;
- 	struct semaphore hSemInactiveTime;
- /* timer handlers */
- 	struct timer_list hScanTimer;
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error) {
 -- 
 1.9.1
 
