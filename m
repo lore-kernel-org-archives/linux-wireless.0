@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chaos.universe-factory.net ([37.72.148.22]:58264 "EHLO
-	chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752023AbbJXTdu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4886 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932102AbbJMLDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2015 15:33:50 -0400
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix crash on mesh local link ID generation with VIFs
-Date: Sat, 24 Oct 2015 21:25:51 +0200
-Message-Id: <410200d1bd404c5c3acf66b8cabaae2860df2241.1445714370.git.mschiffer@universe-factory.net> (sfid-20151024_213417_424404_3C15B02D)
+	Tue, 13 Oct 2015 07:03:13 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 53/54] staging: wilc1000: rename u32Length of struct rcvd_net_info
+Date: Tue, 13 Oct 2015 20:02:11 +0900
+Message-ID: <1444734132-17858-8-git-send-email-tony.cho@atmel.com> (sfid-20151013_130321_567341_813DEBA6)
+In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-llid_in_use needs to be limited to stations of the same VIF, otherwise it
-will cause a NULL deref as the sta_info of non-mesh-VIFs don't have
-sta->mesh set.
+From: Leo Kim <leo.kim@atmel.com>
 
-Steps to reproduce:
+This patch renames u32Length of struct rcvd_net_info to len to
+avoid CamelCase naming convention.
 
-   modprobe mac80211_hwsim channels=2
-   iw phy phy0 interface add ibss0 type ibss
-   iw phy phy0 interface add mesh0 type mp
-   iw phy phy1 interface add ibss1 type ibss
-   iw phy phy1 interface add mesh1 type mp
-   ip link set ibss0 up
-   ip link set mesh0 up
-   ip link set ibss1 up
-   ip link set mesh1 up
-   iw dev ibss0 ibss join foo 2412
-   iw dev ibss1 ibss join foo 2412
-   # Ensure that ibss0 and ibss1 are actually associated; I often need to
-   # leave and join the cell on ibss1 a second time.
-   iw dev mesh0 mesh join bar
-   iw dev mesh1 mesh join bar # crash
-
-Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-Should probably be queued for stable, at least for all kernels containing
-"mac80211: move mesh related station fields to own struct" (the bug was
-there before, but it didn't crash without that commit).
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
- net/mac80211/mesh_plink.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 5838464..d1224d3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -677,6 +677,9 @@ static bool llid_in_use(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 432b275..392bf08 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4439,7 +4439,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.id = HOST_IF_MSG_RCVD_NTWRK_INFO;
+ 	msg.drv = hif_drv;
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (sdata != sta->sdata)
-+			continue;
-+
- 		if (!memcmp(&sta->mesh->llid, &llid, sizeof(llid))) {
- 			in_use = true;
- 			break;
+-	msg.body.net_info.u32Length = u32Length;
++	msg.body.net_info.len = u32Length;
+ 	msg.body.net_info.buffer = kmalloc(u32Length, GFP_KERNEL);
+ 	memcpy(msg.body.net_info.buffer, pu8Buffer, u32Length);
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 778dbf5..146a60f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -200,7 +200,7 @@ typedef void (*wilc_remain_on_chan_ready)(void *); /*Remain on channel callback
+  */
+ struct rcvd_net_info {
+ 	u8 *buffer;
+-	u32 u32Length;
++	u32 len;
+ };
+ 
+ struct hidden_net_info {
 -- 
-2.6.2
+1.9.1
 
