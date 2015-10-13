@@ -1,67 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33752 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbbJBHl3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:41:29 -0400
-Received: by pacex6 with SMTP id ex6so100061377pac.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:29 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 01/12] staging: wilc1000: remove wilc_platform.h
-Date: Fri,  2 Oct 2015 16:41:10 +0900
-Message-Id: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094132_698886_727664A8)
+Received: from s3.sipsolutions.net ([5.9.151.49]:51722 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751401AbbJMJg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 05:36:56 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use new cfg80211_inform_bss_frame_data() API
+Date: Tue, 13 Oct 2015 11:36:53 +0200
+Message-Id: <1444729013-3585-1-git-send-email-johannes@sipsolutions.net> (sfid-20151013_113659_576160_646C9BCB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes wilc_platform.h file that is not used anywhere.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The new API is more easily extensible with a metadata struct
+passed to it, use it in mac80211.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-V2: resend because 08/12 patch is changed.
+ net/mac80211/ibss.c | 11 ++++++-----
+ net/mac80211/scan.c | 19 +++++++++----------
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
- drivers/staging/wilc1000/wilc_platform.h | 28 ----------------------------
- 1 file changed, 28 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_platform.h
-
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-deleted file mode 100644
-index 6ec1aa3..0000000
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ /dev/null
-@@ -1,28 +0,0 @@
--#ifndef __WILC_platform_H__
--#define __WILC_platform_H__
--
--#include <linux/kthread.h>
--#include <linux/semaphore.h>
--#include <linux/module.h>
--#include <linux/slab.h>
--#include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/types.h>
--#include <linux/stat.h>
--#include <linux/time.h>
--#include <linux/version.h>
--#include "linux/string.h"
--/******************************************************************
-- *      OS specific types
-- *******************************************************************/
--
--
--
--
--
--
--/*******************************************************************
-- *      others
-- ********************************************************************/
--
--#endif
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 7f72bc9bae2e..bd853e7bde93 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -229,7 +229,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_chan_def chandef;
+ 	struct ieee80211_channel *chan;
+ 	struct beacon_data *presp;
+-	enum nl80211_bss_scan_width scan_width;
++	struct cfg80211_inform_bss bss_meta = {};
+ 	bool have_higher_than_11mbit;
+ 	bool radar_required;
+ 	int err;
+@@ -383,10 +383,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	mod_timer(&ifibss->timer,
+ 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+ 
+-	scan_width = cfg80211_chandef_to_scan_width(&chandef);
+-	bss = cfg80211_inform_bss_width_frame(local->hw.wiphy, chan,
+-					      scan_width, mgmt,
+-					      presp->head_len, 0, GFP_KERNEL);
++	bss_meta.chan = chan;
++	bss_meta.scan_width = cfg80211_chandef_to_scan_width(&chandef);
++	bss = cfg80211_inform_bss_frame_data(local->hw.wiphy, &bss_meta, mgmt,
++					     presp->head_len, GFP_KERNEL);
++
+ 	cfg80211_put_bss(local->hw.wiphy, bss);
+ 	netif_carrier_on(sdata->dev);
+ 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, chan, GFP_KERNEL);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 11d0901ebb7b..a368a1d6caff 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -67,24 +67,23 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_bss *bss;
+ 	int clen, srlen;
+-	enum nl80211_bss_scan_width scan_width;
+-	s32 signal = 0;
++	struct cfg80211_inform_bss bss_meta = {};
+ 	bool signal_valid;
+ 
+ 	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM))
+-		signal = rx_status->signal * 100;
++		bss_meta.signal = rx_status->signal * 100;
+ 	else if (ieee80211_hw_check(&local->hw, SIGNAL_UNSPEC))
+-		signal = (rx_status->signal * 100) / local->hw.max_signal;
++		bss_meta.signal = (rx_status->signal * 100) / local->hw.max_signal;
+ 
+-	scan_width = NL80211_BSS_CHAN_WIDTH_20;
++	bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_20;
+ 	if (rx_status->flag & RX_FLAG_5MHZ)
+-		scan_width = NL80211_BSS_CHAN_WIDTH_5;
++		bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_5;
+ 	if (rx_status->flag & RX_FLAG_10MHZ)
+-		scan_width = NL80211_BSS_CHAN_WIDTH_10;
++		bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_10;
+ 
+-	cbss = cfg80211_inform_bss_width_frame(local->hw.wiphy, channel,
+-					       scan_width, mgmt, len, signal,
+-					       GFP_ATOMIC);
++	bss_meta.chan = channel;
++	cbss = cfg80211_inform_bss_frame_data(local->hw.wiphy, &bss_meta,
++					      mgmt, len, GFP_ATOMIC);
+ 	if (!cbss)
+ 		return NULL;
+ 	/* In case the signal is invalid update the status */
 -- 
-2.6.0
+2.5.1
 
