@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38700 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbJON62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:58:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/12] cfg80211: reg: remove useless reg_timeout scheduling
-Date: Thu, 15 Oct 2015 15:58:16 +0200
-Message-Id: <1444917503-19118-5-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155846_808343_3C51DC38)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2892 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671AbbJMKwr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 06:52:47 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 20/54] staging: wilc1000: rename pvUserArg of struct scan_attr
+Date: Tue, 13 Oct 2015 19:49:45 +0900
+Message-ID: <1444733419-17679-20-git-send-email-tony.cho@atmel.com> (sfid-20151013_125250_079179_7C8EB9BF)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-When the functions reg_set_rd_driver() and reg_set_rd_country_ie()
-return with an error, the calling function already restores data
-by calling restore_regulatory_settings(), so there's no need to
-also schedule a timeout (which would lead to other side effects
-such as indicating CRDA failed, which clearly isn't true.) Remove
-the scheduling.
+This patch renames pvUserArg of struct scan_attr to arg to
+avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/wireless/reg.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 18b990426e13..e7c489b38b0c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2884,11 +2884,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c5cf7d4..6926a9e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -103,7 +103,7 @@ struct scan_attr {
+ 	u8 *ies;
+ 	size_t ies_len;
+ 	wilc_scan_result result;
+-	void *pvUserArg;
++	void *arg;
+ 	struct hidden_network strHiddenNetwork;
+ };
  
- 	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
--	if (!request_wiphy) {
--		queue_delayed_work(system_power_efficient_wq,
--				   &reg_timeout, 0);
-+	if (!request_wiphy)
- 		return -ENODEV;
--	}
+@@ -841,7 +841,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	PRINT_D(HOSTINF_DBG, "Scanning: In [%d] state\n", hif_drv->enuHostIFstate);
  
- 	if (!driver_request->intersect) {
- 		if (request_wiphy->regd)
-@@ -2945,11 +2942,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
- 	}
+ 	hif_drv->strWILC_UsrScanReq.pfUserScanResult = pstrHostIFscanAttr->result;
+-	hif_drv->strWILC_UsrScanReq.u32UserScanPvoid = pstrHostIFscanAttr->pvUserArg;
++	hif_drv->strWILC_UsrScanReq.u32UserScanPvoid = pstrHostIFscanAttr->arg;
  
- 	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
--	if (!request_wiphy) {
--		queue_delayed_work(system_power_efficient_wq,
--				   &reg_timeout, 0);
-+	if (!request_wiphy)
- 		return -ENODEV;
--	}
+ 	if ((hif_drv->enuHostIFstate >= HOST_IF_SCANNING) && (hif_drv->enuHostIFstate < HOST_IF_CONNECTED)) {
+ 		PRINT_D(GENERIC_DBG, "Don't scan we are already in [%d] state\n", hif_drv->enuHostIFstate);
+@@ -4060,7 +4060,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	msg.body.scan_info.src = u8ScanSource;
+ 	msg.body.scan_info.type = u8ScanType;
+ 	msg.body.scan_info.result = ScanResult;
+-	msg.body.scan_info.pvUserArg = pvUserArg;
++	msg.body.scan_info.arg = pvUserArg;
  
- 	if (country_ie_request->intersect)
- 		return -EINVAL;
+ 	msg.body.scan_info.ch_list_len = u8ChnlListLen;
+ 	msg.body.scan_info.ch_freq_list = kmalloc(u8ChnlListLen, GFP_KERNEL);
 -- 
-2.5.1
+1.9.1
 
