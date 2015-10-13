@@ -1,65 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33743 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277AbbJOCHp (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3005 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942AbbJMKxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:45 -0400
-Received: by pabrc13 with SMTP id rc13so71276153pab.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:45 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 13/33] staging: wilc1000: fix return type of host_int_get_host_chnl_num
-Date: Thu, 15 Oct 2015 11:06:42 +0900
-Message-Id: <1444874822-31152-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041428_861115_345FCDE6)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 13 Oct 2015 06:53:20 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/54] staging: wilc1000: rename pu8ssid of struct connect_attr
+Date: Tue, 13 Oct 2015 19:49:50 +0900
+Message-ID: <1444733419-17679-25-git-send-email-tony.cho@atmel.com> (sfid-20151013_125323_227805_70DBEA14)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_get_host_chnl_num from s32 to
-int. s32Error gets return value from wilc_mq_send that has retun type of
-int. It should be changed return type of int as well as data type of
-s32Error.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames pu8ssid of struct connect_attr to ssid to
+avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 32 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8cc0cfb..5859d34 100644
+index b450136..3c044d2 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3844,9 +3844,9 @@ int host_int_set_operation_mode(struct host_if_drv *hif_drv, u32 mode)
- 	return result;
- }
+@@ -109,7 +109,7 @@ struct scan_attr {
  
--s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
-+int host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
+ struct connect_attr {
+ 	u8 *bssid;
+-	u8 *pu8ssid;
++	u8 *ssid;
+ 	size_t ssidLen;
+ 	u8 *pu8IEs;
+ 	size_t IEsLen;
+@@ -1037,9 +1037,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	}
  
- 	if (!hif_drv) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4285b1b..5b2261d 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -800,7 +800,7 @@ int host_int_set_mac_chnl_num(struct host_if_drv *wfi_drv, u8 channel);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--s32 host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
-+int host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
- /**
-  *  @brief              gets the sta rssi
-  *  @details    gets the currently maintained RSSI value for the station.
+ 	hif_drv->strWILC_UsrConnReq.ssidLen = pstrHostIFconnectAttr->ssidLen;
+-	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
++	if (pstrHostIFconnectAttr->ssid != NULL) {
+ 		hif_drv->strWILC_UsrConnReq.pu8ssid = kmalloc(pstrHostIFconnectAttr->ssidLen + 1, GFP_KERNEL);
+-		memcpy(hif_drv->strWILC_UsrConnReq.pu8ssid, pstrHostIFconnectAttr->pu8ssid,
++		memcpy(hif_drv->strWILC_UsrConnReq.pu8ssid, pstrHostIFconnectAttr->ssid,
+ 			    pstrHostIFconnectAttr->ssidLen);
+ 		hif_drv->strWILC_UsrConnReq.pu8ssid[pstrHostIFconnectAttr->ssidLen] = '\0';
+ 	}
+@@ -1081,7 +1081,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		strWIDList[u32WidsCount].size = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+ 		u32WidsCount++;
+ 
+-		if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
++		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 
+ 			gu32FlushedInfoElemAsocSize = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+ 			gu8FlushedInfoElemAsoc =  kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
+@@ -1095,7 +1095,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].val = (s8 *)(&(hif_drv->strWILC_UsrConnReq.u8security));
+ 	u32WidsCount++;
+ 
+-	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
++	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+ 		gu8Flushed11iMode = hif_drv->strWILC_UsrConnReq.u8security;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", hif_drv->strWILC_UsrConnReq.u8security);
+@@ -1107,7 +1107,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].val = (s8 *)(&hif_drv->strWILC_UsrConnReq.tenuAuth_type);
+ 	u32WidsCount++;
+ 
+-	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
++	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+ 		gu8FlushedAuthType = (u8)hif_drv->strWILC_UsrConnReq.tenuAuth_type;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", hif_drv->strWILC_UsrConnReq.tenuAuth_type);
+@@ -1119,7 +1119,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].size = 112;
+ 	strWIDList[u32WidsCount].val = kmalloc(strWIDList[u32WidsCount].size, GFP_KERNEL);
+ 
+-	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
++	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 		gu32FlushedJoinReqSize = strWIDList[u32WidsCount].size;
+ 		gu8FlushedJoinReq = kmalloc(gu32FlushedJoinReqSize, GFP_KERNEL);
+ 	}
+@@ -1131,8 +1131,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	pu8CurrByte = strWIDList[u32WidsCount].val;
+ 
+ 
+-	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
+-		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8ssid, pstrHostIFconnectAttr->ssidLen);
++	if (pstrHostIFconnectAttr->ssid != NULL) {
++		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssidLen);
+ 		pu8CurrByte[pstrHostIFconnectAttr->ssidLen] = '\0';
+ 	}
+ 	pu8CurrByte += MAX_SSID_LEN;
+@@ -1223,7 +1223,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	u32WidsCount++;
+ 	gu32WidConnRstHack = 0;
+ 
+-	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
++	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
+ 		gu8FlushedJoinReqDrvHandler = hif_drv;
+ 	}
+@@ -1292,9 +1292,9 @@ ERRORHANDLER:
+ 		pstrHostIFconnectAttr->bssid = NULL;
+ 	}
+ 
+-	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
+-		kfree(pstrHostIFconnectAttr->pu8ssid);
+-		pstrHostIFconnectAttr->pu8ssid = NULL;
++	if (pstrHostIFconnectAttr->ssid != NULL) {
++		kfree(pstrHostIFconnectAttr->ssid);
++		pstrHostIFconnectAttr->ssid = NULL;
+ 	}
+ 
+ 	if (pstrHostIFconnectAttr->pu8IEs != NULL) {
+@@ -3626,10 +3626,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 
+ 	if (pu8ssid != NULL) {
+ 		msg.body.con_info.ssidLen = ssidLen;
+-		msg.body.con_info.pu8ssid = kmalloc(ssidLen, GFP_KERNEL);
+-		memcpy(msg.body.con_info.pu8ssid,
+-
+-			    pu8ssid, ssidLen);
++		msg.body.con_info.ssid = kmalloc(ssidLen, GFP_KERNEL);
++		memcpy(msg.body.con_info.ssid, pu8ssid, ssidLen);
+ 	}
+ 
+ 	if (pu8IEs != NULL) {
 -- 
-2.6.1
+1.9.1
 
