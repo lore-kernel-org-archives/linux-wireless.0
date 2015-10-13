@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56820 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753586AbbJVBDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 21:03:31 -0400
-Date: Thu, 22 Oct 2015 08:58:58 +0800
-From: kbuild test robot <lkp@intel.com>
-To: greearb@candelatech.com
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
-	ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH 2/2] ath6k: implement ethtool stats.
-Message-ID: <201510220815.XZd9VwIK%fengguang.wu@intel.com> (sfid-20151022_030335_660861_A870A5DA)
+Received: from mail-io0-f176.google.com ([209.85.223.176]:32824 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbbJMSiF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 14:38:05 -0400
+Received: by iodv82 with SMTP id v82so31024202iod.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 11:38:04 -0700 (PDT)
+Date: Tue, 13 Oct 2015 13:37:03 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Karl =?utf-8?Q?M=C3=B6ller?= <karl@excors.net>
+Subject: Re: [PATCH] wireless-regdb: Update ZA rules for 5490-5710 MHz
+Message-ID: <20151013183703.GA50632@ubuntu-hedt> (sfid-20151013_203812_758856_6C12F2BD)
+References: <1444053722-33852-1-git-send-email-seth.forshee@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445471597-26091-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1444053722-33852-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On Mon, Oct 05, 2015 at 09:02:02AM -0500, Seth Forshee wrote:
+> The Radio Frequency Spectrum Regulations 2015 [1] drops the
+> requirement for DFS and TPC in the 5490-5710 MHz range. Update
+> the database to remove DFS for this range and remove the 3dB drop
+> in the transmit power limit for TPC.
+> 
+> [1] http://www.ellipsis.co.za/wp-content/uploads/2014/12/Radio-Frequency-Spectrum-Regulations-2015.pdf
+> 
+> Cc: Karl Möller <karl@excors.net>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
-[auto build test WARNING on net/master -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
-
-url:    https://github.com/0day-ci/linux/commits/greearb-candelatech-com/ath6k-break-stats-gathering-code-into-separate-method/20151022-075558
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
->> drivers/net/wireless/ath/ath6kl/cfg80211.c:3750:26: sparse: symbol 'ath6k_ethtool_ops' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Applied.
