@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2729 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3295 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688AbbJMKwC (ORCPT
+	with ESMTP id S1752629AbbJMKyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:52:02 -0400
+	Tue, 13 Oct 2015 06:54:44 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,9 +12,9 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/54] staging: wilc1000: rename u8ScanType of struct scan_attr
-Date: Tue, 13 Oct 2015 19:49:38 +0900
-Message-ID: <1444733419-17679-13-git-send-email-tony.cho@atmel.com> (sfid-20151013_125206_878186_F43EA6AD)
+Subject: [PATCH 38/54] staging: wilc1000: rename u32Interval of struct beacon_attr
+Date: Tue, 13 Oct 2015 19:50:03 +0900
+Message-ID: <1444733419-17679-38-git-send-email-tony.cho@atmel.com> (sfid-20151013_125447_337880_29DDF0EB)
 In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
@@ -24,46 +24,52 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u8ScanType of struct scan_attr to type to
+This patch renames u32Interval of struct beacon_attr to interval to
 avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9180ea6..b7eb272 100644
+index cd42364..e6490ef 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -97,7 +97,7 @@ struct key_attr {
+@@ -131,7 +131,7 @@ struct channel_attr {
+ };
  
- struct scan_attr {
- 	u8 src;
--	u8 u8ScanType;
-+	u8 type;
- 	u8 *pu8ChnlFreqList;
- 	u8 u8ChnlListLen;
- 	u8 *pu8IEs;
-@@ -899,7 +899,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].id = WID_SCAN_TYPE;
- 	strWIDList[u32WidsCount].type = WID_CHAR;
- 	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)(&(pstrHostIFscanAttr->u8ScanType));
-+	strWIDList[u32WidsCount].val = (s8 *)(&(pstrHostIFscanAttr->type));
- 	u32WidsCount++;
+ struct beacon_attr {
+-	u32 u32Interval;
++	u32 interval;
+ 	u32 u32DTIMPeriod;
+ 	u32 u32HeadLen;
+ 	u8 *pu8Head;
+@@ -2344,10 +2344,10 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 		goto ERRORHANDLER;
  
- 	strWIDList[u32WidsCount].id = WID_SCAN_CHANNEL_LIST;
-@@ -4063,7 +4063,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	pu8CurrByte = strWID.val;
+-	*pu8CurrByte++ = (pstrSetBeaconParam->u32Interval & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32Interval >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32Interval >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32Interval >> 24) & 0xFF);
++	*pu8CurrByte++ = (pstrSetBeaconParam->interval & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 8) & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 16) & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 24) & 0xFF);
  
+ 	*pu8CurrByte++ = (pstrSetBeaconParam->u32DTIMPeriod & 0xFF);
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->u32DTIMPeriod >> 8) & 0xFF);
+@@ -4641,7 +4641,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 
+ 	msg.id = HOST_IF_MSG_ADD_BEACON;
  	msg.drv = hif_drv;
- 	msg.body.scan_info.src = u8ScanSource;
--	msg.body.scan_info.u8ScanType = u8ScanType;
-+	msg.body.scan_info.type = u8ScanType;
- 	msg.body.scan_info.pfScanResult = ScanResult;
- 	msg.body.scan_info.pvUserArg = pvUserArg;
- 
+-	pstrSetBeaconParam->u32Interval = u32Interval;
++	pstrSetBeaconParam->interval = u32Interval;
+ 	pstrSetBeaconParam->u32DTIMPeriod = u32DTIMPeriod;
+ 	pstrSetBeaconParam->u32HeadLen = u32HeadLen;
+ 	pstrSetBeaconParam->pu8Head = kmalloc(u32HeadLen, GFP_KERNEL);
 -- 
 1.9.1
 
