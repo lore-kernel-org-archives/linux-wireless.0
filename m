@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8299 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929AbbJSJ0s (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7405 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462AbbJMMu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 05:26:48 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 3/6] staging: wilc1000: move variable FALSE_FRMWR_CHANNEL
-Date: Mon, 19 Oct 2015 18:26:10 +0900
-Message-ID: <1445246773-22253-4-git-send-email-tony.cho@atmel.com> (sfid-20151019_112650_915796_C4A16AFA)
-In-Reply-To: <1445246773-22253-1-git-send-email-tony.cho@atmel.com>
-References: <1445246773-22253-1-git-send-email-tony.cho@atmel.com>
+	Tue, 13 Oct 2015 08:50:59 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath10k: implement board API 2 support
+In-Reply-To: <20151006131455.14278.28222.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Tue, 06 Oct 2015 16:15:39 +0300")
+References: <20151006131455.14278.28222.stgit@potku.adurom.net>
+Date: Tue, 13 Oct 2015 15:50:45 +0300
+Message-ID: <87r3kzortm.fsf@kamboji.qca.qualcomm.com> (sfid-20151013_145103_869430_179606D5)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-This patch moves the variable 'FALSE_FRMWR_CHANNEL' to where local definitions
-are.
+> Implement board 2 API to make it easier to have multiple board files and
+> automatically choose correct one.
+>
+> ---
+>
+> Manikanta Pubbisetty (2):
+>       ath10k: add board 2 API support
+>       ath10k: select board data based on BMI chip id and board id
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c61042e..948b986 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -60,6 +60,7 @@ extern u8 g_wilc_initialized;
- #define BA_SESSION_DEFAULT_BUFFER_SIZE          16
- #define BA_SESSION_DEFAULT_TIMEOUT              1000
- #define BLOCK_ACK_REQ_SIZE                      0x14
-+#define FALSE_FRMWR_CHANNEL			100
- 
- struct cfg_param_attr {
- 	struct cfg_param_val cfg_attr_info;
-@@ -2623,7 +2624,6 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
- 	return result;
- }
- 
--#define FALSE_FRMWR_CHANNEL 100
- static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 				     struct remain_ch *pstrHostIfRemainOnChan)
- {
 -- 
-1.9.1
-
+Kalle Valo
