@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34700 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012AbbJWWdf (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:33270 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbbJMWmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 18:33:35 -0400
-Received: by padhk11 with SMTP id hk11so129402047pad.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 15:33:34 -0700 (PDT)
+	Tue, 13 Oct 2015 18:42:35 -0400
+Received: by wicge5 with SMTP id ge5so77826833wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 15:42:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1444727650.1961.10.camel@sipsolutions.net>
+References: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com>
+	<1444727650.1961.10.camel@sipsolutions.net>
+Date: Wed, 14 Oct 2015 00:42:34 +0200
+Message-ID: <CABAco3CLCtFOofHMbJSz-Okcc4BM4nnVwO5By8DeZUYJrsCt6Q@mail.gmail.com> (sfid-20151014_004239_268062_761E6DDC)
+Subject: Re: [PATCH] ocb: use correct "MHz" instead of "MHZ"
 From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] iw: Fix memory leak if nla_put fails
-Date: Sat, 24 Oct 2015 00:33:12 +0200
-Message-Id: <1445639592-5559-1-git-send-email-ola1olsson@gmail.com> (sfid-20151024_003338_280380_D4EE8ED5)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The NLA_PUT macro will automatically goto nla_put_failure if
-the underlying nla_put fails. This will in turn leak our malloced
-memory in both the scan and wowlan commands.
-Fix that by not using the macro in the cases where we have
-allocated heap mem.
+Absolutely, I will do that.
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
----
- scan.c   |    5 ++++-
- wowlan.c |    8 ++++++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
+May I ask if you are interested in patches that removes the compiler
+warnings on Android? I have cloned the iw git under the external
+folder in the android tree and everything compiles fine with "mm" but
+there are a lot of warnings. Most warnings are unused-parameter and
+sign-compare but also missing-field-initializers.
+None of them are critical but it is way easier to introduce new ones
+if the screen is full of them already.The patches are ready in case
+you are interested.
 
-diff --git a/scan.c b/scan.c
-index 8762784..06c4255 100644
---- a/scan.c
-+++ b/scan.c
-@@ -458,7 +458,10 @@ static int handle_scan(struct nl80211_state *state,
- 			memcpy(&tmpies[ies_len], meshid, meshid_len);
- 			free(meshid);
- 		}
--		NLA_PUT(msg, NL80211_ATTR_IE, ies_len + meshid_len, tmpies);
-+		if (nla_put(msg, NL80211_ATTR_IE, ies_len + meshid_len, tmpies) < 0) {
-+			free(tmpies);
-+			goto nla_put_failure;
-+		}
- 		free(tmpies);
- 	}
- 
-diff --git a/wowlan.c b/wowlan.c
-index e1d3750..c30eab7 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -159,8 +159,12 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
- 			tok->offset = atoi(offs);
- 			memcpy(tok->token_stream, stream, stream_len);
- 
--			NLA_PUT(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
--				sizeof(*tok) + stream_len, tok);
-+			if (nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
-+				sizeof(*tok) + stream_len, tok) < 0) {
-+				free(stream);
-+				free(tok);
-+				goto nla_put_failure;
-+			}
- 			free(stream);
- 			free(tok);
- 		} else {
--- 
-1.7.9.5
 
+/Ola
+
+On Tue, Oct 13, 2015 at 11:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi Ola,
+>
+> Thanks for all the patches - I just applied this and three others.
+>
+> Note that I've reworded the subject for some - I prefer the subject to
+> state in active voice what the change is doing - i.e. be something you
+> read before the actual change, rather than afterwards. I'd appreciate
+> if you could do the same for future patches.
+>
+> Thanks,
+> johannes
