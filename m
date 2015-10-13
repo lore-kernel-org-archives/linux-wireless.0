@@ -1,92 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41799 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755291AbbJ1G7O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:59:14 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 16/80] staging: wilc1000: rename u8RemainOnChan_pendingreq of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:36 +0900
-Message-ID: <1446015640-29398-16-git-send-email-glen.lee@atmel.com> (sfid-20151028_081655_523443_0042CB24)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:51596 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020AbbJMI7u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 04:59:50 -0400
+Message-ID: <1444726787.1961.7.camel@sipsolutions.net> (sfid-20151013_110001_345454_7C8F8626)
+Subject: pull-request: mac80211 2015-10-13
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Oct 2015 10:59:47 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch renames u8RemainOnChan_pendingreq of struct host_if_drv to
-remain_on_ch_pending to avoid CamelCase naming convention.
+There are just two small fixes, but I didn't really want to wait since
+I have nothing else pending.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Let me know if there's any problem.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dd09152..5a2cae2 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2476,7 +2476,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	u8 u8remain_on_chan_flag;
- 	struct wid wid;
- 
--	if (!hif_drv->u8RemainOnChan_pendingreq) {
-+	if (!hif_drv->remain_on_ch_pending) {
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
- 		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
- 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
-@@ -2488,7 +2488,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 
- 	if (hif_drv->usr_scan_req.pfUserScanResult) {
- 		PRINT_INFO(GENERIC_DBG, "Required to remain on chan while scanning return\n");
--		hif_drv->u8RemainOnChan_pendingreq = 1;
-+		hif_drv->remain_on_ch_pending = 1;
- 		result = -EBUSY;
- 		goto ERRORHANDLER;
- 	}
-@@ -2535,8 +2535,8 @@ ERRORHANDLER:
- 		if (hif_drv->remain_on_ch.pRemainOnChanReady)
- 			hif_drv->remain_on_ch.pRemainOnChanReady(hif_drv->remain_on_ch.pVoid);
- 
--		if (hif_drv->u8RemainOnChan_pendingreq)
--			hif_drv->u8RemainOnChan_pendingreq = 0;
-+		if (hif_drv->remain_on_ch_pending)
-+			hif_drv->remain_on_ch_pending = 0;
- 	}
- 
- 	return result;
-@@ -2886,7 +2886,7 @@ static int hostIFthread(void *pvArg)
- 
- 			Handle_ScanDone(msg.drv, SCAN_EVENT_DONE);
- 
--			if (hif_drv->u8RemainOnChan_pendingreq)
-+			if (hif_drv->remain_on_ch_pending)
- 				Handle_RemainOnChan(msg.drv, &msg.body.remain_on_ch);
- 
- 			break;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index ea47a0d..8f80497 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -295,7 +295,7 @@ struct host_if_drv {
- 	struct user_scan_req usr_scan_req;
- 	struct user_conn_req usr_conn_req;
- 	struct remain_ch remain_on_ch;
--	u8 u8RemainOnChan_pendingreq;
-+	u8 remain_on_ch_pending;
- 	u64 u64P2p_MgmtTimeout;
- 	u8 u8P2PConnect;
- 
--- 
-1.9.1
+johannes
 
+The following changes since commit babc305e21ea3811d98b67437299360904ac1b6a:
+
+  mac80211: reset CQM history upon reconfiguration (2015-09-22 15:22:50 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-10-13
+
+for you to fetch changes up to 4633dfc32c0019bed2996de9bbdbe7f3b518a44e:
+
+  mac80211: Fix hwflags debugfs file format (2015-10-13 10:30:56 +0200)
+
+----------------------------------------------------------------
+Like last time, we have two small fixes:
+ * fast-xmit was not doing powersave filter clearing correctly,
+   disable fast-xmit while any such operations are still pending
+ * a debugfs file was broken due to some infrastructure changes
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mac80211: fix handling of PS filtering with fast-xmit
+
+Mohammed Shafi Shajakhan (1):
+      mac80211: Fix hwflags debugfs file format
+
+ net/mac80211/debugfs.c | 2 +-
+ net/mac80211/status.c  | 1 +
+ net/mac80211/tx.c      | 7 +++++--
+ 3 files changed, 7 insertions(+), 3 deletions(-)
