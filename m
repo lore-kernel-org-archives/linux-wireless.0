@@ -1,59 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44550 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266AbbJEQPV (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:2668 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbbJMKvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 12:15:21 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 2/5] wireless-regdb: Update regulatory rule boundary frequencies for Taiwan (TW)
-Date: Tue,  6 Oct 2015 00:14:55 +0800
-Message-Id: <1444061698-16384-3-git-send-email-wens@csie.org> (sfid-20151005_181527_523669_B18E265C)
-In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
-References: <1444061698-16384-1-git-send-email-wens@csie.org>
+	Tue, 13 Oct 2015 06:51:49 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/54] staging: wilc1000: rename u8Ciphermode of struct host_if_wpa_attr
+Date: Tue, 13 Oct 2015 19:49:36 +0900
+Message-ID: <1444733419-17679-11-git-send-email-tony.cho@atmel.com> (sfid-20151013_125151_897648_3D78AECF)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's frequency allocation rules [1] list the following frequency
-ranges available for low power RF devices:
+From: Leo Kim <leo.kim@atmel.com>
 
-  - 2400 ~ 2483.5 MHz
-  - 5150 ~ 5250 MHz
-  - 5250 ~ 5350 MHz
-  - 5470 ~ 5725 MHz
-  - 5725 ~ 5850 MHz
+This patch renames u8Ciphermode of struct host_if_wpa_attr to mode to
+avoid CamelCase naming convention.
 
-Update the rules to match. Since 5250 ~ 5350 MHz is wide enough for
-VHT80, and there are no regulations against it, enable it as well.
-
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index e081634..f6607bc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1126,10 +1126,10 @@ country TT: DFS-FCC
- #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
- #   (section 3.10.1, 4.7)
- country TW: DFS-JP
--	(2402 - 2472 @ 40), (30)
--	(5270 - 5330 @ 40), (17), DFS
-+	(2400 - 2483.5 @ 40), (30)
-+	(5250 - 5350 @ 80), (17), DFS
- 	(5470 - 5725 @ 160), (23), DFS
--	(5735 - 5835 @ 80), (30)
-+	(5725 - 5850 @ 80), (30)
-  
- country TZ:
- 	(2402 - 2482 @ 40), (20)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2ebd0cc..14a01ce 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -72,7 +72,7 @@ struct host_if_wpa_attr {
+ 	u8 seq_len;
+ 	u8 index;
+ 	u8 key_len;
+-	u8 u8Ciphermode;
++	u8 mode;
+ };
+ 
+ struct host_if_wep_attr {
+@@ -1897,7 +1897,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.u8Ciphermode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.mode));
+ 
+ 			strWIDList[1].id = (u16)WID_ADD_RX_GTK;
+ 			strWIDList[1].type = WID_STR;
+@@ -1977,7 +1977,7 @@ _WPARxGtk_end_case_:
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+ 			strWIDList[0].type = WID_CHAR;
+ 			strWIDList[0].size = sizeof(char);
+-			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.u8Ciphermode));
++			strWIDList[0].val = (s8 *)(&(pstrHostIFkeyAttr->attr.wpa.mode));
+ 
+ 			strWIDList[1].id = (u16)WID_ADD_PTK;
+ 			strWIDList[1].type = WID_STR;
+@@ -3371,8 +3371,8 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	}
+ 
+ 	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
+-	msg.body.key_info.attr.wpa.u8Ciphermode = u8Ciphermode;
+ 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
++	msg.body.key_info.attr.wpa.mode = u8Ciphermode;
+ 	msg.drv = hif_drv;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+@@ -3419,7 +3419,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 
+ 	if (mode == AP_MODE) {
+ 		msg.body.key_info.action = ADDKEY_AP;
+-		msg.body.key_info.attr.wpa.u8Ciphermode = u8Ciphermode;
++		msg.body.key_info.attr.wpa.mode = u8Ciphermode;
+ 	}
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
 -- 
-2.5.3
+1.9.1
 
