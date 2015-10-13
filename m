@@ -1,77 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39603 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756482AbbJVGHr convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3448 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932170AbbJMKzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 02:07:47 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"ido@wizery.com" <ido@wizery.com>
-Subject: Re: [RFC v3 1/2] iwlwifi: pcie: allow to build an A-MSDU using TSO
- core
-Date: Thu, 22 Oct 2015 06:07:42 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8AB4C7@hasmsx107.ger.corp.intel.com> (sfid-20151022_080817_197332_88425909)
-References: <1445452464-19525-1-git-send-email-emmanuel.grumbach@intel.com>
- <1445452464-19525-2-git-send-email-emmanuel.grumbach@intel.com>
- <1445470211.22974.86.camel@edumazet-glaptop2.roam.corp.google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32E8AB280@hasmsx107.ger.corp.intel.com>
- <1445480807.22974.91.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 13 Oct 2015 06:55:10 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 42/54] staging: wilc1000: rename u32TailLen of struct beacon_attr
+Date: Tue, 13 Oct 2015 19:50:07 +0900
+Message-ID: <1444733419-17679-42-git-send-email-tony.cho@atmel.com> (sfid-20151013_125515_147504_83F1EC10)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch renames u32TailLen of struct beacon_attr to tail_len to
+avoid CamelCase naming convention.
 
-On 10/22/2015 05:27 AM, Eric Dumazet wrote:
-> On Thu, 2015-10-22 at 00:14 +0000, Grumbach, Emmanuel wrote:
-> 
->>
->> Well. I guess I should at least check, but even with very small MSS, our
->> device supports up to 20 pointers for the same 802.11 packet: 2 are for
->> metadata. So basically, so leaves me only 18 pointers. for each MSS I
->> need at least 2 (one for the headers and one for the payload), so I will
->> have at most 9 of these for one packet, even with a tiny MSS.
->>
-> 
-> I did not see in your patch where you made the checks about 18 segs in a
-> TSO packet ?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-It is in the other patch: iwlwifi: mvm: send large SKBs to the transport
-mvm is the op_mode and the op_mode needs to make sure that the payload
-fits in one 802.11 packet AND it doesn't exhaust the number of pointers.
-I'll add a comment here.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dd07e11..2a2361a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -135,7 +135,7 @@ struct beacon_attr {
+ 	u32 dtim_period;
+ 	u32 head_len;
+ 	u8 *head;
+-	u32 u32TailLen;
++	u32 tail_len;
+ 	u8 *pu8Tail;
+ };
+ 
+@@ -2338,7 +2338,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 
+ 	strWID.id = (u16)WID_ADD_BEACON;
+ 	strWID.type = WID_BIN;
+-	strWID.size = pstrSetBeaconParam->head_len + pstrSetBeaconParam->u32TailLen + 16;
++	strWID.size = pstrSetBeaconParam->head_len + pstrSetBeaconParam->tail_len + 16;
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+ 	if (strWID.val == NULL)
+ 		goto ERRORHANDLER;
+@@ -2362,14 +2362,14 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 	memcpy(pu8CurrByte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
+ 	pu8CurrByte += pstrSetBeaconParam->head_len;
+ 
+-	*pu8CurrByte++ = (pstrSetBeaconParam->u32TailLen & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
++	*pu8CurrByte++ = (pstrSetBeaconParam->tail_len & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 8) & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
++	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+ 
+ 	if (pstrSetBeaconParam->pu8Tail > 0)
+-		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
+-	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
++		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->tail_len);
++	pu8CurrByte += pstrSetBeaconParam->tail_len;
+ 
+ 	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+@@ -4650,7 +4650,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 		goto ERRORHANDLER;
+ 	}
+ 	memcpy(pstrSetBeaconParam->head, pu8Head, u32HeadLen);
+-	pstrSetBeaconParam->u32TailLen = u32TailLen;
++	pstrSetBeaconParam->tail_len = u32TailLen;
+ 
+ 	if (u32TailLen > 0) {
+ 		pstrSetBeaconParam->pu8Tail = kmalloc(u32TailLen, GFP_KERNEL);
+-- 
+1.9.1
 
-> 
->> I agree that all this should be added to the code in a comment.
->> Speaking of which...
->> int tso_count_descs(struct sk_buff *skb)
->> {
->>         /* The Marvell Way */
->>         return skb_shinfo(skb)->gso_segs * 2 + skb_shinfo(skb)->nr_frags;
->> }
->>
->> What if there is some payload in the header?
->> To me it sounds safer to return:
->>
->> skb_shinfo(skb)->gso_segs * 2 + skb_shinfo(skb)->nr_frags + 1;
->>
->> or maybe to test if there is some payload in the header and then add 1?
->> If there is payload in the header, it should be considered as another
->> frag, shouldn't it?
-> 
-> Minimal count is gso_segs (one per MSS)
-> 
-> Then you have to add extra for the cases we have a mss spanning a frag
-> in skb.
-> 
-> Thats a max of (skb_shinfo(skb)->nr_frags - 1) + (data_in_head() ? 1 :
-> 0);
-> So I believe formula would be correct.
-> 
-
-I needed a piece of paper and a few drawings to understand you are
-right... :)
