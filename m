@@ -1,90 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:34754 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbbJTGqW (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:32827 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374AbbJMOIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:22 -0400
-Received: by lbbwb3 with SMTP id wb3so7787440lbb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:21 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 06/16] rtl8xxxu: rtl8723au: Introduce a pointer to efuse
-Date: Tue, 20 Oct 2015 08:45:36 +0200
-Message-Id: <1445323546-12807-7-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084649_715705_3EE92B86)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	Tue, 13 Oct 2015 10:08:49 -0400
+Received: by wicge5 with SMTP id ge5so60008513wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 07:08:48 -0700 (PDT)
+Date: Tue, 13 Oct 2015 17:08:17 +0300
+From: Mike Rapoport <mike.rapoport@gmail.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 54/54] staging: wilc1000: wilc_msgqueue.c : remove the
+ goto ERRORHANDER
+Message-ID: <20151013140817.GA21195@zed.strato> (sfid-20151013_160852_469242_A2B231A8)
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+ <1444734132-17858-9-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444734132-17858-9-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 26 +++++++++++++-----------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+On Tue, Oct 13, 2015 at 08:02:12PM +0900, Tony Cho wrote:
+> From: Leo Kim <leo.kim@atmel.com>
+> 
+> This patch removes goto ERRORHANDER and the result variable in wilc_mq_send.
+> Then, the error type is directly returned. If normal operation, freeing memory
+> is not needed in this function.
+> 
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/wilc_msgqueue.c | 20 +++++---------------
+>  1 file changed, 5 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> index b13809a..60539aa 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> @@ -56,20 +56,17 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+>  int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>  			     const void *pvSendBuffer, u32 u32SendBufferSize)
+>  {
+> -	int result = 0;
+>  	unsigned long flags;
+>  	Message *pstrMessage = NULL;
+>  
+>  	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+>  		PRINT_ER("pHandle or pvSendBuffer is null\n");
+> -		result = -EFAULT;
+> -		goto ERRORHANDLER;
+> +		return -EFAULT;
+>  	}
+>  
+>  	if (pHandle->bExiting) {
+>  		PRINT_ER("pHandle fail\n");
+> -		result = -EFAULT;
+> -		goto ERRORHANDLER;
+> +		return -EFAULT;
+>  	}
+>  
+>  	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+> @@ -83,8 +80,8 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>  	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+>  					GFP_ATOMIC);
+>  	if (!pstrMessage->pvBuffer) {
+> -		result = -ENOMEM;
+> -		goto ERRORHANDLER;
+> +		kfree(pstrMessage);
+> +		return -ENOMEM;
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index e892fde..a390d75 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1779,43 +1779,45 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 
- static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
- {
--	if (priv->efuse_wifi.efuse8723.rtl_id != cpu_to_le16(0x8129))
-+	struct rtl8723au_efuse *efuse = &priv->efuse_wifi.efuse8723;
-+
-+	if (efuse->rtl_id != cpu_to_le16(0x8129))
- 		return -EINVAL;
- 
--	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8723.mac_addr);
-+	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
- 
- 	memcpy(priv->cck_tx_power_index_A,
--	       priv->efuse_wifi.efuse8723.cck_tx_power_index_A,
-+	       efuse->cck_tx_power_index_A,
- 	       sizeof(priv->cck_tx_power_index_A));
- 	memcpy(priv->cck_tx_power_index_B,
--	       priv->efuse_wifi.efuse8723.cck_tx_power_index_B,
-+	       efuse->cck_tx_power_index_B,
- 	       sizeof(priv->cck_tx_power_index_B));
- 
- 	memcpy(priv->ht40_1s_tx_power_index_A,
--	       priv->efuse_wifi.efuse8723.ht40_1s_tx_power_index_A,
-+	       efuse->ht40_1s_tx_power_index_A,
- 	       sizeof(priv->ht40_1s_tx_power_index_A));
- 	memcpy(priv->ht40_1s_tx_power_index_B,
--	       priv->efuse_wifi.efuse8723.ht40_1s_tx_power_index_B,
-+	       efuse->ht40_1s_tx_power_index_B,
- 	       sizeof(priv->ht40_1s_tx_power_index_B));
- 
- 	memcpy(priv->ht20_tx_power_index_diff,
--	       priv->efuse_wifi.efuse8723.ht20_tx_power_index_diff,
-+	       efuse->ht20_tx_power_index_diff,
- 	       sizeof(priv->ht20_tx_power_index_diff));
- 	memcpy(priv->ofdm_tx_power_index_diff,
--	       priv->efuse_wifi.efuse8723.ofdm_tx_power_index_diff,
-+	       efuse->ofdm_tx_power_index_diff,
- 	       sizeof(priv->ofdm_tx_power_index_diff));
- 
- 	memcpy(priv->ht40_max_power_offset,
--	       priv->efuse_wifi.efuse8723.ht40_max_power_offset,
-+	       efuse->ht40_max_power_offset,
- 	       sizeof(priv->ht40_max_power_offset));
- 	memcpy(priv->ht20_max_power_offset,
--	       priv->efuse_wifi.efuse8723.ht20_max_power_offset,
-+	       efuse->ht20_max_power_offset,
- 	       sizeof(priv->ht20_max_power_offset));
- 
- 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
--		 priv->efuse_wifi.efuse8723.vendor_name);
-+		 efuse->vendor_name);
- 	dev_info(&priv->udev->dev, "Product: %.41s\n",
--		 priv->efuse_wifi.efuse8723.device_name);
-+		 efuse->device_name);
- 	return 0;
- }
- 
--- 
-2.1.0
+It seems that the error path returns from the function while still
+holding spinlock and semaphore. It would be better to rework allocation
+errors handling so that the locks will be released, rather than just
+remove goto...
 
+>  	}
+>  
+>  	/* add it to the message queue */
+> @@ -103,14 +100,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>  
+>  	up(&pHandle->hSem);
+>  
+> -ERRORHANDLER:
+> -	/* error occured, free any allocations */
+> -	if (pstrMessage) {
+> -		kfree(pstrMessage->pvBuffer);
+> -		kfree(pstrMessage);
+> -	}
+> -
+> -	return result;
+> +	return 0;
+>  }
+>  
+>  /*!
+> -- 
+> 1.9.1
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
