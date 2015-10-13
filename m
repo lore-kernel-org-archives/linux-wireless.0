@@ -1,77 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36447 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515AbbJSPK5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4832 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbbJMLDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 11:10:57 -0400
-Date: Mon, 19 Oct 2015 18:10:45 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Subject: re: rtlwifi: rtl8723be: Add new driver
-Message-ID: <20151019151045.GA12293@mwanda> (sfid-20151019_171101_274783_077F841A)
+	Tue, 13 Oct 2015 07:03:00 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 51/54] staging: wilc1000: rename au8IPAddr of struct set_ip_addr
+Date: Tue, 13 Oct 2015 20:02:09 +0900
+Message-ID: <1444734132-17858-6-git-send-email-tony.cho@atmel.com> (sfid-20151013_130304_096225_1190AF99)
+In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Larry Finger,
+From: Leo Kim <leo.kim@atmel.com>
 
-The patch a619d1abe20c: "rtlwifi: rtl8723be: Add new driver" from Feb
-28, 2014, leads to the following static checker warning:
+This patch renames au8IPAddr of struct set_ip_addr to ip_addr to
+avoid CamelCase naming convention.
 
-	drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c:1802 _rtl8723be_read_power_value_fromprom()
-	warn: why is the last element skipped?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-  1770          if (autoload_fail) {
-  1771                  RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-  1772                           "auto load fail : Use Default value!\n");
-  1773                  for (path = 0; path < MAX_RF_PATH; path++) {
-  1774                          /* 2.4G default value */
-  1775                          for (group = 0 ; group < MAX_CHNL_GROUP_24G; group++) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here we go up to the end.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 97d1bd8..8fb6ef5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -159,7 +159,7 @@ struct power_mgmt_param {
+ };
+ 
+ struct set_ip_addr {
+-	u8 *au8IPAddr;
++	u8 *ip_addr;
+ 	u8 idx;
+ };
+ 
+@@ -3079,12 +3079,12 @@ static int hostIFthread(void *pvArg)
+ 
+ 		case HOST_IF_MSG_SET_IPADDRESS:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
+-			Handle_set_IPAddress(msg.drv, msg.body.ip_info.au8IPAddr, msg.body.ip_info.idx);
++			Handle_set_IPAddress(msg.drv, msg.body.ip_info.ip_addr, msg.body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_IPADDRESS:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
+-			Handle_get_IPAddress(msg.drv, msg.body.ip_info.au8IPAddr, msg.body.ip_info.idx);
++			Handle_get_IPAddress(msg.drv, msg.body.ip_info.ip_addr, msg.body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MAC_ADDRESS:
+@@ -5162,7 +5162,7 @@ s32 host_int_setup_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ 
+ 	msg.id = HOST_IF_MSG_SET_IPADDRESS;
+ 
+-	msg.body.ip_info.au8IPAddr = u16ipadd;
++	msg.body.ip_info.ip_addr = u16ipadd;
+ 	msg.drv = hif_drv;
+ 	msg.body.ip_info.idx = idx;
+ 
+@@ -5189,7 +5189,7 @@ s32 host_int_get_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ 
+ 	msg.id = HOST_IF_MSG_GET_IPADDRESS;
+ 
+-	msg.body.ip_info.au8IPAddr = u16ipadd;
++	msg.body.ip_info.ip_addr = u16ipadd;
+ 	msg.drv = hif_drv;
+ 	msg.body.ip_info.idx = idx;
+ 
+-- 
+1.9.1
 
-  1776                                  pw2g->index_cck_base[path][group] = 0x2D;
-  1777                                  pw2g->index_bw40_base[path][group] = 0x2D;
-  1778                          }
-  1779                          for (cnt = 0; cnt < MAX_TX_COUNT; cnt++) {
-  1780                                  if (cnt == 0) {
-  1781                                          pw2g->bw20_diff[path][0] = 0x02;
-  1782                                          pw2g->ofdm_diff[path][0] = 0x04;
-  1783                                  } else {
-  1784                                          pw2g->bw20_diff[path][cnt] = 0xFE;
-  1785                                          pw2g->bw40_diff[path][cnt] = 0xFE;
-  1786                                          pw2g->cck_diff[path][cnt] = 0xFE;
-  1787                                          pw2g->ofdm_diff[path][cnt] = 0xFE;
-  1788                                  }
-  1789                          }
-  1790                  }
-  1791                  return;
-  1792          }
-  1793  
-  1794          for (path = 0; path < MAX_RF_PATH; path++) {
-  1795                  /*2.4G default value*/
-  1796                  for (group = 0; group < MAX_CHNL_GROUP_24G; group++) {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here we go to the end.
-
-  1797                          pw2g->index_cck_base[path][group] = hwinfo[addr++];
-  1798                          if (pw2g->index_cck_base[path][group] == 0xFF)
-  1799                                  pw2g->index_cck_base[path][group] = 0x2D;
-  1800  
-  1801                  }
-  1802                  for (group = 0; group < MAX_CHNL_GROUP_24G - 1; group++) {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here we skip the last element.  So far as I can see this looks like a
-mistake but I don't know the code well.
-
-  1803                          pw2g->index_bw40_base[path][group] = hwinfo[addr++];
-  1804                          if (pw2g->index_bw40_base[path][group] == 0xFF)
-  1805                                  pw2g->index_bw40_base[path][group] = 0x2D;
-  1806                  }
-
-
-regards,
-dan carpenter
