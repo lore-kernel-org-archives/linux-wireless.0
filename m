@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36342 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbbJEKfX (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4749 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbbJMLCk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:23 -0400
-Received: by pablk4 with SMTP id lk4so172800062pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:23 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/20] staging: wilc1000: fix return type of host_int_set_operation_mode
-Date: Mon,  5 Oct 2015 19:34:49 +0900
-Message-Id: <1444041304-7727-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123528_143162_8B446991)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 13 Oct 2015 07:02:40 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 48/54] staging: wilc1000: rename au8MacAddr of struct del_sta
+Date: Tue, 13 Oct 2015 20:02:06 +0900
+Message-ID: <1444734132-17858-3-git-send-email-tony.cho@atmel.com> (sfid-20151013_130243_231456_99B69E9F)
+In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_set_operation_mode from s32
-to int. s32Error gets return value from wilc_mq_send that has return
-type of int. It should be changed return type by int as well as data
-type of s32Error.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames au8MacAddr of struct del_sta to mac_addr to
+avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7c617f7..092ecf5 100644
+index 9cd42f7..4f7ebdc 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5384,9 +5384,9 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address)
- 	return result;
- }
+@@ -150,7 +150,7 @@ struct del_all_sta {
+ };
  
--s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
-+int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
+ struct del_sta {
+-	u8 au8MacAddr[ETH_ALEN];
++	u8 mac_addr[ETH_ALEN];
+ };
  
- 	struct host_if_msg msg;
+ struct power_mgmt_param {
+@@ -2544,7 +2544,7 @@ static void Handle_DelStation(struct host_if_drv *hif_drv,
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 341c2f3..e9db06c 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1187,7 +1187,7 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
-  *  @version	1.0
-  */
- int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address);
--s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
-+int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
+ 	pu8CurrByte = strWID.val;
  
- static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent);
+-	memcpy(pu8CurrByte, pstrDelStaParam->au8MacAddr, ETH_ALEN);
++	memcpy(pu8CurrByte, pstrDelStaParam->mac_addr, ETH_ALEN);
  
+ 	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+@@ -4758,9 +4758,9 @@ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ 	msg.drv = hif_drv;
+ 
+ 	if (pu8MacAddr == NULL)
+-		memset(pstrDelStationMsg->au8MacAddr, 255, ETH_ALEN);
++		memset(pstrDelStationMsg->mac_addr, 255, ETH_ALEN);
+ 	else
+-		memcpy(pstrDelStationMsg->au8MacAddr, pu8MacAddr, ETH_ALEN);
++		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
 -- 
-2.6.0
+1.9.1
 
