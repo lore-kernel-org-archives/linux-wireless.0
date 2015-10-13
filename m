@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8696 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4805 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbbJEG0l (ORCPT
+	with ESMTP id S1752175AbbJMLCx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:26:41 -0400
+	Tue, 13 Oct 2015 07:02:53 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,11 +12,11 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
 	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/18] staging: wilc1000: remove typedef from tuniHostIFkeyAttr
-Date: Mon, 5 Oct 2015 15:25:41 +0900
-Message-ID: <1444026353-29024-6-git-send-email-tony.cho@atmel.com> (sfid-20151005_082644_230534_3F1DEE51)
-In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 50/54] staging: wilc1000: rename u32Timeout of struct power_mgmt_param
+Date: Tue, 13 Oct 2015 20:02:08 +0900
+Message-ID: <1444734132-17858-5-git-send-email-tony.cho@atmel.com> (sfid-20151013_130256_270356_1D50A55D)
+In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -24,51 +24,38 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch remove typedef from the union tuniHostIFkeyAttr.
-And rename it to host_if_key_attr.
+This patch renames u32Timeout of struct power_mgmt_param to timeout to
+avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2e71505..f4c5ec3 100644
+index 0c44fd0..97d1bd8 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -116,7 +116,7 @@ typedef struct _tstrHostIFwepAttr {
- } tstrHostIFwepAttr;
+@@ -155,7 +155,7 @@ struct del_sta {
  
- /*!
-- *  @struct             tuniHostIFkeyAttr
-+ *  @struct             host_if_key_attr
-  *  @brief		Structure to hold Host IF Scan Attributes
-  *  @details
-  *  @todo
-@@ -125,11 +125,11 @@ typedef struct _tstrHostIFwepAttr {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef union _tuniHostIFkeyAttr {
-+union host_if_key_attr {
- 	tstrHostIFwepAttr strHostIFwepAttr;
- 	tstrHostIFwpaAttr strHostIFwpaAttr;
- 	tstrHostIFpmkidAttr strHostIFpmkidAttr;
--} tuniHostIFkeyAttr;
-+};
- 
- /*!
-  *  @struct             key_attr
-@@ -144,7 +144,7 @@ typedef union _tuniHostIFkeyAttr {
- struct key_attr {
- 	enum KEY_TYPE enuKeyType;
- 	u8 u8KeyAction;
--	tuniHostIFkeyAttr uniHostIFkeyAttr;
-+	union host_if_key_attr uniHostIFkeyAttr;
+ struct power_mgmt_param {
+ 	bool enabled;
+-	u32 u32Timeout;
++	u32 timeout;
  };
  
+ struct set_ip_addr {
+@@ -4881,8 +4881,7 @@ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
+ 	msg.drv = hif_drv;
  
+ 	pstrPowerMgmtParam->enabled = bIsEnabled;
+-	pstrPowerMgmtParam->u32Timeout = u32Timeout;
+-
++	pstrPowerMgmtParam->timeout = u32Timeout;
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
 -- 
 1.9.1
 
