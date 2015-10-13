@@ -1,105 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53137 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758248AbbJILfz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 07:35:55 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "y2038@lists.linaro.org" <y2038@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 05/12] mwifiex: avoid gettimeofday in ba_threshold setting
-Date: Fri, 9 Oct 2015 11:35:47 +0000
-Message-ID: <4d9d7f2dc1a44e00b9ce74660e306640@SC-EXCH04.marvell.com> (sfid-20151009_133640_238165_A9907344)
-References: <1443612402-3000775-1-git-send-email-arnd@arndb.de>
- <1443612402-3000775-6-git-send-email-arnd@arndb.de>
-In-Reply-To: <1443612402-3000775-6-git-send-email-arnd@arndb.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4863 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932102AbbJMLDH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 07:03:07 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 52/54] staging: wilc1000: rename pu8Buffer of struct rcvd_net_info
+Date: Tue, 13 Oct 2015 20:02:10 +0900
+Message-ID: <1444734132-17858-7-git-send-email-tony.cho@atmel.com> (sfid-20151013_130318_290089_92977FCD)
+In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd,
+From: Leo Kim <leo.kim@atmel.com>
 
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Wednesday, September 30, 2015 4:57 PM
-> To: netdev@vger.kernel.org
-> Cc: y2038@lists.linaro.org; linux-kernel@vger.kernel.org; David S.
-> Miller; Arnd Bergmann; Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo;
-> linux-wireless@vger.kernel.org
-> Subject: [PATCH 05/12] mwifiex: avoid gettimeofday in ba_threshold
-> setting
-> 
-> mwifiex_get_random_ba_threshold() uses a complex homegrown
-> implementation to generate a pseudo-random number from the current time
-> as returned from do_gettimeofday().
-> 
-> This currently requires two 32-bit divisions plus a couple of other
-> computations that are eventually discarded as only eight bits of the
-> microsecond portion are used at all.
-> 
-> We could replace this with a call to get_random_bytes(), but that might
-> drain the entropy pool too fast if this is called for each packet.
-> 
-> Instead, this patch converts it to use ktime_get_ns(), which is a bit
-> faster than do_gettimeofday(), and then uses a similar algorithm as
-> before, but in a way that takes both the nanosecond and second portion
-> into account for slightly-more-but-still-not-very-random
-> pseudorandom number.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> ---
->  drivers/net/wireless/mwifiex/wmm.c | 15 ++++-----------
->  1 file changed, 4 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/wmm.c
-> b/drivers/net/wireless/mwifiex/wmm.c
-> index 173d3663c2e0..878d358063dc 100644
-> --- a/drivers/net/wireless/mwifiex/wmm.c
-> +++ b/drivers/net/wireless/mwifiex/wmm.c
-> @@ -117,22 +117,15 @@ mwifiex_wmm_allocate_ralist_node(struct
-> mwifiex_adapter *adapter, const u8 *ra)
->   */
->  static u8 mwifiex_get_random_ba_threshold(void)
->  {
-> -	u32 sec, usec;
-> -	struct timeval ba_tstamp;
-> -	u8 ba_threshold;
-> -
-> +	u64 ns;
->  	/* setup ba_packet_threshold here random number between
->  	 * [BA_SETUP_PACKET_OFFSET,
->  	 * BA_SETUP_PACKET_OFFSET+BA_SETUP_MAX_PACKET_THRESHOLD-1]
->  	 */
-> +	ns = ktime_get_ns();
-> +	ns += (ns >> 32) + (ns >> 16);
-> 
-> -	do_gettimeofday(&ba_tstamp);
-> -	sec = (ba_tstamp.tv_sec & 0xFFFF) + (ba_tstamp.tv_sec >> 16);
-> -	usec = (ba_tstamp.tv_usec & 0xFFFF) + (ba_tstamp.tv_usec >> 16);
-> -	ba_threshold = (((sec << 16) + usec) %
-> BA_SETUP_MAX_PACKET_THRESHOLD)
-> -						      + BA_SETUP_PACKET_OFFSET;
-> -
-> -	return ba_threshold;
-> +	return ((u8)ns % BA_SETUP_MAX_PACKET_THRESHOLD) +
-> +BA_SETUP_PACKET_OFFSET;
->  }
-> 
->  /*
-> --
+This patch renames pu8Buffer of struct rcvd_net_info to buffer to
+avoid CamelCase naming convention.
 
-Looks fine to me.
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 ++++++-------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-Regards,
-Amitkumar
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8fb6ef5..432b275 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1450,7 +1450,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 
+ 	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+ 		PRINT_D(HOSTINF_DBG, "State: Scanning, parsing network information received\n");
+-		parse_network_info(pstrRcvdNetworkInfo->pu8Buffer, &pstrNetworkInfo);
++		parse_network_info(pstrRcvdNetworkInfo->buffer, &pstrNetworkInfo);
+ 		if ((pstrNetworkInfo == NULL)
+ 		    || (hif_drv->strWILC_UsrScanReq.pfUserScanResult == NULL)) {
+ 			PRINT_ER("driver is null\n");
+@@ -1509,9 +1509,9 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 	}
+ 
+ done:
+-	if (pstrRcvdNetworkInfo->pu8Buffer != NULL) {
+-		kfree(pstrRcvdNetworkInfo->pu8Buffer);
+-		pstrRcvdNetworkInfo->pu8Buffer = NULL;
++	if (pstrRcvdNetworkInfo->buffer != NULL) {
++		kfree(pstrRcvdNetworkInfo->buffer);
++		pstrRcvdNetworkInfo->buffer = NULL;
+ 	}
+ 
+ 	if (pstrNetworkInfo != NULL) {
+@@ -4440,9 +4440,8 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.drv = hif_drv;
+ 
+ 	msg.body.net_info.u32Length = u32Length;
+-	msg.body.net_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL);
+-	memcpy(msg.body.net_info.pu8Buffer,
+-		    pu8Buffer, u32Length);
++	msg.body.net_info.buffer = kmalloc(u32Length, GFP_KERNEL);
++	memcpy(msg.body.net_info.buffer, pu8Buffer, u32Length);
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0c5f395..778dbf5 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -199,7 +199,7 @@ typedef void (*wilc_remain_on_chan_ready)(void *); /*Remain on channel callback
+  *  @version		1.0
+  */
+ struct rcvd_net_info {
+-	u8 *pu8Buffer;
++	u8 *buffer;
+ 	u32 u32Length;
+ };
+ 
+-- 
+1.9.1
+
