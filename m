@@ -1,20 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4954 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3221 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C60 (ORCPT
+	with ESMTP id S1752629AbbJMKy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:26 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 13 Oct 2015 06:54:26 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 21/64] staging: wilc1000: rename pVoid of struct remain_ch
-Date: Thu, 29 Oct 2015 11:58:44 +0900
-Message-ID: <1446087567-16728-21-git-send-email-glen.lee@atmel.com> (sfid-20151029_035829_510825_084284F8)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 35/54] staging: wilc1000: rename pu8Buffer of struct rcvd_async_info
+Date: Tue, 13 Oct 2015 19:50:00 +0900
+Message-ID: <1444733419-17679-35-git-send-email-tony.cho@atmel.com> (sfid-20151013_125428_718787_B0C12071)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,69 +24,95 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames pVoid of struct remain_ch to arg
-to avoid CamelCase naming convention.
+This patch renames pu8Buffer of struct rcvd_async_info to buffer to
+avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 33 +++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c49bbbf..1ccf450 100644
+index 4af2bd1..7a91010 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2480,7 +2480,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	struct wid wid;
- 
- 	if (!hif_drv->remain_on_ch_pending) {
--		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
-+		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
- 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
- 		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
-@@ -2537,7 +2537,7 @@ ERRORHANDLER:
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
- 
- 		if (hif_drv->remain_on_ch.ready)
--			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
-+			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
- 
- 		if (hif_drv->remain_on_ch_pending)
- 			hif_drv->remain_on_ch_pending = 0;
-@@ -2611,7 +2611,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 		}
- 
- 		if (hif_drv->remain_on_ch.expired) {
--			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
-+			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
- 						      pstrHostIfRemainOnChan->u32ListenSessionID);
- 		}
- 		P2P_LISTEN_STATE = 0;
-@@ -4371,7 +4371,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.ready = RemainOnChanReady;
--	msg.body.remain_on_ch.pVoid = pvUserArg;
-+	msg.body.remain_on_ch.arg = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
- 	msg.drv = hif_drv;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d3dafc6..a69be55 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -240,7 +240,7 @@ struct remain_ch {
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired expired;
- 	wilc_remain_on_chan_ready ready;
--	void *pVoid;
-+	void *arg;
- 	u32 u32ListenSessionID;
+@@ -122,7 +122,7 @@ struct connect_attr {
  };
  
+ struct rcvd_async_info {
+-	u8 *pu8Buffer;
++	u8 *buffer;
+ 	u32 u32Length;
+ };
+ 
+@@ -1544,31 +1544,31 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 		return -ENODEV;
+ 	}
+ 	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", hif_drv->enuHostIFstate,
+-		pstrRcvdGnrlAsyncInfo->pu8Buffer[7]);
++		pstrRcvdGnrlAsyncInfo->buffer[7]);
+ 
+ 	if ((hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) ||
+ 	    (hif_drv->enuHostIFstate == HOST_IF_CONNECTED) ||
+ 	    hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+-		if ((pstrRcvdGnrlAsyncInfo->pu8Buffer == NULL) ||
++		if ((pstrRcvdGnrlAsyncInfo->buffer == NULL) ||
+ 		    (hif_drv->strWILC_UsrConnReq.pfUserConnectResult == NULL)) {
+ 			PRINT_ER("driver is null\n");
+ 			return -EINVAL;
+ 		}
+ 
+-		u8MsgType = pstrRcvdGnrlAsyncInfo->pu8Buffer[0];
++		u8MsgType = pstrRcvdGnrlAsyncInfo->buffer[0];
+ 
+ 		if ('I' != u8MsgType) {
+ 			PRINT_ER("Received Message format incorrect.\n");
+ 			return -EFAULT;
+ 		}
+ 
+-		u8MsgID = pstrRcvdGnrlAsyncInfo->pu8Buffer[1];
+-		u16MsgLen = MAKE_WORD16(pstrRcvdGnrlAsyncInfo->pu8Buffer[2], pstrRcvdGnrlAsyncInfo->pu8Buffer[3]);
+-		u16WidID = MAKE_WORD16(pstrRcvdGnrlAsyncInfo->pu8Buffer[4], pstrRcvdGnrlAsyncInfo->pu8Buffer[5]);
+-		u8WidLen = pstrRcvdGnrlAsyncInfo->pu8Buffer[6];
+-		u8MacStatus  = pstrRcvdGnrlAsyncInfo->pu8Buffer[7];
+-		u8MacStatusReasonCode = pstrRcvdGnrlAsyncInfo->pu8Buffer[8];
+-		u8MacStatusAdditionalInfo = pstrRcvdGnrlAsyncInfo->pu8Buffer[9];
++		u8MsgID = pstrRcvdGnrlAsyncInfo->buffer[1];
++		u16MsgLen = MAKE_WORD16(pstrRcvdGnrlAsyncInfo->buffer[2], pstrRcvdGnrlAsyncInfo->buffer[3]);
++		u16WidID = MAKE_WORD16(pstrRcvdGnrlAsyncInfo->buffer[4], pstrRcvdGnrlAsyncInfo->buffer[5]);
++		u8WidLen = pstrRcvdGnrlAsyncInfo->buffer[6];
++		u8MacStatus  = pstrRcvdGnrlAsyncInfo->buffer[7];
++		u8MacStatusReasonCode = pstrRcvdGnrlAsyncInfo->buffer[8];
++		u8MacStatusAdditionalInfo = pstrRcvdGnrlAsyncInfo->buffer[9];
+ 		PRINT_INFO(HOSTINF_DBG, "Recieved MAC status = %d with Reason = %d , Info = %d\n", u8MacStatus, u8MacStatusReasonCode, u8MacStatusAdditionalInfo);
+ 		if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
+ 			u32 u32RcvdAssocRespInfoLen;
+@@ -1750,9 +1750,9 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 
+ 	}
+ 
+-	if (pstrRcvdGnrlAsyncInfo->pu8Buffer != NULL) {
+-		kfree(pstrRcvdGnrlAsyncInfo->pu8Buffer);
+-		pstrRcvdGnrlAsyncInfo->pu8Buffer = NULL;
++	if (pstrRcvdGnrlAsyncInfo->buffer != NULL) {
++		kfree(pstrRcvdGnrlAsyncInfo->buffer);
++		pstrRcvdGnrlAsyncInfo->buffer = NULL;
+ 	}
+ 
+ 	return s32Error;
+@@ -4484,9 +4484,8 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 
+ 
+ 	msg.body.async_info.u32Length = u32Length;
+-	msg.body.async_info.pu8Buffer = kmalloc(u32Length, GFP_KERNEL);
+-	memcpy(msg.body.async_info.pu8Buffer,
+-		    pu8Buffer, u32Length);
++	msg.body.async_info.buffer = kmalloc(u32Length, GFP_KERNEL);
++	memcpy(msg.body.async_info.buffer, pu8Buffer, u32Length);
+ 
+ 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	if (s32Error)
 -- 
 1.9.1
 
