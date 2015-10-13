@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52488 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756506AbbJUVx0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 17:53:26 -0400
-From: greearb@candelatech.com
+Received: from s3.sipsolutions.net ([5.9.151.49]:51431 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751081AbbJMIe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 04:34:26 -0400
+Message-ID: <1444725264.1961.4.camel@sipsolutions.net> (sfid-20151013_103432_778720_083D2836)
+Subject: Re: [PATCH v2] nl80211: allow BSS data to include CLOCK_BOOTTIME
+ timestamp
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/3] ath6k:  fix firmware version assignment.
-Date: Wed, 21 Oct 2015 14:53:21 -0700
-Message-Id: <1445464401-13826-3-git-send-email-greearb@candelatech.com> (sfid-20151021_235338_803988_ACB0B501)
-In-Reply-To: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
-References: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
+Cc: Dmitry Shmidt <dimitrysh@google.com>
+Date: Tue, 13 Oct 2015 10:34:24 +0200
+In-Reply-To: <1444210373-4508-1-git-send-email-johannes@sipsolutions.net> (sfid-20151007_113301_262875_A75BA800)
+References: <1444210373-4508-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20151007_113301_262875_A75BA800)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, 2015-10-07 at 11:32 +0200, Johannes Berg wrote:
+> From: Dmitry Shmidt <dimitrysh@google.com>
+> 
+> For location and connectivity services, userspace would often like
+> to know the time when the BSS was last seen. The current "last seen"
+> value is calculated in a way that makes it less useful, especially
+> if the system suspended in the meantime.
+> 
+> Add the ability for the driver to report a real CLOCK_BOOTTIME stamp
+> that can then be reported to userspace (if present).
+> 
+> Drivers wishing to use this must be converted to the new API to call
+> cfg80211_inform_bss_data() or cfg80211_inform_bss_frame_data(). They
+> need to ensure the reported value is accurate enough even when the
+> frame might have been buffered in the device (e.g. firmware.)
+> 
+Applied.
 
-Improper use of strlcpy caused garbage to be appended to the
-firmware version string.  Fix this by paying attention to the
-ie_lenth.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath6kl/init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 6e473fa..e3f3a6a 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -994,7 +994,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 		switch (ie_id) {
- 		case ATH6KL_FW_IE_FW_VERSION:
- 			strlcpy(ar->wiphy->fw_version, data,
--				sizeof(ar->wiphy->fw_version));
-+				min(sizeof(ar->wiphy->fw_version), ie_len+1));
- 
- 			ath6kl_dbg(ATH6KL_DBG_BOOT,
- 				   "found fw version %s\n",
--- 
-2.4.3
-
+johannes
