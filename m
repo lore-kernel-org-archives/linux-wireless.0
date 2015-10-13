@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12710 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753949AbbJOGXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 02:23:03 -0400
-Date: Thu, 15 Oct 2015 14:21:32 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	austin.shin@atmel.com, adel.noureldin@atmel.com,
-	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 16/40] staging: wilc1000: rename variable
- hSemHostIntDeinit
-Message-ID: <201510151431.u3oU2Yok%fengguang.wu@intel.com> (sfid-20151015_082308_509782_1D9F9EB3)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3154 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932089AbbJMKyF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2015 06:54:05 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 32/54] staging: wilc1000: rename tenuAuth_type of struct connect_attr
+Date: Tue, 13 Oct 2015 19:49:57 +0900
+Message-ID: <1444733419-17679-32-git-send-email-tony.cho@atmel.com> (sfid-20151013_125412_497243_ADE9ED87)
+In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-16-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+From: Leo Kim <leo.kim@atmel.com>
 
-[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
+This patch renames tenuAuth_type of struct connect_attr to auth_type to
+avoid CamelCase naming convention.
 
-url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
->> drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'g_hPeriodicRSSI' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:256:6: sparse: symbol 'gbScanWhileConnected' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedJoinReq' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:268:4: sparse: symbol 'gu8FlushedInfoElemAsoc' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:269:4: sparse: symbol 'gu8Flushed11iMode' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:270:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:271:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:272:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:410:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:445:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2215:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2356:38: sparse: incompatible types for operation (>)
-   drivers/staging/wilc1000/host_interface.c:2356:38:    left side has type unsigned char [usertype] *tail
-   drivers/staging/wilc1000/host_interface.c:2356:38:    right side has type int
-
-Please review and possibly fold the followup patch.
-
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0790dcb..695fd5c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -116,7 +116,7 @@ struct connect_attr {
+ 	u8 security;
+ 	wilc_connect_result result;
+ 	void *arg;
+-	enum AUTHTYPE tenuAuth_type;
++	enum AUTHTYPE auth_type;
+ 	u8 u8channel;
+ 	void *pJoinParams;
+ };
+@@ -1052,7 +1052,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	}
+ 
+ 	hif_drv->strWILC_UsrConnReq.u8security = pstrHostIFconnectAttr->security;
+-	hif_drv->strWILC_UsrConnReq.tenuAuth_type = pstrHostIFconnectAttr->tenuAuth_type;
++	hif_drv->strWILC_UsrConnReq.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
+ 	hif_drv->strWILC_UsrConnReq.pfUserConnectResult = pstrHostIFconnectAttr->result;
+ 	hif_drv->strWILC_UsrConnReq.u32UserConnectPvoid = pstrHostIFconnectAttr->arg;
+ 
+@@ -3612,7 +3612,7 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	msg.id = HOST_IF_MSG_CONNECT;
+ 
+ 	msg.body.con_info.security = u8security;
+-	msg.body.con_info.tenuAuth_type = tenuAuth_type;
++	msg.body.con_info.auth_type = tenuAuth_type;
+ 	msg.body.con_info.u8channel = u8channel;
+ 	msg.body.con_info.result = pfConnectResult;
+ 	msg.body.con_info.arg = pvUserArg;
+-- 
+1.9.1
+
