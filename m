@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41045 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421AbbJNLWe (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25341 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875AbbJNKus convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:22:34 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 14 Oct 2015 06:50:48 -0400
+From: "Kennady Rajan, Maharaja" <c_mkenna@qti.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCHv2] ath10k: Enable adaptive CCA
+Date: Wed, 14 Oct 2015 10:50:27 +0000
+Message-ID: <1444819835634.25550@qti.qualcomm.com> (sfid-20151014_125051_305984_CEE2A35F)
+References: <1444628598-806-1-git-send-email-c_mkenna@qti.qualcomm.com>,<87bnc2nfdi.fsf@kamboji.qca.qualcomm.com>,<1444817512360.4749@qti.qualcomm.com>
+In-Reply-To: <1444817512360.4749@qti.qualcomm.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Subject: Re: [1/3] mwifiex: fix AP VHT behaviour
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1444389995-4869-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20151014112234.4B7F9141D8E@smtp.codeaurora.org> (sfid-20151014_132242_179252_F97C01D7)
-Date: Wed, 14 Oct 2015 11:22:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> From: Maharaja <c_mkenna@qti.qualcomm.com>
+>
+>>> European Union has made it mandatory that all devices working in 2.4 GHz
+>>> has to adhere to the ETSI specification (ETSI EN 300 328 V1.9.1)
+>>> beginnig this year. The standard basically speaks about interferences
+>>> in 2.4Ghz band.
+>>> For example, when 802.11 device detects interference, TX must be stopped
+>>> as long as interference is present.
+>
+>>> Adaptive CCA is a feature, when enabled the device learns from the
+>>> environment and configures CCA levels adaptively. This will improve
+>>> detecting interferences and the device can stop trasmissions till the
+>>> interference is present eventually leading to good performances in
+>>> varying interference conditions.
+>
+>>> The patch includes code for enabling adaptive CCA for 10.2.4 firmware on
+>>> QCA988X.
+>
+>>> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+>>> Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
 
-> From: Ganapathi Bhat <gbhat@marvell.com>
-> 
-> Even if hostapd configuration file contains VHT parameters,
-> they were not getting reflected in beacons. The reason is
-> we are resetting them before starting AP. This patch removes
-> redundant BSS_STOP and SYS_RESET firmware commands before
-> starting AP to fix the problem.
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>>Please do not send untested code:
 
-Thanks, 3 patches applied to wireless-drivers-next.git:
+>>In function 'ath10k_core_get_fw_feature_str',
+>>    inlined from 'ath10k_core_get_fw_features_str' at
+>>    drivers/net/wireless/ath/ath10k/core.c:184:41:
+>>drivers/net/wireless/ath/ath10k/core.c:161:2: error: call to
+>>    '__compiletime_assert_162' declared with attribute error:
+>>    BUILD_BUG_ON failed: ARRAY_SIZE(ath10k_core_fw_feature_str) !=
+>>    ATH10K_FW_FEATURE_COUNT
 
-505c5cb82ddf mwifiex: fix AP VHT behaviour
-fe24372d1b11 mwifiex: add ndo_validate_addr netdev ops
-8785955bbc28 mwifiex: remove unnecessary NULL check
+>I have missed to add the wireless module in menuconfig while compilation. So I haven't see >the errors while running the compilation script. Now I changed and compilation error has >been resolved.
 
-Kalle Valo
+Apologize for that issue. I did the test cases by mistake. Regret for the inconvenience.
+
+Regards,
+Maha
