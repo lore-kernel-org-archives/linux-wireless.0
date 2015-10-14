@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbJDHYA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 03:24:00 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Received: from lists.s-osg.org ([54.187.51.154]:52824 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752297AbbJNKzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 06:55:04 -0400
+Subject: Re: [PATCH] bcma: mips: Allow build if COMPILE_TEST is enabled
 To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 10/10] wil6210: Do no schedule firmware recovery during reset flow
-Date: Sun,  4 Oct 2015 10:23:27 +0300
-Message-Id: <1443943407-6663-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092405_612039_7B3EC68E)
-In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <201510132319.x2UV0LGD%fengguang.wu@intel.com>
+ <561E1E69.3070108@osg.samsung.com> <87pp0hn2mf.fsf@kamboji.qca.qualcomm.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+	linux-kernel@vger.kernel.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Message-ID: <561E3481.4070008@osg.samsung.com> (sfid-20151014_125526_763608_9292E44B)
+Date: Wed, 14 Oct 2015 12:54:57 +0200
+MIME-Version: 1.0
+In-Reply-To: <87pp0hn2mf.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Hello Kalle,
 
-During reset flow, ignore firmware errors detected prior
-to the actual hardware reset as the recovery flow would
-make additional unnecessary reset.
+On 10/14/2015 12:52 PM, Kalle Valo wrote:
+> Javier Martinez Canillas <javier@osg.samsung.com> writes:
+> 
+>> Hello,
+>>
+>> On 10/13/2015 05:25 PM, kbuild test robot wrote:
+>>> Hi Javier,
+>>>
+>>> [auto build test ERROR on v4.3-rc5 -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
+>>>
+>>> url:    https://github.com/0day-ci/linux/commits/Javier-Martinez-Canillas/bcma-mips-Allow-build-if-COMPILE_TEST-is-enabled/20151013-214630
+>>> config: i386-allmodconfig (attached as .config)
+>>> reproduce:
+>>>         # save the attached .config to linux build tree
+>>>         make ARCH=i386 
+>>>
+>>> All errors (new ones prefixed by >>):
+>>>
+>>>    drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_read':
+>>>>> drivers/mtd/devices/bcm47xxsflash.c:112:37: error: implicit declaration of function 'KSEG0ADDR' [-Werror=implicit-function-declaration]
+>>>      memcpy_fromio(buf, (void __iomem *)KSEG0ADDR(b47s->window + from),
+>>>                    
+>>
+>> Thanks for reporting this issue. I only did a partial build with
+>> make M=drivers/bcma but didn't think about implicit dependencies
+>> on other drivers.
+>>
+>> I've posted this patch that should avoid this issue:
+>> https://patchwork.kernel.org/patch/7391551/
+> 
+> So this patch ("bcma: mips: Allow build if COMPILE_TEST is enabled")
+> depend on that patch ("mtd: Make MTD_BCM47XXSFLASH to depend on MIPS"),
+> right? So I cannot apply the bcma patch until the mtd patch is in my
+> tree.
+>
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    | 8 ++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h | 1 +
- 2 files changed, 9 insertions(+)
+That's correct, sorry for not stating it explicitly.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index de6e3c2..aade16b 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -767,6 +767,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (wil->hw_version == HW_VER_UNKNOWN)
- 		return -ENODEV;
- 
-+	set_bit(wil_status_resetting, wil->status);
-+
- 	cancel_work_sync(&wil->disconnect_worker);
- 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
- 	wil_bcast_fini(wil);
-@@ -853,6 +855,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- void wil_fw_error_recovery(struct wil6210_priv *wil)
- {
- 	wil_dbg_misc(wil, "starting fw error recovery\n");
-+
-+	if (test_bit(wil_status_resetting, wil->status)) {
-+		wil_info(wil, "Reset already in progress\n");
-+		return;
-+	}
-+
- 	wil->recovery_state = fw_recovery_pending;
- 	schedule_work(&wil->fw_error_worker);
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 9a90a58..f619bf2 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -409,6 +409,7 @@ enum { /* for wil6210_priv.status */
- 	wil_status_reset_done,
- 	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
- 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
-+	wil_status_resetting, /* reset in progress */
- 	wil_status_last /* keep last */
- };
- 
+Best regards,
 -- 
-2.1.4
-
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
