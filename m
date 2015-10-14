@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26753 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965235AbbJ2DDR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:03:17 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 34/64] staging: wilc1000: rename IsHTCapable of struct user_conn_req
-Date: Thu, 29 Oct 2015 12:05:26 +0900
-Message-ID: <1446087956-19054-1-git-send-email-glen.lee@atmel.com> (sfid-20151029_040320_475256_E419036E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:58510 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750845AbbJNGwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 02:52:11 -0400
+Message-ID: <1444805527.3054.4.camel@sipsolutions.net> (sfid-20151014_085214_651811_7719A1D7)
+Subject: Re: [PATCH] ocb: use correct "MHz" instead of "MHZ"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Date: Wed, 14 Oct 2015 08:52:07 +0200
+In-Reply-To: <CABAco3CLCtFOofHMbJSz-Okcc4BM4nnVwO5By8DeZUYJrsCt6Q@mail.gmail.com> (sfid-20151014_004234_903313_530163BE)
+References: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com>
+	 <1444727650.1961.10.camel@sipsolutions.net>
+	 <CABAco3CLCtFOofHMbJSz-Okcc4BM4nnVwO5By8DeZUYJrsCt6Q@mail.gmail.com>
+	 (sfid-20151014_004234_903313_530163BE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch renames IsHTCapable of struct user_conn_req to ht_capable
-to avoid CamelCase naming convention.
+> May I ask if you are interested in patches that removes the compiler
+> warnings on Android? I have cloned the iw git under the external
+> folder in the android tree and everything compiles fine with "mm" but
+> there are a lot of warnings. Most warnings are unused-parameter and
+> sign-compare but also missing-field-initializers.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Hm. I think -Wunused-parameter I'd prefer not to fix, since that
+usually ends up with something like
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dc94d00..f1f1ef4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1143,7 +1143,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	*(pu8CurrByte++)  = ptstrJoinBssParam->uapsd_cap;
- 
- 	*(pu8CurrByte++)  = ptstrJoinBssParam->ht_capable;
--	hif_drv->usr_conn_req.IsHTCapable = ptstrJoinBssParam->ht_capable;
-+	hif_drv->usr_conn_req.ht_capable = ptstrJoinBssParam->ht_capable;
- 
- 	*(pu8CurrByte++)  =  ptstrJoinBssParam->rsn_found;
- 	PRINT_D(HOSTINF_DBG, "* rsn found %d*\n", *(pu8CurrByte - 1));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 0363068..3afe432 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -207,7 +207,7 @@ struct user_conn_req {
- 	u8 *ies;
- 	size_t ies_len;
- 	wilc_connect_result conn_result;
--	bool IsHTCapable;
-+	bool ht_capable;
- 	void *u32UserConnectPvoid;
- };
- 
--- 
-1.9.1
+int my_callback_function(void *ignored)
+{
+	ignored = ignored;
 
+	...
+}
+
+or something like that?
+
+-Wsign-compare seems somewhat useful, I've just gone through that and
+fixed it up.
+
+I don't see anything with -Wmissing-field-initializers.
+
+
+johannes
