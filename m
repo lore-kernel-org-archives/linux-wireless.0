@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56969 "EHLO mga11.intel.com"
+Received: from bues.ch ([80.190.117.144]:59739 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851AbbJYMCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:02:01 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/16] iwlwifi: mvm: remove pointless scan plan checks
-Date: Sun, 25 Oct 2015 14:01:13 +0200
-Message-Id: <1445774476-24792-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_131654_681676_6144CB70)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+	id S1753446AbbJNOsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 10:48:54 -0400
+Date: Wed, 14 Oct 2015 16:48:43 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH][RFC][RFT] ssb: pick PCMCIA host code support from b43
+ driver
+Message-ID: <20151014164843.4f9a00e3@wiggum> (sfid-20151014_164858_853464_77CB78EE)
+In-Reply-To: <CACna6rwGRM-qiXSijeGDzupwUXg62BoUDtyL3gPD-HrCJvhQmQ@mail.gmail.com>
+References: <1442826259-6270-1-git-send-email-zajec5@gmail.com>
+	<20150921182000.6d89445d@wiggum>
+	<CACna6rzSqnJF2uBS-DszR+1PFNwqM8S0WecAE+R4QRJjGYuXYQ@mail.gmail.com>
+	<20150923175801.69076f31@wiggum>
+	<CACna6rwGRM-qiXSijeGDzupwUXg62BoUDtyL3gPD-HrCJvhQmQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/6kn8V_ZeAd8Hog1RscyFw/P"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--Sig_/6kn8V_ZeAd8Hog1RscyFw/P
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-As cfg80211 already enforces these limits, there's little point
-in having them again here in our code.
+On Wed, 14 Oct 2015 13:17:16 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 14 --------------
- 1 file changed, 14 deletions(-)
+> If all PCI-bus-host-specific code is always the same,
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index a8e11cc..0e9d28c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -819,16 +819,9 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	ssid_bitmap <<= 1;
- 
- 	for (i = 0; i < params->n_scan_plans; i++) {
--		struct wiphy *wiphy = mvm->hw->wiphy;
- 		struct cfg80211_sched_scan_plan *scan_plan =
- 			&params->scan_plans[i];
- 
--		if (WARN_ON(scan_plan->iterations >
--			    wiphy->max_sched_scan_plan_iterations ||
--			    scan_plan->interval >
--			    wiphy->max_sched_scan_plan_interval))
--			return -EINVAL;
--
- 		cmd->schedule[i].delay =
- 			cpu_to_le16(scan_plan->interval);
- 		cmd->schedule[i].iterations = scan_plan->iterations;
-@@ -1103,16 +1096,9 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				       params->n_channels, ssid_bitmap, cmd);
- 
- 	for (i = 0; i < params->n_scan_plans; i++) {
--		struct wiphy *wiphy = mvm->hw->wiphy;
- 		struct cfg80211_sched_scan_plan *scan_plan =
- 			&params->scan_plans[i];
- 
--		if (WARN_ON(scan_plan->iterations >
--			    wiphy->max_sched_scan_plan_iterations ||
--			    scan_plan->interval >
--			    wiphy->max_sched_scan_plan_interval))
--			return -EINVAL;
--
- 		sec_part->schedule[i].iter_count = scan_plan->iterations;
- 		sec_part->schedule[i].interval =
- 			cpu_to_le16(scan_plan->interval);
--- 
-2.1.4
+And that's the point. It's always the same _except_ for the device IDs.
+Which obviously are PCI-device specific.
 
+--=20
+Michael
+
+--Sig_/6kn8V_ZeAd8Hog1RscyFw/P
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWHmtLAAoJEPUyvh2QjYsOe8QP/RKKCOiVfm+W0aNVaqbBl+l/
+p39+NGqku4DmgjVogHlen2wlgKDDUonsc88y1IENPl32xTqgkS6QxKYoOJXuxkw3
+hE/U+qgff28fonwtVh+mSz/aV8F+icxo6GsvSOnnAzxugtDE2v7oU5vuNdHtlhVs
+QmsnuJIWYhlvUJp/dR8ZBRnd7sl8B/5M96lJICwMAhlQl/6DvYTq0s8e+lVQYS8P
+JFbE9DgiSpV54LV7CPuBNuHByI/B9CdCrY+PO6Tmp94l0OJulUJUGZibCtivjdtH
+Wf1UhwIlK4lwEFaVHzhEFyav9hLR5HGil0aQfphXE/QBd54K5/cYt9AUaMYlO4Jm
+knv5VbMEHgopUT3mWNjN2b4PWzK5pq4IVBL3O3hQYuMR0/6V7u8iT6vsm2QAFbuI
+EgxJ04YVxz2D9cOdCFitSsOgCeE2EN1wtSLdDSoDOXEYmaBoMNqFFlkTjHs4Sukh
+eXFiS8f3/Slfyf2y3aRQ+YDNTYeUPoAAjCdUQ0aW5JrCaaPSsPZdZTVj0DXj47Id
+WLcQ+Fkn+XYurHgy45xNzwwRH1oBp79iFlLrkkmey1OXebv/hRy5g38PW1wBYtCh
+TmR4Wv5ca4HrubLAptXwQS3z3M+5I8ox7pZF2W4G8ko64i/vdfCmPn7nGKlPGUnp
+bPMFhXtM7/3qz+AxE9hN
+=R/Hh
+-----END PGP SIGNATURE-----
+
+--Sig_/6kn8V_ZeAd8Hog1RscyFw/P--
