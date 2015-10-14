@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4805 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbbJMLCx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39258 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276AbbJNLBt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:02:53 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 50/54] staging: wilc1000: rename u32Timeout of struct power_mgmt_param
-Date: Tue, 13 Oct 2015 20:02:08 +0900
-Message-ID: <1444734132-17858-5-git-send-email-tony.cho@atmel.com> (sfid-20151013_130256_270356_1D50A55D)
-In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+	Wed, 14 Oct 2015 07:01:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: kbuild test robot <lkp@intel.com>, <kbuild-all@01.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
+References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>
+	<87wpuspilw.fsf@kamboji.qca.qualcomm.com>
+	<561C1291.8060607@broadcom.com>
+Date: Wed, 14 Oct 2015 14:01:43 +0300
+In-Reply-To: <561C1291.8060607@broadcom.com> (Arend van Spriel's message of
+	"Mon, 12 Oct 2015 22:05:37 +0200")
+Message-ID: <87lhb5n27c.fsf@kamboji.qca.qualcomm.com> (sfid-20151014_130152_462457_4B2B9E4C)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Arend van Spriel <arend@broadcom.com> writes:
 
-This patch renames u32Timeout of struct power_mgmt_param to timeout to
-avoid CamelCase naming convention.
+> On 10/12/2015 10:59 AM, Kalle Valo wrote:
+>> kbuild test robot <lkp@intel.com> writes:
+>>
+>>> Hi Arend,
+>>>
+>>> [auto build test ERROR on next-20151008 -- if it's inappropriate base, please ignore]
+>>>
+>>> config: x86_64-randconfig-x011-201540 (attached as .config)
+>>> reproduce:
+>>>          # save the attached .config to linux build tree
+>>>          make ARCH=x86_64
+>>>
+>>> All errors (new ones prefixed by >>):
+>>>
+>>>     drivers/net/wireless/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
+>>>      void brcmf_debugfs_init(void)
+>>>           ^
+>>>     In file included from drivers/net/wireless/brcm80211/brcmfmac/bus.h:20:0,
+>>>                      from drivers/net/wireless/brcm80211/brcmfmac/debug.c:24:
+>>>     drivers/net/wireless/brcm80211/brcmfmac/debug.h:118:20: note: previous definition of 'brcmf_debugfs_init' was here
+>>>      static inline void brcmf_debugfs_init(void)
+>>>                         ^
+>>
+>> Arend, are the kbuild errors valid? I would guess they are as
+>> wireless-drivers-next should be in linux-next.
+>
+> Actually they are not. I am not sure about the build infrastructure,
+> but the errors above can only occur when CONFIG_BRCMDBG is set, but
+> DEBUG is not. However, that can not happen as we have following line
+> in drivers/net/wireless/brcm80211/Makefile:
+>
+> subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DDEBUG
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+I didn't check the details but I'm still not convinced :) In my opinion
+the code should always compile, with and without -DDEBUG. Anyways, I
+pushed this script to the pending branch to get kbuild test this patch
+once again.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0c44fd0..97d1bd8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -155,7 +155,7 @@ struct del_sta {
- 
- struct power_mgmt_param {
- 	bool enabled;
--	u32 u32Timeout;
-+	u32 timeout;
- };
- 
- struct set_ip_addr {
-@@ -4881,8 +4881,7 @@ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
- 	msg.drv = hif_drv;
- 
- 	pstrPowerMgmtParam->enabled = bIsEnabled;
--	pstrPowerMgmtParam->u32Timeout = u32Timeout;
--
-+	pstrPowerMgmtParam->timeout = u32Timeout;
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
 -- 
-1.9.1
-
+Kalle Valo
