@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbJDHX5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40363 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904AbbJNLQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 03:23:57 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 08/10] wil6210: ratelimit Tx error message
-Date: Sun,  4 Oct 2015 10:23:25 +0300
-Message-Id: <1443943407-6663-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092402_245055_5EA11B6D)
-In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 14 Oct 2015 07:16:28 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath9k: rename ini_modes_rxgain_5g_xlna to
+ ini_modes_rxgain_xlna
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1443504277-3482-1-git-send-email-miaoqing@codeaurora.org>
+To: miaoqing pan <miaoqing@codeaurora.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, kvalo@qca.qualcomm.com,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Message-Id: <20151014111628.5763C141C88@smtp.codeaurora.org> (sfid-20151014_131631_586996_148B8036)
+Date: Wed, 14 Oct 2015 11:16:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Situations observed when IP stack schedules lots of
-frames for Tx while no connection (connection lost,
-for example). In this case, dmesg bloated with error
-message "FW not connected", printed for every frame.
 
-Ratelimit this error message to avoid dmesg pollution.
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+> 
+> rename the variable as preparation for using the array with 2.4 GHz
+> band, etc.
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index c530c79..0f8b687 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1667,7 +1667,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 		goto drop;
- 	}
- 	if (unlikely(!test_bit(wil_status_fwconnected, wil->status))) {
--		wil_err(wil, "FW not connected\n");
-+		wil_err_ratelimited(wil, "FW not connected\n");
- 		goto drop;
- 	}
- 	if (unlikely(wil->wdev->iftype == NL80211_IFTYPE_MONITOR)) {
--- 
-2.1.4
+871d0051f060 ath9k: rename ini_modes_rxgain_5g_xlna to ini_modes_rxgain_xlna
+cfa2b42b4d9a ath9k: fix QCA9561 XLNA rxgain initial
 
+Kalle Valo
