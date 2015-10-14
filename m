@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37641 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764AbbJDIk4 (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:34898 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbbJNHgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 04:40:56 -0400
-Date: Sun, 4 Oct 2015 09:40:53 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 04/10] staging: wilc1000: replace PRINT_ER with pr_err
-Message-ID: <20151004084053.GA21313@kroah.com> (sfid-20151004_104104_498564_73BAB7AE)
-References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
- <1443789896-7082-4-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 14 Oct 2015 03:36:05 -0400
+Received: by wicge5 with SMTP id ge5so223305816wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 00:36:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443789896-7082-4-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <1444805527.3054.4.camel@sipsolutions.net>
+References: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com>
+	<1444727650.1961.10.camel@sipsolutions.net>
+	<CABAco3CLCtFOofHMbJSz-Okcc4BM4nnVwO5By8DeZUYJrsCt6Q@mail.gmail.com>
+	<1444805527.3054.4.camel@sipsolutions.net>
+Date: Wed, 14 Oct 2015 09:36:03 +0200
+Message-ID: <CABAco3BpY-hU=9MGzovyUfyRgXMynikNbUD3cScievczq2qsKg@mail.gmail.com> (sfid-20151014_093610_029345_ADBDAF56)
+Subject: Re: [PATCH] ocb: use correct "MHz" instead of "MHZ"
+From: Ola Olsson <ola1olsson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 09:44:50PM +0900, Chaehyun Lim wrote:
-> This patch replaces PRINT_ER with pr_err.
-> It would be better to use netdev_err, but it cannot use it in this
-> function, so just use pr_err.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 566e618..802d87a 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -5322,7 +5322,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
->  	struct host_if_msg msg;
->  
->  	if (!pstrWFIDrv) {
-> -		PRINT_ER("driver is null\n");
-> +		pr_err("driver is null\n");
->  		return -EFAULT;
->  	}
+> Hm. I think -Wunused-parameter I'd prefer not to fix, since that
+> usually ends up with something like
+>
+> int my_callback_function(void *ignored)
+> {
+>         ignored = ignored;
+>
+>         ...
+> }
+>
+> or something like that?
 
-I don't see how this check will ever trigger, do you?  If not, it should
-just be removed.
+Correct. I have done a macro to utilize the gcc "__attribute__
+((unused))" and I fully understand that it is not an elegant solution.
+I don't want to convince you about merging it since I wouldn't do it
+myself. :)
 
+> I don't see anything with -Wmissing-field-initializers.
 
->  
-> @@ -5334,7 +5334,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
->  
->  	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
->  	if (result) {
-> -		PRINT_ER("wilc mq send fail\n");
-> +		pr_err("wilc mq send fail\n");
+Hmm. I'll try to find out why I get these warnings. Mostly, it is
+about changing "{}" -> "{0}" on stack allocated objects.
+This is what I get when compiling at 0ee571d57b8b631658d1a35ad9a906610d6145d3
 
-You should have a network device pointer somewhere here, dig around, it
-should be possible to use netdev_err().
-
-thanks,
-
-greg k-h
+$ mm -B -j8 2>&1 | grep -i missing-field
+external/iw/scan.c:1863:3: warning: missing initializer for field
+'type' of 'struct nla_policy' [-Wmissing-field-initializers]
+external/iw/scan.c:1866:3: warning: missing initializer for field
+'type' of 'struct nla_policy' [-Wmissing-field-initializers]
+external/iw/scan.c:1871:3: warning: missing initializer for field
+'type' of 'struct nla_policy' [-Wmissing-field-initializers]
+external/iw/connect.c:80:9: warning: missing initializer for field
+'ts' of 'struct print_event_args' [-Wmissing-field-initializers]
+external/iw/link.c:32:3: warning: missing initializer for field 'type'
+of 'struct nla_policy' [-Wmissing-field-initializers]
+external/iw/link.c:35:3: warning: missing initializer for field 'type'
+of 'struct nla_policy' [-Wmissing-field-initializers]
+external/iw/bitrate.c:95:9: warning: missing initializer for field
+'mcs' of 'struct nl80211_txrate_vht' [-Wmissing-field-initializers]
+external/iw/bitrate.c:96:9: warning: missing initializer for field
+'mcs' of 'struct nl80211_txrate_vht' [-Wmissing-field-initializers]
+external/iw/wowlan.c:110:11: warning: missing initializer for field
+'start' of 'struct nl80211_wowlan_tcp_data_seq'
+[-Wmissing-field-initializers]
