@@ -1,138 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7815 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814AbbJYJAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 05:00:05 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/10] mac80211: make enable_qos parameter to ieee80211_set_wmm_default()
-Date: Sun, 25 Oct 2015 10:59:37 +0200
-Message-Id: <1445763582-11421-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100014_851327_B36F8524)
-In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:43498 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753490AbbJNLrK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 07:47:10 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/16] staging: wilc1000: remove typedef from the linux_wlan_t
+Date: Wed, 14 Oct 2015 20:46:30 +0900
+Message-ID: <1444823204-16736-2-git-send-email-tony.cho@atmel.com> (sfid-20151014_134717_035359_C5E21198)
+In-Reply-To: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch removes typedef from the struct linux_wlan_t and renames it
+to the wilc. In addition, all of linux_wlan_t is replaced with struct wilc
+and memory allocation style is changed with preferred form as well like the
+following:
+	p = kmalloc(sizeof(*p), ...) where "struct wilc" is used
 
-The function currently determines this value, for use in bss_info.qos,
-based on the interface type itself. Make it a parameter instead and
-set it with the same logic for now.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/mac80211/ibss.c        |  2 +-
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/iface.c       |  8 +++++---
- net/mac80211/mlme.c        |  4 ++--
- net/mac80211/util.c        | 11 ++---------
- 5 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             | 38 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  8 ++---
+ 3 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 3b5874e..337bb5d 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -356,7 +356,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	else
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ccab89f..b879b8b 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -49,7 +49,7 @@ extern bool g_obtainingIP;
+ extern u16 Set_machw_change_vir_if(bool bValue);
+ extern void resolve_disconnect_aberration(void *drvHandler);
+ extern u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+-void wilc1000_wlan_deinit(linux_wlan_t *nic);
++void wilc1000_wlan_deinit(struct wilc *nic);
+ extern struct timer_list hDuringIpTimer;
  
--	ieee80211_set_wmm_default(sdata, true);
-+	ieee80211_set_wmm_default(sdata, true, false);
+ static int linux_wlan_device_power(int on_off)
+@@ -96,8 +96,8 @@ static struct notifier_block g_dev_notifier = {
+  */
+ static struct semaphore close_exit_sync;
  
- 	sdata->vif.bss_conf.ibss_joined = true;
- 	sdata->vif.bss_conf.ibss_creator = creator;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5c76ba7..d832bd5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1769,7 +1769,7 @@ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 			     int rate, int erp, int short_preamble,
- 			     int shift);
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
--			       bool bss_notify);
-+			       bool bss_notify, bool enable_qos);
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 		    struct sta_info *sta, struct sk_buff *skb);
+-static int wlan_deinit_locks(linux_wlan_t *nic);
+-static void wlan_deinitialize_threads(linux_wlan_t *nic);
++static int wlan_deinit_locks(struct wilc *nic);
++static void wlan_deinitialize_threads(struct wilc *nic);
+ extern void WILC_WFI_monitor_rx(u8 *buff, u32 size);
+ extern void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
  
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f848c75..d0dc1bf 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -661,11 +661,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		}
+@@ -114,7 +114,7 @@ static void wilc_set_multicast_list(struct net_device *dev);
+  * for now - in frmw_to_linux there should be private data to be passed to it
+  * and this data should be pointer to net device
+  */
+-linux_wlan_t *g_linux_wlan;
++struct wilc *g_linux_wlan;
+ bool bEnablePS = true;
  
- 		/*
--		 * set default queue parameters so drivers don't
-+		 * Set default queue parameters so drivers don't
- 		 * need to initialise the hardware if the hardware
--		 * doesn't start up with sane defaults
-+		 * doesn't start up with sane defaults.
-+		 * Enable QoS for anything but station interfaces.
- 		 */
--		ieee80211_set_wmm_default(sdata, true);
-+		ieee80211_set_wmm_default(sdata, true,
-+			sdata->vif.type != NL80211_IFTYPE_STATION);
- 	}
+ static const struct net_device_ops wilc_netdev_ops = {
+@@ -243,9 +243,9 @@ static irqreturn_t isr_uh_routine(int irq, void *user_data)
  
- 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ded4b97..0d0ce5c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2077,7 +2077,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_bss_info_change_notify(sdata, changed);
+ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ {
+-	linux_wlan_t *nic;
++	struct wilc *nic;
  
- 	/* disassociated - set to defaults now */
--	ieee80211_set_wmm_default(sdata, false);
-+	ieee80211_set_wmm_default(sdata, false, false);
+-	nic = (linux_wlan_t *)userdata;
++	nic = (struct wilc *)userdata;
  
- 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
-@@ -3048,7 +3048,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 					 elems.wmm_param_len);
- 	else
--		ieee80211_set_wmm_default(sdata, false);
-+		ieee80211_set_wmm_default(sdata, false, false);
- 	changed |= BSS_CHANGED_QOS;
- 
- 	/* set AID and assoc capability,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c51ff91..29c55ce 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1105,13 +1105,13 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 	/*While mac is closing cacncel the handling of any interrupts received*/
+ 	if (g_linux_wlan->close) {
+@@ -260,10 +260,10 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
  }
  
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
--			       bool bss_notify)
-+			       bool bss_notify, bool enable_qos)
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+-static int init_irq(linux_wlan_t *p_nic)
++static int init_irq(struct wilc *p_nic)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_queue_params qparam;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	int ac;
--	bool use_11b, enable_qos;
-+	bool use_11b;
- 	bool is_ocb; /* Use another EDCA parameters if dot11OCBActivated=true */
- 	int aCWmin, aCWmax;
+ 	int ret = 0;
+-	linux_wlan_t *nic = p_nic;
++	struct wilc *nic = p_nic;
  
-@@ -1130,13 +1130,6 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 		 !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE);
- 	rcu_read_unlock();
+ 	/*initialize GPIO and register IRQ num*/
+ 	/*GPIO request*/
+@@ -299,7 +299,7 @@ static int init_irq(linux_wlan_t *p_nic)
+ }
+ #endif
  
--	/*
--	 * By default disable QoS in STA mode for old access points, which do
--	 * not support 802.11e. New APs will provide proper queue parameters,
--	 * that we will configure later.
--	 */
--	enable_qos = (sdata->vif.type != NL80211_IFTYPE_STATION);
+-static void deinit_irq(linux_wlan_t *nic)
++static void deinit_irq(struct wilc *nic)
+ {
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+ 	/* Deintialize IRQ */
+@@ -336,7 +336,7 @@ void linux_wlan_mac_indicate(int flag)
+ 	/*I have to do it that way becuase there is no mean to encapsulate device pointer
+ 	 * as a parameter
+ 	 */
+-	linux_wlan_t *pd = g_linux_wlan;
++	struct wilc *pd = g_linux_wlan;
+ 	int status;
+ 
+ 	if (flag == WILC_MAC_INDICATE_STATUS) {
+@@ -594,7 +594,7 @@ static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
+ _fail_:
+ 	return ret;
+ }
+-static int linux_wlan_firmware_download(linux_wlan_t *p_nic)
++static int linux_wlan_firmware_download(struct wilc *p_nic)
+ {
+ 
+ 	int ret = 0;
+@@ -626,7 +626,7 @@ _FAIL_:
+ }
+ 
+ /* startup configuration - could be changed later using iconfig*/
+-static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_nic)
++static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_nic)
+ {
+ 
+ 	unsigned char c_val[64];
+@@ -882,7 +882,7 @@ _fail_:
+ }
+ 
+ /**************************/
+-void wilc1000_wlan_deinit(linux_wlan_t *nic)
++void wilc1000_wlan_deinit(struct wilc *nic)
+ {
+ 
+ 	if (g_linux_wlan->wilc1000_initialized)	{
+@@ -944,7 +944,7 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
+ 	}
+ }
+ 
+-int wlan_init_locks(linux_wlan_t *p_nic)
++int wlan_init_locks(struct wilc *p_nic)
+ {
+ 
+ 	PRINT_D(INIT_DBG, "Initializing Locks ...\n");
+@@ -965,7 +965,7 @@ int wlan_init_locks(linux_wlan_t *p_nic)
+ 	return 0;
+ }
+ 
+-static int wlan_deinit_locks(linux_wlan_t *nic)
++static int wlan_deinit_locks(struct wilc *nic)
+ {
+ 	PRINT_D(INIT_DBG, "De-Initializing Locks\n");
+ 
+@@ -977,7 +977,7 @@ static int wlan_deinit_locks(linux_wlan_t *nic)
+ 
+ 	return 0;
+ }
+-void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
++void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ {
+ 
+ 	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
+@@ -1031,7 +1031,7 @@ _fail_2:
+ 	return ret;
+ }
+ 
+-static void wlan_deinitialize_threads(linux_wlan_t *nic)
++static void wlan_deinitialize_threads(struct wilc *nic)
+ {
+ 
+ 	g_linux_wlan->close = 1;
+@@ -1053,7 +1053,7 @@ extern u8 core_11b_ready(void);
+ 
+ #define READY_CHECK_THRESHOLD		30
+ extern void wilc_wlan_global_reset(void);
+-u8 wilc1000_prepare_11b_core(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
++u8 wilc1000_prepare_11b_core(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ {
+ 	u8 trials = 0;
+ 
+@@ -1714,7 +1714,7 @@ int wilc_netdev_init(void)
+ 	sema_init(&close_exit_sync, 0);
+ 
+ 	/*create the common structure*/
+-	g_linux_wlan = kzalloc(sizeof(linux_wlan_t), GFP_KERNEL);
++	g_linux_wlan = kzalloc(sizeof(*g_linux_wlan), GFP_KERNEL);
+ 	if (!g_linux_wlan)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index a950b04..08ba5ba 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2523,7 +2523,7 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-void wilc1000_wlan_deinit(linux_wlan_t *nic);
++void wilc1000_wlan_deinit(struct wilc *nic);
+ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
+ 
+ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8bcfcc2..373959b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -154,7 +154,8 @@ typedef struct {
+ 	struct host_if_drv *drvHandler;
+ 	struct net_device *wilc_netdev;
+ } tstrInterfaceInfo;
+-typedef struct {
++
++struct wilc {
+ 	int mac_status;
+ 	int wilc1000_initialized;
+ 	#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+@@ -188,8 +189,7 @@ typedef struct {
+ #else
+ 	struct spi_device *wilc_spidev;
+ #endif
 -
- 	is_ocb = (sdata->vif.type == NL80211_IFTYPE_OCB);
+-} linux_wlan_t;
++};
  
- 	/* Set defaults according to 802.11-2007 Table 7-37 */
+ typedef struct {
+ 	u8 u8IfIdx;
+@@ -206,7 +206,7 @@ struct WILC_WFI_mon_priv {
+ 	struct net_device *real_ndev;
+ };
+ 
+-extern linux_wlan_t *g_linux_wlan;
++extern struct wilc *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
+ void linux_wlan_mac_indicate(int flag);
 -- 
-2.1.4
+1.9.1
 
