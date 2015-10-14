@@ -1,99 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27053 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:43569 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965300AbbJ2DEr (ORCPT
+	with ESMTP id S932548AbbJNLrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:04:47 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Wed, 14 Oct 2015 07:47:42 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 46/64] staging: wilc1000: rename u32ListenSessionID of struct remain_ch
-Date: Thu, 29 Oct 2015 12:05:38 +0900
-Message-ID: <1446087956-19054-13-git-send-email-glen.lee@atmel.com> (sfid-20151029_040449_948646_755FAE30)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/16] staging: wilc1000: rename u8NoIfcs in the struct wilc
+Date: Wed, 14 Oct 2015 20:46:34 +0900
+Message-ID: <1444823204-16736-6-git-send-email-tony.cho@atmel.com> (sfid-20151014_134750_033102_895A270C)
+In-Reply-To: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch renames u8NoIfcs of the struct wilc to the vif_num to avoid
+CamelCase naming convention.
 
-This patch renames u32ListenSessionID of struct remain_ch to id
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 18 +++++++++---------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6c49091..294f90c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2489,7 +2489,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
- 		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
--		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
-+		hif_drv->remain_on_ch.id = pstrHostIfRemainOnChan->id;
- 	} else {
- 		pstrHostIfRemainOnChan->ch = hif_drv->remain_on_ch.ch;
- 	}
-@@ -2617,7 +2617,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c75dfc4..51c21dd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -366,7 +366,7 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+ 	Bssid  = pMacHeader + 10;
+ 	Bssid1 = pMacHeader + 4;
  
- 		if (hif_drv->remain_on_ch.expired) {
- 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
--						      pstrHostIfRemainOnChan->u32ListenSessionID);
-+						      pstrHostIfRemainOnChan->id);
- 		}
- 		P2P_LISTEN_STATE = 0;
- 	} else {
-@@ -2640,7 +2640,7 @@ static void ListenTimerCB(unsigned long arg)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
- 	msg.drv = hif_drv;
--	msg.body.remain_on_ch.u32ListenSessionID = hif_drv->remain_on_ch.u32ListenSessionID;
-+	msg.body.remain_on_ch.id = hif_drv->remain_on_ch.id;
+-	for (i = 0; i < wl->u8NoIfcs; i++)
++	for (i = 0; i < wl->vif_num; i++)
+ 		if (!memcmp(Bssid1, wl->strInterfaceInfo[i].aBSSID, ETH_ALEN) ||
+ 		    !memcmp(Bssid, wl->strInterfaceInfo[i].aBSSID, ETH_ALEN))
+ 			return wl->strInterfaceInfo[i].wilc_netdev;
+@@ -376,7 +376,7 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+ 		PRINT_D(INIT_DBG, "%02x ", pMacHeader[i]);
+ 	Bssid  = pMacHeader + 18;
+ 	Bssid1 = pMacHeader + 12;
+-	for (i = 0; i < wl->u8NoIfcs; i++)
++	for (i = 0; i < wl->vif_num; i++)
+ 		if (!memcmp(Bssid1, wl->strInterfaceInfo[i].aBSSID, ETH_ALEN) ||
+ 		    !memcmp(Bssid, wl->strInterfaceInfo[i].aBSSID, ETH_ALEN))
+ 			return wl->strInterfaceInfo[i].wilc_netdev;
+@@ -391,7 +391,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
+ 	int ret = -1;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-@@ -4377,7 +4377,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.body.remain_on_ch.ready = RemainOnChanReady;
- 	msg.body.remain_on_ch.arg = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
--	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
-+	msg.body.remain_on_ch.id = u32SessionID;
- 	msg.drv = hif_drv;
+ 	PRINT_D(INIT_DBG, "set bssid on[%p]\n", wilc_netdev);
+-	for (i = 0; i < wl->u8NoIfcs; i++)
++	for (i = 0; i < wl->vif_num; i++)
+ 		if (wl->strInterfaceInfo[i].wilc_netdev == wilc_netdev) {
+ 			memcpy(wl->strInterfaceInfo[i].aBSSID, pBSSID, 6);
+ 			ret = 0;
+@@ -408,7 +408,7 @@ int linux_wlan_get_num_conn_ifcs(void)
+ 	u8 null_bssid[6] = {0};
+ 	u8 ret_val = 0;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-@@ -4402,7 +4402,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
- 	msg.drv = hif_drv;
--	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
-+	msg.body.remain_on_ch.id = u32SessionID;
+-	for (i = 0; i < wl->u8NoIfcs; i++)
++	for (i = 0; i < wl->vif_num; i++)
+ 		if (memcmp(wl->strInterfaceInfo[i].aBSSID, null_bssid, 6))
+ 			ret_val++;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c338028..8450e22 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -244,7 +244,7 @@ struct remain_ch {
- 	wilc_remain_on_chan_expired expired;
- 	wilc_remain_on_chan_ready ready;
- 	void *arg;
--	u32 u32ListenSessionID;
-+	u32 id;
- };
+@@ -1310,7 +1310,7 @@ int mac_open(struct net_device *ndev)
+ 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
  
- struct reg_frame {
+ 	/* loop through the NUM of supported devices and set the MAC address */
+-	for (i = 0; i < wl->u8NoIfcs; i++)
++	for (i = 0; i < wl->vif_num; i++)
+ 		if (ndev == wl->strInterfaceInfo[i].wilc_netdev) {
+ 			memcpy(wl->strInterfaceInfo[i].aSrcAddress, mac_add, ETH_ALEN);
+ 			wl->strInterfaceInfo[i].drvHandler = priv->hWILCWFIDrv;
+@@ -1680,7 +1680,7 @@ void WILC_WFI_mgmt_rx(u8 *buff, u32 size)
+ 
+ 	/*Pass the frame on the monitor interface, if any.*/
+ 	/*Otherwise, pass it on p2p0 netdev, if registered on it*/
+-	for (i = 0; i < wl->u8NoIfcs; i++) {
++	for (i = 0; i < wl->vif_num; i++) {
+ 		nic = netdev_priv(wl->strInterfaceInfo[i].wilc_netdev);
+ 		if (nic->monitor_flag) {
+ 			WILC_WFI_monitor_rx(buff, size);
+@@ -1733,10 +1733,10 @@ int wilc_netdev_init(void)
+ 		} else
+ 			strcpy(ndev->name, "p2p%d");
+ 
+-		nic->u8IfIdx = wl->u8NoIfcs;
++		nic->u8IfIdx = wl->vif_num;
+ 		nic->wilc_netdev = ndev;
+-		wl->strInterfaceInfo[wl->u8NoIfcs].wilc_netdev = ndev;
+-		wl->u8NoIfcs++;
++		wl->strInterfaceInfo[wl->vif_num].wilc_netdev = ndev;
++		wl->vif_num++;
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		{
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 15ce2e8..bd82d78 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -162,7 +162,7 @@ struct wilc {
+ 	unsigned short dev_irq_num;
+ 	#endif
+ 	int close;
+-	u8 u8NoIfcs;
++	u8 vif_num;
+ 	struct wilc_vif strInterfaceInfo[NUM_CONCURRENT_IFC];
+ 	u8 open_ifcs;
+ 
 -- 
 1.9.1
 
