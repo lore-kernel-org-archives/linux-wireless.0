@@ -1,106 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:43784 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932433AbbJNLsy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:48:54 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 16/16] staging: wilc1000: assign pointer of wl to sdio device data
-Date: Wed, 14 Oct 2015 20:46:44 +0900
-Message-ID: <1444823204-16736-16-git-send-email-tony.cho@atmel.com> (sfid-20151014_134901_267702_D20DF1FF)
-In-Reply-To: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
-References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:33072 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751533AbbJNQlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 12:41:01 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove event.c
+Date: Wed, 14 Oct 2015 18:40:58 +0200
+Message-Id: <1444840858-20599-1-git-send-email-johannes@sipsolutions.net> (sfid-20151014_184106_401257_ABC7E6DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch assigns wl pointer to sdio device data. The global variable wl will
-be removed finally.
+That file contains just a single function, which itself is just a
+single statement to call a different function. Remove it.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 3 ++-
- drivers/staging/wilc1000/linux_wlan_sdio.c    | 5 +++--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ net/mac80211/Makefile      |  1 -
+ net/mac80211/event.c       | 27 ---------------------------
+ net/mac80211/ieee80211_i.h |  3 ---
+ net/mac80211/wpa.c         |  9 ++++++---
+ 4 files changed, 6 insertions(+), 34 deletions(-)
+ delete mode 100644 net/mac80211/event.c
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 4708d44..3cc4861 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1616,7 +1616,7 @@ void wl_wlan_cleanup(void)
- 	linux_wlan_device_power(0);
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 783e891b7525..f9137a8341f4 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -27,7 +27,6 @@ mac80211-y := \
+ 	key.o \
+ 	util.o \
+ 	wme.o \
+-	event.o \
+ 	chan.o \
+ 	trace.o mlme.o \
+ 	tdls.o \
+diff --git a/net/mac80211/event.c b/net/mac80211/event.c
+deleted file mode 100644
+index 01ae759518f6..000000000000
+--- a/net/mac80211/event.c
++++ /dev/null
+@@ -1,27 +0,0 @@
+-/*
+- * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- * mac80211 - events
+- */
+-#include <net/cfg80211.h>
+-#include "ieee80211_i.h"
+-
+-/*
+- * Indicate a failed Michael MIC to userspace. If the caller knows the TSC of
+- * the frame that generated the MIC failure (i.e., if it was provided by the
+- * driver or is still in the frame), it should provide that information.
+- */
+-void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
+-				     struct ieee80211_hdr *hdr, const u8 *tsc,
+-				     gfp_t gfp)
+-{
+-	cfg80211_michael_mic_failure(sdata->dev, hdr->addr2,
+-				     (hdr->addr1[0] & 0x01) ?
+-				     NL80211_KEYTYPE_GROUP :
+-				     NL80211_KEYTYPE_PAIRWISE,
+-				     keyidx, tsc, gfp);
+-}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 04b62435f37e..056d3721148c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1765,9 +1765,6 @@ extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
+ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
+ 			     int rate, int erp, int short_preamble,
+ 			     int shift);
+-void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
+-				     struct ieee80211_hdr *hdr, const u8 *tsc,
+-				     gfp_t gfp);
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 			       bool bss_notify);
+ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index feb547dc8643..d824c38971ed 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -174,9 +174,12 @@ mic_fail_no_key:
+ 	 * a driver that supports HW encryption. Send up the key idx only if
+ 	 * the key is set.
+ 	 */
+-	mac80211_ev_michael_mic_failure(rx->sdata,
+-					rx->key ? rx->key->conf.keyidx : -1,
+-					(void *) skb->data, NULL, GFP_ATOMIC);
++	cfg80211_michael_mic_failure(rx->sdata->dev, hdr->addr2,
++				     is_multicast_ether_addr(hdr->addr1) ?
++				     NL80211_KEYTYPE_GROUP :
++				     NL80211_KEYTYPE_PAIRWISE,
++				     rx->key ? rx->key->conf.keyidx : -1,
++				     NULL, GFP_ATOMIC);
+ 	return RX_DROP_UNUSABLE;
  }
  
--int wilc_netdev_init(void)
-+int wilc_netdev_init(struct wilc **wilc)
- {
- 
- 	int i;
-@@ -1629,6 +1629,7 @@ int wilc_netdev_init(void)
- 	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
- 	if (!wl)
- 		return -ENOMEM;
-+	*wilc = wl;
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 7fd53be..45342e8 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -27,7 +27,6 @@ struct wilc_sdio {
- };
- 
- struct sdio_func *local_sdio_func;
--extern int wilc_netdev_init(void);
- extern void wilc_handle_isr(void);
- 
- static unsigned int sdio_default_speed;
-@@ -117,6 +116,7 @@ int linux_sdio_cmd53(sdio_cmd53_t *cmd)
- static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- {
- 	struct wilc_sdio *wl_sdio;
-+	struct wilc *wilc;
- 
- 	PRINT_D(INIT_DBG, "probe function\n");
- 	wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
-@@ -125,12 +125,13 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
- 
- 	PRINT_D(INIT_DBG, "Initializing netdev\n");
- 	local_sdio_func = func;
--	if (wilc_netdev_init()) {
-+	if (wilc_netdev_init(&wilc)) {
- 		PRINT_ER("Couldn't initialize netdev\n");
- 		kfree(wl_sdio);
- 		return -1;
- 	}
- 	wl_sdio->func = func;
-+	wl_sdio->wilc = wilc;
- 	sdio_set_drvdata(func, wl_sdio);
- 
- 	printk("Driver Initializing success\n");
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index a6b948a..9a9e082 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -214,4 +214,5 @@ void linux_wlan_rx_complete(void);
- void linux_wlan_dbg(u8 *buff);
- int linux_wlan_lock_timeout(void *vp, u32 timeout);
- void wl_wlan_cleanup(void);
-+int wilc_netdev_init(struct wilc **wilc);
- #endif
 -- 
-1.9.1
+2.5.1
 
