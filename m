@@ -1,71 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24814 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbJDHXp (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:64546 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbbJNNgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 03:23:45 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+	Wed, 14 Oct 2015 09:36:24 -0400
+Message-ID: <561E5A55.5070607@broadcom.com> (sfid-20151014_153629_103055_A9E9557A)
+Date: Wed, 14 Oct 2015 15:36:21 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
 To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 01/10] wil6210: fix warning in system power management code
-Date: Sun,  4 Oct 2015 10:23:18 +0300
-Message-Id: <1443943407-6663-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151004_092348_838565_3291A577)
-In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+CC: kbuild test robot <lkp@intel.com>, <kbuild-all@01.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
+References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>	<87wpuspilw.fsf@kamboji.qca.qualcomm.com>	<561C1291.8060607@broadcom.com> <87lhb5n27c.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87lhb5n27c.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix compilation warning where CONFIG_PM defined while
-CONFIG_PM_SLEEP is not defined
+On 10/14/2015 01:01 PM, Kalle Valo wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
+>
+>> On 10/12/2015 10:59 AM, Kalle Valo wrote:
+>>> kbuild test robot <lkp@intel.com> writes:
+>>>
+>>>> Hi Arend,
+>>>>
+>>>> [auto build test ERROR on next-20151008 -- if it's inappropriate base, please ignore]
+>>>>
+>>>> config: x86_64-randconfig-x011-201540 (attached as .config)
+>>>> reproduce:
+>>>>           # save the attached .config to linux build tree
+>>>>           make ARCH=x86_64
+>>>>
+>>>> All errors (new ones prefixed by >>):
+>>>>
+>>>>      drivers/net/wireless/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
+>>>>       void brcmf_debugfs_init(void)
+>>>>            ^
+>>>>      In file included from drivers/net/wireless/brcm80211/brcmfmac/bus.h:20:0,
+>>>>                       from drivers/net/wireless/brcm80211/brcmfmac/debug.c:24:
+>>>>      drivers/net/wireless/brcm80211/brcmfmac/debug.h:118:20: note: previous definition of 'brcmf_debugfs_init' was here
+>>>>       static inline void brcmf_debugfs_init(void)
+>>>>                          ^
+>>>
+>>> Arend, are the kbuild errors valid? I would guess they are as
+>>> wireless-drivers-next should be in linux-next.
+>>
+>> Actually they are not. I am not sure about the build infrastructure,
+>> but the errors above can only occur when CONFIG_BRCMDBG is set, but
+>> DEBUG is not. However, that can not happen as we have following line
+>> in drivers/net/wireless/brcm80211/Makefile:
+>>
+>> subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DDEBUG
+>
+> I didn't check the details but I'm still not convinced :) In my opinion
+> the code should always compile, with and without -DDEBUG. Anyways, I
+> pushed this script to the pending branch to get kbuild test this patch
+> once again.
 
-Report follows:
+Ok, Kalle
 
-tree:   git://github.com/kvalo/ath pending
-head:   941145fc5e5afbb120271e5dfaf37213ddb55807
-commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
-config: xtensa-allyesconfig (attached as .config)
-reproduce:
-  wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-  chmod +x ~/bin/make.cross
-  git checkout df596be39294d9712e5d568063a48448031e0a9f
-  # save the attached .config to linux build tree
-  make.cross ARCH=xtensa
+Let me try to be a bit more convincing ;-)
 
-All warnings (new ones prefixed by >>):
+I checked out linux-next/master, taken the provided .config and ran:
 
->> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
-    static int wil6210_suspend(struct device *dev, bool is_runtime)
-               ^
->> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
-    static int wil6210_resume(struct device *dev, bool is_runtime)
-               ^
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+$ make prepare
+$ make M=scripts
+$ make M=drivers/net/wireless/brcm80211
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index feff1ef..1a3142c3 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -260,6 +260,7 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
- 
- #ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- 
- static int wil6210_suspend(struct device *dev, bool is_runtime)
- {
-@@ -307,7 +308,6 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
- 	return rc;
- }
- 
--#ifdef CONFIG_PM_SLEEP
- static int wil6210_pm_suspend(struct device *dev)
- {
- 	return wil6210_suspend(dev, false);
--- 
-2.1.4
+   WARNING: Symbol version dump ./Module.symvers
+            is missing; modules will have no dependencies and modversions.
 
+   CC      drivers/net/wireless/brcm80211/brcmfmac/cfg80211.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/chip.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/fwil.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/fweh.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/fwsignal.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/p2p.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/proto.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/common.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/core.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/firmware.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/feature.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/btcoex.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/vendor.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/bcdc.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/sdio.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/debug.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/tracepoint.o
+   CC      drivers/net/wireless/brcm80211/brcmfmac/of.o
+   LD      drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.o
+   LD      drivers/net/wireless/brcm80211/brcmfmac/built-in.o
+   CC      drivers/net/wireless/brcm80211/brcmutil/utils.o
+   CC      drivers/net/wireless/brcm80211/brcmutil/d11.o
+   LD      drivers/net/wireless/brcm80211/brcmutil/brcmutil.o
+   LD      drivers/net/wireless/brcm80211/brcmutil/built-in.o
+   LD      drivers/net/wireless/brcm80211/built-in.o
+   Building modules, stage 2.
+   MODPOST 0 modules
+
+No compile issues.
+
+Regards,
+Arend
