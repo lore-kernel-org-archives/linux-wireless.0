@@ -1,50 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:34853 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbbJEOCq (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:48319 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbbJNFz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:02:46 -0400
-Received: by ioiz6 with SMTP id z6so185877424ioi.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 07:02:45 -0700 (PDT)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>,
-	=?UTF-8?q?Karl=20M=C3=B6ller?= <karl@excors.net>
-Subject: [PATCH] wireless-regdb: Update ZA rules for 5490-5710 MHz
-Date: Mon,  5 Oct 2015 09:02:02 -0500
-Message-Id: <1444053722-33852-1-git-send-email-seth.forshee@canonical.com> (sfid-20151005_160249_377327_533ABCCF)
+	Wed, 14 Oct 2015 01:55:59 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2] staging: wilc1000: wilc_msgqueue.c : remove the goto ERRORHANDER
+Date: Wed, 14 Oct 2015 14:55:43 +0900
+Message-ID: <1444802143-6298-1-git-send-email-tony.cho@atmel.com> (sfid-20151014_075602_291416_4146E869)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Radio Frequency Spectrum Regulations 2015 [1] drops the
-requirement for DFS and TPC in the 5490-5710 MHz range. Update
-the database to remove DFS for this range and remove the 3dB drop
-in the transmit power limit for TPC.
+From: Leo Kim <leo.kim@atmel.com>
 
-[1] http://www.ellipsis.co.za/wp-content/uploads/2014/12/Radio-Frequency-Spectrum-Regulations-2015.pdf
+This patch removes goto ERRORHANDER and the result variable in wilc_mq_send.
+Then, the error type is directly returned. If normal operation, freeing memory
+is not needed in this function.
+If an error occurs, returns an error after releasing the spin lock.
 
-Cc: Karl Möller <karl@excors.net>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+V2: add releasing spinlock before returnig an error when an error happens.
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index d57ea84..721b081 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1242,7 +1242,7 @@ country ZA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
--	(5490 - 5710 @ 160), (27), DFS
-+	(5490 - 5710 @ 160), (30)
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b13809a..4dfd476 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -56,35 +56,38 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 			     const void *pvSendBuffer, u32 u32SendBufferSize)
+ {
+-	int result = 0;
+ 	unsigned long flags;
+ 	Message *pstrMessage = NULL;
  
- country ZW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+ 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+ 		PRINT_ER("pHandle or pvSendBuffer is null\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+ 	if (pHandle->bExiting) {
+ 		PRINT_ER("pHandle fail\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+ 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+ 
+ 	/* construct a new message */
+ 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+-	if (!pstrMessage)
++
++	if (!pstrMessage) {
++		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 		return -ENOMEM;
++	}
++
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+ 					GFP_ATOMIC);
++
+ 	if (!pstrMessage->pvBuffer) {
+-		result = -ENOMEM;
+-		goto ERRORHANDLER;
++		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++		kfree(pstrMessage);
++		return -ENOMEM;
+ 	}
+ 
+ 	/* add it to the message queue */
+@@ -103,14 +106,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	up(&pHandle->hSem);
+ 
+-ERRORHANDLER:
+-	/* error occured, free any allocations */
+-	if (pstrMessage) {
+-		kfree(pstrMessage->pvBuffer);
+-		kfree(pstrMessage);
+-	}
+-
+-	return result;
++	return 0;
+ }
+ 
+ /*!
 -- 
 1.9.1
 
