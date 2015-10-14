@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38709 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682AbbJON6a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:58:30 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:37477 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932508AbbJNWd6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 18:33:58 -0400
+Received: by wijq8 with SMTP id q8so103103624wij.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 15:33:57 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/12] cfg80211: reg: fix antenna gain in chan_reg_rule_print_dbg()
-Date: Thu, 15 Oct 2015 15:58:21 +0200
-Message-Id: <1444917503-19118-10-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155839_747116_478FEB33)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Cc: ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	nbd@openwrt.org
+Subject: [RFC] ath9k: Simplify and fix eeprom endianness swapping 
+Date: Thu, 15 Oct 2015 00:33:31 +0200
+Message-Id: <1444862012-25376-1-git-send-email-martin.blumenstingl@googlemail.com> (sfid-20151015_003404_999307_2D811DE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ath9k has some code which is supposed to adjust the endianness of the
+eeprom's contents in case it does not match the CPU endianness.
+However, it seems that this code was only working properly for chips
+that used eeprom_def.
 
-Printing "N/A mBi" is strange - print just "N/A" instead.
+I personally have a device with an AR9227 chipset which uses an
+eeprom with "incorrect endianness".
+Feeding ath9k with this eeprom results in "no band has been marked
+as supported in EEPROM". An OpenWrt user has tried to work around
+this and documented the required steps in a ticket: [0].
 
-Also add a missing opening parenthesis.
+The original goal of my patch was to fix the eeprom endianness
+handling. However, it seemed easier to take the existing (working)
+code from eeprom_def and make it re-usable by the other eeprom
+implementations (namely _9287 and _4k).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I have tested my patch on a single AR9227 device and there it's
+working fine. It would be great if more people would give this a go
+before merging this patch.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b1638c9c0798..724b7a90e931 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1145,7 +1145,7 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
- 	if (!power_rule->max_antenna_gain)
- 		snprintf(max_antenna_gain, sizeof(max_antenna_gain), "N/A");
- 	else
--		snprintf(max_antenna_gain, sizeof(max_antenna_gain), "%d",
-+		snprintf(max_antenna_gain, sizeof(max_antenna_gain), "%d mBi",
- 			 power_rule->max_antenna_gain);
- 
- 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
-@@ -1159,7 +1159,7 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
- 	REG_DBG_PRINT("Updating information on frequency %d MHz with regulatory rule:\n",
- 		      chan->center_freq);
- 
--	REG_DBG_PRINT("%d KHz - %d KHz @ %s), (%s mBi, %d mBm)\n",
-+	REG_DBG_PRINT("(%d KHz - %d KHz @ %s), (%s, %d mBm)\n",
- 		      freq_range->start_freq_khz, freq_range->end_freq_khz,
- 		      bw, max_antenna_gain,
- 		      power_rule->max_eirp);
--- 
-2.5.1
+
+Regards,
+Martin
+
+
+[0] https://dev.openwrt.org/ticket/13924
 
