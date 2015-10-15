@@ -1,57 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8285 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbbJSJ0l (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:35786 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbbJOSGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 05:26:41 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 2/6] staging: wilc1000: move variable clients_count
-Date: Mon, 19 Oct 2015 18:26:09 +0900
-Message-ID: <1445246773-22253-3-git-send-email-tony.cho@atmel.com> (sfid-20151019_112644_637008_CD80600D)
-In-Reply-To: <1445246773-22253-1-git-send-email-tony.cho@atmel.com>
-References: <1445246773-22253-1-git-send-email-tony.cho@atmel.com>
+	Thu, 15 Oct 2015 14:06:16 -0400
+Received: by igbkq10 with SMTP id kq10so655227igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2015 11:06:15 -0700 (PDT)
+Date: Thu, 15 Oct 2015 13:06:11 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] wireless-regdb: fix gHz to GHz
+Message-ID: <20151015180611.GB31612@ubuntu-hedt> (sfid-20151015_200618_977019_D9147C78)
+References: <1444918759-21559-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444918759-21559-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, Oct 15, 2015 at 04:19:19PM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There's no "g" prefix, only "G" (1e9) that was clearly intended here.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-This patch moves static variable clients_count to around where the local
-variables are togther.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 066123f..c61042e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -254,6 +254,7 @@ static u8 set_ip[2][4];
- static u8 get_ip[2][4];
- static u32 inactive_time;
- static u8 del_beacon;
-+static u32 clients_count;
- 
- static u8 *join_req;
- u8 *info_element;
-@@ -4138,8 +4139,6 @@ void host_int_send_network_info_to_host
- {
- }
- 
--static u32 clients_count;
--
- s32 host_int_init(struct host_if_drv **hif_drv_handler)
- {
- 	s32 result = 0;
--- 
-1.9.1
-
+Applied, thanks.
