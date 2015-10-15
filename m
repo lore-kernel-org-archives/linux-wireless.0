@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57204 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752502AbbJEPBs (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36792 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932689AbbJOCHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Assaf Krauss <assaf.krauss@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:42 +0300
-Message-Id: <1444055820-27506-11-git-send-email-luca@coelho.fi> (sfid-20151005_170152_659607_7B31B61E)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 11/29] iwlwifi: mvm: Improve debugfs tof robustness
+	Wed, 14 Oct 2015 22:07:54 -0400
+Received: by pabws5 with SMTP id ws5so7342341pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:53 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 16/33] staging: wilc1000: fix return type of host_int_get_statistics
+Date: Thu, 15 Oct 2015 11:06:45 +0900
+Message-Id: <1444874822-31152-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040815_226743_4B4C4A7F)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+This patch changes return type of host_int_get_statistics from s32 to
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type of this function as well as
+data type of s32Error.
 
-Return a proper error when wrong parameters are passed to debugfs
-tof_range_request.
-
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index 15ab543..5dc1686 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -892,6 +892,7 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 			goto out;
- 		}
- 		memcpy(mvm->tof_data.range_req.macaddr_template, mac, ETH_ALEN);
-+		goto out;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0c6048a..05e6880 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3992,9 +3992,9 @@ int host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 	return s32Error;
+ }
  
- 	data = iwl_dbgfs_is_match("macaddr_mask=", buf);
-@@ -903,11 +904,12 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 			goto out;
- 		}
- 		memcpy(mvm->tof_data.range_req.macaddr_mask, mac, ETH_ALEN);
-+		goto out;
- 	}
+-s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
++int host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
  
- 	data = iwl_dbgfs_is_match("ap=", buf);
- 	if (data) {
--		struct iwl_tof_range_req_ap_entry ap;
-+		struct iwl_tof_range_req_ap_entry ap = {};
- 		int size = sizeof(struct iwl_tof_range_req_ap_entry);
- 		u16 burst_period;
- 		u8 *mac = ap.bssid;
-@@ -944,12 +946,12 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 	data = iwl_dbgfs_is_match("send_range_request=", buf);
- 	if (data) {
- 		ret = kstrtou32(data, 10, &value);
--		if (ret == 0 && value) {
-+		if (ret == 0 && value)
- 			ret = iwl_mvm_tof_range_request_cmd(mvm, vif);
--			goto out;
--		}
-+		goto out;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 892e1b7..c9b0533 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -1158,6 +1158,6 @@ static s32 Handle_ScanDone(struct host_if_drv *drvHandler, enum scan_event enuEv
  
-+	ret = -EINVAL;
- out:
- 	mutex_unlock(&mvm->mutex);
- 	return ret ?: count;
-@@ -1073,12 +1075,12 @@ static ssize_t iwl_dbgfs_tof_range_req_ext_write(struct ieee80211_vif *vif,
- 	data = iwl_dbgfs_is_match("send_range_req_ext=", buf);
- 	if (data) {
- 		ret = kstrtou32(data, 10, &value);
--		if (ret == 0 && value) {
-+		if (ret == 0 && value)
- 			ret = iwl_mvm_tof_range_request_ext_cmd(mvm, vif);
--			goto out;
--		}
-+		goto out;
- 	}
+ void host_int_freeJoinParams(void *pJoinParams);
  
-+	ret = -EINVAL;
- out:
- 	mutex_unlock(&mvm->mutex);
- 	return ret ?: count;
+-s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct rf_info *pstrStatistics);
++int host_int_get_statistics(struct host_if_drv *hWFIDrv, struct rf_info *pstrStatistics);
+ 
+ #endif
 -- 
-2.5.3
+2.6.1
 
