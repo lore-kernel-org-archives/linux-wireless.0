@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751658AbbJUBHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 21:07:21 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 03/16] rtl8xxxu: Don't check for illegal offset when reading from efuse
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-	<1445323546-12807-4-git-send-email-jsitnicki@gmail.com>
-Date: Tue, 20 Oct 2015 21:07:19 -0400
-In-Reply-To: <1445323546-12807-4-git-send-email-jsitnicki@gmail.com> (Jakub
-	Sitnicki's message of "Tue, 20 Oct 2015 08:45:33 +0200")
-Message-ID: <wrfjvba1vxko.fsf@redhat.com> (sfid-20151021_030735_891827_088658D7)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33942 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368AbbJOCHZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 22:07:25 -0400
+Received: by payp3 with SMTP id p3so23377853pay.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:24 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/33] staging: wilc1000: fix return type of host_int_get_inactive_time
+Date: Thu, 15 Oct 2015 11:06:35 +0900
+Message-Id: <1444874822-31152-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040731_918735_1981234A)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Sitnicki <jsitnicki@gmail.com> writes:
-> It is enough to check for either illegal offset or illegal map address
-> because map address is a value derived from an offset:
->
->   map_addr = offset * 8
->   EFUSE_MAP_LEN_8723A = EFUSE_MAX_SECTION_8723A * 8
->
-> Leave just the check for an illegal map address because its upper
-> bound (EFUSE_MAP_LEN_8723A) is used also in a couple other places.
->
-> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 63 +++++++++++-------------
->  1 file changed, 28 insertions(+), 35 deletions(-)
+This patch changes return type of host_int_get_inactive_time from s32
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type by int as well as data type of
+s32Error.
 
-Applied - I had already changed EFUSE_MAP_LEN_8723A to EFUSE_MAP_LEN, so
-I applied it with that minor modification.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Jes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 482dc55..191d840 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3871,10 +3871,10 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ 
+ }
+ 
+-s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
++int host_int_get_inactive_time(struct host_if_drv *hif_drv,
+ 			       const u8 *mac, u32 *pu32InactiveTime)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c9ab99d..b660eec 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -453,7 +453,7 @@ int host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk, u8 u8PtkKeyl
+  *  @date		15 April 2013
+  *  @version		1.0
+  */
+-s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac, u32 *pu32InactiveTime);
++int host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac, u32 *pu32InactiveTime);
+ 
+ /**
+  *  @brief              adds Rx GTk Key
+-- 
+2.6.1
+
