@@ -1,100 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38057 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39328 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933099AbbJIIxp (ORCPT
+	with ESMTP id S1751019AbbJOKGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 04:53:45 -0400
-Message-ID: <15ec1e44ce1ef8ca5a2b0c9455c71ac1.squirrel@www.codeaurora.org> (sfid-20151009_105351_042204_2FC3A8FE)
-In-Reply-To: <560D4392.4060107@openwrt.org>
-References: <1443582568-1216-1-git-send-email-miaoqing@codeaurora.org>
-    <560D4392.4060107@openwrt.org>
-Date: Fri, 9 Oct 2015 08:53:44 -0000
-Subject: Re: [PATCH v2] ath9k: feeding entropy in kernel from ADC capture
-From: miaoqing@codeaurora.org
-To: "Felix Fietkau" <nbd@openwrt.org>
-Cc: miaoqing@codeaurora.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, lkp@intel.com
+	Thu, 15 Oct 2015 06:06:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: kbuild test robot <lkp@intel.com>, <kbuild-all@01.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
+References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>
+	<87wpuspilw.fsf@kamboji.qca.qualcomm.com>
+	<561C1291.8060607@broadcom.com>
+	<87lhb5n27c.fsf@kamboji.qca.qualcomm.com>
+	<561E5A55.5070607@broadcom.com>
+Date: Thu, 15 Oct 2015 13:06:40 +0300
+In-Reply-To: <561E5A55.5070607@broadcom.com> (Arend van Spriel's message of
+	"Wed, 14 Oct 2015 15:36:21 +0200")
+Message-ID: <874mhsjvin.fsf@kamboji.qca.qualcomm.com> (sfid-20151015_120654_140863_5B0BFDA7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Felix. You mentioned 'Polling every 10 milliseconds' is not right,
-the kthread will always sleep until when the condition
-'ENTROPY_BITS(&input_pool) <=
-random_write_wakeup_bits'(add_hwgenerator_randomness()) is true.  And
-ath9k_rng_data_read() almost w/o failure, I will add unlikely in patch v3.
+Arend van Spriel <arend@broadcom.com> writes:
 
-- Miaoqing
+> On 10/14/2015 01:01 PM, Kalle Valo wrote:
+>> Arend van Spriel <arend@broadcom.com> writes:
+>>
+>>> On 10/12/2015 10:59 AM, Kalle Valo wrote:
+>>>
+>>>> Arend, are the kbuild errors valid? I would guess they are as
+>>>> wireless-drivers-next should be in linux-next.
+>>>
+>>> Actually they are not. I am not sure about the build infrastructure,
+>>> but the errors above can only occur when CONFIG_BRCMDBG is set, but
+>>> DEBUG is not. However, that can not happen as we have following line
+>>> in drivers/net/wireless/brcm80211/Makefile:
+>>>
+>>> subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DDEBUG
+>>
+>> I didn't check the details but I'm still not convinced :) In my opinion
+>> the code should always compile, with and without -DDEBUG. Anyways, I
+>> pushed this script to the pending branch to get kbuild test this patch
+>> once again.
+>
+> Ok, Kalle
+>
+> Let me try to be a bit more convincing ;-)
+>
+> I checked out linux-next/master, taken the provided .config and ran:
+>
+> $ make prepare
+> $ make M=scripts
+> $ make M=drivers/net/wireless/brcm80211
 
-> On 2015-09-30 05:09, miaoqing@codeaurora.org wrote:
->> From: Miaoqing Pan <miaoqing@codeaurora.org>
->>
->> This patch is derived from
->> commit 6301566e0b2d ("ath9k: export HW random number generator"),
->>
->> We evaluated the entropy of the ADC data on QCA9531, QCA9561, QCA955x,
->> and AR9340, and it has sufficient quality random data (at least 10 bits
->> and up to 22 bits of min-entropy for a 32-bit value). We conservatively
->> assume the min-entropy is 10 bits out of 32 bits. Thus,
->> ATH9K_RNG_BUF_SIZE
->> is set to 320 (u32) i.e., 1.25 kilobytes of data is inserted to fill up
->> the pool as soon as the entropy counter becomes 896/4096 (set by
->> random.c).
->> Since ADC was not designed to be a dedicated HW RNG, we do not want to
->> bind
->> it to /dev/hwrng framework directly. This patch feeds the entropy
->> directly
->> from the WiFi driver to the input pool. The ADC register output is only
->> used as a seed for the Linux entropy pool. No conditioning is needed,
->> since all the conditioning is performed by the pool itself.
->>
->> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
->> ---
->>  drivers/net/wireless/ath/ath9k/Kconfig  |  11 ++++
->>  drivers/net/wireless/ath/ath9k/Makefile |   1 +
->>  drivers/net/wireless/ath/ath9k/ath9k.h  |  22 +++++++
->>  drivers/net/wireless/ath/ath9k/main.c   |   4 ++
->>  drivers/net/wireless/ath/ath9k/rng.c    | 106
->> ++++++++++++++++++++++++++++++++
->>  5 files changed, 144 insertions(+)
->>  create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
->>
->
->> diff --git a/drivers/net/wireless/ath/ath9k/rng.c
->> b/drivers/net/wireless/ath/ath9k/rng.c
->> new file mode 100644
->> index 0000000..93a7485
->> --- /dev/null
->> +++ b/drivers/net/wireless/ath/ath9k/rng.c
->> [...]
->> +static int ath9k_rng_kthread(void *data)
->> +{
->> +	int bytes_read;
->> +	struct ath_softc *sc = data;
->> +	u32 *rng_buf;
->> +
->> +	rng_buf = kmalloc_array(ATH9K_RNG_BUF_SIZE, sizeof(u32), GFP_KERNEL);
->> +	if (!rng_buf)
->> +		goto out;
->> +
->> +	while (!kthread_should_stop()) {
->> +		bytes_read = ath9k_rng_data_read(sc, rng_buf,
->> +						 ATH9K_RNG_BUF_SIZE);
->> +		if (!bytes_read) {
->> +			msleep_interruptible(10);
->> +			continue;
->> +		}
->> +
->> +		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
->> +					   ATH9K_RNG_ENTROPY(bytes_read));
-> Polling every 10 milliseconds seems a bit excessive to me. Think about
-> all those useless wakeups per second that this will produce on battery
-> powered devices.
-> How about polling more data without sleeping when the thread starts, and
-> then afterwards only poll once every few seconds?
->
-> - Felix
->
+Thanks, I'm convinced now :) But the kbuild found this warning (I guess
+you also got an email about that):
 
+drivers/net/wireless/brcm80211/brcmfmac/sdio.c:3562:2: warning: format '%zu' expects argument of type 'size_t', but argument 5 has type 'unsigned int' [-Wformat=]
+
+Can you fix that and respin, please?
+
+-- 
+Kalle Valo
