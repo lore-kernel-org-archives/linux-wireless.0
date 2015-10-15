@@ -1,130 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41872 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755412AbbJ1G7i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:59:38 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 20/80] staging: wilc1000: rename gtOsCfgValuesSem of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:40 +0900
-Message-ID: <1446015640-29398-20-git-send-email-glen.lee@atmel.com> (sfid-20151028_081701_961429_B0EC6D2C)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48315 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753369AbbJOMQi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 08:16:38 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1444869891-21174-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1444869891-21174-2-git-send-email-Jes.Sorensen@redhat.com>
+	<561F978F.8080408@einfach.org>
+Date: Thu, 15 Oct 2015 08:16:36 -0400
+In-Reply-To: <561F978F.8080408@einfach.org> (Bruno Randolf's message of "Thu,
+	15 Oct 2015 13:09:51 +0100")
+Message-ID: <wrfjd1wg5ntn.fsf@redhat.com> (sfid-20151015_141643_203420_64B64E2F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Bruno Randolf <br1@einfach.org> writes:
+> Hi Jens,
 
-This patch renames gtOsCfgValuesSem of struct host_if_drv to sem_cfg_values
-to avoid CamelCase naming convention.
-And, remove the relation comment.
+Jes :)
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- drivers/staging/wilc1000/host_interface.h |  4 ++--
- 2 files changed, 11 insertions(+), 11 deletions(-)
+> I just tested your driver with a RTL8188CU rev A ("Vilros" ID 0bda:8176)
+> and it works well so far! I'm missing monitor mode however. Do you see
+> any chance to add that?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 72779a1..85c376a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -525,7 +525,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
- 	struct wid strWIDList[32];
- 	u8 u8WidCnt = 0;
- 
--	down(&hif_drv->gtOsCfgValuesSem);
-+	down(&hif_drv->sem_cfg_values);
- 
- 	PRINT_D(HOSTINF_DBG, "Setting CFG params\n");
- 
-@@ -797,7 +797,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
- 		PRINT_ER("Error in setting CFG params\n");
- 
- ERRORHANDLER:
--	up(&hif_drv->gtOsCfgValuesSem);
-+	up(&hif_drv->sem_cfg_values);
- 	return result;
- }
- 
-@@ -3949,7 +3949,7 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
- {
- 	s32 result = 0;
- 
--	down(&hif_drv->gtOsCfgValuesSem);
-+	down(&hif_drv->sem_cfg_values);
- 
- 	if (!hif_drv) {
- 		PRINT_ER("hif_drv NULL\n");
-@@ -4033,7 +4033,7 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
- 		break;
- 	}
- 
--	up(&hif_drv->gtOsCfgValuesSem);
-+	up(&hif_drv->sem_cfg_values);
- 
- 	return result;
- }
-@@ -4140,8 +4140,8 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
- 
--	sema_init(&hif_drv->gtOsCfgValuesSem, 1);
--	down(&hif_drv->gtOsCfgValuesSem);
-+	sema_init(&hif_drv->sem_cfg_values, 1);
-+	down(&hif_drv->sem_cfg_values);
- 
- 	hif_drv->hif_state = HOST_IF_IDLE;
- 	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
-@@ -4159,14 +4159,14 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 		   hif_drv->cfg_values.passive_scan_time,
- 		   hif_drv->cfg_values.curr_tx_rate);
- 
--	up(&hif_drv->gtOsCfgValuesSem);
-+	up(&hif_drv->sem_cfg_values);
- 
- 	clients_count++;
- 
- 	return result;
- 
- _fail_timer_2:
--	up(&hif_drv->gtOsCfgValuesSem);
-+	up(&hif_drv->sem_cfg_values);
- 	del_timer_sync(&hif_drv->hConnectTimer);
- 	del_timer_sync(&hif_drv->hScanTimer);
- 	kthread_stop(hif_thread_handler);
-@@ -4235,7 +4235,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		wilc_mq_destroy(&hif_msg_q);
- 	}
- 
--	down(&hif_drv->gtOsCfgValuesSem);
-+	down(&hif_drv->sem_cfg_values);
- 
- 	ret = remove_handler_in_list(hif_drv);
- 	if (ret)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bb18081..700b80a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -303,8 +303,8 @@ struct host_if_drv {
- 
- 	u8 assoc_bssid[ETH_ALEN];
- 	struct cfg_param_val cfg_values;
--/* semaphores */
--	struct semaphore gtOsCfgValuesSem;
-+
-+	struct semaphore sem_cfg_values;
- 	struct semaphore hSemTestKeyBlock;
- 
- 	struct semaphore hSemTestDisconnectBlock;
--- 
-1.9.1
+It's on the todo list, but fairly far down the list. I am more focused
+on adding support for more devices and features at this point.
 
+> Your patch seems to be correct, but in your own git, branch
+> 'rtl8723au-mac80211' you seem to be missing the below part:
+>
+> On 10/15/2015 01:44 AM, Jes.Sorensen@redhat.com wrote:
+>> --- a/drivers/net/wireless/realtek/Makefile
+>> +++ b/drivers/net/wireless/realtek/Makefile
+>> @@ -5,4 +5,5 @@
+>>  obj-$(CONFIG_RTL8180)		+= rtl818x/
+>>  obj-$(CONFIG_RTL8187)		+= rtl818x/
+>>  obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
+>> +obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
+>
+> And it has that leftover in drivers/net/wireless/Makefile:
+>
+> obj-$(CONFIG_RTL8XXXU) += rtl8xxxu.o
+>
+> I had to add the following change to my local tree in order to be able
+> to build:
+>
+> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+> index bc44950..740fdd3 100644
+> --- a/drivers/net/wireless/Makefile
+> +++ b/drivers/net/wireless/Makefile
+> @@ -37,8 +37,6 @@ obj-$(CONFIG_LIBERTAS_THINFIRM)       += libertas_tf/
+>
+>  obj-$(CONFIG_ADM8211)  += adm8211.o
+>
+> -obj-$(CONFIG_RTL8XXXU) += rtl8xxxu.o
+> -
+>  obj-$(CONFIG_MWL8K)    += mwl8k.o
+>
+>  obj-$(CONFIG_IWLWIFI)  += iwlwifi/
+> diff --git a/drivers/net/wireless/realtek/Makefile
+> b/drivers/net/wireless/realtek/Makefile
+> index 3489b98..9c78deb 100644
+> --- a/drivers/net/wireless/realtek/Makefile
+> +++ b/drivers/net/wireless/realtek/Makefile
+> @@ -5,4 +5,5 @@
+>  obj-$(CONFIG_RTL8180)          += rtl818x/
+>  obj-$(CONFIG_RTL8187)          += rtl818x/
+>  obj-$(CONFIG_RTLWIFI)          += rtlwifi/
+> +obj-$(CONFIG_RTL8XXXU)         += rtl8xxxu/
+
+Thanks, I already fixed this, but I may have forgotten to git push
+it. Let me fix that.
+
+Thanks for testing, I am pleased to hear it works well for you!
+
+Cheers,
+Jes
