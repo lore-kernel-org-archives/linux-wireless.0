@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3197 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932089AbbJMKyT (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:33743 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932277AbbJOCHp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:54:19 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 34/54] staging: wilc1000: rename pJoinParams of struct connect_attr
-Date: Tue, 13 Oct 2015 19:49:59 +0900
-Message-ID: <1444733419-17679-34-git-send-email-tony.cho@atmel.com> (sfid-20151013_125423_220953_D7BFA7B9)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 14 Oct 2015 22:07:45 -0400
+Received: by pabrc13 with SMTP id rc13so71276153pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/33] staging: wilc1000: fix return type of host_int_get_host_chnl_num
+Date: Thu, 15 Oct 2015 11:06:42 +0900
+Message-Id: <1444874822-31152-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041428_861115_345FCDE6)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes return type of host_int_get_host_chnl_num from s32 to
+int. s32Error gets return value from wilc_mq_send that has retun type of
+int. It should be changed return type of int as well as data type of
+s32Error.
 
-This patch renames pJoinParams of struct connect_attr to params to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fbc48ee..4af2bd1 100644
+index 8cc0cfb..5859d34 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -118,7 +118,7 @@ struct connect_attr {
- 	void *arg;
- 	enum AUTHTYPE auth_type;
- 	u8 ch;
--	void *pJoinParams;
-+	void *params;
- };
+@@ -3844,9 +3844,9 @@ int host_int_set_operation_mode(struct host_if_drv *hif_drv, u32 mode)
+ 	return result;
+ }
  
- struct rcvd_async_info {
-@@ -1024,7 +1024,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+-s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
++int host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
  
- 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
- 
--	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->pJoinParams;
-+	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->params;
- 	if (ptstrJoinBssParam == NULL) {
- 		PRINT_ER("Required BSSID not found\n");
- 		s32Error = -ENOENT;
-@@ -3616,7 +3616,7 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	msg.body.con_info.ch = u8channel;
- 	msg.body.con_info.result = pfConnectResult;
- 	msg.body.con_info.arg = pvUserArg;
--	msg.body.con_info.pJoinParams = pJoinParams;
-+	msg.body.con_info.params = pJoinParams;
- 	msg.drv = hif_drv ;
- 
- 	if (pu8bssid != NULL) {
+ 	if (!hif_drv) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 4285b1b..5b2261d 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -800,7 +800,7 @@ int host_int_set_mac_chnl_num(struct host_if_drv *wfi_drv, u8 channel);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-s32 host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
++int host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
+ /**
+  *  @brief              gets the sta rssi
+  *  @details    gets the currently maintained RSSI value for the station.
 -- 
-1.9.1
+2.6.1
 
