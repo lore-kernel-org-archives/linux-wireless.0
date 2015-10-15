@@ -1,180 +1,342 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58409 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37509 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752939AbbJUCPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 22:15:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 16/16] rtl8xxxu: rtl8188eu: Implement parse_efuse()
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-	<1445323546-12807-17-git-send-email-jsitnicki@gmail.com>
-Date: Tue, 20 Oct 2015 22:15:12 -0400
-In-Reply-To: <1445323546-12807-17-git-send-email-jsitnicki@gmail.com> (Jakub
-	Sitnicki's message of "Tue, 20 Oct 2015 08:45:46 +0200")
-Message-ID: <wrfjpp09ufv3.fsf@redhat.com> (sfid-20151021_041518_225142_1BD4D1CD)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751048AbbJOJrU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 05:47:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] cfg80211: support loading regulatory database as firmware file
+Date: Thu, 15 Oct 2015 11:47:17 +0200
+Message-Id: <1444902437-25742-1-git-send-email-johannes@sipsolutions.net> (sfid-20151015_114724_119413_F888E0E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Sitnicki <jsitnicki@gmail.com> writes:
-> As opposed to the vendor driver (rtl8188eu), extract from efuse only
-> these TX power values that are going to be of use later on.
->
-> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 35 +++++++++++++++++++++++-
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 24 ++++++++++++++++
->  2 files changed, 58 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> index 344161b..90da707 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> @@ -1900,7 +1900,40 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
->  
->  static int rtl8188eu_parse_efuse(struct rtl8xxxu_priv *priv)
->  {
-> -	return -EOPNOTSUPP; /* Not implemented */
-> +	struct rtl8188eu_efuse *efuse = &priv->efuse_wifi.efuse8188;
-> +	struct rtl8188eu_tx_power *tx_power = &priv->tx_power.tx_power8188;
-> +
-> +	if (efuse->rtl_id != cpu_to_le16(0x8129))
-> +		return -EINVAL;
-> +
-> +	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
-> +
-> +	memcpy(tx_power->cck_index_A,
-> +	       efuse->tx_power.cck_index_A,
-> +	       sizeof(tx_power->cck_index_A));
-> +
-> +	memcpy(tx_power->ht40_1s_index_A,
-> +	       efuse->tx_power.ht40_1s_index_A,
-> +	       sizeof(tx_power->ht40_1s_index_A));
-> +
-> +	memcpy(tx_power->ht20_ofdm_index_diff,
-> +	       efuse->tx_power.ht20_ofdm_index_diff,
-> +	       sizeof(tx_power->ht20_ofdm_index_diff));
-> +
-> +	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
-> +		 efuse->vendor_name);
-> +	dev_info(&priv->udev->dev, "Product: %.11s\n",
-> +		 efuse->device_name);
-> +
-> +	/* XXX: Do we need to read the rf_regulatory flag? */
-> +
-> +	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
-> +		print_hex_dump_bytes("rtl8xxxu: ", DUMP_PREFIX_OFFSET,
-> +				     priv->efuse_wifi.raw,
-> +				     sizeof(priv->efuse_wifi.raw));
-> +	}
-> +
-> +	return 0;
->  }
->  
->  static int
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> index 79f47e3..ec49504 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-> @@ -507,6 +507,22 @@ struct rtl8192cu_efuse {
->  	u8 customer_id;
->  };
->  
-> +struct rtl8188eu_efuse {
-> +	__le16 rtl_id;
-> +	u8 res0[0x0e];
-> +	struct {						/* 0x10 */
-> +		u8 cck_index_A[6];
-> +		u8 ht40_1s_index_A[5];
-> +		struct nibble_pair ht20_ofdm_index_diff[1];
-> +	} tx_power;
-> +	u8 res1[0xbb];
-> +	u8 mac_addr[ETH_ALEN];					/* 0xd7 */
-> +	u8 res2[0x02];
-> +	u8 vendor_name[7];					/* 0xdf */
-> +	u8 res3[0x02];
-> +	u8 device_name[11];					/* 0xe8 */
-> +};
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is incomplete - I think it should look more like this:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 259 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 238 insertions(+), 21 deletions(-)
 
-struct rtl8188eu_efuse {
-	__le16 rtl_id;
-	u8 res0[0x0e];
-	u8 cck_tx_power_index_A[3];	/* 0x10 */
-	u8 cck_tx_power_index_B[3];
-	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
-	u8 ht40_1s_tx_power_index_B[3];
-	u8 res1[0x9c];
-	u8 channel_plan;		/* 0xb8 */
-	u8 xtal_k;
-	u8 thermal_meter;
-	u8 iqk_lck;
-	u8 res2[5];
-	u8 rf_board_option;
-	u8 rf_feature_option;
-	u8 rf_bt_setting;
-	u8 eeprom_version;
-	u8 eeprom_customer_id;
-	u8 res3[3];
-	u8 rf_antenna_option;		/* 0xc9 */
-	u8 res4[6];
-	u8 vid;				/* 0xd0 */
-	u8 res5[1];
-	u8 pid;				/* 0xd2 */
-	u8 res6[1];
-	u8 usb_optional_function;
-	u8 res7[2];
-	u8 mac_addr[ETH_ALEN];		/* 0xd7 */
-	u8 res8[2];
-	u8 vendor_name[7];
-	u8 res9[2];
-	u8 device_name[0x0b];		/* 0xe8 */
-	u8 res10[2];
-	u8 serial[0x0b];		/* 0xf5 */
-	u8 res11[0x30];
-	u8 unknown[0x0d];		/* 0x130 */
-	u8 res12[0xc3];
-};
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 156a7d6eaf95..f752be2b9f6f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -53,6 +53,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
+ #include <linux/moduleparam.h>
++#include <linux/firmware.h>
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
+@@ -446,7 +447,6 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ 	return regd;
+ }
+ 
+-#ifdef CONFIG_CFG80211_INTERNAL_REGDB
+ struct reg_regdb_apply_request {
+ 	struct list_head list;
+ 	const struct ieee80211_regdomain *regdom;
+@@ -478,41 +478,44 @@ static void reg_regdb_apply(struct work_struct *work)
+ 
+ static DECLARE_WORK(reg_regdb_work, reg_regdb_apply);
+ 
+-static int reg_query_builtin(const char *alpha2)
++static int reg_schedule_apply(const struct ieee80211_regdomain *regdom)
+ {
+-	const struct ieee80211_regdomain *regdom = NULL;
+ 	struct reg_regdb_apply_request *request;
+-	unsigned int i;
+-
+-	for (i = 0; i < reg_regdb_size; i++) {
+-		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
+-			regdom = reg_regdb[i];
+-			break;
+-		}
+-	}
+-
+-	if (!regdom)
+-		return -ENODATA;
+ 
+ 	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
+-	if (!request)
+-		return -ENOMEM;
+-
+-	request->regdom = reg_copy_regd(regdom);
+-	if (IS_ERR_OR_NULL(request->regdom)) {
+-		kfree(request);
++	if (!request) {
++		kfree(regdom);
+ 		return -ENOMEM;
+ 	}
+ 
++	request->regdom = regdom;
++
+ 	mutex_lock(&reg_regdb_apply_mutex);
+ 	list_add_tail(&request->list, &reg_regdb_apply_list);
+ 	mutex_unlock(&reg_regdb_apply_mutex);
+ 
+ 	schedule_work(&reg_regdb_work);
+-
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_CFG80211_INTERNAL_REGDB
++static int reg_query_builtin(const char *alpha2)
++{
++	const struct ieee80211_regdomain *regdom = NULL;
++	unsigned int i;
++
++	for (i = 0; i < reg_regdb_size; i++) {
++		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
++			regdom = reg_copy_regd(reg_regdb[i]);
++			break;
++		}
++	}
++	if (!regdom)
++		return -ENODATA;
++
++	return reg_schedule_apply(regdom);
++}
++
+ /* Feel free to add any other sanity checks here */
+ static void reg_regdb_size_check(void)
+ {
+@@ -602,6 +605,214 @@ static inline int call_crda(const char *alpha2)
+ }
+ #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
+ 
++/* code to directly load a firmware database through request_firmware */
++static const struct firmware *regdb;
++static unsigned int fwregdb_attempts = 10;
++
++struct fwdb_country {
++	u8 alpha2[2];
++	__be16 coll_ptr;
++} __packed __aligned(4);
++
++struct fwdb_collection {
++	__be16 len;
++	__be16 n_rules;
++	u8 dfs_region;
++	u8 pad_reserved;
++	__be16 rules_ptr[];
++} __packed __aligned(4);
++
++struct fwdb_rule {
++	__be16 len;
++	__be16 flags;
++	__be32 start, end;
++	__be16 max_bw;
++	__be16 max_ant_gain;
++	__be16 max_eirp;
++	__be16 cac_timeout;
++} __packed __aligned(4);
++
++#define FWDB_MAGIC 0x52474442
++#define FWDB_VERSION 20
++
++struct fwdb_header {
++	__be32 magic;
++	__be32 version;
++	struct fwdb_country country[];
++} __packed __aligned(4);
++
++static bool valid_rule(const struct firmware *db, u16 rule_ptr)
++{
++	struct fwdb_rule *rule = (void *)(db->data + (rule_ptr << 2));
++
++	if ((u8 *)rule + sizeof(rule->len) > db->data + db->size)
++		return false;
++
++	/* mandatory fields */
++	if (be16_to_cpu(rule->len) < 20)
++		return false;
++
++	return true;
++}
++
++static bool valid_country(const struct firmware *db,
++			  const struct fwdb_country *country)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)(db->data + ptr);
++	unsigned int i;
++
++	if ((u8 *)coll + sizeof(coll->len) > db->data + db->size)
++		return false;
++
++	if ((u8 *)coll + be16_to_cpu(coll->len) > db->data + db->size)
++		return false;
++
++	/* mandatory fields */
++	if (be16_to_cpu(coll->len) < 6)
++		return false;
++
++	if (be16_to_cpu(coll->len) < 6 + 2 * be16_to_cpu(coll->n_rules))
++		return false;
++
++	for (i = 0; i < be16_to_cpu(coll->n_rules); i++) {
++		u16 rule_ptr = be16_to_cpu(coll->rules_ptr[i]);
++
++		if (!valid_rule(db, rule_ptr))
++			return false;
++	}
++
++	return true;
++}
++
++static bool valid_regdb(const struct firmware *db)
++{
++	const struct fwdb_header *hdr = (void *)db->data;
++	const struct fwdb_country *country;
++
++	if (db->size < sizeof(*hdr))
++		return false;
++
++	if (hdr->magic != cpu_to_be32(FWDB_MAGIC))
++		return false;
++
++	if (hdr->version != cpu_to_be32(FWDB_VERSION))
++		return false;
++
++	country = &hdr->country[0];
++	while ((u8 *)(country + 1) <= db->data + db->size) {
++		if (!country->coll_ptr)
++			break;
++		if (!valid_country(db, country))
++			return false;
++		country++;
++	}
++
++	return true;
++}
++
++static int regdb_query_country(const struct firmware *db,
++			       const struct fwdb_country *country)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)(db->data + ptr);
++	struct ieee80211_regdomain *regdom;
++	unsigned int size_of_regd;
++	unsigned int i;
++
++	size_of_regd =
++		sizeof(struct ieee80211_regdomain) +
++		be16_to_cpu(coll->n_rules) * sizeof(struct ieee80211_reg_rule);
++
++	regdom = kzalloc(size_of_regd, GFP_KERNEL);
++	if (!regdom)
++		return -ENOMEM;
++
++	regdom->n_reg_rules = be16_to_cpu(coll->n_rules);
++	regdom->alpha2[0] = country->alpha2[0];
++	regdom->alpha2[1] = country->alpha2[1];
++	regdom->dfs_region = coll->dfs_region;
++
++	for (i = 0; i < regdom->n_reg_rules; i++) {
++		unsigned int rule_ptr = be16_to_cpu(coll->rules_ptr[i]) << 2;
++		struct fwdb_rule *rule = (void *)(db->data + rule_ptr);
++		struct ieee80211_reg_rule *rrule = &regdom->reg_rules[i];
++
++		rrule->freq_range.start_freq_khz = be32_to_cpu(rule->start);
++		rrule->freq_range.end_freq_khz = be32_to_cpu(rule->end);
++		rrule->freq_range.max_bandwidth_khz = be16_to_cpu(rule->max_bw);
++
++		rrule->power_rule.max_antenna_gain =
++			be16_to_cpu(rule->max_ant_gain);
++		rrule->power_rule.max_eirp = be16_to_cpu(rule->max_eirp);
++
++		rrule->flags = be16_to_cpu(rule->flags);
++		rrule->dfs_cac_ms = be16_to_cpu(rule->cac_timeout);
++	}
++
++	return reg_schedule_apply(regdom);
++}
++
++static int query_regdb(const char *alpha2)
++{
++	const struct fwdb_header *hdr;
++	const struct fwdb_country *country;
++
++	if (IS_ERR(regdb))
++		return PTR_ERR(regdb);
++
++	hdr = (void *)regdb->data;
++	country = &hdr->country[0];
++	while (country->coll_ptr) {
++		if (alpha2_equal(alpha2, country->alpha2))
++			return regdb_query_country(regdb, country);
++		country++;
++	}
++
++	return -ENODATA;
++}
++
++static void regdb_fw_cb(const struct firmware *fw, void *context)
++{
++	if (!fw) {
++		pr_info("failed to load regulatory.db\n");
++		if (fwregdb_attempts-- == 0)
++			regdb = ERR_PTR(-ENODATA);
++		goto restore;
++	}
++
++	if (!valid_regdb(fw)) {
++		release_firmware(fw);
++		regdb = ERR_PTR(-EINVAL);
++		goto restore;
++	}
++
++	regdb = fw;
++	if (query_regdb(context))
++		goto restore;
++	goto free;
++ restore:
++	rtnl_lock();
++	restore_regulatory_settings(true);
++	rtnl_unlock();
++ free:
++	kfree(context);
++}
++
++static int query_regdb_file(const char *alpha2)
++{
++	if (regdb)
++		return query_regdb(alpha2);
++
++	alpha2 = kmemdup(alpha2, 2, GFP_KERNEL);
++	if (!alpha2)
++		return -ENOMEM;
++
++	return request_firmware_nowait(THIS_MODULE, true, "regulatory.db",
++				       &reg_pdev->dev, GFP_KERNEL,
++				       (void *)alpha2, regdb_fw_cb);
++}
++
+ static enum reg_request_treatment
+ reg_query_database(struct regulatory_request *request)
+ {
+@@ -612,6 +823,9 @@ reg_query_database(struct regulatory_request *request)
+ 	if (call_crda(request->alpha2) == 0)
+ 		return REG_REQ_OK;
+ 
++	if (query_regdb_file(request->alpha2) == 0)
++		return REG_REQ_OK;
++
+ 	return REG_REQ_IGNORE;
+ }
+ 
+@@ -3275,4 +3489,7 @@ void regulatory_exit(void)
+ 		list_del(&reg_request->list);
+ 		kfree(reg_request);
+ 	}
++
++	if (!IS_ERR_OR_NULL(regdb))
++		release_firmware(regdb);
+ }
+-- 
+2.5.1
 
-> +
->  struct rtl8xxxu_reg8val {
->  	u16 reg;
->  	u8 val;
-> @@ -587,6 +603,12 @@ struct rtl8723au_tx_power {
->  	struct nibble_pair ht20_max_offset[3];
->  };
->  
-> +struct rtl8188eu_tx_power {
-> +	u8 cck_index_A[6];
-> +	u8 ht40_1s_index_A[5];
-> +	struct nibble_pair ht20_ofdm_index_diff[1];
-> +};
-> +
->  struct rtl8xxxu_priv {
->  	struct ieee80211_hw *hw;
->  	struct usb_device *udev;
-> @@ -607,6 +629,7 @@ struct rtl8xxxu_priv {
->  	char chip_name[8];
->  	union {
->  		struct rtl8723au_tx_power tx_power8723;
-> +		struct rtl8188eu_tx_power tx_power8188;
->  	} tx_power;
->  	u32 chip_cut:4;
->  	u32 rom_rev:4;
-> @@ -659,6 +682,7 @@ struct rtl8xxxu_priv {
->  		u8 raw[EFUSE_MAP_LEN];
->  		struct rtl8723au_efuse efuse8723;
->  		struct rtl8192cu_efuse efuse8192;
-> +		struct rtl8188eu_efuse efuse8188;
->  	} efuse_wifi;
->  	u32 adda_backup[RTL8XXXU_ADDA_REGS];
->  	u32 mac_backup[RTL8XXXU_MAC_REGS];
-
-There is a lot of conflict with the last couple of patches - please
-rebase them against current.
-
-Thanks,
-Jes
