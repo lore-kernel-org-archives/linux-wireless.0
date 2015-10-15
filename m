@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40101 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752708AbbJZVvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 17:51:00 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZqpfO-0000mC-6c
-	for linux-wireless@vger.kernel.org; Mon, 26 Oct 2015 22:50:58 +0100
-Received: from gas45-3-82-244-252-119.fbx.proxad.net ([82.244.252.119])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 22:50:58 +0100
-Received: from j.cubizolles by gas45-3-82-244-252-119.fbx.proxad.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 22:50:58 +0100
-To: linux-wireless@vger.kernel.org
-From: Julien Cubizolles <j.cubizolles@free.fr>
-Subject: Re: mwifiex problem: incompatible network settings
-Date: Mon, 26 Oct 2015 22:50:51 +0100
-Message-ID: <87twpd8fk4.fsf@free.fr> (sfid-20151026_225104_311793_7D14D246)
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33536 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368AbbJOCHd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2015 22:07:33 -0400
+Received: by pabrc13 with SMTP id rc13so71271343pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:33 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/33] staging: wilc1000: fix return type of host_int_set_MacAddress
+Date: Thu, 15 Oct 2015 11:06:38 +0900
+Message-Id: <1444874822-31152-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040738_239747_0D58CB82)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> writes:
+This patch changes return type of host_int_set_MacAddress from s32 to
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type by int as well as data type of
+s32Error.
 
-> On Mon, 2015-10-26 at 16:51 +0100, Julien Cubizolles wrote:
->> I can't connect anymore to my home wifi since upgrading my machine from
->> Ubuntu 15.04 to Ubuntuy 15.10. I was previously running kernel 4.3.0-rc2
->> from kernel.org without any problem. After the upgrade, and with the
->> same kernel, I couldn't connect anymore. I built 4.3.0-rc7, and the
->> problem remains. However, I can connect to the wifi access point from my
->> Android phone.
->> 
->> Here are the relevant lines from syslog. Let me know if you need more
->> information.
->
-> The AP uses WPA, but the driver has been told that WPA is disabled.  Are
-> you using wpa_supplicant (or NetworkManager, or something else?) to
-> control the WiFi, and if so what version is it?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Yes, I'm using NetworkManager, version 1.0.4-ubuntu5, and I'm guessing
-it's using wpa_supplicant. I deleted the configuration for this network
-and created it again. The network is configured for WPA in
-NetworkManager but I still get the same error message.
-
-Thanks for your help.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ba63565d..6246a12 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3518,9 +3518,9 @@ int host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ 	return s32Error;
+ }
+ 
+-s32 host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
++int host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 
+ 	PRINT_D(GENERIC_DBG, "mac addr = %x:%x:%x\n", pu8MacAddress[0], pu8MacAddress[1], pu8MacAddress[2]);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 08cc4c0..d2ddc4b 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -599,7 +599,7 @@ int host_int_get_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
+  *  @date		16 July 2012
+  *  @version		1.0
+  */
+-s32 host_int_set_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
++int host_int_set_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
+ 
+ /**
+  *  @brief              wait until msg q is empty
+-- 
+2.6.1
 
