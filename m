@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:33123 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbbJQUZj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 16:25:39 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rt2x00: statics code style
-Date: Sat, 17 Oct 2015 21:25:33 +0100
-Message-Id: <1445113533-28116-1-git-send-email-paulmcquad@gmail.com> (sfid-20151017_222559_447013_B716703A)
+Received: from s3.sipsolutions.net ([5.9.151.49]:38700 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752054AbbJON62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 09:58:28 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/12] cfg80211: reg: remove useless reg_timeout scheduling
+Date: Thu, 15 Oct 2015 15:58:16 +0200
+Message-Id: <1444917503-19118-5-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155846_808343_3C51DC38)
+In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not initialise statics to 0 or NULL
-Also use tabs where possible
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+When the functions reg_set_rd_driver() and reg_set_rd_country_ie()
+return with an error, the calling function already restores data
+by calling restore_regulatory_settings(), so there's no need to
+also schedule a timeout (which would lead to other side effects
+such as indicating CRDA failed, which clearly isn't true.) Remove
+the scheduling.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/wireless/reg.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index c0e730e..53bd23d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -39,7 +39,7 @@
- /*
-  * Allow hardware encryption to be disabled.
-  */
--static bool modparam_nohwcrypt = false;
-+static bool modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
-@@ -1388,7 +1388,7 @@ static bool rt61pci_get_entry_state(struct queue_entry *entry)
- 		rt2x00_desc_read(entry_priv->desc, 0, &word);
- 
- 		return (rt2x00_get_field32(word, TXD_W0_OWNER_NIC) ||
--		        rt2x00_get_field32(word, TXD_W0_VALID));
-+		rt2x00_get_field32(word, TXD_W0_VALID));
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 18b990426e13..e7c489b38b0c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2884,11 +2884,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
  	}
- }
  
+ 	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
+-	if (!request_wiphy) {
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, 0);
++	if (!request_wiphy)
+ 		return -ENODEV;
+-	}
+ 
+ 	if (!driver_request->intersect) {
+ 		if (request_wiphy->regd)
+@@ -2945,11 +2942,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
+ 	}
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
+-	if (!request_wiphy) {
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, 0);
++	if (!request_wiphy)
+ 		return -ENODEV;
+-	}
+ 
+ 	if (country_ie_request->intersect)
+ 		return -EINVAL;
 -- 
-2.6.1
+2.5.1
 
