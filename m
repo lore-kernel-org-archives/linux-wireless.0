@@ -1,23 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay004-omc2s22.hotmail.com ([65.54.190.97]:54625 "EHLO
-	BAY004-OMC2S22.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750715AbbJaPRU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2015 11:17:20 -0400
-Message-ID: <BAY172-W2715DF22AB028F126503C6E02E0@phx.gbl> (sfid-20151031_161748_290040_E441A88C)
-From: sunder <sunder_k@hotmail.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Beam forming support
-Date: Sat, 31 Oct 2015 15:17:19 +0000
-Content-Type: text/plain; charset=US-ASCII
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6070 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbbJOE0i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 00:26:38 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/40] staging: wilc1000: remove unused variable gWFiDrvHandle
+Date: Thu, 15 Oct 2015 13:24:51 +0900
+Message-ID: <1444883121-31757-10-git-send-email-tony.cho@atmel.com> (sfid-20151015_062642_829051_2CEAF65D)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is beam forming support in ath10K driver ?
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch removes unused the variable gWFiDrvHandle.
 
-Best Regards,
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- k.sunder 		 	   		  
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 320073e..ad7c102 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -237,7 +237,6 @@ enum scan_conn_timer {
+ 
+ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+ struct host_if_drv *terminated_handle;
+-struct host_if_drv *gWFiDrvHandle;
+ bool g_obtainingIP;
+ u8 P2P_LISTEN_STATE;
+ static struct task_struct *HostIFthreadHandler;
+-- 
+1.9.1
+
