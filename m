@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:32939 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbbJBHlm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6564 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbbJOE3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:41:42 -0400
-Received: by pacex6 with SMTP id ex6so100066193pac.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:42 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 05/12] staging: wilc1000: remove #if 1 and #endif
-Date: Fri,  2 Oct 2015 16:41:14 +0900
-Message-Id: <1443771681-15540-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094145_211597_DC7B50D7)
-In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 15 Oct 2015 00:29:37 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 37/40] staging: wilc1000: move variable FALSE_FRMWR_CHANNEL
+Date: Thu, 15 Oct 2015 13:25:18 +0900
+Message-ID: <1444883121-31757-37-git-send-email-tony.cho@atmel.com> (sfid-20151015_062946_806313_9A67AA98)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes #if 1 and #endif, which is encapsulated
-some codes.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch move variable 'FALSE_FRMWR_CHANNEL' to local define position.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-V2: resend because 08/12 patch is changed.
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 755a817..d781003 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3415,7 +3415,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
- 	struct wilc_priv *priv;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce8cfef..2d771f5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -60,6 +60,7 @@ extern u8 g_wilc_initialized;
+ #define BA_SESSION_DEFAULT_BUFFER_SIZE          16
+ #define BA_SESSION_DEFAULT_TIMEOUT              1000
+ #define BLOCK_ACK_REQ_SIZE                      0x14
++#define FALSE_FRMWR_CHANNEL			100
  
- 	priv = wiphy_priv(wiphy);
--#if 1
- 	switch (changed) {
- 
- 	case WILC_WFI_RX_PKT:
-@@ -3438,7 +3437,6 @@ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
- 	default:
- 		break;
- 	}
--#endif
- 	return 0;
+ struct cfg_param_attr {
+ 	struct cfg_param_val cfg_attr_info;
+@@ -2655,7 +2656,6 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 	return result;
  }
  
+-#define FALSE_FRMWR_CHANNEL 100
+ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 				     struct remain_ch *pstrHostIfRemainOnChan)
+ {
 -- 
-2.6.0
+1.9.1
 
