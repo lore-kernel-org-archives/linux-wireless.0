@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27330 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965285AbbJ2DGb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:06:31 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 64/64] staging: wilc1000: rename pstrHostIfSetOperationMode of fuction Handle_SetOperationMode
-Date: Thu, 29 Oct 2015 12:05:56 +0900
-Message-ID: <1446087956-19054-31-git-send-email-glen.lee@atmel.com> (sfid-20151029_040634_076526_59B3E426)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+Received: from mga11.intel.com ([192.55.52.93]:54755 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753384AbbJOGdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 02:33:39 -0400
+Date: Thu, 15 Oct 2015 14:32:40 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	austin.shin@atmel.com, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Subject: [RFC PATCH] staging: wilc1000: periodic_rssi can be static
+Message-ID: <20151015063240.GA19053@xian> (sfid-20151015_083342_605597_A70E139B)
+References: <201510151441.f2r2iXEa%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-17-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames pstrHostIfSetOperationMode of fuction Handle_SetOperationMode
-to hif_op_mode to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ host_interface.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 96c6d4a..17826f3 100644
+index 3c1110c..b29d7b186 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -373,20 +373,20 @@ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
- }
+@@ -245,7 +245,7 @@ static struct semaphore hif_sema_thread;
+ struct semaphore hif_sema_driver;
+ static struct semaphore hif_sema_wait_response;
+ struct semaphore hif_sema_deinit;
+-struct timer_list periodic_rssi;
++static struct timer_list periodic_rssi;
  
- static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
--				   struct op_mode *pstrHostIfSetOperationMode)
-+				    struct op_mode *hif_op_mode)
- {
- 	s32 result = 0;
- 	struct wid wid;
+ u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
  
- 	wid.id = (u16)WID_SET_OPERATION_MODE;
- 	wid.type = WID_INT;
--	wid.val = (s8 *)&pstrHostIfSetOperationMode->mode;
-+	wid.val = (s8 *)&hif_op_mode->mode;
- 	wid.size = sizeof(u32);
- 
- 	result = send_config_pkt(SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
--	if ((pstrHostIfSetOperationMode->mode) == IDLE_MODE)
-+	if ((hif_op_mode->mode) == IDLE_MODE)
- 		up(&hif_sema_driver);
- 
- 	if (result) {
--- 
-1.9.1
-
