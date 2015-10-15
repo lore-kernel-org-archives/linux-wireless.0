@@ -1,84 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44827 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753539AbbJTIPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 04:15:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: remove sta->last_ack_signal
-Date: Tue, 20 Oct 2015 10:14:56 +0200
-Message-Id: <1445328898-26849-1-git-send-email-johannes@sipsolutions.net> (sfid-20151020_101514_716034_893E9BD1)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6209 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbbJOE1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 00:27:25 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 17/40] staging: wilc1000: rename variable g_hPeriodicRSSI
+Date: Thu, 15 Oct 2015 13:24:58 +0900
+Message-ID: <1444883121-31757-17-git-send-email-tony.cho@atmel.com> (sfid-20151015_062727_644632_5A8D4A3D)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-This file only feeds a debugfs file that isn't very useful, so remove
-it. If necessary, we can add other ways to get this information, for
-example in the NL80211_CMD_PROBE_CLIENT response.
+This patch renames variable g_hPeriodicRSSI to periodic_rssi
+to avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- net/mac80211/debugfs_sta.c | 2 --
- net/mac80211/sta_info.h    | 2 --
- net/mac80211/status.c      | 3 ---
- 3 files changed, 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 06d52935036d..1200b6a581d2 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -50,7 +50,6 @@ static const struct file_operations sta_ ##name## _ops = {		\
- 		STA_OPS(name)
- 
- STA_FILE(aid, sta.aid, D);
--STA_FILE(last_ack_signal, last_ack_signal, D);
- 
- static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
- 			      size_t count, loff_t *ppos)
-@@ -366,7 +365,6 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(agg_status);
- 	DEBUGFS_ADD(ht_capa);
- 	DEBUGFS_ADD(vht_capa);
--	DEBUGFS_ADD(last_ack_signal);
- 
- 	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ce4271406692..7bb5781b4ce2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -373,7 +373,6 @@ DECLARE_EWMA(signal, 1024, 8)
-  * @rx_dropped: number of dropped MPDUs from this STA
-  * @last_signal: signal of last received frame from this STA
-  * @avg_signal: moving average of signal of received frames from this STA
-- * @last_ack_signal: signal of last received Ack frame from this STA
-  * @last_seq_ctrl: last received seq/frag number from this STA (per TID
-  *	plus one for non-QoS frames)
-  * @tx_filtered_count: number of frames the hardware filtered for this STA
-@@ -467,7 +466,6 @@ struct sta_info {
- 	unsigned long rx_dropped;
- 	int last_signal;
- 	struct ewma_signal avg_signal;
--	int last_ack_signal;
- 
- 	u8 chains;
- 	s8 chain_signal_last[IEEE80211_MAX_CHAINS];
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 98fd04c4b2a0..da67b84905a8 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -863,9 +863,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				ieee80211_lost_packet(sta, info);
- 			}
- 		}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index acb8379d..3c1110c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -245,9 +245,7 @@ static struct semaphore hif_sema_thread;
+ struct semaphore hif_sema_driver;
+ static struct semaphore hif_sema_wait_response;
+ struct semaphore hif_sema_deinit;
+-struct timer_list g_hPeriodicRSSI;
 -
--		if (acked)
--			sta->last_ack_signal = info->status.ack_signal;
+-
++struct timer_list periodic_rssi;
+ 
+ u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 
+@@ -4207,8 +4205,8 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 			return;
+ 		}
+ 	}
+-	g_hPeriodicRSSI.data = (unsigned long)hif_drv;
+-	mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
++	periodic_rssi.data = (unsigned long)hif_drv;
++	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
+ 
+ 
+@@ -4276,9 +4274,9 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 			result = -EFAULT;
+ 			goto _fail_mq_;
+ 		}
+-		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
++		setup_timer(&periodic_rssi, GetPeriodicRSSI,
+ 			    (unsigned long)hif_drv);
+-		mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
++		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
  	}
  
- 	rcu_read_unlock();
+ 	setup_timer(&hif_drv->hScanTimer, TimerCB_Scan, 0);
+@@ -4346,10 +4344,8 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+ 	}
+ 
+-
+-	if (del_timer_sync(&g_hPeriodicRSSI)) {
++	if (del_timer_sync(&periodic_rssi))
+ 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+-	}
+ 
+ 	del_timer_sync(&hif_drv->hRemainOnChannel);
+ 
+@@ -4370,9 +4366,9 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 	if (clients_count == 1)	{
+-		if (del_timer_sync(&g_hPeriodicRSSI)) {
++		if (del_timer_sync(&periodic_rssi))
+ 			PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+-		}
++
+ 		msg.id = HOST_IF_MSG_EXIT;
+ 		msg.drv = hif_drv;
+ 
 -- 
-2.5.1
+1.9.1
 
