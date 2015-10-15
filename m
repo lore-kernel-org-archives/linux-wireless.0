@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.180]:54183 "EHLO
-	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758478AbbJHUkO (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34792 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932771AbbJOCIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 16:40:14 -0400
-Date: Thu, 8 Oct 2015 22:33:55 +0200
-From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Jakub Sitnicki <jsitnicki@gmail.com>,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-Message-ID: <20151008223355.248614c9@mir> (sfid-20151008_224019_384807_A7E6E9E1)
-In-Reply-To: <wrfjio6h18jq.fsf@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<87d1wp49ds.fsf@frog.home>
-	<wrfjio6h18jq.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 14 Oct 2015 22:08:11 -0400
+Received: by payp3 with SMTP id p3so23397812pay.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:11 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 22/33] staging: wilc1000: fix return type of host_int_del_All_Rx_BASession
+Date: Thu, 15 Oct 2015 11:06:51 +0900
+Message-Id: <1444874822-31152-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040822_874869_209FB124)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This patch changes return type of host_int_del_All_Rx_BASession from s32
+to int. s32Error gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of s32Error.
 
-On 2015-10-08, Jes Sorensen wrote:
-> Jakub Sitnicki <jsitnicki@gmail.com> writes:
-> > Hi Jes,
-> >
-> > On Sat, Aug 29, 2015 at 11:18 PM CEST, Jes.Sorensen@redhat.com wrote:
-> >> This is an alternate driver for a number of Realtek WiFi USB devices,
-> >> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
-> >> It was written from scratch utilizing the Linux mac80211 stack.
-> >>
-> >> After spending months cleaning up the vendor provided rtl8723au
-> >> driver, which comes with it's own 802.11 stack included, I decided to
-> >> rewrite this driver from the bottom up.
-> >
-> > In the long term, do you plan for this driver to support the
-> > RTL8188EU-based devices as well?
-> 
-> I have an 8188EU dongle in my wifi dongle pouch, together with several
-> other yet to be supported ones :) I am currently trying to get the
-> 8723BU and 8192EU working, but I haven't had time to work much on the
-> 8188EU yet.
-[...]
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-I was wondering about a pretty similar question, do you see this driver 
-as being potentially compatible with rtl8192su[1] or rtl8192du[2] devices
-or are these too different[3]?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 90fe5479..83fd056 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -5105,11 +5105,11 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
+ 	return s32Error;
+ }
+ 
+-s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
++int host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
+ 				  char *pBSSID,
+ 				  char TID)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7719f06..aeb3cb3 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -1091,7 +1091,7 @@ s32 host_int_delBASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
+  *  @date
+  *  @version	1.0
+  */
+-s32 host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
++int host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
+ 
+ 
+ /**
+-- 
+2.6.1
 
-Regards
-	Stefan Lippers-Hollmann
-
-[1]	currently supported by the staging r8712u driver
-	or https://github.com/chunkeey/rtl8192su
-	ID 0bda:8171 Realtek Semiconductor Corp. RTL8188SU 802.11n WLAN Adapter
-	ID 0bda:8172 Realtek Semiconductor Corp. RTL8191SU 802.11n WLAN Adapter
-[2]	currently no mainline support, 
-	https://github.com/lwfinger/rtl8192du/commits/kernel-version
-	as a dual-band device coming in multiple flavours, this might
-	be a bit harder to support.
-	ID 0bda:8194 Realtek Semiconductor Corp.
-[3]	they obviously aren't covered yet, as rtl8xxxu doesn't know
-	about their USB IDs/ firmware or initialisation routines 
-	(respectively 5 GHz support in case of rtl8192du).
