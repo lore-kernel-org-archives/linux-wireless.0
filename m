@@ -1,74 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37644 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbbJQUEo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6339 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754131AbbJOE2Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 16:04:44 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: sgruszka@redhat.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rt2x00: Fixed Spacing issues
-Date: Sat, 17 Oct 2015 21:04:39 +0100
-Message-Id: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com> (sfid-20151017_220506_625048_CDA4B4DE)
+	Thu, 15 Oct 2015 00:28:16 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/40] staging: wilc1000: rename variable gu32InactiveTime
+Date: Thu, 15 Oct 2015 13:25:06 +0900
+Message-ID: <1444883121-31757-25-git-send-email-tony.cho@atmel.com> (sfid-20151015_064658_862785_6EE8C990)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed empty spaces before/after parenthesis
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+This patch renames variable gu32InactiveTime to inactive_time
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.h | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index 1442075..ab86415 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -138,14 +138,14 @@
- #define PAIRWISE_TA_TABLE_BASE		0x1a00
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index cf21ee20..6f4158f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -258,7 +258,7 @@ static s8 link_speed;
+ static u8 ch_no;
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+-static u32 gu32InactiveTime;
++static u32 inactive_time;
+ static u8 gu8DelBcn;
+ static u32 gu32WidConnRstHack;
  
- #define SHARED_KEY_ENTRY(__idx) \
--	( SHARED_KEY_TABLE_BASE + \
--		((__idx) * sizeof(struct hw_key_entry)) )
-+	(SHARED_KEY_TABLE_BASE + \
-+		((__idx) * sizeof(struct hw_key_entry)))
- #define PAIRWISE_KEY_ENTRY(__idx) \
--	( PAIRWISE_KEY_TABLE_BASE + \
--		((__idx) * sizeof(struct hw_key_entry)) )
-+	(PAIRWISE_KEY_TABLE_BASE + \
-+		((__idx) * sizeof(struct hw_key_entry)))
- #define PAIRWISE_TA_ENTRY(__idx) \
--	( PAIRWISE_TA_TABLE_BASE + \
--		((__idx) * sizeof(struct hw_pairwise_ta_entry)) )
-+	(PAIRWISE_TA_TABLE_BASE + \
-+		((__idx) * sizeof(struct hw_pairwise_ta_entry)))
+@@ -2287,7 +2287,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
  
- struct hw_key_entry {
- 	u8 key[16];
-@@ -180,7 +180,7 @@ struct hw_pairwise_ta_entry {
- #define HW_BEACON_BASE3			0x2f00
+ 	strWID.id = (u16)WID_GET_INACTIVE_TIME;
+ 	strWID.type = WID_INT;
+-	strWID.val = (s8 *)&gu32InactiveTime;
++	strWID.val = (s8 *)&inactive_time;
+ 	strWID.size = sizeof(u32);
  
- #define HW_BEACON_OFFSET(__index) \
--	( HW_BEACON_BASE0 + (__index * 0x0100) )
-+	(HW_BEACON_BASE0 + (__index * 0x0100))
  
- /*
-  * HOST-MCU shared memory.
-@@ -1287,9 +1287,9 @@ struct hw_pairwise_ta_entry {
- /*
-  * DMA descriptor defines.
-  */
--#define TXD_DESC_SIZE			( 16 * sizeof(__le32) )
--#define TXINFO_SIZE			( 6 * sizeof(__le32) )
--#define RXD_DESC_SIZE			( 16 * sizeof(__le32) )
-+#define TXD_DESC_SIZE			(16 * sizeof(__le32))
-+#define TXINFO_SIZE			(6 * sizeof(__le32))
-+#define RXD_DESC_SIZE			(16 * sizeof(__le32))
+@@ -2299,8 +2299,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 		return -EFAULT;
+ 	}
  
- /*
-  * TX descriptor format for TX, PRIO and Beacon Ring.
+-
+-	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", gu32InactiveTime);
++	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
+ 
+ 	up(&hif_drv->hSemInactiveTime);
+ 
+@@ -3885,7 +3884,7 @@ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
+ 
+ 	down(&hif_drv->hSemInactiveTime);
+ 
+-	*pu32InactiveTime = gu32InactiveTime;
++	*pu32InactiveTime = inactive_time;
+ 
+ 	return s32Error;
+ }
 -- 
-2.6.1
+1.9.1
 
