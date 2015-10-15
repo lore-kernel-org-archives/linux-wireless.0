@@ -1,114 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42596 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002AbbJYQYw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6418 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbbJOE2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 12:24:52 -0400
-Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id D833A13EF29
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 16:24:50 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8xxxu: fix unused rtl8192cu_fops compiler warning
-Date: Sun, 25 Oct 2015 18:24:38 +0200
-Message-Id: <1445790278-32156-1-git-send-email-kvalo@codeaurora.org> (sfid-20151025_172456_164689_E39432B8)
+	Thu, 15 Oct 2015 00:28:44 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 29/40] staging: wilc1000: rename variable gu8FlushedInfoElemAsoc
+Date: Thu, 15 Oct 2015 13:25:10 +0900
+Message-ID: <1444883121-31757-29-git-send-email-tony.cho@atmel.com> (sfid-20151015_064654_280664_79C1259E)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild reported:
+From: Leo Kim <leo.kim@atmel.com>
 
-rtl8xxxu.c:5786:32: warning: ‘rtl8192cu_fops’ defined but not used [-Wunused-variable]
+This patch renames variable gu8FlushedInfoElemAsoc to info_element
+to avoid CamelCase naming convention.
 
-Fix it by adding temporary ifdefs around the static functions.
-
-Fixes: 033695bdf6d7 ("rtl8xxxu: move devices supported by rtlwifi under UNTESTED config")
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 86d864af3a32..6aed923a709a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1818,6 +1818,8 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 38ce396..0ede4a6d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -262,7 +262,7 @@ static u32 inactive_time;
+ static u8 del_beacon;
  
-+#ifdef CONFIG_RTL8XXXU_UNTESTED
-+
- static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
- 	int i;
-@@ -1885,6 +1887,8 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
+ u8 *join_req;
+-u8 *gu8FlushedInfoElemAsoc;
++u8 *info_element;
+ u8 gu8Flushed11iMode;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+@@ -1076,8 +1076,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
  
-+#endif
-+
- static int
- rtl8xxxu_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
- {
-@@ -2217,6 +2221,8 @@ static int rtl8723au_load_firmware(struct rtl8xxxu_priv *priv)
- 	return ret;
- }
+ 			gu32FlushedInfoElemAsocSize = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+-			gu8FlushedInfoElemAsoc =  kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
+-			memcpy(gu8FlushedInfoElemAsoc, hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs,
++			info_element = kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
++			memcpy(info_element, hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs,
+ 			       gu32FlushedInfoElemAsocSize);
+ 		}
+ 	}
+@@ -1302,7 +1302,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
  
-+#ifdef CONFIG_RTL8XXXU_UNTESTED
-+
- static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
- {
- 	char *fw_name;
-@@ -2234,6 +2240,8 @@ static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
- 	return ret;
- }
+ 	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
+ 	strWIDList[u32WidsCount].type = WID_BIN_DATA;
+-	strWIDList[u32WidsCount].val = gu8FlushedInfoElemAsoc;
++	strWIDList[u32WidsCount].val = info_element;
+ 	strWIDList[u32WidsCount].size = gu32FlushedInfoElemAsocSize;
+ 	u32WidsCount++;
  
-+#endif
+@@ -1411,9 +1411,10 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 		kfree(join_req);
+ 		join_req = NULL;
+ 	}
+-	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
+-		kfree(gu8FlushedInfoElemAsoc);
+-		gu8FlushedInfoElemAsoc = NULL;
 +
- static void rtl8xxxu_firmware_self_reset(struct rtl8xxxu_priv *priv)
- {
- 	u16 val16;
-@@ -3815,6 +3823,8 @@ exit:
- 	return ret;
- }
++	if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
++		kfree(info_element);
++		info_element = NULL;
+ 	}
  
-+#ifdef CONFIG_RTL8XXXU_UNTESTED
+ 	return s32Error;
+@@ -1714,9 +1715,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				kfree(join_req);
+ 				join_req = NULL;
+ 			}
+-			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
+-				kfree(gu8FlushedInfoElemAsoc);
+-				gu8FlushedInfoElemAsoc = NULL;
 +
- static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
-@@ -3918,6 +3928,8 @@ static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
++			if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
++				kfree(info_element);
++				info_element = NULL;
+ 			}
  
-+#endif
+ 			hif_drv->enuHostIFstate = HOST_IF_IDLE;
+@@ -2106,9 +2108,10 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 			kfree(join_req);
+ 			join_req = NULL;
+ 		}
+-		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
+-			kfree(gu8FlushedInfoElemAsoc);
+-			gu8FlushedInfoElemAsoc = NULL;
 +
- static void rtl8xxxu_power_off(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
-@@ -5783,6 +5795,8 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.writeN_block_size = 1024,
- };
++		if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
++			kfree(info_element);
++			info_element = NULL;
+ 		}
  
-+#ifdef CONFIG_RTL8XXXU_UNTESTED
-+
- static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.parse_efuse = rtl8192cu_parse_efuse,
- 	.load_firmware = rtl8192cu_load_firmware,
-@@ -5790,6 +5804,8 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.writeN_block_size = 128,
- };
- 
-+#endif
-+
- static struct usb_device_id dev_table[] = {
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8723au_fops},
+ 	}
 -- 
-1.7.9.5
+1.9.1
 
