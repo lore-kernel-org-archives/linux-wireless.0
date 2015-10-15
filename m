@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:54826 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbbJAKut (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 06:50:49 -0400
-Subject: [PATCH 1/6] ath10k: fix checkpatch warning about logical continuations
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 01 Oct 2015 13:50:45 +0300
-Message-ID: <20151001105045.8770.44227.stgit@potku.adurom.net> (sfid-20151001_125051_655492_6793C19E)
-In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
-References: <20151001105001.8770.96252.stgit@potku.adurom.net>
+Received: from mga01.intel.com ([192.55.52.88]:33085 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753983AbbJOGIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 02:08:45 -0400
+Date: Thu, 15 Oct 2015 14:07:41 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 14/40] staging: wilc1000: rename variable
+ hSemDeinitDrvHandle
+Message-ID: <201510151403.R138Uuyp%fengguang.wu@intel.com> (sfid-20151015_080905_755294_C5481AD8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-14-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-checkpatch found:
+Hi Leo,
 
-drivers/net/wireless/ath/ath9k/core.c:490: Logical continuations should be on the previous line
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hSemHostIntDeinit' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'g_hPeriodicRSSI' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:256:6: sparse: symbol 'gbScanWhileConnected' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedJoinReq' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:4: sparse: symbol 'gu8FlushedInfoElemAsoc' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:269:4: sparse: symbol 'gu8Flushed11iMode' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:270:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:271:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:272:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:410:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:445:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2215:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2356:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2356:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2356:38:    right side has type int
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/net/wireless/ath/ath10k/core.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 879625adc63a..87ad2e998a94 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -486,8 +486,8 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
- 
- 	if (!(skip_otp || test_bit(ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
--				   ar->fw_features))
--	    && result != 0) {
-+				   ar->fw_features)) &&
-+	    result != 0) {
- 		ath10k_err(ar, "otp calibration failed: %d", result);
- 		return -EINVAL;
- 	}
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
