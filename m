@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38605 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbbJSQCm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:5910 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692AbbJOEZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 12:02:42 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
-	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
-	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
-	cengelma@gmx.at, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] net: wireless: b43: Statics are init to 0
-Date: Mon, 19 Oct 2015 17:02:23 +0100
-Message-Id: <1445270543-2209-4-git-send-email-paulmcquad@gmail.com> (sfid-20151019_180309_986076_97FBEC60)
-In-Reply-To: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
-References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+	Thu, 15 Oct 2015 00:25:52 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/40] staging: wilc1000: rename u8OppEnable of struct join_bss_param
+Date: Thu, 15 Oct 2015 13:24:44 +0900
+Message-ID: <1444883121-31757-3-git-send-email-tony.cho@atmel.com> (sfid-20151015_062555_053945_CA9DF6D3)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No Need to state Statics are a 0 or NULL
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+This patch renames u8OppEnable of struct join_bss_param to opp_enabled
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/b43/main.c   | 2 +-
- drivers/net/wireless/b43/phy_lp.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 040caa4..2b50650 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -109,7 +109,7 @@ int b43_modparam_verbose = B43_VERBOSITY_DEFAULT;
- module_param_named(verbose, b43_modparam_verbose, int, 0644);
- MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2b8e412..91e7072 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -220,7 +220,7 @@ struct join_bss_param {
+ 	u8 rsn_cap[2];
+ 	u32 tsf;
+ 	u8 noa_enabled;
+-	u8 u8OppEnable;
++	u8 opp_enabled;
+ 	u8 u8CtWindow;
+ 	u8 u8Count;
+ 	u8 u8Index;
+@@ -1195,10 +1195,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
  
--static int b43_modparam_pio = 0;
-+static int b43_modparam_pio;
- module_param_named(pio, b43_modparam_pio, int, 0644);
- MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->u8Index;
++		*(pu8CurrByte++) = ptstrJoinBssParam->opp_enabled;
  
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 058a9f2..086f0ba 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -2502,7 +2502,7 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
- {
- 	struct ssb_bus *bus = dev->dev->sdev->bus;
+-		*(pu8CurrByte++) = ptstrJoinBssParam->u8OppEnable;
+-
+-		if (ptstrJoinBssParam->u8OppEnable)
++		if (ptstrJoinBssParam->opp_enabled)
+ 			*(pu8CurrByte++) = ptstrJoinBssParam->u8CtWindow;
  
--	static const struct b206x_channel *chandata = NULL;
-+	static const struct b206x_channel *chandata;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
- 	u32 freqref, vco_freq, val1, val2, val3, timeout, timeoutref, count;
- 	u16 old_comm15, scale;
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->u8Count;
+@@ -4988,10 +4987,11 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				pNewJoinBssParam->u8Index = pu8IEs[index + 9];
+ 
+ 				if (pu8IEs[index + 10] & BIT(7)) {
+-					pNewJoinBssParam->u8OppEnable = 1;
++					pNewJoinBssParam->opp_enabled = 1;
+ 					pNewJoinBssParam->u8CtWindow = pu8IEs[index + 10];
+-				} else
+-					pNewJoinBssParam->u8OppEnable = 0;
++				} else {
++					pNewJoinBssParam->opp_enabled = 0;
++				}
+ 
+ 				PRINT_D(GENERIC_DBG, "P2P Dump\n");
+ 				for (i = 0; i < pu8IEs[index + 7]; i++)
 -- 
-2.6.1
+1.9.1
 
