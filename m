@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33256 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971AbbJZJWI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9678 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbbJOKla (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 05:22:08 -0400
-Received: by pacfa8 with SMTP id fa8so4148200pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 02:22:07 -0700 (PDT)
-From: manikanta.pubbisetty@gmail.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
-Subject: [PATCH] ath10k: update antenna configuration after setting in fw
-Date: Mon, 26 Oct 2015 14:52:10 +0530
-Message-Id: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com> (sfid-20151026_102222_992561_ACFC2CE5)
+	Thu, 15 Oct 2015 06:41:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
+Date: Thu, 15 Oct 2015 13:40:40 +0300
+Message-ID: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20151015_124135_470356_BAA6A631)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.bin") I
+forgot to commit board.bin file and that's why it was not included in the
+commit even I had added an entry to WHENCE. Add that now.
 
-Updating tx/rx antenna configuration in ath10k is done even before
-it is set in target. If setting of the tx/rx antenna config fails then
-we will maintain incorrect configuration in ath10k and APIs like
-get_antenna will provide incorrect information.
+At the same time also add Version field for firmware-4.bin.
 
-This patch updates the antenna configuration in ath10k after it is set
-successfully in target.
-
-Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ WHENCE                         |    1 +
+ ath10k/QCA988X/hw2.0/board.bin |  Bin 0 -> 2116 bytes
+ 2 files changed, 1 insertion(+)
+ create mode 100644 ath10k/QCA988X/hw2.0/board.bin
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 484c1a1..8d0ce37 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
- 	ath10k_check_chain_mask(ar, tx_ant, "tx");
- 	ath10k_check_chain_mask(ar, rx_ant, "rx");
+diff --git a/WHENCE b/WHENCE
+index e3a3d89d387c..801b34b6fcf2 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -2390,6 +2390,7 @@ Driver: ath10k - Qualcomm Atheros support for QCA988x family of chips
  
--	ar->cfg_tx_chainmask = tx_ant;
--	ar->cfg_rx_chainmask = rx_ant;
--
- 	if ((ar->state != ATH10K_STATE_ON) &&
- 	    (ar->state != ATH10K_STATE_RESTARTED))
- 		return 0;
-@@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
- 		return ret;
- 	}
+ File: ath10k/QCA988X/hw2.0/board.bin
+ File: ath10k/QCA988X/hw2.0/firmware-4.bin
++Version: 10.2.4.45
  
-+	ar->cfg_tx_chainmask = tx_ant;
-+	ar->cfg_rx_chainmask = rx_ant;
-+
- 	return 0;
- }
+ Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
  
+diff --git a/ath10k/QCA988X/hw2.0/board.bin b/ath10k/QCA988X/hw2.0/board.bin
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f8bd6b99ace2fcfd5a63c072856c215a86a3f59
+GIT binary patch
+literal 2116
+zcmZ?axNpG3!obWfWD>@}ki}r{$-v>l!@<D7AP>aGKnwyMf(*V876yq+977=~0{jdL
+zObiTyf{Y9Sj3CIsAV7+Cx~S!11i3LZlof89Ae=RP7-tz6911!YG4KeqFjNA`8iqoc
+z=YCWG`Hc)^K(dk{A4RmDp%^Gy#*l*~3S*K-7py7hT*CmvN^l@2qof4EA|fL1&Um@3
+zaXI4Uf{QIAB=qh~7Q-6016d5X*n&c$;!-k>POk1=K88l7=2kWg3<afg7r}5<{p1-S
+zHiTZYqo8#88W66k2dP2O*u-sWY;353i48+xpeKceMTEqJMTNzfMS(0~Awf}LAYWJn
+zgfY$WiHOPQ*|PT}pHL=4ECZiV9z!}z5iq{_gmM`Yfn+&D0g7lILlRK5lA#Diw2&bU
+zC|bi%iXz&?Pz@B#0qTGPu(=h$vWHK|kHG;&w3s0oDC)srg(8~G5CIf*W-vh#g)zyc
+zeL^yN7VN|%<z%G9uwelKfitTz7`oUNWH3;|=HcOa_ihctIj#q57zP7dKukhXTGqkM
+z!_(W>z|6wZ+LnRACnlk1%Z|NgVYFXdTHm^D`;P}DO<J_+@c;kl;@~tiVZ#;}?H2~r
+zFm2g7kox~XfG!Tx52Fd0Ut?1P%tt^HPJ{ClFl#{ox;RKB1VL!9Dj*XEVDeyo4M=GX
+zgoM)|-3Wk?hlrD#=3x2+1cgOKL?onCl#~=zl$Df}RTP!flz~`DSwTioUY?LV%$$Lu
+E0as;$_y7O^
+
+literal 0
+HcmV?d00001
+
 -- 
-1.9.1
+1.7.9.5
 
