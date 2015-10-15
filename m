@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f196.google.com ([209.85.212.196]:32838 "EHLO
-	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbbJXWcK (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6352 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752291AbbJOE2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2015 18:32:10 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Punit Vara <punitvara@gmail.com>
-Subject: [PATCH 3/3] Staging: wilc1000: Remove boolean comparision
-Date: Sun, 25 Oct 2015 04:01:25 +0530
-Message-Id: <1445725885-25995-4-git-send-email-punitvara@gmail.com> (sfid-20151025_003232_863274_0BA82A15)
-In-Reply-To: <1445725885-25995-1-git-send-email-punitvara@gmail.com>
-References: <1445725885-25995-1-git-send-email-punitvara@gmail.com>
+	Thu, 15 Oct 2015 00:28:23 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 26/40] staging: wilc1000: rename variable gu8DelBcn
+Date: Thu, 15 Oct 2015 13:25:07 +0900
+Message-ID: <1444883121-31757-26-git-send-email-tony.cho@atmel.com> (sfid-20151015_064657_530370_69C0C399)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the host_interface.c file that fixes up following
-warning reported by coccicheck:
+From: Leo Kim <leo.kim@atmel.com>
 
-WARNING: Comparison to bool
+This patch renames variable gu8DelBcn to del_beacon
+to avoid CamelCase naming convention.
 
-Boolean tests do not need explicit comparison to true or false
-
-Signed-off-by: Punit Vara <punitvara@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
  drivers/staging/wilc1000/host_interface.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 38fead4..09a6c98 100644
+index 6f4158f..1ad160d 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1440,7 +1440,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
- 			}
- 		}
+@@ -259,7 +259,7 @@ static u8 ch_no;
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+ static u32 inactive_time;
+-static u8 gu8DelBcn;
++static u8 del_beacon;
+ static u32 gu32WidConnRstHack;
  
--		if (bNewNtwrkFound == true) {
-+		if (bNewNtwrkFound) {
- 			PRINT_D(HOSTINF_DBG, "New network found\n");
+ u8 *gu8FlushedJoinReq;
+@@ -2373,7 +2373,7 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
+ 	strWID.id = (u16)WID_DEL_BEACON;
+ 	strWID.type = WID_CHAR;
+ 	strWID.size = sizeof(char);
+-	strWID.val = &gu8DelBcn;
++	strWID.val = &del_beacon;
  
- 			if (hif_drv->strWILC_UsrScanReq.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
-@@ -2714,7 +2714,7 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
- 
- 	strWID.id = (u16)WID_POWER_MANAGEMENT;
- 
--	if (strPowerMgmtParam->enabled == true)
-+	if (strPowerMgmtParam->enabled)
- 		s8PowerMode = MIN_FAST_PS;
- 	else
- 		s8PowerMode = NO_POWERSAVE;
+ 	if (strWID.val == NULL)
+ 		return;
 -- 
-2.5.3
+1.9.1
 
