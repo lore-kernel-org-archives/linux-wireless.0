@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42959 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754527AbbJ1HEt (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:32930 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932556AbbJOCH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:04:49 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 55/80] staging: wilc1000: rename u32TxCount of struct rf_info
-Date: Wed, 28 Oct 2015 16:07:00 +0900
-Message-ID: <1446016045-32154-5-git-send-email-glen.lee@atmel.com> (sfid-20151028_080452_180810_74BE7319)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 14 Oct 2015 22:07:57 -0400
+Received: by pabrc13 with SMTP id rc13so71280928pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:56 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 17/33] staging: wilc1000: fix return type of host_int_frame_register
+Date: Thu, 15 Oct 2015 11:06:46 +0900
+Message-Id: <1444874822-31152-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041341_449239_46983DC7)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes return type of host_int_frame_register from s32 to
+int. s32Error gets return value of wilc_mq_send that has return type of
+int. It should be changed return type of this function as well as data
+type of s32Error.
 
-This patch renames u32TxCount of struct rf_info to tx_cnt
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 2 +-
- drivers/staging/wilc1000/host_interface.h         | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 46e590a..76f9977 100644
+index 05e6880..fdcfc91 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2151,7 +2151,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
- 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
- 	strWIDList[u32WidsCount].type = WID_INT;
- 	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->u32TxCount;
-+	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
- 	u32WidsCount++;
+@@ -4570,9 +4570,9 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
+ 	return s32Error;
+ }
  
- 	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
+-s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool bReg)
++int host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool bReg)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6502ec1..c6f4a83 100644
+index c9b0533..7e95df4 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -55,7 +55,7 @@
- struct rf_info {
- 	u8 link_speed;
- 	s8 rssi;
--	u32 u32TxCount;
-+	u32 tx_cnt;
- 	u32 u32RxCount;
- 	u32 u32TxFailureCount;
- };
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5005d68..b80e08e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1568,7 +1568,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 		sinfo->signal = strStatistics.rssi;
- 		sinfo->rx_packets   =  strStatistics.u32RxCount;
--		sinfo->tx_packets   =  strStatistics.u32TxCount + strStatistics.u32TxFailureCount;
-+		sinfo->tx_packets = strStatistics.tx_cnt + strStatistics.u32TxFailureCount;
- 		sinfo->tx_failed	=  strStatistics.u32TxFailureCount;
- 		sinfo->txrate.legacy = strStatistics.link_speed * 10;
- 
+@@ -1141,7 +1141,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hWFIDrv, u32 u32SessionID);
+  *  @date
+  *  @version	1.0
+  */
+-s32 host_int_frame_register(struct host_if_drv *hWFIDrv, u16 u16FrameType, bool bReg);
++int host_int_frame_register(struct host_if_drv *hWFIDrv, u16 u16FrameType, bool bReg);
+ /**
+  *  @brief           host_int_set_wfi_drv_handler
+  *  @details
 -- 
-1.9.1
+2.6.1
 
