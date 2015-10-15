@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:33806 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbbJWMY4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 08:24:56 -0400
-Received: by wikq8 with SMTP id q8so74489237wik.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 05:24:54 -0700 (PDT)
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: overlap of devices in rtl8xxxu and rtl8192cu
-Message-ID: <562A2711.9040700@gmail.com> (sfid-20151023_142500_407357_B1D53B83)
-Date: Fri, 23 Oct 2015 14:24:49 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37503 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752297AbbJOJrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 05:47:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/6] cfg80211: reg: remove useless reg_timeout scheduling
+Date: Thu, 15 Oct 2015 11:46:56 +0200
+Message-Id: <1444902418-25668-4-git-send-email-johannes@sipsolutions.net> (sfid-20151015_114717_772010_A111B53F)
+In-Reply-To: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
+References: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->> This is an alternate driver for a number of Realtek WiFi USB devices,
->> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
->> It was written from scratch utilizing the Linux mac80211 stack.
->> 
->> After spending months cleaning up the vendor provided rtl8723au
->> driver, which comes with it's own 802.11 stack included, I decided to
->> rewrite this driver from the bottom up.
->> 
->> Many thanks to Johannes Berg for 802.11 insights and help and Larry
->> Finger for help with the vendor driver.
->> 
->> The full git log for the development of this driver can be found here:
->> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->>     branch rtl8723au-mac80211
->> 
->> This driver is still under development, but has proven to be very
->> stable for me. It currently supports station mode only. It has support
->> for OFDM and CCK rates. It does lack certain features found in the
->> staging driver, such as power management, AMPDU, and 40MHz channel
->> support. In addition it does not support AD-HOC, AP, and monitor mode
->> support at this point.
->> 
->> The driver is known to work with the following devices:
->> Lenovo Yoga (rtl8723au)
->> TP-Link TL-WN823N (rtl8192cu)
->> Etekcity 6R (rtl8188cu)
->> Daffodil LAN03 (rtl8188cu)
->> Alfa AWUS036NHR (rtl8188ru)
->> 
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> Thanks, applied to wireless-drivers-next.git.
+When the functions reg_set_rd_driver() and reg_set_rd_country_ie()
+return with an error, the calling function already restores data
+by calling restore_regulatory_settings(), so there's no need to
+also schedule a timeout (which would lead to other side effects
+such as indicating CRDA failed, which clearly isn't true.) Remove
+the scheduling.
 
-There is overlap of devices between rtl8xxxu and rtl8192cu:
-USB_VENDER_ID_REALTEK, 0x8176
-USB_VENDER_ID_REALTEK, 0x8178
-USB_VENDER_ID_REALTEK, 0x817f
-0x7392, 0x7811
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6ad01b264eb0..3c4363be6bb0 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2885,11 +2885,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
+ 	}
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
+-	if (!request_wiphy) {
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, 0);
++	if (!request_wiphy)
+ 		return -ENODEV;
+-	}
+ 
+ 	if (!driver_request->intersect) {
+ 		if (request_wiphy->regd)
+@@ -2946,11 +2943,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
+ 	}
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
+-	if (!request_wiphy) {
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, 0);
++	if (!request_wiphy)
+ 		return -ENODEV;
+-	}
+ 
+ 	if (country_ie_request->intersect)
+ 		return -EINVAL;
+-- 
+2.5.1
+
