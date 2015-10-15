@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:37244 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbbJBF2o (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6276 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbbJOE1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 01:28:44 -0400
-Received: from mail-io0-f179.google.com (mail-io0-f179.google.com [209.85.223.179])
-	(Authenticated sender: b93043)
-	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id 33C10207ED
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Oct 2015 13:28:43 +0800 (CST)
-Received: by iow1 with SMTP id 1so72494683iow.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 22:28:41 -0700 (PDT)
+	Thu, 15 Oct 2015 00:27:50 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 21/40] staging: wilc1000: rename variable gs8lnkspd
+Date: Thu, 15 Oct 2015 13:25:02 +0900
+Message-ID: <1444883121-31757-21-git-send-email-tony.cho@atmel.com> (sfid-20151015_064656_793324_9E0D242F)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151001212601.GE101875@ubuntu-hedt>
-References: <1443682667-29814-1-git-send-email-wens@csie.org> <20151001212601.GE101875@ubuntu-hedt>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Fri, 2 Oct 2015 13:28:22 +0800
-Message-ID: <CAGb2v67RBbzo-Q1S4xo63=TFqkLxMtN_FHiSa7Yi=ahKw9xi-g@mail.gmail.com> (sfid-20151002_072854_936120_78E23DBB)
-Subject: Re: [PATCH v3 0/5] wireless-regdb: Update TW and US rules to latest regulations
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Chen-Yu Tsai <wens@csie.org>,
-	wireless-regdb <wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 2, 2015 at 5:26 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Thu, Oct 01, 2015 at 02:57:42PM +0800, Chen-Yu Tsai wrote:
->> Hi Seth,
->>
->> This is v3 of my TW/US 5GHz updates series. Sorry for the long delay.
->>
->> Changes since v2:
->>
->>   - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
->>
->>   - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
->>     side of 250mW
->>
->>
->> Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
->> the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
->> weather radars. The transmission power limit is also corrected to
->> match the regulations.
->>
->> Patch 2 changes the boundary frequencies for each rule for Taiwan to
->> match the frequency allocation table. The "regulation" database shouldn't
->> care about artificial channel boundaries.
->>
->> Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
->> the US.
->>
->> Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
->>
->> Patch 5 updates the transmission power limits for Taiwan, per the NCC's
->> official reply. This patch may be slightly controversial, as there is
->> no official English document. Either someone will have to independently
->> verify this, or translate the Chinese document.
->
-> This description doesn't quite match the patches. Patch 4 both adds the
-> 5150-5250 MHz band and increases the power limits for 5250-5350 MHz,
-> whereas patch 5 changes the DFS master region to DFS-FCC. Previously the
-> increased power limit for 5250-5350 MHz was part of patch 5 - perhaps
-> you accidentally moved that part to patch 4 when you were updating the
-> patches?
+From: Leo Kim <leo.kim@atmel.com>
 
-Indeed. I squashed a fixup into the wrong patch, and tried to fix it.
-Obviously that didn't work out so well.
+This patch renames variable gs8lnkspd to link_speed.
 
-> So patches 1-3 look fine to me. I suspect you'll want to move the power
-> limit increase from patch 4 to 5. I'm also going to take a look at a
-> machine translation of the Chinese document, and if that looks to be in
-> agreement with your patches then I should be able to apply them next
-> week sometime.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Do you want me to send a new version now, or wait for you to go through
-the translation first?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 14cd253..79aaeaa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -254,7 +254,7 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ bool scan_while_connected;
+ 
+ static s8 rssi;
+-static s8 gs8lnkspd;
++static s8 link_speed;
+ static u8 gu8Chnl;
+ static u8 gs8SetIP[2][4];
+ static u8 gs8GetIP[2][4];
+@@ -2188,11 +2188,11 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 	s32 s32Error = 0;
+ 	struct wid strWID;
+ 
+-	gs8lnkspd = 0;
++	link_speed = 0;
+ 
+ 	strWID.id = (u16)WID_LINKSPEED;
+ 	strWID.type = WID_CHAR;
+-	strWID.val = &gs8lnkspd;
++	strWID.val = &link_speed;
+ 	strWID.size = sizeof(char);
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting LINKSPEED value\n");
+@@ -3971,9 +3971,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 		return -EFAULT;
+ 	}
+ 
+-
+-	*ps8lnkspd = gs8lnkspd;
+-
++	*ps8lnkspd = link_speed;
+ 
+ 	return s32Error;
+ }
+-- 
+1.9.1
 
-Thanks.
-
-ChenYu
