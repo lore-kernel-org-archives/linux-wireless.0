@@ -1,75 +1,822 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35071 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757249AbbJ2XcW (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6609 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932097AbbJOE35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:32:22 -0400
-Received: by pasz6 with SMTP id z6so54194520pas.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:32:22 -0700 (PDT)
-Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for
- arm64 dma_alloc.
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
- <878u6lo34e.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-	me@bobcopeland.com, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-From: "fengwei.yin" <fengwei.yin@linaro.org>
-Message-ID: <5632AC81.6090905@linaro.org> (sfid-20151030_003226_164344_6D6BF838)
-Date: Fri, 30 Oct 2015 07:32:17 +0800
+	Thu, 15 Oct 2015 00:29:57 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 40/40] staging: wilc1000: fixes comparison to NULL could be written
+Date: Thu, 15 Oct 2015 13:25:21 +0900
+Message-ID: <1444883121-31757-40-git-send-email-tony.cho@atmel.com> (sfid-20151015_063000_573974_4DA8B85E)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <878u6lo34e.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
-On 2015/10/30 4:01, Kalle Valo wrote:
-> "Yin, Fengwei" <fengwei.yin@linaro.org> writes:
->
->> arm64 has requirement that all the dma operations have actual device.
->> Otherwise, following warnning message shown and dma allocation fails:
->>
->> WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106 __dma_alloc+0x24c/0x258()
->> Use an actual device structure for DMA allocation
->> Modules linked in: wcn36xx wcn36xx_platform
->> CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
->> Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
->> Call trace:
->> [<ffffffc000089904>] dump_backtrace+0x0/0x124
->> [<ffffffc000089a38>] show_stack+0x10/0x1c
->> [<ffffffc000627114>] dump_stack+0x80/0xc4
->> [<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
->> [<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
->> [<ffffffc00009487c>] __dma_alloc+0x248/0x258
->> [<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
->> [<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
->> [<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
->> [<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
->> [<ffffffc00051693c>] __dev_open+0xb0/0x120
->> [<ffffffc000516c10>] __dev_change_flags+0x88/0x150
->> [<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
->> [<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
->>
->> Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
->
-> Please fix your name. I don't know why but your name in git statistics
-> is now "yfw":
->
-> yfw (1):
->        wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
->
-> The right format for both From header and Signed-off-by line is:
->
-> First Lastname <username@example.com>
->
+This patch fixes the checks reported by checkpatch.pl
+for comparison to NULL could be written.
 
-It looks like everything is fine in my side. Could you please check your
-.mailmap whether the email was mapped to "yfw"?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 222 ++++++++++++++++--------------
+ 1 file changed, 115 insertions(+), 107 deletions(-)
 
-It's possible my name was added to your .mailmap because I sent patch to
-mail list with my email client other than git-send-email. "yfw" was used
-in my email client. Thanks.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4fdbe9a..829503f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -477,7 +477,7 @@ static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
+ 	struct wid strWID;
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
+-	if (mac_buf == NULL) {
++	if (!mac_buf) {
+ 		PRINT_ER("No buffer to send mac address\n");
+ 		return -EFAULT;
+ 	}
+@@ -857,7 +857,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 		valuesize += ((pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].u8ssidlen) + 1);
+ 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
+ 	strWIDList[u32WidsCount].val = pu8HdnNtwrksWidVal;
+-	if (strWIDList[u32WidsCount].val != NULL) {
++	if (strWIDList[u32WidsCount].val) {
+ 		pu8Buffer = strWIDList[u32WidsCount].val;
+ 
+ 		*pu8Buffer++ = pstrHostIFscanAttr->hidden_network.u8ssidnum;
+@@ -893,7 +893,8 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].id = WID_SCAN_CHANNEL_LIST;
+ 	strWIDList[u32WidsCount].type = WID_BIN_DATA;
+ 
+-	if (pstrHostIFscanAttr->ch_freq_list != NULL && pstrHostIFscanAttr->ch_list_len > 0) {
++	if (pstrHostIFscanAttr->ch_freq_list &&
++	    pstrHostIFscanAttr->ch_list_len > 0) {
+ 		int i;
+ 
+ 		for (i = 0; i < pstrHostIFscanAttr->ch_list_len; i++)	{
+@@ -931,21 +932,22 @@ ERRORHANDLER:
+ 		Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
+ 	}
+ 
+-	if (pstrHostIFscanAttr->ch_freq_list != NULL) {
++	if (pstrHostIFscanAttr->ch_freq_list) {
+ 		kfree(pstrHostIFscanAttr->ch_freq_list);
+ 		pstrHostIFscanAttr->ch_freq_list = NULL;
+ 	}
+ 
+-	if (pstrHostIFscanAttr->ies != NULL) {
++	if (pstrHostIFscanAttr->ies) {
+ 		kfree(pstrHostIFscanAttr->ies);
+ 		pstrHostIFscanAttr->ies = NULL;
+ 	}
+-	if (pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo != NULL)	{
++
++	if (pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo) {
+ 		kfree(pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo);
+ 		pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo = NULL;
+ 	}
+ 
+-	if (pu8HdnNtwrksWidVal != NULL)
++	if (pu8HdnNtwrksWidVal)
+ 		kfree(pu8HdnNtwrksWidVal);
+ 
+ 	return result;
+@@ -1013,19 +1015,19 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
+ 
+ 	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->params;
+-	if (ptstrJoinBssParam == NULL) {
++	if (!ptstrJoinBssParam) {
+ 		PRINT_ER("Required BSSID not found\n");
+ 		result = -ENOENT;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+-	if (pstrHostIFconnectAttr->bssid != NULL) {
++	if (pstrHostIFconnectAttr->bssid) {
+ 		hif_drv->strWILC_UsrConnReq.pu8bssid = kmalloc(6, GFP_KERNEL);
+ 		memcpy(hif_drv->strWILC_UsrConnReq.pu8bssid, pstrHostIFconnectAttr->bssid, 6);
+ 	}
+ 
+ 	hif_drv->strWILC_UsrConnReq.ssidLen = pstrHostIFconnectAttr->ssid_len;
+-	if (pstrHostIFconnectAttr->ssid != NULL) {
++	if (pstrHostIFconnectAttr->ssid) {
+ 		hif_drv->strWILC_UsrConnReq.pu8ssid = kmalloc(pstrHostIFconnectAttr->ssid_len + 1, GFP_KERNEL);
+ 		memcpy(hif_drv->strWILC_UsrConnReq.pu8ssid,
+ 		       pstrHostIFconnectAttr->ssid,
+@@ -1034,7 +1036,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	}
+ 
+ 	hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = pstrHostIFconnectAttr->ies_len;
+-	if (pstrHostIFconnectAttr->ies != NULL) {
++	if (pstrHostIFconnectAttr->ies) {
+ 		hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
+ 		memcpy(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs,
+ 		       pstrHostIFconnectAttr->ies,
+@@ -1112,15 +1114,14 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		join_req_size = strWIDList[u32WidsCount].size;
+ 		join_req = kmalloc(join_req_size, GFP_KERNEL);
+ 	}
+-	if (strWIDList[u32WidsCount].val == NULL) {
++	if (!strWIDList[u32WidsCount].val) {
+ 		result = -EFAULT;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+ 	pu8CurrByte = strWIDList[u32WidsCount].val;
+ 
+-
+-	if (pstrHostIFconnectAttr->ssid != NULL) {
++	if (pstrHostIFconnectAttr->ssid) {
+ 		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
+ 		pu8CurrByte[pstrHostIFconnectAttr->ssid_len] = '\0';
+ 	}
+@@ -1213,7 +1214,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
+ 
+-	if (pstrHostIFconnectAttr->bssid != NULL) {
++	if (pstrHostIFconnectAttr->bssid) {
+ 		memcpy(u8ConnectedSSID, pstrHostIFconnectAttr->bssid, ETH_ALEN);
+ 
+ 		PRINT_D(GENERIC_DBG, "save Bssid = %pM\n", pstrHostIFconnectAttr->bssid);
+@@ -1241,11 +1242,11 @@ ERRORHANDLER:
+ 
+ 		memset(&strConnectInfo, 0, sizeof(tstrConnectInfo));
+ 
+-		if (pstrHostIFconnectAttr->result != NULL) {
+-			if (pstrHostIFconnectAttr->bssid != NULL)
++		if (pstrHostIFconnectAttr->result) {
++			if (pstrHostIFconnectAttr->bssid)
+ 				memcpy(strConnectInfo.au8bssid, pstrHostIFconnectAttr->bssid, 6);
+ 
+-			if (pstrHostIFconnectAttr->ies != NULL) {
++			if (pstrHostIFconnectAttr->ies) {
+ 				strConnectInfo.ReqIEsLen = pstrHostIFconnectAttr->ies_len;
+ 				strConnectInfo.pu8ReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
+ 				memcpy(strConnectInfo.pu8ReqIEs,
+@@ -1259,7 +1260,7 @@ ERRORHANDLER:
+ 							       NULL,
+ 							       pstrHostIFconnectAttr->arg);
+ 			hif_drv->enuHostIFstate = HOST_IF_IDLE;
+-			if (strConnectInfo.pu8ReqIEs != NULL) {
++			if (strConnectInfo.pu8ReqIEs) {
+ 				kfree(strConnectInfo.pu8ReqIEs);
+ 				strConnectInfo.pu8ReqIEs = NULL;
+ 			}
+@@ -1270,22 +1271,22 @@ ERRORHANDLER:
+ 	}
+ 
+ 	PRINT_D(HOSTINF_DBG, "Deallocating connection parameters\n");
+-	if (pstrHostIFconnectAttr->bssid != NULL) {
++	if (pstrHostIFconnectAttr->bssid) {
+ 		kfree(pstrHostIFconnectAttr->bssid);
+ 		pstrHostIFconnectAttr->bssid = NULL;
+ 	}
+ 
+-	if (pstrHostIFconnectAttr->ssid != NULL) {
++	if (pstrHostIFconnectAttr->ssid) {
+ 		kfree(pstrHostIFconnectAttr->ssid);
+ 		pstrHostIFconnectAttr->ssid = NULL;
+ 	}
+ 
+-	if (pstrHostIFconnectAttr->ies != NULL) {
++	if (pstrHostIFconnectAttr->ies) {
+ 		kfree(pstrHostIFconnectAttr->ies);
+ 		pstrHostIFconnectAttr->ies = NULL;
+ 	}
+ 
+-	if (pu8CurrByte != NULL)
++	if (pu8CurrByte)
+ 		kfree(pu8CurrByte);
+ 
+ 	return result;
+@@ -1357,13 +1358,13 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 
+ 	memset(&strConnectInfo, 0, sizeof(tstrConnectInfo));
+ 
+-	if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult != NULL)	{
+-		if (hif_drv->strWILC_UsrConnReq.pu8bssid != NULL) {
++	if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult) {
++		if (hif_drv->strWILC_UsrConnReq.pu8bssid) {
+ 			memcpy(strConnectInfo.au8bssid,
+ 			       hif_drv->strWILC_UsrConnReq.pu8bssid, 6);
+ 		}
+ 
+-		if (hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs != NULL) {
++		if (hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs) {
+ 			strConnectInfo.ReqIEsLen = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+ 			strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->strWILC_UsrConnReq.ConnReqIEsLen, GFP_KERNEL);
+ 			memcpy(strConnectInfo.pu8ReqIEs,
+@@ -1377,7 +1378,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 								   NULL,
+ 								   hif_drv->strWILC_UsrConnReq.u32UserConnectPvoid);
+ 
+-		if (strConnectInfo.pu8ReqIEs != NULL) {
++		if (strConnectInfo.pu8ReqIEs) {
+ 			kfree(strConnectInfo.pu8ReqIEs);
+ 			strConnectInfo.pu8ReqIEs = NULL;
+ 		}
+@@ -1405,12 +1406,12 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 
+ 	eth_zero_addr(u8ConnectedSSID);
+ 
+-	if (join_req != NULL && join_req_drv == hif_drv) {
++	if (join_req && join_req_drv == hif_drv) {
+ 		kfree(join_req);
+ 		join_req = NULL;
+ 	}
+ 
+-	if (info_element != NULL && join_req_drv == hif_drv) {
++	if (info_element && join_req_drv == hif_drv) {
+ 		kfree(info_element);
+ 		info_element = NULL;
+ 	}
+@@ -1433,8 +1434,8 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+ 		PRINT_D(HOSTINF_DBG, "State: Scanning, parsing network information received\n");
+ 		parse_network_info(pstrRcvdNetworkInfo->buffer, &pstrNetworkInfo);
+-		if ((pstrNetworkInfo == NULL)
+-		    || (hif_drv->strWILC_UsrScanReq.pfUserScanResult == NULL)) {
++		if ((!pstrNetworkInfo) ||
++		    (!hif_drv->strWILC_UsrScanReq.pfUserScanResult)) {
+ 			PRINT_ER("driver is null\n");
+ 			result = -EINVAL;
+ 			goto done;
+@@ -1442,8 +1443,8 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 
+ 		for (i = 0; i < hif_drv->strWILC_UsrScanReq.u32RcvdChCount; i++) {
+ 
+-			if ((hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid != NULL) &&
+-			    (pstrNetworkInfo->au8bssid != NULL)) {
++			if ((hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid) &&
++			    (pstrNetworkInfo->au8bssid)) {
+ 				if (memcmp(hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid,
+ 					   pstrNetworkInfo->au8bssid, 6) == 0) {
+ 					if (pstrNetworkInfo->s8rssi <= hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].s8rssi) {
+@@ -1464,8 +1465,8 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 			if (hif_drv->strWILC_UsrScanReq.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
+ 				hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[hif_drv->strWILC_UsrScanReq.u32RcvdChCount].s8rssi = pstrNetworkInfo->s8rssi;
+ 
+-				if ((hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[hif_drv->strWILC_UsrScanReq.u32RcvdChCount].au8bssid != NULL)
+-				    && (pstrNetworkInfo->au8bssid != NULL)) {
++				if (hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[hif_drv->strWILC_UsrScanReq.u32RcvdChCount].au8bssid &&
++				    pstrNetworkInfo->au8bssid) {
+ 					memcpy(hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[hif_drv->strWILC_UsrScanReq.u32RcvdChCount].au8bssid,
+ 					       pstrNetworkInfo->au8bssid, 6);
+ 
+@@ -1491,12 +1492,12 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 	}
+ 
+ done:
+-	if (pstrRcvdNetworkInfo->buffer != NULL) {
++	if (pstrRcvdNetworkInfo->buffer) {
+ 		kfree(pstrRcvdNetworkInfo->buffer);
+ 		pstrRcvdNetworkInfo->buffer = NULL;
+ 	}
+ 
+-	if (pstrNetworkInfo != NULL) {
++	if (pstrNetworkInfo) {
+ 		DeallocateNetworkInfo(pstrNetworkInfo);
+ 		pstrNetworkInfo = NULL;
+ 	}
+@@ -1530,8 +1531,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 	if ((hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) ||
+ 	    (hif_drv->enuHostIFstate == HOST_IF_CONNECTED) ||
+ 	    hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+-		if ((pstrRcvdGnrlAsyncInfo->buffer == NULL) ||
+-		    (hif_drv->strWILC_UsrConnReq.pfUserConnectResult == NULL)) {
++		if (!pstrRcvdGnrlAsyncInfo->buffer ||
++		    !hif_drv->strWILC_UsrConnReq.pfUserConnectResult) {
+ 			PRINT_ER("driver is null\n");
+ 			return -EINVAL;
+ 		}
+@@ -1581,7 +1582,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 
+ 						if (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+ 							PRINT_INFO(HOSTINF_DBG, "Association response received : Successful connection status\n");
+-							if (pstrConnectRespInfo->pu8RespIEs != NULL) {
++							if (pstrConnectRespInfo->pu8RespIEs) {
+ 								strConnectInfo.u16RespIEsLen = pstrConnectRespInfo->u16RespIEsLen;
+ 
+ 
+@@ -1591,7 +1592,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 							}
+ 						}
+ 
+-						if (pstrConnectRespInfo != NULL) {
++						if (pstrConnectRespInfo) {
+ 							DeallocateAssocRespInfo(pstrConnectRespInfo);
+ 							pstrConnectRespInfo = NULL;
+ 						}
+@@ -1609,7 +1610,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				eth_zero_addr(u8ConnectedSSID);
+ 			}
+ 
+-			if (hif_drv->strWILC_UsrConnReq.pu8bssid != NULL) {
++			if (hif_drv->strWILC_UsrConnReq.pu8bssid) {
+ 				PRINT_D(HOSTINF_DBG, "Retrieving actual BSSID from AP\n");
+ 				memcpy(strConnectInfo.au8bssid, hif_drv->strWILC_UsrConnReq.pu8bssid, 6);
+ 
+@@ -1621,7 +1622,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			}
+ 
+ 
+-			if (hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs != NULL) {
++			if (hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs) {
+ 				strConnectInfo.ReqIEsLen = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+ 				strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->strWILC_UsrConnReq.ConnReqIEsLen, GFP_KERNEL);
+ 				memcpy(strConnectInfo.pu8ReqIEs,
+@@ -1654,12 +1655,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				scan_while_connected = false;
+ 			}
+ 
+-			if (strConnectInfo.pu8RespIEs != NULL) {
++			if (strConnectInfo.pu8RespIEs) {
+ 				kfree(strConnectInfo.pu8RespIEs);
+ 				strConnectInfo.pu8RespIEs = NULL;
+ 			}
+ 
+-			if (strConnectInfo.pu8ReqIEs != NULL) {
++			if (strConnectInfo.pu8ReqIEs) {
+ 				kfree(strConnectInfo.pu8ReqIEs);
+ 				strConnectInfo.pu8ReqIEs = NULL;
+ 			}
+@@ -1684,7 +1685,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			strDisconnectNotifInfo.ie = NULL;
+ 			strDisconnectNotifInfo.ie_len = 0;
+ 
+-			if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult != NULL)	{
++			if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult) {
+ 				g_obtainingIP = false;
+ 				host_int_set_power_mgmt(hif_drv, 0, 0);
+ 
+@@ -1706,12 +1707,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
+ 			kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
+ 
+-			if (join_req != NULL && join_req_drv == hif_drv) {
++			if (join_req && join_req_drv == hif_drv) {
+ 				kfree(join_req);
+ 				join_req = NULL;
+ 			}
+ 
+-			if (info_element != NULL && join_req_drv == hif_drv) {
++			if (info_element && join_req_drv == hif_drv) {
+ 				kfree(info_element);
+ 				info_element = NULL;
+ 			}
+@@ -1720,7 +1721,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			scan_while_connected = false;
+ 
+ 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
+-			   (hif_drv->strWILC_UsrScanReq.pfUserScanResult != NULL)) {
++			   (hif_drv->strWILC_UsrScanReq.pfUserScanResult)) {
+ 			PRINT_D(HOSTINF_DBG, "Received MAC_DISCONNECTED from the FW while scanning\n");
+ 			PRINT_D(HOSTINF_DBG, "\n\n<< Abort the running Scan >>\n\n");
+ 
+@@ -1732,7 +1733,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 
+ 	}
+ 
+-	if (pstrRcvdGnrlAsyncInfo->buffer != NULL) {
++	if (pstrRcvdGnrlAsyncInfo->buffer) {
+ 		kfree(pstrRcvdGnrlAsyncInfo->buffer);
+ 		pstrRcvdGnrlAsyncInfo->buffer = NULL;
+ 	}
+@@ -1778,7 +1779,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len, GFP_KERNEL);
+ 
+-			if (pu8keybuf == NULL) {
++			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
+ 			}
+@@ -1803,7 +1804,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+-			if (pu8keybuf == NULL) {
++			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send Key\n");
+ 				return -1;
+ 			}
+@@ -1850,13 +1851,13 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 	case WPARxGtk:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+-			if (pu8keybuf == NULL) {
++			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -1;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+ 
+-			if (pstrHostIFkeyAttr->attr.wpa.seq != NULL)
++			if (pstrHostIFkeyAttr->attr.wpa.seq)
+ 				memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
+ 
+ 			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
+@@ -1927,9 +1928,7 @@ _WPARxGtk_end_case_:
+ 
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 
+-
+-
+-			if (pu8keybuf == NULL) {
++			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -1;
+ 				goto _WPAPtk_end_case_;
+@@ -1962,9 +1961,7 @@ _WPARxGtk_end_case_:
+ 
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+ 
+-
+-
+-			if (pu8keybuf == NULL) {
++			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -1;
+ 				goto _WPAPtk_end_case_;
+@@ -2000,7 +1997,7 @@ _WPAPtk_end_case_:
+ 		PRINT_D(HOSTINF_DBG, "Handling PMKSA key\n");
+ 
+ 		pu8keybuf = kmalloc((pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
+-		if (pu8keybuf == NULL) {
++		if (!pu8keybuf) {
+ 			PRINT_ER("No buffer to send PMKSA Key\n");
+ 			return -1;
+ 		}
+@@ -2073,7 +2070,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 			hif_drv->strWILC_UsrScanReq.pfUserScanResult = NULL;
+ 		}
+ 
+-		if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult != NULL)	{
++		if (hif_drv->strWILC_UsrConnReq.pfUserConnectResult) {
+ 			if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
+ 				PRINT_D(HOSTINF_DBG, "Upper layer requested termination of connection\n");
+ 				del_timer(&hif_drv->hConnectTimer);
+@@ -2097,12 +2094,12 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 		hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
+ 		kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
+ 
+-		if (join_req != NULL && join_req_drv == hif_drv) {
++		if (join_req && join_req_drv == hif_drv) {
+ 			kfree(join_req);
+ 			join_req = NULL;
+ 		}
+ 
+-		if (info_element != NULL && join_req_drv == hif_drv) {
++		if (info_element && join_req_drv == hif_drv) {
+ 			kfree(info_element);
+ 			info_element = NULL;
+ 		}
+@@ -2306,7 +2303,8 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 	strWID.type = WID_BIN;
+ 	strWID.size = pstrSetBeaconParam->head_len + pstrSetBeaconParam->tail_len + 16;
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2359,7 +2357,7 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
+ 	strWID.size = sizeof(char);
+ 	strWID.val = &del_beacon;
+ 
+-	if (strWID.val == NULL)
++	if (!strWID.val)
+ 		return;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2431,7 +2429,8 @@ static void Handle_AddStation(struct host_if_drv *hif_drv,
+ 	strWID.size = WILC_ADD_STA_LENGTH + pstrStationParam->u8NumRates;
+ 
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2464,7 +2463,8 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
+ 	PRINT_D(HOSTINF_DBG, "Handling delete station\n");
+ 
+ 	strWID.val = kmalloc((pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2505,7 +2505,8 @@ static void Handle_DelStation(struct host_if_drv *hif_drv,
+ 	PRINT_D(HOSTINF_DBG, "Handling delete station\n");
+ 
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2534,7 +2535,8 @@ static void Handle_EditStation(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling edit station\n");
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2567,7 +2569,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 		pstrHostIfRemainOnChan->u16Channel = hif_drv->strHostIfRemainOnChan.u16Channel;
+ 	}
+ 
+-	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult != NULL) {
++	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+ 		PRINT_INFO(GENERIC_DBG, "Required to remain on chan while scanning return\n");
+ 		hif_drv->u8RemainOnChan_pendingreq = 1;
+ 		result = -EBUSY;
+@@ -2593,7 +2595,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	strWID.size = 2;
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+ 
+-	if (strWID.val == NULL) {
++	if (!strWID.val) {
+ 		result = -ENOMEM;
+ 		goto ERRORHANDLER;
+ 	}
+@@ -2636,7 +2638,8 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 	strWID.id = (u16)WID_REGISTER_FRAME;
+ 	strWID.type = WID_STR;
+ 	strWID.val = kmalloc(sizeof(u16) + 2, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		return -ENOMEM;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2674,7 +2677,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 		strWID.size = 2;
+ 		strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+ 
+-		if (strWID.val == NULL)
++		if (!strWID.val)
+ 			PRINT_ER("Failed to allocate memory\n");
+ 
+ 		strWID.val[0] = u8remain_on_chan_flag;
+@@ -2757,7 +2760,8 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
+ 	strWID.type = WID_BIN;
+ 	strWID.size = sizeof(struct set_multicast) + ((strHostIfSetMulti->cnt) * ETH_ALEN);
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+-	if (strWID.val == NULL)
++
++	if (!strWID.val)
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = strWID.val;
+@@ -2844,7 +2848,7 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+ 	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				 get_id_from_handler(hif_drv));
+ 
+-	if (strWID.val != NULL)
++	if (strWID.val)
+ 		kfree(strWID.val);
+ 
+ 	return result;
+@@ -2882,8 +2886,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+ 	if (result)
+ 		PRINT_D(HOSTINF_DBG, "Couldn't delete BA Session\n");
+ 
+-
+-	if (strWID.val != NULL)
++	if (strWID.val)
+ 		kfree(strWID.val);
+ 
+ 	up(&hif_sema_wait_response);
+@@ -2914,7 +2917,8 @@ static int hostIFthread(void *pvArg)
+ 			continue;
+ 		}
+ 
+-		if (msg.id == HOST_IF_MSG_CONNECT && hif_drv->strWILC_UsrScanReq.pfUserScanResult != NULL) {
++		if (msg.id == HOST_IF_MSG_CONNECT &&
++		    hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+ 			PRINT_D(HOSTINF_DBG, "Requeue connect request till scan done received\n");
+ 			wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 			usleep_range(2 * 1000, 2 * 1000);
+@@ -3282,9 +3286,11 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 		PRINT_ER("driver is null\n");
+ 		return -EFAULT;
+ 	}
+-	if (pu8RxMic != NULL)
++
++	if (pu8RxMic)
+ 		u8KeyLen += RX_MIC_KEY_LEN;
+-	if (pu8TxMic != NULL)
++
++	if (pu8TxMic)
+ 		u8KeyLen += TX_MIC_KEY_LEN;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3302,14 +3308,14 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	msg.body.key_info.attr.wpa.key = kmalloc(u8PtkKeylen, GFP_KERNEL);
+ 	memcpy(msg.body.key_info.attr.wpa.key, pu8Ptk, u8PtkKeylen);
+ 
+-	if (pu8RxMic != NULL) {
++	if (pu8RxMic) {
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
+ 		if (INFO) {
+ 			for (i = 0; i < RX_MIC_KEY_LEN; i++)
+ 				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, pu8RxMic[i]);
+ 		}
+ 	}
+-	if (pu8TxMic != NULL) {
++	if (pu8TxMic) {
+ 		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
+ 		if (INFO) {
+ 			for (i = 0; i < TX_MIC_KEY_LEN; i++)
+@@ -3348,12 +3354,13 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+-
+-	if (pu8RxMic != NULL)
++	if (pu8RxMic)
+ 		u8KeyLen += RX_MIC_KEY_LEN;
+-	if (pu8TxMic != NULL)
++
++	if (pu8TxMic)
+ 		u8KeyLen += TX_MIC_KEY_LEN;
+-	if (KeyRSC != NULL) {
++
++	if (KeyRSC) {
+ 		msg.body.key_info.attr.wpa.seq = kmalloc(u32KeyRSClen, GFP_KERNEL);
+ 		memcpy(msg.body.key_info.attr.wpa.seq, KeyRSC, u32KeyRSClen);
+ 	}
+@@ -3373,10 +3380,11 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	msg.body.key_info.attr.wpa.key = kmalloc(u8KeyLen, GFP_KERNEL);
+ 	memcpy(msg.body.key_info.attr.wpa.key, pu8RxGtk, u8GtkKeylen);
+ 
+-	if (pu8RxMic != NULL) {
++	if (pu8RxMic) {
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
+ 	}
+-	if (pu8TxMic != NULL) {
++
++	if (pu8TxMic) {
+ 		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
+ 	}
+ 
+@@ -3544,12 +3552,12 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	struct host_if_msg msg;
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+-	if (!hif_drv || pfConnectResult == NULL) {
++	if (!hif_drv || !pfConnectResult) {
+ 		PRINT_ER("Driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+-	if (pJoinParams == NULL) {
++	if (!pJoinParams) {
+ 		PRINT_ER("Unable to Join - JoinParams is NULL\n");
+ 		return -EFAULT;
+ 	}
+@@ -3566,18 +3574,18 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	msg.body.con_info.params = pJoinParams;
+ 	msg.drv = hif_drv ;
+ 
+-	if (pu8bssid != NULL) {
++	if (pu8bssid) {
+ 		msg.body.con_info.bssid = kmalloc(6, GFP_KERNEL);
+ 		memcpy(msg.body.con_info.bssid, pu8bssid, 6);
+ 	}
+ 
+-	if (pu8ssid != NULL) {
++	if (pu8ssid) {
+ 		msg.body.con_info.ssid_len = ssidLen;
+ 		msg.body.con_info.ssid = kmalloc(ssidLen, GFP_KERNEL);
+ 		memcpy(msg.body.con_info.ssid, pu8ssid, ssidLen);
+ 	}
+ 
+-	if (pu8IEs != NULL) {
++	if (pu8IEs) {
+ 		msg.body.con_info.ies_len = IEsLen;
+ 		msg.body.con_info.ies = kmalloc(IEsLen, GFP_KERNEL);
+ 		memcpy(msg.body.con_info.ies, pu8IEs, IEsLen);
+@@ -3900,8 +3908,7 @@ s32 host_int_get_rssi(struct host_if_drv *hif_drv, s8 *ps8Rssi)
+ 
+ 	down(&hif_drv->hSemGetRSSI);
+ 
+-
+-	if (ps8Rssi == NULL) {
++	if (!ps8Rssi) {
+ 		PRINT_ER("RSS pointer value is null");
+ 		return -EFAULT;
+ 	}
+@@ -3928,8 +3935,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 
+ 	down(&hif_drv->hSemGetLINKSPEED);
+ 
+-
+-	if (ps8lnkspd == NULL) {
++	if (!ps8lnkspd) {
+ 		PRINT_ER("LINKSPEED pointer value is null");
+ 		return -EFAULT;
+ 	}
+@@ -3969,7 +3975,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	struct host_if_msg msg;
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+-	if (!hif_drv || ScanResult == NULL) {
++	if (!hif_drv || !ScanResult) {
+ 		PRINT_ER("hif_drv or ScanResult = NULL\n");
+ 		return -EFAULT;
+ 	}
+@@ -3978,7 +3984,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 
+ 	msg.id = HOST_IF_MSG_SCAN;
+ 
+-	if (pstrHiddenNetwork != NULL) {
++	if (pstrHiddenNetwork) {
+ 		msg.body.scan_info.hidden_network.pstrHiddenNetworkInfo = pstrHiddenNetwork->pstrHiddenNetworkInfo;
+ 		msg.body.scan_info.hidden_network.u8ssidnum = pstrHiddenNetwork->u8ssidnum;
+ 
+@@ -4572,7 +4578,8 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
+ 	pstrSetBeaconParam->head_len = u32HeadLen;
+ 	pstrSetBeaconParam->head = kmalloc(u32HeadLen, GFP_KERNEL);
+-	if (pstrSetBeaconParam->head == NULL) {
++
++	if (!pstrSetBeaconParam->head) {
+ 		result = -ENOMEM;
+ 		goto ERRORHANDLER;
+ 	}
+@@ -4581,7 +4588,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 
+ 	if (u32TailLen > 0) {
+ 		pstrSetBeaconParam->tail = kmalloc(u32TailLen, GFP_KERNEL);
+-		if (pstrSetBeaconParam->tail == NULL) {
++		if (!pstrSetBeaconParam->tail) {
+ 			result = -ENOMEM;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -4596,10 +4603,10 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 
+ ERRORHANDLER:
+ 	if (result) {
+-		if (pstrSetBeaconParam->head != NULL)
++		if (pstrSetBeaconParam->head)
+ 			kfree(pstrSetBeaconParam->head);
+ 
+-		if (pstrSetBeaconParam->tail != NULL)
++		if (pstrSetBeaconParam->tail)
+ 			kfree(pstrSetBeaconParam->tail);
+ 	}
+ 
+@@ -4682,7 +4689,7 @@ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ 	msg.id = HOST_IF_MSG_DEL_STATION;
+ 	msg.drv = hif_drv;
+ 
+-	if (pu8MacAddr == NULL)
++	if (!pu8MacAddr)
+ 		memset(pstrDelStationMsg->mac_addr, 255, ETH_ALEN);
+ 	else
+ 		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
+@@ -4862,7 +4869,8 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 	u16IEsLen = ptstrNetworkInfo->u16IEsLen;
+ 
+ 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
+-	if (pNewJoinBssParam != NULL) {
++
++	if (pNewJoinBssParam) {
+ 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
+ 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
+ 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
+@@ -5006,7 +5014,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 
+ void host_int_freeJoinParams(void *pJoinParams)
+ {
+-	if ((struct bss_param *)pJoinParams != NULL)
++	if ((struct bss_param *)pJoinParams)
+ 		kfree((struct bss_param *)pJoinParams);
+ 	else
+ 		PRINT_ER("Unable to FREE null pointer\n");
+-- 
+1.9.1
 
-Regards
-Yin, Fengwei
