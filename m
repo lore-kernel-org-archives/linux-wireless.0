@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:54590 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905AbbJZJND (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 05:13:03 -0400
-Message-ID: <562DEF4C.1070103@atmel.com> (sfid-20151026_101307_458318_7249C71C)
-Date: Mon, 26 Oct 2015 18:15:56 +0900
-From: glen lee <glen.lee@atmel.com>
+Received: from mga11.intel.com ([192.55.52.93]:39221 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754734AbbJOHEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 03:04:55 -0400
+Date: Thu, 15 Oct 2015 15:04:15 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 28/40] staging: wilc1000: rename variable
+ gu8FlushedJoinReq
+Message-ID: <201510151525.jxBsHYPh%fengguang.wu@intel.com> (sfid-20151015_090500_126125_2DEDB70C)
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
-	<adel.noureldin@atmel.com>, <tony.cho@atmel.com>,
-	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
-Subject: Re: [PATCH 02/28] staging: wicl1000: isr_uh_routine: use netdev private
- wilc
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com> <1445578124-31486-2-git-send-email-glen.lee@atmel.com> <20151025012944.GA22184@kroah.com> <562D8B2B.2000308@atmel.com> <20151026082340.GA4643@kroah.com>
-In-Reply-To: <20151026082340.GA4643@kroah.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-28-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Leo,
+
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
+
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
 
-On 2015년 10월 26일 17:23, Greg KH wrote:
-> On Mon, Oct 26, 2015 at 11:08:43AM +0900, glen lee wrote:
->>
->> On 2015년 10월 25일 10:29, Greg KH wrote:
->>> On Fri, Oct 23, 2015 at 02:28:18PM +0900, Glen Lee wrote:
->>>> Use netdev private member wilc instead of g_linux_wlan and Change argument wilc
->>>> with dev in the function request_threaded_irq to pass back to handler
->>>> the function isr_uh_routine.
->>>>
->>>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->>>> ---
->>>>   drivers/staging/wilc1000/linux_wlan.c | 9 +++++++--
->>>>   1 file changed, 7 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
->>>> index b036b96..7b0614d 100644
->>>> --- a/drivers/staging/wilc1000/linux_wlan.c
->>>> +++ b/drivers/staging/wilc1000/linux_wlan.c
->>>> @@ -229,10 +229,15 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
->>>>   #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->>>>   static irqreturn_t isr_uh_routine(int irq, void *user_data)
->>>>   {
->>>> +	perInterface_wlan_t *nic;
->>>> +	struct wilc *wl;
->>>> +
->>>> +	nic = netdev_priv(usedata);
->>> This patch breaks the build, which means you didn't even test build the
->>> series :(
->> Hi greg,
->>
->> I built every patches I'v posted and also there is no build error for this patch.
-> I don't believe you, just look at the lines, it's obviously incorrect.
->
->> Would you please reconsider this patch again?
-> Why would I ever accept a patch that is obviously wrong?  I would be a
-> horrible subsystem maintainer, and you would not want me to merge an
-> obviously broken patch from someone else into this driver, breaking it,
-> right?
+sparse warnings: (new ones prefixed by >>)
 
-True. Sorry for wasting your time. I didn't look at the code carefully but just built on SDIO not SPI as usual.
-I should have been more careful about this.
-Again, sorry for the noise. I'll do this patches again.
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:265:4: sparse: symbol 'gu8FlushedInfoElemAsoc' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'gu8Flushed11iMode' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2210:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2350:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2350:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2350:38:    right side has type int
 
->
-> I have no idea why you would expect me to ever accept this patch as-is.
->
-> greg k-h
+Please review and possibly fold the followup patch.
 
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
