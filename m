@@ -1,1021 +1,2462 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14528 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751721AbbJWIBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 04:01:33 -0400
-Date: Fri, 23 Oct 2015 16:00:32 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Vivek Natarajan <nataraja@qti.qualcomm.com>
-Cc: kbuild-all@01.org, kvalo@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: Add support for pktlog in QCA99X0
-Message-ID: <201510231559.X740AlW1%fengguang.wu@intel.com> (sfid-20151023_100137_189275_B0E04B71)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6530 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbbJOE3Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 00:29:24 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 35/40] staging: wilc1000: rename variable s32Error
+Date: Thu, 15 Oct 2015 13:25:16 +0900
+Message-ID: <1444883121-31757-35-git-send-email-tony.cho@atmel.com> (sfid-20151015_064657_767948_9C3D9C22)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <1445580203-3273-1-git-send-email-nataraja@qti.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This patch renames variable s32Error to result
+to avoid CamelCase naming convention.
 
-Hi Vivek,
-
-[auto build test ERROR on next-20151022 -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
-
-url:    https://github.com/0day-ci/linux/commits/Vivek-Natarajan/ath10k-Add-support-for-pktlog-in-QCA99X0/20151023-140452
-config: i386-allmodconfig (attached as .config)
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=i386 
-
-All errors (new ones prefixed by >>):
-
->> ERROR: "__tracepoint_ath10k_htt_pktlog" undefined!
-
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/staging/wilc1000/host_interface.c | 784 ++++++++++++++----------------
+ 1 file changed, 371 insertions(+), 413 deletions(-)
 
---+QahgC5+KEYLbs62
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 704419f..4270ef1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -330,8 +330,7 @@ static struct host_if_drv *get_handler_from_id(int id)
+ static s32 Handle_SetChannel(struct host_if_drv *hif_drv,
+ 			     struct channel_attr *pstrHostIFSetChan)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_CURRENT_CHANNEL;
+@@ -341,21 +340,21 @@ static s32 Handle_SetChannel(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++
++	if (result) {
+ 		PRINT_ER("Failed to set channel\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
+ 				   struct drv_handler *pstrHostIfSetDrvHandler)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_SET_DRV_HANDLER;
+@@ -363,25 +362,24 @@ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
+ 	strWID.val = (s8 *)&(pstrHostIfSetDrvHandler->u32Address);
+ 	strWID.size = sizeof(u32);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   pstrHostIfSetDrvHandler->u32Address);
+ 
+ 	if (!hif_drv)
+ 		up(&hif_sema_driver);
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to set driver handler\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
+ 				   struct op_mode *pstrHostIfSetOperationMode)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_SET_OPERATION_MODE;
+@@ -389,25 +387,23 @@ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
+ 	strWID.val = (s8 *)&(pstrHostIfSetOperationMode->u32Mode);
+ 	strWID.size = sizeof(u32);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-
+ 	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
+ 		up(&hif_sema_driver);
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to set driver handler\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	char firmwareIPAddress[4] = {0};
+ 
+@@ -423,26 +419,24 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 	strWID.val = (u8 *)pu8IPAddr;
+ 	strWID.size = IP_ALEN;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-
+ 	host_int_get_ipaddress(hif_drv, firmwareIPAddress, idx);
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to set IP address\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "IP address set\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_IP_ADDRESS;
+@@ -450,7 +444,7 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 	strWID.val = kmalloc(IP_ALEN, GFP_KERNEL);
+ 	strWID.size = IP_ALEN;
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", strWID.val);
+@@ -462,7 +456,7 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
+ 		host_int_setup_ipaddress(hif_drv, set_ip[idx], idx);
+ 
+-	if (s32Error != 0) {
++	if (result != 0) {
+ 		PRINT_ER("Failed to get IP address\n");
+ 		return -EINVAL;
+ 	}
+@@ -471,14 +465,13 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", get_ip[idx]);
+ 	PRINT_INFO(HOSTINF_DBG, "\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
+ 				struct set_mac_addr *pstrHostIfSetMacAddress)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
+@@ -494,22 +487,21 @@ static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
+ 	strWID.size = ETH_ALEN;
+ 	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", strWID.val);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to set mac address\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+ 	kfree(mac_buf);
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+ 				struct get_mac_addr *pstrHostIfGetMacAddress)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_MAC_ADDR;
+@@ -517,21 +509,22 @@ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+ 	strWID.val = pstrHostIfGetMacAddress->u8MacAddress;
+ 	strWID.size = ETH_ALEN;
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++
++	if (result) {
+ 		PRINT_ER("Failed to get mac address\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 	up(&hif_sema_wait_response);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			   struct cfg_param_attr *strHostIFCfgParamAttr)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWIDList[32];
+ 	u8 u8WidCnt = 0;
+ 
+@@ -549,7 +542,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.bss_type = (u8)strHostIFCfgParamAttr->cfg_attr_info.bss_type;
+ 		} else {
+ 			PRINT_ER("check value 6 over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -563,7 +556,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.auth_type = (u8)strHostIFCfgParamAttr->cfg_attr_info.auth_type;
+ 		} else {
+ 			PRINT_ER("Impossible value \n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -577,7 +570,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.auth_timeout = strHostIFCfgParamAttr->cfg_attr_info.auth_timeout;
+ 		} else {
+ 			PRINT_ER("Range(1 ~ 65535) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -591,7 +584,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.power_mgmt_mode = (u8)strHostIFCfgParamAttr->cfg_attr_info.power_mgmt_mode;
+ 		} else {
+ 			PRINT_ER("Invalide power mode\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -605,7 +598,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.short_retry_limit = strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit;
+ 		} else {
+ 			PRINT_ER("Range(1~256) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -620,7 +613,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.long_retry_limit = strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit;
+ 		} else {
+ 			PRINT_ER("Range(1~256) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -635,7 +628,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.frag_threshold = strHostIFCfgParamAttr->cfg_attr_info.frag_threshold;
+ 		} else {
+ 			PRINT_ER("Threshold Range fail\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -649,7 +642,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.rts_threshold = strHostIFCfgParamAttr->cfg_attr_info.rts_threshold;
+ 		} else {
+ 			PRINT_ER("Threshold Range fail\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -663,7 +656,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.preamble_type = strHostIFCfgParamAttr->cfg_attr_info.preamble_type;
+ 		} else {
+ 			PRINT_ER("Preamle Range(0~2) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -677,7 +670,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.short_slot_allowed = (u8)strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed;
+ 		} else {
+ 			PRINT_ER("Short slot(2) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -691,7 +684,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.txop_prot_disabled = (u8)strHostIFCfgParamAttr->cfg_attr_info.txop_prot_disabled;
+ 		} else {
+ 			PRINT_ER("TXOP prot disable\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -705,7 +698,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.beacon_interval = strHostIFCfgParamAttr->cfg_attr_info.beacon_interval;
+ 		} else {
+ 			PRINT_ER("Beacon interval(1~65535) fail\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -719,7 +712,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.dtim_period = strHostIFCfgParamAttr->cfg_attr_info.dtim_period;
+ 		} else {
+ 			PRINT_ER("DTIM range(1~255) fail\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -733,7 +726,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.site_survey_enabled = (u8)strHostIFCfgParamAttr->cfg_attr_info.site_survey_enabled;
+ 		} else {
+ 			PRINT_ER("Site survey disable\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -747,7 +740,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.site_survey_scan_time = strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time;
+ 		} else {
+ 			PRINT_ER("Site survey scan time(1~65535) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -761,7 +754,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.active_scan_time = strHostIFCfgParamAttr->cfg_attr_info.active_scan_time;
+ 		} else {
+ 			PRINT_ER("Active scan time(1~65535) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -775,7 +768,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.passive_scan_time = strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time;
+ 		} else {
+ 			PRINT_ER("Passive scan time(1~65535) over\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+@@ -795,20 +788,21 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 			hif_drv->strCfgValues.curr_tx_rate = (u8)curr_tx_rate;
+ 		} else {
+ 			PRINT_ER("out of TX rate\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	s32Error = send_config_pkt(SET_CFG, strWIDList, u8WidCnt,
++
++	result = send_config_pkt(SET_CFG, strWIDList, u8WidCnt,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Error in setting CFG params\n");
+ 
+ ERRORHANDLER:
+ 	up(&hif_drv->gtOsCfgValuesSem);
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_wait_msg_q_empty(void)
+@@ -821,7 +815,7 @@ static s32 Handle_wait_msg_q_empty(void)
+ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 		       struct scan_attr *pstrHostIFscanAttr)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0;
+ 	u32 i;
+@@ -838,14 +832,14 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	if ((hif_drv->enuHostIFstate >= HOST_IF_SCANNING) && (hif_drv->enuHostIFstate < HOST_IF_CONNECTED)) {
+ 		PRINT_D(GENERIC_DBG, "Don't scan we are already in [%d] state\n", hif_drv->enuHostIFstate);
+ 		PRINT_ER("Already scan\n");
+-		s32Error = -EBUSY;
++		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+ 	if (g_obtainingIP || connecting) {
+ 		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP adresss is obtained\n");
+ 		PRINT_ER("Don't do obss scan\n");
+-		s32Error = -EBUSY;
++		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+@@ -921,16 +915,16 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	else if (hif_drv->enuHostIFstate == HOST_IF_IDLE)
+ 		scan_while_connected = false;
+ 
+-	s32Error = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
++	result = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send scan paramters config packet\n");
+ 	else
+ 		PRINT_D(HOSTINF_DBG, "Successfully sent SCAN params config packet\n");
+ 
+ ERRORHANDLER:
+-	if (s32Error) {
++	if (result) {
+ 		del_timer(&hif_drv->hScanTimer);
+ 		Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
+ 	}
+@@ -952,13 +946,13 @@ ERRORHANDLER:
+ 	if (pu8HdnNtwrksWidVal != NULL)
+ 		kfree(pu8HdnNtwrksWidVal);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
+ 			   enum scan_event enuEvent)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	u8 u8abort_running_scan;
+ 	struct wid strWID;
+ 
+@@ -973,17 +967,18 @@ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
+ 		strWID.val = (s8 *)&u8abort_running_scan;
+ 		strWID.size = sizeof(char);
+ 
+-		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++		result = send_config_pkt(SET_CFG, &strWID, 1,
+ 					   get_id_from_handler(hif_drv));
+-		if (s32Error) {
++
++		if (result) {
+ 			PRINT_ER("Failed to set abort running scan\n");
+-			s32Error = -EFAULT;
++			result = -EFAULT;
+ 		}
+ 	}
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("Driver handler is NULL\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+@@ -992,14 +987,14 @@ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
+ 		hif_drv->strWILC_UsrScanReq.pfUserScanResult = NULL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ u8 u8ConnectedSSID[6] = {0};
+ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 			  struct connect_attr *pstrHostIFconnectAttr)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWIDList[8];
+ 	u32 u32WidsCount = 0, dummyval = 0;
+ 	u8 *pu8CurrByte = NULL;
+@@ -1008,10 +1003,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	PRINT_D(GENERIC_DBG, "Handling connect request\n");
+ 
+ 	if (memcmp(pstrHostIFconnectAttr->bssid, u8ConnectedSSID, ETH_ALEN) == 0) {
+-
+-		s32Error = 0;
++		result = 0;
+ 		PRINT_ER("Trying to connect to an already connected AP, Discard connect request\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
+@@ -1019,7 +1013,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->params;
+ 	if (ptstrJoinBssParam == NULL) {
+ 		PRINT_ER("Required BSSID not found\n");
+-		s32Error = -ENOENT;
++		result = -ENOENT;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+@@ -1115,7 +1109,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		join_req = kmalloc(join_req_size, GFP_KERNEL);
+ 	}
+ 	if (strWIDList[u32WidsCount].val == NULL) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+@@ -1222,11 +1216,11 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		PRINT_D(GENERIC_DBG, "save bssid = %pM\n", u8ConnectedSSID);
+ 	}
+ 
+-	s32Error = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
++	result = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("failed to send config packet\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		goto ERRORHANDLER;
+ 	} else {
+ 		PRINT_D(GENERIC_DBG, "set HOST_IF_WAITING_CONN_RESP\n");
+@@ -1234,7 +1228,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	}
+ 
+ ERRORHANDLER:
+-	if (s32Error) {
++	if (result) {
+ 		tstrConnectInfo strConnectInfo;
+ 
+ 		del_timer(&hif_drv->hConnectTimer);
+@@ -1289,12 +1283,13 @@ ERRORHANDLER:
+ 
+ 	if (pu8CurrByte != NULL)
+ 		kfree(pu8CurrByte);
+-	return s32Error;
++
++	return result;
+ }
+ 
+ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0;
+ 	u8 *pu8CurrByte = NULL;
+@@ -1330,26 +1325,26 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ 
+ 	u32WidsCount++;
+ 
+-	s32Error = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
++	result = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
+ 				   get_id_from_handler(join_req_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("failed to send config packet\n");
+-		s32Error = -EINVAL;
++		result = -EINVAL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	tstrConnectInfo strConnectInfo;
+ 	struct wid strWID;
+ 	u16 u16DummyReasonCode = 0;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("Driver handler is NULL\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	hif_drv->enuHostIFstate = HOST_IF_IDLE;
+@@ -1393,9 +1388,9 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Sending disconnect request\n");
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send dissconect config packet\n");
+ 
+ 	hif_drv->strWILC_UsrConnReq.ssidLen = 0;
+@@ -1416,7 +1411,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 		info_element = NULL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+@@ -1424,10 +1419,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ {
+ 	u32 i;
+ 	bool bNewNtwrkFound;
+-
+-
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	tstrNetworkInfo *pstrNetworkInfo = NULL;
+ 	void *pJoinParams = NULL;
+ 
+@@ -1440,7 +1432,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 		if ((pstrNetworkInfo == NULL)
+ 		    || (hif_drv->strWILC_UsrScanReq.pfUserScanResult == NULL)) {
+ 			PRINT_ER("driver is null\n");
+-			s32Error = -EINVAL;
++			result = -EINVAL;
+ 			goto done;
+ 		}
+ 
+@@ -1505,13 +1497,13 @@ done:
+ 		pstrNetworkInfo = NULL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				    struct rcvd_async_info *pstrRcvdGnrlAsyncInfo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	u8 u8MsgType = 0;
+ 	u8 u8MsgID = 0;
+ 	u16 u16MsgLen = 0;
+@@ -1741,13 +1733,13 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 		pstrRcvdGnrlAsyncInfo->buffer = NULL;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ static int Handle_Key(struct host_if_drv *hif_drv,
+ 		      struct key_attr *pstrHostIFkeyAttr)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	struct wid strWIDList[5];
+ 	u8 i;
+@@ -1797,8 +1789,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWIDList[3].size = pstrHostIFkeyAttr->attr.wep.key_len;
+ 			strWIDList[3].val = (s8 *)pu8keybuf;
+ 
+-
+-			s32Error = send_config_pkt(SET_CFG, strWIDList, 4,
++			result = send_config_pkt(SET_CFG, strWIDList, 4,
+ 						   get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+ 
+@@ -1823,7 +1814,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.val = (s8 *)pu8keybuf;
+ 			strWID.size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
+ 
+-			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++			result = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & REMOVEKEY) {
+@@ -1836,7 +1827,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.val = s8idxarray;
+ 			strWID.size = 1;
+ 
+-			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++			result = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+ 		} else {
+ 			strWID.id = (u16)WID_KEY_ID;
+@@ -1846,7 +1837,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 
+ 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
+ 
+-			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++			result = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+ 		}
+ 		up(&hif_drv->hSemTestKeyBlock);
+@@ -1879,7 +1870,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWIDList[1].val = (s8 *)pu8keybuf;
+ 			strWIDList[1].size = RX_MIC_KEY_MSG_LEN;
+ 
+-			s32Error = send_config_pkt(SET_CFG, strWIDList, 2,
++			result = send_config_pkt(SET_CFG, strWIDList, 2,
+ 						   get_id_from_handler(hif_drv));
+ 
+ 			kfree(pu8keybuf);
+@@ -1912,7 +1903,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			strWID.val = (s8 *)pu8keybuf;
+ 			strWID.size = RX_MIC_KEY_MSG_LEN;
+ 
+-			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++			result = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+ 
+ 			kfree(pu8keybuf);
+@@ -1957,7 +1948,7 @@ _WPARxGtk_end_case_:
+ 			strWIDList[1].val = (s8 *)pu8keybuf;
+ 			strWIDList[1].size = PTK_KEY_MSG_LEN + 1;
+ 
+-			s32Error = send_config_pkt(SET_CFG, strWIDList, 2,
++			result = send_config_pkt(SET_CFG, strWIDList, 2,
+ 						   get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+ 			up(&hif_drv->hSemTestKeyBlock);
+@@ -1986,7 +1977,7 @@ _WPARxGtk_end_case_:
+ 			strWID.val = (s8 *)pu8keybuf;
+ 			strWID.size = PTK_KEY_MSG_LEN;
+ 
+-			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++			result = send_config_pkt(SET_CFG, &strWID, 1,
+ 						   get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+ 			up(&hif_drv->hSemTestKeyBlock);
+@@ -2022,25 +2013,24 @@ _WPAPtk_end_case_:
+ 		strWID.val = (s8 *)pu8keybuf;
+ 		strWID.size = (pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
+ 
+-		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++		result = send_config_pkt(SET_CFG, &strWID, 1,
+ 					   get_id_from_handler(hif_drv));
+ 
+ 		kfree(pu8keybuf);
+ 		break;
+ 	}
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send key config packet\n");
+ 
+-
+-	return s32Error;
++	return result;
+ }
+ 
+ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ {
+ 	struct wid strWID;
+ 
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	u16 u16DummyReasonCode = 0;
+ 
+ 	strWID.id = (u16)WID_DISCONNECT;
+@@ -2057,10 +2047,10 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 
+ 	eth_zero_addr(u8ConnectedSSID);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to send dissconect config packet\n");
+ 	} else {
+ 		tstrDisconnectNotifInfo strDisconnectNotifInfo;
+@@ -2131,8 +2121,7 @@ void resolve_disconnect_aberration(struct host_if_drv *hif_drv)
+ 
+ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_CURRENT_CHANNEL;
+@@ -2142,25 +2131,22 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting channel value\n");
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to get channel number\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+ 	up(&hif_drv->hSemGetCHNL);
+ 
+-	return s32Error;
+-
+-
+-
++	return result;
+ }
+ 
+ static void Handle_GetRssi(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	strWID.id = (u16)WID_RSSI;
+@@ -2170,11 +2156,11 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting RSSI value\n");
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to get RSSI value\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+ 	up(&hif_drv->hSemGetRSSI);
+@@ -2185,7 +2171,7 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
+ 
+ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	link_speed = 0;
+@@ -2197,11 +2183,11 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting LINKSPEED value\n");
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to get LINKSPEED value\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+ 	up(&(hif_drv->hSemGetLINKSPEED));
+@@ -2212,7 +2198,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
+ {
+ 	struct wid strWIDList[5];
+-	u32 u32WidsCount = 0, s32Error = 0;
++	u32 u32WidsCount = 0, result = 0;
+ 
+ 	strWIDList[u32WidsCount].id = WID_LINKSPEED;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+@@ -2244,10 +2230,10 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	strWIDList[u32WidsCount].val = (s8 *)(&(pstrStatistics->u32TxFailureCount));
+ 	u32WidsCount++;
+ 
+-	s32Error = send_config_pkt(GET_CFG, strWIDList, u32WidsCount,
++	result = send_config_pkt(GET_CFG, strWIDList, u32WidsCount,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send scan paramters config packet\n");
+ 
+ 	up(&hif_sema_wait_response);
+@@ -2258,8 +2244,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 				   struct sta_inactive_t *strHostIfStaInactiveT)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	u8 *stamac;
+ 	struct wid strWID;
+ 
+@@ -2275,11 +2260,10 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
+ 
+-
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to SET incative time\n");
+ 		return -EFAULT;
+ 	}
+@@ -2290,11 +2274,10 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 	strWID.val = (s8 *)&inactive_time;
+ 	strWID.size = sizeof(u32);
+ 
+-
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to get incative time\n");
+ 		return -EFAULT;
+ 	}
+@@ -2303,16 +2286,13 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 
+ 	up(&hif_drv->hSemInactiveTime);
+ 
+-	return s32Error;
+-
+-
+-
++	return result;
+ }
+ 
+ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 			     struct beacon_attr *pstrSetBeaconParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2353,9 +2333,9 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
+ 	pu8CurrByte += pstrSetBeaconParam->tail_len;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send add beacon config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2366,7 +2346,7 @@ ERRORHANDLER:
+ 
+ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2382,9 +2362,9 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Deleting BEACON\n");
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send delete beacon config packet\n");
+ }
+ 
+@@ -2437,7 +2417,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ static void Handle_AddStation(struct host_if_drv *hif_drv,
+ 			      struct add_sta_param *pstrStationParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2453,9 +2433,9 @@ static void Handle_AddStation(struct host_if_drv *hif_drv,
+ 	pu8CurrByte = strWID.val;
+ 	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error != 0)
++	if (result != 0)
+ 		PRINT_ER("Failed to send add station config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2466,7 +2446,7 @@ ERRORHANDLER:
+ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
+ 			     struct del_all_sta *pstrDelAllStaParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+@@ -2496,9 +2476,9 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
+ 		pu8CurrByte += ETH_ALEN;
+ 	}
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send add station config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2510,7 +2490,7 @@ ERRORHANDLER:
+ static void Handle_DelStation(struct host_if_drv *hif_drv,
+ 			      struct del_sta *pstrDelStaParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2528,9 +2508,9 @@ static void Handle_DelStation(struct host_if_drv *hif_drv,
+ 
+ 	memcpy(pu8CurrByte, pstrDelStaParam->mac_addr, ETH_ALEN);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send add station config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2540,7 +2520,7 @@ ERRORHANDLER:
+ static void Handle_EditStation(struct host_if_drv *hif_drv,
+ 			       struct add_sta_param *pstrStationParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2556,9 +2536,9 @@ static void Handle_EditStation(struct host_if_drv *hif_drv,
+ 	pu8CurrByte = strWID.val;
+ 	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send edit station config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2569,7 +2549,7 @@ ERRORHANDLER:
+ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 			       struct remain_ch *pstrHostIfRemainOnChan)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid strWID;
+ 
+@@ -2586,18 +2566,18 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult != NULL) {
+ 		PRINT_INFO(GENERIC_DBG, "Required to remain on chan while scanning return\n");
+ 		hif_drv->u8RemainOnChan_pendingreq = 1;
+-		s32Error = -EBUSY;
++		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 	if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
+ 		PRINT_INFO(GENERIC_DBG, "Required to remain on chan while connecting return\n");
+-		s32Error = -EBUSY;
++		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+ 	if (g_obtainingIP || connecting) {
+ 		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP adresss is obtained\n");
+-		s32Error = -EBUSY;
++		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+@@ -2610,16 +2590,16 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	strWID.val = kmalloc(strWID.size, GFP_KERNEL);
+ 
+ 	if (strWID.val == NULL) {
+-		s32Error = -ENOMEM;
++		result = -ENOMEM;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+ 	strWID.val[0] = u8remain_on_chan_flag;
+ 	strWID.val[1] = (s8)pstrHostIfRemainOnChan->u16Channel;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error != 0)
++	if (result != 0)
+ 		PRINT_ER("Failed to set remain on channel\n");
+ 
+ ERRORHANDLER:
+@@ -2636,13 +2616,14 @@ ERRORHANDLER:
+ 		if (hif_drv->u8RemainOnChan_pendingreq)
+ 			hif_drv->u8RemainOnChan_pendingreq = 0;
+ 	}
+-	return s32Error;
++
++	return result;
+ }
+ 
+ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 				struct reg_frame *pstrHostIfRegisterFrame)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2663,15 +2644,14 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 
+ 	strWID.size = sizeof(u16) + 2;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to frame register config packet\n");
+-		s32Error = -EINVAL;
++		result = -EINVAL;
+ 	}
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ #define FALSE_FRMWR_CHANNEL 100
+@@ -2680,7 +2660,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ {
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid strWID;
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 
+ 	PRINT_D(HOSTINF_DBG, "CANCEL REMAIN ON CHAN\n");
+ 
+@@ -2697,9 +2677,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 		strWID.val[0] = u8remain_on_chan_flag;
+ 		strWID.val[1] = FALSE_FRMWR_CHANNEL;
+ 
+-		s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++		result = send_config_pkt(SET_CFG, &strWID, 1,
+ 					   get_id_from_handler(hif_drv));
+-		if (s32Error != 0) {
++		if (result != 0) {
+ 			PRINT_ER("Failed to set remain on channel\n");
+ 			goto _done_;
+ 		}
+@@ -2711,16 +2691,16 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 		P2P_LISTEN_STATE = 0;
+ 	} else {
+ 		PRINT_D(GENERIC_DBG, "Not in listen state\n");
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+ _done_:
+-	return s32Error;
++	return result;
+ }
+ 
+ static void ListenTimerCB(unsigned long arg)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
+ 
+@@ -2731,15 +2711,15 @@ static void ListenTimerCB(unsigned long arg)
+ 	msg.drv = hif_drv;
+ 	msg.body.remain_on_ch.u32ListenSessionID = hif_drv->strHostIfRemainOnChan.u32ListenSessionID;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ }
+ 
+ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
+ 				   struct power_mgmt_param *strPowerMgmtParam)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	s8 s8PowerMode;
+ 
+@@ -2755,16 +2735,16 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling Power Management\n");
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send power management config packet\n");
+ }
+ 
+ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
+ 				      struct set_multicast *strHostIfSetMulti)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	u8 *pu8CurrByte;
+ 
+@@ -2791,9 +2771,9 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
+ 	if ((strHostIfSetMulti->cnt) > 0)
+ 		memcpy(pu8CurrByte, gau8MulticastMacAddrList, ((strHostIfSetMulti->cnt) * ETH_ALEN));
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Failed to send setup multicast config packet\n");
+ 
+ ERRORHANDLER:
+@@ -2804,7 +2784,7 @@ ERRORHANDLER:
+ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+ 			       struct ba_session_info *strHostIfBASessionInfo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	int AddbaTimeout = 100;
+ 	char *ptr = NULL;
+@@ -2838,9 +2818,9 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+ 	*ptr++ = 8;
+ 	*ptr++ = 0;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_D(HOSTINF_DBG, "Couldn't open BA Session\n");
+ 
+ 
+@@ -2858,20 +2838,19 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+ 	*ptr++ = (strHostIfBASessionInfo->u16BufferSize & 0xFF);
+ 	*ptr++ = ((strHostIfBASessionInfo->u16SessionTimeout >> 16) & 0xFF);
+ 	*ptr++ = 3;
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+ 	if (strWID.val != NULL)
+ 		kfree(strWID.val);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+ 				     struct ba_session_info *strHostIfBASessionInfo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 	char *ptr = NULL;
+ 
+@@ -2895,9 +2874,9 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+ 	*ptr++ = 0;
+ 	*ptr++ = 32;
+ 
+-	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
++	result = send_config_pkt(SET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error)
++	if (result)
+ 		PRINT_D(HOSTINF_DBG, "Couldn't delete BA Session\n");
+ 
+ 
+@@ -2906,8 +2885,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+ 
+ 	up(&hif_sema_wait_response);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ static int hostIFthread(void *pvArg)
+@@ -3185,14 +3163,14 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
+ 
+ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3204,12 +3182,12 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ 	msg.drv = hif_drv;
+ 	msg.body.key_info.attr.wep.index = u8Index;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Error in sending message queue : Default key index\n");
+ 	down(&hif_drv->hSemTestKeyBlock);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+@@ -3217,14 +3195,13 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 				 u8 u8WepKeylen,
+ 				 u8 u8Keyidx)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3239,13 +3216,12 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
+ 	msg.body.key_info.attr.wep.index = u8Keyidx;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Error in sending message queue :WEP Key\n");
+ 	down(&hif_drv->hSemTestKeyBlock);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+@@ -3255,15 +3231,14 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 				u8 u8mode,
+ 				enum AUTHTYPE tenuAuth_type)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	u8 i;
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3283,14 +3258,13 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	msg.body.key_info.attr.wep.mode = u8mode;
+ 	msg.body.key_info.attr.wep.auth_type = tenuAuth_type;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Error in sending message queue :WEP Key\n");
+ 	down(&hif_drv->hSemTestKeyBlock);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+@@ -3298,15 +3272,15 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 		     const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 		     u8 mode, u8 u8Ciphermode, u8 u8Idx)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	u8 u8KeyLen = u8PtkKeylen;
+ 	u32 i;
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 	if (pu8RxMic != NULL)
+ 		u8KeyLen += RX_MIC_KEY_LEN;
+@@ -3348,14 +3322,14 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	msg.body.key_info.attr.wpa.mode = u8Ciphermode;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("Error in sending message queue:  PTK Key\n");
+ 
+ 	down(&hif_drv->hSemTestKeyBlock);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+@@ -3364,14 +3338,14 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 			const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 			u8 mode, u8 u8Ciphermode)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	u8 u8KeyLen = u8GtkKeylen;
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+@@ -3411,26 +3385,26 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
+ 	msg.body.key_info.attr.wpa.seq_len = u32KeyRSClen;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Error in sending message queue:  RX GTK\n");
+ 
+ 	down(&hif_drv->hSemTestKeyBlock);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_attr *pu8PmkidInfoArray)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	u32 i;
+ 
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3447,11 +3421,11 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 			    PMKID_LEN);
+ 	}
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER(" Error in sending messagequeue: PMKID Info\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_get_pmkid_info(struct host_if_drv *hif_drv,
+@@ -3486,7 +3460,7 @@ s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hif_drv,
+ 
+ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3495,19 +3469,19 @@ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ 	msg.body.get_mac_info.u8MacAddress = pu8MacAddress;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send get mac address\n");
+ 		return -EFAULT;
+ 	}
+ 
+ 	down(&hif_sema_wait_response);
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	PRINT_D(GENERIC_DBG, "mac addr = %x:%x:%x\n", pu8MacAddress[0], pu8MacAddress[1], pu8MacAddress[2]);
+@@ -3517,12 +3491,11 @@ s32 host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ 	memcpy(msg.body.set_mac_info.u8MacAddress, pu8MacAddress, ETH_ALEN);
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Failed to send message queue: Set mac address\n");
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hif_drv,
+@@ -3569,14 +3542,14 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 			  u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 			  u8 u8channel, void *pJoinParams)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+ 	if (!hif_drv || pfConnectResult == NULL) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	if (pJoinParams == NULL) {
+@@ -3617,8 +3590,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	else
+ 		PRINT_D(GENERIC_DBG, "Don't set state to 'connecting' as state is %d\n", hif_drv->enuHostIFstate);
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send message queue: Set join request\n");
+ 		return -EFAULT;
+ 	}
+@@ -3628,41 +3601,41 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	mod_timer(&hif_drv->hConnectTimer,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_CONNECT_TIMEOUT));
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!join_req) {
+-		s32Error = -EFAULT;
+-		return s32Error;
++		result = -EFAULT;
++		return result;
+ 	}
+ 
+ 
+ 	if (!hif_drv) {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	msg.id = HOST_IF_MSG_FLUSH_CONNECT;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send message queue: Flush join request\n");
+ 		return -EFAULT;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_disconnect(struct host_if_drv *hif_drv, u16 u16ReasonCode)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -3675,13 +3648,13 @@ s32 host_int_disconnect(struct host_if_drv *hif_drv, u16 u16ReasonCode)
+ 	msg.id = HOST_IF_MSG_DISCONNECT;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Failed to send message queue: disconnect\n");
+ 
+ 	down(&hif_drv->hSemTestDisconnectBlock);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_disconnect_station(struct host_if_drv *hif_drv, u8 assoc_id)
+@@ -3712,7 +3685,7 @@ s32 host_int_get_assoc_req_info(struct host_if_drv *hif_drv, u8 *pu8AssocReqInfo
+ s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv, u8 *pu8AssocRespInfo,
+ 					u32 u32MaxAssocRespInfoLen, u32 *pu32RcvdAssocRespInfoLen)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	if (!hif_drv) {
+@@ -3725,9 +3698,9 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv, u8 *pu8AssocRespInf
+ 	strWID.val = pu8AssocRespInfo;
+ 	strWID.size = u32MaxAssocRespInfoLen;
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+-	if (s32Error) {
++	if (result) {
+ 		*pu32RcvdAssocRespInfoLen = 0;
+ 		PRINT_ER("Failed to send association response config packet\n");
+ 		return -EINVAL;
+@@ -3735,7 +3708,7 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv, u8 *pu8AssocRespInf
+ 		*pu32RcvdAssocRespInfoLen = strWID.size;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_get_rx_power_level(struct host_if_drv *hif_drv, u8 *pu8RxPowerLevel,
+@@ -3833,7 +3806,7 @@ int host_int_set_operation_mode(struct host_if_drv *hif_drv, u32 mode)
+ 
+ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -3846,22 +3819,20 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ 	msg.id = HOST_IF_MSG_GET_CHNL;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+ 	down(&hif_drv->hSemGetCHNL);
+ 
+ 	*pu8ChNo = ch_no;
+ 
+-	return s32Error;
+-
+-
++	return result;
+ }
+ 
+ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
+ 			       const u8 *mac, u32 *pu32InactiveTime)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -3878,21 +3849,20 @@ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
+ 	msg.id = HOST_IF_MSG_GET_INACTIVETIME;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("Failed to send get host channel param's message queue ");
+ 
+ 	down(&hif_drv->hSemInactiveTime);
+ 
+ 	*pu32InactiveTime = inactive_time;
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_test_get_int_wid(struct host_if_drv *hif_drv, u32 *pu32TestMemAddr)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct wid strWID;
+ 
+ 	if (!hif_drv) {
+@@ -3905,10 +3875,10 @@ s32 host_int_test_get_int_wid(struct host_if_drv *hif_drv, u32 *pu32TestMemAddr)
+ 	strWID.val = (s8 *)pu32TestMemAddr;
+ 	strWID.size = sizeof(u32);
+ 
+-	s32Error = send_config_pkt(GET_CFG, &strWID, 1,
++	result = send_config_pkt(GET_CFG, &strWID, 1,
+ 				   get_id_from_handler(hif_drv));
+ 
+-	if (s32Error) {
++	if (result) {
+ 		PRINT_ER("Failed to get wid value\n");
+ 		return -EINVAL;
+ 	} else {
+@@ -3916,20 +3886,20 @@ s32 host_int_test_get_int_wid(struct host_if_drv *hif_drv, u32 *pu32TestMemAddr)
+ 
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_get_rssi(struct host_if_drv *hif_drv, s8 *ps8Rssi)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 	msg.id = HOST_IF_MSG_GET_RSSI;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send get host channel param's message queue ");
+ 		return -EFAULT;
+ 	}
+@@ -3944,20 +3914,20 @@ s32 host_int_get_rssi(struct host_if_drv *hif_drv, s8 *ps8Rssi)
+ 
+ 	*ps8Rssi = rssi;
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ {
+ 	struct host_if_msg msg;
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 	msg.id = HOST_IF_MSG_GET_LINKSPEED;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send GET_LINKSPEED to message queue ");
+ 		return -EFAULT;
+ 	}
+@@ -3972,12 +3942,12 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 
+ 	*ps8lnkspd = link_speed;
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+@@ -3985,14 +3955,14 @@ s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
+ 	msg.body.data = (char *)pstrStatistics;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Failed to send get host channel param's message queue ");
+ 		return -EFAULT;
+ 	}
+ 
+ 	down(&hif_sema_wait_response);
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+@@ -4001,7 +3971,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 		  size_t IEsLen, wilc_scan_result ScanResult,
+ 		  void *pvUserArg, struct hidden_network *pstrHiddenNetwork)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+@@ -4035,8 +4005,8 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
+ 	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error) {
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result) {
+ 		PRINT_ER("Error in sending message queue\n");
+ 		return -EINVAL;
+ 	}
+@@ -4047,15 +4017,13 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	mod_timer(&hif_drv->hScanTimer,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_SCAN_TIMEOUT));
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 hif_set_cfg(struct host_if_drv *hif_drv,
+ 		struct cfg_param_val *pstrCfgParamVal)
+ {
+-
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 
+@@ -4069,15 +4037,14 @@ s32 hif_set_cfg(struct host_if_drv *hif_drv,
+ 	msg.body.cfg_info.cfg_attr_info = *pstrCfgParamVal;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-
+-	return s32Error;
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
++	return result;
+ }
+ 
+ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 
+ 	down(&hif_drv->gtOsCfgValuesSem);
+ 
+@@ -4166,8 +4133,7 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
+ 
+ 	up(&hif_drv->gtOsCfgValuesSem);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ void host_int_send_join_leave_info_to_host
+@@ -4185,7 +4151,7 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 	}
+ 
+ 	if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED) {
+-		s32 s32Error = 0;
++		s32 result = 0;
+ 		struct host_if_msg msg;
+ 
+ 		memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -4193,8 +4159,8 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 		msg.id = HOST_IF_MSG_GET_RSSI;
+ 		msg.drv = hif_drv;
+ 
+-		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-		if (s32Error) {
++		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++		if (result) {
+ 			PRINT_ER("Failed to send get host channel param's message queue ");
+ 			return;
+ 		}
+@@ -4316,7 +4282,7 @@ _fail_:
+ 
+ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	int ret;
+ 
+@@ -4366,9 +4332,9 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		msg.id = HOST_IF_MSG_EXIT;
+ 		msg.drv = hif_drv;
+ 
+-		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-		if (s32Error != 0)
+-			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", s32Error);
++		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++		if (result != 0)
++			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", result);
+ 
+ 		down(&hif_sema_thread);
+ 
+@@ -4379,19 +4345,19 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 
+ 	ret = remove_handler_in_list(hif_drv);
+ 	if (ret)
+-		s32Error = -ENOENT;
++		result = -ENOENT;
+ 
+ 	kfree(hif_drv);
+ 
+ 	clients_count--;
+ 	terminated_handle = NULL;
+ 	up(&hif_sema_deinit);
+-	return s32Error;
++	return result;
+ }
+ 
+ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	int id;
+ 	struct host_if_drv *hif_drv = NULL;
+@@ -4416,14 +4382,14 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.body.net_info.buffer = kmalloc(u32Length, GFP_KERNEL);
+ 	memcpy(msg.body.net_info.buffer, pu8Buffer, u32Length);
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
+-		PRINT_ER("Error in sending network info message queue message parameters: Error(%d)\n", s32Error);
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
++		PRINT_ER("Error in sending network info message queue message parameters: Error(%d)\n", result);
+ }
+ 
+ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	int id;
+ 	struct host_if_drv *hif_drv = NULL;
+@@ -4457,16 +4423,16 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	msg.body.async_info.buffer = kmalloc(u32Length, GFP_KERNEL);
+ 	memcpy(msg.body.async_info.buffer, pu8Buffer, u32Length);
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
+-		PRINT_ER("Error in sending message queue asynchronous message info: Error(%d)\n", s32Error);
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
++		PRINT_ER("Error in sending message queue asynchronous message info: Error(%d)\n", result);
+ 
+ 	up(&hif_sema_deinit);
+ }
+ 
+ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	int id;
+ 	struct host_if_drv *hif_drv = NULL;
+@@ -4486,9 +4452,9 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
+ 		msg.id = HOST_IF_MSG_RCVD_SCAN_COMPLETE;
+ 		msg.drv = hif_drv;
+ 
+-		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-		if (s32Error)
+-			PRINT_ER("Error in sending message queue scan complete parameters: Error(%d)\n", s32Error);
++		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++		if (result)
++			PRINT_ER("Error in sending message queue scan complete parameters: Error(%d)\n", result);
+ 	}
+ 
+ 
+@@ -4502,7 +4468,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 			       wilc_remain_on_chan_ready RemainOnChanReady,
+ 			       void *pvUserArg)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -4521,16 +4487,16 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -4545,16 +4511,16 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
+ 	msg.drv = hif_drv;
+ 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool bReg)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -4584,20 +4550,18 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
+ 	msg.body.reg_frame.bReg = bReg;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+ 
+-	return s32Error;
+-
+-
++	return result;
+ }
+ 
+ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 			u32 u32DTIMPeriod, u32 u32HeadLen, u8 *pu8Head,
+ 			u32 u32TailLen, u8 *pu8Tail)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct beacon_attr *pstrSetBeaconParam = &msg.body.beacon_info;
+ 
+@@ -4617,7 +4581,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 	pstrSetBeaconParam->head_len = u32HeadLen;
+ 	pstrSetBeaconParam->head = kmalloc(u32HeadLen, GFP_KERNEL);
+ 	if (pstrSetBeaconParam->head == NULL) {
+-		s32Error = -ENOMEM;
++		result = -ENOMEM;
+ 		goto ERRORHANDLER;
+ 	}
+ 	memcpy(pstrSetBeaconParam->head, pu8Head, u32HeadLen);
+@@ -4626,7 +4590,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 	if (u32TailLen > 0) {
+ 		pstrSetBeaconParam->tail = kmalloc(u32TailLen, GFP_KERNEL);
+ 		if (pstrSetBeaconParam->tail == NULL) {
+-			s32Error = -ENOMEM;
++			result = -ENOMEM;
+ 			goto ERRORHANDLER;
+ 		}
+ 		memcpy(pstrSetBeaconParam->tail, pu8Tail, u32TailLen);
+@@ -4634,12 +4598,12 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
+ 		pstrSetBeaconParam->tail = NULL;
+ 	}
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+ 
+ ERRORHANDLER:
+-	if (s32Error) {
++	if (result) {
+ 		if (pstrSetBeaconParam->head != NULL)
+ 			kfree(pstrSetBeaconParam->head);
+ 
+@@ -4647,13 +4611,12 @@ ERRORHANDLER:
+ 			kfree(pstrSetBeaconParam->tail);
+ 	}
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 host_int_del_beacon(struct host_if_drv *hif_drv)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -4665,17 +4628,17 @@ s32 host_int_del_beacon(struct host_if_drv *hif_drv)
+ 	msg.drv = hif_drv;
+ 	PRINT_D(HOSTINF_DBG, "Setting deleting beacon message queue params\n");
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 			 struct add_sta_param *pstrStaParams)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 
+@@ -4703,15 +4666,15 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 		pstrAddStationMsg->pu8Rates = rates;
+ 	}
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
+ 
+@@ -4732,16 +4695,16 @@ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ 	else
+ 		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
+ 			    u8 pu8MacAddr[][ETH_ALEN])
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct del_all_sta *pstrDelAllStationMsg = &msg.body.del_all_sta_info;
+ 	u8 au8Zero_Buff[ETH_ALEN] = {0};
+@@ -4776,25 +4739,24 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
+ 	}
+ 	if (!u8AssocNumb) {
+ 		PRINT_D(CFG80211_DBG, "NO ASSOCIATED STAS\n");
+-		return s32Error;
++		return result;
+ 	}
+ 
+ 	pstrDelAllStationMsg->assoc_sta = u8AssocNumb;
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+-	if (s32Error)
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+ 	down(&hif_sema_wait_response);
+ 
+-	return s32Error;
+-
++	return result;
+ }
+ 
+ s32 host_int_edit_station(struct host_if_drv *hif_drv,
+ 			  struct add_sta_param *pstrStaParams)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 
+@@ -4821,18 +4783,18 @@ s32 host_int_edit_station(struct host_if_drv *hif_drv,
+ 		pstrAddStationMsg->pu8Rates = rates;
+ 	}
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
+ 			    bool bIsEnabled,
+ 			    u32 u32Timeout)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.pwr_mgmt_info;
+ 
+@@ -4853,17 +4815,17 @@ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
+ 	pstrPowerMgmtParam->enabled = bIsEnabled;
+ 	pstrPowerMgmtParam->timeout = u32Timeout;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_setup_multicast_filter(struct host_if_drv *hif_drv,
+ 				    bool bIsEnabled,
+ 				    u32 u32count)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct set_multicast *pstrMulticastFilterParam = &msg.body.multicast_info;
+ 
+@@ -4883,10 +4845,10 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hif_drv,
+ 	pstrMulticastFilterParam->enabled = bIsEnabled;
+ 	pstrMulticastFilterParam->cnt = u32count;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+-	return s32Error;
++	return result;
+ }
+ 
+ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+@@ -5060,7 +5022,7 @@ void host_int_freeJoinParams(void *pJoinParams)
+ 
+ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
+ 
+@@ -5077,20 +5039,20 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
+ 	pBASessionInfo->u8Ted = TID;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+ 	down(&hif_sema_wait_response);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
+ 				  char *pBSSID,
+ 				  char TID)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
+ 
+@@ -5107,18 +5069,18 @@ s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
+ 	pBASessionInfo->u8Ted = TID;
+ 	msg.drv = hif_drv;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+ 	down(&hif_sema_wait_response);
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 host_int_setup_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	return 0;
+@@ -5136,18 +5098,16 @@ s32 host_int_setup_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ 	msg.drv = hif_drv;
+ 	msg.body.ip_info.idx = idx;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	return s32Error;
+-
+-
++	return result;
+ }
+ 
+ s32 host_int_get_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+@@ -5163,11 +5123,9 @@ s32 host_int_get_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
+ 	msg.drv = hif_drv;
+ 	msg.body.ip_info.idx = idx;
+ 
+-	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	if (s32Error)
++	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
++	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	return s32Error;
+-
+-
++	return result;
+ }
+-- 
+1.9.1
 
-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
-ZeJiNQMA
-
---+QahgC5+KEYLbs62--
