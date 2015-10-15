@@ -1,95 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([5.9.2.179]:53319 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbbJUVKI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6578 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754806AbbJOE3n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 17:10:08 -0400
-From: Bruno Randolf <br1@einfach.org>
-To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
-Cc: Bruno Randolf <br1@einfach.org>
-Subject: [PATCH] rtl8xxxu: Debugging for RXFLTMAP0,1,2
-Date: Wed, 21 Oct 2015 22:10:01 +0100
-Message-Id: <1445461801-16742-1-git-send-email-br1@einfach.org> (sfid-20151021_231014_067945_45C3BE1A)
+	Thu, 15 Oct 2015 00:29:43 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 38/40] staging: wilc1000: fixes unnecessary variable replacement
+Date: Thu, 15 Oct 2015 13:25:19 +0900
+Message-ID: <1444883121-31757-38-git-send-email-tony.cho@atmel.com> (sfid-20151015_062948_865832_1ED42123)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 54 ++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
+From: Leo Kim <leo.kim@atmel.com>
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 324ab8a..4d0e121 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5657,7 +5657,58 @@ rtl8xxxu_rcr_read(void *data, u64 *val)
- 	return 0;
- }
+This patch removes an unnecessary variable use for the errors and
+returns errors directly without a result variable.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 28 +++++++++-------------------
+ 1 file changed, 9 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2d771f5..1898f18 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3200,9 +3200,8 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	struct host_if_msg msg;
  
-+static int
-+rtl8xxxu_RXFLTMAP0_write(void *data, u64 val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	rtl8xxxu_write16(priv, REG_RXFLTMAP0, val);
-+	return 0;
-+}
-+
-+static int
-+rtl8xxxu_RXFLTMAP0_read(void *data, u64 *val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP0);
-+	return 0;
-+}
-+
-+static int
-+rtl8xxxu_RXFLTMAP1_write(void *data, u64 val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	rtl8xxxu_write16(priv, REG_RXFLTMAP1, val);
-+	return 0;
-+}
-+
-+static int
-+rtl8xxxu_RXFLTMAP1_read(void *data, u64 *val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP1);
-+	return 0;
-+}
-+
-+static int
-+rtl8xxxu_RXFLTMAP2_write(void *data, u64 val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	rtl8xxxu_write16(priv, REG_RXFLTMAP2, val);
-+	return 0;
-+}
-+
-+static int
-+rtl8xxxu_RXFLTMAP2_read(void *data, u64 *val)
-+{
-+	struct rtl8xxxu_priv *priv = data;
-+	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP2);
-+	return 0;
-+}
-+
- DEFINE_SIMPLE_ATTRIBUTE(fops_rcr, rtl8xxxu_rcr_read, rtl8xxxu_rcr_write, "0x%08llx\n");
-+DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP0, rtl8xxxu_RXFLTMAP0_read, rtl8xxxu_RXFLTMAP0_write, "0x%08llx\n");
-+DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP1, rtl8xxxu_RXFLTMAP1_read, rtl8xxxu_RXFLTMAP1_write, "0x%08llx\n");
-+DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP2, rtl8xxxu_RXFLTMAP2_read, rtl8xxxu_RXFLTMAP2_write, "0x%08llx\n");
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
  
- void rtl8xxxu_init_debugfs(struct rtl8xxxu_priv *priv)
- {
-@@ -5668,6 +5719,9 @@ void rtl8xxxu_init_debugfs(struct rtl8xxxu_priv *priv)
- 		return;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3237,9 +3236,8 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	u8 i;
  
- 	debugfs_create_file("rcr", S_IRUSR | S_IWUSR, dir, priv, &fops_rcr);
-+	debugfs_create_file("RXFLTMAP0", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP0);
-+	debugfs_create_file("RXFLTMAP1", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP1);
-+	debugfs_create_file("RXFLTMAP2", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP2);
- }
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
  
- static int rtl8xxxu_probe(struct usb_interface *interface,
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3279,9 +3277,8 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	u32 i;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 	if (pu8RxMic != NULL)
+ 		u8KeyLen += RX_MIC_KEY_LEN;
+@@ -3344,9 +3341,8 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	u8 u8KeyLen = u8GtkKeylen;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+@@ -3403,9 +3399,8 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3548,9 +3543,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+ 	if (!hif_drv || pfConnectResult == NULL) {
+-		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	if (pJoinParams == NULL) {
+@@ -3610,16 +3604,12 @@ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
+ 	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+-	if (!join_req) {
+-		result = -EFAULT;
+-		return result;
+-	}
+-
++	if (!join_req)
++		return -EFAULT;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	msg.id = HOST_IF_MSG_FLUSH_CONNECT;
 -- 
 1.9.1
 
