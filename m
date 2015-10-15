@@ -1,103 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964940AbbJVJMY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:24 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 05/10] nfc: nci: Introduce nci_core_cmd
-Date: Thu, 22 Oct 2015 12:11:37 +0300
-Message-Id: <1445505102-16639-6-git-send-email-robert.dolca@intel.com> (sfid-20151022_113502_157027_91F3A335)
-In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
-References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6298 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbbJOE15 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 00:27:57 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 22/40] staging: wilc1000: rename variable gu8Chnl
+Date: Thu, 15 Oct 2015 13:25:03 +0900
+Message-ID: <1444883121-31757-22-git-send-email-tony.cho@atmel.com> (sfid-20151015_064656_552979_BD1901F9)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows sending core commands from the driver. The driver should be
-able to send NCI core commands like CORE_GET_CONFIG_CMD.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+This patch renames variable gu8Chnl to ch_no
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/core.c         | 24 +++++++++++++++++++-----
- 2 files changed, 20 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index aaada20..4ca1b6d 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -278,6 +278,7 @@ int nci_request(struct nci_dev *ndev,
- 			    unsigned long opt),
- 		unsigned long opt, __u32 timeout);
- int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload);
-+int nci_core_cmd(struct nci_dev *ndev, __u16 opcode, size_t len, __u8 *payload);
- int nci_core_reset(struct nci_dev *ndev);
- int nci_core_init(struct nci_dev *ndev);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 79aaeaa..386267c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -255,7 +255,7 @@ bool scan_while_connected;
  
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 5362d8f..5b4f48a 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -325,32 +325,46 @@ static void nci_rf_deactivate_req(struct nci_dev *ndev, unsigned long opt)
- 		     sizeof(struct nci_rf_deactivate_cmd), &cmd);
- }
+ static s8 rssi;
+ static s8 link_speed;
+-static u8 gu8Chnl;
++static u8 ch_no;
+ static u8 gs8SetIP[2][4];
+ static u8 gs8GetIP[2][4];
+ static u32 gu32InactiveTime;
+@@ -2137,7 +2137,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
  
--struct nci_prop_cmd_param {
-+struct nci_cmd_param {
- 	__u16 opcode;
- 	size_t len;
- 	__u8 *payload;
- };
+ 	strWID.id = (u16)WID_CURRENT_CHANNEL;
+ 	strWID.type = WID_CHAR;
+-	strWID.val = (s8 *)&gu8Chnl;
++	strWID.val = (s8 *)&ch_no;
+ 	strWID.size = sizeof(char);
  
--static void nci_prop_cmd_req(struct nci_dev *ndev, unsigned long opt)
-+static void nci_generic_req(struct nci_dev *ndev, unsigned long opt)
- {
--	struct nci_prop_cmd_param *param = (struct nci_prop_cmd_param *)opt;
-+	struct nci_cmd_param *param =
-+		(struct nci_cmd_param *)opt;
+ 	PRINT_D(HOSTINF_DBG, "Getting channel value\n");
+@@ -3852,7 +3852,7 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ 		PRINT_ER("wilc mq send fail\n");
+ 	down(&hif_drv->hSemGetCHNL);
  
- 	nci_send_cmd(ndev, param->opcode, param->len, param->payload);
- }
+-	*pu8ChNo = gu8Chnl;
++	*pu8ChNo = ch_no;
  
- int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload)
- {
--	struct nci_prop_cmd_param param;
-+	struct nci_cmd_param param;
+ 	return s32Error;
  
- 	param.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY, oid);
- 	param.len = len;
- 	param.payload = payload;
- 
--	return __nci_request(ndev, nci_prop_cmd_req, (unsigned long)&param,
-+	return __nci_request(ndev, nci_generic_req, (unsigned long)&param,
- 			     msecs_to_jiffies(NCI_CMD_TIMEOUT));
- }
- EXPORT_SYMBOL(nci_prop_cmd);
- 
-+int nci_core_cmd(struct nci_dev *ndev, __u16 opcode, size_t len, __u8 *payload)
-+{
-+	struct nci_cmd_param param;
-+
-+	param.opcode = opcode;
-+	param.len = len;
-+	param.payload = payload;
-+
-+	return __nci_request(ndev, nci_generic_req, (unsigned long)&param,
-+			     msecs_to_jiffies(NCI_CMD_TIMEOUT));
-+}
-+EXPORT_SYMBOL(nci_core_cmd);
-+
- int nci_core_reset(struct nci_dev *ndev)
- {
- 	return __nci_request(ndev, nci_reset_req, 0,
 -- 
 1.9.1
 
