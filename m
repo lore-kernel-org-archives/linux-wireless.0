@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:51043 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755834AbbJVVH7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 17:07:59 -0400
-Date: Thu, 22 Oct 2015 23:58:43 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Matthias May <matthias.may@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: hostapd mailinglist gone?
-Message-ID: <20151022205843.GA1980@w1.fi> (sfid-20151022_230803_827338_D56B8D5C)
-References: <56260BD6.4020304@neratec.com>
+Received: from mga09.intel.com ([134.134.136.24]:12710 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753949AbbJOGXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 02:23:03 -0400
+Date: Thu, 15 Oct 2015 14:21:32 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	austin.shin@atmel.com, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 16/40] staging: wilc1000: rename variable
+ hSemHostIntDeinit
+Message-ID: <201510151431.u3oU2Yok%fengguang.wu@intel.com> (sfid-20151015_082308_509782_1D9F9EB3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56260BD6.4020304@neratec.com>
+In-Reply-To: <1444883121-31757-16-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 11:39:34AM +0200, Matthias May wrote:
-> Is the hostapd mailinglist gone?
-> It used to be at http://lists.shmoo.com/mailman/listinfo/hostap
-> One is currently greeted with the message: "No such list hostap"
+Hi Leo,
 
-I don't know what exactly happened to the previously used mailing
-list on Friday, but in any case, it seems to have disappeared and
-I have not received any response to my question on what happened
-and whether the list could be fixed. As such, there is now a new
-mailing list that replaces the old one. Please note that I do not
-have access to the subscriber list from the old server, so no
-subscribers were transferred to the new mailing list and whoever wants
-to remain on the list will need to subscribe again.
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-The new subscription page is here:
-http://lists.infradead.org/mailman/listinfo/hostap
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-Messages sent to this address will get delivered to the list:
-hostap@lists.infradead.org
 
-Any messages sent after October 16 did not make it to the old list and
-as such, may need to be resend to the new list.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'g_hPeriodicRSSI' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:256:6: sparse: symbol 'gbScanWhileConnected' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedJoinReq' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:4: sparse: symbol 'gu8FlushedInfoElemAsoc' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:269:4: sparse: symbol 'gu8Flushed11iMode' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:270:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:271:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:272:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:410:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:445:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2215:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2356:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2356:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2356:38:    right side has type int
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
