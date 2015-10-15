@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30053 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbbJBLhP (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33431 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368AbbJOCH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 07:37:15 -0400
-Date: Fri, 2 Oct 2015 14:37:01 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, gregkh@linuxfoundation.org,
-	johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	Wed, 14 Oct 2015 22:07:28 -0400
+Received: by pabrc13 with SMTP id rc13so71268888pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:27 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-Message-ID: <20151002113701.GN7289@mwanda> (sfid-20151002_133720_521721_212B6743)
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
- <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
- <560E3628.4000105@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <560E3628.4000105@broadcom.com>
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 07/33] staging: wilc1000: fix return type of host_int_set_pmkid_info
+Date: Thu, 15 Oct 2015 11:06:36 +0900
+Message-Id: <1444874822-31152-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040734_753141_935CDC3F)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 09:45:44AM +0200, Arend van Spriel wrote:
-> On 10/01/2015 03:43 PM, Chaehyun Lim wrote:
-> >This patch replaces int8_t with s8 that is a preferred type.
-> >
-> >Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> >---
-> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >index d781003..56c97c9 100644
-> >--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >@@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
-> >  	g_obtainingIP = false;
-> >  }
-> >
-> >-int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-> >+s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-> 
-> It seems to make more sense to use bool type here.
+This patch changes return type of host_int_set_pmkid_info from s32 to
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type by int as well as data type of
+s32Error.
 
-That doesn't work, but you're right that the function is poorly named.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-It could be renamed to get_ap_index_or_something() in a later patch.
-Returning directly is also a good idea.
-
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 191d840..a4e0c5b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3433,9 +3433,9 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	return s32Error;
+ }
+ 
+-s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_attr *pu8PmkidInfoArray)
++int host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_attr *pu8PmkidInfoArray)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	u32 i;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index b660eec..34aa1dc 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -515,7 +515,7 @@ s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen, u8 *pu8TxGtk,
+  *  @version		1.0
+  */
+ 
+-s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv, struct host_if_pmkid_attr *pu8PmkidInfoArray);
++int host_int_set_pmkid_info(struct host_if_drv *hWFIDrv, struct host_if_pmkid_attr *pu8PmkidInfoArray);
+ /**
+  *  @brief              gets the cached the pmkid info
+  *  @details    valid only in BSS STA mode if External Supplicant
+-- 
+2.6.1
 
