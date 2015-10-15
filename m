@@ -1,94 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5455 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38697 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753485AbbJZL6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 07:58:51 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH] nfc: nci: non-static functions can not be inline
-Date: Mon, 26 Oct 2015 13:58:54 +0200
-Message-Id: <1445860734-17651-1-git-send-email-robert.dolca@intel.com> (sfid-20151026_125939_619023_661F4E8D)
+	id S1751782AbbJON62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 09:58:28 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/12] cfg80211: reg: search built-in database directly
+Date: Thu, 15 Oct 2015 15:58:15 +0200
+Message-Id: <1444917503-19118-4-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155848_048897_A160FB2F)
+In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- include/net/nfc/nci_core.h |  8 ++++----
- net/nfc/nci/core.c         | 16 ++++++++--------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 530df66..1e3db2b 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -351,13 +351,13 @@ static inline int nci_set_vendor_cmds(struct nci_dev *ndev,
- 
- void nci_rsp_packet(struct nci_dev *ndev, struct sk_buff *skb);
- void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb);
--inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
-+int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
- 			struct sk_buff *skb);
--inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
-+int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
- 			struct sk_buff *skb);
--inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
-+int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
- 			struct sk_buff *skb);
--inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
-+int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
- 			struct sk_buff *skb);
- void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
- int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index ecf420d..0767cc1 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -1314,29 +1314,29 @@ static int nci_op_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
- 	return op->ntf(ndev, skb);
+Instead of searching the built-in database only in the worker,
+search it directly and return an error if the entry cannot be
+found (or memory cannot be allocated.) This means that builtin
+database queries no longer rely on the timeout.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 102 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 58 insertions(+), 44 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4e14804ef51f..18b990426e13 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -453,65 +453,70 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
  }
  
--inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
--			       struct sk_buff *skb)
-+int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
-+			struct sk_buff *skb)
+ #ifdef CONFIG_CFG80211_INTERNAL_REGDB
+-struct reg_regdb_search_request {
+-	char alpha2[2];
++struct reg_regdb_apply_request {
+ 	struct list_head list;
++	const struct ieee80211_regdomain *regdom;
+ };
+ 
+-static LIST_HEAD(reg_regdb_search_list);
+-static DEFINE_MUTEX(reg_regdb_search_mutex);
++static LIST_HEAD(reg_regdb_apply_list);
++static DEFINE_MUTEX(reg_regdb_apply_mutex);
+ 
+-static void reg_regdb_search(struct work_struct *work)
++static void reg_regdb_apply(struct work_struct *work)
  {
- 	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->prop_ops,
- 				 ndev->ops->n_prop_ops);
+-	struct reg_regdb_search_request *request;
+-	const struct ieee80211_regdomain *curdom, *regdom = NULL;
+-	int i;
++	struct reg_regdb_apply_request *request;
+ 
+ 	rtnl_lock();
+ 
+-	mutex_lock(&reg_regdb_search_mutex);
+-	while (!list_empty(&reg_regdb_search_list)) {
+-		request = list_first_entry(&reg_regdb_search_list,
+-					   struct reg_regdb_search_request,
++	mutex_lock(&reg_regdb_apply_mutex);
++	while (!list_empty(&reg_regdb_apply_list)) {
++		request = list_first_entry(&reg_regdb_apply_list,
++					   struct reg_regdb_apply_request,
+ 					   list);
+ 		list_del(&request->list);
+ 
+-		for (i = 0; i < reg_regdb_size; i++) {
+-			curdom = reg_regdb[i];
+-
+-			if (alpha2_equal(request->alpha2, curdom->alpha2)) {
+-				regdom = reg_copy_regd(curdom);
+-				break;
+-			}
+-		}
+-
++		set_regdom(request->regdom, REGD_SOURCE_INTERNAL_DB);
+ 		kfree(request);
+ 	}
+-	mutex_unlock(&reg_regdb_search_mutex);
+-
+-	if (!IS_ERR_OR_NULL(regdom))
+-		set_regdom(regdom, REGD_SOURCE_INTERNAL_DB);
++	mutex_unlock(&reg_regdb_apply_mutex);
+ 
+ 	rtnl_unlock();
  }
  
--inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
--			       struct sk_buff *skb)
-+int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
-+			struct sk_buff *skb)
+-static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
++static DECLARE_WORK(reg_regdb_work, reg_regdb_apply);
+ 
+-static void reg_regdb_query(const char *alpha2)
++static int reg_regdb_query(const char *alpha2)
  {
- 	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->prop_ops,
- 				 ndev->ops->n_prop_ops);
+-	struct reg_regdb_search_request *request;
++	const struct ieee80211_regdomain *regdom = NULL;
++	struct reg_regdb_apply_request *request;
++	unsigned int i;
++
++	for (i = 0; i < reg_regdb_size; i++) {
++		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
++			regdom = reg_regdb[i];
++			break;
++		}
++	}
++
++	if (!regdom)
++		return -ENODATA;
+ 
+-	request = kzalloc(sizeof(struct reg_regdb_search_request), GFP_KERNEL);
++	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
+ 	if (!request)
+-		return;
++		return -ENOMEM;
+ 
+-	memcpy(request->alpha2, alpha2, 2);
++	request->regdom = reg_copy_regd(regdom);
++	if (IS_ERR_OR_NULL(request->regdom)) {
++		kfree(request);
++		return -ENOMEM;
++	}
+ 
+-	mutex_lock(&reg_regdb_search_mutex);
+-	list_add_tail(&request->list, &reg_regdb_search_list);
+-	mutex_unlock(&reg_regdb_search_mutex);
++	mutex_lock(&reg_regdb_apply_mutex);
++	list_add_tail(&request->list, &reg_regdb_apply_list);
++	mutex_unlock(&reg_regdb_apply_mutex);
+ 
+ 	schedule_work(&reg_regdb_work);
++
++	return 0;
  }
  
--inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
--			       struct sk_buff *skb)
-+int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
-+			struct sk_buff *skb)
+ /* Feel free to add any other sanity checks here */
+@@ -522,7 +527,10 @@ static void reg_regdb_size_check(void)
+ }
+ #else
+ static inline void reg_regdb_size_check(void) {}
+-static inline void reg_regdb_query(const char *alpha2) {}
++static inline int reg_regdb_query(const char *alpha2)
++{
++	return -ENODATA;
++}
+ #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
+ 
+ /*
+@@ -533,13 +541,11 @@ static int call_crda(const char *alpha2)
  {
- 	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->core_ops,
- 				  ndev->ops->n_core_ops);
+ 	char country[12];
+ 	char *env[] = { country, NULL };
++	int ret;
+ 
+ 	snprintf(country, sizeof(country), "COUNTRY=%c%c",
+ 		 alpha2[0], alpha2[1]);
+ 
+-	/* query internal regulatory database (if it exists) */
+-	reg_regdb_query(alpha2);
+-
+ 	if (reg_crda_timeouts > REG_MAX_CRDA_TIMEOUTS) {
+ 		pr_debug("Exceeded CRDA call max attempts. Not calling CRDA\n");
+ 		return -EINVAL;
+@@ -551,17 +557,25 @@ static int call_crda(const char *alpha2)
+ 	else
+ 		pr_debug("Calling CRDA to update world regulatory domain\n");
+ 
+-	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
++	ret = kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
++	if (ret)
++		return ret;
++
++	queue_delayed_work(system_power_efficient_wq,
++			   &reg_timeout, msecs_to_jiffies(3142));
++	return 0;
  }
  
--inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
--			       struct sk_buff *skb)
-+int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
-+			struct sk_buff *skb)
+ static bool reg_query_database(struct regulatory_request *request)
  {
- 	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->core_ops,
- 				 ndev->ops->n_core_ops);
+-	if (call_crda(request->alpha2))
+-		return false;
++	/* query internal regulatory database (if it exists) */
++	if (reg_regdb_query(request->alpha2) == 0)
++		return true;
+ 
+-	queue_delayed_work(system_power_efficient_wq,
+-			   &reg_timeout, msecs_to_jiffies(3142));
+-	return true;
++	if (call_crda(request->alpha2) == 0)
++		return true;
++
++	return false;
+ }
+ 
+ bool reg_is_valid_request(const char *alpha2)
 -- 
-1.9.1
+2.5.1
 
