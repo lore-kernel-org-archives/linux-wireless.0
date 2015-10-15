@@ -1,142 +1,392 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:36385 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624AbbI3Xkz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 19:40:55 -0400
-Received: by igcrk20 with SMTP id rk20so3176465igc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 16:40:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABAco3BNzsmSdf6mNEJ+qGQ4HpaE9ypdVSwDEqd5QzSDCV8Q0w@mail.gmail.com>
-References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
- <20150930231613.GC20220@us.netrek.org> <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com>
- <CAGRGNgVRAUOEX7zWcQjJ0rWseYTsBE1e+6HjzEeifXnSMDLrAw@mail.gmail.com> <CABAco3BNzsmSdf6mNEJ+qGQ4HpaE9ypdVSwDEqd5QzSDCV8Q0w@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 1 Oct 2015 09:40:35 +1000
-Message-ID: <CAGRGNgWm2Th+CqHr--kcEG5W1mg4yEkWB3QruMozth1MiVBxdA@mail.gmail.com> (sfid-20151001_014057_453864_9E386964)
-Subject: Re: [PATCH] iw: Memory leak in error condition
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: James Cameron <quozl@laptop.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:38712 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752853AbbJON6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 09:58:43 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/2] cfg80211: support loading regulatory database as firmware file
+Date: Thu, 15 Oct 2015 15:58:38 +0200
+Message-Id: <1444917519-19169-1-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155906_249277_407866C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ola,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Thu, Oct 1, 2015 at 9:39 AM, Ola Olsson <ola1olsson@gmail.com> wrote:
-> I guess not since there is a goto statement in between. Please correct
-> me if I am wrong.
+As the current regulatory database is only about 4k big, and already
+difficult to extend, we decided that overall it would be better to
+get rid of the complications with CRDA and load the database into the
+kernel directly, but in a new format that is extensible.
 
-Oh, wait, you are right. I'm used to goto-free code.
+The new file format can be extended since it carries a length field
+on all the structs that need to be extensible.
 
-Sorry for the noise.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/networking/regulatory.txt |   8 +
+ net/wireless/Kconfig                    |   3 +-
+ net/wireless/reg.c                      | 260 +++++++++++++++++++++++++++++---
+ 3 files changed, 248 insertions(+), 23 deletions(-)
 
-Thanks,
-
-Julian Calaby
-
-
-> /Ola
->
-> On Thu, Oct 1, 2015 at 1:34 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Hi Ola,
->>
->> On Thu, Oct 1, 2015 at 9:27 AM, Ola Olsson <ola1olsson@gmail.com> wrote:
->>> Oh yes! :)
->>> Suddenly valgrind was happy as well.
->>>
->>> From 2724dd259f2bf61a2b7c85a70a70fd640a583453 Mon Sep 17 00:00:00 2001
->>> From: Ola Olsson <ola.olsson@sonymobile.com>
->>> Date: Thu, 1 Oct 2015 00:43:06 +0200
->>> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola Olsson
->>>  <ola.olsson@sonymobile.com>
->>>
->>> ---
->>>  scan.c |    5 ++++-
->>>  1 file changed, 4 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/scan.c b/scan.c
->>> index e959c1b..f3441a7 100644
->>> --- a/scan.c
->>> +++ b/scan.c
->>> @@ -445,8 +445,11 @@ static int handle_scan(struct nl80211_state *state,
->>>
->>>         if (ies || meshid) {
->>>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
->>> -               if (!tmpies)
->>> +               if (!tmpies) {
->>> +                       free(ies);
->>> +                       free(meshid);
->>>                         goto nla_put_failure;
->>> +               }
->>>                 if (ies) {
->>
->> free() doesn't set it to "null" or anything like that, so isn't the
->> line above a use-after-free?
->>
->>>                         memcpy(tmpies, ies, ies_len);
->>>                         free(ies);
->>> --
->>> 1.7.9.5
->>>
->>> On Thu, Oct 1, 2015 at 1:16 AM, James Cameron <quozl@laptop.org> wrote:
->>>> On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
->>>>> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
->>>>> From: Ola Olsson <ola.olsson@sonymobile.com>
->>>>> Date: Thu, 1 Oct 2015 00:43:06 +0200
->>>>> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
->>>>>  Olsson <ola.olsson@sonymobile.com>
->>>>>
->>>>> ---
->>>>>  scan.c |    2 ++
->>>>>  1 file changed, 2 insertions(+)
->>>>>
->>>>> diff --git a/scan.c b/scan.c
->>>>> index e959c1b..f248981 100644
->>>>> --- a/scan.c
->>>>> +++ b/scan.c
->>>>> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
->>>>>         if (ies || meshid) {
->>>>>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
->>>>>                 if (!tmpies)
->>>>> +                       free(ies);
->>>>> +                       free(meshid);
->>>>>                         goto nla_put_failure;
->>>>
->>>> Braces?  { }
->>>>
->>>>
->>>>>                 if (ies) {
->>>>>                         memcpy(tmpies, ies, ies_len);
->>>>> --
->>>>> 1.7.9.5
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>> --
->>>> James Cameron
->>>> http://quozl.linux.org.au/
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->> --
->> Julian Calaby
->>
->> Email: julian.calaby@gmail.com
->> Profile: http://www.google.com/profiles/julian.calaby/
-
-
-
+diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.txt
+index 356f791af574..753f912185eb 100644
+--- a/Documentation/networking/regulatory.txt
++++ b/Documentation/networking/regulatory.txt
+@@ -19,6 +19,14 @@ core regulatory domain all wireless devices should adhere to.
+ How to get regulatory domains to the kernel
+ -------------------------------------------
+ 
++When the regulatory domain is first set up, the kernel will request a
++database file (regulatory.db) containing all the regulatory rules. It
++will then use that database when it needs to look up the rules for a
++given country.
++
++How to get regulatory domains to the kernel (old CRDA solution)
++---------------------------------------------------------------
++
+ Userspace gets a regulatory domain in the kernel by having
+ a userspace agent build it and send it via nl80211. Only
+ expected regulatory domains will be respected by the kernel.
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index ab7017951083..063b29f15a70 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -180,7 +180,8 @@ config CFG80211_CRDA_SUPPORT
+ 	depends on CFG80211
+ 	help
+ 	  You should enable this option unless you know for sure you have no
+-	  need for it, for example when using internal regdb (above.)
++	  need for it, for example when using internal regdb (above) or the
++	  database loaded as a firmware file.
+ 
+ 	  If unsure, say Y.
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c8f43a8f850b..82b394bddfc3 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -53,6 +53,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
+ #include <linux/moduleparam.h>
++#include <linux/firmware.h>
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
+@@ -106,7 +107,7 @@ static struct regulatory_request core_request_world = {
+ static struct regulatory_request __rcu *last_request =
+ 	(void __force __rcu *)&core_request_world;
+ 
+-/* To trigger userspace events */
++/* To trigger userspace events and load firmware */
+ static struct platform_device *reg_pdev;
+ 
+ /*
+@@ -449,7 +450,6 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ 	return regd;
+ }
+ 
+-#ifdef CONFIG_CFG80211_INTERNAL_REGDB
+ struct reg_regdb_apply_request {
+ 	struct list_head list;
+ 	const struct ieee80211_regdomain *regdom;
+@@ -481,41 +481,44 @@ static void reg_regdb_apply(struct work_struct *work)
+ 
+ static DECLARE_WORK(reg_regdb_work, reg_regdb_apply);
+ 
+-static int reg_query_builtin(const char *alpha2)
++static int reg_schedule_apply(const struct ieee80211_regdomain *regdom)
+ {
+-	const struct ieee80211_regdomain *regdom = NULL;
+ 	struct reg_regdb_apply_request *request;
+-	unsigned int i;
+-
+-	for (i = 0; i < reg_regdb_size; i++) {
+-		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
+-			regdom = reg_regdb[i];
+-			break;
+-		}
+-	}
+-
+-	if (!regdom)
+-		return -ENODATA;
+ 
+ 	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
+-	if (!request)
+-		return -ENOMEM;
+-
+-	request->regdom = reg_copy_regd(regdom);
+-	if (IS_ERR_OR_NULL(request->regdom)) {
+-		kfree(request);
++	if (!request) {
++		kfree(regdom);
+ 		return -ENOMEM;
+ 	}
+ 
++	request->regdom = regdom;
++
+ 	mutex_lock(&reg_regdb_apply_mutex);
+ 	list_add_tail(&request->list, &reg_regdb_apply_list);
+ 	mutex_unlock(&reg_regdb_apply_mutex);
+ 
+ 	schedule_work(&reg_regdb_work);
+-
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_CFG80211_INTERNAL_REGDB
++static int reg_query_builtin(const char *alpha2)
++{
++	const struct ieee80211_regdomain *regdom = NULL;
++	unsigned int i;
++
++	for (i = 0; i < reg_regdb_size; i++) {
++		if (alpha2_equal(alpha2, reg_regdb[i]->alpha2)) {
++			regdom = reg_copy_regd(reg_regdb[i]);
++			break;
++		}
++	}
++	if (!regdom)
++		return -ENODATA;
++
++	return reg_schedule_apply(regdom);
++}
++
+ /* Feel free to add any other sanity checks here */
+ static void reg_regdb_size_check(void)
+ {
+@@ -605,12 +608,222 @@ static inline int call_crda(const char *alpha2)
+ }
+ #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
+ 
++/* code to directly load a firmware database through request_firmware */
++static const struct firmware *regdb;
++static unsigned int fwregdb_attempts = 10;
++
++struct fwdb_country {
++	u8 alpha2[2];
++	__be16 coll_ptr;
++} __packed __aligned(4);
++
++struct fwdb_collection {
++	__be16 len;
++	__be16 n_rules;
++	u8 dfs_region;
++	u8 pad_reserved;
++	__be16 rules_ptr[];
++} __packed __aligned(4);
++
++struct fwdb_rule {
++	__be16 len;
++	__be16 flags;
++	__be32 start, end, max_bw;
++	__be32 cac_timeout;
++	__be16 max_ant_gain;
++	__be16 max_eirp;
++} __packed __aligned(4);
++
++#define FWDB_MAGIC 0x52474442
++#define FWDB_VERSION 20
++
++struct fwdb_header {
++	__be32 magic;
++	__be32 version;
++	struct fwdb_country country[];
++} __packed __aligned(4);
++
++static bool valid_rule(const struct firmware *db, u16 rule_ptr)
++{
++	struct fwdb_rule *rule = (void *)(db->data + (rule_ptr << 2));
++
++	if ((u8 *)rule + sizeof(rule->len) > db->data + db->size)
++		return false;
++
++	/* mandatory fields */
++	if (be16_to_cpu(rule->len) < 24)
++		return false;
++
++	return true;
++}
++
++static bool valid_country(const struct firmware *db,
++			  const struct fwdb_country *country)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)(db->data + ptr);
++	unsigned int i;
++
++	if ((u8 *)coll + sizeof(coll->len) > db->data + db->size)
++		return false;
++
++	if ((u8 *)coll + be16_to_cpu(coll->len) > db->data + db->size)
++		return false;
++
++	/* mandatory fields */
++	if (be16_to_cpu(coll->len) < 6)
++		return false;
++
++	if (be16_to_cpu(coll->len) < 6 + 2 * be16_to_cpu(coll->n_rules))
++		return false;
++
++	for (i = 0; i < be16_to_cpu(coll->n_rules); i++) {
++		u16 rule_ptr = be16_to_cpu(coll->rules_ptr[i]);
++
++		if (!valid_rule(db, rule_ptr))
++			return false;
++	}
++
++	return true;
++}
++
++static bool valid_regdb(const struct firmware *db)
++{
++	const struct fwdb_header *hdr = (void *)db->data;
++	const struct fwdb_country *country;
++
++	if (db->size < sizeof(*hdr))
++		return false;
++
++	if (hdr->magic != cpu_to_be32(FWDB_MAGIC))
++		return false;
++
++	if (hdr->version != cpu_to_be32(FWDB_VERSION))
++		return false;
++
++	country = &hdr->country[0];
++	while ((u8 *)(country + 1) <= db->data + db->size) {
++		if (!country->coll_ptr)
++			break;
++		if (!valid_country(db, country))
++			return false;
++		country++;
++	}
++
++	return true;
++}
++
++static int regdb_query_country(const struct firmware *db,
++			       const struct fwdb_country *country)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)(db->data + ptr);
++	struct ieee80211_regdomain *regdom;
++	unsigned int size_of_regd;
++	unsigned int i;
++
++	size_of_regd =
++		sizeof(struct ieee80211_regdomain) +
++		be16_to_cpu(coll->n_rules) * sizeof(struct ieee80211_reg_rule);
++
++	regdom = kzalloc(size_of_regd, GFP_KERNEL);
++	if (!regdom)
++		return -ENOMEM;
++
++	regdom->n_reg_rules = be16_to_cpu(coll->n_rules);
++	regdom->alpha2[0] = country->alpha2[0];
++	regdom->alpha2[1] = country->alpha2[1];
++	regdom->dfs_region = coll->dfs_region;
++
++	for (i = 0; i < regdom->n_reg_rules; i++) {
++		unsigned int rule_ptr = be16_to_cpu(coll->rules_ptr[i]) << 2;
++		struct fwdb_rule *rule = (void *)(db->data + rule_ptr);
++		struct ieee80211_reg_rule *rrule = &regdom->reg_rules[i];
++
++		rrule->freq_range.start_freq_khz = be32_to_cpu(rule->start);
++		rrule->freq_range.end_freq_khz = be32_to_cpu(rule->end);
++		rrule->freq_range.max_bandwidth_khz = be32_to_cpu(rule->max_bw);
++
++		rrule->power_rule.max_antenna_gain =
++			be16_to_cpu(rule->max_ant_gain);
++		rrule->power_rule.max_eirp = be16_to_cpu(rule->max_eirp);
++
++		rrule->flags = be16_to_cpu(rule->flags);
++		rrule->dfs_cac_ms = be32_to_cpu(rule->cac_timeout);
++	}
++
++	return reg_schedule_apply(regdom);
++}
++
++static int query_regdb(const char *alpha2)
++{
++	const struct fwdb_header *hdr;
++	const struct fwdb_country *country;
++
++	if (IS_ERR(regdb))
++		return PTR_ERR(regdb);
++
++	hdr = (void *)regdb->data;
++	country = &hdr->country[0];
++	while (country->coll_ptr) {
++		if (alpha2_equal(alpha2, country->alpha2))
++			return regdb_query_country(regdb, country);
++		country++;
++	}
++
++	return -ENODATA;
++}
++
++static void regdb_fw_cb(const struct firmware *fw, void *context)
++{
++	if (!fw) {
++		pr_info("failed to load regulatory.db\n");
++		if (fwregdb_attempts-- == 0)
++			regdb = ERR_PTR(-ENODATA);
++		goto restore;
++	}
++
++	if (!valid_regdb(fw)) {
++		release_firmware(fw);
++		regdb = ERR_PTR(-EINVAL);
++		goto restore;
++	}
++
++	regdb = fw;
++	if (query_regdb(context))
++		goto restore;
++	goto free;
++ restore:
++	rtnl_lock();
++	restore_regulatory_settings(true);
++	rtnl_unlock();
++ free:
++	kfree(context);
++}
++
++static int query_regdb_file(const char *alpha2)
++{
++	if (regdb)
++		return query_regdb(alpha2);
++
++	alpha2 = kmemdup(alpha2, 2, GFP_KERNEL);
++	if (!alpha2)
++		return -ENOMEM;
++
++	return request_firmware_nowait(THIS_MODULE, true, "regulatory.db",
++				       &reg_pdev->dev, GFP_KERNEL,
++				       (void *)alpha2, regdb_fw_cb);
++}
++
+ static bool reg_query_database(struct regulatory_request *request)
+ {
+ 	/* query internal regulatory database (if it exists) */
+ 	if (reg_query_builtin(request->alpha2) == 0)
+ 		return true;
+ 
++	if (query_regdb_file(request->alpha2) == 0)
++		return true;
++
+ 	if (call_crda(request->alpha2) == 0)
+ 		return true;
+ 
+@@ -3276,4 +3489,7 @@ void regulatory_exit(void)
+ 		list_del(&reg_request->list);
+ 		kfree(reg_request);
+ 	}
++
++	if (!IS_ERR_OR_NULL(regdb))
++		release_firmware(regdb);
+ }
 -- 
-Julian Calaby
+2.5.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
