@@ -1,101 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4813 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C5k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:57:40 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 13/64] staging: wilc1000: rename hRemainOnChannel of struct host_if_drv
-Date: Thu, 29 Oct 2015 11:58:36 +0900
-Message-ID: <1446087567-16728-13-git-send-email-glen.lee@atmel.com> (sfid-20151029_035743_073874_1000A790)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+Received: from mga14.intel.com ([192.55.52.115]:8898 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224AbbJOHtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 03:49:11 -0400
+Date: Thu, 15 Oct 2015 15:47:43 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	austin.shin@atmel.com, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 33/40] staging: wilc1000: rename variable
+ gu32FlushedInfoElemAsocSize
+Message-ID: <201510151546.Iq5R4HbM%fengguang.wu@intel.com> (sfid-20151015_094918_450756_C66974AC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-33-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Leo,
 
-This patch renames hRemainOnChannel of struct host_if_drv to remain_on_ch_timer
-to avoid CamelCase naming convention.
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'mode_11i' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'join_req_size' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'info_element_size' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2212:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2352:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2352:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2352:38:    right side has type int
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6cde0bf..3cff865 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2530,8 +2530,8 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- ERRORHANDLER:
- 	{
- 		P2P_LISTEN_STATE = 1;
--		hif_drv->hRemainOnChannel.data = (unsigned long)hif_drv;
--		mod_timer(&hif_drv->hRemainOnChannel,
-+		hif_drv->remain_on_ch_timer.data = (unsigned long)hif_drv;
-+		mod_timer(&hif_drv->remain_on_ch_timer,
- 			  jiffies +
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
- 
-@@ -2628,7 +2628,7 @@ static void ListenTimerCB(unsigned long arg)
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
- 
--	del_timer(&hif_drv->hRemainOnChannel);
-+	del_timer(&hif_drv->remain_on_ch_timer);
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
-@@ -4139,7 +4139,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	setup_timer(&hif_drv->scan_timer, TimerCB_Scan, 0);
- 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
--	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
-+	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
- 
- 	sema_init(&hif_drv->sem_cfg_values, 1);
- 	down(&hif_drv->sem_cfg_values);
-@@ -4202,7 +4202,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 	if (del_timer_sync(&periodic_rssi))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
- 
--	del_timer_sync(&hif_drv->hRemainOnChannel);
-+	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
- 	host_int_set_wfi_drv_handler(NULL);
- 	down(&hif_sema_driver);
-@@ -4391,7 +4391,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
- 		return -EFAULT;
- 	}
- 
--	del_timer(&hif_drv->hRemainOnChannel);
-+	del_timer(&hif_drv->remain_on_ch_timer);
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d95011e..71788b1 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -314,7 +314,7 @@ struct host_if_drv {
- 
- 	struct timer_list scan_timer;
- 	struct timer_list connect_timer;
--	struct timer_list hRemainOnChannel;
-+	struct timer_list remain_on_ch_timer;
- 
- 	bool IFC_UP;
- };
--- 
-1.9.1
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
