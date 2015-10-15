@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57099 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751956AbbJEOhP (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33514 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932956AbbJOCI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:37:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:38 +0300
-Message-Id: <1444055820-27506-7-git-send-email-luca@coelho.fi> (sfid-20151005_163813_874958_84E8084C)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 07/29] iwlwifi: mvm: Correctly update MAC context on add/del station
+	Wed, 14 Oct 2015 22:08:29 -0400
+Received: by pabrc13 with SMTP id rc13so71294595pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:28 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 28/33] staging: wilc1000: fix return type of host_int_del_station
+Date: Thu, 15 Oct 2015 11:06:57 +0900
+Message-Id: <1444874822-31152-28-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041159_045910_4BDA51C1)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+This patch changes return type of host_int_del_station from s32 to int.
+s32Error gets return value from wilc_mq_send that has return type of
+int. It should be changed return type of this function as well as data
+type of s32Error.
 
-Commit "iwlwifi: mvm: don't ask beacons when AP vif and no
-assoc sta" directly called iwl_mvm_mac_ctxt_cmd_ap() to update the
-MAC context when adding/removing a station. However, this ignores
-the case that the vif is actually a P2P GO.
-
-Fix this by calling iwl_mvm_mac_ctxt_changed() that handles P2P GO
-case as well.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 6 +++---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 4 ----
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 2 +-
- 4 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 5af0090..3615650 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -1126,9 +1126,9 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
- 	ctxt_ap->beacon_template = cpu_to_le32(mvmvif->id);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 60c9fb9..3666495 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4728,9 +4728,9 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 	return s32Error;
  }
  
--int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
--			    struct ieee80211_vif *vif,
--			    u32 action)
-+static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
-+				   struct ieee80211_vif *vif,
-+				   u32 action)
+-s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
  {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mac_ctx_cmd cmd = {};
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 4c497fe..d7275a5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2616,7 +2616,7 @@ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
  
- 	if (mvm_sta->vif->type == NL80211_IFTYPE_AP) {
- 		mvmvif->ap_assoc_sta_count--;
--		iwl_mvm_mac_ctxt_cmd_ap(mvm, vif, FW_CTXT_ACTION_MODIFY);
-+		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 2452faa4..d3f01ef 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -1012,7 +1012,7 @@ int host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
  
- 	mutex_unlock(&mvm->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index cf1f514..5e02736 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1129,10 +1129,6 @@ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif);
- unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
- 					 struct ieee80211_vif *exclude_vif);
--int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
--			    struct ieee80211_vif *vif,
--			    u32 action);
--
- /* Bindings */
- int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 18ca030..4967990 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -277,7 +277,7 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 
- 	if (vif->type == NL80211_IFTYPE_AP) {
- 		mvmvif->ap_assoc_sta_count++;
--		iwl_mvm_mac_ctxt_cmd_ap(mvm, vif, FW_CTXT_ACTION_MODIFY);
-+		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 	}
- 
- 	spin_lock_init(&mvm_sta->lock);
+ /*!
+  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-2.5.3
+2.6.1
 
