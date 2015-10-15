@@ -1,98 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9820 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbbJBFXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 01:23:20 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/10] staging: wilc1000: remove function pointer rx_indicate
-Date: Fri, 2 Oct 2015 14:22:10 +0900
-Message-ID: <1443763332-7330-8-git-send-email-tony.cho@atmel.com> (sfid-20151002_073152_765188_4DDD33CD)
-In-Reply-To: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
-References: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
+Received: from mga09.intel.com ([134.134.136.24]:54066 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754879AbbJOHTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 03:19:17 -0400
+Date: Thu, 15 Oct 2015 15:18:34 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 30/40] staging: wilc1000: rename variable
+ gu8Flushed11iMode
+Message-ID: <201510151552.WMKP1tMV%fengguang.wu@intel.com> (sfid-20151015_091925_415969_5440CBDA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-30-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+Hi Leo,
 
-This patch removes function pointer rx_indicate and just call the function
-wilc_wlan_cfg_indicate_rx instead. Remove static from the function
-declration.
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'mode_11i' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2213:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2353:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2353:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2353:38:    right side has type int
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/staging/wilc1000/wilc_wlan.c     | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h     | 1 -
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 1 +
- 4 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a9a8d24..cd4598a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1198,7 +1198,7 @@ static void wilc_wlan_handle_rxq(void)
- 
- 
- 
--					mac_cfg.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
-+					wilc_wlan_cfg_indicate_rx(&buffer[pkt_offset + offset], pkt_len, &rsp);
- 					if (rsp.type == WILC_CFG_RSP) {
- 						/**
- 						 *      wake up the waiting task...
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 9386939..5099cf0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -296,7 +296,6 @@ typedef struct {
- } wilc_cfg_rsp_t;
- 
- typedef struct {
--	int (*rx_indicate)(u8 *, int, wilc_cfg_rsp_t *);
- 	int (*cfg_init)(wilc_debug_func);
- } wilc_cfg_func_t;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 55d2083..2916d45 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -505,7 +505,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	return ret;
- }
- 
--static int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
-+int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
- {
- 	int ret = 1;
- 	u8 msg_type;
-@@ -566,6 +566,5 @@ static int wilc_wlan_cfg_init(wilc_debug_func func)
- }
- 
- wilc_cfg_func_t mac_cfg = {
--	wilc_wlan_cfg_indicate_rx,
- 	wilc_wlan_cfg_init,
- };
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 0efa2c5..fe2c0382 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -33,5 +33,6 @@ typedef struct {
- int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
-+int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp);
- 
- #endif
--- 
-1.9.1
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
