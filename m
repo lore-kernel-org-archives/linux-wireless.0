@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20747 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6027 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbbJWINY (ORCPT
+	with ESMTP id S932079AbbJOE0Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 04:13:24 -0400
-Subject: Re: [PATCH 05/28] staging: wilc1000: wilc_handle_isr: add argument
- wilc to wilc_handle_isr
-To: Dan Carpenter <dan.carpenter@oracle.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
- <1445578124-31486-5-git-send-email-glen.lee@atmel.com>
- <20151023065703.GV7340@mwanda> <5629E367.1000006@atmel.com>
- <20151023075253.GA7289@mwanda>
-CC: Glen Lee <glen.lee@atmel.com>, <gregkh@linuxfoundation.org>,
-	<devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
-	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
-	<adham.abozaeid@atmel.com>
+	Thu, 15 Oct 2015 00:26:25 -0400
 From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <5629EC11.40507@atmel.com> (sfid-20151023_101346_100137_CA5D96DF)
-Date: Fri, 23 Oct 2015 17:13:05 +0900
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/40] staging: wilc1000: rename au8Interval of struct join_bss_param
+Date: Thu, 15 Oct 2015 13:24:49 +0900
+Message-ID: <1444883121-31757-8-git-send-email-tony.cho@atmel.com> (sfid-20151015_062634_087457_5A6D1B34)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151023075253.GA7289@mwanda>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch renames au8Interval of struct join_bss_param to interval
+to avoid CamelCase naming convention.
 
-On 2015년 10월 23일 16:52, Dan Carpenter wrote:
-> On Fri, Oct 23, 2015 at 04:36:07PM +0900, Tony Cho wrote:
->> In addition, the function parameter names will be wilc
->> for the variable of struct wilc.
->>
->> The "wl" is local variable naming as well.
-> So if it is a parameter it is wilc but if it is a local variable then it
-> is wl?  That seems like an arbitrary meaningless distinction.  It just
-> makes searching harder and complicates things for no reason.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-I will be on the business trip for the time being so let me ask Glen to
-
-reconsider your concerns to apply your opinion to coming patches.
-
-I always appreciate your guide and reviews because learning valuable things from you.
-
-Thanks,
-
-Tony.
-
->
-> regards,
-> dan carpenter
->
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0c5cf08..5cbba1a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -225,7 +225,7 @@ struct join_bss_param {
+ 	u8 cnt;
+ 	u8 idx;
+ 	u8 duration[4];
+-	u8 au8Interval[4];
++	u8 interval[4];
+ 	u8 au8StartTime[4];
+ };
+ 
+@@ -1205,9 +1205,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		memcpy(pu8CurrByte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
+ 		pu8CurrByte += sizeof(ptstrJoinBssParam->duration);
+ 
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Interval, sizeof(ptstrJoinBssParam->au8Interval));
+-
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->au8Interval);
++		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
++		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
+ 
+ 		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
+ 
+@@ -5002,7 +5001,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				memcpy(pNewJoinBssParam->duration, pu8IEs + u16P2P_count, 4);
+ 				u16P2P_count += 4;
+ 
+-				memcpy(pNewJoinBssParam->au8Interval, pu8IEs + u16P2P_count, 4);
++				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
+ 				u16P2P_count += 4;
+ 
+ 				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
+-- 
+1.9.1
 
