@@ -1,68 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52271 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbbJPEi4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:38:56 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 06/40] staging: wilc1000: rename u8Index of struct join_bss_param
-Date: Fri, 16 Oct 2015 13:37:36 +0900
-Message-ID: <1444970290-17609-6-git-send-email-tony.cho@atmel.com> (sfid-20151016_063902_336079_E80E7D7E)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:37499 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751731AbbJOJrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 05:47:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/6] cfg80211: reg: rename reg_call_crda to reg_query_database
+Date: Thu, 15 Oct 2015 11:46:54 +0200
+Message-Id: <1444902418-25668-2-git-send-email-johannes@sipsolutions.net> (sfid-20151015_114711_675192_F8FCD15B)
+In-Reply-To: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
+References: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames u8Index of struct join_bss_param to idx
-to avoid CamelCase naming convention.
+The new name is more appropriate since in the case of a built-in
+database it may not really rely on CRDA.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/wireless/reg.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e8a35d3..75a4279 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -223,7 +223,7 @@ struct join_bss_param {
- 	u8 opp_enabled;
- 	u8 ct_window;
- 	u8 cnt;
--	u8 u8Index;
-+	u8 idx;
- 	u8 au8Duration[4];
- 	u8 au8Interval[4];
- 	u8 au8StartTime[4];
-@@ -1194,8 +1194,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
- 		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3acb51462cc6..c63a13185905 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -555,7 +555,7 @@ static int call_crda(const char *alpha2)
+ }
  
--		*(pu8CurrByte++) = ptstrJoinBssParam->u8Index;
- 		*(pu8CurrByte++) = ptstrJoinBssParam->opp_enabled;
-+		*(pu8CurrByte++) = ptstrJoinBssParam->idx;
+ static enum reg_request_treatment
+-reg_call_crda(struct regulatory_request *request)
++reg_query_database(struct regulatory_request *request)
+ {
+ 	if (call_crda(request->alpha2))
+ 		return REG_REQ_IGNORE;
+@@ -1867,7 +1867,7 @@ reg_process_hint_core(struct regulatory_request *core_request)
  
- 		if (ptstrJoinBssParam->opp_enabled)
- 			*(pu8CurrByte++) = ptstrJoinBssParam->ct_window;
-@@ -4984,7 +4984,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 	reg_update_last_request(core_request);
  
- 				pNewJoinBssParam->tsf = ptstrNetworkInfo->u32Tsf;
- 				pNewJoinBssParam->noa_enabled = 1;
--				pNewJoinBssParam->u8Index = pu8IEs[index + 9];
-+				pNewJoinBssParam->idx = pu8IEs[index + 9];
+-	return reg_call_crda(core_request);
++	return reg_query_database(core_request);
+ }
  
- 				if (pu8IEs[index + 10] & BIT(7)) {
- 					pNewJoinBssParam->opp_enabled = 1;
+ static enum reg_request_treatment
+@@ -1935,7 +1935,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	user_alpha2[0] = user_request->alpha2[0];
+ 	user_alpha2[1] = user_request->alpha2[1];
+ 
+-	return reg_call_crda(user_request);
++	return reg_query_database(user_request);
+ }
+ 
+ static enum reg_request_treatment
+@@ -2016,7 +2016,7 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 		return treatment;
+ 	}
+ 
+-	return reg_call_crda(driver_request);
++	return reg_query_database(driver_request);
+ }
+ 
+ static enum reg_request_treatment
+@@ -2101,7 +2101,7 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
+ 
+ 	reg_update_last_request(country_ie_request);
+ 
+-	return reg_call_crda(country_ie_request);
++	return reg_query_database(country_ie_request);
+ }
+ 
+ /* This processes *all* regulatory hints */
 -- 
-1.9.1
+2.5.1
 
