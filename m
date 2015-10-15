@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:33930 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbbJWOea (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6545 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbbJOE3a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 10:34:30 -0400
-Received: by lfaz124 with SMTP id z124so85866488lfa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 07:34:29 -0700 (PDT)
+	Thu, 15 Oct 2015 00:29:30 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 36/40] staging: wilc1000: move variable clients_count
+Date: Thu, 15 Oct 2015 13:25:17 +0900
+Message-ID: <1444883121-31757-36-git-send-email-tony.cho@atmel.com> (sfid-20151015_064655_286895_0DF2D7E1)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1445540254-4207-1-git-send-email-punitvara@gmail.com>
-References: <1445540254-4207-1-git-send-email-punitvara@gmail.com>
-Date: Fri, 23 Oct 2015 07:34:28 -0700
-Message-ID: <CAJAp7OgZY+GMFBpU6TonZh+tvHiVC21pUAr0jPCDHjgS5On4Jg@mail.gmail.com> (sfid-20151023_163450_136010_2B9FECC9)
-Subject: Re: [PATCH v5 14/15] net: wireless: ath: Remove unneeded variable ret
- returning 0
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Punit Vara <punitvara@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	sergei.shtylyov@cogentembedded.com, jirislaby@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 11:57 AM, Punit Vara <punitvara@gmail.com> wrote:
+From: Leo Kim <leo.kim@atmel.com>
 
-Hi Punit,
+This patch move static variable clients_count to local variable position.
 
-> Remove empty line suggested by Sergei
->
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-A commit message is here to, in the future, help us all understand
-what and why this change was made, so you should not include comments
-about what you changed since a previous version of this patch.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4270ef1..ce8cfef 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -260,6 +260,7 @@ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+ static u32 inactive_time;
+ static u8 del_beacon;
++static u32 clients_count;
+ 
+ u8 *join_req;
+ u8 *info_element;
+@@ -4175,8 +4176,6 @@ void host_int_send_network_info_to_host
+ {
+ }
+ 
+-static u32 clients_count;
+-
+ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ {
+ 	s32 result = 0;
+-- 
+1.9.1
 
-> This patch is to the ath5k/eeprom.c that fixes up warning caught by
-> coccicheck:
->
-
-You don't need to indicate what files are changed in the commit
-message, as that information is already available in the body of the
-commit. And the comment stats the wrong file.
-
-> Unneeded variable: "ret". Return "0" on line 980
->
-> Remove unneeded variable ret created to return zero.
->
-
-Both of these are only reiterating what the subject already states -
-in two different ways. So you can easily remove them without loosing
-any information. In fact, the subject is all you need to describe the
-change.
-
-Regards,
-Bjorn
