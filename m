@@ -1,113 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:35970 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884AbbJJT2v (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36356 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368AbbJOCHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2015 15:28:51 -0400
-Received: by qgx61 with SMTP id 61so94315586qgx.3
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2015 12:28:50 -0700 (PDT)
-From: Jacob Kiefer <jtk54@cornell.edu>
-Cc: Jacob Kiefer <jtk54@cornell.edu>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
-	WIRELESS DRIVER),
-	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 1/2 v3] drivers: staging: rtl8723au: Changed rssi_cmd to little-endian param
-Date: Sat, 10 Oct 2015 15:28:16 -0400
-Message-Id: <1444505324-2924-1-git-send-email-jtk54@cornell.edu> (sfid-20151010_212948_295083_BF950626)
-To: unlisted-recipients:; (no To-header on input)
+	Wed, 14 Oct 2015 22:07:30 -0400
+Received: by pabws5 with SMTP id ws5so7332030pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:30 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/33] staging: wilc1000: fix return type of host_int_get_MacAddress
+Date: Thu, 15 Oct 2015 11:06:37 +0900
+Message-Id: <1444874822-31152-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040736_129328_66B0416D)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jacob Kiefer <jtk54@cornell.edu>
+This patch changes return type of host_int_get_MacAddress from s32 to
+int. s32Error gets return value from wilc_mq_send that has return type
+of int. It should be changed return type by int as well as data type of
+s32Error.
 
-Changed rssi_cmd interface to accept le32 param instead of
-unnecessary u8 * conversion. Updated existing calls to rssi_cmd.
-This patch pushes responsibility to caller to convert to
-le32. This cleans up the code quite a bit.
-Also removed magic numbers.
-
-This patch fixes the following sparse error:
-
-  CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-...
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
-  warning: incorrect type in assignment (different base types)
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: \
-  expected unsigned int [unsigned] [usertype] <noident>
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:  \
-  got restricted __le32 [usertype] <noident>
-...
-
-Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
-In v3, opted to change the interface rather than just the internal
-code to clear the sparse errors and make the code more sane.
----
- drivers/staging/rtl8723au/hal/odm.c              | 3 ++-
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 7 +++----
- drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
-index 6b9dbef..c7f45c7 100644
---- a/drivers/staging/rtl8723au/hal/odm.c
-+++ b/drivers/staging/rtl8723au/hal/odm.c
-@@ -1274,7 +1274,8 @@ static void odm_RSSIMonitorCheck(struct dm_odm_t *pDM_Odm)
-
- 	for (i = 0; i < sta_cnt; i++) {
- 		if (PWDB_rssi[i] != (0))
--			rtl8723a_set_rssi_cmd(Adapter, (u8 *)&PWDB_rssi[i]);
-+			rtl8723a_set_rssi_cmd(Adapter,
-+					cpu_to_le32(PWDB_rssi[i]));
- 	}
-
- 	pdmpriv->EntryMaxUndecoratedSmoothedPWDB = MaxDB;
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-index 9733aa6..97d23c3 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-@@ -25,6 +25,7 @@
- #define RTL92C_MAX_CMD_LEN		5
- #define MESSAGE_BOX_SIZE		4
- #define EX_MESSAGE_BOX_SIZE		2
-+#define RSSI_CMD_LEN			3
-
- static u8 _is_fw_read_cmd_down(struct rtw_adapter *padapter, u8 msgbox_num)
- {
-@@ -113,11 +114,9 @@ exit:
- 	return ret;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a4e0c5b..ba63565d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3497,9 +3497,9 @@ s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hif_drv,
+ 	return 0;
  }
-
--int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
-+int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param)
+ 
+-s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
++int host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
  {
--	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
--
--	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
-+	FillH2CCmd(padapter, RSSI_SETTING_EID, RSSI_CMD_LEN, (u8 *)&param);
-
- 	return _SUCCESS;
- }
-diff --git a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-index 014c02e..e281543 100644
---- a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-+++ b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-@@ -149,7 +149,7 @@ void rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(struct rtw_adapter *padapter);
- #else
- #define rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(padapter) do {} while(0)
- #endif
--int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param);
-+int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param);
- int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg);
- void rtl8723a_add_rateatid(struct rtw_adapter *padapter, u32 bitmap, u8 arg, u8 rssi_level);
-
---
-1.8.3.2
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 34aa1dc..08cc4c0 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -586,7 +586,7 @@ s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
+  *  @date		19 April 2012
+  *  @version		1.0
+  */
+-s32 host_int_get_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
++int host_int_get_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
+ 
+ /**
+  *  @brief              sets mac address
+-- 
+2.6.1
 
