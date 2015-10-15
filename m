@@ -1,117 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57106 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751311AbbJEOhR (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6175 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbbJOE1L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:37:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Assaf Krauss <assaf.krauss@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:40 +0300
-Message-Id: <1444055820-27506-9-git-send-email-luca@coelho.fi> (sfid-20151005_163816_141788_E131B2BE)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 09/29] iwlwifi: mvm: Fix tof debugfs formats (dec vs. hex)
+	Thu, 15 Oct 2015 00:27:11 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 15/40] staging: wilc1000: rename variable hWaitResponse
+Date: Thu, 15 Oct 2015 13:24:56 +0900
+Message-ID: <1444883121-31757-15-git-send-email-tony.cho@atmel.com> (sfid-20151015_062715_488902_80476C5F)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Make some input formats more natural, e.g. bandwidth and periods
-are more natural in decimal than in hexadecimal.
+This patch renames variable hWaitResponse to hif_sema_wait_response
+to avoid CamelCase naming convention.
 
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 40 ++++++++++++++------------
- 1 file changed, 21 insertions(+), 19 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index 334ae56..15ab543 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -913,11 +913,11 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 		u8 *mac = ap.bssid;
- 		unsigned int i;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b4f8c3a..d9a4e3a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -243,7 +243,7 @@ static struct task_struct *hif_thread_handler;
+ static WILC_MsgQueueHandle hif_msg_q;
+ static struct semaphore hif_sema_thread;
+ struct semaphore hif_sema_driver;
+-static struct semaphore hWaitResponse;
++static struct semaphore hif_sema_wait_response;
+ struct semaphore hSemHostIntDeinit;
+ struct timer_list g_hPeriodicRSSI;
  
--		if (sscanf(data, "%u %hhd %hhx %hhx"
-+		if (sscanf(data, "%u %hhd %hhd %hhd"
- 			   "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx"
--			   "%hhx %hhx %hx"
--			   "%hhx %hhx %x"
--			   "%hhx %hhx %hhx %hhx",
-+			   "%hhd %hhd %hd"
-+			   "%hhd %hhd %d"
-+			   "%hhx %hhd %hhd %hhd",
- 			   &i, &ap.channel_num, &ap.bandwidth,
- 			   &ap.ctrl_ch_position,
- 			   mac, mac + 1, mac + 2, mac + 3, mac + 4, mac + 5,
-@@ -994,16 +994,18 @@ static ssize_t iwl_dbgfs_tof_range_request_read(struct file *file,
- 		struct iwl_tof_range_req_ap_entry *ap = &cmd->ap[i];
- 
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				"ap %.2d: channel_num=%hhx bw=%hhx"
--				" control=%hhx bssid=%pM type=%hhx"
--				" num_of_bursts=%hhx burst_period=%hx ftm=%hhx"
--				" retries=%hhx tsf_delta=%x location_req=%hhx "
--				" asap=%hhx enable=%hhx rssi=%hhx\n",
-+				"ap %.2d: channel_num=%hhd bw=%hhd"
-+				" control=%hhd bssid=%pM type=%hhd"
-+				" num_of_bursts=%hhd burst_period=%hd ftm=%hhd"
-+				" retries=%hhd tsf_delta=%d"
-+				" tsf_delta_direction=%hhd location_req=0x%hhx "
-+				" asap=%hhd enable=%hhd rssi=%hhd\n",
- 				i, ap->channel_num, ap->bandwidth,
- 				ap->ctrl_ch_position, ap->bssid,
- 				ap->measure_type, ap->num_of_bursts,
- 				ap->burst_period, ap->samples_per_burst,
- 				ap->retries_per_sample, ap->tsf_delta,
-+				ap->tsf_delta_direction,
- 				ap->location_req, ap->asap_mode,
- 				ap->enable_dyn_ack, ap->rssi);
+@@ -526,7 +526,7 @@ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+ 		PRINT_ER("Failed to get mac address\n");
+ 		s32Error = -EFAULT;
  	}
-@@ -1099,18 +1101,18 @@ static ssize_t iwl_dbgfs_tof_range_req_ext_read(struct file *file,
- 	mutex_lock(&mvm->mutex);
+-	up(&hWaitResponse);
++	up(&hif_sema_wait_response);
  
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "tsf_timer_offset_msec = %hx\n",
-+			 "tsf_timer_offset_msec = %hd\n",
- 			 cmd->tsf_timer_offset_msec);
--	pos += scnprintf(buf + pos, bufsz - pos, "min_delta_ftm = %hhx\n",
-+	pos += scnprintf(buf + pos, bufsz - pos, "min_delta_ftm = %hhd\n",
- 			 cmd->min_delta_ftm);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "ftm_format_and_bw20M = %hhx\n",
-+			 "ftm_format_and_bw20M = %hhd\n",
- 			 cmd->ftm_format_and_bw20M);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "ftm_format_and_bw40M = %hhx\n",
-+			 "ftm_format_and_bw40M = %hhd\n",
- 			 cmd->ftm_format_and_bw40M);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "ftm_format_and_bw80M = %hhx\n",
-+			 "ftm_format_and_bw80M = %hhd\n",
- 			 cmd->ftm_format_and_bw80M);
+ 	return s32Error;
+ }
+@@ -817,7 +817,7 @@ ERRORHANDLER:
+ static s32 Handle_wait_msg_q_empty(void)
+ {
+ 	g_wilc_initialized = 0;
+-	up(&hWaitResponse);
++	up(&hif_sema_wait_response);
+ 	return 0;
+ }
  
- 	mutex_unlock(&mvm->mutex);
-@@ -1205,11 +1207,11 @@ static ssize_t iwl_dbgfs_tof_range_response_read(struct file *file,
- 		struct iwl_tof_range_rsp_ap_entry_ntfy *ap = &cmd->ap[i];
+@@ -2253,7 +2253,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	if (s32Error)
+ 		PRINT_ER("Failed to send scan paramters config packet\n");
  
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				"ap %.2d: bssid=%pM status=%hhx bw=%hhx"
--				" rtt=%x rtt_var=%x rtt_spread=%x"
--				" rssi=%hhx  rssi_spread=%hhx"
--				" range=%x range_var=%x"
--				" time_stamp=%x\n",
-+				"ap %.2d: bssid=%pM status=%hhd bw=%hhd"
-+				" rtt=%d rtt_var=%d rtt_spread=%d"
-+				" rssi=%hhd  rssi_spread=%hhd"
-+				" range=%d range_var=%d"
-+				" time_stamp=%d\n",
- 				i, ap->bssid, ap->measure_status,
- 				ap->measure_bw,
- 				ap->rtt, ap->rtt_variance, ap->rtt_spread,
+-	up(&hWaitResponse);
++	up(&hif_sema_wait_response);
+ 	return 0;
+ 
+ }
+@@ -2508,7 +2508,7 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
+ ERRORHANDLER:
+ 	kfree(strWID.val);
+ 
+-	up(&hWaitResponse);
++	up(&hif_sema_wait_response);
+ }
+ 
+ static void Handle_DelStation(struct host_if_drv *hif_drv,
+@@ -2908,7 +2908,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+ 	if (strWID.val != NULL)
+ 		kfree(strWID.val);
+ 
+-	up(&hWaitResponse);
++	up(&hif_sema_wait_response);
+ 
+ 	return s32Error;
+ 
+@@ -3505,7 +3505,7 @@ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ 		return -EFAULT;
+ 	}
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 	return s32Error;
+ }
+ 
+@@ -3792,7 +3792,7 @@ int host_int_wait_msg_queue_idle(void)
+ 		result = -EINVAL;
+ 	}
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 
+ 	return result;
+ }
+@@ -3999,7 +3999,7 @@ s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
+ 		return -EFAULT;
+ 	}
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 	return s32Error;
+ }
+ 
+@@ -4229,7 +4229,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 
+ 	gbScanWhileConnected = false;
+ 
+-	sema_init(&hWaitResponse, 0);
++	sema_init(&hif_sema_wait_response, 0);
+ 
+ 	hif_drv  = kzalloc(sizeof(struct host_if_drv), GFP_KERNEL);
+ 	if (!hif_drv) {
+@@ -4795,7 +4795,7 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
+ 	if (s32Error)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 
+ 	return s32Error;
+ 
+@@ -5091,7 +5091,7 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
+ 	if (s32Error)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 
+ 	return s32Error;
+ }
+@@ -5121,7 +5121,7 @@ s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
+ 	if (s32Error)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ 
+-	down(&hWaitResponse);
++	down(&hif_sema_wait_response);
+ 
+ 	return s32Error;
+ }
 -- 
-2.5.3
+1.9.1
 
