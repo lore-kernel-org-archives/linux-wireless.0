@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47318 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161AbbJZIXo (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:34125 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617AbbJOXEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 04:23:44 -0400
-Date: Mon, 26 Oct 2015 17:23:40 +0900
-From: Greg KH <gregkh@linuxfoundation.org>
-To: glen lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 02/28] staging: wicl1000: isr_uh_routine: use netdev
- private wilc
-Message-ID: <20151026082340.GA4643@kroah.com> (sfid-20151026_092353_487472_8EE7E624)
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
- <1445578124-31486-2-git-send-email-glen.lee@atmel.com>
- <20151025012944.GA22184@kroah.com>
- <562D8B2B.2000308@atmel.com>
+	Thu, 15 Oct 2015 19:04:14 -0400
+Received: by igbni9 with SMTP id ni9so2717926igb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2015 16:04:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <562D8B2B.2000308@atmel.com>
+In-Reply-To: <1444902418-25668-5-git-send-email-johannes@sipsolutions.net>
+References: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net> <1444902418-25668-5-git-send-email-johannes@sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 16 Oct 2015 10:03:54 +1100
+Message-ID: <CAGRGNgUZXfrmCA+KpgTW2_yFEqVao7DmQofNrFpiiRAWhUaYXw@mail.gmail.com> (sfid-20151016_010417_089181_030B30DE)
+Subject: Re: [PATCH 5/6] cfg80211: reg: make CRDA support optional
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 26, 2015 at 11:08:43AM +0900, glen lee wrote:
-> 
-> 
-> On 2015년 10월 25일 10:29, Greg KH wrote:
-> >On Fri, Oct 23, 2015 at 02:28:18PM +0900, Glen Lee wrote:
-> >>Use netdev private member wilc instead of g_linux_wlan and Change argument wilc
-> >>with dev in the function request_threaded_irq to pass back to handler
-> >>the function isr_uh_routine.
-> >>
-> >>Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> >>---
-> >>  drivers/staging/wilc1000/linux_wlan.c | 9 +++++++--
-> >>  1 file changed, 7 insertions(+), 2 deletions(-)
-> >>
-> >>diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> >>index b036b96..7b0614d 100644
-> >>--- a/drivers/staging/wilc1000/linux_wlan.c
-> >>+++ b/drivers/staging/wilc1000/linux_wlan.c
-> >>@@ -229,10 +229,15 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
-> >>  #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
-> >>  static irqreturn_t isr_uh_routine(int irq, void *user_data)
-> >>  {
-> >>+	perInterface_wlan_t *nic;
-> >>+	struct wilc *wl;
-> >>+
-> >>+	nic = netdev_priv(usedata);
-> >This patch breaks the build, which means you didn't even test build the
-> >series :(
-> 
-> Hi greg,
-> 
-> I built every patches I'v posted and also there is no build error for this patch.
+Hi Johannes,
 
-I don't believe you, just look at the lines, it's obviously incorrect.
+On Thu, Oct 15, 2015 at 8:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> If there's a built-in regulatory database, there may be little point
+> in also calling out to CRDA and failing if the system is configured
+> that way. Allow removing CRDA support to save ~1K kernel size.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/Kconfig   |  10 +++++
+>  net/wireless/nl80211.c | 104 +++++++++++++++++++++++++------------------------
+>  net/wireless/reg.c     |  73 +++++++++++++++++++++++-----------
+>  3 files changed, 114 insertions(+), 73 deletions(-)
+>
+> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+> index 4f5543dd2524..ab7017951083 100644
+> --- a/net/wireless/Kconfig
+> +++ b/net/wireless/Kconfig
+> @@ -174,6 +174,16 @@ config CFG80211_INTERNAL_REGDB
+>
+>           Most distributions have a CRDA package.  So if unsure, say N.
+>
+> +config CFG80211_CRDA_SUPPORT
+> +       bool "support CRDA" if EXPERT
+> +       default y
+> +       depends on CFG80211
+> +       help
+> +         You should enable this option unless you know for sure you have no
+> +         need for it, for example when using internal regdb (above.)
+> +
+> +         If unsure, say Y.
+> +
 
-> Would you please reconsider this patch again?
+Is there a way to force the kernel builder to select at least one of
+these if they're building cfg80211?
 
-Why would I ever accept a patch that is obviously wrong?  I would be a
-horrible subsystem maintainer, and you would not want me to merge an
-obviously broken patch from someone else into this driver, breaking it,
-right?
+Thanks,
 
-I have no idea why you would expect me to ever accept this patch as-is.
+-- 
+Julian Calaby
 
-greg k-h
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
