@@ -1,41 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:46639 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111AbbJPNBw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6134 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252AbbJOE06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 09:01:52 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <c_traja@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2 v2] ath10k: Make fw stats prints specific to firmware version
-References: <1444812821-11138-1-git-send-email-c_traja@qti.qualcomm.com>
-Date: Fri, 16 Oct 2015 16:01:34 +0300
-In-Reply-To: <1444812821-11138-1-git-send-email-c_traja@qti.qualcomm.com> (c.
-	traja's message of "Wed, 14 Oct 2015 14:23:41 +0530")
-Message-ID: <87lhb3ge6p.fsf@kamboji.qca.qualcomm.com> (sfid-20151016_150216_784145_DEF2A177)
+	Thu, 15 Oct 2015 00:26:58 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/40] staging: wilc1000: rename variable hSemHostIFthrdEnd
+Date: Thu, 15 Oct 2015 13:24:54 +0900
+Message-ID: <1444883121-31757-13-git-send-email-tony.cho@atmel.com> (sfid-20151015_062701_001626_86C68B84)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<c_traja@qti.qualcomm.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> From: Manikanta <c_mpubbi@qti.qualcomm.com>
->
-> The patch makes debug stats prints fw specific by adding a new member
-> in wmi_ops
->
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+This patch renames variable hSemHostIFthrdEnd to hif_sema_thread
+to avoid CamelCase naming convention.
 
-This patch added few checkpatch warnings, I fixed them in the pending
-branch.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-drivers/net/wireless/ath/ath10k/wmi-ops.h:1297: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/wmi.c:6628: Missing a blank line after declarations
-drivers/net/wireless/ath/ath10k/wmi.c:6638: Missing a blank line after declarations
-
-Also I fixed Manikanta's name and added his Signed-off-by line which you
-had accidentally dropped.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bb770ab1..a587080 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -241,8 +241,7 @@ bool g_obtainingIP;
+ u8 P2P_LISTEN_STATE;
+ static struct task_struct *hif_thread_handler;
+ static WILC_MsgQueueHandle hif_msg_q;
+-static struct semaphore hSemHostIFthrdEnd;
+-
++static struct semaphore hif_sema_thread;
+ struct semaphore hSemDeinitDrvHandle;
+ static struct semaphore hWaitResponse;
+ struct semaphore hSemHostIntDeinit;
+@@ -3123,7 +3122,7 @@ static int hostIFthread(void *pvArg)
+ 	}
+ 
+ 	PRINT_D(HOSTINF_DBG, "Releasing thread exit semaphore\n");
+-	up(&hSemHostIFthrdEnd);
++	up(&hif_sema_thread);
+ 	return 0;
+ }
+ 
+@@ -4250,7 +4249,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Global handle pointer value=%p\n", hif_drv);
+ 	if (clients_count == 0)	{
+-		sema_init(&hSemHostIFthrdEnd, 0);
++		sema_init(&hif_sema_thread, 0);
+ 		sema_init(&hSemDeinitDrvHandle, 0);
+ 		sema_init(&hSemHostIntDeinit, 1);
+ 	}
+@@ -4383,7 +4382,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		if (s32Error != 0)
+ 			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", s32Error);
+ 
+-		down(&hSemHostIFthrdEnd);
++		down(&hif_sema_thread);
+ 
+ 		wilc_mq_destroy(&hif_msg_q);
+ 	}
 -- 
-Kalle Valo
+1.9.1
+
