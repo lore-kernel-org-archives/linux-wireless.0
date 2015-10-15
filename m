@@ -1,20 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41581 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6492 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754999AbbJ1G6N (ORCPT
+	with ESMTP id S1753287AbbJOE3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:58:13 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Thu, 15 Oct 2015 00:29:10 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/80] staging: wilc1000: host_interface: removes unused functions
-Date: Wed, 28 Oct 2015 15:59:26 +0900
-Message-ID: <1446015640-29398-6-git-send-email-glen.lee@atmel.com> (sfid-20151028_075817_423891_FA4C1F17)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 33/40] staging: wilc1000: rename variable gu32FlushedInfoElemAsocSize
+Date: Thu, 15 Oct 2015 13:25:14 +0900
+Message-ID: <1444883121-31757-33-git-send-email-tony.cho@atmel.com> (sfid-20151015_064658_618764_01CD57D3)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,91 +24,52 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch removes unused functions at host_interface files.
- - host_int_send_join_leave_info_to_host
- - host_int_send_network_info_to_host
+This patch renames variable gu32FlushedInfoElemAsocSize to info_element_size
+to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 11 ----------
- drivers/staging/wilc1000/host_interface.h | 34 -------------------------------
- 2 files changed, 45 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c3826eb..7f29abd 100644
+index 29ee4bd..961e853 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4037,11 +4037,6 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
- 	return result;
- }
+@@ -266,7 +266,7 @@ u8 *info_element;
+ u8 mode_11i;
+ u8 auth_type;
+ u32 join_req_size;
+-u32 gu32FlushedInfoElemAsocSize;
++u32 info_element_size;
+ struct host_if_drv *gu8FlushedJoinReqDrvHandler;
+ #define REAL_JOIN_REQ 0
+ #define FLUSHED_JOIN_REQ 1
+@@ -1074,11 +1074,10 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		u32WidsCount++;
  
--void host_int_send_join_leave_info_to_host
--	(u16 assocId, u8 *stationAddr, bool joining)
--{
--}
+ 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
 -
- static void GetPeriodicRSSI(unsigned long arg)
- {
- 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
-@@ -4070,12 +4065,6 @@ static void GetPeriodicRSSI(unsigned long arg)
- 	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- }
+-			gu32FlushedInfoElemAsocSize = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
+-			info_element = kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
++			info_element_size = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
++			info_element = kmalloc(info_element_size, GFP_KERNEL);
+ 			memcpy(info_element, hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs,
+-			       gu32FlushedInfoElemAsocSize);
++			       info_element_size);
+ 		}
+ 	}
+ 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
+@@ -1303,7 +1302,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ 	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
+ 	strWIDList[u32WidsCount].type = WID_BIN_DATA;
+ 	strWIDList[u32WidsCount].val = info_element;
+-	strWIDList[u32WidsCount].size = gu32FlushedInfoElemAsocSize;
++	strWIDList[u32WidsCount].size = info_element_size;
+ 	u32WidsCount++;
  
--
--void host_int_send_network_info_to_host
--	(u8 *macStartAddress, u16 u16RxFrameLen, s8 s8Rssi)
--{
--}
--
- s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- {
- 	s32 result = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 0fd2eda..d4fb1d4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -869,40 +869,6 @@ s32 hif_get_cfg(struct host_if_drv *hWFIDrv, u16 u16WID, u16 *pu16WID_Value);
- /*							Notification Functions							 */
- /*****************************************************************************/
- /**
-- *  @brief              notifies host with join and leave requests
-- *  @details    This function prepares an Information frame having the
-- *                              information about a joining/leaving station.
-- *  @param[in,out] handle to the wifi driver,
-- *  @param[in]	6 byte Sta Adress
-- *                              Join or leave flag:
-- *                              Join = 1,
-- *                              Leave =0
-- *  @return             Error code indicating success/failure
-- *  @note
-- *  @author		zsalah
-- *  @date		8 March 2012
-- *  @version		1.0
-- */
--void host_int_send_join_leave_info_to_host
--	(u16 assocId, u8 *stationAddr, bool joining);
--
--/**
-- *  @brief              notifies host with stations found in scan
-- *  @details    sends the beacon/probe response from scan
-- *  @param[in,out] handle to the wifi driver,
-- *  @param[in]	Sta Address,
-- *                              Frame length,
-- *                              Rssi of the Station found
-- *  @return             Error code indicating success/failure
-- *  @note
-- *  @author		zsalah
-- *  @date		8 March 2012
-- *  @version		1.0
-- */
--void host_int_send_network_info_to_host
--	(u8 *macStartAddress, u16 u16RxFrameLen, s8 s8Rssi);
--
--/**
-  *  @brief              host interface initialization function
-  *  @details
-  *  @param[in,out] handle to the wifi driver,
+ 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
 -- 
 1.9.1
 
