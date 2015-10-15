@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52043 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6328 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100AbbJWF1r (ORCPT
+	with ESMTP id S1754376AbbJOE2K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:27:47 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Thu, 15 Oct 2015 00:28:10 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 19/28] staging: wilc1000: wilc_wlan_cleanup: add parameter net_device *dev
-Date: Fri, 23 Oct 2015 14:28:35 +0900
-Message-ID: <1445578124-31486-19-git-send-email-glen.lee@atmel.com> (sfid-20151023_074659_408390_4A9148C1)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/40] staging: wilc1000: rename variable gs8GetIP
+Date: Thu, 15 Oct 2015 13:25:05 +0900
+Message-ID: <1444883121-31757-24-git-send-email-tony.cho@atmel.com> (sfid-20151015_064654_562584_F58AE0EE)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new function parameter net_device *dev and pass dev to
-the functions.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames variable gs8GetIP to get_ip
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 05cb442..a73fe19 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -926,7 +926,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
- 		wilc_wlan_stop();
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce94859..cf21ee20 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -257,7 +257,7 @@ static s8 rssi;
+ static s8 link_speed;
+ static u8 ch_no;
+ static u8 set_ip[2][4];
+-static u8 gs8GetIP[2][4];
++static u8 get_ip[2][4];
+ static u32 gu32InactiveTime;
+ static u8 gu8DelBcn;
+ static u32 gu32WidConnRstHack;
+@@ -456,11 +456,11 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
  
- 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
--		wilc_wlan_cleanup();
-+		wilc_wlan_cleanup(dev);
- #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
-   #if defined(PLAT_ALLWINNER_A20) || defined(PLAT_ALLWINNER_A23) || defined(PLAT_ALLWINNER_A31)
- 		PRINT_D(INIT_DBG, "Disabling IRQ 2\n");
-@@ -1171,7 +1171,7 @@ _fail_irq_init_:
- #endif
- 		wlan_deinitialize_threads(dev);
- _fail_wilc_wlan_:
--		wilc_wlan_cleanup();
-+		wilc_wlan_cleanup(dev);
- _fail_locks_:
- 		wlan_deinit_locks(wl);
- 		PRINT_ER("WLAN Iinitialization FAILED\n");
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 531d342..43df5f1 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1647,7 +1647,7 @@ int wilc_wlan_stop(void)
- 	return ret;
- }
+ 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", strWID.val);
  
--void wilc_wlan_cleanup(void)
-+void wilc_wlan_cleanup(struct net_device *dev)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	struct txq_entry_t *tqe;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 79b35e6..d0b2448 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -302,7 +302,7 @@ int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
- 			      wilc_tx_complete_func_t func);
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
- void wilc_handle_isr(void *wilc);
--void wilc_wlan_cleanup(void);
-+void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
- int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
+-	memcpy(gs8GetIP[idx], strWID.val, IP_ALEN);
++	memcpy(get_ip[idx], strWID.val, IP_ALEN);
+ 
+ 	kfree(strWID.val);
+ 
+-	if (memcmp(gs8GetIP[idx], set_ip[idx], IP_ALEN) != 0)
++	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
+ 		host_int_setup_ipaddress(hif_drv, set_ip[idx], idx);
+ 
+ 	if (s32Error != 0) {
+@@ -469,7 +469,7 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 	}
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "IP address retrieved:: u8IfIdx = %d\n", idx);
+-	PRINT_INFO(HOSTINF_DBG, "%pI4\n", gs8GetIP[idx]);
++	PRINT_INFO(HOSTINF_DBG, "%pI4\n", get_ip[idx]);
+ 	PRINT_INFO(HOSTINF_DBG, "\n");
+ 
+ 	return s32Error;
 -- 
 1.9.1
 
