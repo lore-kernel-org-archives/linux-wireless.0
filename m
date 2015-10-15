@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35758 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758010AbbJ2XSG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6008 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612AbbJOE0T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:18:06 -0400
-Received: by pasz6 with SMTP id z6so53895901pas.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:06 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 05/12] staging: wilc1000: rename pu8MacAddr in host_int_del_station
-Date: Fri, 30 Oct 2015 08:17:41 +0900
-Message-Id: <1446160668-10747-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001838_149568_ADC58CFD)
-In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 15 Oct 2015 00:26:19 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/40] staging: wilc1000: rename au8Duration of struct join_bss_param
+Date: Thu, 15 Oct 2015 13:24:48 +0900
+Message-ID: <1444883121-31757-7-git-send-email-tony.cho@atmel.com> (sfid-20151015_062633_478564_0DD78CC5)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes pu8MacAddr to mac_addr that is second argument of
-this function to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames au8Duration of struct join_bss_param to duration
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-V2: resend because 11/12 patch is changed.
-
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index be5e652..8dba9a3 100644
+index 75a4279..0c5cf08 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4552,7 +4552,7 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
- 	return result;
- }
+@@ -224,7 +224,7 @@ struct join_bss_param {
+ 	u8 ct_window;
+ 	u8 cnt;
+ 	u8 idx;
+-	u8 au8Duration[4];
++	u8 duration[4];
+ 	u8 au8Interval[4];
+ 	u8 au8StartTime[4];
+ };
+@@ -1202,9 +1202,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
  
--int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4570,10 +4570,10 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
- 	msg.id = HOST_IF_MSG_DEL_STATION;
- 	msg.drv = hif_drv;
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->cnt;
  
--	if (!pu8MacAddr)
-+	if (!mac_addr)
- 		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
- 	else
--		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
-+		memcpy(pstrDelStationMsg->mac_addr, mac_addr, ETH_ALEN);
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Duration, sizeof(ptstrJoinBssParam->au8Duration));
+-
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->au8Duration);
++		memcpy(pu8CurrByte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
++		pu8CurrByte += sizeof(ptstrJoinBssParam->duration);
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 083def57..be9283f 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr);
+ 		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Interval, sizeof(ptstrJoinBssParam->au8Interval));
  
- /*!
-  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
+@@ -5000,7 +4999,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				pNewJoinBssParam->cnt = pu8IEs[index + 11];
+ 				u16P2P_count = index + 12;
+ 
+-				memcpy(pNewJoinBssParam->au8Duration, pu8IEs + u16P2P_count, 4);
++				memcpy(pNewJoinBssParam->duration, pu8IEs + u16P2P_count, 4);
+ 				u16P2P_count += 4;
+ 
+ 				memcpy(pNewJoinBssParam->au8Interval, pu8IEs + u16P2P_count, 4);
 -- 
-2.6.1
+1.9.1
 
