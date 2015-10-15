@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:33842 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844AbbJYJOi (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6435 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbbJOE2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 05:14:38 -0400
-Received: by lfaz124 with SMTP id z124so120420927lfa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 02:14:36 -0700 (PDT)
+	Thu, 15 Oct 2015 00:28:50 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 30/40] staging: wilc1000: rename variable gu8Flushed11iMode
+Date: Thu, 15 Oct 2015 13:25:11 +0900
+Message-ID: <1444883121-31757-30-git-send-email-tony.cho@atmel.com> (sfid-20151015_064657_048136_973D38D8)
+In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
+References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1445763582-11421-7-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1445763582-11421-7-git-send-email-emmanuel.grumbach@intel.com>
-Date: Sun, 25 Oct 2015 11:14:36 +0200
-Message-ID: <CANUX_P0F6cjmkRxMv0yWtzhFWieq0OzvJVmccNTCNgDcW9nzGA@mail.gmail.com> (sfid-20151025_101451_686805_C8656E18)
-Subject: Re: [PATCH 07/10] mac80211: allow driver to prevent two stations w/
- same address
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 25, 2015 at 10:59 AM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Some devices or drivers cannot deal with having the same station
-> address for different virtual interfaces, say as a client to two
-> virtual AP interfaces. Rather than requiring each driver with a
-> limitation like that to enforce it, add a hardware flag for it.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  include/net/mac80211.h  |  6 ++++++
->  net/mac80211/debugfs.c  |  1 +
->  net/mac80211/sta_info.c | 18 ++++++++++++++++--
->  3 files changed, 23 insertions(+), 2 deletions(-)
->
+From: Leo Kim <leo.kim@atmel.com>
 
-Got confused. You already sent this one.
+This patch renames variable gu8Flushed11iMode to mode_11i
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0ede4a6d..778d9b3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -263,7 +263,7 @@ static u8 del_beacon;
+ 
+ u8 *join_req;
+ u8 *info_element;
+-u8 gu8Flushed11iMode;
++u8 mode_11i;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+ u32 gu32FlushedInfoElemAsocSize;
+@@ -1088,7 +1088,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	u32WidsCount++;
+ 
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+-		gu8Flushed11iMode = hif_drv->strWILC_UsrConnReq.u8security;
++		mode_11i = hif_drv->strWILC_UsrConnReq.u8security;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", hif_drv->strWILC_UsrConnReq.u8security);
+ 
+@@ -1309,7 +1309,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)(&(gu8Flushed11iMode));
++	strWIDList[u32WidsCount].val = (s8 *)(&(mode_11i));
+ 	u32WidsCount++;
+ 
+ 
+-- 
+1.9.1
+
