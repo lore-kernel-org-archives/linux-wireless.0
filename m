@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:3267 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009AbbJ2Tne (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36642 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964788AbbJOCIk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 15:43:34 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/9] brcmfmac: Remove unnecessary check from start_xmit.
-Date: Thu, 29 Oct 2015 20:33:13 +0100
-Message-ID: <1446147199-21671-4-git-send-email-arend@broadcom.com> (sfid-20151029_204339_594461_2EBCC893)
-In-Reply-To: <1446147199-21671-1-git-send-email-arend@broadcom.com>
-References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 14 Oct 2015 22:08:40 -0400
+Received: by pabws5 with SMTP id ws5so7362956pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:40 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 32/33] staging: wilc1000: fix return type of host_int_scan
+Date: Thu, 15 Oct 2015 11:07:01 +0900
+Message-Id: <1444874822-31152-32-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040846_752748_FFE7EC55)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This patch changes return type of host_int_scan from s32 to int.
+s32Error gets return value from wilc_mq_send that has return type of
+int. It should be changed return type of this function as well as data
+type of s32Error.
 
-The brcmf_netdev_start_xmit checks if the ndev is still valid by
-checking if it still exists in database. This check is not needed
-and therefor removed.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/core.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 76b66bc..b743a83 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -217,14 +217,6 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f419ce7..c1125f8 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4012,13 +4012,13 @@ int host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
+ 	return s32Error;
+ }
  
--	if (!drvr->iflist[ifp->bssidx]) {
--		brcmf_err("bad ifidx %d\n", ifp->bssidx);
--		netif_stop_queue(ndev);
--		dev_kfree_skb(skb);
--		ret = -ENODEV;
--		goto done;
--	}
--
- 	/* Make sure there's enough room for any header */
- 	if (skb_headroom(skb) < drvr->hdrlen) {
- 		struct sk_buff *skb2;
+-s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
++int host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 		  u8 u8ScanType, u8 *pu8ChnlFreqList,
+ 		  u8 u8ChnlListLen, const u8 *pu8IEs,
+ 		  size_t IEsLen, wilc_scan_result ScanResult,
+ 		  void *pvUserArg, struct hidden_network *pstrHiddenNetwork)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 42458c9..7b229bb 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -833,7 +833,7 @@ int host_int_get_link_speed(struct host_if_drv *hWFIDrv, s8 *ps8lnkspd);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
++int host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
+ 			  u8 u8ScanType, u8 *pu8ChnlFreqList,
+ 			  u8 u8ChnlListLen, const u8 *pu8IEs,
+ 			  size_t IEsLen, wilc_scan_result ScanResult,
 -- 
-1.9.1
+2.6.1
 
