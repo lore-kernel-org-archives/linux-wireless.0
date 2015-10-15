@@ -1,252 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33622 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:54755 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756613AbbJVPqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:46:10 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: treat bad WMM parameters more gracefully
-Date: Thu, 22 Oct 2015 17:46:06 +0200
-Message-Id: <1445528766-19048-3-git-send-email-johannes@sipsolutions.net> (sfid-20151022_174617_481386_BC238B1C)
-In-Reply-To: <1445528766-19048-1-git-send-email-johannes@sipsolutions.net>
-References: <1445528766-19048-1-git-send-email-johannes@sipsolutions.net>
+	id S1753384AbbJOGdn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2015 02:33:43 -0400
+Date: Thu, 15 Oct 2015 14:32:40 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	austin.shin@atmel.com, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 17/40] staging: wilc1000: rename variable g_hPeriodicRSSI
+Message-ID: <201510151441.f2r2iXEa%fengguang.wu@intel.com> (sfid-20151015_083346_593026_347B0A12)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444883121-31757-17-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Leo,
 
-As WMM is required for HT/VHT operation, treat bad WMM parameters
-more gracefully by falling back to default parameters instead of
-not using WMM assocation. This makes it possible to still use HT
-or VHT, although potentially with reduced quality of service due
-to unintended WMM parameters.
+[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
+>> drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'gbScanWhileConnected' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:265:4: sparse: symbol 'gu8FlushedJoinReq' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'gu8FlushedInfoElemAsoc' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8Flushed11iMode' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:268:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:270:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:408:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:443:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2213:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
+   drivers/staging/wilc1000/host_interface.c:2354:38: sparse: incompatible types for operation (>)
+   drivers/staging/wilc1000/host_interface.c:2354:38:    left side has type unsigned char [usertype] *tail
+   drivers/staging/wilc1000/host_interface.c:2354:38:    right side has type int
+
+Please review and possibly fold the followup patch.
+
 ---
- net/mac80211/mlme.c | 142 ++++++++++++++++++----------------------------------
- 1 file changed, 48 insertions(+), 94 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0aaac951a32c..5daf4c92c87f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1744,10 +1744,10 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 				     struct ieee80211_sub_if_data *sdata,
- 				     const u8 *wmm_param, size_t wmm_param_len)
- {
--	struct ieee80211_tx_queue_params params;
-+	struct ieee80211_tx_queue_params params[IEEE80211_NUM_ACS];
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	size_t left;
--	int count;
-+	int count, ac;
- 	const u8 *pos;
- 	u8 uapsd_queues = 0;
- 
-@@ -1781,25 +1781,24 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 		int aci = (pos[0] >> 5) & 0x03;
- 		int acm = (pos[0] >> 4) & 0x01;
- 		bool uapsd = false;
--		int queue;
- 
- 		switch (aci) {
- 		case 1: /* AC_BK */
--			queue = 3;
-+			ac = IEEE80211_AC_BK;
- 			if (acm)
- 				sdata->wmm_acm |= BIT(1) | BIT(2); /* BK/- */
- 			if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
- 				uapsd = true;
- 			break;
- 		case 2: /* AC_VI */
--			queue = 1;
-+			ac = IEEE80211_AC_VI;
- 			if (acm)
- 				sdata->wmm_acm |= BIT(4) | BIT(5); /* CL/VI */
- 			if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
- 				uapsd = true;
- 			break;
- 		case 3: /* AC_VO */
--			queue = 0;
-+			ac = IEEE80211_AC_VO;
- 			if (acm)
- 				sdata->wmm_acm |= BIT(6) | BIT(7); /* VO/NC */
- 			if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-@@ -1807,7 +1806,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 			break;
- 		case 0: /* AC_BE */
- 		default:
--			queue = 2;
-+			ac = IEEE80211_AC_BE;
- 			if (acm)
- 				sdata->wmm_acm |= BIT(0) | BIT(3); /* BE/EE */
- 			if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
-@@ -1815,32 +1814,41 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 			break;
- 		}
- 
--		params.aifs = pos[0] & 0x0f;
-+		params[ac].aifs = pos[0] & 0x0f;
- 
--		if (params.aifs < 2) {
-+		if (params[ac].aifs < 2) {
- 			sdata_info(sdata,
- 				   "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
--				   params.aifs, aci);
--			params.aifs = 2;
-+				   params[ac].aifs, aci);
-+			params[ac].aifs = 2;
- 		}
--		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
--		params.cw_min = ecw2cw(pos[1] & 0x0f);
--		params.txop = get_unaligned_le16(pos + 2);
--		params.acm = acm;
--		params.uapsd = uapsd;
-+		params[ac].cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
-+		params[ac].cw_min = ecw2cw(pos[1] & 0x0f);
-+		params[ac].txop = get_unaligned_le16(pos + 2);
-+		params[ac].acm = acm;
-+		params[ac].uapsd = uapsd;
- 
-+		if (params[ac].cw_min > params[ac].cw_max) {
-+			sdata_info(sdata,
-+				   "AP has invalid WMM params (CWmin/max=%d/%d for ACI %d), using defaults\n",
-+				   params[ac].cw_min, params[ac].cw_max, aci);
-+			return false;
-+		}
-+	}
-+
-+	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		mlme_dbg(sdata,
--			 "WMM queue=%d aci=%d acm=%d aifs=%d cWmin=%d cWmax=%d txop=%d uapsd=%d, downgraded=%d\n",
--			 queue, aci, acm,
--			 params.aifs, params.cw_min, params.cw_max,
--			 params.txop, params.uapsd,
--			 ifmgd->tx_tspec[queue].downgraded);
--		sdata->tx_conf[queue] = params;
--		if (!ifmgd->tx_tspec[queue].downgraded &&
--		    drv_conf_tx(local, sdata, queue, &params))
-+			 "WMM AC=%d acm=%d aifs=%d cWmin=%d cWmax=%d txop=%d uapsd=%d, downgraded=%d\n",
-+			 ac, params[ac].acm,
-+			 params[ac].aifs, params[ac].cw_min, params[ac].cw_max,
-+			 params[ac].txop, params[ac].uapsd,
-+			 ifmgd->tx_tspec[ac].downgraded);
-+		sdata->tx_conf[ac] = params[ac];
-+		if (!ifmgd->tx_tspec[ac].downgraded &&
-+		    drv_conf_tx(local, sdata, ac, &params[ac]))
- 			sdata_err(sdata,
--				  "failed to set TX queue parameters for queue %d\n",
--				  queue);
-+				  "failed to set TX queue parameters for AC %d\n",
-+				  ac);
- 	}
- 
- 	/* enable WMM or activate new settings */
-@@ -3051,11 +3059,21 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	ifmgd->wmm_last_param_set = -1;
- 
--	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_WMM) && elems.wmm_param)
--		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
--					 elems.wmm_param_len);
--	else
-+	if (ifmgd->flags & IEEE80211_STA_DISABLE_WMM) {
- 		ieee80211_set_wmm_default(sdata, false, false);
-+	} else if (!ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
-+					     elems.wmm_param_len)) {
-+		/* still enable QoS since we might have HT/VHT */
-+		ieee80211_set_wmm_default(sdata, false, true);
-+		/* set the disable-WMM flag in this case to disable
-+		 * tracking WMM parameter changes in the beacon if
-+		 * the parameters weren't actually valid. Doing so
-+		 * avoids changing parameters very strangely when
-+		 * the AP is going back and forth between valid and
-+		 * invalid parameters.
-+		 */
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_WMM;
-+	}
- 	changed |= BSS_CHANGED_QOS;
- 
- 	/* set AID and assoc capability,
-@@ -4550,37 +4568,6 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	return err;
- }
- 
--static bool ieee80211_usable_wmm_params(struct ieee80211_sub_if_data *sdata,
--					const u8 *wmm_param, int len)
--{
--	const u8 *pos;
--	size_t left;
--
--	if (len < 8)
--		return false;
--
--	if (wmm_param[5] != 1 /* version */)
--		return false;
--
--	pos = wmm_param + 8;
--	left = len - 8;
--
--	for (; left >= 4; left -= 4, pos += 4) {
--		u8 ecwmin = pos[1] & 0x0f;
--		u8 ecwmax = (pos[1] & 0xf0) >> 4;
--		int aci = (pos[0] >> 5) & 0x03;
--
--		if (ecwmin > ecwmax) {
--			sdata_info(sdata,
--				   "AP has invalid WMM params (ECWmin/max=%d/%d for ACI %d), disabling WMM\n",
--				   ecwmin, ecwmax, aci);
--			return false;
--		}
--	}
--
--	return true;
--}
--
- int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_assoc_request *req)
- {
-@@ -4645,39 +4632,6 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	assoc_data->wmm = bss->wmm_used &&
- 			  (local->hw.queues >= IEEE80211_NUM_ACS);
--	if (assoc_data->wmm) {
--		/* try to check validity of WMM params IE */
--		const struct cfg80211_bss_ies *ies;
--		const u8 *wp, *start, *end;
--
--		rcu_read_lock();
--		ies = rcu_dereference(req->bss->ies);
--		start = ies->data;
--		end = start + ies->len;
--
--		while (true) {
--			wp = cfg80211_find_vendor_ie(
--				WLAN_OUI_MICROSOFT,
--				WLAN_OUI_TYPE_MICROSOFT_WMM,
--				start, end - start);
--			if (!wp)
--				break;
--			start = wp + wp[1] + 2;
--			/* if this IE is too short, try the next */
--			if (wp[1] <= 4)
--				continue;
--			/* if this IE is WMM params, we found what we wanted */
--			if (wp[6] == 1)
--				break;
--		}
--
--		if (!wp || !ieee80211_usable_wmm_params(sdata, wp + 2,
--							wp[1] - 2)) {
--			assoc_data->wmm = false;
--			ifmgd->flags |= IEEE80211_STA_DISABLE_WMM;
--		}
--		rcu_read_unlock();
--	}
- 
- 	/*
- 	 * IEEE802.11n does not allow TKIP/WEP as pairwise ciphers in HT mode.
--- 
-2.5.1
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
