@@ -1,27 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33089 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027AbbJ0XT7 (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34128 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964788AbbJOCIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 19:19:59 -0400
-Received: by pabla5 with SMTP id la5so42957263pab.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:59 -0700 (PDT)
+	Wed, 14 Oct 2015 22:08:32 -0400
+Received: by payp3 with SMTP id p3so23406262pay.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:31 -0700 (PDT)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/10] staging: wilc1000: rename tenuAuth_type in host_int_add_wep_key_bss_ap
-Date: Wed, 28 Oct 2015 08:19:26 +0900
-Message-Id: <1445987968-18974-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_002001_975774_C5C01B2C)
-In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 29/33] staging: wilc1000: fix return type of host_int_add_station
+Date: Thu, 15 Oct 2015 11:06:58 +0900
+Message-Id: <1444874822-31152-29-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040846_173701_03DC8AF0)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes tenuAuth_type to auth_type that is sixth argument of
-this function to avoid camelcase.
+This patch changes return type of host_int_add_station from s32 to int.
+s32Error gets return value from wilc_mq_send that has return type of
+int. It should be changed return type of this function as well as data
+type of s32Error.
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
@@ -30,40 +32,35 @@ Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fbafed9..2f4f699 100644
+index 3666495..6dfb667 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3196,7 +3196,7 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				u8 len,
- 				u8 index,
- 				u8 mode,
--				enum AUTHTYPE tenuAuth_type)
-+				enum AUTHTYPE auth_type)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3222,7 +3222,7 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 	msg.body.key_info.attr.wep.key_len = len;
- 	msg.body.key_info.attr.wep.index = index;
- 	msg.body.key_info.attr.wep.mode = mode;
--	msg.body.key_info.attr.wep.auth_type = tenuAuth_type;
-+	msg.body.key_info.attr.wep.auth_type = auth_type;
+@@ -4690,10 +4690,10 @@ s32 host_int_del_beacon(struct host_if_drv *hif_drv)
+ 	return s32Error;
+ }
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-s32 host_int_add_station(struct host_if_drv *hif_drv,
++int host_int_add_station(struct host_if_drv *hif_drv,
+ 			 struct add_sta_param *pstrStaParams)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
  
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 1927d4c..cae61a4 100644
+index d3f01ef..5ee2797 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
-  *  @date		28 Feb 2013
-  *  @version		1.0
+@@ -981,7 +981,7 @@ s32 host_int_del_beacon(struct host_if_drv *hWFIDrv);
+  *  @date		12 July 2012
+  *  @version		1.0 Description
   */
--int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 len, u8 index, u8 mode, enum AUTHTYPE tenuAuth_type);
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 len, u8 index, u8 mode, enum AUTHTYPE auth_type);
+-s32 host_int_add_station(struct host_if_drv *hWFIDrv,
++int host_int_add_station(struct host_if_drv *hWFIDrv,
+ 			 struct add_sta_param *pstrStaParams);
  
- /**
-  *  @brief              adds ptk Key
+ /*!
 -- 
 2.6.1
 
