@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20727 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbbJNIwn (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36322 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932858AbbJOCIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 04:52:43 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH 0/2 v2] ath10k: print firwmare stats specific to firmware version
-Date: Wed, 14 Oct 2015 14:22:31 +0530
-Message-ID: <1444812751-11103-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20151014_105249_463882_B62417FA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 14 Oct 2015 22:08:23 -0400
+Received: by pabws5 with SMTP id ws5so7355437pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:22 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 26/33] staging: wilc1000: fix return type of host_int_edit_station
+Date: Thu, 15 Oct 2015 11:06:55 +0900
+Message-Id: <1444874822-31152-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041237_176623_D1CC3056)
+In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+This patch changes return type of host_int_edit_station from s32 to int.
+s32Error gets return value from wilc_mq_send that has return type of
+int. It should be changed return type of this function as well as data
+type of s32Error.
 
-Currently printing fw stats in ath10k is common to all firmware versions.
-Printing all the stats might lead to confusion because some of the stats
-are firmware specific and when printed will have 0's.
-Below patchset prints firmware stats specific to firmware.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-v2:
-        > All the filtered functions moved to wmi.c
-        > Added firmware stats support for 10.4 firmware.
-
-Manikanta (2):
-  ath10k: Make fw stats prints specific to firmware version
-  ath10k: add fw_stats support to 10.4 firmware
-
- drivers/net/wireless/ath/ath10k/core.h    |   12 +
- drivers/net/wireless/ath/ath10k/debug.c   |  267 +------------
- drivers/net/wireless/ath/ath10k/debug.h   |    3 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   13 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    1 +
- drivers/net/wireless/ath/ath10k/wmi.c     |  588 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |  144 +++++++
- 7 files changed, 769 insertions(+), 259 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 20d6e16..45adf62 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4811,10 +4811,10 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
+ 
+ }
+ 
+-s32 host_int_edit_station(struct host_if_drv *hif_drv,
++int host_int_edit_station(struct host_if_drv *hif_drv,
+ 			  struct add_sta_param *pstrStaParams)
+ {
+-	s32 s32Error = 0;
++	int s32Error = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index bed3799..66ff6f7 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -1028,7 +1028,7 @@ s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-s32 host_int_edit_station(struct host_if_drv *hWFIDrv,
++int host_int_edit_station(struct host_if_drv *hWFIDrv,
+ 			  struct add_sta_param *pstrStaParams);
+ 
+ /*!
 -- 
-1.7.9.5
+2.6.1
 
