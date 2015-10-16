@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f193.google.com ([209.85.212.193]:35301 "EHLO
-	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950AbbJ0TD6 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52352 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033AbbJPEj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:03:58 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Punit Vara <punitvara@gmail.com>
-Subject: [RESEND PATCH 04/10] net: wireless: brcm80211: Remove duplicated arguments to |
-Date: Wed, 28 Oct 2015 00:32:39 +0530
-Message-Id: <1445972565-14963-4-git-send-email-punitvara@gmail.com> (sfid-20151027_200653_198589_DE22A439)
-In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
-References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+	Fri, 16 Oct 2015 00:39:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 11/40] staging: wilc1000: rename variable HostIFthreadHandler
+Date: Fri, 16 Oct 2015 13:37:41 +0900
+Message-ID: <1444970290-17609-11-git-send-email-tony.cho@atmel.com> (sfid-20151016_064658_178628_68D85921)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove uncessary repeated arguments with OR(|)
+From: Leo Kim <leo.kim@atmel.com>
 
-This is patch to the brcmsmac/channel.c file that removes following
- warning reported by coccicheck:
+This patch renames variable HostIFthreadHandler to hif_thread_handler
+to avoid CamelCase naming convention.
 
--duplicated argument to & or |
-
-Signed-off-by: Punit Vara <punitvara@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 635ae03..d56fa03 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -652,7 +652,6 @@ static void brcms_reg_apply_radar_flags(struct wiphy *wiphy)
- 		 */
- 		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
- 			ch->flags |= IEEE80211_CHAN_RADAR |
--				     IEEE80211_CHAN_NO_IR |
- 				     IEEE80211_CHAN_NO_IR;
- 	}
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ad7c102..4f24a05 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -239,7 +239,7 @@ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+ struct host_if_drv *terminated_handle;
+ bool g_obtainingIP;
+ u8 P2P_LISTEN_STATE;
+-static struct task_struct *HostIFthreadHandler;
++static struct task_struct *hif_thread_handler;
+ static WILC_MsgQueueHandle gMsgQHostIF;
+ static struct semaphore hSemHostIFthrdEnd;
+ 
+@@ -4271,8 +4271,10 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 			PRINT_ER("Failed to creat MQ\n");
+ 			goto _fail_;
+ 		}
+-		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
+-		if (IS_ERR(HostIFthreadHandler)) {
++
++		hif_thread_handler = kthread_run(hostIFthread, NULL, "WILC_kthread");
++
++		if (IS_ERR(hif_thread_handler)) {
+ 			PRINT_ER("Failed to creat Thread\n");
+ 			result = -EFAULT;
+ 			goto _fail_mq_;
+@@ -4316,7 +4318,7 @@ _fail_timer_2:
+ 	up(&hif_drv->gtOsCfgValuesSem);
+ 	del_timer_sync(&hif_drv->hConnectTimer);
+ 	del_timer_sync(&hif_drv->hScanTimer);
+-	kthread_stop(HostIFthreadHandler);
++	kthread_stop(hif_thread_handler);
+ _fail_mq_:
+ 	wilc_mq_destroy(&gMsgQHostIF);
+ _fail_:
 -- 
-2.5.3
+1.9.1
 
