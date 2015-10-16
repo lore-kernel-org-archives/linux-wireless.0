@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33578 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbbJMSwJ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:34463 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbbJPJXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 14:52:09 -0400
-Received: by iodv82 with SMTP id v82so31446142iod.0
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 11:52:09 -0700 (PDT)
-Date: Tue, 13 Oct 2015 13:50:55 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [ANN] wireless-regdb: master-2015-10-13
-Message-ID: <20151013185055.GD50632@ubuntu-hedt> (sfid-20151013_205213_306518_67D66DB4)
+	Fri, 16 Oct 2015 05:23:37 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/13] staging: wilc1000: wlan_init_locks: change parameter and use nic-wilc
+Date: Fri, 16 Oct 2015 18:22:59 +0900
+Message-ID: <1444987389-14151-3-git-send-email-tony.cho@atmel.com> (sfid-20151016_112341_591999_B946626D)
+In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2015-10-13) is available at:
+From: Glen Lee <glen.lee@atmel.com>
 
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.10.13.tar.gz
+This patch changes function parameter type wilc with net_device and use netdev
+private data member wilc instead of global variable wl.
 
-The short log of changes since the 2015-09-25 release is below.
-
-Thanks,
-Seth
-
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
+ drivers/staging/wilc1000/linux_wlan.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Chen-Yu Tsai (5):
-      wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan (TW)
-      wireless-regdb: Update regulatory rule boundary frequencies for Taiwan (TW)
-      wireless-regdb: Update 5GHz rules for US
-      wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
-      wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
-
-Jouni Malinen (4):
-      wireless-regdb: Update regulatory rules for Uruguay (UY)
-      wireless-regdb: Add VHT channel bandwidth for Russia (RU)
-      wireless-regdb: Add VHT channel bandwidth for Ukraine (UA)
-      wireless-regdb: Update regulatory rules for Malaysia (MY)
-
-Seth Forshee (2):
-      wireless-regdb: Update ZA rules for 5490-5710 MHz
-      wireless-regdb: update regulatory.bin based on preceding changes
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index f79160c..38b981d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -921,8 +921,13 @@ void wilc1000_wlan_deinit(struct wilc *nic)
+ 	}
+ }
+ 
+-int wlan_init_locks(struct wilc *p_nic)
++int wlan_init_locks(struct net_device *dev)
+ {
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
++
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
+ 
+ 	PRINT_D(INIT_DBG, "Initializing Locks ...\n");
+ 
+@@ -1032,7 +1037,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		wl->mac_status = WILC_MAC_STATUS_INIT;
+ 		wl->close = 0;
+ 
+-		wlan_init_locks(wl);
++		wlan_init_locks(dev);
+ 
+ 		linux_to_wlan(&nwi, wl);
+ 
+-- 
+1.9.1
 
