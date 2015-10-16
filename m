@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:36195 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964927AbbJ0TQR (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:46639 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754111AbbJPNBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:16:17 -0400
-Received: by obcqt19 with SMTP id qt19so178991928obc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 12:16:17 -0700 (PDT)
+	Fri, 16 Oct 2015 09:01:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <c_traja@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2 v2] ath10k: Make fw stats prints specific to firmware version
+References: <1444812821-11138-1-git-send-email-c_traja@qti.qualcomm.com>
+Date: Fri, 16 Oct 2015 16:01:34 +0300
+In-Reply-To: <1444812821-11138-1-git-send-email-c_traja@qti.qualcomm.com> (c.
+	traja's message of "Wed, 14 Oct 2015 14:23:41 +0530")
+Message-ID: <87lhb3ge6p.fsf@kamboji.qca.qualcomm.com> (sfid-20151016_150216_784145_DEF2A177)
 MIME-Version: 1.0
-From: Chris Kuethe <chris.kuethe@gmail.com>
-Date: Tue, 27 Oct 2015 12:15:57 -0700
-Message-ID: <CAGHP0pK5452ixOHr0uWY=o2S2JvgoqVx8X7r6ZnQ=ezxqNg1UA@mail.gmail.com> (sfid-20151027_201620_728553_4D5C16E1)
-Subject: problems with mwifiex_usb, hangs under load, firmware in bad state
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Like others, I'm having problems with mwifiex_usb on a Surface 2 Pro,
-with the latest firmware "driver_version = mwifiex 1.0 (14.68.29.p38)"
-and the latest release candidate kernel (4.3.0rc7)
+<c_traja@qti.qualcomm.com> writes:
 
-Every 5-10 seconds, even while idle, I'll get a kernel message:
-    usb 1-2: Rx of mgmt packet failed
+> From: Manikanta <c_mpubbi@qti.qualcomm.com>
+>
+> The patch makes debug stats prints fw specific by adding a new member
+> in wmi_ops
+>
+> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Under load (a big scp or a couple of kernel source tarballs will do
-the trick), I get a huge amount of log spam, one message per packet:
-    usb 1-2: data: -ENOSR is returned
+This patch added few checkpatch warnings, I fixed them in the pending
+branch.
 
-Occasionally I'll also see
-    usb 1-2: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+drivers/net/wireless/ath/ath10k/wmi-ops.h:1297: Alignment should match open parenthesis
+drivers/net/wireless/ath/ath10k/wmi.c:6628: Missing a blank line after declarations
+drivers/net/wireless/ath/ath10k/wmi.c:6638: Missing a blank line after declarations
 
-After a while, I get the dreaded firmware bad state and the only fix
-is to power cycle the machine. Suspend doesn't reset the hardware, and
-attempting to rmmod/modprobe mwifiex_usb will crash my machine.
-
- usb 1-2: mwifiex_cmd_timeout_func: Timeout cmd id = 0x6, act = 0x3
- usb 1-2: num_data_h2c_failure = 0
- usb 1-2: num_cmd_h2c_failure = 0
- usb 1-2: is_cmd_timedout = 1
- usb 1-2: num_tx_timeout = 0
- usb 1-2: last_cmd_index = 0
- usb 1-2: last_cmd_id: 06 00 28 00 28 00 28 00 28 00
- usb 1-2: last_cmd_act: 03 00 13 00 13 00 13 00 13 00
- usb 1-2: last_cmd_resp_index = 4
- usb 1-2: last_cmd_resp_id: 28 80 28 80 28 80 28 80 28 80
- usb 1-2: last_event_index = 3
- usb 1-2: last_event: 37 00 33 00 37 00 33 00 33 00
- usb 1-2: data_sent=0 cmd_sent=0
- usb 1-2: ps_mode=0 ps_state=0
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: Ignore scan. Card removed or firmware in bad state
- usb 1-2: scan failed: -14
- usb 1-2: PREP_CMD: FW is in bad state
- usb 1-2: PREP_CMD: FW is in bad state
- IPv6: ADDRCONF(NETDEV_UP): wlx281878fd2432: link is not ready
- usb 1-2: PREP_CMD: FW is in bad state
-
-This is reproducible all the way up to 4.3.0-rc7 which includes the patch from
-http://www.spinics.net/lists/netdev/msg334367.html
-
-that was suggested as a fix in
-http://www.spinics.net/lists/linux-wireless/msg139095.html
-
-I was able to reproduce this with after turning up debugging (echo
-0xffffffff > /sys/kernel/debug/mwifiex/mlan0/debug_mask) - the
-resulting trace is 1.4GB. Interested parties can contact me for a
-link, or tell me what I should grep for...
+Also I fixed Manikanta's name and added his Signed-off-by line which you
+had accidentally dropped.
 
 -- 
-GDB has a 'break' feature; why doesn't it have 'fix' too?
+Kalle Valo
