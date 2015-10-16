@@ -1,46 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37721 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbbJDImd (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:34710 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037AbbJPJYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 04:42:33 -0400
-Date: Sun, 4 Oct 2015 09:42:29 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 09/10] staging: wilc1000: use pr_err in
- host_int_wait_msg_queue_idle
-Message-ID: <20151004084229.GC21313@kroah.com> (sfid-20151004_104237_960209_C597A473)
-References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
- <1443789896-7082-9-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 16 Oct 2015 05:24:35 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/13] staging: wilc1000: init_irq: change argument and use netdev private wilc
+Date: Fri, 16 Oct 2015 18:23:09 +0900
+Message-ID: <1444987389-14151-13-git-send-email-tony.cho@atmel.com> (sfid-20151016_112442_043435_3C72679A)
+In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443789896-7082-9-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 09:44:55PM +0900, Chaehyun Lim wrote:
-> This patch changes PRINT_ER by pr_err.
-> It would be better to use netdev_err, but it cannot use it in this
-> function, so just use pr_err.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 69a4e79..79014ab 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -5354,7 +5354,7 @@ int host_int_wait_msg_queue_idle(void)
->  	msg.id = HOST_IF_MSG_Q_IDLE;
->  	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
->  	if (result) {
-> -		PRINT_ER("wilc mq send fail\n");
-> +		pr_err("wilc mq send fail\n");
+From: Glen Lee <glen.lee@atmel.com>
 
-Same as before, you should be able to get to a network device, please
-use netdev_err().
+This patch changes function argument type wilc with net_device and use
+netdev private data member wilc instead of p_nic.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b32a8ce..b02c8b7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -259,10 +259,14 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ }
+ 
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+-static int init_irq(struct wilc *p_nic)
++static int init_irq(struct net_device *dev)
+ {
+ 	int ret = 0;
+-	struct wilc *nic = p_nic;
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
++
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
+ 
+ 	/*initialize GPIO and register IRQ num*/
+ 	/*GPIO request*/
+@@ -275,23 +279,23 @@ static int init_irq(struct wilc *p_nic)
+  * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+  */
+ #else
+-		nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
++		wl->dev_irq_num = gpio_to_irq(GPIO_NUM);
+ #endif
+ 	} else {
+ 		ret = -1;
+ 		PRINT_ER("could not obtain gpio for WILC_INTR\n");
+ 	}
+ 
+-	if ((ret != -1) && (request_threaded_irq(nic->dev_irq_num, isr_uh_routine, isr_bh_routine,
++	if ((ret != -1) && (request_threaded_irq(wl->dev_irq_num, isr_uh_routine, isr_bh_routine,
+ 						  IRQF_TRIGGER_LOW | IRQF_ONESHOT,               /*Without IRQF_ONESHOT the uh will remain kicked in and dont gave a chance to bh*/
+-						  "WILC_IRQ", nic)) < 0) {
++						  "WILC_IRQ", wl)) < 0) {
+ 
+ 		PRINT_ER("Failed to request IRQ for GPIO: %d\n", GPIO_NUM);
+ 		ret = -1;
+ 	} else {
+ 
+ 		PRINT_D(INIT_DBG, "IRQ request succeeded IRQ-NUM= %d on GPIO: %d\n",
+-			nic->dev_irq_num, GPIO_NUM);
++			wl->dev_irq_num, GPIO_NUM);
+ 	}
+ 
+ 	return ret;
+@@ -1054,7 +1058,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ 
+ #if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+-		if (init_irq(wl)) {
++		if (init_irq(dev)) {
+ 			PRINT_ER("couldn't initialize IRQ\n");
+ 			ret = -EIO;
+ 			goto _fail_locks_;
+-- 
+1.9.1
+
