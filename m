@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33550 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbbJYI02 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52652 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753353AbbJPEk7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 04:26:28 -0400
-Date: Sat, 24 Oct 2015 18:29:44 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 02/28] staging: wicl1000: isr_uh_routine: use netdev
- private wilc
-Message-ID: <20151025012944.GA22184@kroah.com> (sfid-20151025_092636_706660_4AB4845A)
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
- <1445578124-31486-2-git-send-email-glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:40:59 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 27/40] staging: wilc1000: remove unused variable gu32WidConnRstHack
+Date: Fri, 16 Oct 2015 13:37:57 +0900
+Message-ID: <1444970290-17609-27-git-send-email-tony.cho@atmel.com> (sfid-20151016_064700_122335_A1985C9F)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445578124-31486-2-git-send-email-glen.lee@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 23, 2015 at 02:28:18PM +0900, Glen Lee wrote:
-> Use netdev private member wilc instead of g_linux_wlan and Change argument wilc
-> with dev in the function request_threaded_irq to pass back to handler
-> the function isr_uh_routine.
-> 
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index b036b96..7b0614d 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -229,10 +229,15 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
->  #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->  static irqreturn_t isr_uh_routine(int irq, void *user_data)
->  {
-> +	perInterface_wlan_t *nic;
-> +	struct wilc *wl;
-> +
-> +	nic = netdev_priv(usedata);
+From: Leo Kim <leo.kim@atmel.com>
 
-This patch breaks the build, which means you didn't even test build the
-series :(
+This patch removes unused the variable gu32WidConnRstHack.
 
-Please redo this whole series and test your patches better.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-greg k-h
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9f5db14..82d058f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -260,7 +260,6 @@ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+ static u32 inactive_time;
+ static u8 del_beacon;
+-static u32 gu32WidConnRstHack;
+ 
+ u8 *gu8FlushedJoinReq;
+ u8 *gu8FlushedInfoElemAsoc;
+@@ -1209,7 +1208,6 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 
+ 	pu8CurrByte = strWIDList[u32WidsCount].val;
+ 	u32WidsCount++;
+-	gu32WidConnRstHack = 0;
+ 
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
+-- 
+1.9.1
+
