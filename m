@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37314 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504AbbI3X1l (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52271 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbbJPEi4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 19:27:41 -0400
-Received: by wicfx3 with SMTP id fx3so4732098wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2015 16:27:40 -0700 (PDT)
+	Fri, 16 Oct 2015 00:38:56 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 06/40] staging: wilc1000: rename u8Index of struct join_bss_param
+Date: Fri, 16 Oct 2015 13:37:36 +0900
+Message-ID: <1444970290-17609-6-git-send-email-tony.cho@atmel.com> (sfid-20151016_063902_336079_E80E7D7E)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150930231613.GC20220@us.netrek.org>
-References: <CABAco3AMgZSv9kCYkE6yQDcDE0+-7rA4ZzYazxSqAS99LHHMGQ@mail.gmail.com>
-	<20150930231613.GC20220@us.netrek.org>
-Date: Thu, 1 Oct 2015 01:27:40 +0200
-Message-ID: <CABAco3Dd7urHu+y7J8TKYOXgh1QjRDvAp_Rs=q_gsU3f6Oum8Q@mail.gmail.com> (sfid-20151001_012744_989069_B3421ADE)
-Subject: Re: [PATCH] iw: Memory leak in error condition
-From: Ola Olsson <ola1olsson@gmail.com>
-To: James Cameron <quozl@laptop.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh yes! :)
-Suddenly valgrind was happy as well.
+From: Leo Kim <leo.kim@atmel.com>
 
->From 2724dd259f2bf61a2b7c85a70a70fd640a583453 Mon Sep 17 00:00:00 2001
-From: Ola Olsson <ola.olsson@sonymobile.com>
-Date: Thu, 1 Oct 2015 00:43:06 +0200
-Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola Olsson
- <ola.olsson@sonymobile.com>
+This patch renames u8Index of struct join_bss_param to idx
+to avoid CamelCase naming convention.
 
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- scan.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index e959c1b..f3441a7 100644
---- a/scan.c
-+++ b/scan.c
-@@ -445,8 +445,11 @@ static int handle_scan(struct nl80211_state *state,
-
-        if (ies || meshid) {
-                tmpies = (unsigned char *) malloc(ies_len + meshid_len);
--               if (!tmpies)
-+               if (!tmpies) {
-+                       free(ies);
-+                       free(meshid);
-                        goto nla_put_failure;
-+               }
-                if (ies) {
-                        memcpy(tmpies, ies, ies_len);
-                        free(ies);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e8a35d3..75a4279 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -223,7 +223,7 @@ struct join_bss_param {
+ 	u8 opp_enabled;
+ 	u8 ct_window;
+ 	u8 cnt;
+-	u8 u8Index;
++	u8 idx;
+ 	u8 au8Duration[4];
+ 	u8 au8Interval[4];
+ 	u8 au8StartTime[4];
+@@ -1194,8 +1194,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
+ 		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
+ 
+-		*(pu8CurrByte++) = ptstrJoinBssParam->u8Index;
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->opp_enabled;
++		*(pu8CurrByte++) = ptstrJoinBssParam->idx;
+ 
+ 		if (ptstrJoinBssParam->opp_enabled)
+ 			*(pu8CurrByte++) = ptstrJoinBssParam->ct_window;
+@@ -4984,7 +4984,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 
+ 				pNewJoinBssParam->tsf = ptstrNetworkInfo->u32Tsf;
+ 				pNewJoinBssParam->noa_enabled = 1;
+-				pNewJoinBssParam->u8Index = pu8IEs[index + 9];
++				pNewJoinBssParam->idx = pu8IEs[index + 9];
+ 
+ 				if (pu8IEs[index + 10] & BIT(7)) {
+ 					pNewJoinBssParam->opp_enabled = 1;
 -- 
-1.7.9.5
+1.9.1
 
-On Thu, Oct 1, 2015 at 1:16 AM, James Cameron <quozl@laptop.org> wrote:
-> On Thu, Oct 01, 2015 at 01:01:18AM +0200, Ola Olsson wrote:
->> >From 5239e8e9aa79a131b716398efbf7a1203decbd9b Mon Sep 17 00:00:00 2001
->> From: Ola Olsson <ola.olsson@sonymobile.com>
->> Date: Thu, 1 Oct 2015 00:43:06 +0200
->> Subject: [PATCH] iw: Memory leak in error condition Signed-off-by: Ola
->>  Olsson <ola.olsson@sonymobile.com>
->>
->> ---
->>  scan.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/scan.c b/scan.c
->> index e959c1b..f248981 100644
->> --- a/scan.c
->> +++ b/scan.c
->> @@ -446,6 +446,8 @@ static int handle_scan(struct nl80211_state *state,
->>         if (ies || meshid) {
->>                 tmpies = (unsigned char *) malloc(ies_len + meshid_len);
->>                 if (!tmpies)
->> +                       free(ies);
->> +                       free(meshid);
->>                         goto nla_put_failure;
->
-> Braces?  { }
->
->
->>                 if (ies) {
->>                         memcpy(tmpies, ies, ies_len);
->> --
->> 1.7.9.5
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
