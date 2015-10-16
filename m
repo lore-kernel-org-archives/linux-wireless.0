@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44551 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbbJEQPV (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:34657 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860AbbJPJYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 12:15:21 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 1/5] wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan (TW)
-Date: Tue,  6 Oct 2015 00:14:54 +0800
-Message-Id: <1444061698-16384-2-git-send-email-wens@csie.org> (sfid-20151005_181532_815369_55DDFE0A)
-In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
-References: <1444061698-16384-1-git-send-email-wens@csie.org>
+	Fri, 16 Oct 2015 05:24:24 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/13] staging: wilc1000: wilc_mgmt_frame_register: use netdev private wilc
+Date: Fri, 16 Oct 2015 18:23:07 +0900
+Message-ID: <1444987389-14151-11-git-send-email-tony.cho@atmel.com> (sfid-20151016_112430_414303_1B1C40D9)
+In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications revised its
-frequency allocation rules [1] on 2014/11/17, allowing usage of 5600 ~
-5650 MHz, previously allocated to weather radars, to U-NII applications
-with DFS support.
+From: Glen Lee <glen.lee@atmel.com>
 
-Also, the technical regulations [2] show that for 5470 ~ 5725 MHz U-NII
-applications, the peak transmit power shall not exceed the lesser of
-250 mW (slightly less than 24 dBm) or 11 dBm + 10log B, where B is the
-26dB emission bandwidth in MHz. This is slightly more than 23 dBm for
-20 MHz channels.
+Use netdev private data member wilc instead of global variable wl.
 
-This patch updates both. Also add links to the two documents into the
-database.
-
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- db.txt | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index d57ea84..e081634 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1118,11 +1118,17 @@ country TT: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7599457..00ce76f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2396,12 +2396,12 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
  
-+# Source:
-+# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
-+#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
-+#      filedisplay=Table+of+radio+frequency+allocation.doc
-+# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
-+#   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-+#   (section 3.10.1, 4.7)
- country TW: DFS-JP
- 	(2402 - 2472 @ 40), (30)
- 	(5270 - 5330 @ 40), (17), DFS
--	(5490 - 5590 @ 80), (30), DFS
--	(5650 - 5710 @ 40), (30), DFS
-+	(5470 - 5725 @ 160), (23), DFS
- 	(5735 - 5835 @ 80), (30)
-  
- country TZ:
+ 	struct wilc_priv *priv;
+ 	perInterface_wlan_t *nic;
+-
++	struct wilc *wl;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(priv->wdev->netdev);
+ 
+-
++	wl = nic->wilc;
+ 
+ 	if (!frame_type)
+ 		return;
 -- 
-2.5.3
+1.9.1
 
