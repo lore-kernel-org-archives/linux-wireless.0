@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42284 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52437 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbbJ1HBI (ORCPT
+	with ESMTP id S1751514AbbJPEj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:01:08 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:39:57 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 35/80] staging: wilc1000: rename pRemainOnChanExpired of struct remain_ch
-Date: Wed, 28 Oct 2015 15:59:55 +0900
-Message-ID: <1446015640-29398-35-git-send-email-glen.lee@atmel.com> (sfid-20151028_080118_453232_56E873F4)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 16/40] staging: wilc1000: rename variable hSemHostIntDeinit
+Date: Fri, 16 Oct 2015 13:37:46 +0900
+Message-ID: <1444970290-17609-16-git-send-email-tony.cho@atmel.com> (sfid-20151016_064701_684416_DD4E7B52)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,64 +22,93 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames pRemainOnChanExpired of struct remain_ch to expired
+This patch renames variable hSemHostIntDeinit to hif_sema_deinit
 to avoid CamelCase naming convention.
 
+Add to static because follow warning reported by kbuild system.
+ - drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol
+   'hif_sema_deinit' was not declared. Should it be static?
+
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 75f617a..0bd0d2b 100644
+index 9346d42..5900972 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2482,7 +2482,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+@@ -244,7 +244,7 @@ static WILC_MsgQueueHandle hif_msg_q;
+ static struct semaphore hif_sema_thread;
+ static struct semaphore hif_sema_driver;
+ static struct semaphore hif_sema_wait_response;
+-struct semaphore hSemHostIntDeinit;
++static struct semaphore hif_sema_deinit;
+ struct timer_list g_hPeriodicRSSI;
  
- 	if (!hif_drv->remain_on_ch_pending) {
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
--		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
-+		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
- 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
-@@ -2611,9 +2611,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 			goto _done_;
- 		}
  
--		if (hif_drv->remain_on_ch.pRemainOnChanExpired) {
--			hif_drv->remain_on_ch.pRemainOnChanExpired(hif_drv->remain_on_ch.pVoid,
--								   pstrHostIfRemainOnChan->u32ListenSessionID);
-+		if (hif_drv->remain_on_ch.expired) {
-+			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
-+						      pstrHostIfRemainOnChan->u32ListenSessionID);
- 		}
- 		P2P_LISTEN_STATE = 0;
- 	} else {
-@@ -4366,7 +4366,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+@@ -4249,7 +4249,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 	if (clients_count == 0)	{
+ 		sema_init(&hif_sema_thread, 0);
+ 		sema_init(&hif_sema_driver, 0);
+-		sema_init(&hSemHostIntDeinit, 1);
++		sema_init(&hif_sema_deinit, 1);
+ 	}
  
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
--	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
-+	msg.body.remain_on_ch.expired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index eea251a..58d3101 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -238,7 +238,7 @@ struct ba_session_info {
- struct remain_ch {
- 	u16 ch;
- 	u32 u32duration;
--	wilc_remain_on_chan_expired pRemainOnChanExpired;
-+	wilc_remain_on_chan_expired expired;
- 	wilc_remain_on_chan_ready pRemainOnChanReady;
- 	void *pVoid;
- 	u32 u32ListenSessionID;
+ 	sema_init(&hif_drv->hSemTestKeyBlock, 0);
+@@ -4333,7 +4333,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		return 0;
+ 	}
+ 
+-	down(&hSemHostIntDeinit);
++	down(&hif_sema_deinit);
+ 
+ 	terminated_handle = hif_drv;
+ 	PRINT_D(HOSTINF_DBG, "De-initializing host interface for client %d\n", clients_count);
+@@ -4395,7 +4395,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 
+ 	clients_count--;
+ 	terminated_handle = NULL;
+-	up(&hSemHostIntDeinit);
++	up(&hif_sema_deinit);
+ 	return s32Error;
+ }
+ 
+@@ -4438,7 +4438,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	int id;
+ 	struct host_if_drv *hif_drv = NULL;
+ 
+-	down(&hSemHostIntDeinit);
++	down(&hif_sema_deinit);
+ 
+ 	id = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+ 	hif_drv = get_handler_from_id(id);
+@@ -4447,13 +4447,13 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 
+ 	if (!hif_drv || hif_drv == terminated_handle) {
+ 		PRINT_D(HOSTINF_DBG, "Wifi driver handler is equal to NULL\n");
+-		up(&hSemHostIntDeinit);
++		up(&hif_sema_deinit);
+ 		return;
+ 	}
+ 
+ 	if (!hif_drv->strWILC_UsrConnReq.pfUserConnectResult) {
+ 		PRINT_ER("Received mac status is not needed when there is no current Connect Reques\n");
+-		up(&hSemHostIntDeinit);
++		up(&hif_sema_deinit);
+ 		return;
+ 	}
+ 
+@@ -4471,7 +4471,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	if (s32Error)
+ 		PRINT_ER("Error in sending message queue asynchronous message info: Error(%d)\n", s32Error);
+ 
+-	up(&hSemHostIntDeinit);
++	up(&hif_sema_deinit);
+ }
+ 
+ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
 -- 
 1.9.1
 
