@@ -1,76 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18206 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159AbbJLM6i (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52475 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195AbbJPEkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 08:58:38 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 4/7] ath10k: export htt tx rx handlers
-Date: Mon, 12 Oct 2015 18:27:03 +0530
-Message-ID: <1444654626-3290-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145857_544398_E1F31C4B)
-In-Reply-To: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 16 Oct 2015 00:40:08 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 18/40] staging: wilc1000: rename variable gapu8RcvdAssocResp
+Date: Fri, 16 Oct 2015 13:37:48 +0900
+Message-ID: <1444970290-17609-18-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_162699_7BCFACBB)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some special copy engines delivers messages directly to HTT by
-bypassing HTC layer. Hence exporting tx_completion and rx_handler
-for delivering the data to HTT layer.
+From: Leo Kim <leo.kim@atmel.com>
 
-Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+This patch renames variable gapu8RcvdAssocResp to rcv_assoc_resp
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    | 1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c | 1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
- 3 files changed, 8 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index db0a99b..2bad50e 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1591,6 +1591,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-+void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8c529d1..5112aee 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -249,7 +249,7 @@ static struct timer_list periodic_rssi;
  
- void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 606c1a3..6060dda 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2125,6 +2125,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	/* Free the indication buffer */
- 	dev_kfree_skb_any(skb);
- }
-+EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
+ u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
  
- static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 5551747..1682397 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -187,6 +187,12 @@ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
- 	dev_kfree_skb_any(skb);
- }
+-static u8 gapu8RcvdAssocResp[MAX_ASSOC_RESP_FRAME_SIZE];
++static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
  
-+void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	dev_kfree_skb_any(skb);
-+}
-+EXPORT_SYMBOL(ath10k_htt_hif_tx_complete);
-+
- int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
+ bool gbScanWhileConnected;
+ 
+@@ -1567,10 +1567,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			memset(&strConnectInfo, 0, sizeof(tstrConnectInfo));
+ 
+ 			if (u8MacStatus == MAC_CONNECTED) {
+-				memset(gapu8RcvdAssocResp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
++				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
+ 
+ 				host_int_get_assoc_res_info(hif_drv,
+-							    gapu8RcvdAssocResp,
++							    rcv_assoc_resp,
+ 							    MAX_ASSOC_RESP_FRAME_SIZE,
+ 							    &u32RcvdAssocRespInfoLen);
+ 
+@@ -1579,7 +1579,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				if (u32RcvdAssocRespInfoLen != 0) {
+ 
+ 					PRINT_D(HOSTINF_DBG, "Parsing association response\n");
+-					s32Err = ParseAssocRespInfo(gapu8RcvdAssocResp, u32RcvdAssocRespInfoLen,
++					s32Err = ParseAssocRespInfo(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
+ 								    &pstrConnectRespInfo);
+ 					if (s32Err) {
+ 						PRINT_ER("ParseAssocRespInfo() returned error %d\n", s32Err);
 -- 
-2.6.0
+1.9.1
 
