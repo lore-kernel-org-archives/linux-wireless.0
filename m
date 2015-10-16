@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:36117 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707AbbJZEDS (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52567 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735AbbJPEkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 00:03:18 -0400
-Subject: Re: [PATCH v2] net: tso: add support for IPv6
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	netdev@vger.kernel.org
-References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
- <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, egrumbach@gmail.com
-From: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>
-Message-ID: <562DA5FF.6040307@lab.ntt.co.jp> (sfid-20151026_050357_424417_B337752E)
-Date: Mon, 26 Oct 2015 13:03:11 +0900
+	Fri, 16 Oct 2015 00:40:37 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 23/40] staging: wilc1000: rename variable gs8SetIP
+Date: Fri, 16 Oct 2015 13:37:53 +0900
+Message-ID: <1444970290-17609-23-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_404804_912219FF)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015/10/26 5:02, Emmanuel Grumbach wrote:
-> Adding IPv6 for the TSO helper API is trivial:
-> * Don't play with the id (which doesn't exist in IPv6)
-> * Correctly update the payload_len (don't include the
->   length of the IP header itself)
-...
->  	memcpy(hdr, skb->data, hdr_len);
-> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
-> -	iph->id = htons(tso->ip_id);
-> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-> +	if (skb->protocol == htons(ETH_P_IP)) {
+From: Leo Kim <leo.kim@atmel.com>
 
-I guess this should be vlan_get_protocol(skb).
+This patch renames variable gs8SetIP to set_ip
+to avoid CamelCase naming convention.
 
-> +		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
-> +
-> +		iph->id = htons(tso->ip_id);
-> +		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-> +		tso->ip_id++;
-> +	} else if (skb->protocol == htons(ETH_P_IPV6)) {
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Likewise.
-
-Toshiaki Makita
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c9126d0..7e436fb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -256,7 +256,7 @@ static bool scan_while_connected;
+ static s8 rssi;
+ static s8 link_speed;
+ static u8 ch_no;
+-static u8 gs8SetIP[2][4];
++static u8 set_ip[2][4];
+ static u8 gs8GetIP[2][4];
+ static u32 gu32InactiveTime;
+ static u8 gu8DelBcn;
+@@ -417,7 +417,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
+ 
+-	memcpy(gs8SetIP[idx], pu8IPAddr, IP_ALEN);
++	memcpy(set_ip[idx], pu8IPAddr, IP_ALEN);
+ 
+ 	strWID.id = (u16)WID_IP_ADDRESS;
+ 	strWID.type = WID_STR;
+@@ -460,8 +460,8 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ 
+ 	kfree(strWID.val);
+ 
+-	if (memcmp(gs8GetIP[idx], gs8SetIP[idx], IP_ALEN) != 0)
+-		host_int_setup_ipaddress(hif_drv, gs8SetIP[idx], idx);
++	if (memcmp(gs8GetIP[idx], set_ip[idx], IP_ALEN) != 0)
++		host_int_setup_ipaddress(hif_drv, set_ip[idx], idx);
+ 
+ 	if (s32Error != 0) {
+ 		PRINT_ER("Failed to get IP address\n");
+-- 
+1.9.1
 
