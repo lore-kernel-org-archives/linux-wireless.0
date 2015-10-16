@@ -1,54 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38435 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbbJDInj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52871 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388AbbJPEmC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 04:43:39 -0400
-Date: Sun, 4 Oct 2015 09:43:35 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chandra S Gorentla <csgorentla@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com
-Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Move spin lock to the
- start of critical section
-Message-ID: <20151004084335.GA24589@kroah.com> (sfid-20151004_104403_648240_98A6BBF0)
-References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+	Fri, 16 Oct 2015 00:42:02 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 38/40] staging: wilc1000: fixes unnecessary variable replacement
+Date: Fri, 16 Oct 2015 13:38:08 +0900
+Message-ID: <1444970290-17609-38-git-send-email-tony.cho@atmel.com> (sfid-20151016_064654_752726_15747351)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 03, 2015 at 02:57:29PM +0530, Chandra S Gorentla wrote:
-> The spin_lock_irqsave is moved to just beginning of critical section.
-> This change moves a couple of return statements out of the lock.
-> 
-> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> index d5ebd6d..284a3f5 100644
-> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> @@ -72,8 +72,6 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
->  		goto ERRORHANDLER;
->  	}
->  
-> -	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-> -
->  	/* construct a new message */
->  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+From: Leo Kim <leo.kim@atmel.com>
 
-As you have moved the lock, can you also change this to GFP_KERNEL as
-well because we do not have a lock held?
+This patch removes an unnecessary variable use for the errors and
+returns errors directly without a result variable.
 
-And how have you tested that this is ok?  What is this lock trying to
-protect?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 28 +++++++++-------------------
+ 1 file changed, 9 insertions(+), 19 deletions(-)
 
-thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 02c9763..08f70d8 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3200,9 +3200,8 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	struct host_if_msg msg;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3237,9 +3236,8 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	u8 i;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3279,9 +3277,8 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	u32 i;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 	if (pu8RxMic != NULL)
+ 		u8KeyLen += RX_MIC_KEY_LEN;
+@@ -3344,9 +3341,8 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	u8 u8KeyLen = u8GtkKeylen;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+@@ -3403,9 +3399,8 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3548,9 +3543,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
+ 	enum scan_conn_timer enuScanConnTimer;
+ 
+ 	if (!hif_drv || pfConnectResult == NULL) {
+-		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	if (pJoinParams == NULL) {
+@@ -3610,16 +3604,12 @@ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
+ 	s32 result = 0;
+ 	struct host_if_msg msg;
+ 
+-	if (!join_req) {
+-		result = -EFAULT;
+-		return result;
+-	}
+-
++	if (!join_req)
++		return -EFAULT;
+ 
+ 	if (!hif_drv) {
+-		result = -EFAULT;
+ 		PRINT_ER("Driver is null\n");
+-		return result;
++		return -EFAULT;
+ 	}
+ 
+ 	msg.id = HOST_IF_MSG_FLUSH_CONNECT;
+-- 
+1.9.1
 
-greg k-h
