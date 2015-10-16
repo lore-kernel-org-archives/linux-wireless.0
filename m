@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35119 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755267AbbJAG57 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52172 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbbJPEi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 02:57:59 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v3 5/5] wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
-Date: Thu,  1 Oct 2015 14:57:47 +0800
-Message-Id: <1443682667-29814-6-git-send-email-wens@csie.org> (sfid-20151001_085809_441367_D57579BF)
-In-Reply-To: <1443682667-29814-1-git-send-email-wens@csie.org>
-References: <1443682667-29814-1-git-send-email-wens@csie.org>
+	Fri, 16 Oct 2015 00:38:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 01/40] staging: wilc1000: rename ssidLen of struct join_bss_param
+Date: Fri, 16 Oct 2015 13:37:31 +0900
+Message-ID: <1444970290-17609-1-git-send-email-tony.cho@atmel.com> (sfid-20151016_063857_247943_30D2BF44)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following the amendment of FCC part 15E and U-NII regulations effective
-2014/06/02, and the opening up of 5150 ~ 5250 MHz and 5600 ~ 5650 MHz
-spectrum in Taiwan, vendors have asked whether Taiwan's regulations
-would be updated to match the new FCC rules, when this would happen,
-and what to do in the interim.
+From: Leo Kim <leo.kim@atmel.com>
 
-The NCC, Taiwan's regulatory body has officially replied that new
-amendments are under way, and the goal is to match the FCC rules.
-Until the amendments come through, vendors are free to test and
-submit applications using the new FCC rules for transmission power
-limits and DFS requirements, though unintended / unwanted emissions
-must still conform to the current standard, LP0002. [1][2]
+This patch renames ssidLen of struct join_bss_param to ssid_len
+to avoid CamelCase naming convention.
 
-This has been confirmed via a phone call to the NCC.
-
-[1] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
-[2] Proposal #10312260 (p.6, Chinese),
-    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 3f5268b..4409516 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1125,7 +1125,7 @@ country TT: DFS-FCC
- # LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
- #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
- #   (section 3.10.1, 4.7)
--country TW: DFS-JP
-+country TW: DFS-FCC
- 	(2400 - 2483.5 @ 40), (30)
- 	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
- 	(5150 - 5250 @ 80), (23), AUTO-BW
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 04f3bc2..e2588ef 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -207,7 +207,7 @@ struct join_bss_param {
+ 	u16 cap_info;
+ 	u8 au8bssid[6];
+ 	char ssid[MAX_SSID_LEN];
+-	u8 ssidLen;
++	u8 ssid_len;
+ 	u8 supp_rates[MAX_RATES_SUPPORTED + 1];
+ 	u8 ht_capable;
+ 	u8 wmm_cap;
+@@ -4934,7 +4934,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
+ 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
+ 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
+-		pNewJoinBssParam->ssidLen = ptstrNetworkInfo->u8SsidLen;
++		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
+ 		memset(pNewJoinBssParam->rsn_pcip_policy, 0xFF, 3);
+ 		memset(pNewJoinBssParam->rsn_auth_policy, 0xFF, 3);
+ 
 -- 
-2.5.3
+1.9.1
 
