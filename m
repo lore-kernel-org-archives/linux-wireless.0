@@ -1,119 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36262 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbbJZApE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52327 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbbJPEjO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 20:45:04 -0400
-Received: by pacfv9 with SMTP id fv9so177827259pac.3
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 17:45:04 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/4] staging: wilc1000: rename host_int_set_WEPDefaultKeyID
-Date: Mon, 26 Oct 2015 09:44:45 +0900
-Message-Id: <1445820285-14433-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151026_014509_336158_B3AA4C9D)
-In-Reply-To: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 16 Oct 2015 00:39:14 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 09/40] staging: wilc1000: rename au8StartTime of struct join_bss_param
+Date: Fri, 16 Oct 2015 13:37:39 +0900
+Message-ID: <1444970290-17609-9-git-send-email-tony.cho@atmel.com> (sfid-20151016_063918_357662_198C894E)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces host_int_set_WEPDefaultKeyID with
-host_int_set_wep_default_key to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames au8StartTime of struct join_bss_param to start_time
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4f1af61..e5ffe52 100644
+index 5cbba1a..320073e 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3128,7 +3128,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	return result;
- }
+@@ -226,7 +226,7 @@ struct join_bss_param {
+ 	u8 idx;
+ 	u8 duration[4];
+ 	u8 interval[4];
+-	u8 au8StartTime[4];
++	u8 start_time[4];
+ };
  
--int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index)
-+int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index ea91bbf..f3fb628 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -384,7 +384,7 @@ int host_int_remove_wep_key(struct host_if_drv *wfi_drv, u8 index);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index);
-+int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index);
+ enum scan_conn_timer {
+@@ -1208,10 +1208,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
+ 		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
  
- /**
-  *  @brief              sets WEP deafault key
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5559aa6..ac32d2b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -892,7 +892,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			g_key_wep_params.key_idx = sme->key_idx;
- 			g_wep_keys_saved = true;
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
+-
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->au8StartTime);
+-
++		memcpy(pu8CurrByte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
++		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
+ 	} else
+ 		PRINT_D(HOSTINF_DBG, "NOA not present\n");
  
--			host_int_set_WEPDefaultKeyID(priv->hWILCWFIDrv, sme->key_idx);
-+			host_int_set_wep_default_key(priv->hWILCWFIDrv, sme->key_idx);
- 			host_int_add_wep_key_bss_sta(priv->hWILCWFIDrv, sme->key, sme->key_len, sme->key_idx);
- 		} else if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)   {
- 			u8security = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
-@@ -909,7 +909,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			g_key_wep_params.key_idx = sme->key_idx;
- 			g_wep_keys_saved = true;
+@@ -5004,7 +5002,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
+ 				u16P2P_count += 4;
  
--			host_int_set_WEPDefaultKeyID(priv->hWILCWFIDrv, sme->key_idx);
-+			host_int_set_wep_default_key(priv->hWILCWFIDrv, sme->key_idx);
- 			host_int_add_wep_key_bss_sta(priv->hWILCWFIDrv, sme->key, sme->key_len, sme->key_idx);
- 		} else if (sme->crypto.wpa_versions & NL80211_WPA_VERSION_2)   {
- 			if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_TKIP)	{
-@@ -1502,7 +1502,7 @@ static int set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 ke
+-				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
++				memcpy(pNewJoinBssParam->start_time, pu8IEs + u16P2P_count, 4);
  
- 	if (key_index != priv->WILC_WFI_wep_default) {
- 
--		host_int_set_WEPDefaultKeyID(priv->hWILCWFIDrv, key_index);
-+		host_int_set_wep_default_key(priv->hWILCWFIDrv, key_index);
- 	}
- 
- 	return 0;
-@@ -2605,7 +2605,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 
- 			/*Add saved WEP keys, if any*/
- 			if (g_wep_keys_saved) {
--				host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
-+				host_int_set_wep_default_key(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key_idx);
- 				host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key,
-@@ -2687,7 +2687,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 
- 			/*Add saved WEP keys, if any*/
- 			if (g_wep_keys_saved) {
--				host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
-+				host_int_set_wep_default_key(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key_idx);
- 				host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key,
-@@ -2803,7 +2803,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 
- 		/*Add saved WEP keys, if any*/
- 		if (g_wep_keys_saved) {
--			host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
-+			host_int_set_wep_default_key(wl->vif[0].hif_drv,
- 						     g_key_wep_params.key_idx);
- 			host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 						     g_key_wep_params.key,
+ 				index += pu8IEs[index + 1] + 2;
+ 				continue;
 -- 
-2.6.1
+1.9.1
 
