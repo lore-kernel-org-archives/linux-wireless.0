@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46586 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933520AbbJIIUC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 04:20:02 -0400
+Received: from max.feld.cvut.cz ([147.32.192.36]:47242 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752180AbbJPUqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2015 16:46:45 -0400
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Jan Kaisrlik <kaisrja1@fel.cvut.cz>,
+	wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
+	jan-niklas.meier@volkswagen.de, s.sander@nordsys.de
+Subject: Re: [RFC PATCH 1/2] cfg80211: Add support for ITS-G5 band (5.9 GHz)
+In-Reply-To: <1445027060.2370.25.camel@sipsolutions.net>
+References: <1444994885-21825-1-git-send-email-kaisrja1@fel.cvut.cz> <1444997197.2370.22.camel@sipsolutions.net> <87h9lqeplf.fsf@steelpick.2x.cz> <1445027060.2370.25.camel@sipsolutions.net>
+Date: Fri, 16 Oct 2015 22:46:41 +0200
+Message-ID: <87bnbyee32.fsf@steelpick.2x.cz> (sfid-20151016_224649_027648_C2A9F27F)
 MIME-Version: 1.0
-Message-ID: <20151009081922.GQ7340@mwanda> (sfid-20151009_102027_450711_6647899C)
-Date: Fri, 9 Oct 2015 01:19:22 -0700 (PDT)
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 08/14] staging: wilc1000: remove typedef from
- tstrStatistics
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
- <1444268961-7551-8-git-send-email-tony.cho@atmel.com>
- <20151009081628.GP7340@mwanda>
-In-Reply-To: <20151009081628.GP7340@mwanda>
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 11:16:28AM +0300, Dan Carpenter wrote:
-> I feel like the name 'statistics' is very vague.  I guess it's so vague
-> that it's unlikely anyone else will try use it...
-> 
+On Fri, Oct 16 2015, Johannes Berg wrote:
+> Hi,
+>
+>> I thought that the regdb is for unlicensed bands with unrestricted use.
+>> The 5.9 GHz band is not licensed but it is restricted for ITS
+>> applications. 
+>
+> It kind of is, at least the current one is.
+>
+>> In http://marc.info/?l=linux-wireless&m=140183393707445&w=2
+>> Luis Rodriguez suggested that having a Kconfig option may be the way to
+>> go, but we may misread what he was saying.
+>
+> I didn't really follow this.
+>
+>> I assume that if this band will be in regdb, it will be too easy to use
+>> this band (e.g. by mistake) for non-ITS applications.
+>
+> Does the *regulatory* actually prohibit that anyway though?
 
-A lot of these are pretty vague.  But I guess it's probably ok...
-Nevermind me.
+Regulatory (ECC Decision (08)01) reads:
 
-regards,
-dan carpenter
+    ... decides ... that CEPT administrations shall designate the
+    frequency sub-band 5875-5905 MHz on a non-exclusive basis for ITS
+    traffic safety applications;
 
+I'm not sure about the exact meaning of words "designate" and
+"non-exclusive". If anyone can clarify that for me, I'd appreciate it. I
+tend to understand that this band can be only used by ITS applications
+(without license) or by other devices that have a proper license.
+
+Thanks.
+-Michal
