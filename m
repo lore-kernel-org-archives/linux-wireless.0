@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbbJYMBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:22 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/16] iwlwifi: rs: Remove workaround that disables MIMO on P2P
-Date: Sun, 25 Oct 2015 14:01:01 +0200
-Message-Id: <1445774476-24792-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130125_324199_BD7C1FDE)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52521 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735AbbJPEkZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2015 00:40:25 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 21/40] staging: wilc1000: rename variable gs8lnkspd
+Date: Fri, 16 Oct 2015 13:37:51 +0900
+Message-ID: <1444970290-17609-21-git-send-email-tony.cho@atmel.com> (sfid-20151016_064655_749209_993B1633)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Remove an old workaround that's no longer needed and
-enable MIMO on P2P interfaces.
+This patch renames variable gs8lnkspd to link_speed.
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/constants.h | 1 -
- drivers/net/wireless/iwlwifi/mvm/rs.c        | 6 ------
- 2 files changed, 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index a3ca6db..aa9ae1d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -101,7 +101,6 @@
- #define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
- #define IWL_MVM_QUOTA_THRESHOLD			4
- #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
--#define IWL_MVM_RS_DISABLE_P2P_MIMO		0
- #define IWL_MVM_RS_80_20_FAR_RANGE_TWEAK	1
- #define IWL_MVM_TOF_IS_RESPONDER		0
- #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 34d98b2..d1ad103 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -177,9 +177,6 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eda6382..2648e43 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -254,7 +254,7 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ static bool scan_while_connected;
  
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
--	if (IWL_MVM_RS_DISABLE_P2P_MIMO &&
--	    iwl_mvm_vif_low_latency(mvmvif) && mvmsta->vif->p2p)
--		return false;
+ static s8 rssi;
+-static s8 gs8lnkspd;
++static s8 link_speed;
+ static u8 gu8Chnl;
+ static u8 gs8SetIP[2][4];
+ static u8 gs8GetIP[2][4];
+@@ -2188,11 +2188,11 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 	s32 s32Error = 0;
+ 	struct wid strWID;
  
- 	if (mvm->nvm_data->sku_cap_mimo_disabled)
- 		return false;
-@@ -3071,9 +3068,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	else
- 		rs_vht_init(mvm, sta, lq_sta, vht_cap);
+-	gs8lnkspd = 0;
++	link_speed = 0;
  
--	if (IWL_MVM_RS_DISABLE_P2P_MIMO && sta_priv->vif->p2p)
--		lq_sta->active_mimo2_rate = 0;
+ 	strWID.id = (u16)WID_LINKSPEED;
+ 	strWID.type = WID_CHAR;
+-	strWID.val = &gs8lnkspd;
++	strWID.val = &link_speed;
+ 	strWID.size = sizeof(char);
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting LINKSPEED value\n");
+@@ -3971,9 +3971,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 		return -EFAULT;
+ 	}
+ 
 -
- 	lq_sta->max_legacy_rate_idx =
- 		rs_get_max_rate_from_mask(lq_sta->active_legacy_rate);
- 	lq_sta->max_siso_rate_idx =
+-	*ps8lnkspd = gs8lnkspd;
+-
++	*ps8lnkspd = link_speed;
+ 
+ 	return s32Error;
+ }
 -- 
-2.1.4
+1.9.1
 
