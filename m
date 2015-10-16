@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47171 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753760AbbJHHsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 03:48:39 -0400
-Message-ID: <1444290511.2131.0.camel@sipsolutions.net> (sfid-20151008_094845_542702_BC0F3B40)
-Subject: Re: [PATCH] Revert "mac80211: remove exposing 'mfp' to drivers"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <poh@codeaurora.org>, c_traja@qti.qualcomm.com,
-	ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 08 Oct 2015 09:48:31 +0200
-In-Reply-To: <56154DE5.4040300@codeaurora.org>
-References: <1444194604-12637-1-git-send-email-c_traja@qti.qualcomm.com>
-	 <56154DE5.4040300@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52234 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854AbbJPEio (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2015 00:38:44 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 04/40] staging: wilc1000: rename u8CtWindow of struct join_bss_param
+Date: Fri, 16 Oct 2015 13:37:34 +0900
+Message-ID: <1444970290-17609-4-git-send-email-tony.cho@atmel.com> (sfid-20151016_063900_772857_58794412)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-10-07 at 09:52 -0700, Peter Oh wrote:
-> On 10/06/2015 10:10 PM, c_traja@qti.qualcomm.com wrote:
-> > From: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> > 
-> > This reverts commit 5c48f1201744233d4f235c7dd916d5196ed20716.
-> > 
-> > Some device drivers (ath10k) offload part of aggregation including
-> > AddBA/DelBA
-> > negotiations to firmware. In such scenario, the PMF
-> Is it typo of MFP or abbreviation of something else?
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch renames u8CtWindow of struct join_bss_param to ct_window
+to avoid CamelCase naming convention.
 
-Oh, it's just some acronym confusion...
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-MFP = management frame protection
-PMF = protected management frames
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 91e7072..07c5213 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -221,7 +221,7 @@ struct join_bss_param {
+ 	u32 tsf;
+ 	u8 noa_enabled;
+ 	u8 opp_enabled;
+-	u8 u8CtWindow;
++	u8 ct_window;
+ 	u8 u8Count;
+ 	u8 u8Index;
+ 	u8 au8Duration[4];
+@@ -1198,7 +1198,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->opp_enabled;
+ 
+ 		if (ptstrJoinBssParam->opp_enabled)
+-			*(pu8CurrByte++) = ptstrJoinBssParam->u8CtWindow;
++			*(pu8CurrByte++) = ptstrJoinBssParam->ct_window;
+ 
+ 		*(pu8CurrByte++) = ptstrJoinBssParam->u8Count;
+ 
+@@ -4988,7 +4988,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 
+ 				if (pu8IEs[index + 10] & BIT(7)) {
+ 					pNewJoinBssParam->opp_enabled = 1;
+-					pNewJoinBssParam->u8CtWindow = pu8IEs[index + 10];
++					pNewJoinBssParam->ct_window = pu8IEs[index + 10];
+ 				} else {
+ 					pNewJoinBssParam->opp_enabled = 0;
+ 				}
+-- 
+1.9.1
 
-(or so)
-
-johannes
