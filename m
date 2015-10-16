@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12790 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbbJ1UXK (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52340 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752490AbbJPEjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 16:23:10 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH-v2 1/2] ath6k:  break stats gathering code into separate method.
-In-Reply-To: <1445530059-6276-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Thu, 22 Oct 2015 09:07:38
-	-0700")
-References: <1445530059-6276-1-git-send-email-greearb@candelatech.com>
-Date: Wed, 28 Oct 2015 22:09:46 +0200
-Message-ID: <87eggesqk5.fsf@kamboji.qca.qualcomm.com> (sfid-20151028_212326_357221_28DFCE53)
+	Fri, 16 Oct 2015 00:39:21 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 10/40] staging: wilc1000: remove unused variable gWFiDrvHandle
+Date: Fri, 16 Oct 2015 13:37:40 +0900
+Message-ID: <1444970290-17609-10-git-send-email-tony.cho@atmel.com> (sfid-20151016_063924_034579_E0A89FC5)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> This will allow us to call it from elsewhere when implementing
-> ethtool stats.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+This patch removes unused the variable gWFiDrvHandle.
 
-I'll do s/ath6k/ath6kl/ (manually) for both patches.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 320073e..ad7c102 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -237,7 +237,6 @@ enum scan_conn_timer {
+ 
+ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+ struct host_if_drv *terminated_handle;
+-struct host_if_drv *gWFiDrvHandle;
+ bool g_obtainingIP;
+ u8 P2P_LISTEN_STATE;
+ static struct task_struct *HostIFthreadHandler;
 -- 
-Kalle Valo
+1.9.1
+
