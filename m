@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5358 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbbJTDuF convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52715 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbbJPElR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 23:50:05 -0400
-From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 0/2 v2] ath10k: print firwmare stats specific to firmware
- version
-Date: Tue, 20 Oct 2015 03:49:54 +0000
-Message-ID: <cd133c47903b4f159461914b25365a8c@aphydexm01f.ap.qualcomm.com> (sfid-20151020_055011_164364_65ED7AE1)
-References: <1444812751-11103-1-git-send-email-c_traja@qti.qualcomm.com>
- <87vba2gbrz.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vba2gbrz.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 16 Oct 2015 00:41:17 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 30/40] staging: wilc1000: rename variable gu8Flushed11iMode
+Date: Fri, 16 Oct 2015 13:38:00 +0900
+Message-ID: <1444970290-17609-30-git-send-email-tony.cho@atmel.com> (sfid-20151016_064701_428942_06A833FD)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->>
->> Currently printing fw stats in ath10k is common to all firmware versions.
->> Printing all the stats might lead to confusion because some of the 
->> stats are firmware specific and when printed will have 0's.
->> Below patchset prints firmware stats specific to firmware.
->>
->> v2:
->>         > All the filtered functions moved to wmi.c
->>         > Added firmware stats support for 10.4 firmware.
->>
->> Manikanta (2):
->>   ath10k: Make fw stats prints specific to firmware version
+From: Leo Kim <leo.kim@atmel.com>
 
->Applied this patch.
+This patch renames variable gu8Flushed11iMode to mode_11i
+to avoid CamelCase naming convention.
 
->>   ath10k: add fw_stats support to 10.4 firmware
+Add to static because follow warning reported by kbuild system.
+ - drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol
+   'mode_11i' was not declared. Should it be static?
 
->Dropped this patch due to the bug I saw. Please resend once you have fixed that.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Ok kalle. I will send the patch once the issue fixed.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index db63886..e15aeb1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -263,7 +263,7 @@ static u8 del_beacon;
+ 
+ static u8 *join_req;
+ static u8 *info_element;
+-u8 gu8Flushed11iMode;
++static u8 mode_11i;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+ u32 gu32FlushedInfoElemAsocSize;
+@@ -1088,7 +1088,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	u32WidsCount++;
+ 
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+-		gu8Flushed11iMode = hif_drv->strWILC_UsrConnReq.u8security;
++		mode_11i = hif_drv->strWILC_UsrConnReq.u8security;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", hif_drv->strWILC_UsrConnReq.u8security);
+ 
+@@ -1309,7 +1309,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)(&(gu8Flushed11iMode));
++	strWIDList[u32WidsCount].val = (s8 *)(&(mode_11i));
+ 	u32WidsCount++;
+ 
+ 
+-- 
+1.9.1
 
-___
-Tamizh.
