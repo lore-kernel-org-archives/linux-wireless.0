@@ -1,114 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6511 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbbJOE3R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:29:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 34/40] staging: wilc1000: rename variable gu8FlushedJoinReqDrvHandler
-Date: Thu, 15 Oct 2015 13:25:15 +0900
-Message-ID: <1444883121-31757-34-git-send-email-tony.cho@atmel.com> (sfid-20151015_064658_368424_C31FD400)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ns.gsystem.sk ([62.176.172.50]:34542 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932310AbbJPTE0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2015 15:04:26 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: [PATCH 2/2] airo: fix scan after SIOCSIWAP (airo_set_wap)
+Date: Fri, 16 Oct 2015 21:04:14 +0200
+Message-Id: <1445022254-30428-2-git-send-email-linux@rainbow-software.org> (sfid-20151016_210458_281055_9B817C69)
+In-Reply-To: <1445022254-30428-1-git-send-email-linux@rainbow-software.org>
+References: <1445022254-30428-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+SIOCSIWAP (airo_set_wap) affects scan: only the AP specified by
+SIOCSIWAP is present in scan results.
 
-This patch renames variable gu8FlushedJoinReqDrvHandler to join_req_drv
-to avoid CamelCase naming convention.
+This makes NetworkManager work for the first time but then unable to
+find any other APs.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Clear APList before starting scan and set it back after scan completes
+to work-around the problem.
+
+To avoid losing packets during scan, modify disable_MAC() to omit
+netif_carrier_off() call when lock == 2.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/airo.c |   20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 961e853..704419f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -267,7 +267,7 @@ u8 mode_11i;
- u8 auth_type;
- u32 join_req_size;
- u32 info_element_size;
--struct host_if_drv *gu8FlushedJoinReqDrvHandler;
-+struct host_if_drv *join_req_drv;
- #define REAL_JOIN_REQ 0
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79
-@@ -1210,7 +1210,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		memcpy(join_req, pu8CurrByte, join_req_size);
--		gu8FlushedJoinReqDrvHandler = hif_drv;
-+		join_req_drv = hif_drv;
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 4ef2f98..17c40f0 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -3037,6 +3037,11 @@ static void airo_process_scan_results (struct airo_info *ai) {
  	}
  
- 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
-@@ -1331,7 +1331,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 	u32WidsCount++;
+ out:
++	/* write APList back (we cleared it in airo_set_scan) */
++	disable_MAC(ai, 2);
++	writeAPListRid(ai, &ai->APList, 0);
++	enable_MAC(ai, 0);
++
+ 	ai->scan_timeout = 0;
+ 	clear_bit(JOB_SCAN_RESULTS, &ai->jobs);
+ 	up(&ai->sem);
+@@ -3608,17 +3613,18 @@ static void disable_MAC( struct airo_info *ai, int lock ) {
+         Cmd cmd;
+ 	Resp rsp;
  
- 	s32Error = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
--				   get_id_from_handler(gu8FlushedJoinReqDrvHandler));
-+				   get_id_from_handler(join_req_drv));
- 	if (s32Error) {
- 		PRINT_ER("failed to send config packet\n");
- 		s32Error = -EINVAL;
-@@ -1406,12 +1406,12 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+-	if (lock && down_interruptible(&ai->sem))
++	if (lock == 1 && down_interruptible(&ai->sem))
+ 		return;
  
- 	eth_zero_addr(u8ConnectedSSID);
- 
--	if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+	if (join_req != NULL && join_req_drv == hif_drv) {
- 		kfree(join_req);
- 		join_req = NULL;
+ 	if (test_bit(FLAG_ENABLED, &ai->flags)) {
+-		netif_carrier_off(ai->dev);
++		if (lock != 2) /* lock == 2 means don't disable carrier */
++			netif_carrier_off(ai->dev);
+ 		memset(&cmd, 0, sizeof(cmd));
+ 		cmd.cmd = MAC_DISABLE; // disable in case already enabled
+ 		issuecommand(ai, &cmd, &rsp);
+ 		clear_bit(FLAG_ENABLED, &ai->flags);
  	}
+-	if (lock)
++	if (lock == 1)
+ 		up(&ai->sem);
+ }
  
--	if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+	if (info_element != NULL && join_req_drv == hif_drv) {
- 		kfree(info_element);
- 		info_element = NULL;
- 	}
-@@ -1710,12 +1710,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
- 			kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
+@@ -7216,6 +7222,7 @@ static int airo_set_scan(struct net_device *dev,
+ 	Cmd cmd;
+ 	Resp rsp;
+ 	int wake = 0;
++	APListRid APList_rid_empty;
  
--			if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+			if (join_req != NULL && join_req_drv == hif_drv) {
- 				kfree(join_req);
- 				join_req = NULL;
- 			}
+ 	/* Note : you may have realised that, as this is a SET operation,
+ 	 * this is privileged and therefore a normal user can't
+@@ -7233,6 +7240,13 @@ static int airo_set_scan(struct net_device *dev,
+ 	if (ai->scan_timeout > 0)
+ 		goto out;
  
--			if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+			if (info_element != NULL && join_req_drv == hif_drv) {
- 				kfree(info_element);
- 				info_element = NULL;
- 			}
-@@ -2103,12 +2103,12 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 		hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
- 		kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
- 
--		if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+		if (join_req != NULL && join_req_drv == hif_drv) {
- 			kfree(join_req);
- 			join_req = NULL;
- 		}
- 
--		if (info_element != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+		if (info_element != NULL && join_req_drv == hif_drv) {
- 			kfree(info_element);
- 			info_element = NULL;
- 		}
++	/* Clear APList as it affects scan results */
++	memset(&APList_rid_empty, 0, sizeof(APList_rid_empty));
++	APList_rid_empty.len = cpu_to_le16(sizeof(APList_rid_empty));
++	disable_MAC(ai, 2);
++	writeAPListRid(ai, &APList_rid_empty, 0);
++	enable_MAC(ai, 0);
++
+ 	/* Initiate a scan command */
+ 	ai->scan_timeout = RUN_AT(3*HZ);
+ 	memset(&cmd, 0, sizeof(cmd));
 -- 
-1.9.1
+Ondrej Zary
 
