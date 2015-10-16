@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12711 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:34524 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbbJLH6T (ORCPT
+	with ESMTP id S1753420AbbJPJXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:58:19 -0400
+	Fri, 16 Oct 2015 05:23:54 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 16/41] staging: wilc1000: remove _tstrJoinParam from join_bss_param
-Date: Mon, 12 Oct 2015 16:55:50 +0900
-Message-ID: <1444636575-2486-16-git-send-email-tony.cho@atmel.com> (sfid-20151012_095826_091833_BCA3E3E3)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/13] staging: wilc1000: chage_virtual_intf: use netdev private wilc
+Date: Fri, 16 Oct 2015 18:23:02 +0900
+Message-ID: <1444987389-14151-6-git-send-email-tony.cho@atmel.com> (sfid-20151016_112357_697617_F22FAF27)
+In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
+References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Glen Lee <glen.lee@atmel.com>
 
-This patch removes struct _tstrJoinParam from the struct join_bss_param
-because it is not used inside the struct.
+Use netdev private data member wilc instead of global variable wl.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0d83351..fdde387 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -425,7 +425,6 @@ struct join_bss_param {
- 	u8 rsn_pcip_policy[3];
- 	u8 rsn_auth_policy[3];
- 	u8 rsn_cap[2];
--	struct _tstrJoinParam *nextJoinBss;
- 	u32 tsf;
- 	u8 u8NoaEnbaled;
- 	u8 u8OppEnable;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ebba9d4..b34b7d0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2533,9 +2533,11 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	u8 interface_type;
+ 	u16 TID = 0;
+ 	u8 i;
++	struct wilc *wl;
+ 
+ 	nic = netdev_priv(dev);
+ 	priv = wiphy_priv(wiphy);
++	wl = nic->wilc;
+ 
+ 	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
+ 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
 -- 
 1.9.1
 
