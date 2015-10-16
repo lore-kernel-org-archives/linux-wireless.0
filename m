@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:31435 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751814AbbJYOI0 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52409 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107AbbJPEjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 10:08:26 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH 7/8] ath6kl: add missing of_node_put
-Date: Sun, 25 Oct 2015 14:57:06 +0100
-Message-Id: <1445781427-7110-8-git-send-email-Julia.Lawall@lip6.fr> (sfid-20151025_151240_780434_EDCA9C75)
-In-Reply-To: <1445781427-7110-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1445781427-7110-1-git-send-email-Julia.Lawall@lip6.fr>
+	Fri, 16 Oct 2015 00:39:45 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 14/40] staging: wilc1000: rename variable hSemDeinitDrvHandle
+Date: Fri, 16 Oct 2015 13:37:44 +0900
+Message-ID: <1444970290-17609-14-git-send-email-tony.cho@atmel.com> (sfid-20151016_064658_668406_A6D2F492)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for_each_compatible_node performs an of_node_get on each iteration, so
-a break out of the loop requires an of_node_put.
+From: Leo Kim <leo.kim@atmel.com>
 
-A simplified version of the semantic patch that fixes this problem is as
-follows (http://coccinelle.lip6.fr):
+This patch renames variable hSemDeinitDrvHandle to hif_sema_driver
+to avoid CamelCase naming convention.
 
-// <smpl>
-@@
-expression e;
-local idexpression n;
-@@
+Add to static because follow warning reported by kbuild system.
+ - drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol
+   'hif_sema_driver' was not declared. Should it be static?
 
- for_each_compatible_node(n,...) {
-   ... when != of_node_put(n)
-       when != e = n
-(
-   return n;
-|
-+  of_node_put(n);
-?  return ...;
-)
-   ...
- }
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/host_interface.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 6e473fa..12241b1 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -715,6 +715,7 @@ static bool check_device_tree(struct ath6kl *ar)
- 				   board_filename, ret);
- 			continue;
- 		}
-+		of_node_put(node);
- 		return true;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a587080..32c73b1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -242,7 +242,7 @@ u8 P2P_LISTEN_STATE;
+ static struct task_struct *hif_thread_handler;
+ static WILC_MsgQueueHandle hif_msg_q;
+ static struct semaphore hif_sema_thread;
+-struct semaphore hSemDeinitDrvHandle;
++static struct semaphore hif_sema_driver;
+ static struct semaphore hWaitResponse;
+ struct semaphore hSemHostIntDeinit;
+ struct timer_list g_hPeriodicRSSI;
+@@ -370,8 +370,7 @@ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
+ 				   pstrHostIfSetDrvHandler->u32Address);
+ 
+ 	if (!hif_drv)
+-		up(&hSemDeinitDrvHandle);
+-
++		up(&hif_sema_driver);
+ 
+ 	if (s32Error) {
+ 		PRINT_ER("Failed to set driver handler\n");
+@@ -398,8 +397,7 @@ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
+ 
+ 
+ 	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
+-		up(&hSemDeinitDrvHandle);
+-
++		up(&hif_sema_driver);
+ 
+ 	if (s32Error) {
+ 		PRINT_ER("Failed to set driver handler\n");
+@@ -4250,7 +4248,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 	PRINT_D(HOSTINF_DBG, "Global handle pointer value=%p\n", hif_drv);
+ 	if (clients_count == 0)	{
+ 		sema_init(&hif_sema_thread, 0);
+-		sema_init(&hSemDeinitDrvHandle, 0);
++		sema_init(&hif_sema_driver, 0);
+ 		sema_init(&hSemHostIntDeinit, 1);
  	}
- 	return false;
+ 
+@@ -4356,7 +4354,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 	del_timer_sync(&hif_drv->hRemainOnChannel);
+ 
+ 	host_int_set_wfi_drv_handler(NULL);
+-	down(&hSemDeinitDrvHandle);
++	down(&hif_sema_driver);
+ 
+ 	if (hif_drv->strWILC_UsrScanReq.pfUserScanResult) {
+ 		hif_drv->strWILC_UsrScanReq.pfUserScanResult(SCAN_EVENT_ABORTED, NULL,
+-- 
+1.9.1
 
