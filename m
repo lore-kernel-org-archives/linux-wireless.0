@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56788 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52635 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030642AbbJ3Jpo (ORCPT
+	with ESMTP id S1751252AbbJPEky (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:45:44 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:40:54 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 13/17] staging: wilc1000: wilc_wlan_start: add argument struct net_device
-Date: Fri, 30 Oct 2015 18:47:19 +0900
-Message-ID: <1446198443-6623-13-git-send-email-glen.lee@atmel.com> (sfid-20151030_104654_862682_3670A345)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 26/40] staging: wilc1000: rename variable gu8DelBcn
+Date: Fri, 16 Oct 2015 13:37:56 +0900
+Message-ID: <1444970290-17609-26-git-send-email-tony.cho@atmel.com> (sfid-20151016_064657_017625_2F429326)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct net_device and pass dev to the function.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames variable gu8DelBcn to del_beacon
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index bb37f5b..2226ddb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -584,7 +584,7 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ea3c011..9f5db14 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -259,7 +259,7 @@ static u8 ch_no;
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+ static u32 inactive_time;
+-static u8 gu8DelBcn;
++static u8 del_beacon;
+ static u32 gu32WidConnRstHack;
  
- 	/* start firmware */
- 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
--	ret = wilc_wlan_start();
-+	ret = wilc_wlan_start(dev);
- 	if (ret < 0) {
- 		PRINT_ER("Failed to start Firmware\n");
- 		goto _fail_;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 93fae34..894466f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1489,7 +1489,7 @@ _fail_1:
-  *      Common
-  *
-  ********************************************/
--int wilc_wlan_start(void)
-+int wilc_wlan_start(struct net_device *dev)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 reg = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index c948c25..73e01a7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -297,7 +297,7 @@ typedef struct {
+ u8 *gu8FlushedJoinReq;
+@@ -2373,7 +2373,7 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
+ 	strWID.id = (u16)WID_DEL_BEACON;
+ 	strWID.type = WID_CHAR;
+ 	strWID.size = sizeof(char);
+-	strWID.val = &gu8DelBcn;
++	strWID.val = &del_beacon;
  
- int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
- 				u32 buffer_size);
--int wilc_wlan_start(void);
-+int wilc_wlan_start(struct net_device *dev);
- int wilc_wlan_stop(struct net_device *dev);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func);
+ 	if (strWID.val == NULL)
+ 		return;
 -- 
 1.9.1
 
