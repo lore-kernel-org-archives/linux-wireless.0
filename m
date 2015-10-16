@@ -1,89 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56615 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52454 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030341AbbJ3JpE (ORCPT
+	with ESMTP id S1752743AbbJPEkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:45:04 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:40:03 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 07/17] staging: wilc1000: wilc_wlan_txq_add_to_head: add new argument net_device
-Date: Fri, 30 Oct 2015 18:47:13 +0900
-Message-ID: <1446198443-6623-7-git-send-email-glen.lee@atmel.com> (sfid-20151030_104508_457759_3D9901F4)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 17/40] staging: wilc1000: rename variable g_hPeriodicRSSI
+Date: Fri, 16 Oct 2015 13:37:47 +0900
+Message-ID: <1444970290-17609-17-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_655891_B5730A4B)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct net_device and use netdev private data
-member wilc instead of g_linux_wlan, pass dev to the function as well.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames variable g_hPeriodicRSSI to periodic_rssi
+to avoid CamelCase naming convention.
+
+Add to static because follow warning reported by kbuild system.
+ - drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol
+   'periodic_rssi' was not declared. Should it be static?
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index ec4bff4..b503f07 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -227,15 +227,21 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 	up(&wilc->txq_event);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5900972..8c529d1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -245,9 +245,7 @@ static struct semaphore hif_sema_thread;
+ static struct semaphore hif_sema_driver;
+ static struct semaphore hif_sema_wait_response;
+ static struct semaphore hif_sema_deinit;
+-struct timer_list g_hPeriodicRSSI;
+-
+-
++static struct timer_list periodic_rssi;
+ 
+ u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 
+@@ -4207,8 +4205,8 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 			return;
+ 		}
+ 	}
+-	g_hPeriodicRSSI.data = (unsigned long)hif_drv;
+-	mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
++	periodic_rssi.data = (unsigned long)hif_drv;
++	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
  }
  
--static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
-+static int wilc_wlan_txq_add_to_head(struct net_device *dev,
-+				     struct txq_entry_t *tqe)
- {
-+	perInterface_wlan_t *nic = netdev_priv(dev);
-+	struct wilc *wilc;
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	unsigned long flags;
--	if (linux_wlan_lock_timeout(&g_linux_wlan->txq_add_to_head_cs,
+ 
+@@ -4276,9 +4274,9 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 			result = -EFAULT;
+ 			goto _fail_mq_;
+ 		}
+-		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
++		setup_timer(&periodic_rssi, GetPeriodicRSSI,
+ 			    (unsigned long)hif_drv);
+-		mod_timer(&g_hPeriodicRSSI, jiffies + msecs_to_jiffies(5000));
++		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
+ 	setup_timer(&hif_drv->hScanTimer, TimerCB_Scan, 0);
+@@ -4346,10 +4344,8 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+ 	}
+ 
+-
+-	if (del_timer_sync(&g_hPeriodicRSSI)) {
++	if (del_timer_sync(&periodic_rssi))
+ 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+-	}
+ 
+ 	del_timer_sync(&hif_drv->hRemainOnChannel);
+ 
+@@ -4370,9 +4366,9 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 	if (clients_count == 1)	{
+-		if (del_timer_sync(&g_hPeriodicRSSI)) {
++		if (del_timer_sync(&periodic_rssi))
+ 			PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+-		}
 +
-+	wilc = nic->wilc;
-+
-+	if (linux_wlan_lock_timeout(&wilc->txq_add_to_head_cs,
- 				    CFG_PKTS_TIMEOUT))
- 		return -1;
+ 		msg.id = HOST_IF_MSG_EXIT;
+ 		msg.drv = hif_drv;
  
--	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
-+	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 
- 	if (p->txq_head == NULL) {
- 		tqe->next = NULL;
-@@ -251,14 +257,14 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
- 	p->txq_entries += 1;
- 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
- 
--	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
--	up(&g_linux_wlan->txq_add_to_head_cs);
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
-+	up(&wilc->txq_add_to_head_cs);
- 
- 
- 	/**
- 	 *      wake up TX queue
- 	 **/
--	up(&g_linux_wlan->txq_event);
-+	up(&wilc->txq_event);
- 	PRINT_D(TX_DBG, "Wake up the txq_handler\n");
- 
- 	return 0;
-@@ -520,7 +526,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct net_device *dev,
- 	 **/
- 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
- 
--	if (wilc_wlan_txq_add_to_head(tqe))
-+	if (wilc_wlan_txq_add_to_head(dev, tqe))
- 		return 0;
- 	return 1;
- }
 -- 
 1.9.1
 
