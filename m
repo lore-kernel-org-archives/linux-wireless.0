@@ -1,80 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58616 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52605 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767AbbJ0J1j (ORCPT
+	with ESMTP id S1753317AbbJPEks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:27:39 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:40:48 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 26/27] staging: wilc1000: wilc_wlan_txq_add_net_pkt: add argument struct net_device
-Date: Tue, 27 Oct 2015 18:28:02 +0900
-Message-ID: <1445938083-20445-26-git-send-email-glen.lee@atmel.com> (sfid-20151027_102759_316524_B6659D0D)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 25/40] staging: wilc1000: rename variable gu32InactiveTime
+Date: Fri, 16 Oct 2015 13:37:55 +0900
+Message-ID: <1444970290-17609-25-git-send-email-tony.cho@atmel.com> (sfid-20151016_064700_639772_9AD31E36)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add new argument struct net_device *dev and pass net_device to
-wilc_wlan_txq_add_net_pkt.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch renames variable gu32InactiveTime to inactive_time
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c  | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.h  | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 9a105ceb..2a5b36f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1413,8 +1413,8 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	nic->netstats.tx_packets++;
- 	nic->netstats.tx_bytes += tx_data->size;
- 	tx_data->pBssid = wilc->vif[nic->u8IfIdx].bssid;
--	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
--					       tx_data->size,
-+	QueueCount = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
-+					       tx_data->buff, tx_data->size,
- 					       linux_wlan_tx_complete);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 59cbf90..ea3c011 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -258,7 +258,7 @@ static s8 link_speed;
+ static u8 ch_no;
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+-static u32 gu32InactiveTime;
++static u32 inactive_time;
+ static u8 gu8DelBcn;
+ static u32 gu32WidConnRstHack;
  
- 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index b109289..14a56d6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -502,8 +502,8 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
- 	return 1;
+@@ -2287,7 +2287,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 
+ 	strWID.id = (u16)WID_GET_INACTIVE_TIME;
+ 	strWID.type = WID_INT;
+-	strWID.val = (s8 *)&gu32InactiveTime;
++	strWID.val = (s8 *)&inactive_time;
+ 	strWID.size = sizeof(u32);
+ 
+ 
+@@ -2299,8 +2299,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 		return -EFAULT;
+ 	}
+ 
+-
+-	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", gu32InactiveTime);
++	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
+ 
+ 	up(&hif_drv->hSemInactiveTime);
+ 
+@@ -3885,7 +3884,7 @@ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
+ 
+ 	down(&hif_drv->hSemInactiveTime);
+ 
+-	*pu32InactiveTime = gu32InactiveTime;
++	*pu32InactiveTime = inactive_time;
+ 
+ 	return s32Error;
  }
- 
--int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
--			      wilc_tx_complete_func_t func)
-+int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
-+			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	struct txq_entry_t *tqe;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index d0b2448..57e1d51 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -298,8 +298,8 @@ typedef struct {
- int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
- int wilc_wlan_start(void);
- int wilc_wlan_stop(void);
--int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
--			      wilc_tx_complete_func_t func);
-+int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
-+			      u32 buffer_size, wilc_tx_complete_func_t func);
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
- void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
 -- 
 1.9.1
 
