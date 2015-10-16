@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43398 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52185 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964794AbbJ1HGr (ORCPT
+	with ESMTP id S1750746AbbJPEid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:06:47 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Fri, 16 Oct 2015 00:38:33 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 75/80] staging: wilc1000: rename u8ASELCap of struct add_sta_param
-Date: Wed, 28 Oct 2015 16:07:20 +0900
-Message-ID: <1446016045-32154-25-git-send-email-glen.lee@atmel.com> (sfid-20151028_081655_814741_4C528987)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 02/40] staging: wilc1000: rename u8NoaEnbaled of struct join_bss_param
+Date: Fri, 16 Oct 2015 13:37:32 +0900
+Message-ID: <1444970290-17609-2-git-send-email-tony.cho@atmel.com> (sfid-20151016_063858_392000_C96FFEE2)
+In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,86 +22,49 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u8ASELCap of struct add_sta_param to ht_ante_sel
+This patch renames u8NoaEnbaled of struct join_bss_param to noa_enabled
 to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 11 ++++++-----
- 3 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 77454fd..ebf0be4 100644
+index e2588ef..2b8e412 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2338,7 +2338,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	*pu8CurrByte++ = (pstrStationParam->ht_tx_bf_cap >> 16) & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->ht_tx_bf_cap >> 24) & 0xFF;
+@@ -219,7 +219,7 @@ struct join_bss_param {
+ 	u8 rsn_auth_policy[3];
+ 	u8 rsn_cap[2];
+ 	u32 tsf;
+-	u8 u8NoaEnbaled;
++	u8 noa_enabled;
+ 	u8 u8OppEnable;
+ 	u8 u8CtWindow;
+ 	u8 u8Count;
+@@ -1184,9 +1184,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	pu8CurrByte += sizeof(ptstrJoinBssParam->rsn_cap);
  
--	*pu8CurrByte++ = pstrStationParam->u8ASELCap;
-+	*pu8CurrByte++ = pstrStationParam->ht_ante_sel;
+ 	*(pu8CurrByte++) = REAL_JOIN_REQ;
++	*(pu8CurrByte++) = ptstrJoinBssParam->noa_enabled;
  
- 	*pu8CurrByte++ = pstrStationParam->u16FlagsMask & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->u16FlagsMask >> 8) & 0xFF;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 8a5b8a0..47eb5a0 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -298,7 +298,7 @@ struct add_sta_param {
- 	u8 ht_supp_mcs_set[16];
- 	u16 ht_ext_params;
- 	u32 ht_tx_bf_cap;
--	u8 u8ASELCap;
-+	u8 ht_ante_sel;
- 	u16 u16FlagsMask;
- 	u16 u16FlagsSet;
- };
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d04d2b6..b6d2246 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3030,7 +3030,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			       WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
--			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
-+			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
- 		}
+-	*(pu8CurrByte++) = ptstrJoinBssParam->u8NoaEnbaled;
+-	if (ptstrJoinBssParam->u8NoaEnbaled) {
++	if (ptstrJoinBssParam->noa_enabled) {
+ 		PRINT_D(HOSTINF_DBG, "NOA present\n");
  
- 		strStaParams.u16FlagsMask = params->sta_flags_mask;
-@@ -3046,7 +3046,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ext_params);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
- 			strStaParams.ht_tx_bf_cap);
--		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
-+		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
-+			strStaParams.ht_ante_sel);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
- 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
+ 		*(pu8CurrByte++) = (ptstrJoinBssParam->tsf) & 0xFF;
+@@ -4984,7 +4984,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				u16 u16P2P_count;
  
-@@ -3151,8 +3152,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			       WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
--			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
--
-+			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
- 		}
+ 				pNewJoinBssParam->tsf = ptstrNetworkInfo->u32Tsf;
+-				pNewJoinBssParam->u8NoaEnbaled = 1;
++				pNewJoinBssParam->noa_enabled = 1;
+ 				pNewJoinBssParam->u8Index = pu8IEs[index + 9];
  
- 		strStaParams.u16FlagsMask = params->sta_flags_mask;
-@@ -3168,7 +3168,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_ext_params);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
- 			strStaParams.ht_tx_bf_cap);
--		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
-+		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
-+			strStaParams.ht_ante_sel);
- 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
- 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
- 
+ 				if (pu8IEs[index + 10] & BIT(7)) {
 -- 
 1.9.1
 
