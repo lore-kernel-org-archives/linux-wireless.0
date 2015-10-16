@@ -1,387 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23091 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336AbbJHSdY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 14:33:24 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
-Date: Thu, 8 Oct 2015 20:33:11 +0200
-Message-ID: <1444329201-3696-2-git-send-email-arend@broadcom.com> (sfid-20151008_203338_601199_693AB746)
-In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lists.s-osg.org ([54.187.51.154]:33156 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932178AbbJPPcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2015 11:32:35 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] staging: wilc1000: Remove boolean comparisons
+Date: Fri, 16 Oct 2015 16:32:26 +0100
+Message-Id: <1445009546-25856-1-git-send-email-luisbg@osg.samsung.com> (sfid-20151016_173310_352235_8A69C7D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon PSM watchdog event received from firmware the driver will obtain
-a memory snapshot of the device and expose it to user-space through
-the devcoredump framework. This will trigger a uevent.
+Boolean tests do not need explicit comparison to true or false.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
 ---
- drivers/net/wireless/brcm80211/Kconfig          |  1 +
- drivers/net/wireless/brcm80211/brcmfmac/bus.h   | 21 ++++++++
- drivers/net/wireless/brcm80211/brcmfmac/core.c  |  6 +--
- drivers/net/wireless/brcm80211/brcmfmac/debug.c | 42 ++++++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/debug.h |  8 +--
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c  | 65 +++++++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c  | 49 ++++++++++++++++++-
- 7 files changed, 181 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index fe3dc12..ab42b1f 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -82,5 +82,6 @@ config BRCM_TRACING
- config BRCMDBG
- 	bool "Broadcom driver debug functions"
- 	depends on BRCMSMAC || BRCMFMAC
-+	select WANT_DEV_COREDUMP
- 	---help---
- 	  Selecting this enables additional code for debug purposes.
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-index 89e6a4d..230cad7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-@@ -65,6 +65,8 @@ struct brcmf_bus_dcmd {
-  * @rxctl: receive a control response message from dongle.
-  * @gettxq: obtain a reference of bus transmit queue (optional).
-  * @wowl_config: specify if dongle is configured for wowl when going to suspend
-+ * @get_ramsize: obtain size of device memory.
-+ * @get_memdump: obtain device memory dump in provided buffer.
-  *
-  * This structure provides an abstract interface towards the
-  * bus specific driver. For control messages to common driver
-@@ -79,6 +81,8 @@ struct brcmf_bus_ops {
- 	int (*rxctl)(struct device *dev, unsigned char *msg, uint len);
- 	struct pktq * (*gettxq)(struct device *dev);
- 	void (*wowl_config)(struct device *dev, bool enabled);
-+	size_t (*get_ramsize)(struct device *dev);
-+	int (*get_memdump)(struct device *dev, void *data, size_t len);
- };
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 706912b..16a2a5f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -363,7 +363,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
+ 	struct cfg80211_bss *bss = NULL;
  
+ 	priv = (struct wilc_priv *)pUserVoid;
+-	if (priv->bCfgScanning == true) {
++	if (priv->bCfgScanning) {
+ 		if (enuScanEvent == SCAN_EVENT_NETWORK_FOUND) {
+ 			wiphy = priv->dev->ieee80211_ptr->wiphy;
  
-@@ -185,6 +189,23 @@ void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
- 		bus->ops->wowl_config(bus->dev, enabled);
- }
+@@ -391,7 +391,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
+ 					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)pstrNetworkInfo->s8rssi) * 100),
+ 					   pstrNetworkInfo->u16CapInfo, pstrNetworkInfo->u16BeaconPeriod);
  
-+static inline size_t brcmf_bus_get_ramsize(struct brcmf_bus *bus)
-+{
-+	if (!bus->ops->get_ramsize)
-+		return 0;
-+
-+	return bus->ops->get_ramsize(bus->dev);
-+}
-+
-+static inline
-+int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
-+{
-+	if (!bus->ops->get_memdump)
-+		return -EOPNOTSUPP;
-+
-+	return bus->ops->get_memdump(bus->dev, data, len);
-+}
-+
- /*
-  * interface functions from common layer
-  */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 8c2a280..a1d39b196 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -957,8 +957,8 @@ int brcmf_attach(struct device *dev)
- 	drvr->bus_if = dev_get_drvdata(dev);
- 	drvr->bus_if->drvr = drvr;
+-				if (pstrNetworkInfo->bNewNetwork == true) {
++				if (pstrNetworkInfo->bNewNetwork) {
+ 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) { /* TODO: mostafa: to be replaced by */
+ 						/*               max_scan_ssids */
+ 						PRINT_D(CFG80211_DBG, "Network %s found\n", pstrNetworkInfo->au8ssid);
+@@ -1947,7 +1947,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
+ 			PRINT_D(GENERIC_DBG, "Rx Action Frame Type: %x %x\n", buff[ACTION_SUBTYPE_ID], buff[P2P_PUB_ACTION_SUBTYPE]);
  
--	/* create device debugfs folder */
--	brcmf_debugfs_attach(drvr);
-+	/* attach debug facilities */
-+	brcmf_debug_attach(drvr);
+-			if (priv->bCfgScanning == true && time_after_eq(jiffies, (unsigned long)pstrWFIDrv->u64P2p_MgmtTimeout)) {
++			if (priv->bCfgScanning && time_after_eq(jiffies, (unsigned long)pstrWFIDrv->u64P2p_MgmtTimeout)) {
+ 				PRINT_D(GENERIC_DBG, "Receiving action frames from wrong channels\n");
+ 				return;
+ 			}
+@@ -2360,7 +2360,7 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 	PRINT_D(GENERIC_DBG, "Tx Cancel wait :%lu\n", jiffies);
+ 	pstrWFIDrv->u64P2p_MgmtTimeout = jiffies;
  
- 	/* Attach and link in the protocol */
- 	ret = brcmf_proto_attach(drvr);
-@@ -1155,7 +1155,7 @@ void brcmf_detach(struct device *dev)
- 
- 	brcmf_proto_detach(drvr);
- 
--	brcmf_debugfs_detach(drvr);
-+	brcmf_debug_detach(drvr);
- 	bus_if->drvr = NULL;
- 	kfree(drvr);
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-index 2d6d005..1299dcc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-@@ -16,15 +16,45 @@
- #include <linux/debugfs.h>
- #include <linux/netdevice.h>
- #include <linux/module.h>
-+#include <linux/devcoredump.h>
- 
- #include <brcmu_wifi.h>
- #include <brcmu_utils.h>
- #include "core.h"
- #include "bus.h"
-+#include "fweh.h"
- #include "debug.h"
- 
- static struct dentry *root_folder;
- 
-+static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
-+				      size_t len)
-+{
-+	void *dump;
-+	size_t ramsize;
-+
-+	ramsize = brcmf_bus_get_ramsize(bus);
-+	if (ramsize) {
-+		dump = vzalloc(len + ramsize);
-+		if (!dump)
-+			return -ENOMEM;
-+		memcpy(dump, data, len);
-+		brcmf_bus_get_memdump(bus, dump + len, ramsize);
-+		dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
-+	}
-+	return 0;
-+}
-+
-+static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
-+					   const struct brcmf_event_msg *evtmsg,
-+					   void *data)
-+{
-+	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
-+
-+	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
-+					  evtmsg->datalen);
-+}
-+
- void brcmf_debugfs_init(void)
- {
- 	root_folder = debugfs_create_dir(KBUILD_MODNAME, NULL);
-@@ -41,7 +71,7 @@ void brcmf_debugfs_exit(void)
- 	root_folder = NULL;
- }
- 
--int brcmf_debugfs_attach(struct brcmf_pub *drvr)
-+int brcmf_debug_attach(struct brcmf_pub *drvr)
- {
- 	struct device *dev = drvr->bus_if->dev;
- 
-@@ -49,12 +79,18 @@ int brcmf_debugfs_attach(struct brcmf_pub *drvr)
- 		return -ENODEV;
- 
- 	drvr->dbgfs_dir = debugfs_create_dir(dev_name(dev), root_folder);
-+	if (IS_ERR(drvr->dbgfs_dir))
-+		return PTR_ERR(drvr->dbgfs_dir);
- 
--	return PTR_ERR_OR_ZERO(drvr->dbgfs_dir);
-+
-+	return brcmf_fweh_register(drvr, BRCMF_E_PSM_WATCHDOG,
-+				   brcmf_debug_psm_watchdog_notify);
- }
- 
--void brcmf_debugfs_detach(struct brcmf_pub *drvr)
-+void brcmf_debug_detach(struct brcmf_pub *drvr)
- {
-+	brcmf_fweh_unregister(drvr, BRCMF_E_PSM_WATCHDOG);
-+
- 	if (!IS_ERR_OR_NULL(drvr->dbgfs_dir))
- 		debugfs_remove_recursive(drvr->dbgfs_dir);
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
-index 48648ca..d0d9676 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
-@@ -109,8 +109,8 @@ struct brcmf_pub;
- #ifdef DEBUG
- void brcmf_debugfs_init(void);
- void brcmf_debugfs_exit(void);
--int brcmf_debugfs_attach(struct brcmf_pub *drvr);
--void brcmf_debugfs_detach(struct brcmf_pub *drvr);
-+int brcmf_debug_attach(struct brcmf_pub *drvr);
-+void brcmf_debug_detach(struct brcmf_pub *drvr);
- struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
- int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
- 			    int (*read_fn)(struct seq_file *seq, void *data));
-@@ -121,11 +121,11 @@ static inline void brcmf_debugfs_init(void)
- static inline void brcmf_debugfs_exit(void)
- {
- }
--static inline int brcmf_debugfs_attach(struct brcmf_pub *drvr)
-+static inline int brcmf_debug_attach(struct brcmf_pub *drvr)
- {
- 	return 0;
- }
--static inline void brcmf_debugfs_detach(struct brcmf_pub *drvr)
-+static inline void brcmf_debug_detach(struct brcmf_pub *drvr)
- {
- }
- static inline
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 30baf35..36b386a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -448,6 +448,47 @@ brcmf_pcie_copy_mem_todev(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
- }
- 
- 
-+static void
-+brcmf_pcie_copy_dev_tomem(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
-+			  void *dstaddr, u32 len)
-+{
-+	void __iomem *address = devinfo->tcm + mem_offset;
-+	__le32 *dst32;
-+	__le16 *dst16;
-+	u8 *dst8;
-+
-+	if (((ulong)address & 4) || ((ulong)dstaddr & 4) || (len & 4)) {
-+		if (((ulong)address & 2) || ((ulong)dstaddr & 2) || (len & 2)) {
-+			dst8 = (u8 *)dstaddr;
-+			while (len) {
-+				*dst8 = ioread8(address);
-+				address++;
-+				dst8++;
-+				len--;
-+			}
-+		} else {
-+			len = len / 2;
-+			dst16 = (__le16 *)dstaddr;
-+			while (len) {
-+				*dst16 = cpu_to_le16(ioread16(address));
-+				address += 2;
-+				dst16++;
-+				len--;
-+			}
-+		}
-+	} else {
-+		len = len / 4;
-+		dst32 = (__le32 *)dstaddr;
-+		while (len) {
-+			*dst32 = cpu_to_le32(ioread32(address));
-+			address += 4;
-+			dst32++;
-+			len--;
-+		}
-+	}
-+}
-+
-+
- #define WRITECC32(devinfo, reg, value) brcmf_pcie_write_reg32(devinfo, \
- 		CHIPCREGOFFS(reg), value)
- 
-@@ -1352,12 +1393,36 @@ static void brcmf_pcie_wowl_config(struct device *dev, bool enabled)
- }
- 
- 
-+static size_t brcmf_pcie_get_ramsize(struct device *dev)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
-+	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
-+
-+	return devinfo->ci->ramsize - devinfo->ci->srsize;
-+}
-+
-+
-+static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
-+	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
-+
-+	brcmf_dbg(PCIE, "dump at 0x%08X: len=%zu\n", devinfo->ci->rambase, len);
-+	brcmf_pcie_copy_dev_tomem(devinfo, devinfo->ci->rambase, data, len);
-+	return 0;
-+}
-+
-+
- static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
- 	.txdata = brcmf_pcie_tx,
- 	.stop = brcmf_pcie_down,
- 	.txctl = brcmf_pcie_tx_ctlpkt,
- 	.rxctl = brcmf_pcie_rx_ctlpkt,
- 	.wowl_config = brcmf_pcie_wowl_config,
-+	.get_ramsize = brcmf_pcie_get_ramsize,
-+	.get_memdump = brcmf_pcie_get_memdump,
- };
- 
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 7f574f2..7e74ac3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -3539,6 +3539,51 @@ done:
- 	return err;
- }
- 
-+static size_t brcmf_sdio_bus_get_ramsize(struct device *dev)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio *bus = sdiodev->bus;
-+
-+	return bus->ci->ramsize - bus->ci->srsize;
-+}
-+
-+static int brcmf_sdio_bus_get_memdump(struct device *dev, void *data,
-+				      size_t mem_size)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio *bus = sdiodev->bus;
-+	int err;
-+	int address;
-+	int offset;
-+	int len;
-+
-+	brcmf_dbg(INFO, "dump at 0x%08x: size=%zu\n", bus->ci->rambase,
-+		  mem_size);
-+
-+	address = bus->ci->rambase;
-+	offset = err = 0;
-+	sdio_claim_host(sdiodev->func[1]);
-+	while (offset < mem_size) {
-+		len = ((offset + MEMBLOCK) < mem_size) ? MEMBLOCK :
-+		      mem_size - offset;
-+		err = brcmf_sdiod_ramrw(sdiodev, false, address, data, len);
-+		if (err) {
-+			brcmf_err("error %d on reading %d membytes at 0x%08x\n",
-+				  err, len, address);
-+			goto done;
-+		}
-+		data += len;
-+		offset += len;
-+		address += len;
-+	}
-+
-+done:
-+	sdio_release_host(sdiodev->func[1]);
-+	return err;
-+}
-+
- void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus)
- {
- 	if (!bus->dpc_triggered) {
-@@ -3987,7 +4032,9 @@ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
- 	.txctl = brcmf_sdio_bus_txctl,
- 	.rxctl = brcmf_sdio_bus_rxctl,
- 	.gettxq = brcmf_sdio_bus_gettxq,
--	.wowl_config = brcmf_sdio_wowl_config
-+	.wowl_config = brcmf_sdio_wowl_config,
-+	.get_ramsize = brcmf_sdio_bus_get_ramsize,
-+	.get_memdump = brcmf_sdio_bus_get_memdump,
- };
- 
- static void brcmf_sdio_firmware_callback(struct device *dev,
+-	if (priv->bInP2PlistenState == false) {
++	if (!priv->bInP2PlistenState) {
+ 		cfg80211_remain_on_channel_expired(priv->wdev,
+ 						   priv->strRemainOnChanParams.u64ListenCookie,
+ 						   priv->strRemainOnChanParams.pstrListenChan,
 -- 
-1.9.1
+2.5.1
 
