@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36433 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753169AbbJ2M3x (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:36756 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092AbbJQKdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:29:53 -0400
-Received: by pacfv9 with SMTP id fv9so41653753pac.3
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:53 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
+	Sat, 17 Oct 2015 06:33:25 -0400
+Received: by wicgb1 with SMTP id gb1so37171168wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2015 03:33:24 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/12] staging: wilc1000: rename pu8MacAddr in host_int_del_station
-Date: Thu, 29 Oct 2015 21:29:21 +0900
-Message-Id: <1446121768-4953-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132956_542002_C3529C97)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 7/9] staging: vt6655: remove static inline alloc_td_info.
+Date: Sat, 17 Oct 2015 11:33:00 +0100
+Message-Id: <1445077982-17832-7-git-send-email-tvboxspy@gmail.com> (sfid-20151017_123333_559167_D16443ED)
+In-Reply-To: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
+References: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes pu8MacAddr to mac_addr that is second argument of
-this function to avoid camelcase.
+Since this only contains one function and used only twice remove
+inline altogether.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/vt6655/device.h      | 4 ----
+ drivers/staging/vt6655/device_main.c | 4 ++--
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index be5e652..8dba9a3 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4552,7 +4552,7 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
- 	return result;
- }
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 0002049..8be3e21 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -306,8 +306,4 @@ struct vnt_private {
+ 	struct ieee80211_low_level_stats low_stats;
+ };
  
--int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4570,10 +4570,10 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
- 	msg.id = HOST_IF_MSG_DEL_STATION;
- 	msg.drv = hif_drv;
+-static inline struct vnt_td_info *alloc_td_info(void)
+-{
+-	return kzalloc(sizeof(struct vnt_td_info), GFP_ATOMIC);
+-}
+ #endif
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index aa8f750..d305d7a 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -633,7 +633,7 @@ static void device_init_td0_ring(struct vnt_private *priv)
+ 	for (i = 0; i < priv->sOpts.tx_descs[0];
+ 	     i++, curr += sizeof(struct vnt_tx_desc)) {
+ 		desc = &priv->apTD0Rings[i];
+-		desc->td_info = alloc_td_info();
++		desc->td_info = kzalloc(sizeof(*desc->td_info), GFP_ATOMIC);
  
--	if (!pu8MacAddr)
-+	if (!mac_addr)
- 		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
- 	else
--		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
-+		memcpy(pstrDelStationMsg->mac_addr, mac_addr, ETH_ALEN);
+ 		desc->td_info->buf = priv->tx0_bufs + i * PKT_BUF_SZ;
+ 		desc->td_info->buf_dma = priv->tx_bufs_dma0 + i * PKT_BUF_SZ;
+@@ -658,7 +658,7 @@ static void device_init_td1_ring(struct vnt_private *priv)
+ 	for (i = 0; i < priv->sOpts.tx_descs[1];
+ 	     i++, curr += sizeof(struct vnt_tx_desc)) {
+ 		desc = &priv->apTD1Rings[i];
+-		desc->td_info = alloc_td_info();
++		desc->td_info = kzalloc(sizeof(*desc->td_info), GFP_ATOMIC);
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 083def57..be9283f 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr);
- 
- /*!
-  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
+ 		desc->td_info->buf = priv->tx1_bufs + i * PKT_BUF_SZ;
+ 		desc->td_info->buf_dma = priv->tx_bufs_dma1 + i * PKT_BUF_SZ;
 -- 
-2.6.1
+2.5.0
 
