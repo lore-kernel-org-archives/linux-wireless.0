@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58838 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751334AbbJNIAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 04:00:46 -0400
-Message-ID: <1444809642.3054.6.camel@sipsolutions.net> (sfid-20151014_100049_630517_4C2D7E9A)
-Subject: Re: [PATCH] ocb: use correct "MHz" instead of "MHZ"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Wed, 14 Oct 2015 10:00:42 +0200
-In-Reply-To: <CABAco3BpY-hU=9MGzovyUfyRgXMynikNbUD3cScievczq2qsKg@mail.gmail.com> (sfid-20151014_093604_196513_8DA0F8F0)
-References: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com>
-	 <1444727650.1961.10.camel@sipsolutions.net>
-	 <CABAco3CLCtFOofHMbJSz-Okcc4BM4nnVwO5By8DeZUYJrsCt6Q@mail.gmail.com>
-	 <1444805527.3054.4.camel@sipsolutions.net>
-	 <CABAco3BpY-hU=9MGzovyUfyRgXMynikNbUD3cScievczq2qsKg@mail.gmail.com>
-	 (sfid-20151014_093604_196513_8DA0F8F0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:38044 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbbJQKdW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2015 06:33:22 -0400
+Received: by wicll6 with SMTP id ll6so41468533wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2015 03:33:20 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/9] staging: vt6655: device.h remove unsed headers.
+Date: Sat, 17 Oct 2015 11:32:56 +0100
+Message-Id: <1445077982-17832-3-git-send-email-tvboxspy@gmail.com> (sfid-20151017_123327_573475_BB497ED4)
+In-Reply-To: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
+References: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-10-14 at 09:36 +0200, Ola Olsson wrote:
+Most of these headers rate to old api that are no longer used
+in driver.
 
-> Correct. I have done a macro to utilize the gcc "__attribute__
-> ((unused))" and I fully understand that it is not an elegant 
-> solution.
-> I don't want to convince you about merging it since I wouldn't do it
-> myself. :)
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
-Yeah, ouch, I don't really want that. Perhaps you can add -Wno-unused
--parameters to your Android makefile.
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 4b8573b..be6c42b 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -31,34 +31,12 @@
+ 
+ #include <linux/module.h>
+ #include <linux/types.h>
+-#include <linux/mm.h>
+-#include <linux/errno.h>
+-#include <linux/ioport.h>
+ #include <linux/pci.h>
+-#include <linux/kernel.h>
+-#include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ #include <linux/skbuff.h>
+-#include <linux/delay.h>
+-#include <linux/timer.h>
+-#include <linux/slab.h>
+ #include <linux/interrupt.h>
+-#include <linux/string.h>
+-#include <linux/wait.h>
+-#include <linux/if_arp.h>
+-#include <linux/sched.h>
+-#include <linux/io.h>
+-#include <linux/if.h>
+ #include <linux/crc32.h>
+-#include <linux/uaccess.h>
+-#include <linux/proc_fs.h>
+-#include <linux/inetdevice.h>
+-#include <linux/reboot.h>
+-#include <linux/ethtool.h>
+-/* Include Wireless Extension definition and check version - Jean II */
+ #include <net/mac80211.h>
+-#include <linux/wireless.h>
+-#include <net/iw_handler.h>	/* New driver API */
+ 
+ /* device specific */
+ 
+-- 
+2.5.0
 
-> > I don't see anything with -Wmissing-field-initializers.
-> 
-> Hmm. I'll try to find out why I get these warnings. Mostly, it is
-> about changing "{}" -> "{0}" on stack allocated objects.
-> This is what I get when compiling at 
-> 0ee571d57b8b631658d1a35ad9a906610d6145d3
-> 
-> $ mm -B -j8 2>&1 | grep -i missing-field
-> external/iw/scan.c:1863:3: warning: missing initializer for field
-> 'type' of 'struct nla_policy' [-Wmissing-field-initializers]
-> 
-
-Yeah, ok, so technically IIRC ={0} is the standard way of doing this in
-C, but everything seems to accept ={} as a natural extension of ={.x=y}
-I guess? Not sure I want to fix it - doesn't really seem worth much.
-
-johannes
