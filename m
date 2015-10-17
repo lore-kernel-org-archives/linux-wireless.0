@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56585 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030341AbbJ3Jo6 (ORCPT
+Received: from mail-wi0-f194.google.com ([209.85.212.194]:33506 "EHLO
+	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714AbbJQXBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:44:58 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 06/17] staging: wilc1000: wilc_wlan_txq_add_cfg_pkt: add argument net_device
-Date: Fri, 30 Oct 2015 18:47:12 +0900
-Message-ID: <1446198443-6623-6-git-send-email-glen.lee@atmel.com> (sfid-20151030_104500_599642_E501A80A)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 Oct 2015 19:01:51 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, johannes.berg@intel.com,
+	davem@davemloft.net, joe@perches.com, m@bues.ch,
+	mike.looijmans@topic.nl, cengelma@gmx.at, khoroshilov@ispras.ru,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] net: wireless: rsi: Coding Spaces
+Date: Sun, 18 Oct 2015 00:01:36 +0100
+Message-Id: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com> (sfid-20151018_010238_986981_CBCF6894)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct net_device and use netdev private data
-member wilc instead of g_linux_wlan, pass dev to the function.
+Removed space before that ','
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
+ drivers/net/wireless/rsi/rsi_mgmt.h         | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 75b0616..ec4bff4 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -484,15 +484,20 @@ bool is_TCP_ACK_Filter_Enabled(void)
- 	return EnableTCPAckFilter;
- }
- 
--static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
-+static int wilc_wlan_txq_add_cfg_pkt(struct net_device *dev,
-+				     u8 *buffer, u32 buffer_size)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	struct txq_entry_t *tqe;
-+	perInterface_wlan_t *nic = netdev_priv(dev);
-+	struct wilc *wilc;
-+
-+	wilc = nic->wilc;
- 
- 	PRINT_D(TX_DBG, "Adding config packet ...\n");
- 	if (p->quit) {
- 		PRINT_D(TX_DBG, "Return due to clear function\n");
--		up(&g_linux_wlan->cfg_event);
-+		up(&wilc->cfg_event);
- 		return 0;
- 	}
- 
-@@ -1763,7 +1768,7 @@ static int wilc_wlan_cfg_commit(struct net_device *dev,
- 	 *      Add to TX queue
- 	 **/
- 
--	if (!wilc_wlan_txq_add_cfg_pkt(&cfg->wid_header[0], total_len))
-+	if (!wilc_wlan_txq_add_cfg_pkt(dev, &cfg->wid_header[0], total_len))
- 		return -1;
- 
- 	return 0;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 40d7231..8fa241b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -435,7 +435,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 				} else {
+ 					rsi_dbg(ERR_ZONE,
+ 						"%s: Firmware Status is 0x%x\n",
+-						__func__ , fw_status);
++						__func__, fw_status);
+ 					rsi_sdio_ack_intr(common->priv,
+ 							  (1 << FW_ASSERT_IND));
+ 				}
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 3741173..3d4eddd 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -173,9 +173,9 @@ enum cmd_frame_type {
+ 	AUTO_RATE_IND,
+ 	BOOTUP_PARAMS_REQUEST,
+ 	VAP_CAPABILITIES,
+-	EEPROM_READ_TYPE ,
++	EEPROM_READ_TYPE,
+ 	EEPROM_WRITE,
+-	GPIO_PIN_CONFIG ,
++	GPIO_PIN_CONFIG,
+ 	SET_RX_FILTER,
+ 	AMPDU_IND,
+ 	STATS_REQUEST_FRAME,
 -- 
-1.9.1
+2.6.1
 
