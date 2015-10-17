@@ -1,70 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13382 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbbJEEvQ (ORCPT
+Received: from mail-wi0-f195.google.com ([209.85.212.195]:33549 "EHLO
+	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbbJQXB4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 00:51:16 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 3/3] staging: wilc1000: rename strHostIFDelAllSta
-Date: Mon, 5 Oct 2015 13:50:46 +0900
-Message-ID: <1444020646-3000-3-git-send-email-tony.cho@atmel.com> (sfid-20151005_065119_200102_4AB73988)
-In-Reply-To: <1444020646-3000-1-git-send-email-tony.cho@atmel.com>
-References: <1444020646-3000-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 Oct 2015 19:01:56 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, johannes.berg@intel.com,
+	davem@davemloft.net, joe@perches.com, m@bues.ch,
+	mike.looijmans@topic.nl, cengelma@gmx.at, khoroshilov@ispras.ru,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] net: wireless: b43: Fixed Pointer issue
+Date: Sun, 18 Oct 2015 00:01:37 +0100
+Message-Id: <1445122898-5810-2-git-send-email-paulmcquad@gmail.com> (sfid-20151018_010309_901739_49E9B926)
+In-Reply-To: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
+References: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFDelAllSta to del_all_sta_info to avoid
-CamelCase naming convention.
+Moved around pointer to avoid ERROR
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 ---
-V2:
- rename strHostIfRegisterFrame to reg_frame instead of reg_f because it is
- ambiguous
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 10d4d9f..9f715cf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -387,7 +387,7 @@ union message_body {
- 	struct remain_ch remain_on_ch;
- 	struct reg_frame reg_frame;
- 	char *data;
--	struct del_all_sta strHostIFDelAllSta;
-+	struct del_all_sta del_all_sta_info;
- };
+ drivers/net/wireless/b43/dma.h  | 14 +++++++-------
+ drivers/net/wireless/b43/main.c |  6 +++---
+ drivers/net/wireless/b43/main.h |  2 +-
+ drivers/net/wireless/b43/xmit.h |  2 +-
+ 4 files changed, 12 insertions(+), 12 deletions(-)
  
- /*!
-@@ -4206,7 +4206,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+ enum b43_dmatype {
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 2849070..040caa4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -364,7 +364,7 @@ static struct ieee80211_supported_band b43_band_2ghz_limited = {
  
- 		case HOST_IF_MSG_DEL_ALL_STA:
--			Handle_DelAllSta(msg.drvHandler, &msg.body.strHostIFDelAllSta);
-+			Handle_DelAllSta(msg.drvHandler, &msg.body.del_all_sta_info);
- 			break;
+ static void b43_wireless_core_exit(struct b43_wldev *dev);
+ static int b43_wireless_core_init(struct b43_wldev *dev);
+-static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
++static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev);
+ static int b43_wireless_core_start(struct b43_wldev *dev);
+ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+@@ -989,7 +989,7 @@ static void do_key_write(struct b43_wldev *dev,
+ 		 * 0xffffffff and let's b43_op_update_tkip_key provide a
+ 		 * correct pair.
+ 		 */
+-		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16*)buf);
++		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16 *)buf);
+ 	} else if (index >= pairwise_keys_start) /* clear it */
+ 		rx_tkip_phase1_write(dev, index, 0, NULL);
+ 	if (key)
+@@ -4334,7 +4334,7 @@ out_unlock:
+ /* Locking: wl->mutex
+  * Returns the current dev. This might be different from the passed in dev,
+  * because the core might be gone away while we unlocked the mutex. */
+-static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev)
++static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl;
+ 	struct b43_wldev *orig_dev;
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index c46430c..fa56b22 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -73,7 +73,7 @@ static inline int b43_is_ofdm_rate(int rate)
+ u8 b43_ieee80211_antenna_sanitize(struct b43_wldev *dev,
+ 				  u8 antenna_nr);
  
- 		default:
-@@ -6719,7 +6719,7 @@ s32 host_int_del_allstation(tstrWILC_WFIDrv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN])
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct del_all_sta *pstrDelAllStationMsg = &msg.body.strHostIFDelAllSta;
-+	struct del_all_sta *pstrDelAllStationMsg = &msg.body.del_all_sta_info;
- 	u8 au8Zero_Buff[ETH_ALEN] = {0};
- 	u32 i;
- 	u8 u8AssocNumb = 0;
+-void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
++void b43_tsf_read(struct b43_wldev *dev, u64 *tsf);
+ void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
+ 
+ u32 b43_shm_read32(struct b43_wldev *dev, u16 routing, u16 offset);
+diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
+index ba61153..fed8657 100644
+--- a/drivers/net/wireless/b43/xmit.h
++++ b/drivers/net/wireless/b43/xmit.h
+@@ -203,7 +203,7 @@ size_t b43_txhdr_size(struct b43_wldev *dev)
+ 
+ 
+ int b43_generate_txhdr(struct b43_wldev *dev,
+-		       u8 * txhdr,
++		       u8 *txhdr,
+ 		       struct sk_buff *skb_frag,
+ 		       struct ieee80211_tx_info *txctl, u16 cookie);
+ 
 -- 
-1.9.1
+2.6.1
 
