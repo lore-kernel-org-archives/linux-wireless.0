@@ -1,47 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25691 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbbJGIW0 (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:9459 "EHLO
+	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750943AbbJQJn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 04:22:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kbuild test robot <lkp@intel.com>
-CC: <c_traja@qti.qualcomm.com>,
-	Manikanta pubbisetty <c_mpubbi@qti.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	<kbuild-all@01.org>, <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] ath10k: set peer MFP flag in peer assoc command
-References: <201510071317.0ndTjHKZ%fengguang.wu@intel.com>
-Date: Wed, 7 Oct 2015 11:22:08 +0300
-In-Reply-To: <201510071317.0ndTjHKZ%fengguang.wu@intel.com> (kbuild test
-	robot's message of "Wed, 7 Oct 2015 13:34:39 +0800")
-Message-ID: <87612j1427.fsf@kamboji.qca.qualcomm.com> (sfid-20151007_102238_107062_1207D05A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 17 Oct 2015 05:43:26 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org
+Subject: [PATCH 0/2] delete null dereference
+Date: Sat, 17 Oct 2015 11:32:18 +0200
+Message-Id: <1445074340-21955-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20151017_114453_131231_D9532A1E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+These patches delete NULL dereferences, as detected by
+scripts/coccinelle/null/deref_null.cocci.
 
-> Hi Tamizh,
->
-> [auto build test ERROR on next-20151006 -- if it's inappropriate base, please ignore]
->
-> config: xtensa-allyesconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=xtensa 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_peer_assoc_h_crypto':
->>> drivers/net/wireless/ath/ath10k/mac.c:2014:9: error: 'struct ieee80211_sta' has no member named 'mfp'
->      if (sta->mfp &&
+---
 
-This is expected as the patch depends on not yet commited patch 'Revert
-"mac80211: remove exposing 'mfp' to drivers"'.
-
--- 
-Kalle Valo
+ drivers/media/pci/netup_unidvb/netup_unidvb_spi.c |    6 ++----
+ net/nfc/netlink.c                                 |    6 ++----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
