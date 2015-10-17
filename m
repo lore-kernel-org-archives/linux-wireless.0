@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43064 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509AbbJ1HFG (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:34468 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbbJQKdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:05:06 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 58/80] staging: wilc1000: rename WPARxGtk of enum KEY_TYPE
-Date: Wed, 28 Oct 2015 16:07:03 +0900
-Message-ID: <1446016045-32154-8-git-send-email-glen.lee@atmel.com> (sfid-20151028_080514_629897_1666A236)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 Oct 2015 06:33:25 -0400
+Received: by wicgb1 with SMTP id gb1so38241023wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2015 03:33:23 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/9] staging: vt6655: remove static inline alloc_rd_info.
+Date: Sat, 17 Oct 2015 11:32:59 +0100
+Message-Id: <1445077982-17832-6-git-send-email-tvboxspy@gmail.com> (sfid-20151017_123328_961356_5D65E8FC)
+In-Reply-To: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
+References: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Since this only contains one function and only used twice
+remove inline altogether.
 
-This patch renames WPARxGtk of enum KEY_TYPE to WPA_RX_GTK
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/vt6655/device.h      | 5 -----
+ drivers/staging/vt6655/device_main.c | 4 ++--
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7b41359..4b4e8563 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1795,7 +1795,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 		up(&hif_drv->sem_test_key_block);
- 		break;
- 
--	case WPARxGtk:
-+	case WPA_RX_GTK:
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
-@@ -3288,7 +3288,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	}
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.type = WPARxGtk;
-+	msg.body.key_info.type = WPA_RX_GTK;
- 	msg.drv = hif_drv;
- 
- 	if (mode == AP_MODE) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 655f59f..96c7c41 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -163,7 +163,7 @@ enum conn_event {
- 
- enum KEY_TYPE {
- 	WEP,
--	WPARxGtk,
-+	WPA_RX_GTK,
- 	WPAPtk,
- 	PMKSA,
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index aca6e00..0002049 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -306,11 +306,6 @@ struct vnt_private {
+ 	struct ieee80211_low_level_stats low_stats;
  };
+ 
+-static inline struct vnt_rd_info *alloc_rd_info(void)
+-{
+-	return kzalloc(sizeof(struct vnt_rd_info), GFP_ATOMIC);
+-}
+-
+ static inline struct vnt_td_info *alloc_td_info(void)
+ {
+ 	return kzalloc(sizeof(struct vnt_td_info), GFP_ATOMIC);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 8bca3fc..aa8f750 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -551,7 +551,7 @@ static void device_init_rd0_ring(struct vnt_private *priv)
+ 	for (i = 0; i < priv->sOpts.rx_descs0;
+ 	     i ++, curr += sizeof(struct vnt_rx_desc)) {
+ 		desc = &priv->aRD0Ring[i];
+-		desc->rd_info = alloc_rd_info();
++		desc->rd_info = kzalloc(sizeof(*desc->rd_info), GFP_ATOMIC);
+ 
+ 		if (!device_alloc_rx_buf(priv, desc))
+ 			dev_err(&priv->pcid->dev, "can not alloc rx bufs\n");
+@@ -575,7 +575,7 @@ static void device_init_rd1_ring(struct vnt_private *priv)
+ 	for (i = 0; i < priv->sOpts.rx_descs1;
+ 	     i ++, curr += sizeof(struct vnt_rx_desc)) {
+ 		desc = &priv->aRD1Ring[i];
+-		desc->rd_info = alloc_rd_info();
++		desc->rd_info = kzalloc(sizeof(*desc->rd_info), GFP_ATOMIC);
+ 
+ 		if (!device_alloc_rx_buf(priv, desc))
+ 			dev_err(&priv->pcid->dev, "can not alloc rx bufs\n");
 -- 
-1.9.1
+2.5.0
 
