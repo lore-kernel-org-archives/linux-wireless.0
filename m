@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:32849 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913AbbJ2M35 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:37193 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbbJQVHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:29:57 -0400
-Received: by padhy1 with SMTP id hy1so34068407pad.0
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:56 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/12] staging: wilc1000: rename pstrDelStationMsg in host_int_del_station
-Date: Thu, 29 Oct 2015 21:29:22 +0900
-Message-Id: <1446121768-4953-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132959_878363_F9D6FB09)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+	Sat, 17 Oct 2015 17:07:06 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Paul McQuade <paulmcquad@gmail.com#>
+Subject: [PATCH 3/3] net: wireless: rt2x00: Space Required
+Date: Sat, 17 Oct 2015 22:06:45 +0100
+Message-Id: <1445116005-28670-3-git-send-email-paulmcquad@gmail.com> (sfid-20151017_230842_517921_DFB7F3E3)
+In-Reply-To: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
+References: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrDelStationMsg to del_sta_info to avoid camelcase.
+Space needed before open parenthesis
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>#
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8dba9a3..fe4ccdb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4556,7 +4556,7 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
--	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
-+	struct del_sta *del_sta_info = &msg.body.del_sta_info;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 90fdb02..25ee3cb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -629,7 +629,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	data += sprintf(data, "register\tbase\twords\twordsize\n");
+ #define RT2X00DEBUGFS_SPRINTF_REGISTER(__name)			\
+ {								\
+-	if(debug->__name.read)					\
++	if (debug->__name.read)					\
+ 		data += sprintf(data, __stringify(__name)	\
+ 				"\t%d\t%d\t%d\n",		\
+ 				debug->__name.word_base,	\
+@@ -699,7 +699,7 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
  
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -4571,9 +4571,9 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
- 	msg.drv = hif_drv;
- 
- 	if (!mac_addr)
--		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
-+		eth_broadcast_addr(del_sta_info->mac_addr);
- 	else
--		memcpy(pstrDelStationMsg->mac_addr, mac_addr, ETH_ALEN);
-+		memcpy(del_sta_info->mac_addr, mac_addr, ETH_ALEN);
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
+ #define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)			\
+ ({										\
+-	if(debug->__name.read) {						\
++	if (debug->__name.read) {						\
+ 		(__intf)->__name##_off_entry =					\
+ 		debugfs_create_u32(__stringify(__name) "_offset",		\
+ 				       S_IRUSR | S_IWUSR,			\
 -- 
 2.6.1
 
