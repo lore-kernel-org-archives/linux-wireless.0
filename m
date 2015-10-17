@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36659 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934177AbbJIIoX (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59457 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbbJQEdv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 04:44:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 00/10] wil6210 patches
-References: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Fri, 09 Oct 2015 11:44:15 +0300
-In-Reply-To: <1443943407-6663-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Sun, 4 Oct 2015 10:23:17 +0300")
-Message-ID: <878u7csa74.fsf@kamboji.qca.qualcomm.com> (sfid-20151009_104433_004679_E2A00018)
+	Sat, 17 Oct 2015 00:33:51 -0400
+Date: Fri, 16 Oct 2015 21:33:49 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 03/16] staging: wilc1000: rename g_linux_wlan to wl
+Message-ID: <20151017043349.GA23351@kroah.com> (sfid-20151017_063354_398329_6FB6B488)
+References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+ <1444823204-16736-3-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444823204-16736-3-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+On Wed, Oct 14, 2015 at 08:46:31PM +0900, Tony Cho wrote:
+> This patch renames g_linux_wlan to wl.
 
-> New features:
-> - BlockAckReq support
-> - firmware crashdump using devcoredump
-> - capture all frames with sniffer
->
-> The rest of patches are fixes
->
-> Hamad Kadmany (1):
->   wil6210: Do no schedule firmware recovery during reset flow
->
-> Vladimir Kondratiev (8):
->   wil6210: fix warning in system power management code
->   wil6210: Add proper handling for invalid frames on Rx
->   wil6210: log firmware crash information
->   wil6210: treat broadcast bssid as "disconnect all"
->   wil6210: support BAR (BlockAck Req)
->   wil6210: capture all frames in sniffer mode
->   wil6210: ratelimit Tx error message
->   wil6210: dump firmware memory when firmware crashes
->
-> Vladimir Shulman (1):
->   wil6210: pmc logger bug fix
+Why?  What's wrong with g_linux_wlan?  You will need to delete this
+entire variable soon anyway, might as well leave it alone until then.
 
-Thanks, all 10 applied.
+thanks,
 
--- 
-Kalle Valo
+greg k-h
