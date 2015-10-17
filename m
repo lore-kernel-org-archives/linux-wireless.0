@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52652 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbbJPEk7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41460 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbbJQF00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:40:59 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 27/40] staging: wilc1000: remove unused variable gu32WidConnRstHack
-Date: Fri, 16 Oct 2015 13:37:57 +0900
-Message-ID: <1444970290-17609-27-git-send-email-tony.cho@atmel.com> (sfid-20151016_064700_122335_A1985C9F)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Sat, 17 Oct 2015 01:26:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-10-17
+Date: Sat, 17 Oct 2015 08:26:19 +0300
+Message-ID: <878u72gj5w.fsf@kamboji.qca.qualcomm.com> (sfid-20151017_072710_674385_9050D56E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Dave,
 
-This patch removes unused the variable gu32WidConnRstHack.
+few small fixes I would like to get to 4.3 still. Please let me know if
+there are any problems.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 --
- 1 file changed, 2 deletions(-)
+Kalle
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9f5db14..82d058f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -260,7 +260,6 @@ static u8 set_ip[2][4];
- static u8 get_ip[2][4];
- static u32 inactive_time;
- static u8 del_beacon;
--static u32 gu32WidConnRstHack;
- 
- u8 *gu8FlushedJoinReq;
- u8 *gu8FlushedInfoElemAsoc;
-@@ -1209,7 +1208,6 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 
- 	pu8CurrByte = strWIDList[u32WidsCount].val;
- 	u32WidsCount++;
--	gu32WidConnRstHack = 0;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
+The following changes since commit 76d164f582150fd0259ec0fcbc485470bcd8033e:
+
+  ath10k: fix DMA related firmware crashes on multiple devices (2015-09-26 20:48:25 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-10-17
+
+for you to fetch changes up to de28a05ee28e36fa1fc68fcfc7c6cc1c6f7c270c:
+
+  Merge tag 'iwlwifi-for-kalle-2015-10-05' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-10-07 11:12:01 +0300)
+
+----------------------------------------------------------------
+
+iwlwifi:
+
+* mvm: flush fw_dump_wk when mvm fails to start
+* mvm: init card correctly on ctkill exit check
+* pci: add a few more PCI subvendor IDs for the 7265 series
+* fix firmware filename for 3160
+* mvm: clear csa countdown when AP is stopped
+* mvm: fix D3 firmware PN programming
+* dvm: fix D3 firmware PN programming
+* mvm: fix D3 CCMP TX PN assignment
+
+rtlwifi:
+
+* rtl8821ae: Fix system lockups on boot
+
+----------------------------------------------------------------
+Andrei Otcheretianski (1):
+      iwlwifi: mvm: flush fw_dump_wk when mvm fails to start
+
+Arik Nemtsov (1):
+      iwlwifi: mvm: init card correctly on ctkill exit check
+
+Avraham Stern (1):
+      iwlwifi: mvm: clear csa countdown when AP is stopped
+
+Johannes Berg (4):
+      iwlwifi: mvm: fix D3 CCMP TX PN assignment
+      iwlwifi: dvm: fix D3 firmware PN programming
+      iwlwifi: mvm: fix D3 firmware PN programming
+      iwlwifi: fix firmware filename for 3160
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-10-05' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: rtl8821ae: Fix system lockups on boot
+
+Luca Coelho (1):
+      iwlwifi: pci: add a few more PCI subvendor IDs for the 7265 series
+
+ drivers/net/wireless/iwlwifi/dvm/lib.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-7000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/mvm/d3.c       |   27 +++++++++++----------------
+ drivers/net/wireless/iwlwifi/mvm/fw.c       |    4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |    5 +++++
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |    1 +
+ drivers/net/wireless/iwlwifi/pcie/drv.c     |    5 +++++
+ drivers/net/wireless/rtlwifi/pci.h          |    2 ++
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c |   17 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8821ae/sw.c |    5 +++++
+ drivers/net/wireless/rtlwifi/wifi.h         |    3 +++
+ 12 files changed, 54 insertions(+), 20 deletions(-)
+
 -- 
-1.9.1
-
+Kalle Valo
