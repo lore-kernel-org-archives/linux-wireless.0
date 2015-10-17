@@ -1,143 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5301 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965235AbbJ2DBH (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:38029 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbbJQVG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:01:07 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 32/64] staging: wilc1000: rename ConnReqIEsLen of struct user_conn_req
-Date: Thu, 29 Oct 2015 11:58:55 +0900
-Message-ID: <1446087567-16728-32-git-send-email-glen.lee@atmel.com> (sfid-20151029_041657_583837_34034364)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 Oct 2015 17:06:57 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] net: wireless: rt2x00: Space issue
+Date: Sat, 17 Oct 2015 22:06:43 +0100
+Message-Id: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com> (sfid-20151017_230812_516376_DB2F51B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Removed empty spaces before/after parenthesis
 
-This patch renames ConnReqIEsLen of struct user_conn_req to ies_len
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 26 +++++++++++++-------------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 667bd2d..bc899e8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1019,7 +1019,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		hif_drv->usr_conn_req.pu8ssid[pstrHostIFconnectAttr->ssid_len] = '\0';
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 3282ddb..6f8310a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -107,7 +107,7 @@
+  * amount of bytes needed to move the data.
+  */
+ #define ALIGN_SIZE(__skb, __header) \
+-	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
++	(((unsigned long)((__skb)->data + (__header))) & 3)
  
--	hif_drv->usr_conn_req.ConnReqIEsLen = pstrHostIFconnectAttr->ies_len;
-+	hif_drv->usr_conn_req.ies_len = pstrHostIFconnectAttr->ies_len;
- 	if (pstrHostIFconnectAttr->ies) {
- 		hif_drv->usr_conn_req.ies = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
- 		memcpy(hif_drv->usr_conn_req.ies,
-@@ -1054,11 +1054,11 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
- 		strWIDList[u32WidsCount].type = WID_BIN_DATA;
- 		strWIDList[u32WidsCount].val = hif_drv->usr_conn_req.ies;
--		strWIDList[u32WidsCount].size = hif_drv->usr_conn_req.ConnReqIEsLen;
-+		strWIDList[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
- 		u32WidsCount++;
+ /*
+  * Constants for extra TX headroom for alignment purposes.
+@@ -128,14 +128,14 @@
+ #define SLOT_TIME		20
+ #define SHORT_SLOT_TIME		9
+ #define SIFS			10
+-#define PIFS			( SIFS + SLOT_TIME )
+-#define SHORT_PIFS		( SIFS + SHORT_SLOT_TIME )
+-#define DIFS			( PIFS + SLOT_TIME )
+-#define SHORT_DIFS		( SHORT_PIFS + SHORT_SLOT_TIME )
+-#define EIFS			( SIFS + DIFS + \
+-				  GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
+-#define SHORT_EIFS		( SIFS + SHORT_DIFS + \
+-				  GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
++#define PIFS			(SIFS + SLOT_TIME)
++#define SHORT_PIFS		(SIFS + SHORT_SLOT_TIME)
++#define DIFS			(PIFS + SLOT_TIME)
++#define SHORT_DIFS		(SHORT_PIFS + SHORT_SLOT_TIME)
++#define EIFS			(SIFS + DIFS + \
++				  GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
++#define SHORT_EIFS		(SIFS + SHORT_DIFS + \
++				  GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
  
- 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--			info_element_size = hif_drv->usr_conn_req.ConnReqIEsLen;
-+			info_element_size = hif_drv->usr_conn_req.ies_len;
- 			info_element = kmalloc(info_element_size, GFP_KERNEL);
- 			memcpy(info_element, hif_drv->usr_conn_req.ies,
- 			       info_element_size);
-@@ -1340,11 +1340,11 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 		}
- 
- 		if (hif_drv->usr_conn_req.ies) {
--			strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ConnReqIEsLen;
--			strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ConnReqIEsLen, GFP_KERNEL);
-+			strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ies_len;
-+			strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
- 			memcpy(strConnectInfo.pu8ReqIEs,
- 			       hif_drv->usr_conn_req.ies,
--			       hif_drv->usr_conn_req.ConnReqIEsLen);
-+			       hif_drv->usr_conn_req.ies_len);
- 		}
- 
- 		hif_drv->usr_conn_req.pfUserConnectResult(CONN_DISCONN_EVENT_CONN_RESP,
-@@ -1374,7 +1374,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 	hif_drv->usr_conn_req.ssid_len = 0;
- 	kfree(hif_drv->usr_conn_req.pu8ssid);
- 	kfree(hif_drv->usr_conn_req.pu8bssid);
--	hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-+	hif_drv->usr_conn_req.ies_len = 0;
- 	kfree(hif_drv->usr_conn_req.ies);
- 
- 	eth_zero_addr(u8ConnectedSSID);
-@@ -1587,11 +1587,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			}
- 
- 			if (hif_drv->usr_conn_req.ies) {
--				strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ConnReqIEsLen;
--				strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ConnReqIEsLen, GFP_KERNEL);
-+				strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ies_len;
-+				strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
- 				memcpy(strConnectInfo.pu8ReqIEs,
- 				       hif_drv->usr_conn_req.ies,
--				       hif_drv->usr_conn_req.ConnReqIEsLen);
-+				       hif_drv->usr_conn_req.ies_len);
- 			}
- 
- 			del_timer(&hif_drv->connect_timer);
-@@ -1626,7 +1626,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
--			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-+			hif_drv->usr_conn_req.ies_len = 0;
- 			kfree(hif_drv->usr_conn_req.ies);
- 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
- 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
-@@ -1662,7 +1662,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
--			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-+			hif_drv->usr_conn_req.ies_len = 0;
- 			kfree(hif_drv->usr_conn_req.ies);
- 
- 			if (join_req && join_req_drv == hif_drv) {
-@@ -2026,7 +2026,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 		hif_drv->usr_conn_req.ssid_len = 0;
- 		kfree(hif_drv->usr_conn_req.pu8ssid);
- 		kfree(hif_drv->usr_conn_req.pu8bssid);
--		hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-+		hif_drv->usr_conn_req.ies_len = 0;
- 		kfree(hif_drv->usr_conn_req.ies);
- 
- 		if (join_req && join_req_drv == hif_drv) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index de4e7d9..b2fe8f9 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -205,7 +205,7 @@ struct user_conn_req {
- 	enum AUTHTYPE tenuAuth_type;
- 	size_t ssid_len;
- 	u8 *ies;
--	size_t ConnReqIEsLen;
-+	size_t ies_len;
- 	wilc_connect_result pfUserConnectResult;
- 	bool IsHTCapable;
- 	void *u32UserConnectPvoid;
+ enum rt2x00_chip_intf {
+ 	RT2X00_CHIP_INTF_PCI,
+
 -- 
-1.9.1
+2.6.1
 
