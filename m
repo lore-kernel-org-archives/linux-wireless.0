@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52352 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033AbbJPEj1 (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33406 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750840AbbJRSpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:27 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 11/40] staging: wilc1000: rename variable HostIFthreadHandler
-Date: Fri, 16 Oct 2015 13:37:41 +0900
-Message-ID: <1444970290-17609-11-git-send-email-tony.cho@atmel.com> (sfid-20151016_064658_178628_68D85921)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Sun, 18 Oct 2015 14:45:07 -0400
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id 03BD62021A
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2015 14:45:05 -0400 (EDT)
+Date: Sun, 18 Oct 2015 11:45:04 -0700
+From: Greg KH <greg@kroah.com>
+To: Frans van de Wiel <fvdw@fvdw.eu>
+Cc: Larry.Finger@lwfinger.net, florian.c.schilhabel@googlemail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.10-3.18] Driver, staging rtl8712,  add support for
+ sitecom WLA2100
+Message-ID: <20151018184504.GA6332@kroah.com> (sfid-20151018_204535_647642_CC0B6A16)
+References: <D805188AF08F4EC2A19325C1329525E0@FransW7>
+ <20151018154547.GA8553@kroah.com>
+ <5845ADB79D70437C90C0CF7433F3D180@FransW7>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5845ADB79D70437C90C0CF7433F3D180@FransW7>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Sun, Oct 18, 2015 at 07:58:30PM +0200, Frans van de Wiel wrote:
+> The staging driver rtl8712 lacks support for dongles based on sitecom
+> WLA2100.
+> The current driver doesn't contain the usb id for this device, this patch
+> add it.
+> 
+> reported by: Frans van de Wiel  <fvdw@fvdw.eu>
+> Signed-off-by: Frans van de Wiel  <fvdw@fvdw.eu>
+> ---
+> This patch is for stable kernels 3.14 to 3.18
+> Patch for 3.14.2 is included
 
-This patch renames variable HostIFthreadHandler to hif_thread_handler
-to avoid CamelCase naming convention.
+We can only apply new patches to the latest kernel version, not older
+ones, as we can't go back in time :)
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+If you want a patch like this backported to older kernels, please read
+Documentation/stable_kernel_rules.txt for how to do that.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ad7c102..4f24a05 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -239,7 +239,7 @@ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
- struct host_if_drv *terminated_handle;
- bool g_obtainingIP;
- u8 P2P_LISTEN_STATE;
--static struct task_struct *HostIFthreadHandler;
-+static struct task_struct *hif_thread_handler;
- static WILC_MsgQueueHandle gMsgQHostIF;
- static struct semaphore hSemHostIFthrdEnd;
- 
-@@ -4271,8 +4271,10 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 			PRINT_ER("Failed to creat MQ\n");
- 			goto _fail_;
- 		}
--		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
--		if (IS_ERR(HostIFthreadHandler)) {
-+
-+		hif_thread_handler = kthread_run(hostIFthread, NULL, "WILC_kthread");
-+
-+		if (IS_ERR(hif_thread_handler)) {
- 			PRINT_ER("Failed to creat Thread\n");
- 			result = -EFAULT;
- 			goto _fail_mq_;
-@@ -4316,7 +4318,7 @@ _fail_timer_2:
- 	up(&hif_drv->gtOsCfgValuesSem);
- 	del_timer_sync(&hif_drv->hConnectTimer);
- 	del_timer_sync(&hif_drv->hScanTimer);
--	kthread_stop(HostIFthreadHandler);
-+	kthread_stop(hif_thread_handler);
- _fail_mq_:
- 	wilc_mq_destroy(&gMsgQHostIF);
- _fail_:
--- 
-1.9.1
+> 
+> --- linux-3.14.2/drivers/staging/rtl8712/usb_intf.c.orig    2014-04-27
+> 02:19:26.000000000 +0200
+> +++ linux-3.14.2/drivers/staging/rtl8712/usb_intf.c    2014-03-25
+> 22:31:33.000000000 +0100
+> @@ -144,6 +144,7 @@ static struct usb_device_id rtl871x_usb_
+>     {USB_DEVICE(0x0DF6, 0x0058)},
+>     {USB_DEVICE(0x0DF6, 0x0049)},
+>     {USB_DEVICE(0x0DF6, 0x004C)},
+> +    {USB_DEVICE(0x0DF6, 0x006C)},
+>     {USB_DEVICE(0x0DF6, 0x0064)},
+>     /* Skyworth */
+>     {USB_DEVICE(0x14b2, 0x3300)},
 
+Your patch was line-wrapped and the whitespace all messed up, and can't
+be applied :(
+
+Please make the patch against the linux-next tree and resend it so that
+we have a chance to apply it.
+
+thanks,
+
+greg k-h
