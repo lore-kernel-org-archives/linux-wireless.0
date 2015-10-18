@@ -1,108 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56521 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965478AbbJ3Joh (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34027 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334AbbJRToV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:44:37 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 03/17] staging: wilc1000: wilc_wlan_cfg_get: add argument struct net_device
-Date: Fri, 30 Oct 2015 18:47:09 +0900
-Message-ID: <1446198443-6623-3-git-send-email-glen.lee@atmel.com> (sfid-20151030_104440_627182_E82157CF)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+	Sun, 18 Oct 2015 15:44:21 -0400
+Received: by wikq8 with SMTP id q8so25087719wik.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2015 12:44:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151015180408.GA31612@ubuntu-hedt>
+References: <1444761084-4399-1-git-send-email-andrej.vlasic0@gmail.com>
+	<20151015180408.GA31612@ubuntu-hedt>
+Date: Sun, 18 Oct 2015 21:44:19 +0200
+Message-ID: <CAAudh+8q-7-Wz5B5hZ+hePJ-7=QNbbpVoc7Xpf4jsmKBqvkXfQ@mail.gmail.com> (sfid-20151018_214425_506373_59867792)
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Croatia (HR)
+From: =?UTF-8?B?QW5kcmVqIFZsYcWhacSH?= <andrej.vlasic0@gmail.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds argument struct net_device and use netdev private data member wilc
-instead of g_linux_wlan, pass dev to the functions as well.
+On 15 October 2015 at 20:04, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Tue, Oct 13, 2015 at 08:31:24PM +0200, Andrej Vlasic wrote:
+>> Update frequency allocation rules to mach data from table [1].
+>>
+>> Also increase allowed power limit for range 5150-5250 Mhz to 200mW.
+>>
+>> [1] http://tablice.hakom.hr:8280/vis?lang=en
+>>
+>> Signed-off-by: Andrej Vlasic <andrej.vlasic0@gmail.com>
+>> ---
+>>  db.txt | 14 ++++++++++----
+>>  1 file changed, 10 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/db.txt b/db.txt
+>> index d57ea84..3b36616 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -504,11 +504,17 @@ country HN: DFS-FCC
+>>       (5490 - 5730 @ 160), (24), DFS
+>>       (5735 - 5835 @ 80), (30)
+>>
+>> +# Data from table of frequency allocations: http://tablice.hakom.hr:8280/vis?lang=en
+>> +# For 5ghz range see http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_85.pdf
+>> +# and http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_86.pdf
+>> +# and http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_87.pdf
+>> +# TPC devices on range 5250-5350 can use 200mW, and 1W on range 5470-5725.
+>> +
+>>  country HR: DFS-ETSI
+>> -     (2402 - 2482 @ 40), (20)
+>> -     (5170 - 5250 @ 80), (20), AUTO-BW
+>> -     (5250 - 5330 @ 80), (20), DFS, AUTO-BW
+>> -     (5490 - 5710 @ 160), (27), DFS
+>> +     (2400 - 2483.5 @ 40), (100 mW)
+>> +     (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+>> +     (5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+>> +     (5470 - 5725 @ 160), (500 mW), DFS
+>>       # 60 gHz band channels 1-4, ref: Etsi En 302 567
+>>       (57000 - 66000 @ 2160), (40)
+>
+> In general the changes look okay to me and in line with the published
+> regulations (I couldn't read some of the documents you linked to, but
+> the limits do look to be in line with ERC/DEC/(01)07 and ECC/DEC/(04)08
+> which are referenced by the frequency allocation table).
+>
+> It seems pretty arbitrary to change from dBm to mW however, especially
+> for those rules whose power limit isn't actually changing. I'd prefer we
+> leave them in dBm for consistency, in which case I think we end up with:
+>
+> country HR: DFS-ETSI
+>         (2400 - 2483.5 @ 40), (20)
+>         (5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
+>         (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
+>         (5470 - 5725 @ 160), (27), DFS
+>         # 60 gHz band channels 1-4, ref: Etsi En 302 567
+>         (57000 - 66000 @ 2160), (40)
+>
+> If that looks fine to you then I can fix it up when I apply the patch.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 3 ++-
- drivers/staging/wilc1000/linux_wlan.c       | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c        | 8 ++++++--
- drivers/staging/wilc1000/wilc_wlan.h        | 3 ++-
- 4 files changed, 11 insertions(+), 5 deletions(-)
+It's fine with me too like that.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3b4a950..530d64a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -595,7 +595,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
- 		for (counter = 0; counter < count; counter++) {
- 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
- 				   (counter == count - 1));
--			if (!wilc_wlan_cfg_get(!counter,
-+			if (!wilc_wlan_cfg_get(dev,
-+					       !counter,
- 					       wids[counter].id,
- 					       (counter == count - 1),
- 					       drv)) {
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d0161cd..4ed324c 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1153,7 +1153,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 
- 		wilc_bus_set_max_speed();
- 
--		if (wilc_wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
-+		if (wilc_wlan_cfg_get(dev, 1, WID_FIRMWARE_VERSION, 1, 0)) {
- 			int size;
- 			char Firmware_ver[20];
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 16224ce..768fd30 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1809,12 +1809,16 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 
- 	return ret_size;
- }
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
-+int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
-+		      u32 drvHandler)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 offset;
- 	int ret_size;
-+	perInterface_wlan_t *nic = netdev_priv(dev);
-+	struct wilc *wilc;
- 
-+	wilc = nic->wilc;
- 
- 	if (p->cfg_frame_in_use)
- 		return 0;
-@@ -1834,7 +1838,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- 			ret_size = 0;
- 
- 
--		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
-+		if (linux_wlan_lock_timeout(&wilc->cfg_event,
- 					    CFG_PKTS_TIMEOUT)) {
- 			PRINT_D(TX_DBG, "Get Timed Out\n");
- 			ret_size = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 2eb7e20..2879a93 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -305,7 +305,8 @@ void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
-+int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
-+		      u32 drvHandler);
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			       u32 buffer_size, wilc_tx_complete_func_t func);
--- 
-1.9.1
-
+>
+> Thanks,
+> Seth
