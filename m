@@ -1,500 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19895 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922AbbJTLh3 (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57496 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752414AbbJRS36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 07:37:29 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH v3] ath10k: add fw_stats support to 10.4 firmware
-Date: Tue, 20 Oct 2015 17:07:48 +0530
-Message-ID: <1445341068-24498-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20151020_133733_740951_EB185E3F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 18 Oct 2015 14:29:58 -0400
+Message-ID: <1445192980.31451.76.camel@decadent.org.uk> (sfid-20151018_203011_166546_2E08BA31)
+Subject: Re: [PATCH] Add FW binary used by mwlwifi driver.
+From: Ben Hutchings <ben@decadent.org.uk>
+To: David Lin <dlin@marvell.com>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>, linux-firmware@kernel.org
+Date: Sun, 18 Oct 2015 19:29:40 +0100
+In-Reply-To: <a7484186c61d496bb9dc05b55f8d6cd0@SC-EXCH02.marvell.com>
+References: <a7484186c61d496bb9dc05b55f8d6cd0@SC-EXCH02.marvell.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-RiVPVnMRzD4ABe/hQM7q"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
 
-This patch adds support for getting firmware debug stats in 10.4 fw.
+--=-RiVPVnMRzD4ABe/hQM7q
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
-v3:
-	>Fixed the parsing error for client's mac address.
+On Sat, 2015-08-22 at 03:54 +0000, David Lin wrote:
+> Signed-off-by: David Lin <dlin@marvell.com>
+> ---
+> =C2=A0WHENCE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A012 ++++++++++++
+> =C2=A0mwlwifi/88W8864.bin | Bin 0 -> 116356 bytes
+> =C2=A0mwlwifi/88W8897.bin | Bin 0 -> 489084 bytes
+> =C2=A03 files changed, 12 insertions(+)
+> =C2=A0mode change 100644 =3D> 100755 WHENCE
+> =C2=A0create mode 100755 mwlwifi/88W8864.bin
+> =C2=A0create mode 100755 mwlwifi/88W8897.bin
+[...]
 
- drivers/net/wireless/ath/ath10k/core.h |  12 ++
- drivers/net/wireless/ath/ath10k/wmi.c  | 211 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  | 135 +++++++++++++++++++++
- 3 files changed, 358 insertions(+)
+Applied. =C2=A0In future, please send requests to the alias
+linux-firmware@kernel.org.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7cc7cdd..c1970ae 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -214,6 +214,7 @@ struct ath10k_fw_stats_pdev {
- 	s32 hw_queued;
- 	s32 hw_reaped;
- 	s32 underrun;
-+	u32 hw_paused;
- 	s32 tx_abort;
- 	s32 mpdus_requed;
- 	u32 tx_ko;
-@@ -226,6 +227,16 @@ struct ath10k_fw_stats_pdev {
- 	u32 pdev_resets;
- 	u32 phy_underrun;
- 	u32 txop_ovf;
-+	u32 seq_posted;
-+	u32 seq_failed_queueing;
-+	u32 seq_completed;
-+	u32 seq_restarted;
-+	u32 mu_seq_posted;
-+	u32 mpdus_sw_flush;
-+	u32 mpdus_hw_filter;
-+	u32 mpdus_truncated;
-+	u32 mpdus_ack_failed;
-+	u32 mpdus_expired;
- 
- 	/* PDEV RX stats */
- 	s32 mid_ppdu_route_change;
-@@ -242,6 +253,7 @@ struct ath10k_fw_stats_pdev {
- 	s32 phy_errs;
- 	s32 phy_err_drop;
- 	s32 mpdu_errs;
-+	s32 rx_ovfl_errs;
- };
- 
- struct ath10k_fw_stats {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6e7d7a7..1b97fef 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2475,6 +2475,47 @@ void ath10k_wmi_pull_pdev_stats_tx(const struct wmi_pdev_stats_tx *src,
- 	dst->txop_ovf = __le32_to_cpu(src->txop_ovf);
- }
- 
-+static void
-+ath10k_wmi_10_4_pull_pdev_stats_tx(const struct wmi_10_4_pdev_stats_tx *src,
-+				   struct ath10k_fw_stats_pdev *dst)
-+{
-+	dst->comp_queued = __le32_to_cpu(src->comp_queued);
-+	dst->comp_delivered = __le32_to_cpu(src->comp_delivered);
-+	dst->msdu_enqued = __le32_to_cpu(src->msdu_enqued);
-+	dst->mpdu_enqued = __le32_to_cpu(src->mpdu_enqued);
-+	dst->wmm_drop = __le32_to_cpu(src->wmm_drop);
-+	dst->local_enqued = __le32_to_cpu(src->local_enqued);
-+	dst->local_freed = __le32_to_cpu(src->local_freed);
-+	dst->hw_queued = __le32_to_cpu(src->hw_queued);
-+	dst->hw_reaped = __le32_to_cpu(src->hw_reaped);
-+	dst->underrun = __le32_to_cpu(src->underrun);
-+	dst->tx_abort = __le32_to_cpu(src->tx_abort);
-+	dst->mpdus_requed = __le32_to_cpu(src->mpdus_requed);
-+	dst->tx_ko = __le32_to_cpu(src->tx_ko);
-+	dst->data_rc = __le32_to_cpu(src->data_rc);
-+	dst->self_triggers = __le32_to_cpu(src->self_triggers);
-+	dst->sw_retry_failure = __le32_to_cpu(src->sw_retry_failure);
-+	dst->illgl_rate_phy_err = __le32_to_cpu(src->illgl_rate_phy_err);
-+	dst->pdev_cont_xretry = __le32_to_cpu(src->pdev_cont_xretry);
-+	dst->pdev_tx_timeout = __le32_to_cpu(src->pdev_tx_timeout);
-+	dst->pdev_resets = __le32_to_cpu(src->pdev_resets);
-+	dst->phy_underrun = __le32_to_cpu(src->phy_underrun);
-+	dst->txop_ovf = __le32_to_cpu(src->txop_ovf);
-+	dst->hw_paused = __le32_to_cpu(src->hw_paused);
-+	dst->seq_posted = __le32_to_cpu(src->seq_posted);
-+	dst->seq_failed_queueing =
-+		__le32_to_cpu(src->seq_failed_queueing);
-+	dst->seq_completed = __le32_to_cpu(src->seq_completed);
-+	dst->seq_restarted = __le32_to_cpu(src->seq_restarted);
-+	dst->mu_seq_posted = __le32_to_cpu(src->mu_seq_posted);
-+	dst->mpdus_sw_flush = __le32_to_cpu(src->mpdus_sw_flush);
-+	dst->mpdus_hw_filter = __le32_to_cpu(src->mpdus_hw_filter);
-+	dst->mpdus_truncated = __le32_to_cpu(src->mpdus_truncated);
-+	dst->mpdus_ack_failed = __le32_to_cpu(src->mpdus_ack_failed);
-+	dst->mpdus_hw_filter = __le32_to_cpu(src->mpdus_hw_filter);
-+	dst->mpdus_expired = __le32_to_cpu(src->mpdus_expired);
-+}
-+
- void ath10k_wmi_pull_pdev_stats_rx(const struct wmi_pdev_stats_rx *src,
- 				   struct ath10k_fw_stats_pdev *dst)
- {
-@@ -2785,6 +2826,86 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
- 	return 0;
- }
- 
-+static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
-+					    struct sk_buff *skb,
-+					    struct ath10k_fw_stats *stats)
-+{
-+	const struct wmi_10_2_stats_event *ev = (void *)skb->data;
-+	u32 num_pdev_stats;
-+	u32 num_pdev_ext_stats;
-+	u32 num_vdev_stats;
-+	u32 num_peer_stats;
-+	int i;
-+
-+	if (!skb_pull(skb, sizeof(*ev)))
-+		return -EPROTO;
-+
-+	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
-+	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
-+	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
-+	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
-+
-+	for (i = 0; i < num_pdev_stats; i++) {
-+		const struct wmi_10_4_pdev_stats *src;
-+		struct ath10k_fw_stats_pdev *dst;
-+
-+		src = (void *)skb->data;
-+		if (!skb_pull(skb, sizeof(*src)))
-+			return -EPROTO;
-+
-+		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
-+		if (!dst)
-+			continue;
-+
-+		ath10k_wmi_pull_pdev_stats_base(&src->base, dst);
-+		ath10k_wmi_10_4_pull_pdev_stats_tx(&src->tx, dst);
-+		ath10k_wmi_pull_pdev_stats_rx(&src->rx, dst);
-+		dst->rx_ovfl_errs = __le32_to_cpu(src->rx_ovfl_errs);
-+		ath10k_wmi_pull_pdev_stats_extra(&src->extra, dst);
-+
-+		list_add_tail(&dst->list, &stats->pdevs);
-+	}
-+
-+	for (i = 0; i < num_pdev_ext_stats; i++) {
-+		const struct wmi_10_2_pdev_ext_stats *src;
-+
-+		src = (void *)skb->data;
-+		if (!skb_pull(skb, sizeof(*src)))
-+			return -EPROTO;
-+
-+		/* FIXME: expose values to userspace
-+		 *
-+		 * Note: Even though this loop seems to do nothing it is
-+		 * required to parse following sub-structures properly.
-+		 */
-+	}
-+
-+	/* fw doesn't implement vdev stats */
-+
-+	for (i = 0; i < num_peer_stats; i++) {
-+		const struct wmi_10_4_peer_stats *src;
-+		struct ath10k_fw_stats_peer *dst;
-+
-+		src = (void *)skb->data;
-+		if (!skb_pull(skb, sizeof(*src)))
-+			return -EPROTO;
-+
-+		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
-+		if (!dst)
-+			continue;
-+
-+		ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
-+		dst->peer_rssi = __le32_to_cpu(src->peer_rssi);
-+		dst->peer_tx_rate = __le32_to_cpu(src->peer_tx_rate);
-+		dst->peer_rx_rate = __le32_to_cpu(src->peer_rx_rate);
-+		/* FIXME: expose 10.4 specific values */
-+
-+		list_add_tail(&dst->list, &stats->peers);
-+	}
-+
-+	return 0;
-+}
-+
- void ath10k_wmi_event_update_stats(struct ath10k *ar, struct sk_buff *skb)
- {
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_UPDATE_STATS_EVENTID\n");
-@@ -4931,6 +5052,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_dbg(ar, ATH10K_DBG_WMI,
- 			   "received event id %d not implemented\n", id);
- 		break;
-+	case WMI_10_4_UPDATE_STATS_EVENTID:
-+		ath10k_wmi_event_update_stats(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6996,6 +7120,90 @@ unlock:
- 		buf[len] = 0;
- }
- 
-+void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
-+				      struct ath10k_fw_stats *fw_stats,
-+				      char *buf)
-+{
-+	u32 len = 0;
-+	u32 buf_len = ATH10K_FW_STATS_BUF_SIZE;
-+	const struct ath10k_fw_stats_pdev *pdev;
-+	const struct ath10k_fw_stats_vdev *vdev;
-+	const struct ath10k_fw_stats_peer *peer;
-+	size_t num_peers;
-+	size_t num_vdevs;
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	pdev = list_first_entry_or_null(&fw_stats->pdevs,
-+					struct ath10k_fw_stats_pdev, list);
-+	if (!pdev) {
-+		ath10k_warn(ar, "failed to get pdev stats\n");
-+		goto unlock;
-+	}
-+
-+	num_peers = ath10k_wmi_fw_stats_num_peers(&fw_stats->peers);
-+	num_vdevs = ath10k_wmi_fw_stats_num_vdevs(&fw_stats->vdevs);
-+
-+	ath10k_wmi_fw_pdev_base_stats_fill(pdev, buf, &len);
-+	ath10k_wmi_fw_pdev_extra_stats_fill(pdev, buf, &len);
-+	ath10k_wmi_fw_pdev_tx_stats_fill(pdev, buf, &len);
-+
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"HW paused", pdev->hw_paused);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Seqs posted", pdev->seq_posted);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Seqs failed queueing", pdev->seq_failed_queueing);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Seqs completed", pdev->seq_completed);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Seqs restarted", pdev->seq_restarted);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MU Seqs posted", pdev->mu_seq_posted);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MPDUs SW flushed", pdev->mpdus_sw_flush);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MPDUs HW filtered", pdev->mpdus_hw_filter);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MPDUs truncated", pdev->mpdus_truncated);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MPDUs receive no ACK", pdev->mpdus_ack_failed);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"MPDUs expired", pdev->mpdus_expired);
-+
-+	ath10k_wmi_fw_pdev_rx_stats_fill(pdev, buf, &len);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Num Rx Overflow errors", pdev->rx_ovfl_errs);
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	len += scnprintf(buf + len, buf_len - len, "%30s (%zu)\n",
-+			"ath10k VDEV stats", num_vdevs);
-+	len += scnprintf(buf + len, buf_len - len, "%30s\n\n",
-+				"=================");
-+
-+	list_for_each_entry(vdev, &fw_stats->vdevs, list) {
-+		ath10k_wmi_fw_vdev_stats_fill(vdev, buf, &len);
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	len += scnprintf(buf + len, buf_len - len, "%30s (%zu)\n",
-+			"ath10k PEER stats", num_peers);
-+	len += scnprintf(buf + len, buf_len - len, "%30s\n\n",
-+				"=================");
-+
-+	list_for_each_entry(peer, &fw_stats->peers, list) {
-+		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len);
-+	}
-+
-+unlock:
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (len >= buf_len)
-+		buf[len - 1] = 0;
-+	else
-+		buf[len] = 0;
-+}
-+
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -7261,6 +7469,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.rx = ath10k_wmi_10_4_op_rx,
- 	.map_svc = wmi_10_4_svc_map,
- 
-+	.pull_fw_stats = ath10k_wmi_10_4_op_pull_fw_stats,
- 	.pull_scan = ath10k_wmi_op_pull_scan_ev,
- 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
- 	.pull_ch_info = ath10k_wmi_10_4_op_pull_ch_info_ev,
-@@ -7310,9 +7519,11 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
- 	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
-+	.fw_stats_fill = ath10k_wmi_10_4_op_fw_stats_fill,
- 
- 	/* shared with 10.2 */
- 	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
-+	.gen_request_stats = ath10k_wmi_op_gen_request_stats,
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 6e84d1c..b48e6e8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3862,6 +3862,111 @@ struct wmi_pdev_stats_tx {
- 	__le32 txop_ovf;
- } __packed;
- 
-+struct wmi_10_4_pdev_stats_tx {
-+	/* Num HTT cookies queued to dispatch list */
-+	__le32 comp_queued;
-+
-+	/* Num HTT cookies dispatched */
-+	__le32 comp_delivered;
-+
-+	/* Num MSDU queued to WAL */
-+	__le32 msdu_enqued;
-+
-+	/* Num MPDU queue to WAL */
-+	__le32 mpdu_enqued;
-+
-+	/* Num MSDUs dropped by WMM limit */
-+	__le32 wmm_drop;
-+
-+	/* Num Local frames queued */
-+	__le32 local_enqued;
-+
-+	/* Num Local frames done */
-+	__le32 local_freed;
-+
-+	/* Num queued to HW */
-+	__le32 hw_queued;
-+
-+	/* Num PPDU reaped from HW */
-+	__le32 hw_reaped;
-+
-+	/* Num underruns */
-+	__le32 underrun;
-+
-+	/* HW Paused. */
-+	__le32  hw_paused;
-+
-+	/* Num PPDUs cleaned up in TX abort */
-+	__le32 tx_abort;
-+
-+	/* Num MPDUs requed by SW */
-+	__le32 mpdus_requed;
-+
-+	/* excessive retries */
-+	__le32 tx_ko;
-+
-+	/* data hw rate code */
-+	__le32 data_rc;
-+
-+	/* Scheduler self triggers */
-+	__le32 self_triggers;
-+
-+	/* frames dropped due to excessive sw retries */
-+	__le32 sw_retry_failure;
-+
-+	/* illegal rate phy errors  */
-+	__le32 illgl_rate_phy_err;
-+
-+	/* wal pdev continuous xretry */
-+	__le32 pdev_cont_xretry;
-+
-+	/* wal pdev tx timeouts */
-+	__le32 pdev_tx_timeout;
-+
-+	/* wal pdev resets  */
-+	__le32 pdev_resets;
-+
-+	/* frames dropped due to non-availability of stateless TIDs */
-+	__le32 stateless_tid_alloc_failure;
-+
-+	__le32 phy_underrun;
-+
-+	/* MPDU is more than txop limit */
-+	__le32 txop_ovf;
-+
-+	/* Number of Sequences posted */
-+	__le32 seq_posted;
-+
-+	/* Number of Sequences failed queueing */
-+	__le32 seq_failed_queueing;
-+
-+	/* Number of Sequences completed */
-+	__le32 seq_completed;
-+
-+	/* Number of Sequences restarted */
-+	__le32 seq_restarted;
-+
-+	/* Number of MU Sequences posted */
-+	__le32 mu_seq_posted;
-+
-+	/* Num MPDUs flushed by SW, HWPAUSED,SW TXABORT(Reset,channel change) */
-+	__le32 mpdus_sw_flush;
-+
-+	/* Num MPDUs filtered by HW, all filter condition (TTL expired) */
-+	__le32 mpdus_hw_filter;
-+
-+	/* Num MPDUs truncated by PDG
-+	 * (TXOP, TBTT, PPDU_duration based on rate, dyn_bw)
-+	 */
-+	__le32 mpdus_truncated;
-+
-+	/* Num MPDUs that was tried but didn't receive ACK or BA */
-+	__le32 mpdus_ack_failed;
-+
-+	/* Num MPDUs that was dropped due to expiry. */
-+	__le32 mpdus_expired;
-+} __packed;
-+
- struct wmi_pdev_stats_rx {
- 	/* Cnts any change in ring routing mid-ppdu */
- 	__le32 mid_ppdu_route_change;
-@@ -4035,6 +4140,16 @@ struct wmi_10_2_pdev_stats {
- 	struct wmi_pdev_stats_extra extra;
- } __packed;
- 
-+struct wmi_10_4_pdev_stats {
-+	struct wmi_pdev_stats_base base;
-+	struct wmi_10_4_pdev_stats_tx tx;
-+	struct wmi_pdev_stats_rx rx;
-+	__le32 rx_ovfl_errs;
-+	struct wmi_pdev_stats_mem mem;
-+	__le32 sram_free_size;
-+	struct wmi_pdev_stats_extra extra;
-+} __packed;
-+
- /*
-  * VDEV statistics
-  * TODO: add all VDEV stats here
-@@ -4076,6 +4191,23 @@ struct wmi_10_2_4_peer_stats {
- 	__le32 unknown_value; /* FIXME: what is this word? */
- } __packed;
- 
-+struct wmi_10_4_peer_stats {
-+	struct wmi_mac_addr peer_macaddr;
-+	__le32 peer_rssi;
-+	__le32 peer_rssi_seq_num;
-+	__le32 peer_tx_rate;
-+	__le32 peer_rx_rate;
-+	__le32 current_per;
-+	__le32 retries;
-+	__le32 tx_rate_count;
-+	__le32 max_4ms_frame_len;
-+	__le32 total_sub_frames;
-+	__le32 tx_bytes;
-+	__le32 num_pkt_loss_overflow[4];
-+	__le32 num_pkt_loss_excess_retry[4];
-+	__le32 peer_rssi_changed;
-+} __packed;
-+
- struct wmi_10_2_pdev_ext_stats {
- 	__le32 rx_rssi_comb;
- 	__le32 rx_rssi[4];
-@@ -6188,5 +6320,8 @@ void ath10k_wmi_10x_op_fw_stats_fill(struct ath10k *ar,
- 				     char *buf);
- size_t ath10k_wmi_fw_stats_num_peers(struct list_head *head);
- size_t ath10k_wmi_fw_stats_num_vdevs(struct list_head *head);
-+void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
-+				      struct ath10k_fw_stats *fw_stats,
-+				      char *buf);
- 
- #endif /* _WMI_H_ */
--- 
-1.9.1
+Ben.
 
+--=20
+Ben Hutchings
+A free society is one where it is safe to be unpopular. - Adlai Stevenson
+
+--=-RiVPVnMRzD4ABe/hQM7q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAViPlFee/yOyVhhEJAQreMBAAhpRoyG+0pWOR6uYpWRfjnoZAp7t/Dtdt
+SUmmcGZvqNBAjdqFPL9q4zM0JXQ182fP22PvJ75nFHXaWQ9zMmFayulaBqnsUY7X
+w7JPeCWG8Ed7gcggpSgRCTx1qXM57zuqGYJiQ1vLGuveh3PQMndSGnz+ctNawqO7
+Eay+GycsmnNLEEeCZ17+CiWmGWfxHWKULYmsRCvqYEGKDu5E+RUWIDhmTQtl0/r2
+XWVhkXUEeTclDoozT8otlcZhYyjm2202toKDrBt2MdifbFh3RQDwb+6mUFprsUOH
+14SQsAK4meDIcXmh7pn63IOegGZET7/1u+1v/+Y4TAYd3UdfSgS+u48TXDU9sdIC
+bnWuk+L9Y2vGE4Qrci7T37t4/tNsLXcM+gDJQZmL3IGG9+qMo5PYLF3W8J/W8UNT
+7VzzdtG3NaKRPvMyXnvIgrrhlvHbg60TBxa/ompfbfX4mTkigWEfTTi0IZMhpRP8
+0l+7Q3DSx1WrJMNmRJt0Qefm0pf4o1gysiv3DiNTnx1q61/hf2MN2aPqS2wTYSF9
+Lyjs8neh2mwZHUUk63+rXKojzvK09j6m9X9f9nzK7Ep6Nps1VjaZXx6n34a7x0gh
+Fi3Eu2kbxA/DjRsNbGu7JQ7ESHKhwIfcUev7XcqBKeryHyOkybbmD0wYJWeoP/j7
+VzDHyozq1Bc=
+=9HSK
+-----END PGP SIGNATURE-----
+
+--=-RiVPVnMRzD4ABe/hQM7q--
