@@ -1,129 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:43655 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932465AbbJNLsK (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:47269 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752384AbbJRFHJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:48:10 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/16] staging: wilc1000: rename drvHandler in the struct wilc_vif
-Date: Wed, 14 Oct 2015 20:46:38 +0900
-Message-ID: <1444823204-16736-10-git-send-email-tony.cho@atmel.com> (sfid-20151014_134814_262575_5E6E6CD0)
-In-Reply-To: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
-References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+	Sun, 18 Oct 2015 01:07:09 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Helmut Heubel <heubelmail@gmail.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [linuxwifi] Wireless card not working
+Date: Sun, 18 Oct 2015 05:07:03 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8A3742@hasmsx107.ger.corp.intel.com> (sfid-20151018_070714_325090_10A173C0)
+References: <20151017193826.4a266ae3@UX305FA>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames drvHandler in the struct wilc_vif to the hif_drv.
+Hi,
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c             |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
- 3 files changed, 14 insertions(+), 14 deletions(-)
+On 10/18/2015 01:38 AM, Helmut Heubel wrote:
+> 
+> Hi, I have an Asus UX305FA notebook and I am facing some problems with
+> the Intel 7265 wireless card, sometimes it works and sometimes not
+> (lately it is more frequent that it does not work at all what forces
+> me to always use the ethernet USB adaptor and cable).
+> 
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6478f6e..6e21825 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1313,7 +1313,7 @@ int mac_open(struct net_device *ndev)
- 	for (i = 0; i < wl->vif_num; i++)
- 		if (ndev == wl->vif[i].wilc_netdev) {
- 			memcpy(wl->vif[i].src_addr, mac_add, ETH_ALEN);
--			wl->vif[i].drvHandler = priv->hWILCWFIDrv;
-+			wl->vif[i].hif_drv = priv->hWILCWFIDrv;
- 			break;
- 		}
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 150397a..d7c9279 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2586,16 +2586,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 			nic->iftype = interface_type;
- 
- 			/*Setting interface 1 drv handler and mac address in newly downloaded FW*/
--			host_int_set_wfi_drv_handler(wl->vif[0].drvHandler);
--			host_int_set_MacAddress(wl->vif[0].drvHandler,
-+			host_int_set_wfi_drv_handler(wl->vif[0].hif_drv);
-+			host_int_set_MacAddress(wl->vif[0].hif_drv,
- 						wl->vif[0].src_addr);
- 			host_int_set_operation_mode(priv->hWILCWFIDrv, STATION_MODE);
- 
- 			/*Add saved WEP keys, if any*/
- 			if (g_wep_keys_saved) {
--				host_int_set_WEPDefaultKeyID(wl->vif[0].drvHandler,
-+				host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key_idx);
--				host_int_add_wep_key_bss_sta(wl->vif[0].drvHandler,
-+				host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key,
- 							     g_key_wep_params.key_len,
- 							     g_key_wep_params.key_idx);
-@@ -2666,16 +2666,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 			wilc1000_wlan_init(dev, nic);
- 			g_wilc_initialized = 1;
- 
--			host_int_set_wfi_drv_handler(wl->vif[0].drvHandler);
--			host_int_set_MacAddress(wl->vif[0].drvHandler,
-+			host_int_set_wfi_drv_handler(wl->vif[0].hif_drv);
-+			host_int_set_MacAddress(wl->vif[0].hif_drv,
- 						wl->vif[0].src_addr);
- 			host_int_set_operation_mode(priv->hWILCWFIDrv, STATION_MODE);
- 
- 			/*Add saved WEP keys, if any*/
- 			if (g_wep_keys_saved) {
--				host_int_set_WEPDefaultKeyID(wl->vif[0].drvHandler,
-+				host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key_idx);
--				host_int_add_wep_key_bss_sta(wl->vif[0].drvHandler,
-+				host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 							     g_key_wep_params.key,
- 							     g_key_wep_params.key_len,
- 							     g_key_wep_params.key_idx);
-@@ -2782,16 +2782,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 
- 
- 		/*Setting interface 1 drv handler and mac address in newly downloaded FW*/
--		host_int_set_wfi_drv_handler(wl->vif[0].drvHandler);
--		host_int_set_MacAddress(wl->vif[0].drvHandler,
-+		host_int_set_wfi_drv_handler(wl->vif[0].hif_drv);
-+		host_int_set_MacAddress(wl->vif[0].hif_drv,
- 					wl->vif[0].src_addr);
- 		host_int_set_operation_mode(priv->hWILCWFIDrv, AP_MODE);
- 
- 		/*Add saved WEP keys, if any*/
- 		if (g_wep_keys_saved) {
--			host_int_set_WEPDefaultKeyID(wl->vif[0].drvHandler,
-+			host_int_set_WEPDefaultKeyID(wl->vif[0].hif_drv,
- 						     g_key_wep_params.key_idx);
--			host_int_add_wep_key_bss_sta(wl->vif[0].drvHandler,
-+			host_int_add_wep_key_bss_sta(wl->vif[0].hif_drv,
- 						     g_key_wep_params.key,
- 						     g_key_wep_params.key_len,
- 						     g_key_wep_params.key_idx);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 14bfd05..64b931b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -151,7 +151,7 @@ typedef struct {
- struct wilc_vif {
- 	u8 src_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
--	struct host_if_drv *drvHandler;
-+	struct host_if_drv *hif_drv;
- 	struct net_device *wilc_netdev;
- };
- 
--- 
-1.9.1
+please share  your dmesg output as a start.
+> ==================================================
+> # sudo lshw -C network
+> 
+>   *-network               
+>        description: Wireless interface
+>        product: Wireless 7265
+>        vendor: Intel Corporation
+>        physical id: 0
+>        bus info: pci@0000:02:00.0
+>        logical name: wlan0
+>        version: 59
+>        serial: 34:02:86:60:cd:3b
+>        width: 64 bits
+>        clock: 33MHz
+>        capabilities: pm msi pciexpress bus_master cap_list ethernet
+>   physical wireless configuration: broadcast=yes driver=iwlwifi
+>   driverversion=3.19.0-30-generic firmware=25.17.12.0 ip=192.168.101.20
+>   latency=0 link=yes multicast=yes wireless=IEEE 802.11abgn resources:
+>   irq:50 memory:f7000000-f7001fff
+> ==================================================
 
+> ==================================================
+> # cat /etc/modprobe.d/iwlwifi.conf
+> 
+> # /etc/modprobe.d/iwlwifi.conf
+> # iwlwifi will dyamically load either iwldvm or iwlmvm depending on the
+> # microcode file installed on the system.  When removing iwlwifi, first
+> # remove the iwl?vm module and then iwlwifi.
+> remove iwlwifi (/sbin/lsmod | grep -o -e ^iwlmvm -e ^iwldvm -e ^iwlwifi
+> | xargs /sbin/rmmod) && /sbin/modprobe -r mac80211
+> options iwlwifi 11n_disable=1
+> options iwlwifi 11n_disable=8
+> options iwlwifi wd_disable=1
+> ==================================================
+> 
+
+Please remove all these options.
+
+> My latest attempt was to download this firmware but I don't know how to
+> load it correctly:
+> 
+> https://wireless.wiki.kernel.org/_media/en/users/drivers/iwlwifi-7265-ucode-25.17.12.0.tgz
+> 
+
+You already have the correct firmware for this kernel. No need to update
+anything.
