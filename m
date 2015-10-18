@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35686 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173AbbJEKfO (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:34857 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbbJRJ3M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:14 -0400
-Received: by pacfv12 with SMTP id fv12so177126788pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:13 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/20] staging: wilc1000: remove multiple blank lines
-Date: Mon,  5 Oct 2015 19:34:46 +0900
-Message-Id: <1444041304-7727-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123523_417432_9BA73944)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 18 Oct 2015 05:29:12 -0400
+Subject: Re: [PATCH] staging: wilc1000: restore wilc_spi_dev variable
+To: Arnd Bergmann <arnd@arndb.de>, gregkh@linuxfoundation.org
+References: <4978401.AVrDN2jmbq@wuerfel>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Message-ID: <5623665F.40700@gmail.com> (sfid-20151018_113004_077125_5577C2D2)
+Date: Sun, 18 Oct 2015 12:29:03 +0300
+MIME-Version: 1.0
+In-Reply-To: <4978401.AVrDN2jmbq@wuerfel>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes multiple blank lines found by checkpatch
+Hi!
 
-CHECK: Please don't use multiple blank lines
-FILE: drivers/staging/wilc1000/host_interface.c:5343:
-FILE: drivers/staging/wilc1000/host_interface.c:5372:
-FILE: drivers/staging/wilc1000/host_interface.c:5389:
+On 16.10.2015 23:05, Arnd Bergmann wrote:
+> A recent change to wilc1000 accidentally deleted an important
+> variable, so we now get a build error when the SPI mode is
+> selected:
+> 
+> ERROR: "wilc_spi_dev" [drivers/staging/wilc1000/wilc1000.ko] undefined!
+> 
+> This partially reverts the broken commit to put the variable back.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 56293ff232b9 ("staging: wilc1000: linux_wlan_spi: include header")
+> ---
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ----
- 1 file changed, 4 deletions(-)
+I'm really sorry about it, will be more careful in the future. 
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 038923d..f8206a2 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5340,7 +5340,6 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *wfi_drv, u8 channel)
- 	return 0;
- }
- 
--
- int host_int_wait_msg_queue_idle(void)
- {
- 	int result = 0;
-@@ -5369,7 +5368,6 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
- 
- 	struct host_if_msg msg;
- 
--
- 	/* prepare the set driver handler message */
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
-@@ -5386,8 +5384,6 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
- 	return s32Error;
- }
- 
--
--
- s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
- {
- 	s32 s32Error = 0;
--- 
-2.6.0
-
+Thank you for fixing this.
