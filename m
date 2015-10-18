@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32306 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212AbbJHSdY (ORCPT
+Received: from isp-bos-04.edutel.nl ([88.159.1.182]:33305 "EHLO
+	isp-bos-04.edutel.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729AbbJRPR4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 14:33:24 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 00/11] brcmfmac: cfg80211 callbacks and coredump
-Date: Thu, 8 Oct 2015 20:33:10 +0200
-Message-ID: <1444329201-3696-1-git-send-email-arend@broadcom.com> (sfid-20151008_203328_468089_FC9B3957)
+	Sun, 18 Oct 2015 11:17:56 -0400
+Received: from isp-aos-01 (unknown [IPv6:2a01:670:100:11::1:1])
+	by isp-bos-04.edutel.nl (Postfix) with ESMTPS id D66272E255C
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2015 17:17:52 +0200 (CEST)
+Received: from [88.159.174.220] (helo=FransW7)
+	by isp-aos-01 with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <fvdw@fvdw.eu>)
+	id 1Znpia-0000ee-2u
+	for linux-wireless@vger.kernel.org; Sun, 18 Oct 2015 17:17:52 +0200
+Message-ID: <809DC09955974DA99BA61BF86298735F@FransW7> (sfid-20151018_171759_374255_C58B07BD)
+From: "Frans van de Wiel" <fvdw@fvdw.eu>
+To: <linux-wireless@vger.kernel.org>
+Subject: Fw: patch for rtl8712 driver, add support for sitecom WLA2100 (006c)
+Date: Sun, 18 Oct 2015 17:17:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0010_01D109C8.E981EB90"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series provides following:
+Dit is een meerdelig bericht in de MIME-indeling.
 
-* using netdev carrier state.
-* add and rework some cfg80211 callbacks mainly for AP mode.
-* use devcoredump when triggered by firmware event.
+------=_NextPart_000_0010_01D109C8.E981EB90
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 
-The series is intended for 4.4 kernel and applies to the
-master branch of wireless-drivers-next repository.
 
-Arend van Spriel (2):
-  brcmfmac: expose device memory to devcoredump subsystem
-  brcmfmac: remove conversational comment
 
-Franky Lin (1):
-  brcmfmac: rename firmware_path to alternative_fw_path
+From: Frans van de Wiel
+Sent: Sunday, October 18, 2015 4:34 PM
+To: greg@kroah.com ; Larry.Finger@lwfinger.net ; 
+florian.c.schilhabel@googlemail.com ; linux-wireless@vger.kernel.org
+Subject: patch for rtl8712 driver, add support for sitecom WLA2100 (006c)
 
-Hante Meuleman (8):
-  brcmfmac: Fix race condition between USB probe/load and disconnect.
-  brcmfmac: Rework p2p attach, use single method for p2p dev creation.
-  brcmfmac: Fix station info rate information.
-  brcmfmac: Add RSSI information to get_station.
-  brcmfmac: Add dump_station support to cfg80221 ops.
-  brcmfmac: Move brcmf_c_preinit_dcmds prototype to correct file.
-  brcmfmac: Remove unused state AP creating.
-  brcmfmac: Properly set carrier state of netdev.
+dear sirs, please find attached a patch for the rtl8712 driver (staging)
+The patch add support for  sitecom WLA2100, seems this device id is missing. 
+Many dongles use it.
 
- drivers/net/wireless/brcm80211/Kconfig             |  1 +
- drivers/net/wireless/brcm80211/brcmfmac/bus.h      | 21 ++++++
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 86 ++++++++++++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h |  3 +-
- drivers/net/wireless/brcm80211/brcmfmac/common.h   |  3 +
- drivers/net/wireless/brcm80211/brcmfmac/core.c     | 65 ++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/core.h     | 11 +--
- drivers/net/wireless/brcm80211/brcmfmac/debug.c    | 42 ++++++++++-
- drivers/net/wireless/brcm80211/brcmfmac/debug.h    |  8 +-
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  3 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |  1 +
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 13 ++++
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |  3 -
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      | 71 +++---------------
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 65 ++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     | 49 +++++++++++-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 29 +++++++-
- 18 files changed, 355 insertions(+), 121 deletions(-)
+Kind regards
+Frans 
 
--- 
-1.9.1
+------=_NextPart_000_0010_01D109C8.E981EB90
+Content-Type: application/octet-stream;
+	name="patch.dat"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="patch.dat"
+
+--- linux-3.14.2/drivers/staging/rtl8712/usb_intf.c.orig	2014-04-27 =
+02:19:26.000000000 +0200=0A=
++++ linux-3.14.2/drivers/staging/rtl8712/usb_intf.c	2014-03-25 =
+22:31:33.000000000 +0100=0A=
+@@ -144,6 +144,7 @@ static struct usb_device_id rtl871x_usb_=0A=
+ 	{USB_DEVICE(0x0DF6, 0x0058)},=0A=
+ 	{USB_DEVICE(0x0DF6, 0x0049)},=0A=
+ 	{USB_DEVICE(0x0DF6, 0x004C)},=0A=
++	{USB_DEVICE(0x0DF6, 0x006C)},=0A=
+ 	{USB_DEVICE(0x0DF6, 0x0064)},=0A=
+ 	/* Skyworth */=0A=
+ 	{USB_DEVICE(0x14b2, 0x3300)},=0A=
+
+------=_NextPart_000_0010_01D109C8.E981EB90--
 
