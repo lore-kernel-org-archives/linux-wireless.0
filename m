@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:35223 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbbJISTV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 14:19:21 -0400
-From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-To: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-Subject: [PATCH] staging: wilc1000: typo in WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
-Date: Fri,  9 Oct 2015 21:19:07 +0300
-Message-Id: <1444414747-8049-1-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20151009_201938_613561_80DA849E)
-In-Reply-To: <20151008184724.GA11027@kroah.com>
-References: <20151008184724.GA11027@kroah.com>
+Received: from m50-138.163.com ([123.125.50.138]:57854 "EHLO m50-138.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752992AbbJRPcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Oct 2015 11:32:48 -0400
+From: Geliang Tang <geliangtang@163.com>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/9] staging: wilc1000: fix trivial typos
+Date: Sun, 18 Oct 2015 23:31:11 +0800
+Message-Id: <eb89ced1dda5b521dba1ed6095deef09d577e37a.1445181079.git.geliangtang@163.com> (sfid-20151018_173326_499173_1D17060C)
+In-Reply-To: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+References: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+In-Reply-To: <918fdb002ec3b2a9fc5a5d364c0fbaff2f77c5cc.1445181079.git.geliangtang@163.com>
+References: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com> <557286dd38beb4d8d1be28e787ad89611e7cc077.1445181079.git.geliangtang@163.com> <5fea4cd474d5fe49688f88d91cdf5e8019844806.1445181079.git.geliangtang@163.com> <918fdb002ec3b2a9fc5a5d364c0fbaff2f77c5cc.1445181079.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looking at the code, it seems that "MEMROY" in the config option
-name is a typo. It should be "MEMORY" instead.
+s/regsiter/register/
 
-Changed the config option name accordingly.
-
-Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Signed-off-by: Geliang Tang <geliangtang@163.com>
 ---
- drivers/staging/wilc1000/Kconfig  | 2 +-
- drivers/staging/wilc1000/Makefile | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-index 59ccecc..d636f46 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -19,7 +19,7 @@ config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
- 	  during initial time. The driver will also free the buffer
- 	  by calling network device stop.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ccab89f..6dc5faf 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1880,10 +1880,10 @@ static void __exit exit_wilc_driver(void)
+ 	}
  
--config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
-+config WILC1000_DYNAMICALLY_ALLOCATE_MEMORY
-         bool "Dynamically allocate memory in real time"
-         ---help---
- 	  This choice supports dynamic allocation of the memory
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index f495061..026609a 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -15,7 +15,7 @@ ccflags-y += -I$(src)/ -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
- ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
- 								-DWILC_PREALLOC_AT_INSMOD
+ #ifndef WILC_SDIO
+-	PRINT_D(INIT_DBG, "SPI unregsiter...\n");
++	PRINT_D(INIT_DBG, "SPI unregister...\n");
+ 	spi_unregister_driver(&wilc_bus);
+ #else
+-	PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
++	PRINT_D(INIT_DBG, "SDIO unregister...\n");
+ 	sdio_unregister_driver(&wilc_bus);
+ #endif
  
--ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
-+ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMORY) += -DWILC_NORMAL_ALLOC
- 
- 
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
 -- 
-1.9.1
+2.5.0
+
 
