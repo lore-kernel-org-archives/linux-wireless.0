@@ -1,78 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57362 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932183AbbJRRrV (ORCPT
+Received: from mail-wi0-f195.google.com ([209.85.212.195]:33575 "EHLO
+	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbbJSQCj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 13:47:21 -0400
-Message-ID: <1445190425.31451.70.camel@decadent.org.uk> (sfid-20151018_194726_500754_8E48065A)
-Subject: [PATCH] iwlwifi: Fix module firmware information for 3160
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 18 Oct 2015 18:47:05 +0100
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-bBTaOPSelQc003azFW3M"
-Mime-Version: 1.0
+	Mon, 19 Oct 2015 12:02:39 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
+	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
+	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
+	cengelma@gmx.at, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/3] net: wireless: b43: Coding Style
+Date: Mon, 19 Oct 2015 17:02:22 +0100
+Message-Id: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com> (sfid-20151019_180327_073166_B94BA3A4)
+In-Reply-To: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fixed Pointer Coding Style
 
---=-bBTaOPSelQc003azFW3M
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-IWL3160_UCODE_API_OK is no longer defined, so we end up with this
-in the module information:
-
-firmware:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi-3160-IWL3160_UCO=
-DE_API_OK.ucode
-
-It looks like IWL7260_UCODE_API_OK should be used instead now.
-
-Fixes: ed65918735a5 ("iwlwifi: 7000: modify the firmware name for 3165")
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 ---
-=C2=A0drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
-=C2=A01 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/b43/main.c | 6 +++---
+ drivers/net/wireless/b43/main.h | 2 +-
+ drivers/net/wireless/b43/xmit.h | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless=
-/iwlwifi/iwl-7000.c
-index cc35f79..d7acbd1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -348,6 +348,6 @@ const struct iwl_cfg iwl7265d_n_cfg =3D {
-=C2=A0};
-=C2=A0
-=C2=A0MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
-=C2=A0MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
-=C2=A0MODULE_FIRMWARE(IWL7265D_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
---=20
-Ben Hutchings
-A free society is one where it is safe to be unpopular. - Adlai Stevenson
---=-bBTaOPSelQc003azFW3M
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 2849070..040caa4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -364,7 +364,7 @@ static struct ieee80211_supported_band b43_band_2ghz_limited = {
+ 
+ static void b43_wireless_core_exit(struct b43_wldev *dev);
+ static int b43_wireless_core_init(struct b43_wldev *dev);
+-static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
++static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev);
+ static int b43_wireless_core_start(struct b43_wldev *dev);
+ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+@@ -989,7 +989,7 @@ static void do_key_write(struct b43_wldev *dev,
+ 		 * 0xffffffff and let's b43_op_update_tkip_key provide a
+ 		 * correct pair.
+ 		 */
+-		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16*)buf);
++		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16 *)buf);
+ 	} else if (index >= pairwise_keys_start) /* clear it */
+ 		rx_tkip_phase1_write(dev, index, 0, NULL);
+ 	if (key)
+@@ -4334,7 +4334,7 @@ out_unlock:
+ /* Locking: wl->mutex
+  * Returns the current dev. This might be different from the passed in dev,
+  * because the core might be gone away while we unlocked the mutex. */
+-static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev)
++static struct b43_wldev *b43_wireless_core_stop(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl;
+ 	struct b43_wldev *orig_dev;
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index c46430c..fa56b22 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -73,7 +73,7 @@ static inline int b43_is_ofdm_rate(int rate)
+ u8 b43_ieee80211_antenna_sanitize(struct b43_wldev *dev,
+ 				  u8 antenna_nr);
+ 
+-void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
++void b43_tsf_read(struct b43_wldev *dev, u64 *tsf);
+ void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
+ 
+ u32 b43_shm_read32(struct b43_wldev *dev, u16 routing, u16 offset);
+diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
+index ba61153..fed8657 100644
+--- a/drivers/net/wireless/b43/xmit.h
++++ b/drivers/net/wireless/b43/xmit.h
+@@ -203,7 +203,7 @@ size_t b43_txhdr_size(struct b43_wldev *dev)
+ 
+ 
+ int b43_generate_txhdr(struct b43_wldev *dev,
+-		       u8 * txhdr,
++		       u8 *txhdr,
+ 		       struct sk_buff *skb_frag,
+ 		       struct ieee80211_tx_info *txctl, u16 cookie);
+ 
+-- 
+2.6.1
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAViPbGee/yOyVhhEJAQoKEw/8CfyWWD8ZaP4qxTg3XjCj23DCN6lvWjBR
-QsGkAdqIOng1Dm1Ig5YqSe+hTZCM2+tHkU1EjgdEHFa3JKkLRZxwUgl8qZwP0FhJ
-BZEInFbcQPXUtpu+i73EKzSQZgSt8VTFAFAqtOfcFMiNOUbYx9s05U7M6AE7Yw+B
-zSSMQ9D2FmN26tIaB3JJQRlSVhfjhy7izV6ug0IsmSGlKCwUIKLyqyRu3K1TqCGH
-05VBm5Z7PFvGOHCuasSpOvPfKeS15l45o6Yvh3CMsNfzH7yXMyS+FOquEhqcw+nX
-nYeZLYCZ40JHh22dh1fmOi/7DN5xUd4fg0EoBvTudxIgBkYFTlF35wQoz6a3XDdU
-EdM/vPklxnFMOo49WUOrcXUqb2Ghhtk6fXGUGdAJuqO5UB+YFNFYryNvjAg+ASX4
-9GZ8XbxYvjfmf354o5MRzm+p0BhtrcYoF06aOuB60wcvM0Nvf/YBMjwoqQ1tf4EE
-NiTMRwmdj/x2OPGRityxPDDu0O18pQm2hX8xxtEkg652sK404wopcoSVwxe5yVyi
-zApJkMsApFR/YXp8f01PqKASTbE0nlhFCvOuZh2UuN+fpN9v4W0GDl/6CQqKbGCq
-UXjA3MpysjrF0fifezPeX50Saz3ki5lSh17tS9lGvYFo69xCzvqOjmb9K9/7U603
-T/vnKkgtatk=
-=RDYD
------END PGP SIGNATURE-----
-
---=-bBTaOPSelQc003azFW3M--
