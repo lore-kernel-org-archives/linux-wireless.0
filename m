@@ -1,122 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from TYO200.gate.nec.co.jp ([210.143.35.50]:61404 "EHLO
-	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760213AbbJIAh7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 20:37:59 -0400
-From: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Markus Elfring <elfring@users.sourceforge.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] brcmfmac: fix waitqueue_active without memory barrier in
- brcmfmac driver
-Date: Fri, 9 Oct 2015 00:35:46 +0000
-Message-ID: <17EC94B0A072C34B8DCF0D30AD16044A02874785@BPXM09GP.gisp.nec.co.jp> (sfid-20151009_023909_686692_7C06B9F5)
-Content-Type: text/plain; charset="iso-2022-jp"
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:32968 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750787AbbJSWUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2015 18:20:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZoImi-00013T-QS
+	for linux-wireless@vger.kernel.org; Tue, 20 Oct 2015 00:20:04 +0200
+Received: from cpc10-rdng23-2-0-cust836.15-3.cable.virginm.net ([80.7.139.69])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 00:20:04 +0200
+Received: from allcoms by cpc10-rdng23-2-0-cust836.15-3.cable.virginm.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 00:20:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Dan MacDonald <allcoms@gmail.com>
+Subject: =?utf-8?b?bGliZXJ0YXNfY3M=?= TX lockups
+Date: Mon, 19 Oct 2015 22:14:04 +0000 (UTC)
+Message-ID: <loom.20151020T001231-593@post.gmane.org> (sfid-20151020_002012_484973_2AEB661B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_msgbuf_ioctl_resp_wake() seems to be missing a memory barrier
-which might cause the waker to not notice the waiter and miss sending a
-wake_up as in the following figure.
+Hi Linux wireless devs!
 
-  brcmf_msgbuf_ioctl_resp_wake		    brcmf_msgbuf_ioctl_resp_wait
-------------------------------------------------------------------------
-if (waitqueue_active(&msgbuf->ioctl_resp_wait))
-/* The CPU might reorder the test for
-   the waitqueue up here, before
-   prior writes complete */
-   	   	     	 	       /* wait_event_timeout */
-				        /* __wait_event_timeout */
-					 /* ___wait_event */
-					 prepare_to_wait_event(&wq, &__wait,
-					   state);
-					 if (msgbuf->ctl_completed)
-					 ...
-msgbuf->ctl_completed = true;
-					 schedule_timeout(__ret))
-------------------------------------------------------------------------
+I'm having probs maintaining a stable connection with the libertas_cs
+driver. When I use wifi for more than a few seconds I start to get errors like:
 
-There are three other place in drivers/net/wireless/brcm80211/brcmfmac/
-which have similar code.  The attached patch removes the call to
-waitqueue_active() leaving just wake_up() behind.  This fixes the
-problem because the call to spin_lock_irqsave() in wake_up() will be an
-ACQUIRE operation.
+libertas_cs 0.0 wlan0: TX lockup detected
 
-I found this issue when I was looking through the linux source code
-for places calling waitqueue_active() before wake_up*(), but without
-preceding memory barriers, after sending a patch to fix a similar
-issue in drivers/tty/n_tty.c  (Details about the original issue can be
-found here: https://lkml.org/lkml/2015/9/28/849).
+I get this error when I connect with iw, iwconfig, netctl or networkmanager,
+with or without wpa_supplicant / encryption under both Linux 3.11.3 and
+4.2.3. I am trying to use a SparkLAN WCFM-100 under Arch Linux ARM on my
+olde SHARP Zaurus SL-C3000, of course! :)
 
-Signed-off-by: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |    3 +--
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c   |    6 ++----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c    |    3 +--
- 3 files changed, 4 insertions(+), 8 deletions(-)
+The libertas homepage (
+http://linuxwireless.sipsolutions.net/en/users/Drivers/libertas/ ) says I
+should extract the firmware to use my device. Although I can download the
+tools source, running `make` in the fwcutter dir fails because it needs to
+download http://files.gumstix.com/cf8385-5.0.16.p0-26306.tbz which no longer
+exists. To work around this I have copied cf8385.bin and cf8385_helper.bin
+from my laptop's libertas firmware directory into the kernel firmware
+directory on my Zaurus which at least gets the card activated by the kernel.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 7b2136c..648151e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -473,8 +473,7 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
- static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
- {
- 	msgbuf->ctl_completed = true;
--	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
--		wake_up(&msgbuf->ioctl_resp_wait);
-+	wake_up(&msgbuf->ioctl_resp_wait);
- }
- 
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index f990e3d..332c4c8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -1785,8 +1785,7 @@ static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
- 
- static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
- {
--	if (waitqueue_active(&bus->dcmd_resp_wait))
--		wake_up_interruptible(&bus->dcmd_resp_wait);
-+	wake_up_interruptible(&bus->dcmd_resp_wait);
- 
- 	return 0;
- }
-@@ -2110,8 +2109,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- static void
- brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
- {
--	if (waitqueue_active(&bus->ctrl_wait))
--		wake_up_interruptible(&bus->ctrl_wait);
-+	wake_up_interruptible(&bus->ctrl_wait);
- 	return;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index daba86d..7f5889c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -184,8 +184,7 @@ static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
- 
- static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
- {
--	if (waitqueue_active(&devinfo->ioctl_resp_wait))
--		wake_up(&devinfo->ioctl_resp_wait);
-+	wake_up(&devinfo->ioctl_resp_wait);
- }
- 
- static void
--- 
-1.7.1
+I should prob also mention that Linux prints something like this whenever I
+plug the card in:
+
+Oct 14 20:22:06 alarm kernel: pcmcia_socket pcmcia_socket0: pccard: PCMCIA
+card inserted into slot 0
+Oct 14 20:22:06 alarm kernel: pcmcia 0.0: pcmcia: registering new device
+pcmcia0.0 (IRQ: 201)
+Oct 14 20:22:06 alarm kernel: cfg80211: Calling CRDA to update world
+regulatory domain
+Oct 14 20:22:06 alarm kernel: lib80211: common routines for IEEE802.11 drivers
+Oct 14 20:22:06 alarm kernel: lib80211_crypt: registered algorithm 'NULL'
+Oct 14 20:22:06 alarm kernel: libertas_cs 0.0 (unregistered net_device):
+00:0e:8e:11:68:50, fw 5.0.20p2, cap 0x00000303
+Oct 14 20:22:06 alarm kernel: libertas_cs 0.0 (unregistered net_device):
+PREP_CMD: command 0x00a3 failed: 2
+Oct 14 20:22:06 alarm kernel: libertas_cs 0.0 (unregistered net_device):
+PREP_CMD: command 0x10ac failed: 2
+Oct 14 20:22:07 alarm kernel: libertas_cs 0.0 (unregistered net_device):
+PREP_CMD: command 0x00a3 failed: 2
+Oct 14 20:22:07 alarm kernel: libertas_cs 0.0 wlan0: Marvell WLAN 802.11 adapter
+
+Could my problems be caused by incorrect firmware or might I have a faulty
+wifi card? If I need to use fwcutter to extract the firmware, where can I
+get the required archives from?
+
+Thanks for your help!
+
