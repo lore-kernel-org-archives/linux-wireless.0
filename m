@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12646 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752851AbbJYJAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 05:00:11 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/10] mac80211: allow null chandef in tracing
-Date: Sun, 25 Oct 2015 10:59:41 +0200
-Message-Id: <1445763582-11421-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100021_185539_8CAEF005)
-In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31080 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753837AbbJSO53 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2015 10:57:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: only advertise mesh support in raw mode
+References: <1443445192-30464-1-git-send-email-me@bobcopeland.com>
+Date: Mon, 19 Oct 2015 17:57:12 +0300
+In-Reply-To: <1443445192-30464-1-git-send-email-me@bobcopeland.com> (Bob
+	Copeland's message of "Mon, 28 Sep 2015 08:59:52 -0400")
+Message-ID: <87r3kqgb3r.fsf@kamboji.qca.qualcomm.com> (sfid-20151019_165737_266037_13D38332)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Bob Copeland <me@bobcopeland.com> writes:
 
-In TDLS channel-switch operations the chandef can sometimes be NULL.
-Avoid an oops in the trace code for these cases and just print a
-chandef full of zeros.
+> Rather than always advertising mesh support and then generating
+> an error when the user attempts to bring up the device without
+> rawmode, only advertise it when available: that is, if the module
+> is loaded with rawmode=1, the firmware supports it, and the
+> device/firmware supports an AP virtual interface internally.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+> Actually, I think this is perhaps worse than just spitting out an
+> error on interface up, but I'm sending anyway because it was requested
+> a couple of times in review.
+>
+> The reason this is so ugly is that the structures in question are
+> defined const in the API; when also declared const in the driver,
+> they go into the .rodata section and the interface limit types
+> cannot be changed without causing a fault.  So this patch removes
+> const in a bunch of places and adds casts to const where required.
+>
+> Another approach might be changing cfg80211 to silently remove interface
+> types from advertised combinations when the given mode is not also
+> in interface_modes, instead of warning and failing registration as it
+> does today.  But this would make errors here harder to spot.
+>
+> Or we can keep it the way it is with the driver failing and showing an
+> error on add interface.  I'm okay with any of these approaches really.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/trace.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Yeah, I'm with you. It would be nice to advertise the mesh feature on
+when the firmware supports it, but I think this is just too complicated.
+So I'm dropping this for now, but we can revisit later if there's a need
+for that.
 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 5cf8f4e..56c6d6c 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -33,11 +33,11 @@
- 			__field(u32, chan_width)					\
- 			__field(u32, center_freq1)					\
- 			__field(u32, center_freq2)
--#define CHANDEF_ASSIGN(c)								\
--			__entry->control_freq = (c)->chan ? (c)->chan->center_freq : 0;	\
--			__entry->chan_width = (c)->width;				\
--			__entry->center_freq1 = (c)->center_freq1;			\
--			__entry->center_freq2 = (c)->center_freq2;
-+#define CHANDEF_ASSIGN(c)							\
-+			__entry->control_freq = (c) ? ((c)->chan ? (c)->chan->center_freq : 0) : 0;	\
-+			__entry->chan_width = (c) ? (c)->width : 0;			\
-+			__entry->center_freq1 = (c) ? (c)->center_freq1 : 0;		\
-+			__entry->center_freq2 = (c) ? (c)->center_freq2 : 0;
- #define CHANDEF_PR_FMT	" control:%d MHz width:%d center: %d/%d MHz"
- #define CHANDEF_PR_ARG	__entry->control_freq, __entry->chan_width,			\
- 			__entry->center_freq1, __entry->center_freq2
 -- 
-2.1.4
-
+Kalle Valo
