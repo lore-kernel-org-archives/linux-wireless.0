@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49251 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbbJEOcM (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:38605 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131AbbJSQCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:32:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: egrumbach@gmail.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: iwlwifi-next 2015-10-05
-References: <1444050759.27220.15.camel@coelho.fi>
-Date: Mon, 05 Oct 2015 17:32:05 +0300
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi> (Luca Coelho's message of
-	"Mon, 05 Oct 2015 16:12:39 +0300")
-Message-ID: <877fn14c9m.fsf@kamboji.qca.qualcomm.com> (sfid-20151005_163215_926059_2AC24476)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 19 Oct 2015 12:02:42 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
+	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
+	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
+	cengelma@gmx.at, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 3/3] net: wireless: b43: Statics are init to 0
+Date: Mon, 19 Oct 2015 17:02:23 +0100
+Message-Id: <1445270543-2209-4-git-send-email-paulmcquad@gmail.com> (sfid-20151019_180309_986076_97FBEC60)
+In-Reply-To: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moro,
+No Need to state Statics are a 0 or NULL
 
-Luca Coelho <luca@coelho.fi> writes:
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+---
+ drivers/net/wireless/b43/main.c   | 2 +-
+ drivers/net/wireless/b43/phy_lp.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> Here's our second pull request for 4.4.  Nothing really stands out,
-> just the usual series of improvements, bugfixes and clean-ups.
->
-> There doesn't seem to be any conflict with the fixes pull request I
-> just sent, but if you find any problems, let me know.
-
-What about the actual pactches? I don't see them on the list.
-
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 040caa4..2b50650 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -109,7 +109,7 @@ int b43_modparam_verbose = B43_VERBOSITY_DEFAULT;
+ module_param_named(verbose, b43_modparam_verbose, int, 0644);
+ MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
+ 
+-static int b43_modparam_pio = 0;
++static int b43_modparam_pio;
+ module_param_named(pio, b43_modparam_pio, int, 0644);
+ MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+ 
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 058a9f2..086f0ba 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -2502,7 +2502,7 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
+ {
+ 	struct ssb_bus *bus = dev->dev->sdev->bus;
+ 
+-	static const struct b206x_channel *chandata = NULL;
++	static const struct b206x_channel *chandata;
+ 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
+ 	u32 freqref, vco_freq, val1, val2, val3, timeout, timeoutref, count;
+ 	u16 old_comm15, scale;
 -- 
-Kalle Valo
+2.6.1
+
