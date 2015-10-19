@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36216 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbbJZApC (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:29449 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446AbbJSM6c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 20:45:02 -0400
-Received: by pacfv9 with SMTP id fv9so177826040pac.3
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 17:45:01 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/4] staging: wilc1000: rename u8Index in host_int_set_WEPDefaultKeyID
-Date: Mon, 26 Oct 2015 09:44:44 +0900
-Message-Id: <1445820285-14433-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151026_014505_897804_946A431D)
-In-Reply-To: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 19 Oct 2015 08:58:32 -0400
+Date: Mon, 19 Oct 2015 15:57:50 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	kernel-janitors@vger.kernel.org,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] NFC: delete null dereference
+Message-ID: <20151019125750.GG7340@mwanda> (sfid-20151019_151045_025496_CC71BD90)
+References: <1445074340-21955-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1445074340-21955-2-git-send-email-Julia.Lawall@lip6.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445074340-21955-2-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes second parameter of host_int_set_WEPDefaultKeyID from
-u8Index to index to avoid camelcase.
+The next goto after that is messed up as well:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+  1056          dev = nfc_get_device(idx);
+  1057          if (!dev)
+  1058                  return -ENODEV;
+  1059  
+  1060          device_lock(&dev->dev);
+  1061  
+  1062          local = nfc_llcp_find_local(dev);
+  1063          if (!local) {
+  1064                  nfc_put_device(dev);
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 56e0859..4f1af61 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3128,7 +3128,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	return result;
- }
- 
--int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
-+int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3147,7 +3147,7 @@ int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = DEFAULTKEY;
- 	msg.drv = hif_drv;
--	msg.body.key_info.attr.wep.index = u8Index;
-+	msg.body.key_info.attr.wep.index = index;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7631757..ea91bbf 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -384,7 +384,7 @@ int host_int_remove_wep_key(struct host_if_drv *wfi_drv, u8 index);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index);
-+int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index);
- 
- /**
-  *  @brief              sets WEP deafault key
--- 
-2.6.1
+It should not call nfc_put_device() because that happens after goto
+exit.
 
+  1065                  rc = -ENODEV;
+  1066                  goto exit;
+  1067          }
+
+regards,
+dan carpenter
