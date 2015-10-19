@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58336 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632AbbJ0J0v (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:34669 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbbJSNbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:26:51 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 18/27] staging: wilc1000: wilc_wlan_cleanup: add new argument struct net_device
-Date: Tue, 27 Oct 2015 18:27:54 +0900
-Message-ID: <1445938083-20445-18-git-send-email-glen.lee@atmel.com> (sfid-20151027_102653_677303_C30B72AB)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Mon, 19 Oct 2015 09:31:03 -0400
+Received: by oies66 with SMTP id s66so58213587oie.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 06:31:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5624B374.5080209@neratec.com>
+References: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com>
+	<5624B374.5080209@neratec.com>
+Date: Mon, 19 Oct 2015 06:31:01 -0700
+Message-ID: <CAJ+vNU2gWU5HcN9oy+T33sN-ufzDKS=_3n0BLM75Pr7=PbHhtw@mail.gmail.com> (sfid-20151019_153110_001556_4BB78060)
+Subject: Re: FCC DFS support
+From: Tim Harvey <tharvey@gateworks.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new function argument net_device and pass dev to the functions.
+On Mon, Oct 19, 2015 at 2:10 AM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> On 10/16/2015 06:53 PM, Tim Harvey wrote:
+>> Greetings,
+>>
+>> Is FCC DFS support (from the updated rules released in Aug 2014) fully
+>> supported in ath10k by the driver/firmware/cards?
+>>
+>> The linux-wireless DFS page [1] has some great info but doesn't really
+>> list what is currently in place and working and doesn't mention ath10k
+>> specifically and I didn't see anything on the ath10k page either [2].
+>>
+>> Thanks for any info!
+>>
+>> Regards,
+>>
+>> Tim
+>>
+>> [1] - https://wireless.wiki.kernel.org/en/developers/dfs
+>> [2] - https://wireless.wiki.kernel.org/en/users/drivers/ath10k
+>> --
+>>
+>
+> Hi Tim,
+>
+> you're right, unfortunately the DFS documentation in [1] is quite outdated -
+> basically in its initial state from 2011 when ath10k was unknown. It took around
+> four years to get the work done, and since numerous parties contributed at
+> different times and different modules (driver, mac/cfg, hostapd), the
+> documentation has not always been updated accordingly.
+>
+> But the more important fact is: yes, ath10 and ath9k today fully support FCC.
+>
+> We certified one of our ath9k based products for FCC and ETSI some months ago, and
+> I got confirmations that ath10k also passed certification testing for FCC.
+>
+> It is relevant to note that both drivers use the same radar pattern detector (and
+> all upper layers anyway), so that if ath9k passed, ath10k most probably will also
+> do (and vice versa).
+>
+>
+> Hth,
+> Zefir
+>
+>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Zefir,
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index bd9f715..d193af8 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -927,7 +927,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
- 		wilc_wlan_stop();
- 
- 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
--		wilc_wlan_cleanup();
-+		wilc_wlan_cleanup(dev);
- #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
-   #if defined(PLAT_ALLWINNER_A20) || defined(PLAT_ALLWINNER_A23) || defined(PLAT_ALLWINNER_A31)
- 		PRINT_D(INIT_DBG, "Disabling IRQ 2\n");
-@@ -1178,7 +1178,7 @@ _fail_irq_init_:
- #endif
- 		wlan_deinitialize_threads(dev);
- _fail_wilc_wlan_:
--		wilc_wlan_cleanup();
-+		wilc_wlan_cleanup(dev);
- _fail_locks_:
- 		wlan_deinit_locks(dev);
- 		PRINT_ER("WLAN Iinitialization FAILED\n");
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index babd941..7473742 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1647,7 +1647,7 @@ int wilc_wlan_stop(void)
- 	return ret;
- }
- 
--void wilc_wlan_cleanup(void)
-+void wilc_wlan_cleanup(struct net_device *dev)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	struct txq_entry_t *tqe;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 79b35e6..d0b2448 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -302,7 +302,7 @@ int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
- 			      wilc_tx_complete_func_t func);
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
- void wilc_handle_isr(void *wilc);
--void wilc_wlan_cleanup(void);
-+void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
- int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
--- 
-1.9.1
+Thank you for the information!
 
+Tim
