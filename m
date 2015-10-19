@@ -1,57 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:52845 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752365AbbJNLFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:05:02 -0400
-Subject: Re: [PATCH] bcma: mips: Allow build if COMPILE_TEST is enabled
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <201510132319.x2UV0LGD%fengguang.wu@intel.com>
- <561E1E69.3070108@osg.samsung.com> <87pp0hn2mf.fsf@kamboji.qca.qualcomm.com>
- <561E3481.4070008@osg.samsung.com> <87h9ltn23b.fsf@kamboji.qca.qualcomm.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-	linux-kernel@vger.kernel.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <561E36D8.1070100@osg.samsung.com> (sfid-20151014_130523_666614_19D14C6F)
-Date: Wed, 14 Oct 2015 13:04:56 +0200
+Received: from eusmtp01.atmel.com ([212.144.249.243]:26886 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbbJSBVW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Oct 2015 21:21:22 -0400
+Subject: Re: [PATCH V2] staging: wilc1000: wilc_msgqueue.c : remove the goto
+ ERRORHANDER
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1444802143-6298-1-git-send-email-tony.cho@atmel.com>
+ <20151014083221.GA25667@zed.strato> <561E17E7.2080407@atmel.com>
+ <20151017042826.GB11306@kroah.com>
+CC: Mike Rapoport <mike.rapoport@gmail.com>,
+	<devel@driverdev.osuosl.org>, <rachel.kim@atmel.com>,
+	<chris.park@atmel.com>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <5624457E.3060206@atmel.com> (sfid-20151019_032125_696437_4DFD6DA3)
+Date: Mon, 19 Oct 2015 10:21:02 +0900
 MIME-Version: 1.0
-In-Reply-To: <87h9ltn23b.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20151017042826.GB11306@kroah.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kale,
 
-On 10/14/2015 01:04 PM, Kalle Valo wrote:
-> Javier Martinez Canillas <javier@osg.samsung.com> writes:
-> 
->> On 10/14/2015 12:52 PM, Kalle Valo wrote:
->>> Javier Martinez Canillas <javier@osg.samsung.com> writes:
->>>
->>>> Thanks for reporting this issue. I only did a partial build with
->>>> make M=drivers/bcma but didn't think about implicit dependencies
->>>> on other drivers.
->>>>
->>>> I've posted this patch that should avoid this issue:
->>>> https://patchwork.kernel.org/patch/7391551/
->>>
->>> So this patch ("bcma: mips: Allow build if COMPILE_TEST is enabled")
->>> depend on that patch ("mtd: Make MTD_BCM47XXSFLASH to depend on MIPS"),
->>> right? So I cannot apply the bcma patch until the mtd patch is in my
->>> tree.
+
+On 2015년 10월 17일 13:28, Greg KH wrote:
+> On Wed, Oct 14, 2015 at 05:52:55PM +0900, Tony Cho wrote:
 >>
->> That's correct, sorry for not stating it explicitly.
-> 
-> Ok, I put the patch now to "Awaiting Upstream" state in patchwork and
-> will apply it once I have the mtd patch.
->
+>> On 2015년 10월 14일 17:32, Mike Rapoport wrote:
+>>> On Wed, Oct 14, 2015 at 02:55:43PM +0900, Tony Cho wrote:
+>>>> From: Leo Kim <leo.kim@atmel.com>
+>>>>
+>>>> This patch removes goto ERRORHANDER and the result variable in wilc_mq_send.
+>>>> Then, the error type is directly returned. If normal operation, freeing memory
+>>>> is not needed in this function.
+>>>> If an error occurs, returns an error after releasing the spin lock.
+>>>>
+>>>> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+>>>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+>>>> ---
+>>>> V2: add releasing spinlock before returnig an error when an error happens.
+>>>> ---
+>>>>   drivers/staging/wilc1000/wilc_msgqueue.c | 28 ++++++++++++----------------
+>>>>   1 file changed, 12 insertions(+), 16 deletions(-)
+>>>>
+>>>> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+>>>> index b13809a..4dfd476 100644
+>>>> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+>>>> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+>>>> @@ -56,35 +56,38 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+>>>>   int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+>>>>   			     const void *pvSendBuffer, u32 u32SendBufferSize)
+>>>>   {
+>>>> -	int result = 0;
+>>>>   	unsigned long flags;
+>>>>   	Message *pstrMessage = NULL;
+>>>>   	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+>>>>   		PRINT_ER("pHandle or pvSendBuffer is null\n");
+>>>> -		result = -EFAULT;
+>>>> -		goto ERRORHANDLER;
+>>>> +		return -EFAULT;
+>>>>   	}
+>>>>   	if (pHandle->bExiting) {
+>>>>   		PRINT_ER("pHandle fail\n");
+>>>> -		result = -EFAULT;
+>>>> -		goto ERRORHANDLER;
+>>>> +		return -EFAULT;
+>>>>   	}
+>>>>   	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+>>>>   	/* construct a new message */
+>>>>   	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+>>> You can make this allocation outisde the spinlock, then there won't be
+>>> need to release it if the allocation fails.
+>>>
+>>>> -	if (!pstrMessage)
+>>>> +
+>>>> +	if (!pstrMessage) {
+>>>> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+>>>>   		return -ENOMEM;
+>>>> +	}
+>>>> +
+>>>>   	pstrMessage->u32Length = u32SendBufferSize;
+>>>>   	pstrMessage->pstrNext = NULL;
+>>>>   	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+>>>>   					GFP_ATOMIC);
+>>>> +
+>>>>   	if (!pstrMessage->pvBuffer) {
+>>>> -		result = -ENOMEM;
+>>>> -		goto ERRORHANDLER;
+>>>> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+>>> You are still holding pHandle->hSem here. Moreover, all error paths
+>>> return while still holding pHandle->hSem.
+>> Can you explain to me what you mean for holding hsem here? Basically, this function cannot release
+>>
+>> the semaphore (of course, this synchronization mechanism will be changed, anyway) if errors happen.
+>>
+>> The thread will do his work when it is released without unexpected situations.
+>>
+>>> I'd suggest, that instead of trying to return immediately, you'd better
+>>> move error handling code to the end of the function and use goto and
+>>> several labels to do appropriate cleanups depending on when the error
+>>> was caught. E.g.
+>> I don't want to use goto statement as possible as I can. Do you
+>> concern semaphore uses in this function?
+> You should use a goto, it will make the error unwinding much easier and
+> is a very common pattern in Linux kernel code.  It will save you many
+> lines in this function, please do it that way instead.
 
-Great, thanks a lot for your help!
- 
-Best regards,
--- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+ok, I will do that,
+
+Thanks,
+
+Tony.
+
+>
+> thanks,
+>
+> greg k-h
+
