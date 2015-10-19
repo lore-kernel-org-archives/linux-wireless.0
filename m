@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26873 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:27839 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965235AbbJ2DDv (ORCPT
+	with ESMTP id S1752033AbbJSBc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:03:51 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 36/64] staging: wilc1000: host_interface.h: move local define variables
-Date: Thu, 29 Oct 2015 12:05:28 +0900
-Message-ID: <1446087956-19054-3-git-send-email-glen.lee@atmel.com> (sfid-20151029_040354_673820_B6349408)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+	Sun, 18 Oct 2015 21:32:28 -0400
+Subject: Re: [PATCH V2 01/40] staging: wilc1000: rename ssidLen of struct
+ join_bss_param
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+ <20151017045907.GA6504@kroah.com>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <5624481A.2050405@atmel.com> (sfid-20151019_033256_699866_AE297754)
+Date: Mon, 19 Oct 2015 10:32:10 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151017045907.GA6504@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch move local define variables to local define position.
- - ACTION
- - PROBE_REQ
- - PROBE_RESP
- - ACTION_FRM_IDX
- - PROBE_REQ_IDX
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+On 2015년 10월 17일 13:59, Greg KH wrote:
+> On Fri, Oct 16, 2015 at 01:37:31PM +0900, Tony Cho wrote:
+>> From: Leo Kim <leo.kim@atmel.com>
+>>
+>> This patch renames ssidLen of struct join_bss_param to ssid_len
+>> to avoid CamelCase naming convention.
+>>
+>> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+>> ---
+>>   drivers/staging/wilc1000/host_interface.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+> Doesn't apply, I missed that you sent this as v2, why did you do that?
+> What was wrong with v1?
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9595d48..2dfd7f0 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -10,8 +10,12 @@
- #define STATION_MODE	0x02
- #define GO_MODE		0x03
- #define CLIENT_MODE	0x04
-+#define ACTION		0xD0
-+#define PROBE_REQ	0x40
-+#define PROBE_RESP	0x50
- 
--
-+#define ACTION_FRM_IDX				0
-+#define PROBE_REQ_IDX				1
- #define MAX_NUM_STA				9
- #define ACTIVE_SCAN_TIME			10
- #define PASSIVE_SCAN_TIME			1200
-@@ -249,14 +253,6 @@ struct reg_frame {
- 	u8 reg_id;
- };
- 
--
--#define ACTION			0xD0
--#define PROBE_REQ		0x40
--#define PROBE_RESP		0x50
--#define ACTION_FRM_IDX		0
--#define PROBE_REQ_IDX		1
--
--
- enum p2p_listen_state {
- 	P2P_IDLE,
- 	P2P_LISTEN,
--- 
-1.9.1
+This series of V2 includes Dan's suggestion, we don't have to add one blank line between malloc and null check if-statement.
+
+In addition, some of global variables are declared as "static" because they are used in only one file so kbuild test robot indicated they had better be declared as "static".
+
+So, I sent the series of them as V2. I can find the V1 of this series are already accepted so I will later make separate patch for them.
+
+Thanks,
+
+Tony.
+
+> thanks,
+>
+> greg k-h
 
