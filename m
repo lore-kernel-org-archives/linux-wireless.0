@@ -1,96 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3401 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932170AbbJMKzE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24834 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753607AbbJSOmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:55:04 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 41/54] staging: wilc1000: rename pu8Head of struct beacon_attr
-Date: Tue, 13 Oct 2015 19:50:06 +0900
-Message-ID: <1444733419-17679-41-git-send-email-tony.cho@atmel.com> (sfid-20151013_125509_030214_D078FE7C)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	Mon, 19 Oct 2015 10:42:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <c_traja@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2 v2] ath10k: print firwmare stats specific to firmware version
+References: <1444812751-11103-1-git-send-email-c_traja@qti.qualcomm.com>
+Date: Mon, 19 Oct 2015 17:42:40 +0300
+In-Reply-To: <1444812751-11103-1-git-send-email-c_traja@qti.qualcomm.com> (c.
+	traja's message of "Wed, 14 Oct 2015 14:22:31 +0530")
+Message-ID: <87vba2gbrz.fsf@kamboji.qca.qualcomm.com> (sfid-20151019_164259_231174_67E624AF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+<c_traja@qti.qualcomm.com> writes:
 
-This patch renames pu8Head of struct beacon_attr to head to
-avoid CamelCase naming convention.
+> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+>
+> Currently printing fw stats in ath10k is common to all firmware versions.
+> Printing all the stats might lead to confusion because some of the stats
+> are firmware specific and when printed will have 0's.
+> Below patchset prints firmware stats specific to firmware.
+>
+> v2:
+>         > All the filtered functions moved to wmi.c
+>         > Added firmware stats support for 10.4 firmware.
+>
+> Manikanta (2):
+>   ath10k: Make fw stats prints specific to firmware version
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Applied this patch.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 70ba13f..dd07e11 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -134,7 +134,7 @@ struct beacon_attr {
- 	u32 interval;
- 	u32 dtim_period;
- 	u32 head_len;
--	u8 *pu8Head;
-+	u8 *head;
- 	u32 u32TailLen;
- 	u8 *pu8Tail;
- };
-@@ -2359,7 +2359,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 16) & 0xFF);
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 24) & 0xFF);
- 
--	memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Head, pstrSetBeaconParam->head_len);
-+	memcpy(pu8CurrByte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
- 	pu8CurrByte += pstrSetBeaconParam->head_len;
- 
- 	*pu8CurrByte++ = (pstrSetBeaconParam->u32TailLen & 0xFF);
-@@ -2378,7 +2378,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 
- ERRORHANDLER:
- 	kfree(strWID.val);
--	kfree(pstrSetBeaconParam->pu8Head);
-+	kfree(pstrSetBeaconParam->head);
- 	kfree(pstrSetBeaconParam->pu8Tail);
- }
- 
-@@ -4644,12 +4644,12 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
- 	pstrSetBeaconParam->interval = u32Interval;
- 	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
- 	pstrSetBeaconParam->head_len = u32HeadLen;
--	pstrSetBeaconParam->pu8Head = kmalloc(u32HeadLen, GFP_KERNEL);
--	if (pstrSetBeaconParam->pu8Head == NULL) {
-+	pstrSetBeaconParam->head = kmalloc(u32HeadLen, GFP_KERNEL);
-+	if (pstrSetBeaconParam->head == NULL) {
- 		s32Error = -ENOMEM;
- 		goto ERRORHANDLER;
- 	}
--	memcpy(pstrSetBeaconParam->pu8Head, pu8Head, u32HeadLen);
-+	memcpy(pstrSetBeaconParam->head, pu8Head, u32HeadLen);
- 	pstrSetBeaconParam->u32TailLen = u32TailLen;
- 
- 	if (u32TailLen > 0) {
-@@ -4669,8 +4669,8 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
- 
- ERRORHANDLER:
- 	if (s32Error) {
--		if (pstrSetBeaconParam->pu8Head != NULL)
--			kfree(pstrSetBeaconParam->pu8Head);
-+		if (pstrSetBeaconParam->head != NULL)
-+			kfree(pstrSetBeaconParam->head);
- 
- 		if (pstrSetBeaconParam->pu8Tail != NULL)
- 			kfree(pstrSetBeaconParam->pu8Tail);
+>   ath10k: add fw_stats support to 10.4 firmware
+
+Dropped this patch due to the bug I saw. Please resend once you have
+fixed that.
+
 -- 
-1.9.1
-
+Kalle Valo
