@@ -1,73 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5967 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755577AbbJ1HqK (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36422 "EHLO
+	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754044AbbJSStn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:46:10 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/12] staging: wilc1000: wilc_wlan_init: add argument struct net_device
-Date: Wed, 28 Oct 2015 16:48:23 +0900
-Message-ID: <1446018508-17889-7-git-send-email-glen.lee@atmel.com> (sfid-20151028_084624_269464_C530A57A)
-In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
-References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 19 Oct 2015 14:49:43 -0400
+Received: by qkca6 with SMTP id a6so13348759qkc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 11:49:42 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Denton Gentry <dgentry@google.com>,
+	Avery Pennarun <apenwarr@google.com>,
+	Marty Faltesek <mfaltesek@google.com>
+Subject: [PATCH] mwifiex: toggle carrier state in start_ap/stop_ap.
+Date: Mon, 19 Oct 2015 14:49:10 -0400
+Message-Id: <1445280550-13673-1-git-send-email-mfaltesek@google.com> (sfid-20151019_204946_729089_A5D7AD78)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds an argument dev and pass dev to the function.
+In uap mode the carrier is not enabled until after the first STA joins.
+The carrier triggers the bridge to start its state machine, and if STP
+is enabled, it takes 4 seconds as it transitions from disabled to
+forwarding. During this time the bridge drops all traffic, and the EAPOL
+handshake times out after 3 seconds, preventing stations from joining.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Follow the logic used in mac80211 and start the carrier in start_ap
+and disable it in stop_ap. This has a nice benefit of allowing the
+first station connection time to be reduced by up to 75% when STP is
+in use.
+
+Signed-off-by: Martin Faltesek <mfaltesek@google.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c  | 12 ++++++++++++
+ drivers/net/wireless/mwifiex/uap_event.c | 11 -----------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6b5f1c5..895eb60 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1096,7 +1096,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 495621f..275ce3c 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1765,6 +1765,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		return -1;
+ 	}
  
- 		linux_to_wlan(&nwi, wl);
- 
--		ret = wilc_wlan_init(&nwi);
-+		ret = wilc_wlan_init(dev, &nwi);
- 		if (ret < 0) {
- 			PRINT_ER("Initializing WILC_Wlan FAILED\n");
- 			ret = -EIO;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 03593b7..5a480a1 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1951,7 +1951,7 @@ _fail_:
- 	return chipid;
++	priv->media_connected = false;
++	if (netif_carrier_ok(priv->netdev))
++		netif_carrier_off(priv->netdev);
++	mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
++	mwifiex_clean_txrx(priv);
++	mwifiex_del_all_sta_list(priv);
++
+ 	return 0;
  }
  
--int wilc_wlan_init(wilc_wlan_inp_t *inp)
-+int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- {
+@@ -1863,6 +1870,11 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
+ 		return -1;
  
- 	int ret = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index be972af..139cc6d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -937,7 +937,7 @@ typedef enum {
- 	WID_MAX				= 0xFFFF
- } WID_T;
- 
--int wilc_wlan_init(wilc_wlan_inp_t *inp);
-+int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp);
- 
- void wilc_bus_set_max_speed(void);
- void wilc_bus_set_default_speed(void);
++	priv->media_connected = true;
++	if (!netif_carrier_ok(priv->netdev))
++		netif_carrier_on(priv->netdev);
++	mwifiex_wake_up_net_dev_queue(priv->netdev, priv->adapter);
++
+ 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
+ 	kfree(bss_cfg);
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index f4794cd..c5bb6ee 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -113,19 +113,8 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		mwifiex_del_sta_entry(priv, deauth_mac);
+ 		break;
+ 	case EVENT_UAP_BSS_IDLE:
+-		priv->media_connected = false;
+-		if (netif_carrier_ok(priv->netdev))
+-			netif_carrier_off(priv->netdev);
+-		mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+-
+-		mwifiex_clean_txrx(priv);
+-		mwifiex_del_all_sta_list(priv);
+ 		break;
+ 	case EVENT_UAP_BSS_ACTIVE:
+-		priv->media_connected = true;
+-		if (!netif_carrier_ok(priv->netdev))
+-			netif_carrier_on(priv->netdev);
+-		mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
+ 		break;
+ 	case EVENT_UAP_BSS_START:
+ 		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
 -- 
-1.9.1
+2.6.0.rc2.230.g3dd15c0
 
