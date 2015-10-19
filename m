@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39308 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751737AbbJSLx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 07:53:56 -0400
-Message-ID: <1445255633.3307.1.camel@sipsolutions.net> (sfid-20151019_135400_868984_DADA4352)
-Subject: Re: new regdb file format
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Oct 2015 13:53:53 +0200
-In-Reply-To: <CAB3XZEdwybRaKgjQJknVH=iJ+FcPkuh8fhSXaEM9noWdSz1TjA@mail.gmail.com> (sfid-20151019_135237_510478_78FDFDCD)
-References: <1444855924.3054.9.camel@sipsolutions.net>
-	 <1444856468.3054.17.camel@sipsolutions.net>
-	 <CAB3XZEdkpYrLXh1yTJCGA-ZGS0eRuqUhTwnD9WgZaw_g7UvioA@mail.gmail.com>
-	 <1445254283.3307.0.camel@sipsolutions.net>
-	 <CAB3XZEdwybRaKgjQJknVH=iJ+FcPkuh8fhSXaEM9noWdSz1TjA@mail.gmail.com>
-	 (sfid-20151019_135237_510478_78FDFDCD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47048 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416AbbJSPaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2015 11:30:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	RUC_Soft_Sec <rucsoftsec@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] orinoco_usb: return error in ezusb_probe when alloc_orinocodev fails
+Date: Mon, 19 Oct 2015 11:15:00 -0400
+Message-Id: <1445267700-21554-1-git-send-email-linville@tuxdriver.com> (sfid-20151019_173028_118538_1010A100)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-10-19 at 14:52 +0300, Eliad Peller wrote:
-> 
-> > Hm? Why would you want to do that, if you are allowed to use that 
-> > band?
-> > 
-> The spec seems to indicate the allowed channel set for each operating
-> class, and some channels are allowed only in some countries (tables
-> E-1 vs. E-2 in 802.11-2012 Annex E).
-> 
+The current code exits after alloc_orinocodev, but fails to change the
+return value to something that indicates the failure.  This patch
+changes the return value to -ENOMEM.
 
-But that's a different problem in a way - the regulatory database only
-tries to encode the legal restrictions, not the spec restrictions.
+https://bugzilla.kernel.org/show_bug.cgi?id=106181
 
-johannes
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/orinoco/orinoco_usb.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index 26a57d773d30..f2cd513d54b2 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1576,6 +1576,7 @@ static int ezusb_probe(struct usb_interface *interface,
+ 				ezusb_hard_reset, NULL);
+ 	if (!priv) {
+ 		err("Couldn't allocate orinocodev");
++		retval = -ENOMEM;
+ 		goto exit;
+ 	}
+ 
+-- 
+2.4.3
+
