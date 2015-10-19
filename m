@@ -1,117 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39090 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbJWMc2 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:32111 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbbJSCTy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 08:32:28 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 4/4] ath10k: remove shadow copy of CE descriptors for source ring
-Date: Fri, 23 Oct 2015 18:01:06 +0530
-Message-ID: <1445603466-14138-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151023_143233_537246_909A6664)
-In-Reply-To: <1445603466-14138-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445603466-14138-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Sun, 18 Oct 2015 22:19:54 -0400
+Subject: Re: [PATCH 03/16] staging: wilc1000: rename g_linux_wlan to wl
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1444823204-16736-1-git-send-email-tony.cho@atmel.com>
+ <1444823204-16736-3-git-send-email-tony.cho@atmel.com>
+ <20151017043349.GA23351@kroah.com>
+CC: <devel@driverdev.osuosl.org>, <rachel.kim@atmel.com>,
+	<chris.park@atmel.com>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <56245338.9010707@atmel.com> (sfid-20151019_041957_305671_9AC71467)
+Date: Mon, 19 Oct 2015 11:19:36 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151017043349.GA23351@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the messages from host to target, shadow copy of CE descriptors
-are maintained in source ring. Before writing actual CE descriptor,
-first shadow copy is filled and then it is copied to CE address space.
-To optimize in download path and to reduce d-cache pressure, removing
-shadow copy of CE descriptors. This will also reduce driver memory
-consumption by 33KB during on device probing.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  | 22 ----------------------
- drivers/net/wireless/ath/ath10k/ce.h  |  6 ------
- drivers/net/wireless/ath/ath10k/pci.c |  5 -----
- 3 files changed, 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 52021a9..edf3629 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -921,27 +921,6 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			src_ring->base_addr_ce_space_unaligned,
- 			CE_DESC_RING_ALIGN);
- 
--	/*
--	 * Also allocate a shadow src ring in regular
--	 * mem to use for faster access.
--	 */
--	src_ring->shadow_base_unaligned =
--		kmalloc((nentries * sizeof(struct ce_desc) +
--			 CE_DESC_RING_ALIGN), GFP_KERNEL);
--	if (!src_ring->shadow_base_unaligned) {
--		dma_free_coherent(ar->dev,
--				  (nentries * sizeof(struct ce_desc) +
--				   CE_DESC_RING_ALIGN),
--				  src_ring->base_addr_owner_space,
--				  src_ring->base_addr_ce_space);
--		kfree(src_ring);
--		return ERR_PTR(-ENOMEM);
--	}
--
--	src_ring->shadow_base = PTR_ALIGN(
--			src_ring->shadow_base_unaligned,
--			CE_DESC_RING_ALIGN);
--
- 	return src_ring;
- }
- 
-@@ -1120,7 +1099,6 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ar_pci->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
--		kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc) +
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 67f90ec..47b734c 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -100,12 +100,6 @@ struct ath10k_ce_ring {
- 
- 	/* CE address space */
- 	u32 base_addr_ce_space;
--	/*
--	 * Start of shadow copy of descriptors, within regular memory.
--	 * Aligned to descriptor-size boundary.
--	 */
--	void *shadow_base_unaligned;
--	struct ce_desc *shadow_base;
- 
- 	/* keep last */
- 	void *per_transfer_context[0];
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8100025..4a65385 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1594,7 +1594,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 	struct ath10k_pci *ar_pci;
- 	struct ath10k_ce_pipe *ce_pipe;
- 	struct ath10k_ce_ring *ce_ring;
--	struct ce_desc *ce_desc;
- 	struct sk_buff *skb;
- 	int i;
- 
-@@ -1609,10 +1608,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 	if (!pci_pipe->buf_sz)
- 		return;
- 
--	ce_desc = ce_ring->shadow_base;
--	if (WARN_ON(!ce_desc))
--		return;
--
- 	for (i = 0; i < ce_ring->nentries; i++) {
- 		skb = ce_ring->per_transfer_context[i];
- 		if (!skb)
--- 
-2.6.1
+On 2015년 10월 17일 13:33, Greg KH wrote:
+> On Wed, Oct 14, 2015 at 08:46:31PM +0900, Tony Cho wrote:
+>> This patch renames g_linux_wlan to wl.
+> Why?  What's wrong with g_linux_wlan?  You will need to delete this
+> entire variable soon anyway, might as well leave it alone until then.
+
+The reason why I rename it to the "wl" is that there first is 80 ending line over issue due to its length where I want to modify
+and also we will take our representative structure as "wl" in the future. As you expected, finally g_linux_wlan global variable will
+all be deleted by referring it from the private structure as it is introduced in another 13 series of patch.
+
+However, as you guided, I will leave it until all of patch is done.
+
+Thanks,
+
+Tony.
+
+> thanks,
+>
+> greg k-h
 
