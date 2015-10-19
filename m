@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:36354 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756717AbbJ2M3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:29:47 -0400
-Received: by pacfv9 with SMTP id fv9so41651467pac.3
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:46 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 03/12] staging: wilc1000: fix return type of host_int_del_station
-Date: Thu, 29 Oct 2015 21:29:19 +0900
-Message-Id: <1446121768-4953-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132949_871545_3FB90F68)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from bues.ch ([80.190.117.144]:33094 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753692AbbJSQNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2015 12:13:48 -0400
+Date: Mon, 19 Oct 2015 18:11:57 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Paul McQuade <paulmcquad@gmail.com>,
+	=?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
+	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
+	mike.looijmans@topic.nl, khoroshilov@ispras.ru, cengelma@gmx.at,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] net: wireless: b43: Statics are init to 0
+Message-ID: <20151019181157.7018b25c@wiggum> (sfid-20151019_181441_116334_07709121)
+In-Reply-To: <1445270543-2209-4-git-send-email-paulmcquad@gmail.com>
+References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+	<1445270543-2209-4-git-send-email-paulmcquad@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/a3tsOcnxoqCEKWZoSzYSI27"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_del_station from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+--Sig_/a3tsOcnxoqCEKWZoSzYSI27
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Mon, 19 Oct 2015 17:02:23 +0100
+Paul McQuade <paulmcquad@gmail.com> wrote:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b469962..be5e652 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4552,9 +4552,9 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
- 	return result;
- }
- 
--s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 36de990..9eb1b3b 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
-+int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
- 
- /*!
-  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
--- 
-2.6.1
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43=
+/phy_lp.c
+> index 058a9f2..086f0ba 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -2502,7 +2502,7 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
+>  {
+>  	struct ssb_bus *bus =3D dev->dev->sdev->bus;
+> =20
+> -	static const struct b206x_channel *chandata =3D NULL;
+> +	static const struct b206x_channel *chandata;
+>  	u32 crystal_freq =3D bus->chipco.pmu.crystalfreq * 1000;
+>  	u32 freqref, vco_freq, val1, val2, val3, timeout, timeoutref, count;
+>  	u16 old_comm15, scale;
 
+
+Why on earth is this static anyway? That seems really wrong here.
+The static should be removed (and the =3DNULL init be left in place.)
+
+
+--=20
+Michael
+
+--Sig_/a3tsOcnxoqCEKWZoSzYSI27
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWJRZNAAoJEPUyvh2QjYsOw/MP/3uHGnU6KBMDfkVFovLSFuQh
+FyySSsrlE1r3nyM1iqUF3c9AAoQjFqLD/7nBID20oXzbXxR14FcdJYxp+plS94f4
+GjyYseEgkphw0Rbn+xMnjFGaZqlzv4n1CaKs0A2TLaarAGU24wNyDiFnBWiQiwV2
+lwfYuS+X5lRQJf7d2DI5BtntYFf2BP3ez8ii4cok93o5/izhfMm+RK6yTpu/X9Q1
+cKgWi0bcerhjiBsOv/ICp8WkiSMtn/Y5yMCzE5cdf+LO155IYoSoNuNX/2jNnTpN
+6ND+w3xgZ7Gls9P3PqMimtRHPW07IE3TylUiy4NE2L6orVXgZn5C5XJQPKA+VZil
+Fmy/rQhXMU59t19xPDy0RCl5dNEPgIVEeDDm1vWccl+HtPfImwh4EpyWNaDqOV3B
+DKM3DNHASM0prtIkkNRrdkiXATGbW6uGdi43cEOKu+Lx3ZMqeJlDrrhrhc0LJWZP
+vP/1q3/2395BV55B6OC5DFqphYl1S8d7oXmEcVtzHKZ5NEC3INsyCmozKBw2qvy3
+2iz/n0Cz8Xw8C4pFOs3qMjEXAZHcQ7IJNrvm7SOJoUpAWX/ZOIcQevvRjFlSJLfN
+nP/cNFJncUqncQ8H67axWJc0hsWZM4vsXF7O5d7RJ2HC27M/T1VCn+qyGUp0Bjzy
+0bH+Uas85u44M2kv/Fjc
+=tYVm
+-----END PGP SIGNATURE-----
+
+--Sig_/a3tsOcnxoqCEKWZoSzYSI27--
