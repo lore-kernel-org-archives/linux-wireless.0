@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52394 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbbJPEjk (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:57741 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbbJSJkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:40 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 13/40] staging: wilc1000: rename variable hSemHostIFthrdEnd
-Date: Fri, 16 Oct 2015 13:37:43 +0900
-Message-ID: <1444970290-17609-13-git-send-email-tony.cho@atmel.com> (sfid-20151016_064656_248458_EC1BCCDD)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Mon, 19 Oct 2015 05:40:04 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] staging/wilc: fix Kconfig dependencies, second try
+Date: Mon, 19 Oct 2015 11:39:31 +0200
+Message-ID: <4253270.hGxaSY0VLA@wuerfel> (sfid-20151019_114024_219876_27731E3B)
+In-Reply-To: <5624A1AF.8080607@atmel.com>
+References: <5446980.8Rmykv9Tt3@wuerfel> <5624A1AF.8080607@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Monday 19 October 2015 16:54:23 Tony Cho wrote:
+> Hi Arnd Bergmann,
+> 
+> When I apply this patch, I cannot make WILC1000 module (wilc1000.ko) because CONFIG_WILC1000 is y and also I can see some link errors for the cfg80211 APIs.
+> 
+> Can you consider this patch?
 
-This patch renames variable hSemHostIFthrdEnd to hif_sema_thread
-to avoid CamelCase naming convention.
+Ah, you are right. I see the same thing now and don't know what caused me
+to send the patch in an incomplete state.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+I hope this snippet is the last missing piece:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bb770ab1..a587080 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -241,8 +241,7 @@ bool g_obtainingIP;
- u8 P2P_LISTEN_STATE;
- static struct task_struct *hif_thread_handler;
- static WILC_MsgQueueHandle hif_msg_q;
--static struct semaphore hSemHostIFthrdEnd;
--
-+static struct semaphore hif_sema_thread;
- struct semaphore hSemDeinitDrvHandle;
- static struct semaphore hWaitResponse;
- struct semaphore hSemHostIntDeinit;
-@@ -3123,7 +3122,7 @@ static int hostIFthread(void *pvArg)
- 	}
+diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
+index ee51b4278088..e3f109655be4 100644
+--- a/drivers/staging/wilc1000/Kconfig
++++ b/drivers/staging/wilc1000/Kconfig
+@@ -1,6 +1,7 @@
+ config WILC1000_DRIVER
+-	bool "WILC1000 support (WiFi only)"
++	tristate "WILC1000 support (WiFi only)"
+ 	depends on CFG80211 && WEXT_CORE && INET
++	depends on MMC || SPI
+ 	---help---
+ 	  This module only support IEEE 802.11n WiFi.
  
- 	PRINT_D(HOSTINF_DBG, "Releasing thread exit semaphore\n");
--	up(&hSemHostIFthrdEnd);
-+	up(&hif_sema_thread);
- 	return 0;
- }
+@@ -35,7 +36,7 @@ choice
  
-@@ -4250,7 +4249,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 
- 	PRINT_D(HOSTINF_DBG, "Global handle pointer value=%p\n", hif_drv);
- 	if (clients_count == 0)	{
--		sema_init(&hSemHostIFthrdEnd, 0);
-+		sema_init(&hif_sema_thread, 0);
- 		sema_init(&hSemDeinitDrvHandle, 0);
- 		sema_init(&hSemHostIntDeinit, 1);
- 	}
-@@ -4383,7 +4382,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		if (s32Error != 0)
- 			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", s32Error);
- 
--		down(&hSemHostIFthrdEnd);
-+		down(&hif_sema_thread);
- 
- 		wilc_mq_destroy(&hif_msg_q);
- 	}
--- 
-1.9.1
+ config WILC1000_SDIO
+ 	bool "SDIO support"
+-	depends on MMC
++	depends on MMC=y || (MMC=m && WILC1000_DRIVER=m)
+ 	select WILC1000
+ 	---help---
+ 	  This module adds support for the SDIO interface of adapters using
 
+I'll do a few hundred more randconfig builds with this on top and submit
+it once it succeeds.
+
+	Arnd
