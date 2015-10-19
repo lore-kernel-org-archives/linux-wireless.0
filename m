@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34942 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173AbbJEKfa (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:36447 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515AbbJSPK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:30 -0400
-Received: by pacfv12 with SMTP id fv12so177133329pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:29 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/20] staging: wilc1000: rename hWFIDrv in host_int_set_operation_mode
-Date: Mon,  5 Oct 2015 19:34:51 +0900
-Message-Id: <1444041304-7727-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123532_818946_F8308EBD)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 19 Oct 2015 11:10:57 -0400
+Date: Mon, 19 Oct 2015 18:10:45 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Subject: re: rtlwifi: rtl8723be: Add new driver
+Message-ID: <20151019151045.GA12293@mwanda> (sfid-20151019_171101_274783_077F841A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces hWFIDrv with wfi_drv that is first argument of
-host_int_set_operation_mode to avoid camelcase.
+Hello Larry Finger,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The patch a619d1abe20c: "rtlwifi: rtl8723be: Add new driver" from Feb
+28, 2014, leads to the following static checker warning:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7855b85..33563cc 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5384,7 +5384,7 @@ int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address)
- 	return result;
- }
- 
--int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
-+int host_int_set_operation_mode(tstrWILC_WFIDrv *wfi_drv, u32 u32mode)
- {
- 	int result = 0;
- 
-@@ -5396,7 +5396,7 @@ int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_OPERATION_MODE;
- 	msg.body.mode.u32Mode = u32mode;
--	msg.drvHandler = hWFIDrv;
-+	msg.drvHandler = wfi_drv;
- 
- 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (result) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index e9db06c..890644a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1187,7 +1187,7 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
-  *  @version	1.0
-  */
- int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *address);
--int host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
-+int host_int_set_operation_mode(tstrWILC_WFIDrv *wfi_drv, u32 u32mode);
- 
- static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent);
- 
--- 
-2.6.0
+	drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c:1802 _rtl8723be_read_power_value_fromprom()
+	warn: why is the last element skipped?
 
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+  1770          if (autoload_fail) {
+  1771                  RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+  1772                           "auto load fail : Use Default value!\n");
+  1773                  for (path = 0; path < MAX_RF_PATH; path++) {
+  1774                          /* 2.4G default value */
+  1775                          for (group = 0 ; group < MAX_CHNL_GROUP_24G; group++) {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here we go up to the end.
+
+  1776                                  pw2g->index_cck_base[path][group] = 0x2D;
+  1777                                  pw2g->index_bw40_base[path][group] = 0x2D;
+  1778                          }
+  1779                          for (cnt = 0; cnt < MAX_TX_COUNT; cnt++) {
+  1780                                  if (cnt == 0) {
+  1781                                          pw2g->bw20_diff[path][0] = 0x02;
+  1782                                          pw2g->ofdm_diff[path][0] = 0x04;
+  1783                                  } else {
+  1784                                          pw2g->bw20_diff[path][cnt] = 0xFE;
+  1785                                          pw2g->bw40_diff[path][cnt] = 0xFE;
+  1786                                          pw2g->cck_diff[path][cnt] = 0xFE;
+  1787                                          pw2g->ofdm_diff[path][cnt] = 0xFE;
+  1788                                  }
+  1789                          }
+  1790                  }
+  1791                  return;
+  1792          }
+  1793  
+  1794          for (path = 0; path < MAX_RF_PATH; path++) {
+  1795                  /*2.4G default value*/
+  1796                  for (group = 0; group < MAX_CHNL_GROUP_24G; group++) {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here we go to the end.
+
+  1797                          pw2g->index_cck_base[path][group] = hwinfo[addr++];
+  1798                          if (pw2g->index_cck_base[path][group] == 0xFF)
+  1799                                  pw2g->index_cck_base[path][group] = 0x2D;
+  1800  
+  1801                  }
+  1802                  for (group = 0; group < MAX_CHNL_GROUP_24G - 1; group++) {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here we skip the last element.  So far as I can see this looks like a
+mistake but I don't know the code well.
+
+  1803                          pw2g->index_bw40_base[path][group] = hwinfo[addr++];
+  1804                          if (pw2g->index_bw40_base[path][group] == 0xFF)
+  1805                                  pw2g->index_bw40_base[path][group] = 0x2D;
+  1806                  }
+
+
+regards,
+dan carpenter
