@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60417 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([46.140.151.2]:23128 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754034AbbJ2PQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 11:16:46 -0400
-Message-ID: <1446131804.15968.3.camel@redhat.com> (sfid-20151029_161650_215133_7C1829A3)
-Subject: Re: mwifiex problem: incompatible network settings
-From: Dan Williams <dcbw@redhat.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Julien Cubizolles <j.cubizolles@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Date: Thu, 29 Oct 2015 10:16:44 -0500
-In-Reply-To: <b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	 <87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
-	 <87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
-	 <87vb9qsmg1.fsf@free.fr>
-	 <b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753349AbbJSJKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2015 05:10:14 -0400
+Subject: Re: FCC DFS support
+To: Tim Harvey <tharvey@gateworks.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-ID: <5624B374.5080209@neratec.com> (sfid-20151019_111020_918220_CB19D7D6)
+Date: Mon, 19 Oct 2015 11:10:12 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-10-29 at 12:27 +0000, Amitkumar Karwar wrote:
-> Hi Julien,
+On 10/16/2015 06:53 PM, Tim Harvey wrote:
+> Greetings,
 > 
-> > From: Julien Cubizolles [mailto:j.cubizolles@free.fr]
-> > Sent: Thursday, October 29, 2015 3:09 AM
-> > To: Dan Williams
-> > Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org
-> > Subject: Re: mwifiex problem: incompatible network settings
-> > 
-> > Dan Williams <dcbw@redhat.com> writes:
-> > 
-> > > He actually meant the wpa_supplicant configuration file, not the
-> > > supplicant's dbus config file.  But when driven by NetworkManager,
-> > > there is no supplicant configuration file.
-> > 
-> > Sorry about that.
-> > 
-> > > Instead, you can find out what config NM is pushing to the supplicant
-> > > by checking the NetworkManager logs, where NM will log lines like:
-> > 
-> > Here are the relevant entries from the syslog file:
-> > 
-> > I included the failed attempt to connect to the WPA protected network
-> > named "southcentral" and the successful one to a non protected one named
-> > "FreeWifi".
-> > 
+> Is FCC DFS support (from the updated rules released in Aug 2014) fully
+> supported in ath10k by the driver/firmware/cards?
 > 
-> Thanks for the logs. I compared your network manager log with the one on my setup. Both are same. Basically network manager log doesn't show security info (WPA/WPA2, encryption mode etc). So we can't rely on that.
+> The linux-wireless DFS page [1] has some great info but doesn't really
+> list what is currently in place and working and doesn't mention ath10k
+> specifically and I didn't see anything on the ath10k page either [2].
+> 
+> Thanks for any info!
+> 
+> Regards,
+> 
+> Tim
+> 
+> [1] - https://wireless.wiki.kernel.org/en/developers/dfs
+> [2] - https://wireless.wiki.kernel.org/en/users/drivers/ath10k
+> --
+> 
 
-NetworkManager leaves the 'protos' field empty, which allows the
-supplicant to choose the correct WPA/WPA2 mode depending on driver
-support.  What you see in the NM logs is exactly what gets pushed to the
-supplicant in the network block.  So if you don't see "proto" or
-"pairwise" or "group" in the NM logs, then it doesn't get pushed to the
-supplicant, and the supplicant uses its default behavior, which should
-be:
+Hi Tim,
 
-proto=WPA RSN
-pairwise=CCMP TKIP
-group=CCMP TKIP WEP104 WEP40
+you're right, unfortunately the DFS documentation in [1] is quite outdated -
+basically in its initial state from 2011 when ath10k was unknown. It took around
+four years to get the work done, and since numerous parties contributed at
+different times and different modules (driver, mac/cfg, hostapd), the
+documentation has not always been updated accordingly.
 
-Dan
+But the more important fact is: yes, ath10 and ath9k today fully support FCC.
+
+We certified one of our ath9k based products for FCC and ETSI some months ago, and
+I got confirmations that ath10k also passed certification testing for FCC.
+
+It is relevant to note that both drivers use the same radar pattern detector (and
+all upper layers anyway), so that if ath9k passed, ath10k most probably will also
+do (and vice versa).
+
+
+Hth,
+Zefir
+
 
