@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34611 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbbJ0LlC (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:17249 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753778AbbJTIP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 07:41:02 -0400
-Received: by padhk11 with SMTP id hk11so220890268pad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 04:41:01 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/8] staging: wilc1000: replace kmalloc/memcpy with kmemdup
-Date: Tue, 27 Oct 2015 20:40:37 +0900
-Message-Id: <1445946039-10390-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151027_124106_282768_8042A12D)
-In-Reply-To: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 20 Oct 2015 04:15:28 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/13] staging: wilc1000: wilc_mgmt_frame_register: use netdev private wilc
+Date: Tue, 20 Oct 2015 17:14:01 +0900
+Message-ID: <1445328843-32247-11-git-send-email-tony.cho@atmel.com> (sfid-20151020_101536_867516_9BA3CE71)
+In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces kmalloc followed by memcpy with kmemdup.
-It is also added error checking of kmemdup.
+From: Glen Lee <glen.lee@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Use netdev private data member wilc instead of global variable g_linux_wlan.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f7dc61b..50362c4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3177,8 +3177,10 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY;
- 	msg.drv = hif_drv;
--	msg.body.key_info.attr.wep.key = kmalloc(len, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wep.key, key, len);
-+	msg.body.key_info.attr.wep.key = kmemdup(key, len, GFP_KERNEL);
-+	if (!msg.body.key_info.attr.wep.key)
-+		return -ENOMEM;
-+
- 	msg.body.key_info.attr.wep.key_len = len;
- 	msg.body.key_info.attr.wep.index = index;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index eea7f3b..59db1d5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2397,12 +2397,11 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
  
+ 	struct wilc_priv *priv;
+ 	perInterface_wlan_t *nic;
+-
++	struct wilc *wl;
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	nic = netdev_priv(priv->wdev->netdev);
+-
+-
++	wl = nic->wilc;
+ 
+ 	if (!frame_type)
+ 		return;
+@@ -2430,7 +2429,7 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	}
+ 	/*If mac is closed, then return*/
+-	if (!g_linux_wlan->initialized) {
++	if (!wl->initialized) {
+ 		PRINT_D(GENERIC_DBG, "Return since mac is closed\n");
+ 		return;
+ 	}
 -- 
-2.6.1
+1.9.1
 
