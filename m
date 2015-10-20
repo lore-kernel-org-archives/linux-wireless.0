@@ -1,143 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32406 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824AbbJVJML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:11 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 00/10] Add Intel FieldsPeak NFC solution driver
-Date: Thu, 22 Oct 2015 12:11:32 +0300
-Message-Id: <1445505102-16639-1-git-send-email-robert.dolca@intel.com> (sfid-20151022_113935_482293_D48898B0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35356 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbbJTScn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 14:32:43 -0400
+Received: by pagq8 with SMTP id q8so1676250pag.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 11:32:43 -0700 (PDT)
+From: manikanta.pubbisetty@gmail.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+Subject: [PATCH] ath10k: consolidate if statements in ath10k_wmi_event_mgmt_rx
+Date: Tue, 20 Oct 2015 11:32:46 +0530
+Message-Id: <1445320966-17024-1-git-send-email-manikanta.pubbisetty@gmail.com> (sfid-20151020_203246_623734_1DE6854E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add support for Intel's FieldsPeak NFC solution.
+From: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
 
-Fields Peak complies with the ISO/IEC 14443A/B, 15693, 18092,
-and JIS X 6319-4. It is an NCI based controller.
+This patch combines several if statements into a single if condition
+in WMI management rx handler. Found during code review.
 
-RF Protocols supported:
- - NFC Forum Type 1 Tags (Jewel, Topaz)
- - NFC Forum Type 2 Tags (Mifare UL)
- - NFC Forum Type 3 Tags (FeliCa)
- - NFC Forum Type 4A (ISO/IEC 14443 A-4 106kbps to 848kbps)
- - NFC Forum Type 4B (ISO/IEC 14443 B-4 106kbps to 848kbps)
- - NFCIP in passive and active modes (ISO/IEC 18092 106kbps to 424kbps)
- - B’ (based on ISO/IEC 14443 B-2)
- - iCLASS (based on ISO/IEC 15693-2)
- - Vicinity cards (ISO/IEC 15693-3)
- - Kovio tags (NFC Forum Type 2)
+Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
 
-The device can be enumerated using ACPI using the id INT339A.
-The 1st GPIO is the IRQ and the 2nd is the RESET pin.
-
-
-Changes since v3:
- - replace u32 with le32 where appropriate
- - make nci_prop_ops struct instances static
- - simplify return for fdp_nci_setup and fdp_nci_post_setup
- - change return type from u8 to int for nci_conn_max_data_pkt_payload_size
- - set FDP_NCI_I2C_MAX_PAYLOAD to 261 (255 + NCI header (3) + lrc(2) + size byte)
- - add sleep during patching to make sure that the NFCC processed the last data packet
- - patch droped "nfc: nci: Use a separate mutex for nci open and close"
- - patch droped "nfc: nci: Add a parameter to get the new connection id"
- - add patch "nfc: nci: fix possible crash in nci_core_conn_create"
- - add patch "nfc: nci: add nci_get_conn_info_by_id function"
- - add patch "nfc: nci: rename nci_prop_ops to nci_driver_ops"
- - edit "ecee665 nfc: nci: Allow the driver to set handler for core nci ops" to
-   add wrappers for core ops and prop ops in order to simplify the code
- - removed "atomic_t intercept;" from fdp_nci_info struct
- - make functions inline: fdp_nci_get_versions, fdp_nci_patch_cmd, fdp_nci_set_production_data
- - moved otp and ram patching to separate functions that are called from fdp_nci_post_setup
-
-Changes since v2:
- - rename reset gpio to power gpio because it really is a power switch
- - use named gpio for power with fallback to the indexed gpio 0
- - use device managed gpio for power
- - rely on the i2c subsystem to fill in the irq field of the i2c_client struct
- - remove the internal driver state (the nfc subsystem takes care of what
-   we need)
- - removed the power status field (not needed any more)
- - change i2c / device tree id name s/INT339A/int339a
- - make clock type and clock frequency configurable with device properties
-   (use defauls if not set)
- - firmware vendor specific commands configurable with device properties
-   (default none)
- - other small fixes
-
-Changes since v1:
- - removed .owner
- - made local functions static
- - droped "NFC: NCI: Adds NCI init and reset API for drivers"
- - replaced nfc_info with dev_dbg
- - make controller setup possible without OTP patch
- - retoved the commint that was adding nci_init/reset and using
-   the newly added functions nci_core_init/reset
- - fixed typo and use full controller name instead of abreviation in Kconfig
- - added more info about the controller in the commit message
- - moved NCI_OP_CORE_RESET_NTF, NCI_OP_CORE_GET_CONFIG_RSP and
-   NCI_OP_CORE_GET_CONFIG_CMD into the core header files
- - added MODULE_DEVICE_TABLE for ACPI
- - defined FDP_FW_UPDATE_DEST 0xC2
- - release the firmware buffers
- - settings the vendor configuration and clock on post setup
- - platform data enumerations removed (ACPI enumeration left)
- - packet reception intercept logic remove
- - nci: removed nci_send_cmd symbol export
- - nci: removed nci_request_driver and nci_req_complete_driver
- - removed mutex from driver (no need for it)
- - nci: check the setup return code before callig post_setup
- - nci: add function to allow sending core commands from driver
- - nci: Use a separate mutex for nci open and close
- - nci: mutex for: Adds a way to get the new connection ID
- - nci: Allow the driver to set handler for core nci ops
-
-
-Robert Dolca (10):
-  nfc: nci: Export nci data send API
-  nfc: nci: Add function to get max packet size for conn
-  nfc: nci: Introduce new core opcodes
-  nfc: nci: Do not call post_setup when setup fails
-  nfc: nci: Introduce nci_core_cmd
-  nfc: nci: Allow the driver to set handler for core nci ops
-  nfc: nci: rename nci_prop_ops to nci_driver_ops
-  nfc: nci: fix possible crash in nci_core_conn_create
-  nfc: nci: add nci_get_conn_info_by_id function
-  nfc: Add Intel Fields Peak NFC solution driver
-
- drivers/nfc/Kconfig        |   1 +
- drivers/nfc/Makefile       |   1 +
- drivers/nfc/fdp/Kconfig    |  23 ++
- drivers/nfc/fdp/Makefile   |   9 +
- drivers/nfc/fdp/fdp.c      | 817 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/nfc/fdp/fdp.h      |  38 +++
- drivers/nfc/fdp/i2c.c      | 388 +++++++++++++++++++++
- drivers/nfc/s3fwrn5/nci.c  |   4 +-
- drivers/nfc/st-nci/core.c  |   2 +-
- include/net/nfc/nci.h      |   7 +
- include/net/nfc/nci_core.h |  18 +-
- net/nfc/nci/core.c         | 120 +++++--
- net/nfc/nci/data.c         |  13 +
- net/nfc/nci/ntf.c          |   3 +-
- net/nfc/nci/rsp.c          |   1 +
- 15 files changed, 1409 insertions(+), 36 deletions(-)
- create mode 100644 drivers/nfc/fdp/Kconfig
- create mode 100644 drivers/nfc/fdp/Makefile
- create mode 100644 drivers/nfc/fdp/fdp.c
- create mode 100644 drivers/nfc/fdp/fdp.h
- create mode 100644 drivers/nfc/fdp/i2c.c
-
---
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6e7d7a7..a9d42ef 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2200,22 +2200,9 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
+ 		   "event mgmt rx status %08x\n", rx_status);
+ 
+-	if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags)) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
+-
+-	if (rx_status & WMI_RX_STATUS_ERR_DECRYPT) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
+-
+-	if (rx_status & WMI_RX_STATUS_ERR_KEY_CACHE_MISS) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
+-
+-	if (rx_status & WMI_RX_STATUS_ERR_CRC) {
++	if ((test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags)) ||
++	    (rx_stats & (WMI_RX_STATUS_ERR_DECRYPT |
++	    WMI_RX_STATUS_ERR_KEY_CACHE_MISS | WMI_RX_STATUS_ERR_CRC))) {
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+-- 
 1.9.1
 
