@@ -1,123 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2384 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbbJMKut (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33150 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbbJTGqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:50:49 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/54] staging: wilc1000: rename enuKeyType of struct key_attr
-Date: Tue, 13 Oct 2015 19:49:27 +0900
-Message-ID: <1444733419-17679-2-git-send-email-tony.cho@atmel.com> (sfid-20151013_125056_211882_6F75BB77)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 02:46:32 -0400
+Received: by lffv3 with SMTP id v3so713738lff.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:31 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 14/16] rtl8xxxu: Introduce a device agnostic constant for efuse map length
+Date: Tue, 20 Oct 2015 08:45:44 +0200
+Message-Id: <1445323546-12807-15-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084654_700603_1C957E64)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Preparatory step for adding support for RTL8188EU devices.
 
-This patch renames enuKeyType of struct key_attr to type to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 15b2770..aeb28a1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -90,7 +90,7 @@ union host_if_key_attr {
- };
- 
- struct key_attr {
--	enum KEY_TYPE enuKeyType;
-+	enum KEY_TYPE type;
- 	u8 u8KeyAction;
- 	union host_if_key_attr uniHostIFkeyAttr;
- };
-@@ -1778,7 +1778,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 	s8 s8idxarray[1];
- 	s8 ret = 0;
- 
--	switch (pstrHostIFkeyAttr->enuKeyType) {
-+	switch (pstrHostIFkeyAttr->type) {
- 
- 
- 	case WEP:
-@@ -3210,7 +3210,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WEP;
-+	msg.body.key_info.type = WEP;
- 	msg.body.key_info.u8KeyAction = REMOVEKEY;
- 	msg.drv = hif_drv;
- 	msg.body.key_info.uniHostIFkeyAttr.wep.index = index;
-@@ -3239,7 +3239,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
- 
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WEP;
-+	msg.body.key_info.type = WEP;
- 	msg.body.key_info.u8KeyAction = DEFAULTKEY;
- 	msg.drv = hif_drv;
- 
-@@ -3273,7 +3273,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WEP;
-+	msg.body.key_info.type = WEP;
- 	msg.body.key_info.u8KeyAction = ADDKEY;
- 	msg.drv = hif_drv;
- 
-@@ -3323,7 +3323,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", pu8WepKey[i]);
+Notes:
+    An alternative approach to keeping a buffer that is big enough to hold
+    the efuse map of any of the supported chips would be to allocate the
+    efuse map on-the-go to pass it between read_efuse() and parse_efuse().
+    
+    This would also reduce the memory footprint of struct rtl8xxxu_priv.
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++--
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 5 ++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index ecda799..cf3aad7 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1976,7 +1976,7 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
  	}
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WEP;
-+	msg.body.key_info.type = WEP;
- 	msg.body.key_info.u8KeyAction = ADDKEY_AP;
- 	msg.drv = hif_drv;
  
-@@ -3378,7 +3378,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	/* Default value is 0xff */
+-	memset(priv->efuse_wifi.raw, 0xff, EFUSE_MAP_LEN_8723A);
++	memset(priv->efuse_wifi.raw, 0xff, EFUSE_MAP_LEN);
  
+ 	efuse_addr = 0;
+ 	while (efuse_addr < efuse_len) {
+@@ -2008,7 +2008,7 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
  
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WPAPtk;
-+	msg.body.key_info.type = WPAPtk;
- 	if (mode == AP_MODE) {
- 		msg.body.key_info.u8KeyAction = ADDKEY_AP;
- 		msg.body.key_info.uniHostIFkeyAttr.wpa.u8keyidx = u8Idx;
-@@ -3461,7 +3461,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 		/* We have 8 bits to indicate validity */
+ 		map_addr = offset * 8;
+-		if (map_addr >= EFUSE_MAP_LEN_8723A) {
++		if (map_addr >= EFUSE_MAP_LEN) {
+ 			dev_warn(dev,
+ 				 "%s: Illegal map_addr (%04x), efuse corrupt!\n",
+ 				 __func__, map_addr);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 427eb7e..e55d843 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -59,6 +59,9 @@
+ #define EFUSE_MAX_SECTION_8723A		32
+ #define EFUSE_REAL_CONTENT_LEN_8723A	512
+ #define EFUSE_BT_MAP_LEN_8723A		1024
++
++/* One size fits all, that is use the highest value */
++#define EFUSE_MAP_LEN			EFUSE_MAP_LEN_8723A
+ #define EFUSE_MAX_WORD_UNIT		4
  
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = WPARxGtk;
-+	msg.body.key_info.type = WPARxGtk;
- 	msg.drv = hif_drv;
- 
- 	if (mode == AP_MODE) {
-@@ -3521,7 +3521,7 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_KEY;
--	msg.body.key_info.enuKeyType = PMKSA;
-+	msg.body.key_info.type = PMKSA;
- 	msg.body.key_info.u8KeyAction = ADDKEY;
- 	msg.drv = hif_drv;
- 
+ struct rtl8xxxu_rx_desc {
+@@ -649,7 +652,7 @@ struct rtl8xxxu_priv {
+ 		u8 val8;
+ 	} usb_buf;
+ 	union {
+-		u8 raw[EFUSE_MAP_LEN_8723A];
++		u8 raw[EFUSE_MAP_LEN];
+ 		struct rtl8723au_efuse efuse8723;
+ 		struct rtl8192cu_efuse efuse8192;
+ 	} efuse_wifi;
 -- 
-1.9.1
+2.1.0
 
