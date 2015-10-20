@@ -1,72 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6027 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932079AbbJOE0Z (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39302 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751822AbbJTPCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:26:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/40] staging: wilc1000: rename au8Interval of struct join_bss_param
-Date: Thu, 15 Oct 2015 13:24:49 +0900
-Message-ID: <1444883121-31757-8-git-send-email-tony.cho@atmel.com> (sfid-20151015_062634_087457_5A6D1B34)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 11:02:50 -0400
+Message-ID: <1445353351.2561.19.camel@decadent.org.uk> (sfid-20151020_170255_532774_1C61EFB9)
+Subject: Re: [PATCH] ath10k: add notice.txt references to WHENCE
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Tue, 20 Oct 2015 16:02:31 +0100
+In-Reply-To: <1445352802-18789-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1445352802-18789-1-git-send-email-kvalo@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-QHO6M1Iu4VBkzdKCbTc0"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames au8Interval of struct join_bss_param to interval
-to avoid CamelCase naming convention.
+--=-QHO6M1Iu4VBkzdKCbTc0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+On Tue, 2015-10-20 at 17:53 +0300, Kalle Valo wrote:
+> This is to make sure that the notice files get automatically included.
+>=20
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0c5cf08..5cbba1a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -225,7 +225,7 @@ struct join_bss_param {
- 	u8 cnt;
- 	u8 idx;
- 	u8 duration[4];
--	u8 au8Interval[4];
-+	u8 interval[4];
- 	u8 au8StartTime[4];
- };
- 
-@@ -1205,9 +1205,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->duration);
- 
--		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Interval, sizeof(ptstrJoinBssParam->au8Interval));
--
--		pu8CurrByte += sizeof(ptstrJoinBssParam->au8Interval);
-+		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
-+		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
- 
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
- 
-@@ -5002,7 +5001,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				memcpy(pNewJoinBssParam->duration, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
- 
--				memcpy(pNewJoinBssParam->au8Interval, pu8IEs + u16P2P_count, 4);
-+				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
- 
- 				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
--- 
-1.9.1
+While it isn't actually specified here, I expect the File: lines to
+refer to the firmware itself. =C2=A0Please put these references underneath
+the Licence: fields.
 
+Ben.
+
+> ---
+> =C2=A0WHENCE |=C2=A0=C2=A0=C2=A0=C2=A05 +++++
+> =C2=A01 file changed, 5 insertions(+)
+>=20
+> diff --git a/WHENCE b/WHENCE
+> index 9b7e8e8526aa..5cc01414e915 100755
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -2393,17 +2393,22 @@ Driver: ath10k - Qualcomm Atheros support for QCA=
+988x family of chips
+> =C2=A0File: ath10k/QCA988X/hw2.0/board.bin
+> =C2=A0File: ath10k/QCA988X/hw2.0/firmware-4.bin
+> =C2=A0Version: 10.2.4.45
+> +File: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-4.txt
+> =C2=A0File: ath10k/QCA988X/hw2.0/firmware-5.bin
+> =C2=A0Version: 10.2.4.70.9-2
+> +File: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt
+> =C2=A0File: ath10k/QCA6174/hw2.1/board.bin
+> =C2=A0File: ath10k/QCA6174/hw2.1/firmware-5.bin
+> =C2=A0Version: WLAN.RM.1.1-00141
+> +File: ath10k/QCA6174/hw2.1/notice_ath10k_firmware-5.txt
+> =C2=A0File: ath10k/QCA6174/hw3.0/board.bin
+> =C2=A0File: ath10k/QCA6174/hw3.0/firmware-4.bin
+> =C2=A0Version: WLAN.RM.2.0-00180-QCARMSWPZ-1
+> +File: ath10k/QCA6174/hw3.0/notice_ath10k_firmware-4.txt
+> =C2=A0File: ath10k/QCA99X0/hw2.0/board.bin
+> =C2=A0File: ath10k/QCA99X0/hw2.0/firmware-5.bin
+> =C2=A0Version: 10.4.1.00030-1
+> +File: ath10k/QCA99X0/hw2.0/notice_ath10k_firmware-5.txt
+> =C2=A0
+> =C2=A0Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for de=
+tails
+> =C2=A0
+--=20
+Ben Hutchings
+The first rule of tautology club is the first rule of tautology club.
+--=-QHO6M1Iu4VBkzdKCbTc0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAViZXh+e/yOyVhhEJAQo64hAAtSqSxpHDo5hQSeb1SeS4Msy3FTIUyA8m
+u9GLLd6FgLgTJPe0gOV2jkvtCRZJR4hutYWnv07FmqeGyLUPudGYtKnDj8gXu8pr
+sZ9CqyeSvZaJfEUGguCuWZ6zBcs2dA83/o1xt7XNj+63ZMYrdSIF/lNTEcGWtTPj
+4lZlZgKoEVKosb9WNYftP3BCU4J2ZYPKsSTRLwxkDqJPD0ukVFayeJHZOg96WSpn
+VDkrDhhfKZhF6ezLmYh4u7CefhI8gc2zfP5z01ydw/bqkYRJE++WCxZvQHYT8noy
+nNjy1w1h8V9Aa+TdtREDGg7wsZAJbsULjuqAmpHU/OQrhOFpaB8AsKv+eN+UTO+E
+T6X6GgOydW0Sg3+NNJlj6G2yZVf2w+FZBp6icyyL3m0oBwZDboTHlIxtaH+dXH53
+2l1BFMZV2OPg69CtVPsESXLpvy3+PDwtejNvCI2o/ZAW7BNAX/P0nPFWeRoECaCt
+mXSroQ4sz6X8I5I44P6ePTVZd/9BEkSQ77OWYBhzBDUhLKpz+WmEFsgQj7KR9ePi
+4t0rGwU+wTmBmBJtDlS7QMNhlFEPy7w9b5kkR9FSdIigtb/EvfiiS6OuzpgZmerF
+EEI6sxqP8U0lgctvh71VvwSOL91PoCX7qlBLwyMoFePWOTg7AFZDO8evEQzbtFCM
+VBT2Uu6xVNs=
+=dS/O
+-----END PGP SIGNATURE-----
+
+--=-QHO6M1Iu4VBkzdKCbTc0--
