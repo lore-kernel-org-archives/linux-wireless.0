@@ -1,96 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43216 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964895AbbJ1HFr (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:32878 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbbJTGqX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:05:47 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 65/80] staging: wilc1000: rename au8BSSID of struct add_sta_param
-Date: Wed, 28 Oct 2015 16:07:10 +0900
-Message-ID: <1446016045-32154-15-git-send-email-glen.lee@atmel.com> (sfid-20151028_080612_596370_99793C17)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 02:46:23 -0400
+Received: by lbbec13 with SMTP id ec13so5352093lbb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:22 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 07/16] rtl8xxxu: rtl8192cu: Introduce a pointer to efuse
+Date: Tue, 20 Oct 2015 08:45:37 +0200
+Message-Id: <1445323546-12807-8-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084650_736287_756E1655)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames au8BSSID of struct add_sta_param to bssid
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 29 ++++++++++++------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ff65b87..16aa2c9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2309,7 +2309,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	pu8CurrByte = pu8Buffer;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index a390d75..e1f8c62 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1823,50 +1823,51 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
  
- 	PRINT_D(HOSTINF_DBG, "Packing STA params\n");
--	memcpy(pu8CurrByte, pstrStationParam->au8BSSID, ETH_ALEN);
-+	memcpy(pu8CurrByte, pstrStationParam->bssid, ETH_ALEN);
- 	pu8CurrByte +=  ETH_ALEN;
+ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
++	struct rtl8192cu_efuse *efuse = &priv->efuse_wifi.efuse8192;
+ 	int i;
  
- 	*pu8CurrByte++ = pstrStationParam->u16AssocID & 0xFF;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4991d55..c102a5b 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -288,7 +288,7 @@ struct host_if_drv {
- };
+-	if (priv->efuse_wifi.efuse8192.rtl_id != cpu_to_le16(0x8129))
++	if (efuse->rtl_id != cpu_to_le16(0x8129))
+ 		return -EINVAL;
  
- struct add_sta_param {
--	u8 au8BSSID[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
- 	u16 u16AssocID;
- 	u8 u8NumRates;
- 	const u8 *pu8Rates;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 2fdf856..608bfe9 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3005,7 +3005,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 	nic = netdev_priv(dev);
+-	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8192.mac_addr);
++	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
  
- 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
--		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
-+		memcpy(strStaParams.bssid, mac, ETH_ALEN);
- 		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
- 		strStaParams.u16AssocID = params->aid;
- 		strStaParams.u8NumRates = params->supported_rates_len;
-@@ -3119,13 +3119,15 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 	nic = netdev_priv(dev);
+ 	memcpy(priv->cck_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8192.cck_tx_power_index_A,
++	       efuse->cck_tx_power_index_A,
+ 	       sizeof(priv->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8192.cck_tx_power_index_B,
++	       efuse->cck_tx_power_index_B,
+ 	       sizeof(priv->cck_tx_power_index_B));
  
- 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
--		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
-+		memcpy(strStaParams.bssid, mac, ETH_ALEN);
- 		strStaParams.u16AssocID = params->aid;
- 		strStaParams.u8NumRates = params->supported_rates_len;
- 		strStaParams.pu8Rates = params->supported_rates;
+ 	memcpy(priv->ht40_1s_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_A,
++	       efuse->ht40_1s_tx_power_index_A,
+ 	       sizeof(priv->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_B,
++	       efuse->ht40_1s_tx_power_index_B,
+ 	       sizeof(priv->ht40_1s_tx_power_index_B));
+ 	memcpy(priv->ht40_2s_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ht40_2s_tx_power_index_diff,
++	       efuse->ht40_2s_tx_power_index_diff,
+ 	       sizeof(priv->ht40_2s_tx_power_index_diff));
  
--		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n", strStaParams.au8BSSID[0], strStaParams.au8BSSID[1], strStaParams.au8BSSID[2], strStaParams.au8BSSID[3], strStaParams.au8BSSID[4],
--			strStaParams.au8BSSID[5]);
-+		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n",
-+			strStaParams.bssid[0], strStaParams.bssid[1],
-+			strStaParams.bssid[2], strStaParams.bssid[3],
-+			strStaParams.bssid[4], strStaParams.bssid[5]);
- 		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.u16AssocID);
- 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n", strStaParams.u8NumRates);
+ 	memcpy(priv->ht20_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ht20_tx_power_index_diff,
++	       efuse->ht20_tx_power_index_diff,
+ 	       sizeof(priv->ht20_tx_power_index_diff));
+ 	memcpy(priv->ofdm_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ofdm_tx_power_index_diff,
++	       efuse->ofdm_tx_power_index_diff,
+ 	       sizeof(priv->ofdm_tx_power_index_diff));
  
+ 	memcpy(priv->ht40_max_power_offset,
+-	       priv->efuse_wifi.efuse8192.ht40_max_power_offset,
++	       efuse->ht40_max_power_offset,
+ 	       sizeof(priv->ht40_max_power_offset));
+ 	memcpy(priv->ht20_max_power_offset,
+-	       priv->efuse_wifi.efuse8192.ht20_max_power_offset,
++	       efuse->ht20_max_power_offset,
+ 	       sizeof(priv->ht20_max_power_offset));
+ 
+ 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
+-		 priv->efuse_wifi.efuse8192.vendor_name);
++		 efuse->vendor_name);
+ 	dev_info(&priv->udev->dev, "Product: %.20s\n",
+-		 priv->efuse_wifi.efuse8192.device_name);
++		 efuse->device_name);
+ 
+-	if (priv->efuse_wifi.efuse8192.rf_regulatory & 0x20) {
++	if (efuse->rf_regulatory & 0x20) {
+ 		sprintf(priv->chip_name, "8188RU");
+ 		priv->hi_pa = 1;
+ 	}
 -- 
-1.9.1
+2.1.0
 
