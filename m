@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37448 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbbJZUI2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 16:08:28 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: jirislaby@gmail.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	sergei.shtylyov@cogentembedded.com, kvalo@codeaurora.org,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH v6 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
-Date: Tue, 27 Oct 2015 01:38:07 +0530
-Message-Id: <1445890087-6980-1-git-send-email-punitvara@gmail.com> (sfid-20151026_210835_335291_65AB33F4)
+Received: from mail.neratec.com ([46.140.151.2]:53807 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751789AbbJTJjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 05:39:36 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.neratec.com (Postfix) with ESMTP id 53BED8E3E25
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 11:39:35 +0200 (CEST)
+Received: from mail.neratec.com ([127.0.0.1])
+	by localhost (mail.neratec.com [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id jzsm6YO0gnE9 for <linux-wireless@vger.kernel.org>;
+	Tue, 20 Oct 2015 11:39:35 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.neratec.com (Postfix) with ESMTP id 374E68E3E31
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 11:39:35 +0200 (CEST)
+Received: from mail.neratec.com ([127.0.0.1])
+	by localhost (mail.neratec.com [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id F7ONGLUr6NN2 for <linux-wireless@vger.kernel.org>;
+	Tue, 20 Oct 2015 11:39:35 +0200 (CEST)
+Received: from [192.168.11.50] (CHD500279.neratec.local [192.168.11.50])
+	by mail.neratec.com (Postfix) with ESMTPSA id 1BBEA8E3E25
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 11:39:35 +0200 (CEST)
+Message-ID: <56260BD6.4020304@neratec.com> (sfid-20151020_113939_582531_A71579F3)
+Date: Tue, 20 Oct 2015 11:39:34 +0200
+From: Matthias May <matthias.may@neratec.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: hostapd mailinglist gone?
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the ath5k/eeprom.c that fixes up warning caught by
-coccicheck:
+Hi
+This might be the wrong mailing list.
+Is the hostapd mailinglist gone?
+It used to be at http://lists.shmoo.com/mailman/listinfo/hostap
+One is currently greeted with the message: "No such list hostap"
 
-Unneeded variable: "ret". Return "0" on line 980
-
-Remove unneeded variable ret created to return zero.
-
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
-Remove empty line suggested by Sergei
-
- drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 900e72a..94bcc08 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- {
--	int ret = 0;
--
- 	static const u32 cipher_suites[] = {
- 		WLAN_CIPHER_SUITE_WEP40,
- 		WLAN_CIPHER_SUITE_WEP104,
-@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
- 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
- 
--	return ret;
-+	return 0;
- }
- 
- static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
--- 
-2.5.3
+Best regards
+Matthias
 
