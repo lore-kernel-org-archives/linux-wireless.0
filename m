@@ -1,58 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52635 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:22921 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbbJPEky (ORCPT
+	with ESMTP id S1751194AbbJTF1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:40:54 -0400
+	Tue, 20 Oct 2015 01:27:50 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 26/40] staging: wilc1000: rename variable gu8DelBcn
-Date: Fri, 16 Oct 2015 13:37:56 +0900
-Message-ID: <1444970290-17609-26-git-send-email-tony.cho@atmel.com> (sfid-20151016_064657_017625_2F429326)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH V2 05/12] staging: wilc1000: rename aBSSID in the sturct wilc_vif
+Date: Tue, 20 Oct 2015 14:26:49 +0900
+Message-ID: <1445318816-21686-6-git-send-email-tony.cho@atmel.com> (sfid-20151020_072753_130995_8E78B4E3)
+In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch renames aBSSID in the struct wilc_vif to the bssid.
 
-This patch renames variable gu8DelBcn to del_beacon
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             | 14 +++++++-------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 +++---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ea3c011..9f5db14 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -259,7 +259,7 @@ static u8 ch_no;
- static u8 set_ip[2][4];
- static u8 get_ip[2][4];
- static u32 inactive_time;
--static u8 gu8DelBcn;
-+static u8 del_beacon;
- static u32 gu32WidConnRstHack;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 9d57962..493e02c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -367,8 +367,8 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+ 	Bssid1 = pMacHeader + 4;
  
- u8 *gu8FlushedJoinReq;
-@@ -2373,7 +2373,7 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
- 	strWID.id = (u16)WID_DEL_BEACON;
- 	strWID.type = WID_CHAR;
- 	strWID.size = sizeof(char);
--	strWID.val = &gu8DelBcn;
-+	strWID.val = &del_beacon;
+ 	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (!memcmp(Bssid1, g_linux_wlan->vif[i].aBSSID, ETH_ALEN) ||
+-		    !memcmp(Bssid, g_linux_wlan->vif[i].aBSSID, ETH_ALEN))
++		if (!memcmp(Bssid1, g_linux_wlan->vif[i].bssid, ETH_ALEN) ||
++		    !memcmp(Bssid, g_linux_wlan->vif[i].bssid, ETH_ALEN))
+ 			return g_linux_wlan->vif[i].wilc_netdev;
  
- 	if (strWID.val == NULL)
- 		return;
+ 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
+@@ -377,8 +377,8 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+ 	Bssid  = pMacHeader + 18;
+ 	Bssid1 = pMacHeader + 12;
+ 	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (!memcmp(Bssid1, g_linux_wlan->vif[i].aBSSID, ETH_ALEN) ||
+-		    !memcmp(Bssid, g_linux_wlan->vif[i].aBSSID, ETH_ALEN))
++		if (!memcmp(Bssid1, g_linux_wlan->vif[i].bssid, ETH_ALEN) ||
++		    !memcmp(Bssid, g_linux_wlan->vif[i].bssid, ETH_ALEN))
+ 			return g_linux_wlan->vif[i].wilc_netdev;
+ 
+ 	PRINT_INFO(INIT_DBG, "\n");
+@@ -392,7 +392,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
+ 
+ 	for (i = 0; i < g_linux_wlan->vif_num; i++)
+ 		if (g_linux_wlan->vif[i].wilc_netdev == wilc_netdev) {
+-			memcpy(g_linux_wlan->vif[i].aBSSID, pBSSID, 6);
++			memcpy(g_linux_wlan->vif[i].bssid, pBSSID, 6);
+ 			ret = 0;
+ 			break;
+ 		}
+@@ -408,7 +408,7 @@ int linux_wlan_get_num_conn_ifcs(void)
+ 	u8 ret_val = 0;
+ 
+ 	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (memcmp(g_linux_wlan->vif[i].aBSSID, null_bssid, 6))
++		if (memcmp(g_linux_wlan->vif[i].bssid, null_bssid, 6))
+ 			ret_val++;
+ 
+ 	return ret_val;
+@@ -1472,7 +1472,7 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
+ 	nic->netstats.tx_packets++;
+ 	nic->netstats.tx_bytes += tx_data->size;
+-	tx_data->pBssid = g_linux_wlan->vif[nic->u8IfIdx].aBSSID;
++	tx_data->pBssid = g_linux_wlan->vif[nic->u8IfIdx].bssid;
+ 	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
+ 					       tx_data->size,
+ 					       linux_wlan_tx_complete);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b39ea18..c166d3f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2572,7 +2572,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		nic->iftype = STATION_MODE;
+ 
+ 		if (g_linux_wlan->initialized) {
+-			host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].aBSSID, TID);
++			host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].bssid, TID);
+ 			/* ensure that the message Q is empty */
+ 			host_int_wait_msg_queue_idle();
+ 
+@@ -2648,7 +2648,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		connecting = 0;
+ 		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_P2P_CLIENT\n");
+ 
+-		host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].aBSSID, TID);
++		host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].bssid, TID);
+ 
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+@@ -2760,7 +2760,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		/*sent before downloading new FW. This is because it blocks on*/
+ 		/*hWaitResponse semaphore, which allows previous config*/
+ 		/*packets to actually take action on old FW*/
+-		host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].aBSSID, TID);
++		host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->vif[0].bssid, TID);
+ 		bEnablePS = false;
+ 		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_GO\n");
+ 		dev->ieee80211_ptr->iftype = type;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3089129..6ac9328 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -150,7 +150,7 @@ typedef struct {
+ 
+ struct wilc_vif {
+ 	u8 src_addr[ETH_ALEN];
+-	u8 aBSSID[ETH_ALEN];
++	u8 bssid[ETH_ALEN];
+ 	struct host_if_drv *drvHandler;
+ 	struct net_device *wilc_netdev;
+ };
 -- 
 1.9.1
 
