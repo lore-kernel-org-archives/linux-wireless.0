@@ -1,106 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43334 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964976AbbJ1HGY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:06:24 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 71/80] staging: wilc1000: rename u8AmpduParams of struct add_sta_param
-Date: Wed, 28 Oct 2015 16:07:16 +0900
-Message-ID: <1446016045-32154-21-git-send-email-glen.lee@atmel.com> (sfid-20151028_080629_806472_408DEAB5)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:44829 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753501AbbJTIPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 04:15:05 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] mac80211: move beacon_loss_count into ifmgd
+Date: Tue, 20 Oct 2015 10:14:57 +0200
+Message-Id: <1445328898-26849-2-git-send-email-johannes@sipsolutions.net> (sfid-20151020_101547_993805_5F76E3A4)
+In-Reply-To: <1445328898-26849-1-git-send-email-johannes@sipsolutions.net>
+References: <1445328898-26849-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames u8AmpduParams of struct add_sta_param to ht_ampdu_params
-to avoid CamelCase naming convention.
+There's little point in keeping (and even sending to userspace)
+the beacon_loss_count value per station, since it can only apply
+to the AP on a managed-mode connection. Move the value to ifmgd,
+advertise it only in managed mode, and remove it from ethtool as
+it's available through better interfaces.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ net/mac80211/ethtool.c     |  3 +--
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/mlme.c        | 10 ++--------
+ net/mac80211/sta_info.c    |  9 ++++++---
+ net/mac80211/sta_info.h    |  1 -
+ 5 files changed, 12 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2e17db5..6f4dd85 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2325,7 +2325,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	*pu8CurrByte++ = pstrStationParam->ht_capa_info & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->ht_capa_info >> 8) & 0xFF;
+diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
+index 188faab11c24..3fbf9c308ec5 100644
+--- a/net/mac80211/ethtool.c
++++ b/net/mac80211/ethtool.c
+@@ -40,7 +40,7 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
+ 	"rx_duplicates", "rx_fragments", "rx_dropped",
+ 	"tx_packets", "tx_bytes",
+ 	"tx_filtered", "tx_retry_failed", "tx_retries",
+-	"beacon_loss", "sta_state", "txrate", "rxrate", "signal",
++	"sta_state", "txrate", "rxrate", "signal",
+ 	"channel", "noise", "ch_time", "ch_time_busy",
+ 	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
+ };
+@@ -90,7 +90,6 @@ static void ieee80211_get_stats(struct net_device *dev,
+ 		data[i++] += sta->tx_filtered_count;	\
+ 		data[i++] += sta->tx_retry_failed;	\
+ 		data[i++] += sta->tx_retry_count;	\
+-		data[i++] += sta->beacon_loss_count;	\
+ 	} while (0)
  
--	*pu8CurrByte++ = pstrStationParam->u8AmpduParams;
-+	*pu8CurrByte++ = pstrStationParam->ht_ampdu_params;
- 	memcpy(pu8CurrByte, pstrStationParam->au8SuppMCsSet, WILC_SUPP_MCS_SET_SIZE);
- 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
+ 	/* For Managed stations, find the single station based on BSSID
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 056d3721148c..62f2a97cd2a6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -503,6 +503,9 @@ struct ieee80211_if_managed {
+ 	 */
+ 	unsigned int count_beacon_signal;
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 09a67ab..d2567af 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -294,7 +294,7 @@ struct add_sta_param {
- 	const u8 *rates;
- 	bool ht_supported;
- 	u16 ht_capa_info;
--	u8 u8AmpduParams;
-+	u8 ht_ampdu_params;
- 	u8 au8SuppMCsSet[16];
- 	u16 u16HTExtParams;
- 	u32 u32TxBeamformingCap;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c597659..9fcdf9e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3024,7 +3024,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 		} else {
- 			strStaParams.ht_supported = true;
- 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
--			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
-+			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
- 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-@@ -3038,7 +3038,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_supported);
- 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
- 			strStaParams.ht_capa_info);
--		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
-+		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
-+			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
-@@ -3140,7 +3141,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 		} else {
- 			strStaParams.ht_supported = true;
- 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
--			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
-+			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
- 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-@@ -3155,7 +3156,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_supported);
- 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
- 			strStaParams.ht_capa_info);
--		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
-+		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
-+			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
++	/* Number of times beacon loss was invoked. */
++	unsigned int beacon_loss_count;
++
+ 	/*
+ 	 * Last Beacon frame signal strength average (ave_beacon_signal / 16)
+ 	 * that triggered a cqm event. 0 indicates that no event has been
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6158db06a5b5..ded4b976bb48 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2420,15 +2420,9 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     u.mgd.beacon_connection_loss_work);
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	struct sta_info *sta;
+ 
+-	if (ifmgd->associated) {
+-		rcu_read_lock();
+-		sta = sta_info_get(sdata, ifmgd->bssid);
+-		if (sta)
+-			sta->beacon_loss_count++;
+-		rcu_read_unlock();
+-	}
++	if (ifmgd->associated)
++		ifmgd->beacon_loss_count++;
+ 
+ 	if (ifmgd->connection_loss) {
+ 		sdata_info(sdata, "Connection to AP %pM lost\n",
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 7f2c4f2acadf..0b8dd1cca6d8 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1871,8 +1871,12 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			 BIT(NL80211_STA_INFO_STA_FLAGS) |
+ 			 BIT(NL80211_STA_INFO_BSS_PARAM) |
+ 			 BIT(NL80211_STA_INFO_CONNECTED_TIME) |
+-			 BIT(NL80211_STA_INFO_RX_DROP_MISC) |
+-			 BIT(NL80211_STA_INFO_BEACON_LOSS);
++			 BIT(NL80211_STA_INFO_RX_DROP_MISC);
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		sinfo->beacon_loss_count = sdata->u.mgd.beacon_loss_count;
++		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_LOSS);
++	}
+ 
+ 	sinfo->connected_time = ktime_get_seconds() - sta->last_connected;
+ 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+@@ -1914,7 +1918,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	}
+ 
+ 	sinfo->rx_dropped_misc = sta->rx_dropped;
+-	sinfo->beacon_loss_count = sta->beacon_loss_count;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    !(sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)) {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 7bb5781b4ce2..3a401d40c329 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -508,7 +508,6 @@ struct sta_info {
+ 	enum ieee80211_sta_rx_bandwidth cur_max_bandwidth;
+ 
+ 	unsigned int lost_packets;
+-	unsigned int beacon_loss_count;
+ 
+ 	enum ieee80211_smps_mode known_smps_mode;
+ 	const struct ieee80211_cipher_scheme *cipher_scheme;
 -- 
-1.9.1
+2.5.1
 
