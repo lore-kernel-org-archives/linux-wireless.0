@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38715 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752556AbbJON7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:59:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mout.kundenserver.de ([212.227.17.10]:61422 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398AbbJTWsP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 18:48:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/12] cfg80211: reg: reduce chan_reg_rule_print_dbg() ifdef
-Date: Thu, 15 Oct 2015 15:58:22 +0200
-Message-Id: <1444917503-19118-11-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155907_883996_7C346A8F)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 05/19] staging/wilc1000: use NO_SECURITY instead of NO_ENCRYPT
+Date: Wed, 21 Oct 2015 00:47:24 +0200
+Message-Id: <1445381258-1455986-6-git-send-email-arnd@arndb.de> (sfid-20151021_005138_094972_8920EAD5)
+In-Reply-To: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The linux_wlan.c file uses a set of enums from wilc_wlan_if.h,
+with the exception of the NO_ENCRYPT that comes from
+wilc_wfi_cfgoperations.h. The two sets of enums clearly have
+the same intention but are defined a bit different.
 
-The function is void and static, so just ifdef its contents
-instead of duplicating the declaration.
+To prepare to clean up the ones in wilc_wfi_cfgoperations.h, this
+first changes over the only other user.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- net/wireless/reg.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 724b7a90e931..ef327236e0f0 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1130,11 +1130,11 @@ const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
- }
- EXPORT_SYMBOL(reg_initiator_name);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 50477d70eb24..d3cc255cd91b 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -701,7 +701,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	if (!wilc_wlan_cfg_set(0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--#ifdef CONFIG_CFG80211_REG_DEBUG
- static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
- 				    struct ieee80211_channel *chan,
- 				    const struct ieee80211_reg_rule *reg_rule)
- {
-+#ifdef CONFIG_CFG80211_REG_DEBUG
- 	const struct ieee80211_power_rule *power_rule;
- 	const struct ieee80211_freq_range *freq_range;
- 	char max_antenna_gain[32], bw[32];
-@@ -1163,15 +1163,8 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
- 		      freq_range->start_freq_khz, freq_range->end_freq_khz,
- 		      bw, max_antenna_gain,
- 		      power_rule->max_eirp);
--}
--#else
--static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
--				    struct ieee80211_channel *chan,
--				    const struct ieee80211_reg_rule *reg_rule)
--{
--	return;
--}
- #endif
-+}
+-	c_val[0] = NO_ENCRYPT; /* NO_ENCRYPT, 0x79 */
++	c_val[0] = NO_SECURITY; /* NO_ENCRYPT, 0x79 */
+ 	if (!wilc_wlan_cfg_set(0, WID_11I_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- /*
-  * Note that right now we assume the desired channel bandwidth
 -- 
-2.5.1
+2.1.0.rc2
 
