@@ -1,89 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47535 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755254AbbJHJZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 05:25:40 -0400
-Message-ID: <1444296337.2131.9.camel@sipsolutions.net> (sfid-20151008_112551_922725_D52918B1)
-Subject: Re: [PATCH] mac80211:  Take bitrates into account when building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Thu, 08 Oct 2015 11:25:37 +0200
-In-Reply-To: <1442610145-8759-1-git-send-email-greearb@candelatech.com>
-References: <1442610145-8759-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:16871 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753443AbbJTIOY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 04:14:24 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/13] staging: wilc1000: wilc1000_wlan_init: use netdev private wilc
+Date: Tue, 20 Oct 2015 17:13:52 +0900
+Message-ID: <1445328843-32247-2-git-send-email-tony.cho@atmel.com> (sfid-20151020_101429_104139_BC7C405B)
+In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-18 at 14:02 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> If a user restricts the rateset for some reason, then the
-> probe requests should not advertise rates that are not
-> selected by the user.
-> 
-> To implement this, we save the requested bitrates at
-> the mac80211 level and take it into account when building
-> the IEs.
-> 
-> This allows one to create a more realistic /b mode
-> station on modern hardware, for instance.  Good for
-> testing, and likely good for other things as well.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  include/net/mac80211.h     |  4 ++
->  net/mac80211/cfg.c         |  3 ++
->  net/mac80211/ieee80211_i.h | 15 ++++++-
->  net/mac80211/scan.c        | 26 ++++++++++++-
->  net/mac80211/util.c        | 97 ++++++++++++++++++++++++++++++++++++++++++----
->  5 files changed, 135 insertions(+), 10 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index d52914b..be069bd 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1838,10 +1838,14 @@ struct ieee80211_hw {
->   * struct ieee80211_scan_request - hw scan request
->   *
->   * @ies: pointers different parts of IEs (in req.ie)
-> + * @disable_ht: Ensure nothing related to HT is in the probe request?
-> + * @disable_vht: Ensure nothing related to VHT is in the probe request?
+From: Glen Lee <glen.lee@atmel.com>
 
-what's with the question marks? :)
+This patch use netdev private data member wilc instead of global variable
+g_linux_wlan.
 
-I don't really see why it should be in this struct - the driver
-shouldn't have to access it even for hardware scan?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-> +++ b/net/mac80211/cfg.c
-> @@ -2466,6 +2466,9 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
->  > 	> if (!ieee80211_sdata_running(sdata))
->  > 	> 	> return -ENETDOWN;
->  
-> +> 	> memcpy(&sdata->cfg_bitrate_mask, mask, sizeof(*mask));
-> +> 	> sdata->cfg_bitrate_mask_set = true;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8fa6b7c..39341a8 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1027,14 +1027,15 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 	wilc_wlan_inp_t nwi;
+ 	perInterface_wlan_t *nic = p_nic;
+ 	int ret = 0;
++	struct wilc *wl = nic->wilc;
+ 
+-	if (!g_linux_wlan->initialized) {
+-		g_linux_wlan->mac_status = WILC_MAC_STATUS_INIT;
+-		g_linux_wlan->close = 0;
++	if (!wl->initialized) {
++		wl->mac_status = WILC_MAC_STATUS_INIT;
++		wl->close = 0;
+ 
+-		wlan_init_locks(g_linux_wlan);
++		wlan_init_locks(wl);
+ 
+-		linux_to_wlan(&nwi, g_linux_wlan);
++		linux_to_wlan(&nwi, wl);
+ 
+ 		ret = wilc_wlan_init(&nwi);
+ 		if (ret < 0) {
+@@ -1044,7 +1045,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ 
+ #if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+-		if (init_irq(g_linux_wlan)) {
++		if (init_irq(wl)) {
+ 			PRINT_ER("couldn't initialize IRQ\n");
+ 			ret = -EIO;
+ 			goto _fail_locks_;
+@@ -1073,7 +1074,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ 
+ 		/*Download firmware*/
+-		ret = linux_wlan_firmware_download(g_linux_wlan);
++		ret = linux_wlan_firmware_download(wl);
+ 		if (ret < 0) {
+ 			PRINT_ER("Failed to download firmware\n");
+ 			ret = -EIO;
+@@ -1101,7 +1102,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 			PRINT_D(INIT_DBG, "***** Firmware Ver = %s  *******\n", Firmware_ver);
+ 		}
+ 		/* Initialize firmware with default configuration */
+-		ret = linux_wlan_init_test_config(dev, g_linux_wlan);
++		ret = linux_wlan_init_test_config(dev, wl);
+ 
+ 		if (ret < 0) {
+ 			PRINT_ER("Failed to configure firmware\n");
+@@ -1109,7 +1110,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 			goto _fail_fw_start_;
+ 		}
+ 
+-		g_linux_wlan->initialized = true;
++		wl->initialized = true;
+ 		return 0; /*success*/
+ 
+ _fail_fw_start_:
+@@ -1121,14 +1122,14 @@ _fail_irq_enable_:
+ _fail_irq_init_:
+ #endif
+ #if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+-		deinit_irq(g_linux_wlan);
++		deinit_irq(wl);
+ 
+ #endif
+-		wlan_deinitialize_threads(g_linux_wlan);
++		wlan_deinitialize_threads(wl);
+ _fail_wilc_wlan_:
+ 		wilc_wlan_cleanup();
+ _fail_locks_:
+-		wlan_deinit_locks(g_linux_wlan);
++		wlan_deinit_locks(wl);
+ 		PRINT_ER("WLAN Iinitialization FAILED\n");
+ 	} else {
+ 		PRINT_D(INIT_DBG, "wilc1000 already initialized\n");
+-- 
+1.9.1
 
-
-I'm not entirely convinced of this ...
-
-The documentation for @NL80211_CMD_SET_TX_BITRATE_MASK doesn't really
-state this - it clearly states it's for TX only. Settings it up this
-way now might be rather confusing.
-
-Consider P2P for example, the bitrate mask might be set w/o CCK, but
-perhaps other networks can be found?
-
-> +> 	> /* Store bitrate mask configured from user-space */
-> +> 	> struct cfg80211_bitrate_mask cfg_bitrate_mask;
-> +> 	> bool cfg_bitrate_mask_set; /* Has user set the mask? */
-
-I'm also not really happy with such stateful API in general. If you set
-this, and forget to reset it ...
-
-Obviously that's already the case for the TX bitrates, but it's
-typically used in pretty restricted situations.
-
-Perhaps, for the use case you're considering, it would make more sense
-to be able to in general change the device capabilities in some way?
-
-johannes
