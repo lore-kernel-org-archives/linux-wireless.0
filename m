@@ -1,118 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48695 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbbJAKu4 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:60979 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbbJTWsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 06:50:56 -0400
-Subject: [PATCH 2/6] ath10k: indentation fixes
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 01 Oct 2015 13:50:52 +0300
-Message-ID: <20151001105052.8770.86388.stgit@potku.adurom.net> (sfid-20151001_125058_878634_87B56BA5)
-In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
-References: <20151001105001.8770.96252.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 20 Oct 2015 18:48:10 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless@vger.kernel.org
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 09/19] staging/wilc1000: move init/exit functions to driver files
+Date: Wed, 21 Oct 2015 00:47:28 +0200
+Message-Id: <1445381258-1455986-10-git-send-email-arnd@arndb.de> (sfid-20151021_005616_811598_4D901B0D)
+In-Reply-To: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-checkpatch found:
+The driver interfaces are in linux_wlan_sdio.c and linux_wlan_spi.c, so
+this is where the init and exit functions should be. Splitting this up
+enables further cleanups, including eventually allowing both modules
+to be built together.
 
-drivers/net/wireless/ath/ath10k/core.c:513: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/core.c:1266: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:1267: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:1268: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:1269: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/mac.c:4659: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/mac.c:6271: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/pci.c:2260: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/wmi.c:3510: Alignment should match open parenthesis
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath10k/core.c |   10 +++++-----
- drivers/net/wireless/ath/ath10k/mac.c  |    6 +++---
- drivers/net/wireless/ath/ath10k/pci.c  |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.c  |    2 +-
- 4 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c      | 49 +++++++-----------------------
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 14 +++++++++
+ drivers/staging/wilc1000/linux_wlan_spi.c  | 16 ++++++++++
+ drivers/staging/wilc1000/wilc_wlan.h       |  4 +++
+ 4 files changed, 45 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 87ad2e998a94..12fef599debe 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -510,7 +510,7 @@ static int ath10k_download_fw(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 		data_len = ar->firmware_len;
- 		mode_name = "normal";
- 		ret = ath10k_swap_code_seg_configure(ar,
--				ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW);
-+						     ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW);
- 		if (ret) {
- 			ath10k_err(ar, "failed to configure fw code swap: %d\n",
- 				   ret);
-@@ -1263,10 +1263,10 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 		goto err;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 53cecb892a84..caa85442c12d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1725,59 +1725,38 @@ int wilc_netdev_init(void)
+ 	return 0;
+ }
  
- 	/* Some of of qca988x solutions are having global reset issue
--         * during target initialization. Bypassing PLL setting before
--         * downloading firmware and letting the SoC run on REF_CLK is
--         * fixing the problem. Corresponding firmware change is also needed
--         * to set the clock source once the target is initialized.
-+	 * during target initialization. Bypassing PLL setting before
-+	 * downloading firmware and letting the SoC run on REF_CLK is
-+	 * fixing the problem. Corresponding firmware change is also needed
-+	 * to set the clock source once the target is initialized.
- 	 */
- 	if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
- 		     ar->fw_features)) {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 79490ad41ac5..1b4b53b9ffc1 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4656,7 +4656,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 						info->use_cts_prot ? 1 : 0);
- 		if (ret)
- 			ath10k_warn(ar, "failed to set protection mode %d on vdev %i: %d\n",
--					info->use_cts_prot, arvif->vdev_id, ret);
-+				    info->use_cts_prot, arvif->vdev_id, ret);
+-/*The 1st function called after module inserted*/
+-static int __init init_wilc_driver(void)
++void __init wilc1000_init_driver(void)
+ {
+ #if defined(WILC_DEBUGFS)
+-	if (wilc_debugfs_init() < 0) {
++	if (wilc_debugfs_init() < 0)
+ 		PRINT_D(GENERIC_DBG, "fail to create debugfs for wilc driver\n");
+-		return -1;
+-	}
+ #endif
+ 
+ 	printk("IN INIT FUNCTION\n");
+ 	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
+-
+-#ifdef WILC_SDIO
+-	{
+-		int ret;
+-
+-		ret = sdio_register_driver(&wilc_bus);
+-		if (ret < 0)
+-			PRINT_D(INIT_DBG, "init_wilc_driver: Failed register sdio driver\n");
+-
+-		return ret;
+-	}
+-#else
+-	PRINT_D(INIT_DBG, "Initializing netdev\n");
+-	if (wilc_netdev_init())
+-		PRINT_ER("Couldn't initialize netdev\n");
+-	return 0;
+-#endif
+ }
+-late_initcall(init_wilc_driver);
+ 
+-static void __exit exit_wilc_driver(void)
++void __exit wilc_netdev_free(struct wilc *wilc1000_dev)
+ {
+ 	int i = 0;
+ 	perInterface_wlan_t *nic[NUM_CONCURRENT_IFC] = {NULL,};
+ 	#define CLOSE_TIMEOUT (12 * 1000)
+ 
+-	if ((wilc1000_dev != NULL) && (((wilc1000_dev->strInterfaceInfo[0].wilc_netdev) != NULL)
+-				       || ((wilc1000_dev->strInterfaceInfo[1].wilc_netdev) != NULL))) {
++	if (wilc1000_dev->strInterfaceInfo[0].wilc_netdev ||
++	    wilc1000_dev->strInterfaceInfo[1].wilc_netdev) {
+ 		unregister_inetaddr_notifier(&g_dev_notifier);
+ 
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+ 			nic[i] = netdev_priv(wilc1000_dev->strInterfaceInfo[i].wilc_netdev);
  	}
  
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
-@@ -6268,8 +6268,8 @@ ath10k_mac_update_rx_channel(struct ath10k *ar,
- 	rcu_read_lock();
- 	if (!ctx && ath10k_mac_num_chanctxs(ar) == 1) {
- 		ieee80211_iter_chan_contexts_atomic(ar->hw,
--					ath10k_mac_get_any_chandef_iter,
--					&def);
-+						    ath10k_mac_get_any_chandef_iter,
-+						    &def);
- 
- 		if (vifs)
- 			def = &vifs[0].new_ctx->def;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 110fcad609b9..08cc4304001e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2257,7 +2257,7 @@ static int ath10k_pci_qca6174_chip_reset(struct ath10k *ar)
- 	ret = ath10k_pci_wait_for_target_init(ar);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to wait for target after cold reset: %d\n",
--				ret);
-+			    ret);
- 		return ret;
+-	if ((wilc1000_dev != NULL) && wilc1000_dev->wilc_firmware != NULL) {
++	if (wilc1000_dev->wilc_firmware) {
+ 		release_firmware(wilc1000_dev->wilc_firmware);
+ 		wilc1000_dev->wilc_firmware = NULL;
  	}
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 87d9de2aa8c5..0c7a233a223c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3507,7 +3507,7 @@ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
- 							  tsf);
- 			if (res < 0) {
- 				ath10k_dbg(ar, ATH10K_DBG_WMI, "failed to process fft report: %d\n",
--					    res);
-+					   res);
- 				return;
- 			}
- 			break;
+-	if ((wilc1000_dev != NULL) && (((wilc1000_dev->strInterfaceInfo[0].wilc_netdev) != NULL)
+-				       || ((wilc1000_dev->strInterfaceInfo[1].wilc_netdev) != NULL))) {
++	if (wilc1000_dev->strInterfaceInfo[0].wilc_netdev ||
++	    wilc1000_dev->strInterfaceInfo[1].wilc_netdev) {
+ 		PRINT_D(INIT_DBG, "Waiting for wilc1000_mac_close ....\n");
+ 
+ 		if (linux_wlan_lock_timeout(&close_exit_sync, CLOSE_TIMEOUT) < 0)
+@@ -1801,15 +1780,10 @@ static void __exit exit_wilc_driver(void)
+ 			free_netdev(wilc1000_dev->strInterfaceInfo[i].wilc_netdev);
+ 		}
+ 	}
++}
+ 
+-#ifndef WILC_SDIO
+-	PRINT_D(INIT_DBG, "SPI unregsiter...\n");
+-	spi_unregister_driver(&wilc_bus);
+-#else
+-	PRINT_D(INIT_DBG, "SDIO unregsiter...\n");
+-	sdio_unregister_driver(&wilc_bus);
+-#endif
+-
++void __exit wilc1000_exit_driver(void)
++{
+ 	kfree(wilc1000_dev);
+ 	wilc1000_dev = NULL;
+ 	printk("Module_exit Done.\n");
+@@ -1818,6 +1792,5 @@ static void __exit exit_wilc_driver(void)
+ 	wilc_debugfs_remove();
+ #endif
+ }
+-module_exit(exit_wilc_driver);
+ 
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 4e8c4e6d499e..badcae57875c 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -237,4 +237,18 @@ int wilc1000_sdio_set_default_speed(void)
+ }
+ 
+ 
++static int __init init_wilc_sdio_driver(void)
++{
++	wilc1000_init_driver();
++	return sdio_register_driver(&wilc_bus);
++}
++late_initcall(init_wilc_sdio_driver);
+ 
++static void __exit exit_wilc_sdio_driver(void)
++{
++	if (wilc1000_dev)
++		wilc_netdev_free(wilc1000_dev);
++	sdio_unregister_driver(&wilc_bus);
++	wilc1000_exit_driver();
++}
++module_exit(exit_wilc_sdio_driver);
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 43cfeda97030..c90b741824dc 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -406,3 +406,19 @@ int wilc1000_spi_set_max_speed(void)
+ 	PRINT_INFO(BUS_DBG, "@@@@@@@@@@@@ change SPI speed to %d @@@@@@@@@\n", SPEED);
+ 	return 1;
+ }
++
++static int __init init_wilc_spi_driver(void)
++{
++	wilc1000_init_driver();
++	return wilc_netdev_init();
++}
++late_initcall(init_wilc_spi_driver);
++
++static void __exit exit_wilc_spi_driver(void)
++{
++	if (wilc1000_dev)
++		wilc_netdev_free(wilc1000_dev);
++	spi_unregister_driver(&wilc_bus);
++	wilc1000_exit_driver();
++}
++module_exit(exit_wilc_spi_driver);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 4460c482cb7a..dd312b0b1abf 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -321,6 +321,8 @@ void wilc1000_chip_sleep_manually(u32 u32SleepTime);
+ int wilc1000_wlan_get_num_conn_ifcs(void);
+ int wilc1000_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ int wilc_netdev_init(void);
++void __exit wilc_netdev_free(struct wilc *wilc1000_dev);
++
+ void wilc_handle_isr(void);
+ 
+ u16 wilc1000_set_machw_change_vir_if(bool bValue);
+@@ -337,5 +339,7 @@ u8 wilc1000_core_11b_ready(void);
+ extern bool wilc1000_enable_ps;
+ extern volatile int wilc1000_probe;
+ 
++void __init wilc1000_init_driver(void);
++void __exit wilc1000_exit_driver(void);
+ 
+ #endif
+-- 
+2.1.0.rc2
 
