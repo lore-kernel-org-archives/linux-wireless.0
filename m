@@ -1,109 +1,363 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9843 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751581AbbJBFX1 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43286 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563AbbJTLZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 01:23:27 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/10] staging: wilc1000: remove function pointer cfg_init
-Date: Fri, 2 Oct 2015 14:22:11 +0900
-Message-ID: <1443763332-7330-9-git-send-email-tony.cho@atmel.com> (sfid-20151002_073148_970404_DD35C14A)
-In-Reply-To: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
-References: <1443763332-7330-1-git-send-email-tony.cho@atmel.com>
+	Tue, 20 Oct 2015 07:25:19 -0400
+Subject: [PATCH v2] ath10k: add FW API support to test mode
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 Oct 2015 14:25:13 +0300
+Message-ID: <20151020112513.14879.47438.stgit@potku.adurom.net> (sfid-20151020_132524_114941_BE386D32)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Alan Liu <alanliu@qca.qualcomm.com>
 
-This patch removes function pointer cfg_init and call the function
-wilc_wlan_cfg_init instead. Remove static from function declaration.
-After removing cfg_init, the struct wilc_cfg_func_t is useless so just delete
-it and it's related codes.
+Add WMI-TLV and FW API support in ath10k testmode.
+Ath10k can get right wmi command format from UTF image
+to communicate UTF firmware.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c     | 3 +--
- drivers/staging/wilc1000/wilc_wlan.h     | 4 ----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 6 +-----
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 1 +
- 4 files changed, 3 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c     |    4 -
+ drivers/net/wireless/ath/ath10k/core.h     |    5 +
+ drivers/net/wireless/ath/ath10k/hw.h       |    1 
+ drivers/net/wireless/ath/ath10k/testmode.c |  202 ++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c  |   14 ++
+ 5 files changed, 205 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index cd4598a..4ca8721 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -18,7 +18,6 @@
-  ********************************************/
- extern wilc_hif_func_t hif_sdio;
- extern wilc_hif_func_t hif_spi;
--extern wilc_cfg_func_t mac_cfg;
- extern void WILC_WFI_mgmt_rx(u8 *buff, u32 size);
- u32 wilc_get_chipid(u8 update);
- u16 Set_machw_change_vir_if(bool bValue);
-@@ -1994,7 +1993,7 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp)
- 	/***
- 	 *      mac interface init
- 	 **/
--	if (!mac_cfg.cfg_init(wilc_debug)) {
-+	if (!wilc_wlan_cfg_init(wilc_debug)) {
- 		/* ENOBUFS	105 */
- 		ret = -105;
- 		goto _fail_;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 5099cf0..bd89689 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -295,10 +295,6 @@ typedef struct {
- 	u32 seq_no;
- } wilc_cfg_rsp_t;
- 
--typedef struct {
--	int (*cfg_init)(wilc_debug_func);
--} wilc_cfg_func_t;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 13de3617d5ab..b7a82ae3b3fa 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -568,8 +568,8 @@ static int ath10k_download_fw(struct ath10k *ar, enum ath10k_firmware_mode mode)
+ 		}
+ 		break;
+ 	case ATH10K_FIRMWARE_MODE_UTF:
+-		data = ar->testmode.utf->data;
+-		data_len = ar->testmode.utf->size;
++		data = ar->testmode.utf_firmware_data;
++		data_len = ar->testmode.utf_firmware_len;
+ 		mode_name = "utf";
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7cc7cdd56c95..a6371108be9b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -814,9 +814,12 @@ struct ath10k {
+ 	struct {
+ 		/* protected by conf_mutex */
+ 		const struct firmware *utf;
++		char utf_version[32];
++		const void *utf_firmware_data;
++		size_t utf_firmware_len;
+ 		DECLARE_BITMAP(orig_fw_features, ATH10K_FW_FEATURE_COUNT);
+ 		enum ath10k_fw_wmi_op_version orig_wmi_op_version;
 -
- int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
- int wilc_wlan_start(void);
- int wilc_wlan_stop(void);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 2916d45..d148d6e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -558,13 +558,9 @@ int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
- 	return ret;
++		enum ath10k_fw_wmi_op_version op_version;
+ 		/* protected by data_lock */
+ 		bool utf_monitor;
+ 	} testmode;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737e35ff..0c8ea0226684 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -94,6 +94,7 @@ enum qca6174_chip_id_rev {
+ #define ATH10K_FW_API5_FILE		"firmware-5.bin"
+ 
+ #define ATH10K_FW_UTF_FILE		"utf.bin"
++#define ATH10K_FW_UTF_API2_FILE		"utf-2.bin"
+ 
+ /* includes also the null byte */
+ #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index b084f88da102..1d5a2fdcbf56 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -139,11 +139,181 @@ static int ath10k_tm_cmd_get_version(struct ath10k *ar, struct nlattr *tb[])
+ 	return cfg80211_testmode_reply(skb);
  }
  
--static int wilc_wlan_cfg_init(wilc_debug_func func)
-+int wilc_wlan_cfg_init(wilc_debug_func func)
+-static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
++static int ath10k_tm_fetch_utf_firmware_api_2(struct ath10k *ar)
++{
++	size_t len, magic_len, ie_len;
++	struct ath10k_fw_ie *hdr;
++	char filename[100];
++	__le32 *version;
++	const u8 *data;
++	int ie_id, ret;
++
++	snprintf(filename, sizeof(filename), "%s/%s",
++		 ar->hw_params.fw.dir, ATH10K_FW_UTF_API2_FILE);
++
++	/* load utf firmware image */
++	ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
++	if (ret) {
++		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
++			    filename, ret);
++		return ret;
++	}
++
++	data = ar->testmode.utf->data;
++	len = ar->testmode.utf->size;
++
++	/* FIXME: call release_firmware() in error cases */
++
++	/* magic also includes the null byte, check that as well */
++	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
++
++	if (len < magic_len) {
++		ath10k_err(ar, "utf firmware file is too small to contain magic\n");
++		ret = -EINVAL;
++		goto err;
++	}
++
++	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
++		ath10k_err(ar, "invalid firmware magic\n");
++		ret = -EINVAL;
++		goto err;
++	}
++
++	/* jump over the padding */
++	magic_len = ALIGN(magic_len, 4);
++
++	len -= magic_len;
++	data += magic_len;
++
++	/* loop elements */
++	while (len > sizeof(struct ath10k_fw_ie)) {
++		hdr = (struct ath10k_fw_ie *)data;
++
++		ie_id = le32_to_cpu(hdr->id);
++		ie_len = le32_to_cpu(hdr->len);
++
++		len -= sizeof(*hdr);
++		data += sizeof(*hdr);
++
++		if (len < ie_len) {
++			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
++				   ie_id, len, ie_len);
++			ret = -EINVAL;
++			goto err;
++		}
++
++		switch (ie_id) {
++		case ATH10K_FW_IE_FW_VERSION:
++			if (ie_len > sizeof(ar->testmode.utf_version) - 1)
++				break;
++
++			memcpy(ar->testmode.utf_version, data, ie_len);
++			ar->testmode.utf_version[ie_len] = '\0';
++
++			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
++				   "testmode found fw utf version %s\n",
++				   ar->testmode.utf_version);
++			break;
++		case ATH10K_FW_IE_TIMESTAMP:
++			/* ignore timestamp, but don't warn about it either */
++			break;
++		case ATH10K_FW_IE_FW_IMAGE:
++			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
++				   "testmode found fw image ie (%zd B)\n",
++				   ie_len);
++
++			ar->testmode.utf_firmware_data = data;
++			ar->testmode.utf_firmware_len = ie_len;
++			break;
++		case ATH10K_FW_IE_WMI_OP_VERSION:
++			if (ie_len != sizeof(u32))
++				break;
++			version = (__le32 *)data;
++			ar->testmode.op_version = le32_to_cpup(version);
++			ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode found fw ie wmi op version %d\n",
++				   ar->testmode.op_version);
++			break;
++		default:
++			ath10k_warn(ar, "Unknown testmode FW IE: %u\n",
++				    le32_to_cpu(hdr->id));
++			break;
++		}
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
++		len -= ie_len;
++		data += ie_len;
++	}
++
++	if (!ar->testmode.utf_firmware_data || !ar->testmode.utf_firmware_len) {
++		ath10k_err(ar, "No ATH10K_FW_IE_FW_IMAGE found\n");
++		ret = -EINVAL;
++		goto err;
++	}
++
++	return 0;
++
++err:
++	release_firmware(ar->testmode.utf);
++
++	return ret;
++}
++
++static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar)
  {
- 	memset((void *)&g_mac, 0, sizeof(wilc_mac_cfg_t));
- 	g_mac.dPrint = func;
- 	return 1;
- }
--
--wilc_cfg_func_t mac_cfg = {
--	wilc_wlan_cfg_init,
--};
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index fe2c0382..30e60ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -34,5 +34,6 @@ int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp);
-+int wilc_wlan_cfg_init(wilc_debug_func func);
+ 	char filename[100];
+ 	int ret;
  
- #endif
--- 
-1.9.1
++	snprintf(filename, sizeof(filename), "%s/%s",
++		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
++
++	/* load utf firmware image */
++	ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
++	if (ret) {
++		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
++			    filename, ret);
++		return ret;
++	}
++
++	/* We didn't find FW UTF API 1 ("utf.bin") does not advertise
++	 * firmware features. Do an ugly hack where we force the firmware
++	 * features to match with 10.1 branch so that wmi.c will use the
++	 * correct WMI interface.
++	 */
++
++	ar->testmode.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
++	ar->testmode.utf_firmware_data = ar->testmode.utf->data;
++	ar->testmode.utf_firmware_len = ar->testmode.utf->size;
++
++	return 0;
++}
++
++static int ath10k_tm_fetch_firmware(struct ath10k *ar)
++{
++	int ret;
++
++	ret = ath10k_tm_fetch_utf_firmware_api_2(ar);
++	if (ret == 0) {
++		ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode using fw utf api 2");
++		return 0;
++	}
++
++	ret = ath10k_tm_fetch_utf_firmware_api_1(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to fetch utf firmware binary: %d", ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode using utf api 1");
++
++	return 0;
++}
++
++static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
++{
++	const char *ver;
++	int ret;
++
+ 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode cmd utf start\n");
+ 
+ 	mutex_lock(&ar->conf_mutex);
+@@ -165,36 +335,27 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 		goto err;
+ 	}
+ 
+-	snprintf(filename, sizeof(filename), "%s/%s",
+-		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
+-
+-	/* load utf firmware image */
+-	ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
++	ret = ath10k_tm_fetch_firmware(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
+-			    filename, ret);
++		ath10k_err(ar, "failed to fetch UTF firmware: %d", ret);
+ 		goto err;
+ 	}
+ 
+ 	spin_lock_bh(&ar->data_lock);
+-
+ 	ar->testmode.utf_monitor = true;
+-
+ 	spin_unlock_bh(&ar->data_lock);
+-
+ 	BUILD_BUG_ON(sizeof(ar->fw_features) !=
+ 		     sizeof(ar->testmode.orig_fw_features));
+ 
+ 	memcpy(ar->testmode.orig_fw_features, ar->fw_features,
+ 	       sizeof(ar->fw_features));
+ 	ar->testmode.orig_wmi_op_version = ar->wmi.op_version;
+-
+-	/* utf.bin firmware image does not advertise firmware features. Do
+-	 * an ugly hack where we force the firmware features so that wmi.c
+-	 * will use the correct WMI interface.
+-	 */
+ 	memset(ar->fw_features, 0, sizeof(ar->fw_features));
+-	ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
++
++	ar->wmi.op_version = ar->testmode.op_version;
++
++	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode wmi version %d\n",
++		   ar->wmi.op_version);
+ 
+ 	ret = ath10k_hif_power_up(ar);
+ 	if (ret) {
+@@ -212,7 +373,12 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 
+ 	ar->state = ATH10K_STATE_UTF;
+ 
+-	ath10k_info(ar, "UTF firmware started\n");
++	if (strlen(ar->testmode.utf_version) > 0)
++		ver = ar->testmode.utf_version;
++	else
++		ver = "API 1";
++
++	ath10k_info(ar, "UTF firmware %s started\n", ver);
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 8f835480a62c..6fbd17b69469 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -23,6 +23,7 @@
+ #include "wmi-ops.h"
+ #include "wmi-tlv.h"
+ #include "p2p.h"
++#include "testmode.h"
+ 
+ /***************/
+ /* TLV helpers */
+@@ -419,6 +420,7 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+ 	enum wmi_tlv_event_id id;
++	bool consumed;
+ 
+ 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
+ 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
+@@ -428,6 +430,18 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
+ 
++	consumed = ath10k_tm_event_wmi(ar, id, skb);
++
++	/* Ready event must be handled normally also in UTF mode so that we
++	 * know the UTF firmware has booted, others we are just bypass WMI
++	 * events to testmode.
++	 */
++	if (consumed && id != WMI_TLV_READY_EVENTID) {
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "wmi tlv testmode consumed 0x%x\n", id);
++		goto out;
++	}
++
+ 	switch (id) {
+ 	case WMI_TLV_MGMT_RX_EVENTID:
+ 		ath10k_wmi_event_mgmt_rx(ar, skb);
 
