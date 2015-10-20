@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33166 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933013AbbJANoa (ORCPT
+Received: from postler.einfach.org ([5.9.2.179]:44939 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbbJTLwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:30 -0400
-Received: by pacex6 with SMTP id ex6so75450236pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:30 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/12] staging: wilc1000: use ARRAY_SIZE macro
-Date: Thu,  1 Oct 2015 22:43:54 +0900
-Message-Id: <1443707039-18433-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154432_986936_87021FA2)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 20 Oct 2015 07:52:04 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Cc: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH 2/2] rtl8xxxu: Add debugfs for RCR register
+Date: Tue, 20 Oct 2015 12:51:49 +0100
+Message-Id: <1445341909-28053-2-git-send-email-br1@einfach.org> (sfid-20151020_135210_374200_F8DAB0E1)
+In-Reply-To: <1445341909-28053-1-git-send-email-br1@einfach.org>
+References: <1445341909-28053-1-git-send-email-br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses ARRAY_SIZE macro found by checkpatch.pl
-
-WARNING: Prefer ARRAY_SIZE(wb)
-drivers/staging/wilc1000/wilc_spi.c:400
-drivers/staging/wilc1000/wilc_spi.c:402
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/staging/wilc1000/wilc_spi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 32 ++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 8acf648..599508b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -397,9 +397,9 @@ static int spi_cmd_complete(u8 cmd, u32 adr, u8 *b, u32 sz, u8 clockless)
- 	}
- #undef NUM_DUMMY_BYTES
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 3b5a885..b9b779b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -37,6 +37,7 @@
+ #include <linux/firmware.h>
+ #include <linux/moduleparam.h>
+ #include <net/mac80211.h>
++#include <linux/debugfs.h>
+ #include "rtl8xxxu.h"
+ #include "rtl8xxxu_regs.h"
  
--	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
-+	if (len2 > ARRAY_SIZE(wb)) {
- 		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%zu)\n",
--			 len2, (sizeof(wb) / sizeof(wb[0])));
-+			 len2, ARRAY_SIZE(wb));
- 		result = N_FAIL;
- 		return result;
+@@ -5640,6 +5641,35 @@ exit:
+ 	return ret;
+ }
+ 
++static int
++rtl8xxxu_rcr_write(void *data, u64 val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	rtl8xxxu_write32(priv, REG_RCR, val);
++	return 0;
++}
++
++static int
++rtl8xxxu_rcr_read(void *data, u64 *val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	*val = rtl8xxxu_read32(priv, REG_RCR);
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(fops_rcr, rtl8xxxu_rcr_read, rtl8xxxu_rcr_write, "0x%08llx\n");
++
++void rtl8xxxu_init_debugfs(struct rtl8xxxu_priv *priv)
++{
++	struct dentry *dir;
++
++	dir = debugfs_create_dir("rtl8xxxu", priv->hw->wiphy->debugfsdir);
++	if (!dir)
++		return;
++
++	debugfs_create_file("rcr", S_IRUSR | S_IWUSR, dir, priv, &fops_rcr);
++}
++
+ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 			  const struct usb_device_id *id)
+ {
+@@ -5781,6 +5811,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 		goto exit;
  	}
+ 
++	rtl8xxxu_init_debugfs(priv);
++
+ exit:
+ 	if (ret < 0)
+ 		usb_put_dev(udev);
 -- 
-2.6.0
+1.9.1
 
