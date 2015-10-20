@@ -1,91 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:16952 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753502AbbJTIOm (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:36442 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262AbbJTGq2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 04:14:42 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/13] staging: wilc1000: mac_close: use netdev private wilc instead of g_linux_wlan
-Date: Tue, 20 Oct 2015 17:13:55 +0900
-Message-ID: <1445328843-32247-5-git-send-email-tony.cho@atmel.com> (sfid-20151020_101446_475455_CB939626)
-In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
-References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 02:46:28 -0400
+Received: by lbcao8 with SMTP id ao8so7728962lbc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:26 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 10/16] rtl8xxxu: Rename struct rtl8723au_idx
+Date: Tue, 20 Oct 2015 08:45:40 +0200
+Message-Id: <1445323546-12807-11-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084635_021325_205E6356)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
-
-Use netdev private data member wilc instead of global variable g_linux_wlan.
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 16 +++++-----
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 38 ++++++++++++------------
+ 2 files changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index ebedffa..93475aa 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1383,6 +1383,7 @@ int mac_close(struct net_device *ndev)
- 	struct wilc_priv *priv;
- 	perInterface_wlan_t *nic;
- 	struct host_if_drv *pstrWFIDrv;
-+	struct wilc *wl;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 992bcda..d48db87 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1505,21 +1505,21 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ 	ofdm[0] = tx_power->ht40_1s_index_A[group];
+ 	ofdm[1] = tx_power->ht40_1s_index_B[group];
  
- 	nic = netdev_priv(ndev);
+-	ofdmbase[0] = ofdm[0] +	tx_power->ofdm_index_diff[group].a;
+-	ofdmbase[1] = ofdm[1] +	tx_power->ofdm_index_diff[group].b;
++	ofdmbase[0] = ofdm[0] +	tx_power->ofdm_index_diff[group].low;
++	ofdmbase[1] = ofdm[1] +	tx_power->ofdm_index_diff[group].high;
  
-@@ -1392,6 +1393,7 @@ int mac_close(struct net_device *ndev)
+ 	mcsbase[0] = ofdm[0];
+ 	mcsbase[1] = ofdm[1];
+ 	if (!ht40) {
+-		mcsbase[0] += tx_power->ht20_index_diff[group].a;
+-		mcsbase[1] += tx_power->ht20_index_diff[group].b;
++		mcsbase[0] += tx_power->ht20_index_diff[group].low;
++		mcsbase[1] += tx_power->ht20_index_diff[group].high;
  	}
  
- 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
-+	wl = nic->wilc;
- 
- 	if (priv == NULL) {
- 		PRINT_ER("priv = NULL\n");
-@@ -1402,8 +1404,8 @@ int mac_close(struct net_device *ndev)
- 
- 	PRINT_D(GENERIC_DBG, "Mac close\n");
- 
--	if (g_linux_wlan == NULL) {
--		PRINT_ER("g_linux_wlan = NULL\n");
-+	if (!wl) {
-+		PRINT_ER("wl = NULL\n");
- 		return 0;
+ 	if (priv->tx_paths > 1) {
+-		if (ofdm[0] > tx_power->ht40_2s_index_diff[group].a)
+-			ofdm[0] -= tx_power->ht40_2s_index_diff[group].a;
+-		if (ofdm[1] > tx_power->ht40_2s_index_diff[group].b)
+-			ofdm[1] -= tx_power->ht40_2s_index_diff[group].b;
++		if (ofdm[0] > tx_power->ht40_2s_index_diff[group].low)
++			ofdm[0] -= tx_power->ht40_2s_index_diff[group].low;
++		if (ofdm[1] > tx_power->ht40_2s_index_diff[group].high)
++			ofdm[1] -= tx_power->ht40_2s_index_diff[group].high;
  	}
  
-@@ -1412,8 +1414,8 @@ int mac_close(struct net_device *ndev)
- 		return 0;
- 	}
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_CHANNEL)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 23bf4c0..2f5f903 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -407,13 +407,13 @@ struct rtl8xxxu_firmware_header {
+ /*
+  * The 8723au has 3 channel groups: 1-3, 4-9, and 10-14
+  */
+-struct rtl8723au_idx {
++struct nibble_pair {
+ #ifdef __LITTLE_ENDIAN
+-	int	a:4;
+-	int	b:4;
++	int	low:4;
++	int	high:4;
+ #else
+-	int	b:4;
+-	int	a:4;
++	int	high:4;
++	int	low:4;
+ #endif
+ } __attribute__((packed));
  
--	if ((g_linux_wlan->open_ifcs) > 0) {
--		g_linux_wlan->open_ifcs--;
-+	if ((wl->open_ifcs) > 0) {
-+		wl->open_ifcs--;
- 	} else {
- 		PRINT_ER("ERROR: MAC close called while number of opened interfaces is zero\n");
- 		return 0;
-@@ -1426,10 +1428,10 @@ int mac_close(struct net_device *ndev)
- 		wilc_deinit_host_int(nic->wilc_netdev);
- 	}
+@@ -428,10 +428,10 @@ struct rtl8723au_efuse {
+ 	 * The following entries are half-bytes split as:
+ 	 * bits 0-3: path A, bits 4-7: path B, all values 4 bits signed
+ 	 */
+-	struct rtl8723au_idx ht20_tx_power_index_diff[3];
+-	struct rtl8723au_idx ofdm_tx_power_index_diff[3];
+-	struct rtl8723au_idx ht40_max_power_offset[3];
+-	struct rtl8723au_idx ht20_max_power_offset[3];
++	struct nibble_pair ht20_tx_power_index_diff[3];
++	struct nibble_pair ofdm_tx_power_index_diff[3];
++	struct nibble_pair ht40_max_power_offset[3];
++	struct nibble_pair ht20_max_power_offset[3];
+ 	u8 channel_plan;		/* 0x28 */
+ 	u8 tssi_a;
+ 	u8 thermal_meter;
+@@ -482,11 +482,11 @@ struct rtl8192cu_efuse {
+ 	 * The following entries are half-bytes split as:
+ 	 * bits 0-3: path A, bits 4-7: path B, all values 4 bits signed
+ 	 */
+-	struct rtl8723au_idx ht40_2s_tx_power_index_diff[3];
+-	struct rtl8723au_idx ht20_tx_power_index_diff[3];	/* 0x69 */
+-	struct rtl8723au_idx ofdm_tx_power_index_diff[3];
+-	struct rtl8723au_idx ht40_max_power_offset[3];		/* 0x6f */
+-	struct rtl8723au_idx ht20_max_power_offset[3];
++	struct nibble_pair ht40_2s_tx_power_index_diff[3];
++	struct nibble_pair ht20_tx_power_index_diff[3];		/* 0x69 */
++	struct nibble_pair ofdm_tx_power_index_diff[3];
++	struct nibble_pair ht40_max_power_offset[3];		/* 0x6f */
++	struct nibble_pair ht20_max_power_offset[3];
+ 	u8 channel_plan;					/* 0x75 */
+ 	u8 tssi_a;
+ 	u8 tssi_b;
+@@ -573,11 +573,11 @@ struct rtl8723au_tx_power {
+ 	 * The following entries are half-bytes split as:
+ 	 * bits 0-3: path A, bits 4-7: path B, all values 4 bits signed
+ 	 */
+-	struct rtl8723au_idx ht40_2s_index_diff[3];
+-	struct rtl8723au_idx ht20_index_diff[3];
+-	struct rtl8723au_idx ofdm_index_diff[3];
+-	struct rtl8723au_idx ht40_max_offset[3];
+-	struct rtl8723au_idx ht20_max_offset[3];
++	struct nibble_pair ht40_2s_index_diff[3];
++	struct nibble_pair ht20_index_diff[3];
++	struct nibble_pair ofdm_index_diff[3];
++	struct nibble_pair ht40_max_offset[3];
++	struct nibble_pair ht20_max_offset[3];
+ };
  
--	if (g_linux_wlan->open_ifcs == 0) {
-+	if (wl->open_ifcs == 0) {
- 		PRINT_D(GENERIC_DBG, "Deinitializing wilc1000\n");
--		g_linux_wlan->close = 1;
--		wilc1000_wlan_deinit(g_linux_wlan);
-+		wl->close = 1;
-+		wilc1000_wlan_deinit(wl);
- 		WILC_WFI_deinit_mon_interface();
- 	}
- 
+ struct rtl8xxxu_priv {
 -- 
-1.9.1
+2.1.0
 
