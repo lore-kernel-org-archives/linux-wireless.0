@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38441 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751985AbbJSQCg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37959 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624AbbJTMVw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 12:02:36 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
-	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
-	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
-	cengelma@gmx.at, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/3] net: wireless: rsi: Coding Spaces
-Date: Mon, 19 Oct 2015 17:02:21 +0100
-Message-Id: <1445270543-2209-2-git-send-email-paulmcquad@gmail.com> (sfid-20151019_180345_609714_AA57B84B)
-In-Reply-To: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
-References: <1445270543-2209-1-git-send-email-paulmcquad@gmail.com>
+	Tue, 20 Oct 2015 08:21:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: <linux-firmware@kernel.org>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
+References: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com>
+	<1445192636.31451.74.camel@decadent.org.uk>
+Date: Tue, 20 Oct 2015 15:21:30 +0300
+In-Reply-To: <1445192636.31451.74.camel@decadent.org.uk> (Ben Hutchings's
+	message of "Sun, 18 Oct 2015 19:23:56 +0100")
+Message-ID: <87fv15d92t.fsf@kamboji.qca.qualcomm.com> (sfid-20151020_142156_436690_B19ECFDC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed space before that ','
+Ben Hutchings <ben@decadent.org.uk> writes:
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> On Thu, 2015-10-15 at 13:40 +0300, Kalle Valo wrote:
+>> In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.bin") I
+>> forgot to commit board.bin file and that's why it was not included in the
+>> commit even I had added an entry to WHENCE. Add that now.
+>> 
+>> At the same time also add Version field for firmware-4.bin.
+>> 
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> [...]
+>
+> I've applied this and the following 4 patches.  However, I'm not
+> entirely happy with copyright acknowledgements going into the
+> notice_ath10k*.txt files which aren't referenced anywhere.  It would be
+> easy for downstream distributors to miss that they should be packaged
+> along with the firmware blobs they relate to.  Please can you combine
+> these with the QCA licence file or add references to these files from
+> WHENCE?
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 40d7231..8fa241b 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -435,7 +435,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 				} else {
- 					rsi_dbg(ERR_ZONE,
- 						"%s: Firmware Status is 0x%x\n",
--						__func__ , fw_status);
-+						__func__, fw_status);
- 					rsi_sdio_ack_intr(common->priv,
- 							  (1 << FW_ASSERT_IND));
- 				}
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 3741173..3d4eddd 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -173,9 +173,9 @@ enum cmd_frame_type {
- 	AUTO_RATE_IND,
- 	BOOTUP_PARAMS_REQUEST,
- 	VAP_CAPABILITIES,
--	EEPROM_READ_TYPE ,
-+	EEPROM_READ_TYPE,
- 	EEPROM_WRITE,
--	GPIO_PIN_CONFIG ,
-+	GPIO_PIN_CONFIG,
- 	SET_RX_FILTER,
- 	AMPDU_IND,
- 	STATS_REQUEST_FRAME,
+Combining with the license file is difficult as the notice.txt can be
+different between firmware versions, but I can add a reference to
+WHENCE. I guess you mean to add a new "File: " line for each .txt file?
+
 -- 
-2.6.1
-
+Kalle Valo
