@@ -1,65 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:36026 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933178AbbJHQXa (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58273 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbbJTRYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 12:23:30 -0400
-Received: by lbcao8 with SMTP id ao8so53640186lbc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2015 09:23:28 -0700 (PDT)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com> <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-In-reply-to: <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-Date: Thu, 08 Oct 2015 18:23:27 +0200
-Message-ID: <87d1wp49ds.fsf@frog.home> (sfid-20151008_182333_169577_09E9943A)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 13:24:25 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH-v2 2/2] mac80211: ensure association req uses configured ratemask.
+Date: Tue, 20 Oct 2015 10:24:18 -0700
+Message-Id: <1445361858-24976-2-git-send-email-greearb@candelatech.com> (sfid-20151020_192429_553030_9E31F6D1)
+In-Reply-To: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
+References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+From: Ben Greear <greearb@candelatech.com>
 
-On Sat, Aug 29, 2015 at 11:18 PM CEST, Jes.Sorensen@redhat.com wrote:
-> This is an alternate driver for a number of Realtek WiFi USB devices,
-> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
-> It was written from scratch utilizing the Linux mac80211 stack.
->
-> After spending months cleaning up the vendor provided rtl8723au
-> driver, which comes with it's own 802.11 stack included, I decided to
-> rewrite this driver from the bottom up.
+When sending the association request, pay attention to the
+legacy rates configured by the user, and do not advertise support
+for any that are not configured.
 
-In the long term, do you plan for this driver to support the
-RTL8188EU-based devices as well?
+This makes the assoc request packet look more correct when
+making modern hardware act like a /b mode station, for instance.
 
-I've been checking how far I can get through the rtl8xxxu initialization
-using a TP-Link TL-WN725N dongle without changing too much.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mlme.c        | 49 ++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 48 insertions(+), 3 deletions(-)
 
-Getting it up to read the EFUSE contents wasn't difficult but then you
-need to parse it and first differences come to light.  Namely, TX power
-levels are defined per each of 6 (not 3) channel groups, and power
-differences are defined per TX path (as opposed to per channel group).
-This is perhaps better described by the relevant structure from
-rtl8188eu driver:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5e43e99..e9fcdc2 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -383,7 +383,7 @@ struct ieee80211_mgd_auth_data {
+ 
+ struct ieee80211_mgd_assoc_data {
+ 	struct cfg80211_bss *bss;
+-	const u8 *supp_rates;
++	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
+ 
+ 	unsigned long timeout;
+ 	int tries;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9651e92..fdcf863 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -635,6 +635,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 						     assoc_data->supp_rates_len,
+ 						     &rates);
+ 	} else {
++		u32 msk = sdata->cfg_advert_bitrate_mask.control[chan->band].legacy;
++
+ 		/*
+ 		 * In case AP not provide any supported rates information
+ 		 * before association, we send information element(s) with
+@@ -645,6 +647,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			if ((rate_flags & sband->bitrates[i].flags)
+ 			    != rate_flags)
+ 				continue;
++			if (sdata->cfg_advert_bitrate_mask_set &&
++			    (!(msk & (1 << i))))
++				continue;
+ 			rates |= BIT(i);
+ 			rates_len++;
+ 		}
+@@ -4840,8 +4845,48 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata->smps_mode = ifmgd->req_smps;
+ 
+ 	assoc_data->capability = req->bss->capability;
+-	assoc_data->supp_rates = bss->supp_rates;
+-	assoc_data->supp_rates_len = bss->supp_rates_len;
++	if (sdata->cfg_advert_bitrate_mask_set) {
++		int band = req->bss->channel->band;
++		u32 msk = sdata->cfg_advert_bitrate_mask.control[band].legacy;
++		u8 all_rates[12] = { 2, 4, 11, 22,
++				     12, 18, 24, 36, 48, 72, 96, 108 };
++		int i;
++		int q = 0;
++
++		/* Skip CCK rates for 5Ghz band */
++		if (band == IEEE80211_BAND_5GHZ)
++			msk = msk << 4;
++
++#if 0
++		pr_err("mgt-assoc, band: %d msk: 0x%x  bss-rates-len: %d\n",
++		       band, msk, (int)(bss->supp_rates_len));
++		for (i = 0; i < bss->supp_rates_len; i++) {
++			pr_err("bss rate[%d] = %d (0x%x)\n",
++			       i, bss->supp_rates[i], bss->supp_rates[i]);
++		}
++#endif
++		for (i = 0; i < 12; i++) {
++			int j;
++
++			if (!(msk & (1 << i)))
++				break;
++
++			for (j = 0; j < bss->supp_rates_len; j++) {
++				/* Mask out the 'basic-rate' flag, 0x80 */
++				if ((bss->supp_rates[j] & 0x7f) == all_rates[i]) {
++					assoc_data->supp_rates[q] =
++						bss->supp_rates[j];
++					q++;
++					break;
++				}
++			}
++		}
++		assoc_data->supp_rates_len = q;
++	} else {
++		memcpy(assoc_data->supp_rates, bss->supp_rates,
++		       bss->supp_rates_len);
++		assoc_data->supp_rates_len = bss->supp_rates_len;
++	}
+ 
+ 	rcu_read_lock();
+ 	ht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
+-- 
+2.4.3
 
-struct txpowerinfo24g {
-	u8 IndexCCK_Base[MAX_RF_PATH][MAX_CHNL_GROUP_24G];
-	u8 IndexBW40_Base[MAX_RF_PATH][MAX_CHNL_GROUP_24G];
-	/* If only one tx, only BW20 and OFDM are used. */
-	s8 CCK_Diff[MAX_RF_PATH][MAX_TX_COUNT];
-	s8 OFDM_Diff[MAX_RF_PATH][MAX_TX_COUNT];
-	s8 BW20_Diff[MAX_RF_PATH][MAX_TX_COUNT];
-	s8 BW40_Diff[MAX_RF_PATH][MAX_TX_COUNT];
-};
-
-AFAICT, in this regard, rtl8188eu driver has more in common with the
-rtlwifi/rtl8188ee driver.
-
-I'm curious what is your opinion on this.  In particular, do you see any
-reason not to make an attempt to extend rtl8xxxu to support 8188EU
-chips?
-
-Thanks,
-Jakub
