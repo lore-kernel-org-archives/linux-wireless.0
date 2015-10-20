@@ -1,73 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35652 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbbJ0Lkz (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:35525 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262AbbJTGqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 07:40:55 -0400
-Received: by pasz6 with SMTP id z6so220474102pas.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 04:40:55 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/8] staging: wilc1000: rename u8WepKeylen in host_int_add_wep_key_bss_sta
-Date: Tue, 27 Oct 2015 20:40:35 +0900
-Message-Id: <1445946039-10390-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151027_124058_788871_DC36E0C8)
-In-Reply-To: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 20 Oct 2015 02:46:30 -0400
+Received: by lffy185 with SMTP id y185so720673lff.2
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:28 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 12/16] rtl8xxxu: Prepare to have more than one kind of struct *_tx_power
+Date: Tue, 20 Oct 2015 08:45:42 +0200
+Message-Id: <1445323546-12807-13-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084635_723330_B5146FDB)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes u8WepKeylen to len that is third argument of
-host_int_add_wep_key_bss_sta to avoid camelcase.
+Preparatory step for adding support for RTL8188EU chips. We follow the
+same approach as with efuse here.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 4 +++-
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 1cb2095..b45bec4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3159,7 +3159,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index)
- 
- int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 				 const u8 *key,
--				 u8 u8WepKeylen,
-+				 u8 len,
- 				 u8 u8Keyidx)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index a7d172a..83cdc2a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1490,7 +1490,7 @@ static void rtl8723au_config_channel(struct ieee80211_hw *hw)
+ static void
+ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
  {
- 	int result = 0;
-@@ -3177,9 +3177,9 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY;
- 	msg.drv = hif_drv;
--	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wep.key, key, u8WepKeylen);
--	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
-+	msg.body.key_info.attr.wep.key = kmalloc(len, GFP_KERNEL);
-+	memcpy(msg.body.key_info.attr.wep.key, key, len);
-+	msg.body.key_info.attr.wep.key_len = len;
- 	msg.body.key_info.attr.wep.index = u8Keyidx;
+-	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
++	struct rtl8723au_tx_power *tx_power = &priv->tx_power.tx_power8723;
+ 	u8 cck[RTL8723A_MAX_RF_PATHS], ofdm[RTL8723A_MAX_RF_PATHS];
+ 	u8 ofdmbase[RTL8723A_MAX_RF_PATHS], mcsbase[RTL8723A_MAX_RF_PATHS];
+ 	u32 val32, ofdm_a, ofdm_b, mcs_a, mcs_b;
+@@ -1781,7 +1781,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+ 	struct rtl8723au_efuse *efuse = &priv->efuse_wifi.efuse8723;
+-	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
++	struct rtl8723au_tx_power *tx_power = &priv->tx_power.tx_power8723;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 55a7274..0d8835d 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -405,7 +405,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv, const u8 *key, u8 u8WepKeylen, u8 u8Keyidx);
-+int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv, const u8 *key, u8 len, u8 u8Keyidx);
- /**
-  *  @brief              host_int_add_wep_key_bss_ap
-  *  @details    valid only in AP mode if External Supplicant support is enabled.
+ 	if (efuse->rtl_id != cpu_to_le16(0x8129))
+ 		return -EINVAL;
+@@ -1826,7 +1826,7 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+ 	struct rtl8192cu_efuse *efuse = &priv->efuse_wifi.efuse8192;
+-	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
++	struct rtl8723au_tx_power *tx_power = &priv->tx_power.tx_power8723;
+ 	int i;
+ 
+ 	if (efuse->rtl_id != cpu_to_le16(0x8129))
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index ccfbc10..1a767eb 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -598,7 +598,9 @@ struct rtl8xxxu_priv {
+ 
+ 	u8 mac_addr[ETH_ALEN];
+ 	char chip_name[8];
+-	struct rtl8723au_tx_power tx_power;
++	union {
++		struct rtl8723au_tx_power tx_power8723;
++	} tx_power;
+ 	u32 chip_cut:4;
+ 	u32 rom_rev:4;
+ 	u32 is_multi_func:1;
 -- 
-2.6.1
+2.1.0
 
