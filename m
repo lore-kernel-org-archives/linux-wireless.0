@@ -1,82 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8960 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182AbbJEG1e (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14445 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439AbbJTPN6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:27:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 14/18] staging: wilc1000: rename tWILCpfRemainOnChanExpired
-Date: Mon, 5 Oct 2015 15:25:49 +0900
-Message-ID: <1444026353-29024-14-git-send-email-tony.cho@atmel.com> (sfid-20151005_082745_335016_3450B24D)
-In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+	Tue, 20 Oct 2015 11:13:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH v2] ath10k: add notice.txt references to WHENCE
+Date: Tue, 20 Oct 2015 18:13:29 +0300
+Message-ID: <1445354009-20338-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20151020_171401_906043_16E90EA3)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This is to make sure that the notice files get automatically included.
 
-This patch renames tWILCpfRemainOnChanExpired to wilc_remain_on_chan_expired.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ WHENCE |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4dbb970..c929b06 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6384,7 +6384,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
-  *  @date
-  *  @version		1.0
-  */
--s32 host_int_remain_on_channel(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID, u32 u32duration, u16 chan, tWILCpfRemainOnChanExpired RemainOnChanExpired, tWILCpfRemainOnChanReady RemainOnChanReady, void *pvUserArg)
-+s32 host_int_remain_on_channel(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID, u32 u32duration, u16 chan, wilc_remain_on_chan_expired RemainOnChanExpired, tWILCpfRemainOnChanReady RemainOnChanReady, void *pvUserArg)
- {
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 5993cd8..d33e4ee 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -190,7 +190,7 @@ typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
- 				     tstrDisconnectNotifInfo *,
- 				     void *);
+diff --git a/WHENCE b/WHENCE
+index 9b7e8e8526aa..ded2e7ad161b 100755
+--- a/WHENCE
++++ b/WHENCE
+@@ -2393,17 +2393,22 @@ Driver: ath10k - Qualcomm Atheros support for QCA988x family of chips
+ File: ath10k/QCA988X/hw2.0/board.bin
+ File: ath10k/QCA988X/hw2.0/firmware-4.bin
+ Version: 10.2.4.45
++Licence: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-4.txt
+ File: ath10k/QCA988X/hw2.0/firmware-5.bin
+ Version: 10.2.4.70.9-2
++Licence: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt
+ File: ath10k/QCA6174/hw2.1/board.bin
+ File: ath10k/QCA6174/hw2.1/firmware-5.bin
+ Version: WLAN.RM.1.1-00141
++Licence: ath10k/QCA6174/hw2.1/notice_ath10k_firmware-5.txt
+ File: ath10k/QCA6174/hw3.0/board.bin
+ File: ath10k/QCA6174/hw3.0/firmware-4.bin
+ Version: WLAN.RM.2.0-00180-QCARMSWPZ-1
++Licence: ath10k/QCA6174/hw3.0/notice_ath10k_firmware-4.txt
+ File: ath10k/QCA99X0/hw2.0/board.bin
+ File: ath10k/QCA99X0/hw2.0/firmware-5.bin
+ Version: 10.4.1.00030-1
++Licence: ath10k/QCA99X0/hw2.0/notice_ath10k_firmware-5.txt
  
--typedef void (*tWILCpfRemainOnChanExpired)(void *, u32);  /*Remain on channel expiration callback function*/
-+typedef void (*wilc_remain_on_chan_expired)(void *, u32);  /*Remain on channel expiration callback function*/
- typedef void (*tWILCpfRemainOnChanReady)(void *); /*Remain on channel callback function*/
+ Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
  
- /* typedef u32 WILC_WFIDrvHandle; */
-@@ -277,7 +277,7 @@ struct ba_session_info {
- struct remain_ch {
- 	u16 u16Channel;
- 	u32 u32duration;
--	tWILCpfRemainOnChanExpired pRemainOnChanExpired;
-+	wilc_remain_on_chan_expired pRemainOnChanExpired;
- 	tWILCpfRemainOnChanReady pRemainOnChanReady;
- 	void *pVoid;
- 	u32 u32ListenSessionID;
-@@ -1149,7 +1149,7 @@ s32 host_int_get_ipaddress(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8IPAddr, u8 idx);
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_remain_on_channel(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID, u32 u32duration, u16 chan, tWILCpfRemainOnChanExpired RemainOnChanExpired, tWILCpfRemainOnChanReady RemainOnChanReady, void *pvUserArg);
-+s32 host_int_remain_on_channel(tstrWILC_WFIDrv *hWFIDrv, u32 u32SessionID, u32 u32duration, u16 chan, wilc_remain_on_chan_expired RemainOnChanExpired, tWILCpfRemainOnChanReady RemainOnChanReady, void *pvUserArg);
- 
- /**
-  *  @brief              host_int_ListenStateExpired
 -- 
-1.9.1
+1.7.9.5
 
