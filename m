@@ -1,121 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13690 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbbJLIAq (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:32982 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbbJTGqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 04:00:46 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 38/41] staging: wilc1000: rename u8WepKeylen of struct host_if_wep_attr
-Date: Mon, 12 Oct 2015 16:56:12 +0900
-Message-ID: <1444636575-2486-38-git-send-email-tony.cho@atmel.com> (sfid-20151012_100049_428199_AB22E797)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 02:46:35 -0400
+Received: by lbbec13 with SMTP id ec13so5354770lbb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:33 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 16/16] rtl8xxxu: rtl8188eu: Implement parse_efuse()
+Date: Tue, 20 Oct 2015 08:45:46 +0200
+Message-Id: <1445323546-12807-17-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084654_363585_5C6C6647)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8WepKeylen of struct host_if_wep_attr to key_len to
-avoid CamelCase naming convention.
+As opposed to the vendor driver (rtl8188eu), extract from efuse only
+these TX power values that are going to be of use later on.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 35 +++++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 24 ++++++++++++++++
+ 2 files changed, 58 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b331a7b..c4c570a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -109,7 +109,7 @@ struct host_if_wpa_attr {
-  */
- struct host_if_wep_attr {
- 	u8 *key;
--	u8 u8WepKeylen;
-+	u8 key_len;
- 	u8 u8Wepidx;
- 	u8 u8mode;
- 	enum AUTHTYPE tenuAuth_type;
-@@ -2367,7 +2367,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWIDList[2].size = sizeof(char);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 344161b..90da707 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1900,7 +1900,40 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
  
+ static int rtl8188eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+-	return -EOPNOTSUPP; /* Not implemented */
++	struct rtl8188eu_efuse *efuse = &priv->efuse_wifi.efuse8188;
++	struct rtl8188eu_tx_power *tx_power = &priv->tx_power.tx_power8188;
++
++	if (efuse->rtl_id != cpu_to_le16(0x8129))
++		return -EINVAL;
++
++	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
++
++	memcpy(tx_power->cck_index_A,
++	       efuse->tx_power.cck_index_A,
++	       sizeof(tx_power->cck_index_A));
++
++	memcpy(tx_power->ht40_1s_index_A,
++	       efuse->tx_power.ht40_1s_index_A,
++	       sizeof(tx_power->ht40_1s_index_A));
++
++	memcpy(tx_power->ht20_ofdm_index_diff,
++	       efuse->tx_power.ht20_ofdm_index_diff,
++	       sizeof(tx_power->ht20_ofdm_index_diff));
++
++	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
++		 efuse->vendor_name);
++	dev_info(&priv->udev->dev, "Product: %.11s\n",
++		 efuse->device_name);
++
++	/* XXX: Do we need to read the rf_regulatory flag? */
++
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
++		print_hex_dump_bytes("rtl8xxxu: ", DUMP_PREFIX_OFFSET,
++				     priv->efuse_wifi.raw,
++				     sizeof(priv->efuse_wifi.raw));
++	}
++
++	return 0;
+ }
  
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, GFP_KERNEL);
+ static int
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 79f47e3..ec49504 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -507,6 +507,22 @@ struct rtl8192cu_efuse {
+ 	u8 customer_id;
+ };
  
++struct rtl8188eu_efuse {
++	__le16 rtl_id;
++	u8 res0[0x0e];
++	struct {						/* 0x10 */
++		u8 cck_index_A[6];
++		u8 ht40_1s_index_A[5];
++		struct nibble_pair ht20_ofdm_index_diff[1];
++	} tx_power;
++	u8 res1[0xbb];
++	u8 mac_addr[ETH_ALEN];					/* 0xd7 */
++	u8 res2[0x02];
++	u8 vendor_name[7];					/* 0xdf */
++	u8 res3[0x02];
++	u8 device_name[11];					/* 0xe8 */
++};
++
+ struct rtl8xxxu_reg8val {
+ 	u16 reg;
+ 	u8 val;
+@@ -587,6 +603,12 @@ struct rtl8723au_tx_power {
+ 	struct nibble_pair ht20_max_offset[3];
+ };
  
- 			if (pu8keybuf == NULL) {
-@@ -2376,14 +2376,14 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			}
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
- 
- 
- 			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
- 
- 			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
- 			strWIDList[3].type = WID_STR;
--			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen;
-+			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len;
- 			strWIDList[3].val = (s8 *)pu8keybuf;
- 
- 
-@@ -2396,24 +2396,24 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY) {
- 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send Key\n");
- 				return -1;
- 			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
- 
--			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, 1);
-+			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, 1);
- 
- 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
- 
- 			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
- 
- 			strWID.id = (u16)WID_ADD_WEP_KEY;
- 			strWID.type = WID_STR;
- 			strWID.val = (s8 *)pu8keybuf;
--			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2;
-+			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2;
- 
- 			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
- 						   get_id_from_handler(hif_drv));
-@@ -4199,7 +4199,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 		    pu8WepKey, u8WepKeylen);
- 
- 
--	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
-@@ -4268,7 +4268,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 		    pu8WepKey, (u8WepKeylen));
- 
- 
--	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
++struct rtl8188eu_tx_power {
++	u8 cck_index_A[6];
++	u8 ht40_1s_index_A[5];
++	struct nibble_pair ht20_ofdm_index_diff[1];
++};
++
+ struct rtl8xxxu_priv {
+ 	struct ieee80211_hw *hw;
+ 	struct usb_device *udev;
+@@ -607,6 +629,7 @@ struct rtl8xxxu_priv {
+ 	char chip_name[8];
+ 	union {
+ 		struct rtl8723au_tx_power tx_power8723;
++		struct rtl8188eu_tx_power tx_power8188;
+ 	} tx_power;
+ 	u32 chip_cut:4;
+ 	u32 rom_rev:4;
+@@ -659,6 +682,7 @@ struct rtl8xxxu_priv {
+ 		u8 raw[EFUSE_MAP_LEN];
+ 		struct rtl8723au_efuse efuse8723;
+ 		struct rtl8192cu_efuse efuse8192;
++		struct rtl8188eu_efuse efuse8188;
+ 	} efuse_wifi;
+ 	u32 adda_backup[RTL8XXXU_ADDA_REGS];
+ 	u32 mac_backup[RTL8XXXU_MAC_REGS];
 -- 
-1.9.1
+2.1.0
 
