@@ -1,65 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34206 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753479AbbJOCHj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:16922 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337AbbJTIOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:39 -0400
-Received: by payp3 with SMTP id p3so23384154pay.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:39 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/33] staging: wilc1000: fix return type of host_int_flush_join_req
-Date: Thu, 15 Oct 2015 11:06:40 +0900
-Message-Id: <1444874822-31152-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041654_735534_FA368856)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 20 Oct 2015 04:14:37 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/13] staging: wilc1000: mac_open: use netdev private wilc
+Date: Tue, 20 Oct 2015 17:13:54 +0900
+Message-ID: <1445328843-32247-4-git-send-email-tony.cho@atmel.com> (sfid-20151020_101440_547967_5058E8E3)
+In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_flush_join_req from s32 to
-int. s32Error gets value from wilc_mq_send that has return type of int.
-It should be changed return type of int as well as data type of
-s32Error.
+From: Glen Lee <glen.lee@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Use netdev private data member wilc instead of global variable g_linux_wlan.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c19c474..f966759 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3644,9 +3644,9 @@ int host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	return s32Error;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 5fcbfac..ebedffa 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1167,9 +1167,13 @@ int mac_open(struct net_device *ndev)
+ 	int ret = 0;
+ 	int i = 0;
+ 	struct wilc_priv *priv;
++	struct wilc *wl;
++
++	nic = netdev_priv(ndev);
++	wl = nic->wilc;
+ 
+ #ifdef WILC_SPI
+-	if (!g_linux_wlan || !g_linux_wlan->wilc_spidev) {
++	if (!wl|| !wl->wilc_spidev) {
+ 		netdev_err(ndev, "wilc1000: SPI device not ready\n");
+ 		return -ENODEV;
+ 	}
+@@ -1200,16 +1204,16 @@ int mac_open(struct net_device *ndev)
+ 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
+ 
+ 	/* loop through the NUM of supported devices and set the MAC address */
+-	for (i = 0; i < g_linux_wlan->vif_num; i++) {
+-		if (ndev == g_linux_wlan->vif[i].ndev) {
+-			memcpy(g_linux_wlan->vif[i].src_addr, mac_add, ETH_ALEN);
+-			g_linux_wlan->vif[i].hif_drv = priv->hWILCWFIDrv;
++	for (i = 0; i < wl->vif_num; i++) {
++		if (ndev == wl->vif[i].ndev) {
++			memcpy(wl->vif[i].src_addr, mac_add, ETH_ALEN);
++			wl->vif[i].hif_drv = priv->hWILCWFIDrv;
+ 			break;
+ 		}
+ 	}
+ 
+ 	/* TODO: get MAC address whenever the source is EPROM - hardcoded and copy it to ndev*/
+-	memcpy(ndev->dev_addr, g_linux_wlan->vif[i].src_addr, ETH_ALEN);
++	memcpy(ndev->dev_addr, wl->vif[i].src_addr, ETH_ALEN);
+ 
+ 	if (!is_valid_ether_addr(ndev->dev_addr)) {
+ 		PRINT_ER("Error: Wrong MAC address\n");
+@@ -1222,13 +1226,13 @@ int mac_open(struct net_device *ndev)
+ 	wilc_mgmt_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev->ieee80211_ptr,
+ 				 nic->g_struct_frame_reg[1].frame_type, nic->g_struct_frame_reg[1].reg);
+ 	netif_wake_queue(ndev);
+-	g_linux_wlan->open_ifcs++;
++	wl->open_ifcs++;
+ 	nic->mac_opened = 1;
+ 	return 0;
+ 
+ _err_:
+ 	wilc_deinit_host_int(ndev);
+-	wilc1000_wlan_deinit(g_linux_wlan);
++	wilc1000_wlan_deinit(wl);
+ 	return ret;
  }
  
--s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
-+int host_int_flush_join_req(struct host_if_drv *hif_drv)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 
- 	if (!gu8FlushedJoinReq)	{
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c173503..2ed5945 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -680,7 +680,7 @@ int host_int_set_join_req(struct host_if_drv *hWFIDrv, u8 *pu8bssid,
-  *  @version		8.0
-  */
- 
--s32 host_int_flush_join_req(struct host_if_drv *hWFIDrv);
-+int host_int_flush_join_req(struct host_if_drv *hWFIDrv);
- 
- 
- /**
 -- 
-2.6.1
+1.9.1
 
