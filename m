@@ -1,64 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57531 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751305AbbJDKTW (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:16900 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbbJTIOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 06:19:22 -0400
-Date: Sun, 4 Oct 2015 11:19:18 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chandra Gorentla <csgorentla@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com
-Subject: Re: [PATCH 1/2] drivers: staging: wilc1000: Move spin lock to the
- start of critical section
-Message-ID: <20151004101918.GA13898@kroah.com> (sfid-20151004_122015_712782_ABDB986D)
-References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
- <20151004084335.GA24589@kroah.com>
- <20151004100713.GA27051@gcs-HP-Notebook>
+	Tue, 20 Oct 2015 04:14:30 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/13] staging: wilc1000: wlan_init_locks: change parameter and use wilc
+Date: Tue, 20 Oct 2015 17:13:53 +0900
+Message-ID: <1445328843-32247-3-git-send-email-tony.cho@atmel.com> (sfid-20151020_101434_358003_BBA59139)
+In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151004100713.GA27051@gcs-HP-Notebook>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 04, 2015 at 03:37:13PM +0530, Chandra Gorentla wrote:
-> On Sun, Oct 04, 2015 at 09:43:35AM +0100, Greg KH wrote:
-> > On Sat, Oct 03, 2015 at 02:57:29PM +0530, Chandra S Gorentla wrote:
-> > > The spin_lock_irqsave is moved to just beginning of critical section.
-> > > This change moves a couple of return statements out of the lock.
-> > > 
-> > > Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
-> > > ---
-> > >  drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> > > index d5ebd6d..284a3f5 100644
-> > > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> > > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> > > @@ -72,8 +72,6 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
-> > >  		goto ERRORHANDLER;
-> > >  	}
-> > >  
-> > > -	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-> > > -
-> > >  	/* construct a new message */
-> > >  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
-> > 
-> > As you have moved the lock, can you also change this to GFP_KERNEL as
-> > well because we do not have a lock held?
-> Can 'the change to GFP_KERNEL' be done in a separate patch?
+From: Glen Lee <glen.lee@atmel.com>
 
-Yes.
+This patch changes function parameter type wilc with net_device and use netdev
+private data member wilc instead of global variable g_linux_wlan.
 
-> The lock is to protect linked list manipulations; in this function items
-> are added to the list.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-Ok, please add that description to the patch so we know what is going
-on, and that you know what is going on as well :)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 39341a8..5fcbfac 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -920,23 +920,28 @@ void wilc1000_wlan_deinit(struct wilc *nic)
+ 	}
+ }
+ 
+-int wlan_init_locks(struct wilc *p_nic)
++int wlan_init_locks(struct net_device *dev)
+ {
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
++
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
+ 
+ 	PRINT_D(INIT_DBG, "Initializing Locks ...\n");
+ 
+-	mutex_init(&g_linux_wlan->hif_cs);
+-	mutex_init(&g_linux_wlan->rxq_cs);
++	mutex_init(&wl->hif_cs);
++	mutex_init(&wl->rxq_cs);
+ 
+-	spin_lock_init(&g_linux_wlan->txq_spinlock);
+-	sema_init(&g_linux_wlan->txq_add_to_head_cs, 1);
++	spin_lock_init(&wl->txq_spinlock);
++	sema_init(&wl->txq_add_to_head_cs, 1);
+ 
+-	sema_init(&g_linux_wlan->txq_event, 0);
++	sema_init(&wl->txq_event, 0);
+ 
+-	sema_init(&g_linux_wlan->cfg_event, 0);
+-	sema_init(&g_linux_wlan->sync_event, 0);
++	sema_init(&wl->cfg_event, 0);
++	sema_init(&wl->sync_event, 0);
+ 
+-	sema_init(&g_linux_wlan->txq_thread_started, 0);
++	sema_init(&wl->txq_thread_started, 0);
+ 
+ 	return 0;
+ }
+@@ -1033,7 +1038,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		wl->mac_status = WILC_MAC_STATUS_INIT;
+ 		wl->close = 0;
+ 
+-		wlan_init_locks(wl);
++		wlan_init_locks(dev);
+ 
+ 		linux_to_wlan(&nwi, wl);
+ 
+-- 
+1.9.1
 
-thanks,
-
-greg k-h
