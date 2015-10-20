@@ -1,83 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42311 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:22981 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755526AbbJ1HBN (ORCPT
+	with ESMTP id S1751100AbbJTF2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:01:13 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 20 Oct 2015 01:28:14 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 36/80] staging: wilc1000: rename pRemainOnChanReady of struct remain_ch
-Date: Wed, 28 Oct 2015 15:59:56 +0900
-Message-ID: <1446015640-29398-36-git-send-email-glen.lee@atmel.com> (sfid-20151028_080119_669825_65855068)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 09/12] staging: wilc1000: rename wilc_firmware in the struct wilc
+Date: Tue, 20 Oct 2015 14:26:53 +0900
+Message-ID: <1445318816-21686-10-git-send-email-tony.cho@atmel.com> (sfid-20151020_072817_222723_5213A11A)
+In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch renames wilc_firmware in the struct wilc to the firmware. In
+addition, null assignments to the wl->firmware after release_firmware
+are removed because it is not necessary.
 
-This patch renames pRemainOnChanReady of struct remain_ch to ready
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 15 +++++++--------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0bd0d2b..3ee25c6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2483,7 +2483,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	if (!hif_drv->remain_on_ch_pending) {
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
- 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
--		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
-+		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
- 	} else {
-@@ -2537,8 +2537,8 @@ ERRORHANDLER:
- 			  jiffies +
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 74b7cc0..16b1d80 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -537,7 +537,7 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
+ 		goto _fail_;
+ 	}
+ #endif
+-	g_linux_wlan->wilc_firmware = wilc_firmware;
++	g_linux_wlan->firmware = wilc_firmware;
  
--		if (hif_drv->remain_on_ch.pRemainOnChanReady)
--			hif_drv->remain_on_ch.pRemainOnChanReady(hif_drv->remain_on_ch.pVoid);
-+		if (hif_drv->remain_on_ch.ready)
-+			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
+ _fail_:
  
- 		if (hif_drv->remain_on_ch_pending)
- 			hif_drv->remain_on_ch_pending = 0;
-@@ -4367,7 +4367,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
--	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
-+	msg.body.remain_on_ch.ready = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 58d3101..bbb9690 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -239,7 +239,7 @@ struct remain_ch {
- 	u16 ch;
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired expired;
--	wilc_remain_on_chan_ready pRemainOnChanReady;
-+	wilc_remain_on_chan_ready ready;
- 	void *pVoid;
- 	u32 u32ListenSessionID;
- };
+@@ -594,7 +594,7 @@ static int linux_wlan_firmware_download(struct wilc *p_nic)
+ 
+ 	int ret = 0;
+ 
+-	if (g_linux_wlan->wilc_firmware == NULL) {
++	if (!g_linux_wlan->firmware) {
+ 		PRINT_ER("Firmware buffer is NULL\n");
+ 		ret = -ENOBUFS;
+ 		goto _FAIL_;
+@@ -603,16 +603,15 @@ static int linux_wlan_firmware_download(struct wilc *p_nic)
+ 	 *      do the firmware download
+ 	 **/
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+-	ret = wilc_wlan_firmware_download(g_linux_wlan->wilc_firmware->data,
+-					  g_linux_wlan->wilc_firmware->size);
++	ret = wilc_wlan_firmware_download(g_linux_wlan->firmware->data,
++					  g_linux_wlan->firmware->size);
+ 	if (ret < 0)
+ 		goto _FAIL_;
+ 
+ 	/* Freeing FW buffer */
+ 	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+ 	PRINT_D(INIT_DBG, "Releasing firmware\n");
+-	release_firmware(g_linux_wlan->wilc_firmware);
+-	g_linux_wlan->wilc_firmware = NULL;
++	release_firmware(g_linux_wlan->firmware);
+ 
+ 	PRINT_D(INIT_DBG, "Download Succeeded\n");
+ 
+@@ -1709,8 +1708,8 @@ void wl_wlan_cleanup(void)
+ 			nic[i] = netdev_priv(g_linux_wlan->vif[i].ndev);
+ 	}
+ 
+-	if (g_linux_wlan && g_linux_wlan->wilc_firmware)
+-		release_firmware(g_linux_wlan->wilc_firmware);
++	if (g_linux_wlan && g_linux_wlan->firmware)
++		release_firmware(g_linux_wlan->firmware);
+ 
+ 	if (g_linux_wlan &&
+ 	   (g_linux_wlan->vif[0].ndev || g_linux_wlan->vif[1].ndev)) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index b410424..74eb7b6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -182,7 +182,7 @@ struct wilc {
+ 
+ 	unsigned char eth_src_address[NUM_CONCURRENT_IFC][6];
+ 
+-	const struct firmware *wilc_firmware;
++	const struct firmware *firmware;
+ 
+ #ifdef WILC_SDIO
+ 	struct sdio_func *wilc_sdio_func;
 -- 
 1.9.1
 
