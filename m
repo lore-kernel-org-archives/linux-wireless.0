@@ -1,83 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42189 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:22938 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122AbbJ1HAo (ORCPT
+	with ESMTP id S1751194AbbJTF15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:00:44 -0400
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 20 Oct 2015 01:27:57 -0400
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 31/80] staging: wilc1000: rename bReg of struct reg_frame
-Date: Wed, 28 Oct 2015 15:59:51 +0900
-Message-ID: <1446015640-29398-31-git-send-email-glen.lee@atmel.com> (sfid-20151028_081655_014787_91F42B71)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 06/12] staging: wilc1000: rename drvHandler in the struct wilc_vif
+Date: Tue, 20 Oct 2015 14:26:50 +0900
+Message-ID: <1445318816-21686-7-git-send-email-tony.cho@atmel.com> (sfid-20151020_072759_517078_3B4B6021)
+In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch renames drvHandler in the struct wilc_vif to the hif_drv.
 
-This patch renames bReg of struct reg_frame to reg
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 +++++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b29d651..83d2606 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2553,7 +2553,9 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
- 	struct wid wid;
- 	u8 *pu8CurrByte;
- 
--	PRINT_D(HOSTINF_DBG, "Handling frame register Flag : %d FrameType: %d\n", pstrHostIfRegisterFrame->bReg, pstrHostIfRegisterFrame->u16FrameType);
-+	PRINT_D(HOSTINF_DBG, "Handling frame register : %d FrameType: %d\n",
-+		pstrHostIfRegisterFrame->reg,
-+		pstrHostIfRegisterFrame->u16FrameType);
- 
- 	wid.id = (u16)WID_REGISTER_FRAME;
- 	wid.type = WID_STR;
-@@ -2563,7 +2565,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
- 
- 	pu8CurrByte = wid.val;
- 
--	*pu8CurrByte++ = pstrHostIfRegisterFrame->bReg;
-+	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
- 	*pu8CurrByte++ = pstrHostIfRegisterFrame->u8Regid;
- 	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->u16FrameType,
- 	       sizeof(u16));
-@@ -4431,7 +4433,7 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
- 		break;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 493e02c..11e26fb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1314,7 +1314,7 @@ int mac_open(struct net_device *ndev)
+ 	for (i = 0; i < g_linux_wlan->vif_num; i++) {
+ 		if (ndev == g_linux_wlan->vif[i].wilc_netdev) {
+ 			memcpy(g_linux_wlan->vif[i].src_addr, mac_add, ETH_ALEN);
+-			g_linux_wlan->vif[i].drvHandler = priv->hWILCWFIDrv;
++			g_linux_wlan->vif[i].hif_drv = priv->hWILCWFIDrv;
+ 			break;
+ 		}
  	}
- 	msg.body.reg_frame.u16FrameType = u16FrameType;
--	msg.body.reg_frame.bReg = bReg;
-+	msg.body.reg_frame.reg = bReg;
- 	msg.drv = hif_drv;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c166d3f..2dfc0fd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2585,16 +2585,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 			nic->iftype = interface_type;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 627ea43..4a588c4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -245,7 +245,7 @@ struct remain_ch {
+ 			/*Setting interface 1 drv handler and mac address in newly downloaded FW*/
+-			host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].drvHandler);
+-			host_int_set_MacAddress(g_linux_wlan->vif[0].drvHandler,
++			host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].hif_drv);
++			host_int_set_MacAddress(g_linux_wlan->vif[0].hif_drv,
+ 						g_linux_wlan->vif[0].src_addr);
+ 			host_int_set_operation_mode(priv->hWILCWFIDrv, STATION_MODE);
+ 
+ 			/*Add saved WEP keys, if any*/
+ 			if (g_wep_keys_saved) {
+-				host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].drvHandler,
++				host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].hif_drv,
+ 							     g_key_wep_params.key_idx);
+-				host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].drvHandler,
++				host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].hif_drv,
+ 							     g_key_wep_params.key,
+ 							     g_key_wep_params.key_len,
+ 							     g_key_wep_params.key_idx);
+@@ -2666,16 +2666,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 			wilc1000_wlan_init(dev, nic);
+ 			g_wilc_initialized = 1;
+ 
+-			host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].drvHandler);
+-			host_int_set_MacAddress(g_linux_wlan->vif[0].drvHandler,
++			host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].hif_drv);
++			host_int_set_MacAddress(g_linux_wlan->vif[0].hif_drv,
+ 						g_linux_wlan->vif[0].src_addr);
+ 			host_int_set_operation_mode(priv->hWILCWFIDrv, STATION_MODE);
+ 
+ 			/*Add saved WEP keys, if any*/
+ 			if (g_wep_keys_saved) {
+-				host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].drvHandler,
++				host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].hif_drv,
+ 							     g_key_wep_params.key_idx);
+-				host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].drvHandler,
++				host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].hif_drv,
+ 							     g_key_wep_params.key,
+ 							     g_key_wep_params.key_len,
+ 							     g_key_wep_params.key_idx);
+@@ -2781,16 +2781,16 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 
+ 		/*Setting interface 1 drv handler and mac address in newly downloaded FW*/
+-		host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].drvHandler);
+-		host_int_set_MacAddress(g_linux_wlan->vif[0].drvHandler,
++		host_int_set_wfi_drv_handler(g_linux_wlan->vif[0].hif_drv);
++		host_int_set_MacAddress(g_linux_wlan->vif[0].hif_drv,
+ 					g_linux_wlan->vif[0].src_addr);
+ 		host_int_set_operation_mode(priv->hWILCWFIDrv, AP_MODE);
+ 
+ 		/*Add saved WEP keys, if any*/
+ 		if (g_wep_keys_saved) {
+-			host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].drvHandler,
++			host_int_set_WEPDefaultKeyID(g_linux_wlan->vif[0].hif_drv,
+ 						     g_key_wep_params.key_idx);
+-			host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].drvHandler,
++			host_int_add_wep_key_bss_sta(g_linux_wlan->vif[0].hif_drv,
+ 						     g_key_wep_params.key,
+ 						     g_key_wep_params.key_len,
+ 						     g_key_wep_params.key_idx);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 6ac9328..521d3cb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -151,7 +151,7 @@ typedef struct {
+ struct wilc_vif {
+ 	u8 src_addr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+-	struct host_if_drv *drvHandler;
++	struct host_if_drv *hif_drv;
+ 	struct net_device *wilc_netdev;
  };
  
- struct reg_frame {
--	bool bReg;
-+	bool reg;
- 	u16 u16FrameType;
- 	u8 u8Regid;
- };
 -- 
 1.9.1
 
