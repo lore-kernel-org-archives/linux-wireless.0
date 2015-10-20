@@ -1,52 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:34684 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753933AbbJPJY3 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:54835 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbbJTWsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 05:24:29 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/13] staging: wilc1000: start_ap: use netdev private data wilc
-Date: Fri, 16 Oct 2015 18:23:08 +0900
-Message-ID: <1444987389-14151-12-git-send-email-tony.cho@atmel.com> (sfid-20151016_112436_281721_F653ABDE)
-In-Reply-To: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-References: <1444987389-14151-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 18:48:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless@vger.kernel.org
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 06/19] staging/wilc1000: avoid static definitions in header
+Date: Wed, 21 Oct 2015 00:47:25 +0200
+Message-Id: <1445381258-1455986-7-git-send-email-arnd@arndb.de> (sfid-20151021_005621_232032_FF15B9B4)
+In-Reply-To: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+The wilc_wfi_cfgoperations.h header defines the ieee80211_txrx_stypes
+and cipher_suites variables that are only used in wilc_wfi_cfgoperations.c
+and should not be shared in a header file.
 
-Use netdev private data member wilc instead of global variable wl.
+This moves over all that data into the .c file, and also moves all
+the macro definitions from the file that are also not needed here.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 84 +++++++++++++++++++++++
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 83 ----------------------
+ 2 files changed, 84 insertions(+), 83 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 00ce76f..1a27728 100644
+index 0ed05aafa5bf..702c40c1df4b 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2889,8 +2889,12 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct cfg80211_beacon_data *beacon = &(settings->beacon);
- 	struct wilc_priv *priv;
- 	s32 s32Error = 0;
-+	struct wilc *wl;
-+	perInterface_wlan_t *nic;
+@@ -17,6 +17,90 @@
+ #include "host_interface.h"
+ #include <linux/errno.h>
  
- 	priv = wiphy_priv(wiphy);
-+	nic = netdev_priv(dev);
-+	wl = nic->wilc;
- 	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
++/* The following macros describe the bitfield map used by the firmware to determine its 11i mode */
++#define NO_ENCRYPT		0
++#define ENCRYPT_ENABLED		BIT(0)
++#define WEP			BIT(1)
++#define WEP_EXTENDED		BIT(2)
++#define WPA			BIT(3)
++#define WPA2			BIT(4)
++#define AES			BIT(5)
++#define TKIP			BIT(6)
++
++/*Public action frame index IDs*/
++#define FRAME_TYPE_ID			0
++#define ACTION_CAT_ID			24
++#define ACTION_SUBTYPE_ID		25
++#define P2P_PUB_ACTION_SUBTYPE		30
++
++/*Public action frame Attribute IDs*/
++#define ACTION_FRAME			0xd0
++#define GO_INTENT_ATTR_ID		0x04
++#define CHANLIST_ATTR_ID		0x0b
++#define OPERCHAN_ATTR_ID		0x11
++#define PUB_ACTION_ATTR_ID		0x04
++#define P2PELEM_ATTR_ID			0xdd
++
++/*Public action subtype values*/
++#define GO_NEG_REQ			0x00
++#define GO_NEG_RSP			0x01
++#define GO_NEG_CONF			0x02
++#define P2P_INV_REQ			0x03
++#define P2P_INV_RSP			0x04
++#define PUBLIC_ACT_VENDORSPEC		0x09
++#define GAS_INTIAL_REQ			0x0a
++#define GAS_INTIAL_RSP			0x0b
++
++#define INVALID_CHANNEL			0
++
++#define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
++#define SCAN_RESULT_EXPIRE		(40 * HZ)
++
++static const u32 cipher_suites[] = {
++	WLAN_CIPHER_SUITE_WEP40,
++	WLAN_CIPHER_SUITE_WEP104,
++	WLAN_CIPHER_SUITE_TKIP,
++	WLAN_CIPHER_SUITE_CCMP,
++	WLAN_CIPHER_SUITE_AES_CMAC,
++};
++
++static const struct ieee80211_txrx_stypes
++	wilc_wfi_cfg80211_mgmt_types[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_STATION] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_AP] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
++			BIT(IEEE80211_STYPE_AUTH >> 4) |
++			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
++			BIT(IEEE80211_STYPE_ACTION >> 4)
++	},
++	[NL80211_IFTYPE_P2P_CLIENT] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++			BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
++			BIT(IEEE80211_STYPE_AUTH >> 4) |
++			BIT(IEEE80211_STYPE_DEAUTH >> 4)
++	}
++};
++
++/* Time to stay on the channel */
++#define WILC_WFI_DWELL_PASSIVE 100
++#define WILC_WFI_DWELL_ACTIVE  40
++
++#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
++#define DEFAULT_LINK_SPEED			72
++
++
+ #define IS_MANAGMEMENT				0x100
+ #define IS_MANAGMEMENT_CALLBACK			0x080
+ #define IS_MGMT_STATUS_SUCCES			0x040
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index ae2aaea508db..158d98c0eb87 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -10,86 +10,6 @@
+ #define NM_WFI_CFGOPERATIONS
+ #include "wilc_wfi_netdevice.h"
  
- 	PRINT_D(HOSTAPD_DBG, "Interval = %d\n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+-/* The following macros describe the bitfield map used by the firmware to determine its 11i mode */
+-#define NO_ENCRYPT		0
+-#define ENCRYPT_ENABLED		BIT(0)
+-#define WEP			BIT(1)
+-#define WEP_EXTENDED		BIT(2)
+-#define WPA			BIT(3)
+-#define WPA2			BIT(4)
+-#define AES			BIT(5)
+-#define TKIP			BIT(6)
+-
+-/*Public action frame index IDs*/
+-#define FRAME_TYPE_ID			0
+-#define ACTION_CAT_ID			24
+-#define ACTION_SUBTYPE_ID		25
+-#define P2P_PUB_ACTION_SUBTYPE		30
+-
+-/*Public action frame Attribute IDs*/
+-#define ACTION_FRAME			0xd0
+-#define GO_INTENT_ATTR_ID		0x04
+-#define CHANLIST_ATTR_ID		0x0b
+-#define OPERCHAN_ATTR_ID		0x11
+-#define PUB_ACTION_ATTR_ID		0x04
+-#define P2PELEM_ATTR_ID			0xdd
+-
+-/*Public action subtype values*/
+-#define GO_NEG_REQ			0x00
+-#define GO_NEG_RSP			0x01
+-#define GO_NEG_CONF			0x02
+-#define P2P_INV_REQ			0x03
+-#define P2P_INV_RSP			0x04
+-#define PUBLIC_ACT_VENDORSPEC		0x09
+-#define GAS_INTIAL_REQ			0x0a
+-#define GAS_INTIAL_RSP			0x0b
+-
+-#define INVALID_CHANNEL			0
+-
+-#define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
+-#define SCAN_RESULT_EXPIRE		(40 * HZ)
+-
+-static const u32 cipher_suites[] = {
+-	WLAN_CIPHER_SUITE_WEP40,
+-	WLAN_CIPHER_SUITE_WEP104,
+-	WLAN_CIPHER_SUITE_TKIP,
+-	WLAN_CIPHER_SUITE_CCMP,
+-	WLAN_CIPHER_SUITE_AES_CMAC,
+-};
+-
+-static const struct ieee80211_txrx_stypes
+-	wilc_wfi_cfg80211_mgmt_types[NUM_NL80211_IFTYPES] = {
+-	[NL80211_IFTYPE_STATION] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-			BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+-	},
+-	[NL80211_IFTYPE_AP] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
+-			BIT(IEEE80211_STYPE_AUTH >> 4) |
+-			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
+-			BIT(IEEE80211_STYPE_ACTION >> 4)
+-	},
+-	[NL80211_IFTYPE_P2P_CLIENT] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
+-			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
+-			BIT(IEEE80211_STYPE_AUTH >> 4) |
+-			BIT(IEEE80211_STYPE_DEAUTH >> 4)
+-	}
+-};
+-
+-/* Time to stay on the channel */
+-#define WILC_WFI_DWELL_PASSIVE 100
+-#define WILC_WFI_DWELL_ACTIVE  40
+-
+ struct wireless_dev *wilc_create_wiphy(struct net_device *net);
+ void wilc_free_wiphy(struct net_device *net);
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
+@@ -101,7 +21,4 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			      u16 frame_type, bool reg);
+ 
+-#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+-#define DEFAULT_LINK_SPEED			72
+-
+ #endif
 -- 
-1.9.1
+2.1.0.rc2
 
