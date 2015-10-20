@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64199 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751843AbbJBHps (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:35518 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbbJTGq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:45:48 -0400
-Message-ID: <560E3628.4000105@broadcom.com> (sfid-20151002_094559_005891_A69ED075)
-Date: Fri, 2 Oct 2015 09:45:44 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Chaehyun Lim <chaehyun.lim@gmail.com>, <gregkh@linuxfoundation.org>
-CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
-	<chris.park@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com> <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
-In-Reply-To: <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Tue, 20 Oct 2015 02:46:29 -0400
+Received: by lffy185 with SMTP id y185so720508lff.2
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:27 -0700 (PDT)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [RFC 11/16] rtl8xxxu: Make efuse content length a parameter
+Date: Tue, 20 Oct 2015 08:45:41 +0200
+Message-Id: <1445323546-12807-12-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084632_706024_19B99F88)
+In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/01/2015 03:43 PM, Chaehyun Lim wrote:
-> This patch replaces int8_t with s8 that is a preferred type.
->
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index d781003..56c97c9 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
->   	g_obtainingIP = false;
->   }
->
-> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-> +s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
+This is a preparatory step for adding support for RTL8188EU chips
+which have different efuse length.
 
-It seems to make more sense to use bool type here.
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
->   {
-> -	int8_t state = -1;
-> +	s8 state = -1;
-
-You can actually get rid of the state variable. Just replace the 
-statement 'state = i;' by 'return true;' and replace 'return state;' by 
-'return false;'.
-
->   	int i;
->
->   	if (u32LastScannedNtwrksCountShadow == 0) {
-> @@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
->
->   void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
->   {
-> -	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-> +	s8 ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-
-And here as well.
-
-Regards,
-Arend
-
->   	u32 ap_index = 0;
->   	u8 rssi_index = 0;
->
->
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index d48db87..a7d172a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1930,6 +1930,7 @@ rtl8xxxu_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
+ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+ {
+ 	struct device *dev = &priv->udev->dev;
++	int efuse_len = priv->fops->efuse_len;
+ 	int i, ret = 0;
+ 	u8 val8, word_mask, header, extheader;
+ 	u16 val16, efuse_addr, offset;
+@@ -1978,7 +1979,7 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+ 	memset(priv->efuse_wifi.raw, 0xff, EFUSE_MAP_LEN_8723A);
+ 
+ 	efuse_addr = 0;
+-	while (efuse_addr < EFUSE_REAL_CONTENT_LEN_8723A) {
++	while (efuse_addr < efuse_len) {
+ 		u16 map_addr;
+ 
+ 		ret = rtl8xxxu_read_efuse8(priv, efuse_addr++, &header);
+@@ -5780,6 +5781,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.parse_efuse = rtl8723au_parse_efuse,
+ 	.load_firmware = rtl8723au_load_firmware,
+ 	.power_on = rtl8723au_power_on,
++	.efuse_len = EFUSE_REAL_CONTENT_LEN_8723A,
+ 	.writeN_block_size = 1024,
+ };
+ 
+@@ -5787,6 +5789,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.parse_efuse = rtl8192cu_parse_efuse,
+ 	.load_firmware = rtl8192cu_load_firmware,
+ 	.power_on = rtl8192cu_power_on,
++	.efuse_len = EFUSE_REAL_CONTENT_LEN_8723A,
+ 	.writeN_block_size = 128,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 2f5f903..ccfbc10 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -677,5 +677,6 @@ struct rtl8xxxu_fileops {
+ 	int (*parse_efuse) (struct rtl8xxxu_priv *priv);
+ 	int (*load_firmware) (struct rtl8xxxu_priv *priv);
+ 	int (*power_on) (struct rtl8xxxu_priv *priv);
++	int efuse_len;
+ 	int writeN_block_size;
+ };
+-- 
+2.1.0
 
