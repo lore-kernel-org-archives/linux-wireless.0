@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sif.is.scarlet.be ([193.74.71.28]:59876 "EHLO sif.is.scarlet.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753170AbbJZIuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 04:50:05 -0400
-From: Ewoud Van Craeynest <ewoudvc@gmail.com>
-To: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Cc: Ewoud Van Craeynest <ewoudvc@gmail.com>
-Subject: [PATCH] Staging: rtl8723: Fixed a few whitespace related coding style errors
-Date: Mon, 26 Oct 2015 08:40:26 +0000
-Message-Id: <1445848826-23469-1-git-send-email-ewoudvc@gmail.com> (sfid-20151026_095009_942908_58C9BCAA)
+Received: from mout.kundenserver.de ([212.227.126.130]:53281 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753271AbbJTWmh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 18:42:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>
+Subject: Re: [PATCH] staging/wilc: fix Kconfig dependencies, second try
+Date: Wed, 21 Oct 2015 00:42:23 +0200
+Message-ID: <4126905.7rHMRoCZhU@wuerfel> (sfid-20151021_004254_209781_815C102E)
+In-Reply-To: <4095810.4Q9e8Lc4je@wuerfel>
+References: <5446980.8Rmykv9Tt3@wuerfel> <4253270.hGxaSY0VLA@wuerfel> <4095810.4Q9e8Lc4je@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ewoud Van Craeynest <ewoudvc@gmail.com>
----
-This is my first patch. I followed the kernel newbie's guide
----
- drivers/staging/rtl8723au/core/rtw_wlan_util.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+On Monday 19 October 2015 11:53:40 Arnd Bergmann wrote:
+> On Monday 19 October 2015 11:39:31 Arnd Bergmann wrote:
+> > On Monday 19 October 2015 16:54:23 Tony Cho wrote:
+> > > Hi Arnd Bergmann,
+> > > 
+> > > When I apply this patch, I cannot make WILC1000 module (wilc1000.ko) because CONFIG_WILC1000 is y and also I can see some link errors for the cfg80211 APIs.
+> > > 
+> > > Can you consider this patch?
+> > 
+> > Ah, you are right. I see the same thing now and don't know what caused me
+> > to send the patch in an incomplete state.
+> > 
+> > I hope this snippet is the last missing piece:
+> > 
+> 
+> No, that was not it either, I'll start over to think this through.
+> 
+> The real solution of course is to make it possible to load both the
+> SPI and MMC front-ends at the same time and have a common base driver,
+> which I might have to do, in order to clear myself of the shame of sending
+> not one but two incorrect fixes for this problem 
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-index 5e8736092720..940d38ba86de 100644
---- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-+++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-@@ -542,7 +542,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
- 		switch (ACI) {
- 		case 0x0:
- 			rtl8723a_set_ac_param_be(padapter, acParm);
--			acm_mask |= (ACM? BIT(1):0);
-+			acm_mask |= (ACM ? BIT(1) : 0);
- 			edca[XMIT_BE_QUEUE] = acParm;
- 			break;
- 		case 0x1:
-@@ -552,12 +552,12 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
- 			break;
- 		case 0x2:
- 			rtl8723a_set_ac_param_vi(padapter, acParm);
--			acm_mask |= (ACM? BIT(2):0);
-+			acm_mask |= (ACM ? BIT(2) : 0);
- 			edca[XMIT_VI_QUEUE] = acParm;
- 			break;
- 		case 0x3:
- 			rtl8723a_set_ac_param_vo(padapter, acParm);
--			acm_mask |= (ACM? BIT(3):0);
-+			acm_mask |= (ACM ? BIT(3) : 0);
- 			edca[XMIT_VO_QUEUE] = acParm;
- 			break;
- 		}
-@@ -597,7 +597,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
- 		}
- 	}
- 
--	for (i = 0; i<4; i++) {
-+	for (i = 0; i < 4; i++) {
- 		pxmitpriv->wmm_para_seq[i] = inx[i];
- 		DBG_8723A("wmm_para_seq(%d): %d\n", i,
- 			  pxmitpriv->wmm_para_seq[i]);
-@@ -628,7 +628,7 @@ static void bwmode_update_check(struct rtw_adapter *padapter, const u8 *p)
- 	    pregistrypriv->cbw40_enable) {
- 		new_bwmode = HT_CHANNEL_WIDTH_40;
- 
--		switch (pHT_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET){
-+		switch (pHT_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
- 			new_ch_offset = HAL_PRIME_CHNL_OFFSET_LOWER;
- 			break;
-@@ -1189,7 +1189,7 @@ unsigned int update_basic_rate23a(unsigned char *ptn, unsigned int ptn_sz)
- 	unsigned int i, num_of_rate;
- 	unsigned int mask = 0;
- 
--	num_of_rate = (ptn_sz > NumRates)? NumRates: ptn_sz;
-+	num_of_rate = (ptn_sz > NumRates) ? NumRates : ptn_sz;
- 
- 	for (i = 0; i < num_of_rate; i++) {
- 		if ((*(ptn + i)) & 0x80)
-@@ -1231,7 +1231,7 @@ int support_short_GI23a(struct rtw_adapter *padapter,
- 		return _FAIL;
- 	if (pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_RALINK)
- 		return _FAIL;
--	bit_offset = (pmlmeext->cur_bwmode & HT_CHANNEL_WIDTH_40)? 6: 5;
-+	bit_offset = (pmlmeext->cur_bwmode & HT_CHANNEL_WIDTH_40) ? 6 : 5;
- 
- 	if (pHT_caps->cap_info & cpu_to_le16(0x1 << bit_offset))
- 		return _SUCCESS;
--- 
-1.7.9.5
+I spent too much time on it now, but I have a series that should fix
+this part for real and let you build both drivers into the kernel
+(or as modules) in a single configuration.
 
+	Arnd
