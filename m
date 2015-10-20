@@ -1,118 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28298 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965569AbbJ2DQx (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:55473 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbbJTWsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:16:53 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 11/12] staging: wilc1000: rename os_context to wilc
-Date: Thu, 29 Oct 2015 12:18:51 +0900
-Message-ID: <1446088732-12301-11-git-send-email-glen.lee@atmel.com> (sfid-20151029_044654_941382_7B3BB500)
-In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Oct 2015 18:48:09 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless@vger.kernel.org
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 00/19] staging/wilc1000 cleanups
+Date: Wed, 21 Oct 2015 00:47:19 +0200
+Message-Id: <1445381258-1455986-1-git-send-email-arnd@arndb.de> (sfid-20151021_005350_232622_C5A24916)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch rename os_context to wilc because it is used as struct wilc and
-move os_private from struct wilc_wlan_os_context_t to struct wilc_wlan_inp_t.
-Finally, delete wilc_wlan_os_context_t.
+After I screwed up two or three times trying to get the dependencies
+with the SPI and SDIO backends right, I ended up taking the time
+to do the real fix and make both coexist.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c   | 2 +-
- drivers/staging/wilc1000/wilc_sdio.c    | 6 +++---
- drivers/staging/wilc1000/wilc_spi.c     | 6 +++---
- drivers/staging/wilc1000/wilc_wlan_if.h | 6 +-----
- 4 files changed, 8 insertions(+), 12 deletions(-)
+This is a series of patches that address various issues with the
+driver, but is mainly targetted at splitting out the spi and sdio
+backends into separate drivers that can be built independent of
+one another.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 017799f..d0161cd 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1012,7 +1012,7 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- 
- 	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
- 
--	nwi->os_context.os_private = (void *)nic;
-+	nwi->wilc = (void *)nic;
- 
- #ifdef WILC_SDIO
- 	nwi->io_func.io_type = HIF_SDIO;
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 300c571..82f68eb 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -14,7 +14,7 @@
- #define WILC_SDIO_BLOCK_SIZE 512
- 
- typedef struct {
--	void *os_context;
-+	void *wilc;
- 	u32 block_size;
- 	int (*sdio_cmd52)(sdio_cmd52_t *);
- 	int (*sdio_cmd53)(sdio_cmd53_t *);
-@@ -563,10 +563,10 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
- 
- 	g_sdio.dPrint = func;
--	g_sdio.os_context = inp->os_context.os_private;
-+	g_sdio.wilc = inp->wilc;
- 
- 	if (inp->io_func.io_init) {
--		if (!inp->io_func.io_init(g_sdio.os_context)) {
-+		if (!inp->io_func.io_init(g_sdio.wilc)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
- 			return 0;
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 599508b..9a72fbb 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -12,7 +12,7 @@
- #include "wilc_wlan.h"
- 
- typedef struct {
--	void *os_context;
-+	void *wilc;
- 	int (*spi_tx)(u8 *, u32);
- 	int (*spi_rx)(u8 *, u32);
- 	int (*spi_trx)(u8 *, u8 *, u32);
-@@ -968,9 +968,9 @@ static int spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	memset(&g_spi, 0, sizeof(wilc_spi_t));
- 
- 	g_spi.dPrint = func;
--	g_spi.os_context = inp->os_context.os_private;
-+	g_spi.wilc = inp->wilc;
- 	if (inp->io_func.io_init) {
--		if (!inp->io_func.io_init(g_spi.os_context)) {
-+		if (!inp->io_func.io_init(g_spi.wilc)) {
- 			PRINT_ER("[wilc spi]: Failed io init bus...\n");
- 			return 0;
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 139cc6d..a6bf969 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -99,11 +99,7 @@ typedef struct {
- #define WILC_MAC_INDICATE_SCAN		0x2
- 
- typedef struct {
--	void *os_private;
--} wilc_wlan_os_context_t;
--
--typedef struct {
--	wilc_wlan_os_context_t os_context;
-+	void *wilc;
- 	wilc_wlan_io_func_t io_func;
- } wilc_wlan_inp_t;
- 
+The last patch is more experimental than the others, hence the
+[RFC] annotation.
+
+Please review and test.
+
+	Arnd
+
+Arnd Bergmann (19):
+  staging/wilc1000: remove unused functions
+  staging/wilc1000: make symbols static if possible
+  staging/wilc1000: use proper naming for global symbols
+  staging/wilc1000: move extern declarations to headers
+  staging/wilc1000: use NO_SECURITY instead of NO_ENCRYPT
+  staging/wilc1000: avoid static definitions in header
+  staging/wilc1000: remove linux_wlan_{device_power,device_detection}
+  staging/wilc1000: move wilc_wlan_inp_t into struct wilc
+  staging/wilc1000: move init/exit functions to driver files
+  staging/wilc1000: unify device pointer
+  staging/wilc1000: move wilc1000_ops to drivers
+  staging/wilc1000: use device pointer for phy creation
+  staging/wilc1000: move COMPLEMENT_BOOT code to linux_wlan_sdio.c
+  staging/wilc1000: get rid of WILC_SDIO_IRQ_GPIO
+  staging/wilc1000: turn enable_irq/disable_irq into callbacks
+  staging/wilc1000: remove WILC_SDIO/WILC_SPI macros
+  staging/wilc1000: pass hif operations through initialization
+  staging/wilc1000: split out bus specific modules
+  [RFC] staging/wilc1000: use more regular probing
+
+ drivers/staging/wilc1000/Kconfig                  |  66 +-
+ drivers/staging/wilc1000/Makefile                 |  16 +-
+ drivers/staging/wilc1000/coreconfigurator.c       |  12 +-
+ drivers/staging/wilc1000/coreconfigurator.h       |  12 +-
+ drivers/staging/wilc1000/host_interface.c         | 501 +++-------------
+ drivers/staging/wilc1000/host_interface.h         | 349 ++---------
+ drivers/staging/wilc1000/linux_mon.c              |  11 +-
+ drivers/staging/wilc1000/linux_wlan.c             | 695 +++++++---------------
+ drivers/staging/wilc1000/linux_wlan_common.h      |  18 +-
+ drivers/staging/wilc1000/linux_wlan_sdio.c        | 202 +++++--
+ drivers/staging/wilc1000/linux_wlan_sdio.h        |  14 -
+ drivers/staging/wilc1000/linux_wlan_spi.c         | 119 ++--
+ drivers/staging/wilc1000/linux_wlan_spi.h         |   8 -
+ drivers/staging/wilc1000/wilc_debugfs.c           |  20 +-
+ drivers/staging/wilc1000/wilc_sdio.c              | 213 +++----
+ drivers/staging/wilc1000/wilc_spi.c               | 276 +--------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 495 +++++++--------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  87 +--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  21 +-
+ drivers/staging/wilc1000/wilc_wlan.c              | 180 +++---
+ drivers/staging/wilc1000/wilc_wlan.h              |  49 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h           |  23 +-
+ 23 files changed, 1171 insertions(+), 2222 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
+
 -- 
-1.9.1
+2.1.0.rc2
 
