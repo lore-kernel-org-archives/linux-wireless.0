@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:32949 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755282AbbJANoP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:23016 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbbJTF21 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:15 -0400
-Received: by pacex6 with SMTP id ex6so75444770pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:14 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/12] staging: wilc1000: remove commented codes
-Date: Thu,  1 Oct 2015 22:43:49 +0900
-Message-Id: <1443707039-18433-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154417_699329_CE4784EF)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 20 Oct 2015 01:28:27 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 11/12] staging: wilc1000: introduce struct wilc_sdio for sdio data
+Date: Tue, 20 Oct 2015 14:26:55 +0900
+Message-ID: <1445318816-21686-12-git-send-email-tony.cho@atmel.com> (sfid-20151020_074655_495165_34084923)
+In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes commented codes that is not used in this driver.
+This patch introduces struct wilc_sdio for sdio driver data. The wilc_sdio is
+allocated and set as driver data when the sdio is probed and deallocated when
+the sdio is removed.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 3 ---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- drivers/staging/wilc1000/wilc_wlan.c          | 4 ----
- drivers/staging/wilc1000/wilc_wlan_if.h       | 3 ---
- 4 files changed, 11 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 701d317..bd83da1 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1967,9 +1967,6 @@ static void __exit exit_wilc_driver(void)
- 		}
- 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 1bd7f9b..9a45871 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -21,6 +21,10 @@
+  #define MAX_SPEED (6 * 1000000) /* Max 50M */
+ #endif
  
--	/* WILC_WFI_deinit_mon_interface(); */
--
--	/* if(g_linux_wlan->open_ifcs==0) */
- 	{
- 	#ifndef WILC_SDIO
- 		PRINT_D(INIT_DBG, "SPI unregsiter...\n");
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index d3a03c6..4878f12 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -185,7 +185,6 @@ typedef struct {
- 	struct task_struct *txq_thread;
++struct wilc_sdio {
++	struct sdio_func *func;
++	struct wilc *wilc;
++};
  
- 	unsigned char eth_src_address[NUM_CONCURRENT_IFC][6];
--	/* unsigned char eth_dst_address[6]; */
+ struct sdio_func *local_sdio_func;
+ extern int wilc_netdev_init(void);
+@@ -112,14 +116,22 @@ int linux_sdio_cmd53(sdio_cmd53_t *cmd)
  
- 	const struct firmware *wilc_firmware;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 428e94f..de70c59 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -142,7 +142,6 @@ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
+ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
  {
++	struct wilc_sdio *wl_sdio;
++
+ 	PRINT_D(INIT_DBG, "probe function\n");
++	wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
++	if (!wl_sdio)
++		return -ENOMEM;
  
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
--	/* unsigned long flags; */
- 	if (tqe == p->txq_head)	{
+ 	PRINT_D(INIT_DBG, "Initializing netdev\n");
+ 	local_sdio_func = func;
+ 	if (wilc_netdev_init()) {
+ 		PRINT_ER("Couldn't initialize netdev\n");
++		kfree(wl_sdio);
+ 		return -1;
+ 	}
++	wl_sdio->func = func;
++	sdio_set_drvdata(func, wl_sdio);
  
- 		p->txq_head = tqe->next;
-@@ -848,8 +847,6 @@ static int wilc_wlan_handle_txq(u32 *pu32TxqCount)
- 		i = 0;
- 		sum = 0;
- 		do {
--			/* if ((tqe != NULL) && (i < (8)) && */
--			/* if ((tqe != NULL) && (i < (WILC_VMM_TBL_SIZE-1)) && */
- 			if ((tqe != NULL) && (i < (WILC_VMM_TBL_SIZE - 1)) /* reserve last entry to 0 */) {
+ 	printk("Driver Initializing success\n");
+ 	return 0;
+@@ -127,7 +139,11 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
  
- 				if (tqe->type == WILC_CFG_PKT) {
-@@ -972,7 +969,6 @@ static int wilc_wlan_handle_txq(u32 *pu32TxqCount)
- 					 *      Get the entries
- 					 **/
- 					entries = ((reg >> 3) & 0x3f);
--					/* entries = ((reg>>3)&0x2f); */
- 					break;
- 				} else {
- 					release_bus(RELEASE_ALLOW_SLEEP);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 7aa317d..75c1ebc 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -10,9 +10,6 @@
- #ifndef WILC_WLAN_IF_H
- #define WILC_WLAN_IF_H
+ static void linux_sdio_remove(struct sdio_func *func)
+ {
++	struct wilc_sdio *wl_sdio;
++
++	wl_sdio = sdio_get_drvdata(func);
+ 	wl_wlan_cleanup();
++	kfree(wl_sdio);
+ }
  
--/* #define MEMORY_STATIC */
--/* #define USE_OLD_SPI_SW */
--
- #include <linux/semaphore.h>
- #include "linux_wlan_common.h"
- 
+ struct sdio_driver wilc_bus = {
 -- 
-2.6.0
+1.9.1
 
