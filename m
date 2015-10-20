@@ -1,32 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:55756 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbbJUNTl (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:17049 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbbJTIPC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 09:19:41 -0400
-To: linux-wireless@vger.kernel.org
-From: Christoph Sauer <info@sauer-chris.de>
-Subject: IPW2200 Driver for Linux
-Message-ID: <562790EA.60300@sauer-chris.de> (sfid-20151021_151945_550918_3DFAD1FC)
-Date: Wed, 21 Oct 2015 15:19:38 +0200
+	Tue, 20 Oct 2015 04:15:02 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/13] staging: wilc1000: CfgConnectResult: use netdev private wilc
+Date: Tue, 20 Oct 2015 17:13:58 +0900
+Message-ID: <1445328843-32247-8-git-send-email-tony.cho@atmel.com> (sfid-20151020_101511_270851_689F72E7)
+In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, do you still have the IPW2200 Linux driver for Lenovo Thinkpad 
-t42 notebook? I have an old notebook from a friend which i want to 
-install linux on it, and i am searching for the wifi driver for days.
+From: Glen Lee <glen.lee@atmel.com>
 
-http://ipw2200.sourceforge.net/index.php
+Use netdev private data member wilc instead of global variable g_linux_wlan.
 
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 33a082f..1533804 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -537,11 +537,15 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 	struct net_device *dev;
+ 	struct host_if_drv *pstrWFIDrv;
+ 	u8 NullBssid[ETH_ALEN] = {0};
++	struct wilc *wl;
++	perInterface_wlan_t *nic;
+ 
+ 	connecting = 0;
+ 
+ 	priv = (struct wilc_priv *)pUserVoid;
+ 	dev = priv->dev;
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
+ 	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
+ 
+ 	if (enuConnDisconnEvent == CONN_DISCONN_EVENT_CONN_RESP) {
+@@ -624,12 +628,12 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			u8WLANChannel = INVALID_CHANNEL;
+ 		/*Incase "P2P CLIENT Connected" send deauthentication reason by 3 to force the WPA_SUPPLICANT to directly change
+ 		 *      virtual interface to station*/
+-		if ((pstrWFIDrv->IFC_UP) && (dev == g_linux_wlan->vif[1].ndev)) {
++		if ((pstrWFIDrv->IFC_UP) && (dev == wl->vif[1].ndev)) {
+ 			pstrDisconnectNotifInfo->u16reason = 3;
+ 		}
+ 		/*Incase "P2P CLIENT during connection(not connected)" send deauthentication reason by 1 to force the WPA_SUPPLICANT
+ 		 *      to scan again and retry the connection*/
+-		else if ((!pstrWFIDrv->IFC_UP) && (dev == g_linux_wlan->vif[1].ndev)) {
++		else if ((!pstrWFIDrv->IFC_UP) && (dev == wl->vif[1].ndev)) {
+ 			pstrDisconnectNotifInfo->u16reason = 1;
+ 		}
+ 		cfg80211_disconnected(dev, pstrDisconnectNotifInfo->u16reason, pstrDisconnectNotifInfo->ie,
 -- 
-----------------------------------------------
-Mit freundlichen Grüßen
-Christoph Sauer
-35444 Biebertal,
-Rodheimerstraße 28
-Handy: 0171-8686473
-E-Mail: info@sauer-chris.de
-www.it-sauer.de
+1.9.1
 
