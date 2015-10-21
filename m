@@ -1,126 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6403 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103AbbJOE2h (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52482 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756611AbbJUVxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:28:37 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 28/40] staging: wilc1000: rename variable gu8FlushedJoinReq
-Date: Thu, 15 Oct 2015 13:25:09 +0900
-Message-ID: <1444883121-31757-28-git-send-email-tony.cho@atmel.com> (sfid-20151015_064657_265916_786D827E)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 21 Oct 2015 17:53:24 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/3] ath6k:  report antenna configuration.
+Date: Wed, 21 Oct 2015 14:53:19 -0700
+Message-Id: <1445464401-13826-1-git-send-email-greearb@candelatech.com> (sfid-20151021_235338_206575_05C57F08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This patch renames variable gu8FlushedJoinReq to join_req
-to avoid CamelCase naming convention.
+This lets 'iw phy phy0 info' report antennas for
+the radio device:
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+...
+	Available Antennas: TX 0x2 RX 0x2
+	Configured Antennas: TX 0x2 RX 0x2
+...
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 31a8266..38ce396 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -261,7 +261,7 @@ static u8 get_ip[2][4];
- static u32 inactive_time;
- static u8 del_beacon;
+This patch series is on top of my various local patches in a 4.2.3 kernel.
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 17 +++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |  2 ++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 5b3d79e..ed25ad6 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3231,6 +3231,15 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 					wait, buf, len, no_cck);
+ }
  
--u8 *gu8FlushedJoinReq;
-+u8 *join_req;
- u8 *gu8FlushedInfoElemAsoc;
- u8 gu8Flushed11iMode;
- u8 gu8FlushedAuthType;
-@@ -1113,7 +1113,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		gu32FlushedJoinReqSize = strWIDList[u32WidsCount].size;
--		gu8FlushedJoinReq = kmalloc(gu32FlushedJoinReqSize, GFP_KERNEL);
-+		join_req = kmalloc(gu32FlushedJoinReqSize, GFP_KERNEL);
++static int ath6kl_get_antenna(struct wiphy *wiphy,
++			      u32 *tx_ant, u32 *rx_ant)
++{
++	struct ath6kl *ar = wiphy_priv(wiphy);
++	*tx_ant = ar->hw.tx_ant;
++	*rx_ant = ar->hw.rx_ant;
++	return 0;
++}
++
+ static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
+ 				       struct wireless_dev *wdev,
+ 				       u16 frame_type, bool reg)
+@@ -3448,6 +3457,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
+ 	.mgmt_tx = ath6kl_mgmt_tx,
+ 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
++	.get_antenna = ath6kl_get_antenna,
+ 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
+ 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
+ 	.set_bitrate_mask = ath6kl_cfg80211_set_bitrate,
+@@ -3795,11 +3805,18 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
+ 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[1] = 0xff;
+ 		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[1] = 0xff;
++		ar->hw.tx_ant = 2;
++		ar->hw.rx_ant = 2;
+ 	} else {
+ 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[0] = 0xff;
+ 		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
++		ar->hw.tx_ant = 1;
++		ar->hw.rx_ant = 1;
  	}
- 	if (strWIDList[u32WidsCount].val == NULL) {
- 		s32Error = -EFAULT;
-@@ -1210,7 +1210,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	u32WidsCount++;
  
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
-+		memcpy(join_req, pu8CurrByte, gu32FlushedJoinReqSize);
- 		gu8FlushedJoinReqDrvHandler = hif_drv;
- 	}
++	wiphy->available_antennas_tx = ar->hw.tx_ant;
++	wiphy->available_antennas_rx = ar->hw.rx_ant;
++
+ 	if (band_2gig)
+ 		wiphy->bands[IEEE80211_BAND_2GHZ] = &ath6kl_band_2ghz;
+ 	if (band_5gig)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 2b78c86..5f3acfe 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -782,6 +782,8 @@ struct ath6kl {
+ 		u32 refclk_hz;
+ 		u32 uarttx_pin;
+ 		u32 testscript_addr;
++		u8 tx_ant;
++		u8 rx_ant;
+ 		enum wmi_phy_cap cap;
  
-@@ -1323,7 +1323,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 	strWIDList[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
- 	strWIDList[u32WidsCount].type = WID_STR;
- 	strWIDList[u32WidsCount].size = gu32FlushedJoinReqSize;
--	strWIDList[u32WidsCount].val = (s8 *)gu8FlushedJoinReq;
-+	strWIDList[u32WidsCount].val = (s8 *)join_req;
- 	pu8CurrByte = strWIDList[u32WidsCount].val;
- 
- 	pu8CurrByte += FLUSHED_BYTE_POS;
-@@ -1407,9 +1407,9 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 
- 	eth_zero_addr(u8ConnectedSSID);
- 
--	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
--		kfree(gu8FlushedJoinReq);
--		gu8FlushedJoinReq = NULL;
-+	if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+		kfree(join_req);
-+		join_req = NULL;
- 	}
- 	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
- 		kfree(gu8FlushedInfoElemAsoc);
-@@ -1710,9 +1710,9 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
- 			kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
- 
--			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
--				kfree(gu8FlushedJoinReq);
--				gu8FlushedJoinReq = NULL;
-+			if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+				kfree(join_req);
-+				join_req = NULL;
- 			}
- 			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
- 				kfree(gu8FlushedInfoElemAsoc);
-@@ -2102,9 +2102,9 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 		hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = 0;
- 		kfree(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs);
- 
--		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
--			kfree(gu8FlushedJoinReq);
--			gu8FlushedJoinReq = NULL;
-+		if (join_req != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
-+			kfree(join_req);
-+			join_req = NULL;
- 		}
- 		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == hif_drv) {
- 			kfree(gu8FlushedInfoElemAsoc);
-@@ -3634,7 +3634,7 @@ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
- 	s32 s32Error = 0;
- 	struct host_if_msg msg;
- 
--	if (!gu8FlushedJoinReq)	{
-+	if (!join_req) {
- 		s32Error = -EFAULT;
- 		return s32Error;
- 	}
+ 		u32 flags;
 -- 
-1.9.1
+2.4.3
 
