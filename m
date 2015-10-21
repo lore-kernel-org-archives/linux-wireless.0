@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13115 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbbJLH7Y (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52488 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756506AbbJUVx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:59:24 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 26/41] staging: wilc1000: rename typedef from tenuCfgParam
-Date: Mon, 12 Oct 2015 16:56:00 +0900
-Message-ID: <1444636575-2486-26-git-send-email-tony.cho@atmel.com> (sfid-20151012_095929_562059_DBEFACCB)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 21 Oct 2015 17:53:26 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/3] ath6k:  fix firmware version assignment.
+Date: Wed, 21 Oct 2015 14:53:21 -0700
+Message-Id: <1445464401-13826-3-git-send-email-greearb@candelatech.com> (sfid-20151021_235338_803988_ACB0B501)
+In-Reply-To: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
+References: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This patch rename typedef from the enum tenuCfgParamand
-rename it to cfg_param.
+Improper use of strlcpy caused garbage to be appended to the
+firmware version string.  Fix this by paying attention to the
+ie_lenth.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 64ee054..ad4c1c4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -126,7 +126,7 @@ struct cfg_param_val {
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 6e473fa..e3f3a6a 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -994,7 +994,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 		switch (ie_id) {
+ 		case ATH6KL_FW_IE_FW_VERSION:
+ 			strlcpy(ar->wiphy->fw_version, data,
+-				sizeof(ar->wiphy->fw_version));
++				min(sizeof(ar->wiphy->fw_version), ie_len+1));
  
- };
- 
--typedef enum {
-+enum cfg_param {
- 	RETRY_SHORT		= BIT(0),
- 	RETRY_LONG		= BIT(1),
- 	FRAG_THRESHOLD		= BIT(2),
-@@ -146,7 +146,7 @@ typedef enum {
- 	PASSIVE_SCANTIME	= BIT(16),
- 	CURRENT_TX_RATE		= BIT(17),
- 	HT_ENABLE		= BIT(18),
--} tenuCfgParam;
-+};
- 
- struct found_net_info {
- 	u8 au8bssid[6];
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT,
+ 				   "found fw version %s\n",
 -- 
-1.9.1
+2.4.3
 
