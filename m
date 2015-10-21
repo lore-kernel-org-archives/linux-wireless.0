@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:33240 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268AbbJUTHh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 15:07:37 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jslaby@suse.cz, lkp@intel.com,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH v2 05/15] net: wireless: ti: Return flow can be simplified for wl1271_cmd_interrogate
-Date: Thu, 22 Oct 2015 00:37:07 +0530
-Message-Id: <1445454428-12331-1-git-send-email-punitvara@gmail.com> (sfid-20151021_210820_865569_D95071E7)
+Received: from mx1.redhat.com ([209.132.183.28]:36117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658AbbJUBHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 21:07:21 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jakub Sitnicki <jsitnicki@gmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 03/16] rtl8xxxu: Don't check for illegal offset when reading from efuse
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	<1445323546-12807-4-git-send-email-jsitnicki@gmail.com>
+Date: Tue, 20 Oct 2015 21:07:19 -0400
+In-Reply-To: <1445323546-12807-4-git-send-email-jsitnicki@gmail.com> (Jakub
+	Sitnicki's message of "Tue, 20 Oct 2015 08:45:33 +0200")
+Message-ID: <wrfjvba1vxko.fsf@redhat.com> (sfid-20151021_030735_891827_088658D7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove int ret suggested by kbuild test robot
+Jakub Sitnicki <jsitnicki@gmail.com> writes:
+> It is enough to check for either illegal offset or illegal map address
+> because map address is a value derived from an offset:
+>
+>   map_addr = offset * 8
+>   EFUSE_MAP_LEN_8723A = EFUSE_MAX_SECTION_8723A * 8
+>
+> Leave just the check for an illegal map address because its upper
+> bound (EFUSE_MAP_LEN_8723A) is used also in a couple other places.
+>
+> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 63 +++++++++++-------------
+>  1 file changed, 28 insertions(+), 35 deletions(-)
 
-This patch is to the wlcore/acx.c file that fixes up warning
-reported by coccicheck:
+Applied - I had already changed EFUSE_MAP_LEN_8723A to EFUSE_MAP_LEN, so
+I applied it with that minor modification.
 
-WARNING: end returns can be simplified if negative or 0 value
-
-Prefer direct return value instead of writing 2-3 more sentence.
-
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
- drivers/net/wireless/ti/wlcore/acx.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index f28fa3b..6b566d9 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -158,16 +158,11 @@ out:
- int wl1271_acx_mem_map(struct wl1271 *wl, struct acx_header *mem_map,
- 		       size_t len)
- {
--	int ret;
- 
- 	wl1271_debug(DEBUG_ACX, "acx mem map");
- 
--	ret = wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map,
-+	return wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map,
- 				     sizeof(struct acx_header), len);
--	if (ret < 0)
--		return ret;
--
--	return 0;
- }
- 
- int wl1271_acx_rx_msdu_life_time(struct wl1271 *wl)
--- 
-2.5.3
-
+Jes
