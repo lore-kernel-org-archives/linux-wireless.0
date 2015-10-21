@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-135.163.com ([123.125.50.135]:55572 "EHLO m50-135.163.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60345 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751247AbbJDIrP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 04:47:15 -0400
-From: Geliang Tang <geliangtang@163.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] mwifiex: fix a comment typo
-Date: Sun,  4 Oct 2015 16:46:55 +0800
-Message-Id: <53a87c6aae6bae712c079bf17ed27d0f1b381016.1443948331.git.geliangtang@163.com> (sfid-20151004_104744_400197_12FA568F)
+	id S1750910AbbJUBwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2015 21:52:07 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jakub Sitnicki <jsitnicki@gmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 06/16] rtl8xxxu: rtl8723au: Introduce a pointer to efuse
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	<1445323546-12807-7-git-send-email-jsitnicki@gmail.com>
+Date: Tue, 20 Oct 2015 21:52:05 -0400
+In-Reply-To: <1445323546-12807-7-git-send-email-jsitnicki@gmail.com> (Jakub
+	Sitnicki's message of "Tue, 20 Oct 2015 08:45:36 +0200")
+Message-ID: <wrfjfv15vvi2.fsf@redhat.com> (sfid-20151021_035214_521517_5DA01D20)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just fix a typo in the code comment.
+Jakub Sitnicki <jsitnicki@gmail.com> writes:
+> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 26 +++++++++++++-----------
+>  1 file changed, 14 insertions(+), 12 deletions(-)
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This cleans up the code nicely - so I applied both of these.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 30cbafb..b7ac45f 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2374,7 +2374,7 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-  * CFG802.11 operation handler for scan request.
-  *
-  * This function issues a scan request to the firmware based upon
-- * the user specified scan configuration. On successfull completion,
-+ * the user specified scan configuration. On successful completion,
-  * it also informs the results.
-  */
- static int
--- 
-2.5.0
-
-
+Jes
