@@ -1,123 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:33183 "EHLO
-	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbbJTUUB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 16:20:01 -0400
-Received: by iodv82 with SMTP id v82so35356953iod.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2015 13:20:00 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:42420 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756236AbbJUXNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2015 19:13:21 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Enable data frame reception in rtl8xxxu_start
+References: <1445462932-23679-1-git-send-email-br1@einfach.org>
+Date: Wed, 21 Oct 2015 19:13:19 -0400
+In-Reply-To: <1445462932-23679-1-git-send-email-br1@einfach.org> (Bruno
+	Randolf's message of "Wed, 21 Oct 2015 22:28:52 +0100")
+Message-ID: <wrfjoafrrf1s.fsf@redhat.com> (sfid-20151022_011329_153718_60C567AE)
 MIME-Version: 1.0
-In-Reply-To: <1445280550-13673-1-git-send-email-mfaltesek@google.com>
-References: <1445280550-13673-1-git-send-email-mfaltesek@google.com>
-Date: Tue, 20 Oct 2015 13:20:00 -0700
-Message-ID: <CAJwzM1k-hzyu+49zk5JwB91kAFVbCDRo6vM4UZ=bpj2_cFB4xQ@mail.gmail.com> (sfid-20151020_222007_381522_4473827E)
-Subject: Re: [PATCH] mwifiex: toggle carrier state in start_ap/stop_ap.
-From: Avinash Patil <avinashapatil@gmail.com>
-To: Marty Faltesek <mfaltesek@google.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Denton Gentry <dgentry@google.com>,
-	Avery Pennarun <apenwarr@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Marty,
-
-
-On Mon, Oct 19, 2015 at 11:49 AM, Marty Faltesek <mfaltesek@google.com> wrote:
+Bruno Randolf <br1@einfach.org> writes:
+> mac80211 documentation says, the ieee80211_ops.start callback "must turn on
+> frame reception (for possibly enabled monitor interfaces.)". If not a single
+> monitor interface does not receive data frames.
 >
-> In uap mode the carrier is not enabled until after the first STA joins.
-> The carrier triggers the bridge to start its state machine, and if STP
-> is enabled, it takes 4 seconds as it transitions from disabled to
-> forwarding. During this time the bridge drops all traffic, and the EAPOL
-> handshake times out after 3 seconds, preventing stations from joining.
+> Similarly we should not change the data reception based on the association
+> state.
 >
-> Follow the logic used in mac80211 and start the carrier in start_ap
-> and disable it in stop_ap. This has a nice benefit of allowing the
-> first station connection time to be reduced by up to 75% when STP is
-> in use.
->
-> Signed-off-by: Martin Faltesek <mfaltesek@google.com>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 > ---
->  drivers/net/wireless/mwifiex/cfg80211.c  | 12 ++++++++++++
->  drivers/net/wireless/mwifiex/uap_event.c | 11 -----------
->  2 files changed, 12 insertions(+), 11 deletions(-)
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 12 ++----------
+>  1 file changed, 2 insertions(+), 10 deletions(-)
+
+Bruno,
+
+Thanks - I am not 100% convinced about this one. I don't think we should
+tell the firmware to pass up data frames before we have negotiated the
+connection.
+
+It's true that for monitor mode, we need to enable it if all packets
+are requested. Looking at iw there is an option where it only requests
+control packets, and one for all, etc. However for non monitor mode, we
+shouldn't pass all data packets up to the stack, resulting and have
+mac80211 parse them all.
+
+Cheers,
+Jes
+
+
 >
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> index 495621f..275ce3c 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -1765,6 +1765,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
->                 return -1;
->         }
->
-> +       priv->media_connected = false;
-> +       if (netif_carrier_ok(priv->netdev))
-> +               netif_carrier_off(priv->netdev);
-> +       mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
-> +       mwifiex_clean_txrx(priv);
-> +       mwifiex_del_all_sta_list(priv);
-> +
->         return 0;
->  }
->
-> @@ -1863,6 +1870,11 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
->         if (mwifiex_set_mgmt_ies(priv, &params->beacon))
->                 return -1;
->
-> +       priv->media_connected = true;
-> +       if (!netif_carrier_ok(priv->netdev))
-> +               netif_carrier_on(priv->netdev);
-> +       mwifiex_wake_up_net_dev_queue(priv->netdev, priv->adapter);
-> +
->         memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
->         kfree(bss_cfg);
->         return 0;
-> diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-> index f4794cd..c5bb6ee 100644
-> --- a/drivers/net/wireless/mwifiex/uap_event.c
-> +++ b/drivers/net/wireless/mwifiex/uap_event.c
-> @@ -113,19 +113,8 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
->                 mwifiex_del_sta_entry(priv, deauth_mac);
->                 break;
->         case EVENT_UAP_BSS_IDLE:
-> -               priv->media_connected = false;
-> -               if (netif_carrier_ok(priv->netdev))
-> -                       netif_carrier_off(priv->netdev);
-> -               mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> index 0399b1e..ae490e7 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> @@ -4475,9 +4475,6 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  
+>  			rtl8xxxu_update_rate_mask(priv, ramask, sgi);
+>  
+> -			/* Enable RX of data frames */
+> -			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
 > -
-> -               mwifiex_clean_txrx(priv);
-> -               mwifiex_del_all_sta_list(priv);
->                 break;
->         case EVENT_UAP_BSS_ACTIVE:
-> -               priv->media_connected = true;
-
-I remember we have encountered an issue if we download packets to
-interface/FW before bss has become active. I think media_connected
-cannot be set to true in start_ap; this may cause issues.
-
-Amit,
-I would suggest running some tests to see that FW does not crash if we
-set media_connected before BSS_ACTIVE event.
-
-Also, this patch has side-effect of cleaning TXRX and station list
-data structures only in stop_ap. This is not correct. There is no
-point in holding these structures/memory if no stations are connected.
-
-> -               if (!netif_carrier_ok(priv->netdev))
-> -                       netif_carrier_on(priv->netdev);
-> -               mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
->                 break;
->         case EVENT_UAP_BSS_START:
->                 dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
-> --
-> 2.6.0.rc2.230.g3dd15c0
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Thanks,
-Avinash
+>  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
+>  
+>  			rtl8723a_stop_tx_beacon(priv);
+> @@ -4492,8 +4489,6 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  			val8 |= BEACON_DISABLE_TSF_UPDATE;
+>  			rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
+>  
+> -			/* Disable RX of data frames */
+> -			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x0000);
+>  			h2c.joinbss.data = H2C_JOIN_BSS_DISCONNECT;
+>  		}
+>  		h2c.joinbss.cmd = H2C_JOIN_BSS_REPORT;
+> @@ -5495,12 +5490,9 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+>  	}
+>  exit:
+>  	/*
+> -	 * Disable all data frames
+> -	 */
+> -	rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x0000);
+> -	/*
+> -	 * Accept all mgmt frames
+> +	 * Accept all data and mgmt frames
+>  	 */
+> +	rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
+>  	rtl8xxxu_write16(priv, REG_RXFLTMAP0, 0xffff);
+>  
+>  	rtl8xxxu_write32(priv, REG_OFDM0_XA_AGC_CORE1, 0x6954341e);
