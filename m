@@ -1,99 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26805 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965235AbbJ2DDl (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:27085 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751578AbbJUDlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:03:41 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 35/64] staging: wilc1000: rename u32UserConnectPvoid of struct user_conn_req
-Date: Thu, 29 Oct 2015 12:05:27 +0900
-Message-ID: <1446087956-19054-2-git-send-email-glen.lee@atmel.com> (sfid-20151029_040344_185472_2AB87345)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+	Tue, 20 Oct 2015 23:41:46 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Avinash Patil <avinashapatil@gmail.com>,
+	Marty Faltesek <mfaltesek@google.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nishant Sarmukadam" <nishants@marvell.com>,
+	Denton Gentry <dgentry@google.com>,
+	"Avery Pennarun" <apenwarr@google.com>
+Subject: RE: [PATCH] mwifiex: toggle carrier state in start_ap/stop_ap.
+Date: Wed, 21 Oct 2015 03:41:40 +0000
+Message-ID: <6a3b7114d8dd48ecba00189eb9918380@SC-EXCH04.marvell.com> (sfid-20151021_054149_774827_08B70D67)
+References: <1445280550-13673-1-git-send-email-mfaltesek@google.com>
+ <CAJwzM1k-hzyu+49zk5JwB91kAFVbCDRo6vM4UZ=bpj2_cFB4xQ@mail.gmail.com>
+In-Reply-To: <CAJwzM1k-hzyu+49zk5JwB91kAFVbCDRo6vM4UZ=bpj2_cFB4xQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames u32UserConnectPvoid of struct user_conn_req to arg
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f1f1ef4..3b24a27 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1030,7 +1030,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	hif_drv->usr_conn_req.u8security = pstrHostIFconnectAttr->security;
- 	hif_drv->usr_conn_req.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
- 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
--	hif_drv->usr_conn_req.u32UserConnectPvoid = pstrHostIFconnectAttr->arg;
-+	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
- 
- 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
- 	strWIDList[u32WidsCount].type = WID_INT;
-@@ -1351,7 +1351,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 						  &strConnectInfo,
- 						  MAC_DISCONNECTED,
- 						  NULL,
--						  hif_drv->usr_conn_req.u32UserConnectPvoid);
-+						  hif_drv->usr_conn_req.arg);
- 
- 		kfree(strConnectInfo.pu8ReqIEs);
- 		strConnectInfo.pu8ReqIEs = NULL;
-@@ -1599,7 +1599,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 							  &strConnectInfo,
- 							  u8MacStatus,
- 							  NULL,
--							  hif_drv->usr_conn_req.u32UserConnectPvoid);
-+							  hif_drv->usr_conn_req.arg);
- 
- 			if ((u8MacStatus == MAC_CONNECTED) &&
- 			    (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE))	{
-@@ -1652,7 +1652,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 								  NULL,
- 								  0,
- 								  &strDisconnectNotifInfo,
--								  hif_drv->usr_conn_req.u32UserConnectPvoid);
-+								  hif_drv->usr_conn_req.arg);
- 			} else {
- 				PRINT_ER("Connect result callback function is NULL\n");
- 			}
-@@ -2017,7 +2017,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 							  NULL,
- 							  0,
- 							  &strDisconnectNotifInfo,
--							  hif_drv->usr_conn_req.u32UserConnectPvoid);
-+							  hif_drv->usr_conn_req.arg);
- 		} else {
- 			PRINT_ER("usr_conn_req.conn_result = NULL\n");
- 		}
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 3afe432..9595d48 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -208,7 +208,7 @@ struct user_conn_req {
- 	size_t ies_len;
- 	wilc_connect_result conn_result;
- 	bool ht_capable;
--	void *u32UserConnectPvoid;
-+	void *arg;
- };
- 
- struct drv_handler {
--- 
-1.9.1
-
+SGkgQXZpbmFzaA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBBdmluYXNoIFBhdGlsDQo+IFNlbnQ6IFdlZG5lc2RheSwgT2N0b2JlciAyMSwgMjAx
+NSAxOjUwIEFNDQo+IFRvOiBNYXJ0eSBGYWx0ZXNlaw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50DQo+IFNhcm11a2FkYW07IERl
+bnRvbiBHZW50cnk7IEF2ZXJ5IFBlbm5hcnVuDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG13aWZp
+ZXg6IHRvZ2dsZSBjYXJyaWVyIHN0YXRlIGluIHN0YXJ0X2FwL3N0b3BfYXAuDQo+IA0KPiBIZWxs
+byBNYXJ0eSwNCj4gDQo+IA0KPiBPbiBNb24sIE9jdCAxOSwgMjAxNSBhdCAxMTo0OSBBTSwgTWFy
+dHkgRmFsdGVzZWsgPG1mYWx0ZXNla0Bnb29nbGUuY29tPg0KPiB3cm90ZToNCj4gPg0KPiA+IElu
+IHVhcCBtb2RlIHRoZSBjYXJyaWVyIGlzIG5vdCBlbmFibGVkIHVudGlsIGFmdGVyIHRoZSBmaXJz
+dCBTVEENCj4gam9pbnMuDQo+ID4gVGhlIGNhcnJpZXIgdHJpZ2dlcnMgdGhlIGJyaWRnZSB0byBz
+dGFydCBpdHMgc3RhdGUgbWFjaGluZSwgYW5kIGlmIFNUUA0KPiA+IGlzIGVuYWJsZWQsIGl0IHRh
+a2VzIDQgc2Vjb25kcyBhcyBpdCB0cmFuc2l0aW9ucyBmcm9tIGRpc2FibGVkIHRvDQo+ID4gZm9y
+d2FyZGluZy4gRHVyaW5nIHRoaXMgdGltZSB0aGUgYnJpZGdlIGRyb3BzIGFsbCB0cmFmZmljLCBh
+bmQgdGhlDQo+ID4gRUFQT0wgaGFuZHNoYWtlIHRpbWVzIG91dCBhZnRlciAzIHNlY29uZHMsIHBy
+ZXZlbnRpbmcgc3RhdGlvbnMgZnJvbQ0KPiBqb2luaW5nLg0KPiA+DQo+ID4gRm9sbG93IHRoZSBs
+b2dpYyB1c2VkIGluIG1hYzgwMjExIGFuZCBzdGFydCB0aGUgY2FycmllciBpbiBzdGFydF9hcA0K
+PiA+IGFuZCBkaXNhYmxlIGl0IGluIHN0b3BfYXAuIFRoaXMgaGFzIGEgbmljZSBiZW5lZml0IG9m
+IGFsbG93aW5nIHRoZQ0KPiA+IGZpcnN0IHN0YXRpb24gY29ubmVjdGlvbiB0aW1lIHRvIGJlIHJl
+ZHVjZWQgYnkgdXAgdG8gNzUlIHdoZW4gU1RQIGlzDQo+ID4gaW4gdXNlLg0KPiA+DQo+ID4gU2ln
+bmVkLW9mZi1ieTogTWFydGluIEZhbHRlc2VrIDxtZmFsdGVzZWtAZ29vZ2xlLmNvbT4NCj4gPiAt
+LS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jICB8IDEyICsr
+KysrKysrKysrKw0KPiA+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdWFwX2V2ZW50LmMg
+fCAxMSAtLS0tLS0tLS0tLQ0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKyks
+IDExIGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL213aWZpZXgvY2ZnODAyMTEuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9jZmc4MDIxMS5jDQo+ID4gaW5kZXggNDk1NjIxZi4uMjc1Y2UzYyAxMDA2NDQNCj4gPiAtLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiArKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiBAQCAtMTc2NSw2ICsxNzY1
+LDEzIEBAIHN0YXRpYyBpbnQgbXdpZmlleF9jZmc4MDIxMV9zdG9wX2FwKHN0cnVjdA0KPiB3aXBo
+eSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNlICpkZXYpDQo+ID4gICAgICAgICAgICAgICAgIHJl
+dHVybiAtMTsNCj4gPiAgICAgICAgIH0NCj4gPg0KPiA+ICsgICAgICAgcHJpdi0+bWVkaWFfY29u
+bmVjdGVkID0gZmFsc2U7DQo+ID4gKyAgICAgICBpZiAobmV0aWZfY2Fycmllcl9vayhwcml2LT5u
+ZXRkZXYpKQ0KPiA+ICsgICAgICAgICAgICAgICBuZXRpZl9jYXJyaWVyX29mZihwcml2LT5uZXRk
+ZXYpOw0KPiA+ICsgICAgICAgbXdpZmlleF9zdG9wX25ldF9kZXZfcXVldWUocHJpdi0+bmV0ZGV2
+LCBwcml2LT5hZGFwdGVyKTsNCj4gPiArICAgICAgIG13aWZpZXhfY2xlYW5fdHhyeChwcml2KTsN
+Cj4gPiArICAgICAgIG13aWZpZXhfZGVsX2FsbF9zdGFfbGlzdChwcml2KTsNCj4gPiArDQo+ID4g
+ICAgICAgICByZXR1cm4gMDsNCj4gPiAgfQ0KPiA+DQo+ID4gQEAgLTE4NjMsNiArMTg3MCwxMSBA
+QCBzdGF0aWMgaW50IG13aWZpZXhfY2ZnODAyMTFfc3RhcnRfYXAoc3RydWN0DQo+IHdpcGh5ICp3
+aXBoeSwNCj4gPiAgICAgICAgIGlmIChtd2lmaWV4X3NldF9tZ210X2llcyhwcml2LCAmcGFyYW1z
+LT5iZWFjb24pKQ0KPiA+ICAgICAgICAgICAgICAgICByZXR1cm4gLTE7DQo+ID4NCj4gPiArICAg
+ICAgIHByaXYtPm1lZGlhX2Nvbm5lY3RlZCA9IHRydWU7DQo+ID4gKyAgICAgICBpZiAoIW5ldGlm
+X2NhcnJpZXJfb2socHJpdi0+bmV0ZGV2KSkNCj4gPiArICAgICAgICAgICAgICAgbmV0aWZfY2Fy
+cmllcl9vbihwcml2LT5uZXRkZXYpOw0KPiA+ICsgICAgICAgbXdpZmlleF93YWtlX3VwX25ldF9k
+ZXZfcXVldWUocHJpdi0+bmV0ZGV2LCBwcml2LT5hZGFwdGVyKTsNCj4gPiArDQo+ID4gICAgICAg
+ICBtZW1jcHkoJnByaXYtPmJzc19jZmcsIGJzc19jZmcsIHNpemVvZihwcml2LT5ic3NfY2ZnKSk7
+DQo+ID4gICAgICAgICBrZnJlZShic3NfY2ZnKTsNCj4gPiAgICAgICAgIHJldHVybiAwOw0KPiA+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3VhcF9ldmVudC5jDQo+
+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3VhcF9ldmVudC5jDQo+ID4gaW5kZXgg
+ZjQ3OTRjZC4uYzViYjZlZSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+d2lmaWV4L3VhcF9ldmVudC5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC91YXBfZXZlbnQuYw0KPiA+IEBAIC0xMTMsMTkgKzExMyw4IEBAIGludCBtd2lmaWV4X3Byb2Nl
+c3NfdWFwX2V2ZW50KHN0cnVjdA0KPiBtd2lmaWV4X3ByaXZhdGUgKnByaXYpDQo+ID4gICAgICAg
+ICAgICAgICAgIG13aWZpZXhfZGVsX3N0YV9lbnRyeShwcml2LCBkZWF1dGhfbWFjKTsNCj4gPiAg
+ICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gICAgICAgICBjYXNlIEVWRU5UX1VBUF9CU1NfSURM
+RToNCj4gPiAtICAgICAgICAgICAgICAgcHJpdi0+bWVkaWFfY29ubmVjdGVkID0gZmFsc2U7DQo+
+ID4gLSAgICAgICAgICAgICAgIGlmIChuZXRpZl9jYXJyaWVyX29rKHByaXYtPm5ldGRldikpDQo+
+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgbmV0aWZfY2Fycmllcl9vZmYocHJpdi0+bmV0ZGV2
+KTsNCj4gPiAtICAgICAgICAgICAgICAgbXdpZmlleF9zdG9wX25ldF9kZXZfcXVldWUocHJpdi0+
+bmV0ZGV2LCBhZGFwdGVyKTsNCj4gPiAtDQo+ID4gLSAgICAgICAgICAgICAgIG13aWZpZXhfY2xl
+YW5fdHhyeChwcml2KTsNCj4gPiAtICAgICAgICAgICAgICAgbXdpZmlleF9kZWxfYWxsX3N0YV9s
+aXN0KHByaXYpOw0KPiA+ICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIGNhc2Ug
+RVZFTlRfVUFQX0JTU19BQ1RJVkU6DQo+ID4gLSAgICAgICAgICAgICAgIHByaXYtPm1lZGlhX2Nv
+bm5lY3RlZCA9IHRydWU7DQo+IA0KPiBJIHJlbWVtYmVyIHdlIGhhdmUgZW5jb3VudGVyZWQgYW4g
+aXNzdWUgaWYgd2UgZG93bmxvYWQgcGFja2V0cyB0bw0KPiBpbnRlcmZhY2UvRlcgYmVmb3JlIGJz
+cyBoYXMgYmVjb21lIGFjdGl2ZS4gSSB0aGluayBtZWRpYV9jb25uZWN0ZWQNCj4gY2Fubm90IGJl
+IHNldCB0byB0cnVlIGluIHN0YXJ0X2FwOyB0aGlzIG1heSBjYXVzZSBpc3N1ZXMuDQo+IA0KPiBB
+bWl0LA0KPiBJIHdvdWxkIHN1Z2dlc3QgcnVubmluZyBzb21lIHRlc3RzIHRvIHNlZSB0aGF0IEZX
+IGRvZXMgbm90IGNyYXNoIGlmIHdlDQo+IHNldCBtZWRpYV9jb25uZWN0ZWQgYmVmb3JlIEJTU19B
+Q1RJVkUgZXZlbnQuDQo+IA0KPiBBbHNvLCB0aGlzIHBhdGNoIGhhcyBzaWRlLWVmZmVjdCBvZiBj
+bGVhbmluZyBUWFJYIGFuZCBzdGF0aW9uIGxpc3QgZGF0YQ0KPiBzdHJ1Y3R1cmVzIG9ubHkgaW4g
+c3RvcF9hcC4gVGhpcyBpcyBub3QgY29ycmVjdC4gVGhlcmUgaXMgbm8gcG9pbnQgaW4NCj4gaG9s
+ZGluZyB0aGVzZSBzdHJ1Y3R1cmVzL21lbW9yeSBpZiBubyBzdGF0aW9ucyBhcmUgY29ubmVjdGVk
+Lg0KPiANCg0KVGhhbmtzIGZvciB5b3VyIHJldmlldy4NCg0KSSBzdXBwb3NlIG9ubHkgY2Fycmll
+ciBzdGF0ZSB0b2dnbGUgbG9naWMgKG5ldGlmX2NhcnJpZXJfb2ZmL29uIGxpbmVzKSBuZWVkIHRv
+IGJlIG1vdmVkIHRvIHN0YXJ0X2FwL3N0b3BfYXAgdG8gZml4IHRoZSBwcm9ibGVtLg0KSSB3aWxs
+IHJ1biBzb21lIHRlc3RzIGFuZCBzdWJtaXQgdXBkYXRlZCB2ZXJzaW9uLg0KDQpSZWdhcmRzLA0K
+QW1pdGt1bWFyDQo=
