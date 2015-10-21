@@ -1,60 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21978 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751556AbbJTEun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 00:50:43 -0400
-Date: Tue, 20 Oct 2015 06:50:38 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Vincent =?iso-8859-1?Q?Stehl=E9?= <vincent.stehle@laposte.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Thierry Escande <thierry.escande@linux.intel.com>
-Subject: Re: [PATCH] nfc: netlink: avoid NULL pointer dereference on error
-Message-ID: <20151020045038.GE9764@zurbaran.home> (sfid-20151020_065110_382667_93EB28E5)
-References: <1444210399-3913-1-git-send-email-vincent.stehle@laposte.net>
+Received: from mout.kundenserver.de ([212.227.126.187]:55756 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbbJUNTl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2015 09:19:41 -0400
+To: linux-wireless@vger.kernel.org
+From: Christoph Sauer <info@sauer-chris.de>
+Subject: IPW2200 Driver for Linux
+Message-ID: <562790EA.60300@sauer-chris.de> (sfid-20151021_151945_550918_3DFAD1FC)
+Date: Wed, 21 Oct 2015 15:19:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1444210399-3913-1-git-send-email-vincent.stehle@laposte.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vincent,
+Hello, do you still have the IPW2200 Linux driver for Lenovo Thinkpad 
+t42 notebook? I have an old notebook from a friend which i want to 
+install linux on it, and i am searching for the wifi driver for days.
 
-On Wed, Oct 07, 2015 at 11:33:19AM +0200, Vincent StehlÈ wrote:
-> The function nfc_genl_llc_sdreq() can dereference the dev pointer while
-> it is NULL on its error path. Create a new error handling label to avoid
-> that.
-> 
-> This fixes the following coccinelle error:
-> 
->   ./net/nfc/netlink.c:1175:21-24: ERROR: dev is NULL but dereferenced.
-> 
-> Signed-off-by: Vincent StehlÈ <vincent.stehle@laposte.net>
-> Cc: Thierry Escande <thierry.escande@linux.intel.com>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> ---
->  net/nfc/netlink.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-> index 853172c..51c48f0 100644
-> --- a/net/nfc/netlink.c
-> +++ b/net/nfc/netlink.c
-> @@ -1111,7 +1111,7 @@ static int nfc_genl_llc_sdreq(struct sk_buff *skb, struct genl_info *info)
->  	dev = nfc_get_device(idx);
->  	if (!dev) {
->  		rc = -ENODEV;
-> -		goto exit;
-> +		goto exit_nodev;
->  	}
-Julia Lawall sent a better fix that I applied:
+http://ipw2200.sourceforge.net/index.php
 
--       if (!dev) {
--               rc = -ENODEV;
--               goto exit;
--       }
-+       if (!dev)
-+               return -ENODEV;
+-- 
+----------------------------------------------
+Mit freundlichen Gr√º√üen
+Christoph Sauer
+35444 Biebertal,
+Rodheimerstra√üe 28
+Handy: 0171-8686473
+E-Mail: info@sauer-chris.de
+www.it-sauer.de
 
-Cheers,
-Samuel.
