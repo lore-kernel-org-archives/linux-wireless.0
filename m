@@ -1,75 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34249 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932302AbbJ1HVm (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53997 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842AbbJUXxV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:21:42 -0400
-Received: by padhk11 with SMTP id hk11so248677736pad.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 00:21:42 -0700 (PDT)
-Date: Wed, 28 Oct 2015 12:51:13 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 06/80] staging: wilc1000: host_interface: removes unused
- functions
-Message-ID: <20151028072113.GD3649@sudip-pc> (sfid-20151028_082145_876364_24998B10)
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
- <1446015640-29398-6-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446015640-29398-6-git-send-email-glen.lee@atmel.com>
+	Wed, 21 Oct 2015 19:53:21 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath6k:  break stats gathering code into separate method.
+Date: Wed, 21 Oct 2015 16:53:16 -0700
+Message-Id: <1445471597-26091-1-git-send-email-greearb@candelatech.com> (sfid-20151022_015324_696208_04F27042)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 03:59:26PM +0900, Glen Lee wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch removes unused functions at host_interface files.
->  - host_int_send_join_leave_info_to_host
->  - host_int_send_network_info_to_host
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 11 ----------
->  drivers/staging/wilc1000/host_interface.h | 34 -------------------------------
->  2 files changed, 45 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index c3826eb..7f29abd 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -4037,11 +4037,6 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
->  	return result;
->  }
->  
-> -void host_int_send_join_leave_info_to_host
-> -	(u16 assocId, u8 *stationAddr, bool joining)
-> -{
-> -}
-> -
->  static void GetPeriodicRSSI(unsigned long arg)
->  {
->  	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
-> @@ -4070,12 +4065,6 @@ static void GetPeriodicRSSI(unsigned long arg)
->  	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
->  }
->  
-> -
-> -void host_int_send_network_info_to_host
-> -	(u8 *macStartAddress, u16 u16RxFrameLen, s8 s8Rssi)
-> -{
-> -}
-> -
->  s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+From: Ben Greear <greearb@candelatech.com>
 
-In my staging tree this is:
-s32 host_int_init(struct host_if_drv **hif_drv_handler)
+This will allow us to call it from elsewhere when implementing
+ethtool stats.
 
-Is this patchseries dependent on some previous unapplied patch?
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c | 55 +++++++++++++++++++--------------
+ drivers/net/wireless/ath/ath6kl/debug.h |  2 ++
+ 2 files changed, 34 insertions(+), 23 deletions(-)
 
-regards
-sudip
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 81ba48d..91ff6a5 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -98,6 +98,33 @@ void ath6kl_warn(const char *fmt, ...)
+ }
+ EXPORT_SYMBOL(ath6kl_warn);
+ 
++int ath6k_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif)
++{
++	long left;
++
++	if (down_interruptible(&ar->sem))
++		return -EBUSY;
++
++	set_bit(STATS_UPDATE_PEND, &vif->flags);
++
++	if (ath6kl_wmi_get_stats_cmd(ar->wmi, 0)) {
++		up(&ar->sem);
++		return -EIO;
++	}
++
++	left = wait_event_interruptible_timeout(ar->event_wq,
++						!test_bit(STATS_UPDATE_PEND,
++						&vif->flags), WMI_TIMEOUT);
++
++	up(&ar->sem);
++
++	if (left <= 0)
++		return -ETIMEDOUT;
++
++	return 0;
++}
++EXPORT_SYMBOL(ath6k_read_tgt_stats);
++
+ #ifdef CONFIG_ATH6KL_DEBUG
+ 
+ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+@@ -544,42 +571,24 @@ static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
+ 	char *buf;
+ 	unsigned int len = 0, buf_len = 1500;
+ 	int i;
+-	long left;
+ 	ssize_t ret_cnt;
++	int rv;
+ 
+ 	vif = ath6kl_vif_first(ar);
+ 	if (!vif)
+ 		return -EIO;
+ 
+-	tgt_stats = &vif->target_stats;
+-
+ 	buf = kzalloc(buf_len, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (down_interruptible(&ar->sem)) {
++	rv = ath6k_read_tgt_stats(ar, vif);
++	if (rv < 0) {
+ 		kfree(buf);
+-		return -EBUSY;
++		return rv;
+ 	}
+ 
+-	set_bit(STATS_UPDATE_PEND, &vif->flags);
+-
+-	if (ath6kl_wmi_get_stats_cmd(ar->wmi, 0)) {
+-		up(&ar->sem);
+-		kfree(buf);
+-		return -EIO;
+-	}
+-
+-	left = wait_event_interruptible_timeout(ar->event_wq,
+-						!test_bit(STATS_UPDATE_PEND,
+-						&vif->flags), WMI_TIMEOUT);
+-
+-	up(&ar->sem);
+-
+-	if (left <= 0) {
+-		kfree(buf);
+-		return -ETIMEDOUT;
+-	}
++	tgt_stats = &vif->target_stats;
+ 
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	len += scnprintf(buf + len, buf_len - len, "%25s\n",
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 19106ed..be54f19 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -59,6 +59,8 @@ enum ath6kl_war {
+ 	ATH6KL_WAR_INVALID_RATE,
+ };
+ 
++int ath6k_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif);
++
+ #ifdef CONFIG_ATH6KL_DEBUG
+ 
+ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
+-- 
+2.4.3
+
