@@ -1,124 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35555 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbbJ3Rq1 (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36991 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbbJUHWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 13:46:27 -0400
-Received: by pasz6 with SMTP id z6so80392148pas.2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2015 10:46:27 -0700 (PDT)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH] mac80211: Handle sleep requirements for channel context ops.
-Date: Fri, 30 Oct 2015 23:16:15 +0530
-Message-Id: <1446227175-28942-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20151030_184630_987819_57741181)
+	Wed, 21 Oct 2015 03:22:36 -0400
+Received: by wicfv8 with SMTP id fv8so61023836wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 00:22:34 -0700 (PDT)
+Message-ID: <56273D3F.6080804@gmail.com> (sfid-20151021_092240_456785_055697E2)
+Date: Wed, 21 Oct 2015 12:52:39 +0530
+From: Manikanta <manikanta.pubbisetty@gmail.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add FW API support to test mode
+References: <20151020112513.14879.47438.stgit@potku.adurom.net>	<5625E6BD.6020307@gmail.com> <CA+BoTQnSQmdCCqF43+Q5cxyVVLrM_BxRMT+Ydpfe6_5yRV2+Lw@mail.gmail.com>
+In-Reply-To: <CA+BoTQnSQmdCCqF43+Q5cxyVVLrM_BxRMT+Ydpfe6_5yRV2+Lw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
 
-Channel context OPs can sleep, so add might_sleep() and
-also document sleep requirements for those OPs.
+On Wednesday 21 October 2015 12:36 PM, Michal Kazior wrote:
+> On 20 October 2015 at 09:01, Manikanta Pubbisetty
+> <manikanta.pubbisetty@gmail.com> wrote:
+>>
+>> On 10/20/2015 04:55 PM, Kalle Valo wrote:
+>>> From: Alan Liu <alanliu@qca.qualcomm.com>
+>>>
+>>> Add WMI-TLV and FW API support in ath10k testmode.
+>>> Ath10k can get right wmi command format from UTF image
+>>> to communicate UTF firmware.
+>>>
+>>> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
+>>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>>> ---
+>>>    drivers/net/wireless/ath/ath10k/core.c     |    4 -
+>>>    drivers/net/wireless/ath/ath10k/core.h     |    5 +
+>>>    drivers/net/wireless/ath/ath10k/hw.h       |    1
+>>>    drivers/net/wireless/ath/ath10k/testmode.c |  202
+>>> ++++++++++++++++++++++++++--
+>>>    drivers/net/wireless/ath/ath10k/wmi-tlv.c  |   14 ++
+>>>    5 files changed, 205 insertions(+), 21 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/core.c
+>>> b/drivers/net/wireless/ath/ath10k/core.c
+>>> index 13de3617d5ab..b7a82ae3b3fa 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>>> @@ -568,8 +568,8 @@ static int ath10k_download_fw(struct ath10k *ar, enum
+>>> ath10k_firmware_mode mode)
+>>>                  }
+>>>                  break;
+>>>          case ATH10K_FIRMWARE_MODE_UTF:
+>>> -               data = ar->testmode.utf->data;
+>>> -               data_len = ar->testmode.utf->size;
+>>> +               data = ar->testmode.utf_firmware_data;
+>>> +               data_len = ar->testmode.utf_firmware_len;
+>>>                  mode_name = "utf";
+>>>                  break;
+>>>          default:
+>>> diff --git a/drivers/net/wireless/ath/ath10k/core.h
+>>> b/drivers/net/wireless/ath/ath10k/core.h
+>>> index 7cc7cdd56c95..a6371108be9b 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>>> @@ -814,9 +814,12 @@ struct ath10k {
+>>>          struct {
+>>>                  /* protected by conf_mutex */
+>>>                  const struct firmware *utf;
+>>> +               char utf_version[32];
+>>> +               const void *utf_firmware_data;
+>>> +               size_t utf_firmware_len;
+>>>                  DECLARE_BITMAP(orig_fw_features, ATH10K_FW_FEATURE_COUNT);
+>>>                  enum ath10k_fw_wmi_op_version orig_wmi_op_version;
+>>> -
+>>> +               enum ath10k_fw_wmi_op_version op_version;
+>>>                  /* protected by data_lock */
+>>>                  bool utf_monitor;
+>>>          } testmode;
+>>> diff --git a/drivers/net/wireless/ath/ath10k/hw.h
+>>> b/drivers/net/wireless/ath/ath10k/hw.h
+>>> index 2d87737e35ff..0c8ea0226684 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/hw.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+>>> @@ -94,6 +94,7 @@ enum qca6174_chip_id_rev {
+>>>    #define ATH10K_FW_API5_FILE           "firmware-5.bin"
+>>>
+>>>    #define ATH10K_FW_UTF_FILE            "utf.bin"
+>>> +#define ATH10K_FW_UTF_API2_FILE                "utf-2.bin"
+>>>
+>>>    /* includes also the null byte */
+>>>    #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
+>>> diff --git a/drivers/net/wireless/ath/ath10k/testmode.c
+>>> b/drivers/net/wireless/ath/ath10k/testmode.c
+>>> index b084f88da102..1d5a2fdcbf56 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/testmode.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/testmode.c
+>>> @@ -139,11 +139,181 @@ static int ath10k_tm_cmd_get_version(struct ath10k
+>>> *ar, struct nlattr *tb[])
+>>>          return cfg80211_testmode_reply(skb);
+>>>    }
+>>>
+>>> -static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr
+>>> *tb[])
+>>> +static int ath10k_tm_fetch_utf_firmware_api_2(struct ath10k *ar)
+>>> +{
+>>> +       size_t len, magic_len, ie_len;
+>>> +       struct ath10k_fw_ie *hdr;
+>>> +       char filename[100];
+>>> +       __le32 *version;
+>>> +       const u8 *data;
+>>> +       int ie_id, ret;
+>>> +
+>>> +       snprintf(filename, sizeof(filename), "%s/%s",
+>>> +                ar->hw_params.fw.dir, ATH10K_FW_UTF_API2_FILE);
+>>> +
+>>> +       /* load utf firmware image */
+>>> +       ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
+>>> +       if (ret) {
+>>> +               ath10k_warn(ar, "failed to retrieve utf firmware '%s':
+>>> %d\n",
+>>> +                           filename, ret);
+>>> +               return ret;
+>>> +       }
+>>> +
+>>> +       data = ar->testmode.utf->data;
+>>> +       len = ar->testmode.utf->size;
+>>> +
+>>> +       /* FIXME: call release_firmware() in error cases */
+>>> +
+>>> +       /* magic also includes the null byte, check that as well */
+>>> +       magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
+>>> +
+>>> +       if (len < magic_len) {
+>>> +               ath10k_err(ar, "utf firmware file is too small to contain
+>>> magic\n");
+>>> +               ret = -EINVAL;
+>>> +               goto err;
+>>> +       }
+>>> +
+>>> +       if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
+>>> +               ath10k_err(ar, "invalid firmware magic\n");
+>>> +               ret = -EINVAL;
+>>> +               goto err;
+>>> +       }
+>>> +
+>>> +       /* jump over the padding */
+>>> +       magic_len = ALIGN(magic_len, 4);
+>>> +
+>>> +       len -= magic_len;
+>>> +       data += magic_len;
+>>> +
+>>> +       /* loop elements */
+>>> +       while (len > sizeof(struct ath10k_fw_ie)) {
+>>> +               hdr = (struct ath10k_fw_ie *)data;
+>>> +
+>>> +               ie_id = le32_to_cpu(hdr->id);
+>>> +               ie_len = le32_to_cpu(hdr->len);
+>>> +
+>>> +               len -= sizeof(*hdr);
+>>> +               data += sizeof(*hdr);
+>>> +
+>>> +               if (len < ie_len) {
+>>> +                       ath10k_err(ar, "invalid length for FW IE %d (%zu <
+>>> %zu)\n",
+>>> +                                  ie_id, len, ie_len);
+>>> +                       ret = -EINVAL;
+>>> +                       goto err;
+>>> +               }
+>>> +
+>>> +               switch (ie_id) {
+>>> +               case ATH10K_FW_IE_FW_VERSION:
+>>
+>> Something like ATH10K_UTF_IE_FW_VERSION or ATH10K_TESTMODE_IE_FW_VERSION
+>> would be less confusing and better, isn't it?
+> I don't really see a reason to. UTF is just another main program to
+> run on the device.
+>
+> If anything I would suggest to unify the FW API parsing logic to work
+> with a dedicated structure instead of `struct ath10k` directly, i.e.
+>
+>    struct ath10k_fw {
+>      void *data;
+>      size_t data_len;
+>      enum wmi_op_version wmi_op_version;
+>      // ...
+>    };
+>
+>    int ath10k_core_fw_api_parse(struct ath10k *ar,
+>                                 struct ath10k_fw *arfw,
+>                                 struct firmware *fw)
+>     {
+>       // parse and fill in `arfw`
+>     }
+>
+>    struct ath10k {
+>      // ...
+>      struct ath10k_fw fw_normal;
+>      struct ath10k_fw fw_utf;
+>      // ...
+>    };
+>
+>
+> Michał
+Hmmm, this way we will have a unified firmware parsing logic. Is this a 
+task which can be taken up easily or any other hidden complexities are 
+invloved ?.
+I mean can we do the changes for current parsing logic and then rework 
+the test mode patch ? what is your suggestion ?
 
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
- include/net/mac80211.h    |  6 ++++++
- net/mac80211/driver-ops.c |  2 ++
- net/mac80211/driver-ops.h | 10 ++++++++++
- 3 files changed, 18 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4b9dd07..3876739 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3170,18 +3170,24 @@ enum ieee80211_reconfig_type {
-  *	The callback is optional and can sleep.
-  *
-  * @add_chanctx: Notifies device driver about new channel context creation.
-+ *	This callback may sleep.
-  * @remove_chanctx: Notifies device driver about channel context destruction.
-+ *	This callback may sleep.
-  * @change_chanctx: Notifies device driver about channel context changes that
-  *	may happen when combining different virtual interfaces on the same
-  *	channel context with different settings
-+ *	This callback may sleep.
-  * @assign_vif_chanctx: Notifies device driver about channel context being bound
-  *	to vif. Possible use is for hw queue remapping.
-+ *	This callback may sleep.
-  * @unassign_vif_chanctx: Notifies device driver about channel context being
-  *	unbound from vif.
-+ *	This callback may sleep.
-  * @switch_vif_chanctx: switch a number of vifs from one chanctx to
-  *	another, as specified in the list of
-  *	@ieee80211_vif_chanctx_switch passed to the driver, according
-  *	to the mode defined in &ieee80211_chanctx_switch_mode.
-+ *	This callback may sleep.
-  *
-  * @start_ap: Start operation on the AP interface, this is called after all the
-  *	information in bss_conf is set and beacon can be retrieved. A channel
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index a1d5431..578403a 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -192,6 +192,8 @@ int drv_switch_vif_chanctx(struct ieee80211_local *local,
- 	int ret = 0;
- 	int i;
- 
-+	might_sleep();
-+
- 	if (!local->ops->switch_vif_chanctx)
- 		return -EOPNOTSUPP;
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 3098709..5869bc6 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -871,6 +871,8 @@ static inline int drv_add_chanctx(struct ieee80211_local *local,
- {
- 	int ret = -EOPNOTSUPP;
- 
-+	might_sleep();
-+
- 	trace_drv_add_chanctx(local, ctx);
- 	if (local->ops->add_chanctx)
- 		ret = local->ops->add_chanctx(&local->hw, &ctx->conf);
-@@ -884,6 +886,8 @@ static inline int drv_add_chanctx(struct ieee80211_local *local,
- static inline void drv_remove_chanctx(struct ieee80211_local *local,
- 				      struct ieee80211_chanctx *ctx)
- {
-+	might_sleep();
-+
- 	if (WARN_ON(!ctx->driver_present))
- 		return;
- 
-@@ -898,6 +902,8 @@ static inline void drv_change_chanctx(struct ieee80211_local *local,
- 				      struct ieee80211_chanctx *ctx,
- 				      u32 changed)
- {
-+	might_sleep();
-+
- 	trace_drv_change_chanctx(local, ctx, changed);
- 	if (local->ops->change_chanctx) {
- 		WARN_ON_ONCE(!ctx->driver_present);
-@@ -912,6 +918,8 @@ static inline int drv_assign_vif_chanctx(struct ieee80211_local *local,
- {
- 	int ret = 0;
- 
-+	might_sleep();
-+
- 	if (!check_sdata_in_driver(sdata))
- 		return -EIO;
- 
-@@ -931,6 +939,8 @@ static inline void drv_unassign_vif_chanctx(struct ieee80211_local *local,
- 					    struct ieee80211_sub_if_data *sdata,
- 					    struct ieee80211_chanctx *ctx)
- {
-+	might_sleep();
-+
- 	if (!check_sdata_in_driver(sdata))
- 		return;
- 
--- 
-1.9.1
-
+-Manikanta
