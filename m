@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62043 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbbJWMb2 (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38756 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbbJUOBx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 08:31:28 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 0/4] ath10k: remove shadow copy engine descriptors
-Date: Fri, 23 Oct 2015 18:01:02 +0530
-Message-ID: <1445603466-14138-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151023_143134_065207_A18D3E35)
+	Wed, 21 Oct 2015 10:01:53 -0400
+Received: by igbdj2 with SMTP id dj2so38128741igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 07:01:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <562790EA.60300@sauer-chris.de>
+References: <562790EA.60300@sauer-chris.de>
+Date: Wed, 21 Oct 2015 16:01:52 +0200
+Message-ID: <CACna6rzKBX0XwUBy39g8xP5HupjXxR1w+aB2d4WvFb_oXtLWug@mail.gmail.com> (sfid-20151021_160156_627047_1550CF9C)
+Subject: Re: IPW2200 Driver for Linux
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Christoph Sauer <info@sauer-chris.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Below series remove shadow copy of CE descriptors for source ring.
-Removing the shadow copy should reduce d-cache pressure and memory
-usage of the driver.
+On 21 October 2015 at 15:19, Christoph Sauer <info@sauer-chris.de> wrote:
+> Hello, do you still have the IPW2200 Linux driver for Lenovo Thinkpad t42
+> notebook? I have an old notebook from a friend which i want to install linux
+> on it, and i am searching for the wifi driver for days.
+>
+> http://ipw2200.sourceforge.net/index.php
 
-v2:
- * Since ce_send is not using shadow, fix send completion as well.
-
-Rajkumar Manoharan (4):
-  ath10k: use local memory instead of shadow descriptor in ce_send
-  ath10k: remove send completion validation in diag read/write
-  ath10k: cleanup copy engine send completion
-  ath10k: remove shadow copy of CE descriptors for source ring
-
- drivers/net/wireless/ath/ath10k/ce.c  | 57 +++++------------------------------
- drivers/net/wireless/ath/ath10k/ce.h  | 16 ++--------
- drivers/net/wireless/ath/ath10k/pci.c | 53 +++++---------------------------
- 3 files changed, 17 insertions(+), 109 deletions(-)
-
--- 
-2.6.1
-
+It's part of the upstream kernel for *years*:
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/ipw2x00
