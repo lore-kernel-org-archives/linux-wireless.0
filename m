@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35389 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbbJBHmC (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:35295 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756256AbbJUWAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:42:02 -0400
-Received: by pacfv12 with SMTP id fv12so101966998pac.2
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:42:01 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 11/12] staging: wilc1000: set_channel: rename s32Error
-Date: Fri,  2 Oct 2015 16:41:20 +0900
-Message-Id: <1443771681-15540-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094654_035178_A61D45C9)
-In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 21 Oct 2015 18:00:07 -0400
+Received: by lbbes7 with SMTP id es7so48455834lbb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 15:00:05 -0700 (PDT)
+Subject: Re: [PATCH v2 05/15] net: wireless: ti: Return flow can be simplified
+ for wl1271_cmd_interrogate
+To: Punit Vara <punitvara@gmail.com>, kvalo@codeaurora.org
+References: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jslaby@suse.cz, lkp@intel.com
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <56280AE2.6010502@cogentembedded.com> (sfid-20151022_000037_916737_EE13537C)
+Date: Thu, 22 Oct 2015 01:00:02 +0300
+MIME-Version: 1.0
+In-Reply-To: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces s32Error with result to avoid camelcase.
+On 10/21/2015 10:07 PM, Punit Vara wrote:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: resend because 08/12 patch is changed.
+> Remove int ret suggested by kbuild test robot
+>
+> This patch is to the wlcore/acx.c file that fixes up warning
+> reported by coccicheck:
+>
+> WARNING: end returns can be simplified if negative or 0 value
+>
+> Prefer direct return value instead of writing 2-3 more sentence.
+>
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> ---
+>   drivers/net/wireless/ti/wlcore/acx.c | 7 +------
+>   1 file changed, 1 insertion(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+> index f28fa3b..6b566d9 100644
+> --- a/drivers/net/wireless/ti/wlcore/acx.c
+> +++ b/drivers/net/wireless/ti/wlcore/acx.c
+> @@ -158,16 +158,11 @@ out:
+>   int wl1271_acx_mem_map(struct wl1271 *wl, struct acx_header *mem_map,
+>   		       size_t len)
+>   {
+> -	int ret;
+>
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+    You now need to kill this empty line as well.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 692fef5..1b31fec 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -663,7 +663,7 @@ static int set_channel(struct wiphy *wiphy,
- {
- 	u32 channelnum = 0;
- 	struct wilc_priv *priv;
--	int s32Error = 0;
-+	int result = 0;
- 
- 	priv = wiphy_priv(wiphy);
- 
-@@ -671,12 +671,12 @@ static int set_channel(struct wiphy *wiphy,
- 	PRINT_D(CFG80211_DBG, "Setting channel %d with frequency %d\n", channelnum, chandef->chan->center_freq);
- 
- 	u8CurrChannel = channelnum;
--	s32Error   = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
-+	result = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
- 
--	if (s32Error != 0)
-+	if (result != 0)
- 		PRINT_ER("Error in setting channel %d\n", channelnum);
- 
--	return s32Error;
-+	return result;
- }
- 
- /**
--- 
-2.6.0
+[...]
+
+MBR, Sergei+
 
