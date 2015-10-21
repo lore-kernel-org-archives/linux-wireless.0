@@ -1,81 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:34843 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbbJCAgo (ORCPT
+Received: from postler.einfach.org ([5.9.2.179]:53319 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbbJUVKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 20:36:44 -0400
-Received: by qgt47 with SMTP id 47so108822461qgt.2
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 17:36:44 -0700 (PDT)
-From: Jacob Kiefer <jtk54@cornell.edu>
-Cc: Jacob Kiefer <jtk54@cornell.edu>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
-	WIRELESS DRIVER),
-	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] staging: rtl8723au: Fix Sparse errors in rtl8723a_cmd.c
-Date: Fri,  2 Oct 2015 20:36:28 -0400
-Message-Id: <1443832594-29663-1-git-send-email-jtk54@cornell.edu> (sfid-20151003_023700_869779_BC3D3379)
-To: unlisted-recipients:; (no To-header on input)
+	Wed, 21 Oct 2015 17:10:08 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Cc: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH] rtl8xxxu: Debugging for RXFLTMAP0,1,2
+Date: Wed, 21 Oct 2015 22:10:01 +0100
+Message-Id: <1445461801-16742-1-git-send-email-br1@einfach.org> (sfid-20151021_231014_067945_45C3BE1A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jacob Kiefer <jtk54@cornell.edu>
-
-This patch fixes the following sparse errors:
-
-
-  CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-...
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: warning: incorrect type in assignment (different base types)
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    expected unsigned int [unsigned] [usertype] <noident>
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    got restricted __le32 [usertype] <noident>
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: warning: incorrect type in assignment (different base types)
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    expected unsigned int [unsigned] [usertype] mask
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    got restricted __le32 [usertype] <noident>
-  CC [M]  drivers/staging/rtl8723au/hal/rtl8723a_cmd.o
-
-Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
 ---
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 54 ++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-index 9733aa6..111a24d 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-@@ -115,9 +115,11 @@ exit:
- 
- int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
- {
--	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
-+	__le32 leparam;
- 
--	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
-+	leparam = cpu_to_le32(*((u32 *)param));
-+
-+	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&leparam);
- 
- 	return _SUCCESS;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 324ab8a..4d0e121 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5657,7 +5657,58 @@ rtl8xxxu_rcr_read(void *data, u64 *val)
+ 	return 0;
  }
-@@ -125,10 +127,11 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
- int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
+ 
++static int
++rtl8xxxu_RXFLTMAP0_write(void *data, u64 val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	rtl8xxxu_write16(priv, REG_RXFLTMAP0, val);
++	return 0;
++}
++
++static int
++rtl8xxxu_RXFLTMAP0_read(void *data, u64 *val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP0);
++	return 0;
++}
++
++static int
++rtl8xxxu_RXFLTMAP1_write(void *data, u64 val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	rtl8xxxu_write16(priv, REG_RXFLTMAP1, val);
++	return 0;
++}
++
++static int
++rtl8xxxu_RXFLTMAP1_read(void *data, u64 *val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP1);
++	return 0;
++}
++
++static int
++rtl8xxxu_RXFLTMAP2_write(void *data, u64 val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	rtl8xxxu_write16(priv, REG_RXFLTMAP2, val);
++	return 0;
++}
++
++static int
++rtl8xxxu_RXFLTMAP2_read(void *data, u64 *val)
++{
++	struct rtl8xxxu_priv *priv = data;
++	*val = rtl8xxxu_read16(priv, REG_RXFLTMAP2);
++	return 0;
++}
++
+ DEFINE_SIMPLE_ATTRIBUTE(fops_rcr, rtl8xxxu_rcr_read, rtl8xxxu_rcr_write, "0x%08llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP0, rtl8xxxu_RXFLTMAP0_read, rtl8xxxu_RXFLTMAP0_write, "0x%08llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP1, rtl8xxxu_RXFLTMAP1_read, rtl8xxxu_RXFLTMAP1_write, "0x%08llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(fops_RXFLTMAP2, rtl8xxxu_RXFLTMAP2_read, rtl8xxxu_RXFLTMAP2_write, "0x%08llx\n");
+ 
+ void rtl8xxxu_init_debugfs(struct rtl8xxxu_priv *priv)
  {
- 	u8 buf[5];
-+	__le32 lemask;
+@@ -5668,6 +5719,9 @@ void rtl8xxxu_init_debugfs(struct rtl8xxxu_priv *priv)
+ 		return;
  
- 	memset(buf, 0, 5);
--	mask = cpu_to_le32(mask);
--	memcpy(buf, &mask, 4);
-+	lemask = cpu_to_le32(mask);
-+	memcpy(buf, (u32 *)&lemask, 4);
- 	buf[4]  = arg;
+ 	debugfs_create_file("rcr", S_IRUSR | S_IWUSR, dir, priv, &fops_rcr);
++	debugfs_create_file("RXFLTMAP0", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP0);
++	debugfs_create_file("RXFLTMAP1", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP1);
++	debugfs_create_file("RXFLTMAP2", S_IRUSR | S_IWUSR, dir, priv, &fops_RXFLTMAP2);
+ }
  
- 	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
+ static int rtl8xxxu_probe(struct usb_interface *interface,
 -- 
-1.8.3.2
+1.9.1
 
