@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:25317 "EHLO mga03.intel.com"
+Received: from lists.s-osg.org ([54.187.51.154]:42202 "EHLO lists.s-osg.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579AbbJYUDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 16:03:16 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, egrumbach@gmail.com,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] net: tso: add support for IPv6
-Date: Sun, 25 Oct 2015 22:02:51 +0200
-Message-Id: <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_210323_120785_68E82847)
-In-Reply-To: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751894AbbJURco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2015 13:32:44 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+	Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	roberta.dobrescu@gmail.com, joe@perches.com, fabf@skynet.be,
+	amitoj1606@gmail.com, linux-wireless@vger.kernel.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] staging: rtl8723au: core: rtw_wlan_util: fix misleading indentation
+Date: Wed, 21 Oct 2015 18:32:38 +0100
+Message-Id: <1445448758-28794-1-git-send-email-luisbg@osg.samsung.com> (sfid-20151021_193314_397039_4B5AE1E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding IPv6 for the TSO helper API is trivial:
-* Don't play with the id (which doesn't exist in IPv6)
-* Correctly update the payload_len (don't include the
-  length of the IP header itself)
+For loop is outside of the else branch of the above conditional statement.
+Fixing misleading indentation.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fix a smatch warning:
+drivers/staging/rtl8723au/core/rtw_wlan_util.c:528
+WMMOnAssocRsp23a() warn: curly braces intended?
+
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
 ---
-v2: add else if
+ drivers/staging/rtl8723au/core/rtw_wlan_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-NOTE: instead of checking the skb->protocol, I can add a bool
-	in tso_t. This might be better in terms of cache
-	handling. Let me know if you prefer that option
----
- net/core/tso.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/net/core/tso.c b/net/core/tso.c
-index 630b30b..bf71bdc5 100644
---- a/net/core/tso.c
-+++ b/net/core/tso.c
-@@ -14,18 +14,24 @@ EXPORT_SYMBOL(tso_count_descs);
- void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
- 		   int size, bool is_last)
- {
--	struct iphdr *iph;
- 	struct tcphdr *tcph;
- 	int hdr_len = skb_transport_offset(skb) + tcp_hdrlen(skb);
- 	int mac_hdr_len = skb_network_offset(skb);
+diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+index 5e87360..cc2b84b 100644
+--- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
++++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+@@ -525,7 +525,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
+ 	else
+ 		aSifsTime = 16;
  
- 	memcpy(hdr, skb->data, hdr_len);
--	iph = (struct iphdr *)(hdr + mac_hdr_len);
--	iph->id = htons(tso->ip_id);
--	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-+	if (skb->protocol == htons(ETH_P_IP)) {
-+		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
-+
-+		iph->id = htons(tso->ip_id);
-+		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
-+		tso->ip_id++;
-+	} else if (skb->protocol == htons(ETH_P_IPV6)) {
-+		struct ipv6hdr *iph = (void *)(hdr + mac_hdr_len);
-+
-+		iph->payload_len = htons(size + tcp_hdrlen(skb));
-+	}
- 	tcph = (struct tcphdr *)(hdr + skb_transport_offset(skb));
- 	put_unaligned_be32(tso->tcp_seq, &tcph->seq);
--	tso->ip_id++;
+-		for (i = 0; i < 4; i++) {
++	for (i = 0; i < 4; i++) {
+ 		ACI = (pmlmeinfo->WMM_param.ac_param[i].ACI_AIFSN >> 5) & 0x03;
+ 		ACM = (pmlmeinfo->WMM_param.ac_param[i].ACI_AIFSN >> 4) & 0x01;
  
- 	if (!is_last) {
- 		/* Clear all special flags for not last packet */
 -- 
-2.1.4
+2.5.1
 
