@@ -1,75 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3317 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbbJMKyv (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33490 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751982AbbJUME4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:54:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 39/54] staging: wilc1000: rename u32DTIMPeriod of struct beacon_attr
-Date: Tue, 13 Oct 2015 19:50:04 +0900
-Message-ID: <1444733419-17679-39-git-send-email-tony.cho@atmel.com> (sfid-20151013_125453_739034_06EC989B)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 21 Oct 2015 08:04:56 -0400
+Received: by pabrc13 with SMTP id rc13so53435954pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 05:04:55 -0700 (PDT)
+From: Ola Olsson <ola1olsson@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Subject: [PATCH] iw: remove superfluous includes
+Date: Wed, 21 Oct 2015 14:04:37 +0200
+Message-Id: <1445429077-21719-1-git-send-email-ola1olsson@gmail.com> (sfid-20151021_140459_039816_79E4D605)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames u32DTIMPeriod of struct beacon_attr to dtim_period to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ coalesce.c |    2 --
+ info.c     |    1 -
+ link.c     |    1 -
+ mpp.c      |    1 -
+ p2p.c      |    3 ---
+ scan.c     |    1 -
+ survey.c   |    2 --
+ 7 files changed, 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e6490ef..03ce060 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -132,7 +132,7 @@ struct channel_attr {
+diff --git a/coalesce.c b/coalesce.c
+index fabf44a..36dcaef 100644
+--- a/coalesce.c
++++ b/coalesce.c
+@@ -8,8 +8,6 @@
+ #include <netlink/msg.h>
+ #include <netlink/attr.h>
  
- struct beacon_attr {
- 	u32 interval;
--	u32 u32DTIMPeriod;
-+	u32 dtim_period;
- 	u32 u32HeadLen;
- 	u8 *pu8Head;
- 	u32 u32TailLen;
-@@ -2349,10 +2349,10 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 16) & 0xFF);
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 24) & 0xFF);
+-#include <arpa/inet.h>
+-
+ #include "nl80211.h"
+ #include "iw.h"
  
--	*pu8CurrByte++ = (pstrSetBeaconParam->u32DTIMPeriod & 0xFF);
--	*pu8CurrByte++ = ((pstrSetBeaconParam->u32DTIMPeriod >> 8) & 0xFF);
--	*pu8CurrByte++ = ((pstrSetBeaconParam->u32DTIMPeriod >> 16) & 0xFF);
--	*pu8CurrByte++ = ((pstrSetBeaconParam->u32DTIMPeriod >> 24) & 0xFF);
-+	*pu8CurrByte++ = (pstrSetBeaconParam->dtim_period & 0xFF);
-+	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 8) & 0xFF);
-+	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 16) & 0xFF);
-+	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 24) & 0xFF);
+diff --git a/info.c b/info.c
+index 4ac1eab..d724ca2 100644
+--- a/info.c
++++ b/info.c
+@@ -1,5 +1,4 @@
+ #include <stdbool.h>
+-#include <errno.h>
  
- 	*pu8CurrByte++ = (pstrSetBeaconParam->u32HeadLen & 0xFF);
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->u32HeadLen >> 8) & 0xFF);
-@@ -4642,7 +4642,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
- 	msg.id = HOST_IF_MSG_ADD_BEACON;
- 	msg.drv = hif_drv;
- 	pstrSetBeaconParam->interval = u32Interval;
--	pstrSetBeaconParam->u32DTIMPeriod = u32DTIMPeriod;
-+	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
- 	pstrSetBeaconParam->u32HeadLen = u32HeadLen;
- 	pstrSetBeaconParam->pu8Head = kmalloc(u32HeadLen, GFP_KERNEL);
- 	if (pstrSetBeaconParam->pu8Head == NULL) {
+ #include <netlink/genl/genl.h>
+ #include <netlink/genl/family.h>
+diff --git a/link.c b/link.c
+index f3bde51..0a32392 100644
+--- a/link.c
++++ b/link.c
+@@ -1,7 +1,6 @@
+ #include <net/if.h>
+ #include <errno.h>
+ #include <string.h>
+-#include <ctype.h>
+ #include <stdbool.h>
+ 
+ #include <netlink/genl/genl.h>
+diff --git a/mpp.c b/mpp.c
+index 8859fd5..58bf28e 100644
+--- a/mpp.c
++++ b/mpp.c
+@@ -1,6 +1,5 @@
+ #include <net/if.h>
+ #include <errno.h>
+-#include <string.h>
+ 
+ #include <netlink/genl/genl.h>
+ #include <netlink/genl/family.h>
+diff --git a/p2p.c b/p2p.c
+index 2067916..2d4bab0 100644
+--- a/p2p.c
++++ b/p2p.c
+@@ -1,6 +1,3 @@
+-#include <errno.h>
+-#include <string.h>
+-
+ #include <netlink/genl/genl.h>
+ #include <netlink/genl/family.h>
+ #include <netlink/genl/ctrl.h>
+diff --git a/scan.c b/scan.c
+index d3c7d98..8762784 100644
+--- a/scan.c
++++ b/scan.c
+@@ -1,7 +1,6 @@
+ #include <net/if.h>
+ #include <errno.h>
+ #include <string.h>
+-#include <ctype.h>
+ #include <stdbool.h>
+ 
+ #include <netlink/genl/genl.h>
+diff --git a/survey.c b/survey.c
+index 3e875a8..9325353 100644
+--- a/survey.c
++++ b/survey.c
+@@ -1,6 +1,4 @@
+ #include <net/if.h>
+-#include <errno.h>
+-#include <string.h>
+ 
+ #include <netlink/genl/genl.h>
+ #include <netlink/genl/family.h>
 -- 
-1.9.1
+1.7.9.5
 
