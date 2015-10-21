@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33536 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbbJYI0O (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37699 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755629AbbJUTHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 04:26:14 -0400
-Date: Sat, 24 Oct 2015 18:20:40 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org, Rachel Kim <rachel.kim@atmel.com>,
-	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH 01/19] staging/wilc1000: remove unused functions
-Message-ID: <20151025012040.GA7567@kroah.com> (sfid-20151025_092639_994120_99C022B8)
-References: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
- <1445381258-1455986-2-git-send-email-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445381258-1455986-2-git-send-email-arnd@arndb.de>
+	Wed, 21 Oct 2015 15:07:44 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jslaby@suse.cz, lkp@intel.com,
+	Punit Vara <punitvara@gmail.com>
+Subject: [PATCH v2 08/15] net: wireless: simplify return flow for usb_control_msg
+Date: Thu, 22 Oct 2015 00:37:08 +0530
+Message-Id: <1445454428-12331-2-git-send-email-punitvara@gmail.com> (sfid-20151021_210803_057869_DA8CE8F2)
+In-Reply-To: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
+References: <1445454428-12331-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 12:47:20AM +0200, Arnd Bergmann wrote:
-> A number of symbols in the wilc1000 driver are completely unused
-> and can be removed.
-> This includes two variables that are only written but not read.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+remove int ret suggested by Jiri Slaby
+This patch is to the at76c50x-usb.c file that fixes up warning
+reported by coccicheck:
 
-Due to other patches that were sent before yours for this driver, this
-patch doesn't apply :(
+WARNING: end returns can be simplified if negative or 0 value
 
-Watch out, I'm getting about 50 patches a week for this driver, it's
-under _heavy_ development, you will get merge issues...
+Prefer direct return value instead of writing 2-3 more sentence.
 
-Can you rebase the series on my staging-testing branch and resend?
+Signed-off-by: Punit Vara <punitvara@gmail.com>
+---
+ drivers/net/wireless/at76c50x-usb.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index dab2513..b4aa062 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -543,14 +543,10 @@ static void at76_ledtrig_tx_activity(void)
+ 
+ static int at76_remap(struct usb_device *udev)
+ {
+-	int ret;
+-	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0), 0x0a,
++	return usb_control_msg(udev, usb_sndctrlpipe(udev, 0), 0x0a,
+ 			      USB_TYPE_VENDOR | USB_DIR_OUT |
+ 			      USB_RECIP_INTERFACE, 0, 0, NULL, 0,
+ 			      USB_CTRL_GET_TIMEOUT);
+-	if (ret < 0)
+-		return ret;
+-	return 0;
+ }
+ 
+ static int at76_get_op_mode(struct usb_device *udev)
+-- 
+2.5.3
 
-greg k-h
