@@ -1,68 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41978 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbbJPMnA (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36523 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbbJUMN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 08:43:00 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <c_traja@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2 v2] ath10k: add fw_stats support to 10.4 firmware
-References: <1444812862-11173-1-git-send-email-c_traja@qti.qualcomm.com>
-Date: Fri, 16 Oct 2015 15:42:44 +0300
-In-Reply-To: <1444812862-11173-1-git-send-email-c_traja@qti.qualcomm.com> (c.
-	traja's message of "Wed, 14 Oct 2015 14:24:22 +0530")
-Message-ID: <87twprgf23.fsf@kamboji.qca.qualcomm.com> (sfid-20151016_144305_584057_2D70CD52)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 21 Oct 2015 08:13:27 -0400
+Received: by pacfv9 with SMTP id fv9so55822168pac.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 05:13:26 -0700 (PDT)
+From: Ola Olsson <ola1olsson@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Subject: [PATCH] mesh: show mesh parameters when no args are given
+Date: Wed, 21 Oct 2015 14:13:19 +0200
+Message-Id: <1445429599-22148-1-git-send-email-ola1olsson@gmail.com> (sfid-20151021_141329_733713_FFDA515D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<c_traja@qti.qualcomm.com> writes:
+The help text in "<get|set> mesh_param" says that
+available parameters will be shown if no args are given
+but that is not the case - fix that.
 
-> From: Manikanta <c_mpubbi@qti.qualcomm.com>
->
-> This patch adds support for getting firmware debug stats in 10.4 fw.
->
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Also, add help text if a parameter is given but not found.
 
-This patch adds new warnings:
+Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+---
+ mesh.c |   23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
-drivers/net/wireless/ath/ath10k/wmi.c:7121:6: warning: symbol 'ath10k_wmi_10_4_fw_stats_fill' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/wmi.c:7122: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/wmi.h:6323: Alignment should match open parenthesis
-
-And while testing this I found this buggy:
-
-root@lainahp:/sys/kernel/debug/ieee80211/phy0/ath10k# tail -20 fw_stats 
-   MPDU errors (FCS, MIC, ENC)          0
-        Num Rx Overflow errors          0
-
-             ath10k VDEV stats (0)
-             =================
-
-
-             ath10k PEER stats (2)
-             =================
-
-              Peer MAC address 02:00:00:00:03:00
-                     Peer RSSI 0
-                  Peer TX rate 5120
-                  Peer RX rate 0
-
-              Peer MAC address 00:00:00:00:10:68
-                     Peer RSSI 34236
-                  Peer TX rate 31
-                  Peer RX rate 0
-
-The last two bytes of the client's mac address are bc:85 and 34236 is
-0x85bc so ath10k is definitely not parsing the peer stats correctly.
-
-I used:
-
-[   68.077601] ath10k_pci 0000:02:00.0: pci irq msi interrupts 1 irq_mode 0 reset_mode 0
-[   72.516344] ath10k_pci 0000:02:00.0: qca99x0 hw2.0 (0x01000000, 0x003801ff bmi 1:1) fw 10.4.1.00030-1 fwapi 5 bdapi 2 htt-ver 2.2 wmi-op 6 htt-op 4 cal otp max-sta 512 raw 0 hwcrypto 1 features no-p2p
-[   72.516468] ath10k_pci 0000:02:00.0: debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
-
+diff --git a/mesh.c b/mesh.c
+index 460d0c9..f2415f3 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -286,7 +286,6 @@ static const struct mesh_param_descr *find_mesh_param(const char *name)
+ 			return _mesh_param_descrs + i;
+ 	}
+ 
+-	print_all_mesh_param_descr();
+ 	return NULL;
+ }
+ 
+@@ -305,8 +304,10 @@ static int set_interface_meshparam(struct nl80211_state *state,
+ 	if (!container)
+ 		return -ENOBUFS;
+ 
+-	if (!argc)
++	if (!argc) {
++		print_all_mesh_param_descr();
+ 		return 1;
++	}
+ 
+ 	while (argc) {
+ 		const char *name;
+@@ -334,8 +335,11 @@ static int set_interface_meshparam(struct nl80211_state *state,
+ 		}
+ 
+ 		mdescr = find_mesh_param(name);
+-		if (!mdescr)
++		if (!mdescr) {
++			printf("Could not find the parameter %s.\n", name);
++			print_all_mesh_param_descr();
+ 			return 2;
++		}
+ 
+ 		/* Parse the new value */
+ 		ret = mdescr->parse_fn(value, &any);
+@@ -411,13 +415,18 @@ static int get_interface_meshparam(struct nl80211_state *state,
+ {
+ 	const struct mesh_param_descr *mdescr = NULL;
+ 
+-	if (argc > 1)
++	if (argc == 0) {
++		print_all_mesh_param_descr();
+ 		return 1;
+-
+-	if (argc == 1) {
++	} else if (argc == 1) {
+ 		mdescr = find_mesh_param(argv[0]);
+-		if (!mdescr)
++		if (!mdescr) {
++			printf("Could not find the parameter %s.\n", argv[0]);
++			print_all_mesh_param_descr();
+ 			return 2;
++		}
++	} else {
++		return 1;
+ 	}
+ 
+ 	register_handler(print_mesh_param_handler, (void *)mdescr);
 -- 
-Kalle Valo
+1.7.9.5
+
