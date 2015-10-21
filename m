@@ -1,93 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27021 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965314AbbJ2DEg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42187 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753612AbbJUH5a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:04:36 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 44/64] staging: wilc1000: rename u32RcvdChCount of struct user_scan_req
-Date: Thu, 29 Oct 2015 12:05:36 +0900
-Message-ID: <1446087956-19054-11-git-send-email-glen.lee@atmel.com> (sfid-20151029_040438_646023_767B47AA)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+	Wed, 21 Oct 2015 03:57:30 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [01/11] brcmfmac: expose device memory to devcoredump subsystem
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1444329201-3696-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20151021075729.F2A5C1410C1@smtp.codeaurora.org> (sfid-20151021_095733_381519_072B48E3)
+Date: Wed, 21 Oct 2015 07:57:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u32RcvdChCount of struct user_scan_req to rcvd_ch_cnt
-to avoid CamelCase naming convention.
+> Upon PSM watchdog event received from firmware the driver will obtain
+> a memory snapshot of the device and expose it to user-space through
+> the devcoredump framework. This will trigger a uevent.
+> 
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+Thanks, 11 patches applied to wireless-drivers-next.git:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3e7c6e4..f465233 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -843,7 +843,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 
- 	PRINT_D(HOSTINF_DBG, "Setting SCAN params\n");
- 
--	hif_drv->usr_scan_req.u32RcvdChCount = 0;
-+	hif_drv->usr_scan_req.rcvd_ch_cnt = 0;
- 
- 	strWIDList[u32WidsCount].id = (u16)WID_SSID_PROBE_REQ;
- 	strWIDList[u32WidsCount].type = WID_STR;
-@@ -1414,7 +1414,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
- 			goto done;
- 		}
- 
--		for (i = 0; i < hif_drv->usr_scan_req.u32RcvdChCount; i++) {
-+		for (i = 0; i < hif_drv->usr_scan_req.rcvd_ch_cnt; i++) {
- 			if ((hif_drv->usr_scan_req.net_info[i].au8bssid) &&
- 			    (pstrNetworkInfo->au8bssid)) {
- 				if (memcmp(hif_drv->usr_scan_req.net_info[i].au8bssid,
-@@ -1434,15 +1434,15 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
- 		if (bNewNtwrkFound) {
- 			PRINT_D(HOSTINF_DBG, "New network found\n");
- 
--			if (hif_drv->usr_scan_req.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
--				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].s8rssi = pstrNetworkInfo->s8rssi;
-+			if (hif_drv->usr_scan_req.rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
-+				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].s8rssi = pstrNetworkInfo->s8rssi;
- 
--				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid &&
-+				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].au8bssid &&
- 				    pstrNetworkInfo->au8bssid) {
--					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid,
-+					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].au8bssid,
- 					       pstrNetworkInfo->au8bssid, 6);
- 
--					hif_drv->usr_scan_req.u32RcvdChCount++;
-+					hif_drv->usr_scan_req.rcvd_ch_cnt++;
- 
- 					pstrNetworkInfo->bNewNetwork = true;
- 					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index f94bba6..f824866 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -198,7 +198,7 @@ struct hidden_network {
- struct user_scan_req {
- 	wilc_scan_result scan_result;
- 	void *arg;
--	u32 u32RcvdChCount;
-+	u32 rcvd_ch_cnt;
- 	struct found_net_info net_info[MAX_NUM_SCANNED_NETWORKS];
- };
- 
--- 
-1.9.1
+ff4445a8502c brcmfmac: expose device memory to devcoredump subsystem
+185f0eb0b5fa brcmfmac: Fix race condition between USB probe/load and disconnect.
+4a3462843f9f brcmfmac: rename firmware_path to alternative_fw_path
+43569bfaf6ed brcmfmac: remove conversational comment
+2b76acdbc043 brcmfmac: Rework p2p attach, use single method for p2p dev creation.
+124d517211e4 brcmfmac: Fix station info rate information.
+cae355dc90db brcmfmac: Add RSSI information to get_station.
+bf2a7e0499b9 brcmfmac: Add dump_station support to cfg80221 ops.
+c443e169577c brcmfmac: Move brcmf_c_preinit_dcmds prototype to correct file.
+54b499d9ad10 brcmfmac: Remove unused state AP creating.
+92121e69de8a brcmfmac: Properly set carrier state of netdev.
 
+Kalle Valo
