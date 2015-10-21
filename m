@@ -1,137 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:32805 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579AbbJNIc1 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:63997 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbbJUOU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 04:32:27 -0400
-Received: by wicge5 with SMTP id ge5so90165725wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 01:32:26 -0700 (PDT)
-Date: Wed, 14 Oct 2015 11:32:21 +0300
-From: Mike Rapoport <mike.rapoport@gmail.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2] staging: wilc1000: wilc_msgqueue.c : remove the goto
- ERRORHANDER
-Message-ID: <20151014083221.GA25667@zed.strato> (sfid-20151014_103234_213708_EA187637)
-References: <1444802143-6298-1-git-send-email-tony.cho@atmel.com>
+	Wed, 21 Oct 2015 10:20:58 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless@vger.kernel.org
+Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>
+Subject: [PATCH] fixup! staging/wilc1000: split out bus specific modules
+Date: Wed, 21 Oct 2015 16:20:39 +0200
+Message-ID: <5740053.Wvv4FSxjh3@wuerfel> (sfid-20151021_162120_817798_107DE705)
+In-Reply-To: <1445381258-1455986-19-git-send-email-arnd@arndb.de>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <1445381258-1455986-19-git-send-email-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444802143-6298-1-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 14, 2015 at 02:55:43PM +0900, Tony Cho wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch removes goto ERRORHANDER and the result variable in wilc_mq_send.
-> Then, the error type is directly returned. If normal operation, freeing memory
-> is not needed in this function.
-> If an error occurs, returns an error after releasing the spin lock.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
-> V2: add releasing spinlock before returnig an error when an error happens.
-> ---
->  drivers/staging/wilc1000/wilc_msgqueue.c | 28 ++++++++++++----------------
->  1 file changed, 12 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> index b13809a..4dfd476 100644
-> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> @@ -56,35 +56,38 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
->  int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
->  			     const void *pvSendBuffer, u32 u32SendBufferSize)
->  {
-> -	int result = 0;
->  	unsigned long flags;
->  	Message *pstrMessage = NULL;
->  
->  	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
->  		PRINT_ER("pHandle or pvSendBuffer is null\n");
-> -		result = -EFAULT;
-> -		goto ERRORHANDLER;
-> +		return -EFAULT;
->  	}
->  
->  	if (pHandle->bExiting) {
->  		PRINT_ER("pHandle fail\n");
-> -		result = -EFAULT;
-> -		goto ERRORHANDLER;
-> +		return -EFAULT;
->  	}
->  
->  	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
->  
->  	/* construct a new message */
->  	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+The patch to split out bus modules causes new valid build warnings without this.
 
-You can make this allocation outisde the spinlock, then there won't be
-need to release it if the allocation fails.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> -	if (!pstrMessage)
-> +
-> +	if (!pstrMessage) {
-> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
->  		return -ENOMEM;
-> +	}
-> +
->  	pstrMessage->u32Length = u32SendBufferSize;
->  	pstrMessage->pstrNext = NULL;
->  	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
->  					GFP_ATOMIC);
-> +
->  	if (!pstrMessage->pvBuffer) {
-> -		result = -ENOMEM;
-> -		goto ERRORHANDLER;
-> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8a5f4673c5d0..fe3b464f0d5c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1594,7 +1594,7 @@ int wilc_netdev_init(struct device *dev, const struct wilc1000_ops *ops,
+ }
+ EXPORT_SYMBOL_GPL(wilc_netdev_init);
+ 
+-void __init wilc1000_init_driver(void)
++void wilc1000_init_driver(void)
+ {
+ #if defined(WILC_DEBUGFS)
+ 	if (wilc_debugfs_init() < 0)
+@@ -1606,7 +1606,7 @@ void __init wilc1000_init_driver(void)
+ }
+ EXPORT_SYMBOL_GPL(wilc1000_init_driver);
+ 
+-void __exit wilc_netdev_free(struct wilc *wilc1000_dev)
++void wilc_netdev_free(struct wilc *wilc1000_dev)
+ {
+ 	int i = 0;
+ 	perInterface_wlan_t *nic[NUM_CONCURRENT_IFC] = {NULL,};
+@@ -1653,7 +1653,7 @@ void __exit wilc_netdev_free(struct wilc *wilc1000_dev)
+ }
+ EXPORT_SYMBOL_GPL(wilc_netdev_free);
+ 
+-void __exit wilc1000_exit_driver(void)
++void wilc1000_exit_driver(void)
+ {
+ 	kfree(wilc1000_dev);
+ 	wilc1000_dev = NULL;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index f684d5bf465d..b460b7f6971a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -320,7 +320,7 @@ int wilc1000_wlan_get_num_conn_ifcs(void);
+ int wilc1000_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ int wilc_netdev_init(struct device *, const struct wilc1000_ops *ops,
+ 		     const struct wilc1000_hif_ops *hif_ops, int gpio);
+-void __exit wilc_netdev_free(struct wilc *wilc1000_dev);
++void wilc_netdev_free(struct wilc *wilc1000_dev);
+ 
+ void wilc_handle_isr(void);
+ 
+@@ -340,7 +340,7 @@ extern bool wilc1000_enable_ps;
+ int wilc1000_firmware_download(struct wilc *p_nic);
+ int wilc1000_start_firmware(struct wilc_per_interface *nic);
+ 
+-void __init wilc1000_init_driver(void);
+-void __exit wilc1000_exit_driver(void);
++void wilc1000_init_driver(void);
++void wilc1000_exit_driver(void);
+ 
+ #endif
 
-You are still holding pHandle->hSem here. Moreover, all error paths
-return while still holding pHandle->hSem.
-I'd suggest, that instead of trying to return immediately, you'd better
-move error handling code to the end of the function and use goto and
-several labels to do appropriate cleanups depending on when the error
-was caught. E.g.
 
-mem_free:
-	kfree(pstrMessage);
-release_lock:	
-	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-release_sem:
-	up(&pHandle->sem);
-out:
-	return result;
 
-> +		kfree(pstrMessage);
-> +		return -ENOMEM;
->  	}
->  
->  	/* add it to the message queue */
-> @@ -103,14 +106,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
->  
->  	up(&pHandle->hSem);
->  
-> -ERRORHANDLER:
-> -	/* error occured, free any allocations */
-> -	if (pstrMessage) {
-> -		kfree(pstrMessage->pvBuffer);
-> -		kfree(pstrMessage);
-> -	}
-> -
-> -	return result;
-> +	return 0;
->  }
->  
->  /*!
-> -- 
-> 1.9.1
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
