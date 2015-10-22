@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57191 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752502AbbJEPBk (ORCPT
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:36316 "EHLO
+	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758149AbbJVS4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:58 +0300
-Message-Id: <1444055820-27506-27-git-send-email-luca@coelho.fi> (sfid-20151005_170145_126060_9D45989D)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 27/29] iwlwifi: mvm: make threshold temperatures unsigned
+	Thu, 22 Oct 2015 14:56:50 -0400
+Received: by lffz202 with SMTP id z202so59189307lff.3
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 11:56:48 -0700 (PDT)
+Subject: Re: [PATCH v4 14/15] net: wireless: ath: Remove unneeded variable ret
+ returning 0
+To: Punit Vara <punitvara@gmail.com>, jirislaby@gmail.com
+References: <1445539670-4018-1-git-send-email-punitvara@gmail.com>
+Cc: mickflemm@gmail.com, mcgrof@do-not-panic.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <5629316E.60106@cogentembedded.com> (sfid-20151022_205734_560935_C56C12CF)
+Date: Thu, 22 Oct 2015 21:56:46 +0300
+MIME-Version: 1.0
+In-Reply-To: <1445539670-4018-1-git-send-email-punitvara@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/22/2015 09:47 PM, Punit Vara wrote:
 
-There's no need to have negative threshold temperatures, so make
-them unsigned to avoid signedness warnings in debugfs.
+> Remove black line suggested by Sergei
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-config.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+    Such kind of comments should be under the --- tear line.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 939fa22..9109708 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -223,13 +223,13 @@ struct iwl_tt_tx_backoff {
-  * @support_tx_backoff: Support tx-backoff?
-  */
- struct iwl_tt_params {
--	s32 ct_kill_entry;
--	s32 ct_kill_exit;
-+	u32 ct_kill_entry;
-+	u32 ct_kill_exit;
- 	u32 ct_kill_duration;
--	s32 dynamic_smps_entry;
--	s32 dynamic_smps_exit;
--	s32 tx_protection_entry;
--	s32 tx_protection_exit;
-+	u32 dynamic_smps_entry;
-+	u32 dynamic_smps_exit;
-+	u32 tx_protection_entry;
-+	u32 tx_protection_exit;
- 	struct iwl_tt_tx_backoff tx_backoff[TT_TX_BACKOFF_SIZE];
- 	bool support_ct_kill;
- 	bool support_dynamic_smps;
--- 
-2.5.3
+>
+> This patch is to the ath5k/eeprom.c that fixes up warning caught by
+> coccicheck:
+>
+> Unneeded variable: "ret". Return "0" on line 980
+>
+> Remove unneeded variable ret created to return zero.
+>
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+[...]
+
+MBR, Sergei
 
