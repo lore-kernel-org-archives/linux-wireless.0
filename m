@@ -1,95 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41460 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105AbbJQF00 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:35380 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965449AbbJVSR0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 01:26:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-10-17
-Date: Sat, 17 Oct 2015 08:26:19 +0300
-Message-ID: <878u72gj5w.fsf@kamboji.qca.qualcomm.com> (sfid-20151017_072710_674385_9050D56E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 22 Oct 2015 14:17:26 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: jirislaby@gmail.com
+Cc: mickflemm@gmail.com, mcgrof@do-not-panic.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Punit Vara <punitvara@gmail.com>
+Subject: [PATCH v2 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
+Date: Thu, 22 Oct 2015 23:47:08 +0530
+Message-Id: <1445537828-2802-1-git-send-email-punitvara@gmail.com> (sfid-20151022_201800_800804_F6FDCDF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+This patch is to the ath5k/eeprom.c that fixes up warning caught by
+coccicheck:
 
-few small fixes I would like to get to 4.3 still. Please let me know if
-there are any problems.
+-Unneeded variable: "ret". Return "0" on line 1733
 
-Kalle
+Remove unneccesary variable ret created to return zero.
 
-The following changes since commit 76d164f582150fd0259ec0fcbc485470bcd8033e:
+Signed-off-by: Punit Vara <punitvara@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/eeprom.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-  ath10k: fix DMA related firmware crashes on multiple devices (2015-09-26 20:48:25 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-10-17
-
-for you to fetch changes up to de28a05ee28e36fa1fc68fcfc7c6cc1c6f7c270c:
-
-  Merge tag 'iwlwifi-for-kalle-2015-10-05' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-10-07 11:12:01 +0300)
-
-----------------------------------------------------------------
-
-iwlwifi:
-
-* mvm: flush fw_dump_wk when mvm fails to start
-* mvm: init card correctly on ctkill exit check
-* pci: add a few more PCI subvendor IDs for the 7265 series
-* fix firmware filename for 3160
-* mvm: clear csa countdown when AP is stopped
-* mvm: fix D3 firmware PN programming
-* dvm: fix D3 firmware PN programming
-* mvm: fix D3 CCMP TX PN assignment
-
-rtlwifi:
-
-* rtl8821ae: Fix system lockups on boot
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: flush fw_dump_wk when mvm fails to start
-
-Arik Nemtsov (1):
-      iwlwifi: mvm: init card correctly on ctkill exit check
-
-Avraham Stern (1):
-      iwlwifi: mvm: clear csa countdown when AP is stopped
-
-Johannes Berg (4):
-      iwlwifi: mvm: fix D3 CCMP TX PN assignment
-      iwlwifi: dvm: fix D3 firmware PN programming
-      iwlwifi: mvm: fix D3 firmware PN programming
-      iwlwifi: fix firmware filename for 3160
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-10-05' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Larry Finger (1):
-      rtlwifi: rtl8821ae: Fix system lockups on boot
-
-Luca Coelho (1):
-      iwlwifi: pci: add a few more PCI subvendor IDs for the 7265 series
-
- drivers/net/wireless/iwlwifi/dvm/lib.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-7000.c     |    2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c       |   27 +++++++++++----------------
- drivers/net/wireless/iwlwifi/mvm/fw.c       |    4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |    1 +
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |    5 +++++
- drivers/net/wireless/iwlwifi/mvm/ops.c      |    1 +
- drivers/net/wireless/iwlwifi/pcie/drv.c     |    5 +++++
- drivers/net/wireless/rtlwifi/pci.h          |    2 ++
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c |   17 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8821ae/sw.c |    5 +++++
- drivers/net/wireless/rtlwifi/wifi.h         |    3 +++
- 12 files changed, 54 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 94d34ee..0c82ea5 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1707,8 +1707,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
+ 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+ 	u32 offset;
+ 	u16 val;
+-	int ret = 0, i;
+-
++	int i;
+ 	offset = AR5K_EEPROM_CTL(ee->ee_version) +
+ 				AR5K_EEPROM_N_CTLS(ee->ee_version);
+ 
+@@ -1730,7 +1729,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
+ 		}
+ 	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ 
 -- 
-Kalle Valo
+2.5.3
+
