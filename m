@@ -1,34 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33057 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755943AbbJVMID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 08:08:03 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"ido@wizery.com" <ido@wizery.com>
-Subject: RE: [RFC v3 2/2] iwlwifi: mvm: send large SKBs to the transport
-Date: Thu, 22 Oct 2015 12:07:59 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8AC94B@hasmsx107.ger.corp.intel.com> (sfid-20151022_140815_102784_5F644A37)
-References: <1445452464-19525-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1445452464-19525-3-git-send-email-emmanuel.grumbach@intel.com>
- <1445515406.22974.107.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1445515406.22974.107.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16712 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbbJVPHj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 11:07:39 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: remove send completion validation in diag read/write
+Date: Thu, 22 Oct 2015 20:36:40 +0530
+Message-ID: <1445526402-28522-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151022_170742_096992_1B5C0444)
+In-Reply-To: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1445526402-28522-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gV2VkLCAyMDE1LTEwLTIxIGF0IDIxOjM0ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFj
-aCB3cm90ZToNCj4gPiArDQo+ID4gKwkJaWYgKHNrYi0+cHJvdG9jb2wgPT0gaHRvbnMoRVRIX1Bf
-SVApKSB7DQo+ID4gKwkJCWlwX2hkcih0bXApLT5pZCA9IGlwX2hkcihza2IpLT5pZDsNCj4gDQo+
-IFRvbyBsYXRlLCB5b3UgYWxyZWFkeSBjYWxsZWQgY29uc3VtZV9za2Ioc2tiKS4NCj4gU28gdGhp
-cyBpcyBhIHBvdGVudGlhbCB1c2UgYWZ0ZXIgZnJlZS4NCg0KT3VjaCAtIHRoYW5rcyBmb3IgY2F0
-Y2hpbmcgdGhpcyENCg0KPiANCj4gPiArCQkJYmUxNl9hZGRfY3B1KCZpcF9oZHIodG1wKS0+aWQs
-IGkgKg0KPiBudW1fc3ViZnJhbWVzKTsNCj4gPiArCQl9DQo+ID4gKw0KPiANCj4gDQo+IEkgd291
-bGQgdXNlDQo+IGJhc2VfaWQgPSBpcF9oZHIoc2tiKS0+aWQ7IC8vIGJlZm9yZSB0aGUgY29uc3Vt
-ZV9za2Ioc2tiKQ0KPiBpcF9oZHIodG1wKS0+aWQgPSBodG9ucyhiYXNlX2lkICsgaSAqIG51bV9z
-dWJmcmFtZXMpOw0KPiANClN1cmUgLSBJIHdpbGwuDQoNCkkgd2lsbCBzZW5kIGEgdjQgd2l0aCB0
-aGUgZml4ZXMuDQo=
+CE diag window access is serialized (it has to be by design) so
+there's no way to get a different send completion. so there's no
+need for post completion validation.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 20 --------------------
+ 1 file changed, 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c05b0c..6f3c3e0 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -920,16 +920,6 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 			}
+ 		}
+ 
+-		if (nbytes != completed_nbytes) {
+-			ret = -EIO;
+-			goto done;
+-		}
+-
+-		if (buf != (u32)address) {
+-			ret = -EIO;
+-			goto done;
+-		}
+-
+ 		i = 0;
+ 		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
+ 							    &completed_nbytes,
+@@ -1094,16 +1084,6 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 			}
+ 		}
+ 
+-		if (nbytes != completed_nbytes) {
+-			ret = -EIO;
+-			goto done;
+-		}
+-
+-		if (buf != ce_data) {
+-			ret = -EIO;
+-			goto done;
+-		}
+-
+ 		i = 0;
+ 		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
+ 							    &completed_nbytes,
+-- 
+2.6.1
+
