@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36121 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930AbbJ0XTu (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35806 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757257AbbJVMD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 19:19:50 -0400
-Received: by pacfv9 with SMTP id fv9so246527867pac.3
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:50 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/10] staging: wilc1000: rename u8WepKeylen in host_int_add_wep_key_bss_ap
-Date: Wed, 28 Oct 2015 08:19:23 +0900
-Message-Id: <1445987968-18974-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001953_236425_152C35D8)
-In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 22 Oct 2015 08:03:29 -0400
+Message-ID: <1445515406.22974.107.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20151022_140340_697066_F1B30BCA)
+Subject: Re: [RFC v3 2/2] iwlwifi: mvm: send large SKBs to the transport
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	sara.sharon@intel.com, ido@wizery.com
+Date: Thu, 22 Oct 2015 05:03:26 -0700
+In-Reply-To: <1445452464-19525-3-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445452464-19525-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1445452464-19525-3-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes u8WepKeylen to len that is third argument of this
-function to avoid camelcase.
+On Wed, 2015-10-21 at 21:34 +0300, Emmanuel Grumbach wrote:
+> +
+> +		if (skb->protocol == htons(ETH_P_IP)) {
+> +			ip_hdr(tmp)->id = ip_hdr(skb)->id;
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Too late, you already called consume_skb(skb).
+So this is a potential use after free.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4be42cb..c3cf7a1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3193,7 +3193,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 
- int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				const u8 *key,
--				u8 u8WepKeylen,
-+				u8 len,
- 				u8 u8Keyidx,
- 				u8 u8mode,
- 				enum AUTHTYPE tenuAuth_type)
-@@ -3210,16 +3210,16 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	if (INFO) {
--		for (i = 0; i < u8WepKeylen; i++)
-+		for (i = 0; i < len; i++)
- 			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
- 	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
- 	msg.drv = hif_drv;
--	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wep.key, key, (u8WepKeylen));
--	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
-+	msg.body.key_info.attr.wep.key = kmalloc(len, GFP_KERNEL);
-+	memcpy(msg.body.key_info.attr.wep.key, key, len);
-+	msg.body.key_info.attr.wep.key_len = len;
- 	msg.body.key_info.attr.wep.index = u8Keyidx;
- 	msg.body.key_info.attr.wep.mode = u8mode;
- 	msg.body.key_info.attr.wep.auth_type = tenuAuth_type;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index fa439f2..289dfd3 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
-  *  @date		28 Feb 2013
-  *  @version		1.0
-  */
--int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 len, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
- 
- /**
-  *  @brief              adds ptk Key
--- 
-2.6.1
+> +			be16_add_cpu(&ip_hdr(tmp)->id, i * num_subframes);
+> +		}
+> +
+
+
+I would use 
+
+base_id = ip_hdr(skb)->id; // before the consume_skb(skb)
+
+ip_hdr(tmp)->id = htons(base_id + i * num_subframes);
+
 
