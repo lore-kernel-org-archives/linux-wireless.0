@@ -1,59 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35107 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281AbbJAG55 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 02:57:57 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v3 4/5] wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
-Date: Thu,  1 Oct 2015 14:57:46 +0800
-Message-Id: <1443682667-29814-5-git-send-email-wens@csie.org> (sfid-20151001_085805_472612_545BA501)
-In-Reply-To: <1443682667-29814-1-git-send-email-wens@csie.org>
-References: <1443682667-29814-1-git-send-email-wens@csie.org>
+Received: from mga02.intel.com ([134.134.136.20]:32406 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751824AbbJVJML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 05:12:11 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Robert Dolca <robert.dolca@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v4 00/10] Add Intel FieldsPeak NFC solution driver
+Date: Thu, 22 Oct 2015 12:11:32 +0300
+Message-Id: <1445505102-16639-1-git-send-email-robert.dolca@intel.com> (sfid-20151022_113935_482293_D48898B0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications revised its
-frequency allocation rules [1] on 2014/11/17, opening up 5150 ~ 5250
-MHz to U-NII applications.
+These patches add support for Intel's FieldsPeak NFC solution.
 
-Taiwan's regulatory body, NCC, officially stated [3][4] that until
-the technical regulatory standard [2] are updated to cover this part
-of the spectrum, FCC rules (part 15E, 15.407, effective 2014/06/02)
-shall serve in its place.
+Fields Peak complies with the ISO/IEC 14443A/B, 15693, 18092,
+and JIS X 6319-4. It is an NCI based controller.
 
-Also add AUTO-BW to this and the next (5250 ~ 5350 MHz) rule, so the
-system can actually use VHT160 channels spanning these two rules.
+RF Protocols supported:
+ - NFC Forum Type 1 Tags (Jewel, Topaz)
+ - NFC Forum Type 2 Tags (Mifare UL)
+ - NFC Forum Type 3 Tags (FeliCa)
+ - NFC Forum Type 4A (ISO/IEC 14443 A-4 106kbps to 848kbps)
+ - NFC Forum Type 4B (ISO/IEC 14443 B-4 106kbps to 848kbps)
+ - NFCIP in passive and active modes (ISO/IEC 18092 106kbps to 424kbps)
+ - B’ (based on ISO/IEC 14443 B-2)
+ - iCLASS (based on ISO/IEC 15693-2)
+ - Vicinity cards (ISO/IEC 15693-3)
+ - Kovio tags (NFC Forum Type 2)
 
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-[3] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
-[4] Proposal #10312260 (p.6, Chinese),
-    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
+The device can be enumerated using ACPI using the id INT339A.
+The 1st GPIO is the IRQ and the 2nd is the RESET pin.
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- db.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index ee6eaad..3f5268b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1127,7 +1127,9 @@ country TT: DFS-FCC
- #   (section 3.10.1, 4.7)
- country TW: DFS-JP
- 	(2400 - 2483.5 @ 40), (30)
--	(5250 - 5350 @ 80), (17), DFS
-+	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
-+	(5150 - 5250 @ 80), (23), AUTO-BW
-+	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (23), DFS
- 	(5725 - 5850 @ 80), (30)
-  
--- 
-2.5.3
+Changes since v3:
+ - replace u32 with le32 where appropriate
+ - make nci_prop_ops struct instances static
+ - simplify return for fdp_nci_setup and fdp_nci_post_setup
+ - change return type from u8 to int for nci_conn_max_data_pkt_payload_size
+ - set FDP_NCI_I2C_MAX_PAYLOAD to 261 (255 + NCI header (3) + lrc(2) + size byte)
+ - add sleep during patching to make sure that the NFCC processed the last data packet
+ - patch droped "nfc: nci: Use a separate mutex for nci open and close"
+ - patch droped "nfc: nci: Add a parameter to get the new connection id"
+ - add patch "nfc: nci: fix possible crash in nci_core_conn_create"
+ - add patch "nfc: nci: add nci_get_conn_info_by_id function"
+ - add patch "nfc: nci: rename nci_prop_ops to nci_driver_ops"
+ - edit "ecee665 nfc: nci: Allow the driver to set handler for core nci ops" to
+   add wrappers for core ops and prop ops in order to simplify the code
+ - removed "atomic_t intercept;" from fdp_nci_info struct
+ - make functions inline: fdp_nci_get_versions, fdp_nci_patch_cmd, fdp_nci_set_production_data
+ - moved otp and ram patching to separate functions that are called from fdp_nci_post_setup
+
+Changes since v2:
+ - rename reset gpio to power gpio because it really is a power switch
+ - use named gpio for power with fallback to the indexed gpio 0
+ - use device managed gpio for power
+ - rely on the i2c subsystem to fill in the irq field of the i2c_client struct
+ - remove the internal driver state (the nfc subsystem takes care of what
+   we need)
+ - removed the power status field (not needed any more)
+ - change i2c / device tree id name s/INT339A/int339a
+ - make clock type and clock frequency configurable with device properties
+   (use defauls if not set)
+ - firmware vendor specific commands configurable with device properties
+   (default none)
+ - other small fixes
+
+Changes since v1:
+ - removed .owner
+ - made local functions static
+ - droped "NFC: NCI: Adds NCI init and reset API for drivers"
+ - replaced nfc_info with dev_dbg
+ - make controller setup possible without OTP patch
+ - retoved the commint that was adding nci_init/reset and using
+   the newly added functions nci_core_init/reset
+ - fixed typo and use full controller name instead of abreviation in Kconfig
+ - added more info about the controller in the commit message
+ - moved NCI_OP_CORE_RESET_NTF, NCI_OP_CORE_GET_CONFIG_RSP and
+   NCI_OP_CORE_GET_CONFIG_CMD into the core header files
+ - added MODULE_DEVICE_TABLE for ACPI
+ - defined FDP_FW_UPDATE_DEST 0xC2
+ - release the firmware buffers
+ - settings the vendor configuration and clock on post setup
+ - platform data enumerations removed (ACPI enumeration left)
+ - packet reception intercept logic remove
+ - nci: removed nci_send_cmd symbol export
+ - nci: removed nci_request_driver and nci_req_complete_driver
+ - removed mutex from driver (no need for it)
+ - nci: check the setup return code before callig post_setup
+ - nci: add function to allow sending core commands from driver
+ - nci: Use a separate mutex for nci open and close
+ - nci: mutex for: Adds a way to get the new connection ID
+ - nci: Allow the driver to set handler for core nci ops
+
+
+Robert Dolca (10):
+  nfc: nci: Export nci data send API
+  nfc: nci: Add function to get max packet size for conn
+  nfc: nci: Introduce new core opcodes
+  nfc: nci: Do not call post_setup when setup fails
+  nfc: nci: Introduce nci_core_cmd
+  nfc: nci: Allow the driver to set handler for core nci ops
+  nfc: nci: rename nci_prop_ops to nci_driver_ops
+  nfc: nci: fix possible crash in nci_core_conn_create
+  nfc: nci: add nci_get_conn_info_by_id function
+  nfc: Add Intel Fields Peak NFC solution driver
+
+ drivers/nfc/Kconfig        |   1 +
+ drivers/nfc/Makefile       |   1 +
+ drivers/nfc/fdp/Kconfig    |  23 ++
+ drivers/nfc/fdp/Makefile   |   9 +
+ drivers/nfc/fdp/fdp.c      | 817 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/nfc/fdp/fdp.h      |  38 +++
+ drivers/nfc/fdp/i2c.c      | 388 +++++++++++++++++++++
+ drivers/nfc/s3fwrn5/nci.c  |   4 +-
+ drivers/nfc/st-nci/core.c  |   2 +-
+ include/net/nfc/nci.h      |   7 +
+ include/net/nfc/nci_core.h |  18 +-
+ net/nfc/nci/core.c         | 120 +++++--
+ net/nfc/nci/data.c         |  13 +
+ net/nfc/nci/ntf.c          |   3 +-
+ net/nfc/nci/rsp.c          |   1 +
+ 15 files changed, 1409 insertions(+), 36 deletions(-)
+ create mode 100644 drivers/nfc/fdp/Kconfig
+ create mode 100644 drivers/nfc/fdp/Makefile
+ create mode 100644 drivers/nfc/fdp/fdp.c
+ create mode 100644 drivers/nfc/fdp/fdp.h
+ create mode 100644 drivers/nfc/fdp/i2c.c
+
+--
+
+1.9.1
 
