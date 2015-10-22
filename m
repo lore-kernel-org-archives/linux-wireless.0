@@ -1,77 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:22058 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927AbbJ2B7Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 21:59:25 -0400
-Message-ID: <56317E2E.1090502@atmel.com> (sfid-20151029_025929_026675_A938EE10)
-Date: Thu, 29 Oct 2015 11:02:22 +0900
-From: glen lee <glen.lee@atmel.com>
-MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
-	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
-	<tony.cho@atmel.com>, <leo.kim@atmel.com>,
-	<adham.abozaeid@atmel.com>
-Subject: Re: [PATCH 38/80] staging: wilc1000: rename au8Bssid of struct ba_session_info
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com> <1446015640-29398-38-git-send-email-glen.lee@atmel.com> <20151028165606.GB18797@mwanda>
-In-Reply-To: <20151028165606.GB18797@mwanda>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:6823 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754136AbbJVT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 15:28:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: add complete data to station add/change tracing
+Date: Thu, 22 Oct 2015 22:27:47 +0300
+Message-Id: <1445542067-8150-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151022_212805_507904_ECD39337)
+In-Reply-To: <1445542067-8150-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445542067-8150-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+Complete the tracepoint with the missing data - it's not printed
+by default (a lot of it is dynamic arrays) but will be recorded
+and be available during post-processing.
 
-On 2015년 10월 29일 01:56, Dan Carpenter wrote:
-> On Wed, Oct 28, 2015 at 03:59:58PM +0900, Glen Lee wrote:
->> From: Leo Kim <leo.kim@atmel.com>
->>
->> This patch renames au8Bssid of struct ba_session_info to bssid
->> to avoid CamelCase naming convention.
->> And, some debug logs modified because 80 ending line over warnings.
->>
->> Signed-off-by: Leo Kim <leo.kim@atmel.com>
->> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->> ---
->>   drivers/staging/wilc1000/host_interface.c | 32 ++++++++++++++++++-------------
->>   drivers/staging/wilc1000/host_interface.h |  2 +-
->>   2 files changed, 20 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
->> index 9ad98fd..48a232f 100644
->> --- a/drivers/staging/wilc1000/host_interface.c
->> +++ b/drivers/staging/wilc1000/host_interface.c
->> @@ -2715,10 +2715,14 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
->>   	int AddbaTimeout = 100;
->>   	char *ptr = NULL;
->>   
->> -	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\nBufferSize == %d\nSessionTimeOut = %d\n",
->> -		strHostIfBASessionInfo->au8Bssid[0],
->> -		strHostIfBASessionInfo->au8Bssid[1],
->> -		strHostIfBASessionInfo->au8Bssid[2],
->> +	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with \
->> +		\nBSSID = %.2x:%.2x:%.2x \
->> +		\nBufferSize == %d \
->> +		\nSessionTimeOut = %d \
->> +		\nTID=%d\n",
->> +		strHostIfBASessionInfo->bssid[0],
->> +		strHostIfBASessionInfo->bssid[1],
->> +		strHostIfBASessionInfo->bssid[2],
->>   		strHostIfBASessionInfo->u16BufferSize,
->>   		strHostIfBASessionInfo->u16SessionTimeout,
->>   		strHostIfBASessionInfo->u8Ted);
-> This should be a bunch of printks so that we have the correct debug
-> level at the start of each line.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/trace.h | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-Thank you for your advice.
-We will use netdev_xxx print format later with a bunch of prints when the function gets access net_device.
-For now, continuation \ will be deleted and will be like,
-
-	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with BSSID = %02x:%02x:%02x TID=%d BufferSize == %d SessionTimeOut = %d\n",
-		etc...
-
-> regards,
-> dan carpenter
->
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 62d9b96..5b9139e 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -623,12 +623,24 @@ DECLARE_EVENT_CLASS(station_add_change,
+ 		__field(u32, sta_flags_set)
+ 		__field(u32, sta_modify_mask)
+ 		__field(int, listen_interval)
++		__field(u16, capability)
+ 		__field(u16, aid)
+ 		__field(u8, plink_action)
+ 		__field(u8, plink_state)
+ 		__field(u8, uapsd_queues)
++		__field(u8, max_sp)
++		__field(u8, opmode_notif)
++		__field(bool, opmode_notif_used)
+ 		__array(u8, ht_capa, (int)sizeof(struct ieee80211_ht_cap))
++		__array(u8, vht_capa, (int)sizeof(struct ieee80211_vht_cap))
+ 		__array(char, vlan, IFNAMSIZ)
++		__dynamic_array(u8, supported_rates,
++				params->supported_rates_len)
++		__dynamic_array(u8, ext_capab, params->ext_capab_len)
++		__dynamic_array(u8, supported_channels,
++				params->supported_channels_len)
++		__dynamic_array(u8, supported_oper_classes,
++				params->supported_oper_classes_len)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+@@ -646,9 +658,35 @@ DECLARE_EVENT_CLASS(station_add_change,
+ 		if (params->ht_capa)
+ 			memcpy(__entry->ht_capa, params->ht_capa,
+ 			       sizeof(struct ieee80211_ht_cap));
++		memset(__entry->vht_capa, 0, sizeof(struct ieee80211_vht_cap));
++		if (params->vht_capa)
++			memcpy(__entry->vht_capa, params->vht_capa,
++			       sizeof(struct ieee80211_vht_cap));
+ 		memset(__entry->vlan, 0, sizeof(__entry->vlan));
+ 		if (params->vlan)
+ 			memcpy(__entry->vlan, params->vlan->name, IFNAMSIZ);
++		if (params->supported_rates && params->supported_rates_len)
++			memcpy(__get_dynamic_array(supported_rates),
++			       params->supported_rates,
++			       params->supported_rates_len);
++		if (params->ext_capab && params->ext_capab_len)
++			memcpy(__get_dynamic_array(ext_capab),
++			       params->ext_capab,
++			       params->ext_capab_len);
++		if (params->supported_channels &&
++		    params->supported_channels_len)
++			memcpy(__get_dynamic_array(supported_channels),
++			       params->supported_channels,
++			       params->supported_channels_len);
++		if (params->supported_oper_classes &&
++		    params->supported_oper_classes_len)
++			memcpy(__get_dynamic_array(supported_oper_classes),
++			       params->supported_oper_classes,
++			       params->supported_oper_classes_len);
++		__entry->max_sp = params->max_sp;
++		__entry->capability = params->capability;
++		__entry->opmode_notif = params->opmode_notif;
++		__entry->opmode_notif_used = params->opmode_notif_used;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
+ 		  ", station flags mask: %u, station flags set: %u, "
+-- 
+2.1.4
 
