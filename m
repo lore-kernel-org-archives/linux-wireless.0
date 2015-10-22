@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36795 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755600AbbJANSW convert rfc822-to-8bit (ORCPT
+Received: from mail-io0-f176.google.com ([209.85.223.176]:33454 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965577AbbJVSxj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:18:22 -0400
+	Thu, 22 Oct 2015 14:53:39 -0400
 MIME-Version: 1.0
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Thu, 1 Oct 2015 09:17:42 -0400
-Message-ID: <CA+A7VXW02GyRaFYw34CSim=WJrvF_fff5oK73JT1+bhRbv_B9g@mail.gmail.com> (sfid-20151001_151834_830136_5247D206)
-Subject: rtl8821ae bisected regression between 4.1 and 4.2
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Vincent Fann <vincent_fann@realtek.com>,
-	Shao Fu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stable <stable@vger.kernel.org>,
-	Daniel Drake <drake@endlessm.com>
+In-Reply-To: <56292C55.4030706@cogentembedded.com>
+References: <1445538363-2893-1-git-send-email-punitvara@gmail.com>
+	<56292C55.4030706@cogentembedded.com>
+Date: Fri, 23 Oct 2015 00:23:38 +0530
+Message-ID: <CABXAfNJt4xOhyq1RkN7hNrajqaXLJmU42arydG8Z1KWVsPJ1uQ@mail.gmail.com> (sfid-20151022_205927_993854_92FDC2FE)
+Subject: Re: [PATCH v3 14/15] net: wireless: ath: Remove unneeded variable ret
+ returning 0
+From: punit vara <punitvara@gmail.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: jirislaby@gmail.com, Nick Kossifidis <mickflemm@gmail.com>,
+	mcgrof@do-not-panic.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello linux-wirelless (cc'ing stable since the original patch had
-cc:stable as well),
+On Fri, Oct 23, 2015 at 12:05 AM, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
+>
+> On 10/22/2015 09:26 PM, Punit Vara wrote:
+>
+>> This patch is to the ath5k/eeprom.c that fixes up warning caught by
+>> coccicheck:
+>>
+>> -Unneeded variable: "ret". Return "0" on line 1733
+>>
+>> Remove unneccesary variable ret created to return zero.
+>>
+>> Also removed empty line suggested by Sergei
+>>
+>> Signed-off-by: Punit Vara <punitvara@gmail.com>
+>> ---
+>>   drivers/net/wireless/ath/ath5k/eeprom.c | 5 ++---
+>>   1 file changed, 2 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c
+>> b/drivers/net/wireless/ath/ath5k/eeprom.c
+>> index 94d34ee..0c82ea5 100644
+>> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+>> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+>> @@ -1707,8 +1707,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
+>>         struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>>         u32 offset;
+>>         u16 val;
+>> -       int ret = 0, i;
+>> -
+>
+>
+>    No, this one shouldn't have been removed. There should an empty line
+> between the declarations and the statements.
+>
+>> +       int i;
+>>         offset = AR5K_EEPROM_CTL(ee->ee_version) +
+>>                                 AR5K_EEPROM_N_CTLS(ee->ee_version);
+>>
+>
+> MBR, Sergei
+>
 
-I'm experiencing a CPU soft lockup while downloading when rtl8821ae is
-loaded (even when downloading through other adapters) on a vanilla 4.2
-kernel. The problem did not happen on vanilla 4.1. Bisecting shows the
-first bad commit being "rtlwifi: Remove the clear interrupt routine
-from all drivers" (1277fa2ab2f9a624a4b0177119ca13b5fd65edd0).
-Reverting that commit makes the problem go away.
-
-The system is perfectly stable until I start downloading, when the UI
-becomes unresponsive, sometimes leading to a complete freeze. When the
-system does not completely freezes and I'm able to kill the download,
-everything seems to go back to normal after killing it, and I am able
-to continue to use the computer as long as I do not download anything.
-Most of the time either a soft or a hard lockup is detected, but not
-always, although the freeze always occurs.
-
-This is the kernel log with lockdep enabled (although sometimes the
-problem does not occur with lockdep enabled):
-https://gist.github.com/jprvita/3aa2c0c9a66793e1fad1
-
-I have the laptop where this happens as a test machine sitting on my
-desk, so I'm available to test any patches or gather more information
-if needed. Please advise on how I can help debugging this further.
-
-Regards,
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+I have resent patch with update but I cant see it in my mailbox I dont
+know Why.. Sorry if You are getting mail more time. I am sending final
+version v5 as last.Please sorry for inconvenience
