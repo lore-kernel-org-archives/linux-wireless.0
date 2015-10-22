@@ -1,68 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35836 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758044AbbJ2XSN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:18:13 -0400
-Received: by pasz6 with SMTP id z6so53898222pas.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:12 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 07/12] staging: wilc1000: fix return type of host_int_add_station
-Date: Fri, 30 Oct 2015 08:17:43 +0900
-Message-Id: <1446160668-10747-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001825_618286_0222FD66)
-In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964941AbbJVJM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 05:12:26 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Robert Dolca <robert.dolca@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v4 06/10] nfc: nci: Allow the driver to set handler for core nci ops
+Date: Thu, 22 Oct 2015 12:11:38 +0300
+Message-Id: <1445505102-16639-7-git-send-email-robert.dolca@intel.com> (sfid-20151022_113509_018154_5F32DCAB)
+In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_add_station from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+The driver may be required to act when some responses or notifications
+arrive. For example the NCI core does not have a handler for
+NCI_OP_CORE_GET_CONFIG_RSP. The NFCC can send a config response that has
+to be read by the driver and the packet may contain vendor specific data.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The Fields Peak driver needs to take certain actions when a reset
+notification arrives (packet also not handled by the nfc core).
+
+The driver handlers do not interfere with the core and they are called
+after the core processes the packet.
+
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
-V2: resend because 11/12 patch is changed.
+ include/net/nfc/nci_core.h | 11 +++++--
+ net/nfc/nci/core.c         | 71 +++++++++++++++++++++++++++++++++-------------
+ net/nfc/nci/ntf.c          |  3 +-
+ net/nfc/nci/rsp.c          |  1 +
+ 4 files changed, 63 insertions(+), 23 deletions(-)
 
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fe4ccdb..0f36825 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4516,10 +4516,10 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
- 	return result;
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index 4ca1b6d..d5a1caa 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -96,6 +96,9 @@ struct nci_ops {
+ 
+ 	struct nci_prop_ops *prop_ops;
+ 	size_t n_prop_ops;
++
++	struct nci_prop_ops *core_ops;
++	size_t n_core_ops;
+ };
+ 
+ #define NCI_MAX_SUPPORTED_RF_INTERFACES		4
+@@ -345,9 +348,13 @@ static inline int nci_set_vendor_cmds(struct nci_dev *ndev,
+ 
+ void nci_rsp_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb);
+-int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb);
++inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb);
++inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+-int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+ void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 5b4f48a..30c2708 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -1242,46 +1242,77 @@ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
  }
  
--s32 host_int_add_station(struct host_if_drv *hif_drv,
-+int host_int_add_station(struct host_if_drv *hif_drv,
- 			 struct add_sta_param *pstrStaParams)
+ /* Proprietary commands API */
+-static struct nci_prop_ops *prop_cmd_lookup(struct nci_dev *ndev,
+-					    __u16 opcode)
++static struct nci_prop_ops *ops_cmd_lookup(struct nci_prop_ops *ops,
++					   size_t n_ops,
++					   __u16 opcode)
  {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 	size_t i;
+-	struct nci_prop_ops *prop_op;
++	struct nci_prop_ops *op;
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index be9283f..3fcff7a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -948,7 +948,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
-  *  @date		12 July 2012
-  *  @version		1.0 Description
-  */
--s32 host_int_add_station(struct host_if_drv *hWFIDrv,
-+int host_int_add_station(struct host_if_drv *hWFIDrv,
- 			 struct add_sta_param *pstrStaParams);
+-	if (!ndev->ops->prop_ops || !ndev->ops->n_prop_ops)
++	if (!ops || !n_ops)
+ 		return NULL;
  
- /*!
+-	for (i = 0; i < ndev->ops->n_prop_ops; i++) {
+-		prop_op = &ndev->ops->prop_ops[i];
+-		if (prop_op->opcode == opcode)
+-			return prop_op;
++	for (i = 0; i < n_ops; i++) {
++		op = &ops[i];
++		if (op->opcode == opcode)
++			return op;
+ 	}
+ 
+ 	return NULL;
+ }
+ 
+-int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
+-			struct sk_buff *skb)
++static int nci_op_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
++			     struct sk_buff *skb, struct nci_prop_ops *ops,
++			     size_t n_ops)
+ {
+-	struct nci_prop_ops *prop_op;
++	struct nci_prop_ops *op;
+ 
+-	prop_op = prop_cmd_lookup(ndev, rsp_opcode);
+-	if (!prop_op || !prop_op->rsp)
++	op = ops_cmd_lookup(ops, n_ops, rsp_opcode);
++	if (!op || !op->rsp)
+ 		return -ENOTSUPP;
+ 
+-	return prop_op->rsp(ndev, skb);
++	return op->rsp(ndev, skb);
+ }
+ 
+-int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
+-			struct sk_buff *skb)
++static int nci_op_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
++			     struct sk_buff *skb, struct nci_prop_ops *ops,
++			     size_t n_ops)
+ {
+-	struct nci_prop_ops *prop_op;
++	struct nci_prop_ops *op;
+ 
+-	prop_op = prop_cmd_lookup(ndev, ntf_opcode);
+-	if (!prop_op || !prop_op->ntf)
++	op = ops_cmd_lookup(ops, n_ops, ntf_opcode);
++	if (!op || !op->ntf)
+ 		return -ENOTSUPP;
+ 
+-	return prop_op->ntf(ndev, skb);
++	return op->ntf(ndev, skb);
++}
++
++inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++			       struct sk_buff *skb)
++{
++	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->prop_ops,
++				 ndev->ops->n_prop_ops);
++}
++
++inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++			       struct sk_buff *skb)
++{
++	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->prop_ops,
++				 ndev->ops->n_prop_ops);
++}
++
++inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++			       struct sk_buff *skb)
++{
++	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->core_ops,
++				  ndev->ops->n_core_ops);
++}
++
++inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++			       struct sk_buff *skb)
++{
++	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->core_ops,
++				 ndev->ops->n_core_ops);
+ }
+ 
+ /* ---- NCI TX Data worker thread ---- */
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index 5d1c2e3..2ada2b3 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -759,7 +759,7 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 	skb_pull(skb, NCI_CTRL_HDR_SIZE);
+ 
+ 	if (nci_opcode_gid(ntf_opcode) == NCI_GID_PROPRIETARY) {
+-		if (nci_prop_ntf_packet(ndev, ntf_opcode, skb)) {
++		if (nci_prop_ntf_packet(ndev, ntf_opcode, skb) == -ENOTSUPP) {
+ 			pr_err("unsupported ntf opcode 0x%x\n",
+ 			       ntf_opcode);
+ 		}
+@@ -805,6 +805,7 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		break;
+ 	}
+ 
++	nci_core_ntf_packet(ndev, ntf_opcode, skb);
+ end:
+ 	kfree_skb(skb);
+ }
+diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
+index 408bd8f..9b6eb91 100644
+--- a/net/nfc/nci/rsp.c
++++ b/net/nfc/nci/rsp.c
+@@ -355,6 +355,7 @@ void nci_rsp_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		break;
+ 	}
+ 
++	nci_core_rsp_packet(ndev, rsp_opcode, skb);
+ end:
+ 	kfree_skb(skb);
+ 
 -- 
-2.6.1
+1.9.1
 
