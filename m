@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:35992 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbbJQJ7x (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31838 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756140AbbJVGej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 05:59:53 -0400
-Received: by ykdz2 with SMTP id z2so20798626ykd.3
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2015 02:59:52 -0700 (PDT)
+	Thu, 22 Oct 2015 02:34:39 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yan Bellavance <ybellavance@tamaggo.com>
+CC: "ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>,
+	"c_manoha@qca.qualcomm.com" <c_manoha@qca.qualcomm.com>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: QCA6174, is it ath6kl or ath10k?
+References: <BY2PR15MB0197D5CFB773E0A3F4B6062FA3380@BY2PR15MB0197.namprd15.prod.outlook.com>
+Date: Thu, 22 Oct 2015 09:34:15 +0300
+In-Reply-To: <BY2PR15MB0197D5CFB773E0A3F4B6062FA3380@BY2PR15MB0197.namprd15.prod.outlook.com>
+	(Yan Bellavance's message of "Wed, 21 Oct 2015 20:41:05 +0000")
+Message-ID: <87wpuf8l94.fsf@kamboji.qca.qualcomm.com> (sfid-20151022_083442_765846_47761DD2)
 MIME-Version: 1.0
-In-Reply-To: <CAB6w8enLcU8LZfL=Uzpi5x6od_VExUdTW2PT9norQ=8POGNFcw@mail.gmail.com>
-References: <CAB6w8enLcU8LZfL=Uzpi5x6od_VExUdTW2PT9norQ=8POGNFcw@mail.gmail.com>
-From: Ramprasad Vempati <ramprasad.vempati@gmail.com>
-Date: Sat, 17 Oct 2015 15:29:33 +0530
-Message-ID: <CAB6w8ekg-6-p=ar=crbfDetHPG1bEsszgOKMAwVi2DTs5UL2rg@mail.gmail.com> (sfid-20151017_115955_887985_8BB8E27C)
-Subject: Re: How to enforce Wireless Mode of Station?
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Yan Bellavance <ybellavance@tamaggo.com> writes:
 
-Can someone clarify?
+> I would like to know if the QCA6174 should be driven by ath6kl driver or
+> ath10k.  I'm working with snapdragon 810 devkit and it looks like it's using
+> ath6kl based driver but official linux documentation and github point out that
+> it should be driven by ath10k.
 
-Thanks,
-Ram
+What makes you think you should use ath6kl with QCA6174? Please provide
+details.
 
-On Thu, Oct 8, 2015 at 12:20 AM, Ramprasad Vempati
-<ramprasad.vempati@gmail.com> wrote:
-> Hi,
->
-> I've been trying to find how to control wireless mode, i.e. 802.11b or
-> 802.11g or 802.11ng or 802.11a etc for Station mode. In general for
-> Station mode, the connection happens with AP based AP mode. But for
-> test purpose, if I would like to control mode of a wireless station,
-> is it possible?  I mean when AP is 11bgn mode, if I want STA to
-> associate in 11b mode?
->
-> I understand "iw" can be used to set rate mask. But I've tried with
-> ath9k or intel chipsets. I've not been able to get it working as most
-> of the vendors didn't implement this.
->
-> Is there a different way to enforce specific wireless mode on station?
->
-> Thanks,
-> Ram
+> Could someone explain to me what are the differences between the two(briefly
+> and in the context of QCA61x4) and if there are drawbacks to using the ath6kl
+> one?
+
+ath10k and ath6kl are drivers for different chipsets, you cannot just
+choose with one to use. I don't understand why you think you can choose
+as you can't.
+
+> Why are we not using ath10k driver?
+
+With QCA6174 you have to use ath10k.
+
+-- 
+Kalle Valo
