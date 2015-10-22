@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57014 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbbJHKNH (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:33114 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757453AbbJVSfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 06:13:07 -0400
-Date: Thu, 8 Oct 2015 11:03:17 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, austin.shin@atmel.com,
-	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 01/14] staging: wilc1000: remove typedef from
- tstrWILC_UsrScanReq
-Message-ID: <20151008100317.GA22641@kroah.com> (sfid-20151008_121310_770190_AFFBF2FE)
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+	Thu, 22 Oct 2015 14:35:05 -0400
+Received: by lffv3 with SMTP id v3so58411352lff.0
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 11:35:03 -0700 (PDT)
+Subject: Re: [PATCH v3 14/15] net: wireless: ath: Remove unneeded variable ret
+ returning 0
+To: Punit Vara <punitvara@gmail.com>, jirislaby@gmail.com
+References: <1445538363-2893-1-git-send-email-punitvara@gmail.com>
+Cc: mickflemm@gmail.com, mcgrof@do-not-panic.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <56292C55.4030706@cogentembedded.com> (sfid-20151022_203536_354271_99C5ADDB)
+Date: Thu, 22 Oct 2015 21:35:01 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+In-Reply-To: <1445538363-2893-1-git-send-email-punitvara@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 10:49:08AM +0900, Tony Cho wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch removes typedef from the struct tstrWILC_UsrScanReq with
-> related comments and renames it to user_scan_req.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.h | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
+Hello.
 
-This series also didn't apply :(
+On 10/22/2015 09:26 PM, Punit Vara wrote:
+
+> This patch is to the ath5k/eeprom.c that fixes up warning caught by
+> coccicheck:
+>
+> -Unneeded variable: "ret". Return "0" on line 1733
+>
+> Remove unneccesary variable ret created to return zero.
+>
+> Also removed empty line suggested by Sergei
+>
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> ---
+>   drivers/net/wireless/ath/ath5k/eeprom.c | 5 ++---
+>   1 file changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+> index 94d34ee..0c82ea5 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -1707,8 +1707,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
+>   	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>   	u32 offset;
+>   	u16 val;
+> -	int ret = 0, i;
+> -
+
+    No, this one shouldn't have been removed. There should an empty line 
+between the declarations and the statements.
+
+> +	int i;
+>   	offset = AR5K_EEPROM_CTL(ee->ee_version) +
+>   				AR5K_EEPROM_N_CTLS(ee->ee_version);
+>
+
+MBR, Sergei
+
