@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34702 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbbJWRHr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 13:07:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: overlap of devices in rtl8xxxu and rtl8192cu
-References: <562A2711.9040700@gmail.com> <wrfj7fmdit3l.fsf@redhat.com>
-	<87ziz91xag.fsf@kamboji.qca.qualcomm.com>
-	<wrfj611xhda9.fsf@redhat.com>
-Date: Fri, 23 Oct 2015 20:07:37 +0300
-In-Reply-To: <wrfj611xhda9.fsf@redhat.com> (Jes Sorensen's message of "Fri, 23
-	Oct 2015 10:26:06 -0400")
-Message-ID: <87oafp1pk6.fsf@kamboji.qca.qualcomm.com> (sfid-20151023_190750_573921_BFACE5AE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:33620 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755990AbbJVPqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 11:46:09 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] mac80211: fixup AIFSN instead of disabling WMM
+Date: Thu, 22 Oct 2015 17:46:05 +0200
+Message-Id: <1445528766-19048-2-git-send-email-johannes@sipsolutions.net> (sfid-20151022_174615_360066_B831575D)
+In-Reply-To: <1445528766-19048-1-git-send-email-johannes@sipsolutions.net>
+References: <1445528766-19048-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
->> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>
->>> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
->>>>
->>>> There is overlap of devices between rtl8xxxu and rtl8192cu:
->>>> USB_VENDER_ID_REALTEK, 0x8176
->>>> USB_VENDER_ID_REALTEK, 0x8178
->>>> USB_VENDER_ID_REALTEK, 0x817f
->>>> 0x7392, 0x7811
->>>
->>> Yes
->>
->> What, are you saying that you didn't fix that? I did say in the last
->> review round that we should not have duplicated device entries within
->> drivers/net/wireless and I assumed you took care of that.
->>
->>> and there is also a clash with USB IDs between
->>> drivers/staging/rtl8192u and drivers/net/wireless/realtek/rtlwifi -
->>> this is nothing new.
->>
->> We should do things properly in under drivers/, I don't care what
->> happens in staging and that's no excuse to do things badly.
->
-> As I explained earlier, there is no way I can do that unless we remove
-> rtlwifi's rtl8192cu driver and that cannot happen due to the feature
-> differences. There are plenty of other conflicts and this is not a bug.
+Disabling WMM has a huge impact these days. It implies that
+HT and VHT will be disabled which means that the throughput
+will be drammatically reduced.
+Since the AIFSN is a transmission parameter, we can play a
+bit and fix it up to make it compliant with the 802.11
+specification which requires it to be at least 2.
+Increasing it from 1 to 2 will slightly reduce the
+likelyhood to get a transmission opportunity compared to
+other clients that would accept to set AIFSN=1, but at
+least it will allow HT and VHT which is a huge gain.
 
-Like I said earlier in rtl8xxxu review, I don't want to have two drivers
-supporting the same device. So either rtl8xxxu or rtlwifi supports the
-devices above, not both. And to my knowledge rtl8xxxu is still lacking
-in features, and it's a new driver, so it's best that rtlwifi continues
-to support these for the time being. Once rtl8xxxu catches up and we
-have a clear consensus we can make the switch.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-I'll send a patch in a jiffy, merge window is getting closer so we don't
-have any extra time.
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0d0ce5cc371d..0aaac951a32c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1816,6 +1816,13 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		}
+ 
+ 		params.aifs = pos[0] & 0x0f;
++
++		if (params.aifs < 2) {
++			sdata_info(sdata,
++				   "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
++				   params.aifs, aci);
++			params.aifs = 2;
++		}
+ 		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+ 		params.cw_min = ecw2cw(pos[1] & 0x0f);
+ 		params.txop = get_unaligned_le16(pos + 2);
+@@ -4559,17 +4566,10 @@ static bool ieee80211_usable_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 	left = len - 8;
+ 
+ 	for (; left >= 4; left -= 4, pos += 4) {
+-		u8 aifsn = pos[0] & 0x0f;
+ 		u8 ecwmin = pos[1] & 0x0f;
+ 		u8 ecwmax = (pos[1] & 0xf0) >> 4;
+ 		int aci = (pos[0] >> 5) & 0x03;
+ 
+-		if (aifsn < 2) {
+-			sdata_info(sdata,
+-				   "AP has invalid WMM params (AIFSN=%d for ACI %d), disabling WMM\n",
+-				   aifsn, aci);
+-			return false;
+-		}
+ 		if (ecwmin > ecwmax) {
+ 			sdata_info(sdata,
+ 				   "AP has invalid WMM params (ECWmin/max=%d/%d for ACI %d), disabling WMM\n",
 -- 
-Kalle Valo
+2.5.1
+
