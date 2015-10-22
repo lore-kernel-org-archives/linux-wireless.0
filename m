@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:57927 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbbJ0JZh (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:23081 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbbJVLRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:25:37 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 06/27] staging: wilc1000: wilc_wlan_handle_rxq: add new argument and use wilc
-Date: Tue, 27 Oct 2015 18:27:42 +0900
-Message-ID: <1445938083-20445-6-git-send-email-glen.lee@atmel.com> (sfid-20151027_102540_496328_8D29DE68)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Thu, 22 Oct 2015 07:17:20 -0400
+Date: Thu, 22 Oct 2015 14:17:04 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH V2 03/12] staging: wilc1000: rename strInterfaceInfo in
+ the sturct wilc
+Message-ID: <20151022111704.GN7340@mwanda> (sfid-20151022_131724_085761_7D94E276)
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+ <1445318816-21686-4-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445318816-21686-4-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct wilc and use it instead of g_linux_wlan.
-Pass wilc to the function as well.
+On Tue, Oct 20, 2015 at 02:26:47PM +0900, Tony Cho wrote:
+> This patch renames strInterfaceInfo in the struct wilc to the vif. In
+> addition, unnecessary print statements around it are removed in this patch.
+> 
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c             | 91 +++++++++++------------
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 72 +++++++++---------
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
+>  3 files changed, 80 insertions(+), 85 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index 2bea103..971b99a 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -366,24 +366,21 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+>  	Bssid  = pMacHeader + 10;
+>  	Bssid1 = pMacHeader + 4;
+>  
+> -	for (i = 0; i < g_linux_wlan->vif_num; i++) {
+> -		if (!memcmp(Bssid1, g_linux_wlan->strInterfaceInfo[i].aBSSID, ETH_ALEN) ||
+> -		    !memcmp(Bssid, g_linux_wlan->strInterfaceInfo[i].aBSSID, ETH_ALEN))	{
+> -			return g_linux_wlan->strInterfaceInfo[i].wilc_netdev;
+> -		}
+> -	}
+> +	for (i = 0; i < g_linux_wlan->vif_num; i++)
+> +		if (!memcmp(Bssid1, g_linux_wlan->vif[i].aBSSID, ETH_ALEN) ||
+> +		    !memcmp(Bssid, g_linux_wlan->vif[i].aBSSID, ETH_ALEN))
+> +			return g_linux_wlan->vif[i].wilc_netdev;
+> +
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Removing the curly braces was wrong.  Multi-line indents get curly
+braces for readability even though the compiler does not insist on them.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 5141fe0..4fc88ef 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1107,7 +1107,7 @@ _end_:
- 	return ret;
- }
- 
--static void wilc_wlan_handle_rxq(void)
-+static void wilc_wlan_handle_rxq(struct wilc *wilc)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	int offset = 0, size, has_packet = 0;
-@@ -1122,7 +1122,7 @@ static void wilc_wlan_handle_rxq(void)
- 	do {
- 		if (p->quit) {
- 			PRINT_D(RX_DBG, "exit 1st do-while due to Clean_UP function\n");
--			up(&g_linux_wlan->cfg_event);
-+			up(&wilc->cfg_event);
- 			break;
- 		}
- 		rqe = wilc_wlan_rxq_remove();
-@@ -1194,7 +1194,7 @@ static void wilc_wlan_handle_rxq(void)
- 						 **/
- 						PRINT_D(RX_DBG, "p->cfg_seq_no = %d - rsp.seq_no = %d\n", p->cfg_seq_no, rsp.seq_no);
- 						if (p->cfg_seq_no == rsp.seq_no)
--							up(&g_linux_wlan->cfg_event);
-+							up(&wilc->cfg_event);
- 					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
- 						/**
- 						 *      Call back to indicate status...
-@@ -1350,7 +1350,7 @@ _end_:
- #endif
- 		}
- 	}
--	wilc_wlan_handle_rxq();
-+	wilc_wlan_handle_rxq(wilc);
- }
- 
- void wilc_handle_isr(void *wilc)
--- 
-1.9.1
+regards,
+dan carpenter
 
