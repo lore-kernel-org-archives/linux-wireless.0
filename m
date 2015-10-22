@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40676 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbbJNLUR (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:38399 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965394AbbJVSsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 07:20:17 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eric Caruso <ejcaruso@google.com>
-Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-	leizh@broadcom.com
-Subject: Re: [PATCH] brcm80211: Add support for brcm4371
-References: <1444329646-11495-1-git-send-email-ejcaruso@google.com>
-Date: Wed, 14 Oct 2015 14:20:12 +0300
-In-Reply-To: <1444329646-11495-1-git-send-email-ejcaruso@google.com> (Eric
-	Caruso's message of "Thu, 8 Oct 2015 11:40:46 -0700")
-Message-ID: <87d1whn1cj.fsf@kamboji.qca.qualcomm.com> (sfid-20151014_132022_546340_9E23B5EF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 22 Oct 2015 14:48:09 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: jirislaby@gmail.com
+Cc: mickflemm@gmail.com, mcgrof@do-not-panic.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sergei.shtylyov@cogentembedded.com,
+	Punit Vara <punitvara@gmail.com>
+Subject: [PATCH v4 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
+Date: Fri, 23 Oct 2015 00:17:50 +0530
+Message-Id: <1445539670-4018-1-git-send-email-punitvara@gmail.com> (sfid-20151022_204850_428084_C897C18F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Caruso <ejcaruso@google.com> writes:
+Remove black line suggested by Sergei
 
-> This is a new Broadcom chip and we should be able to recognize it.
->
-> Signed-off-by: Eric Caruso <ejcaruso@google.com>
+This patch is to the ath5k/eeprom.c that fixes up warning caught by
+coccicheck:
 
-This didn't apply. Please rebase on top of wireless-drivers-next and
-resend.
+Unneeded variable: "ret". Return "0" on line 980
 
-Applying: brcm80211: Add support for brcm4371
-Using index info to reconstruct a base tree...
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-CONFLICT (content): Merge conflict in
-drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-Auto-merging drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-CONFLICT (content): Merge conflict in
-drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-Auto-merging drivers/net/wireless/brcm80211/brcmfmac/chip.c
-Failed to merge in the changes.
-Patch failed at 0001 brcm80211: Add support for brcm4371
+Remove unneeded variable ret created to return zero.
 
+Signed-off-by: Punit Vara <punitvara@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 900e72a..94bcc08 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ 
+ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ {
+-	int ret = 0;
+-
+ 	static const u32 cipher_suites[] = {
+ 		WLAN_CIPHER_SUITE_WEP40,
+ 		WLAN_CIPHER_SUITE_WEP104,
+@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
+ 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 -- 
-Kalle Valo
+2.5.3
+
