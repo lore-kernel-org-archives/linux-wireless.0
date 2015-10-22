@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2829 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932235AbbJMKw1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:52:27 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 17/54] staging: wilc1000: rename pu8IEs of struct scan_attr
-Date: Tue, 13 Oct 2015 19:49:42 +0900
-Message-ID: <1444733419-17679-17-git-send-email-tony.cho@atmel.com> (sfid-20151013_125230_516087_8EB664B2)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964911AbbJVJMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2015 05:12:21 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Robert Dolca <robert.dolca@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v4 04/10] nfc: nci: Do not call post_setup when setup fails
+Date: Thu, 22 Oct 2015 12:11:36 +0300
+Message-Id: <1445505102-16639-5-git-send-email-robert.dolca@intel.com> (sfid-20151022_113342_873299_5DB428FB)
+In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The driver should know that it can continue with post setup where
+setup left off. Being able to execute post_setup when setup fails may
+force the developer to keep this state in the driver.
 
-This patch renames pu8IEs of struct scan_attr to ies to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ net/nfc/nci/core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 205be22..4a33d16 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -100,7 +100,7 @@ struct scan_attr {
- 	u8 type;
- 	u8 *ch_freq_list;
- 	u8 ch_list_len;
--	u8 *pu8IEs;
-+	u8 *ies;
- 	size_t IEsLen;
- 	wilc_scan_result pfScanResult;
- 	void *pvUserArg;
-@@ -891,7 +891,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 	{
- 		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
- 		strWIDList[u32WidsCount].type = WID_BIN_DATA;
--		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->pu8IEs;
-+		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->ies;
- 		strWIDList[u32WidsCount].size = pstrHostIFscanAttr->IEsLen;
- 		u32WidsCount++;
- 	}
-@@ -948,9 +948,9 @@ ERRORHANDLER:
- 		pstrHostIFscanAttr->ch_freq_list = NULL;
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 0909720..5362d8f 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -402,9 +402,8 @@ static int nci_open_device(struct nci_dev *ndev)
+ 				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
  	}
  
--	if (pstrHostIFscanAttr->pu8IEs != NULL)	{
--		kfree(pstrHostIFscanAttr->pu8IEs);
--		pstrHostIFscanAttr->pu8IEs = NULL;
-+	if (pstrHostIFscanAttr->ies != NULL) {
-+		kfree(pstrHostIFscanAttr->ies);
-+		pstrHostIFscanAttr->ies = NULL;
- 	}
- 	if (pstrHostIFscanAttr->strHiddenNetwork.pstrHiddenNetworkInfo != NULL)	{
- 		kfree(pstrHostIFscanAttr->strHiddenNetwork.pstrHiddenNetworkInfo);
-@@ -4067,9 +4067,8 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
- 	memcpy(msg.body.scan_info.ch_freq_list, pu8ChnlFreqList, u8ChnlListLen);
+-	if (ndev->ops->post_setup) {
++	if (!rc && ndev->ops->post_setup)
+ 		rc = ndev->ops->post_setup(ndev);
+-	}
  
- 	msg.body.scan_info.IEsLen = IEsLen;
--	msg.body.scan_info.pu8IEs = kmalloc(IEsLen, GFP_KERNEL);
--	memcpy(msg.body.scan_info.pu8IEs,
--		    pu8IEs, IEsLen);
-+	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
-+	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
+ 	if (!rc) {
+ 		rc = __nci_request(ndev, nci_init_complete_req, 0,
 -- 
 1.9.1
 
