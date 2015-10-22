@@ -1,51 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:53281 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753271AbbJTWmh (ORCPT
+Received: from mail-by2on0120.outbound.protection.outlook.com ([207.46.100.120]:21736
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965749AbbJVVBL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 18:42:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH] staging/wilc: fix Kconfig dependencies, second try
-Date: Wed, 21 Oct 2015 00:42:23 +0200
-Message-ID: <4126905.7rHMRoCZhU@wuerfel> (sfid-20151021_004254_209781_815C102E)
-In-Reply-To: <4095810.4Q9e8Lc4je@wuerfel>
-References: <5446980.8Rmykv9Tt3@wuerfel> <4253270.hGxaSY0VLA@wuerfel> <4095810.4Q9e8Lc4je@wuerfel>
+	Thu, 22 Oct 2015 17:01:11 -0400
+From: Yan Bellavance <ybellavance@tamaggo.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>,
+	"c_manoha@qca.qualcomm.com" <c_manoha@qca.qualcomm.com>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: QCA6174, is it ath6kl or ath10k?
+Date: Thu, 22 Oct 2015 21:01:06 +0000
+Message-ID: <BLUPR15MB01957142BACE26716CCB0841A3270@BLUPR15MB0195.namprd15.prod.outlook.com> (sfid-20151022_230116_844106_E2731CB3)
+References: <BY2PR15MB0197D5CFB773E0A3F4B6062FA3380@BY2PR15MB0197.namprd15.prod.outlook.com>,<87wpuf8l94.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wpuf8l94.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 October 2015 11:53:40 Arnd Bergmann wrote:
-> On Monday 19 October 2015 11:39:31 Arnd Bergmann wrote:
-> > On Monday 19 October 2015 16:54:23 Tony Cho wrote:
-> > > Hi Arnd Bergmann,
-> > > 
-> > > When I apply this patch, I cannot make WILC1000 module (wilc1000.ko) because CONFIG_WILC1000 is y and also I can see some link errors for the cfg80211 APIs.
-> > > 
-> > > Can you consider this patch?
-> > 
-> > Ah, you are right. I see the same thing now and don't know what caused me
-> > to send the patch in an incomplete state.
-> > 
-> > I hope this snippet is the last missing piece:
-> > 
-> 
-> No, that was not it either, I'll start over to think this through.
-> 
-> The real solution of course is to make it possible to load both the
-> SPI and MMC front-ends at the same time and have a common base driver,
-> which I might have to do, in order to clear myself of the shame of sending
-> not one but two incorrect fixes for this problem 
+Hello Kalle,
 
-I spent too much time on it now, but I have a series that should fix
-this part for real and let you build both drivers into the kernel
-(or as modules) in a single configuration.
+Thanks for prompt reply.  Frankly, I'm still trying to figure what driver we have really.  It's called qcaqcld2.0 but I see references to ath6kl in the various folders relating to the wifi. So that is why I presumed it was based on a ath6kl driver. What exactly is the qcaqcld2.0 driver?
 
-	Arnd
+
+
+1) Here is the list of files and folders in 
+	/msm8994-la-1-3_amss_oem_standard/LINUX/android/kernel/drivers/net/wireless/ath:
+
+		drwxrwxr-x ar5523
+		drwxrwxr-x ath5k
+		drwxrwxr-x ath6kl
+		drwxrwxr-x ath9k
+		-rw-rw-r-- ath.h
+		drwxrwxr-x carl9170
+		-rw-rw-r-- debug.c
+		-rw-rw-r-- hw.c
+		-rw-rw-r-- Kconfig
+		-rw-rw-r-- key.c
+		-rw-rw-r-- main.c
+		-rw-rw-r-- Makefile
+		-rw-rw-r-- regd.c
+		-rw-rw-r-- regd_common.h
+		-rw-rw-r-- regd.h
+		-rw-rw-r-- reg.h
+		drwxrwxr-x wil6210
+
+As you can see there is no ath10k folder.
+
+
+
+2) Here is the list of folders in 
+	/msm8994-la-1-3_amss_oem_standard/LINUX/android/vendor/qcom/proprietary/wlan
+
+		drwxrwxr-x ath6kl-utils
+		drwxrwxr-x cnss-daemon
+		drwxrwxr-x utils
+
+As you can see it contains an ath6kl-utils folder.
+
+
+
+3) When I look in
+	/msm8994-la-1-3_amss_oem_standard/LINUX/android/vendor/qcom/proprietary/ftm/Android.mk
+
+		I see references to BOARD_HAS_ATH_WLAN_AR6320 only, which is useless to us.
+
+
+		
+4) When I look at athdiag.c, a file inside the qcacld2.0 tools folder, I get the following target info for the register set:
+
+	/LINUX/android/vendor/qcom/opensource/wlan/qcacld-2.0/tools/athdiag
+
+		static const struct ath_target_info target_info[] = {
+			{"AR9888_v2", reg_ar9888_v2},
+			{"AR6320_v1", reg_ar6320_v1},
+			{"AR6320_v2", reg_ar6320_v2},
+			{"AR6320_v3", reg_ar6320_v3},
+		};
+
+5) I will spare you the list of all the other details I have found which raises questions.
+		
+I know support for ath10k starts with kernel 4.0 and we have kernel 3.10 but I don't see anything that would tell me that a backport has been applied.  And we've been having some issues so that is how I got here.
+
+
+Regards,
+
+Yan
+
+________________________________________
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Sent: Thursday, October 22, 2015 2:34 AM
+To: Yan Bellavance
+Cc: ath6kl-devel@qca.qualcomm.com; c_manoha@qca.qualcomm.com; Bartosz Markowski; Janusz Dziedzic; Marek Kwaczynski; Marek Puzyniak; Michal Kazior; ath6kl@lists.infradead.org; linux-wireless@vger.kernel.org
+Subject: Re: QCA6174, is it ath6kl or ath10k?
+
+Yan Bellavance <ybellavance@tamaggo.com> writes:
+
+> I would like to know if the QCA6174 should be driven by ath6kl driver or
+> ath10k.  I'm working with snapdragon 810 devkit and it looks like it's using
+> ath6kl based driver but official linux documentation and github point out that
+> it should be driven by ath10k.
+
+What makes you think you should use ath6kl with QCA6174? Please provide
+details.
+
+> Could someone explain to me what are the differences between the two(briefly
+> and in the context of QCA61x4) and if there are drawbacks to using the ath6kl
+> one?
+
+ath10k and ath6kl are drivers for different chipsets, you cannot just
+choose with one to use. I don't understand why you think you can choose
+as you can't.
+
+> Why are we not using ath10k driver?
+
+With QCA6174 you have to use ath10k.
+
+--
+Kalle Valo
