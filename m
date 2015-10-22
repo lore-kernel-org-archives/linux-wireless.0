@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:34244 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbbJWFYo (ORCPT
+Received: from out22.sjc.mx.trendmicro.com ([216.99.131.79]:64699 "EHLO
+	out22.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754725AbbJVIXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:24:44 -0400
-Received: by lfaz124 with SMTP id z124so71378438lfa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 22:24:43 -0700 (PDT)
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> <wrfjeggpxdwt.fsf@redhat.com>
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 00/16] rtl8xxxu: eFUSE parsing for RTL8188EU chips
-In-reply-to: <wrfjeggpxdwt.fsf@redhat.com>
-Date: Fri, 23 Oct 2015 07:24:41 +0200
-Message-ID: <8737x2taw6.fsf@frog.home> (sfid-20151023_072447_926991_DD55E234)
+	Thu, 22 Oct 2015 04:23:44 -0400
+Received: from out17.sjc.mx.trendmicro.com (unknown [216.99.131.74])
+	by out22.sjc.mx.trendmicro.com (Postfix) with ESMTP id EE49F9BB8DA
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:33 +0000 (UTC)
+Received: from relay05.sjc.mx.trendmicro.com (unknown [10.30.239.131])
+	by out17.sjc.mx.trendmicro.com (Postfix) with ESMTP id D10AA98165D
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:32 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay05.sjc.mx.trendmicro.com (Postfix) with ESMTP id 71DCF98051B
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 07:50:32 +0000 (UTC)
+Received: from unknown (HELO [192.168.5.9]) (br1@[188.85.79.213])
+          (envelope-sender <br1@thinktube.com>)
+          by 111.68.225.247 (qmail-ldap-1.03) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 22 Oct 2015 07:50:31 -0000
+Subject: Re: [PATCH] rtl8xxxu: Enable data frame reception in rtl8xxxu_start
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Bruno Randolf <br1@einfach.org>
+References: <1445462932-23679-1-git-send-email-br1@einfach.org>
+ <wrfjoafrrf1s.fsf@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: Bruno Randolf <br1@thinktube.com>
+Message-ID: <56289543.1070008@thinktube.com> (sfid-20151022_102351_718422_E4750007)
+Date: Thu, 22 Oct 2015 08:50:27 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <wrfjoafrrf1s.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 02:29 AM CEST, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Jakub Sitnicki <jsitnicki@gmail.com> writes:
->> Hi Jes,
+On 10/22/2015 12:13 AM, Jes Sorensen wrote:
+> Bruno Randolf <br1@einfach.org> writes:
+>> mac80211 documentation says, the ieee80211_ops.start callback "must turn on
+>> frame reception (for possibly enabled monitor interfaces.)". If not a single
+>> monitor interface does not receive data frames.
 >>
->> I'm posting this patch set to show in what direction the work is
->> going.  Hopefully any changes (e.g. renames) which you wouldn't see
->> fit for this driver can be identified early this way.
+>> Similarly we should not change the data reception based on the association
+>> state.
 >>
->> The work is nowhere near the end.  These changes only get me past the
->> parse_efuse() step in the probe() routine.
->>
->> I've structured the patch set in such a way that changes that are not
->> RTL8188EU-specific (preparatory work) come first.  All but the last
->> two patches (tagged "rtl8188eu:") fall into this category.  If you
->> were considering to apply any of them, note that they were not tested
->> with any device that is known to work with rtl8xxxu, only a TP-Link
->> TL-WN725N (RTL8188EU) dongle.
->>
->> The corresponding git branch for this patch set is at:
->>
->> git https://github.com/jsitnicki/linux.git branch rtl8xxxu-rtl8188eu
->
-> Jakub,
->
-> Thanks for the feedback - some of these patches are good, some of them I
-> dislike, and some of them will conflict with work I have been doing
-> since I posted the patch. I have been working on adding 8723bu and
-> 8192eu support and some of those changes should also benefit your work.
->
-> I have pushed my current nextgen tree to git, so if you checkout the
-> rtl8xxxu-nextgen branch you will see it.
->
-> I'll respond to the individual patches here.
+>> Signed-off-by: Bruno Randolf <br1@einfach.org>
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 12 ++----------
+>>  1 file changed, 2 insertions(+), 10 deletions(-)
+> 
+> Bruno,
+> 
+> Thanks - I am not 100% convinced about this one. I don't think we should
+> tell the firmware to pass up data frames before we have negotiated the
+> connection.
+> 
+> It's true that for monitor mode, we need to enable it if all packets
+> are requested. Looking at iw there is an option where it only requests
+> control packets, and one for all, etc. However for non monitor mode, we
+> shouldn't pass all data packets up to the stack, resulting and have
+> mac80211 parse them all.
 
-Thanks for the prompt review and the feedback.  I'll rebase the
-RTL8188EU-related patches onto the -nextgen branch, and will be watching
-it.
+But mac80211 requests us to do so - please see include/net/mac80211.h
+line 2576 or
+https://www.kernel.org/doc/htmldocs/80211/API-struct-ieee80211-ops.html
 
-Cheers,
-Jakub
+I know you are focusing on STA mode at the moment, but
+enabling/disabling data reception on association is not correct for most
+other modes.
+
+Also don't be afraid of too many frames being passed. In the initial
+setting (without a monitor interface) the RCR RCR_ACCEPT_AP bit is not
+set and the RCR_CHECK_BSSID_* bits are set as well.
+
+bruno
 
