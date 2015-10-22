@@ -1,123 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:26886 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752416AbbJSBVW (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:49986 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718AbbJVMYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 21:21:22 -0400
-Subject: Re: [PATCH V2] staging: wilc1000: wilc_msgqueue.c : remove the goto
- ERRORHANDER
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1444802143-6298-1-git-send-email-tony.cho@atmel.com>
- <20151014083221.GA25667@zed.strato> <561E17E7.2080407@atmel.com>
- <20151017042826.GB11306@kroah.com>
-CC: Mike Rapoport <mike.rapoport@gmail.com>,
-	<devel@driverdev.osuosl.org>, <rachel.kim@atmel.com>,
-	<chris.park@atmel.com>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
-	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
-	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <5624457E.3060206@atmel.com> (sfid-20151019_032125_696437_4DFD6DA3)
-Date: Mon, 19 Oct 2015 10:21:02 +0900
+	Thu, 22 Oct 2015 08:24:08 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: glen lee <glen.lee@atmel.com>
+Cc: linux-wireless@vger.kernel.org, Rachel Kim <rachel.kim@atmel.com>,
+	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
+	gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>
+Subject: Re: [PATCH 00/19] staging/wilc1000 cleanups
+Date: Thu, 22 Oct 2015 14:23:53 +0200
+Message-ID: <4948909.qZ1ebjqtXf@wuerfel> (sfid-20151022_142448_414037_CD638500)
+In-Reply-To: <562763BC.5030107@atmel.com>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <562763BC.5030107@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151017042826.GB11306@kroah.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 21 October 2015 19:06:52 glen lee wrote:
+> Hi arnd,
+> 
+> Thanks for the all the patches. 
+> About the patch ( use proper naming for global symbols ),
+> We are planning to use this driver not only for wilc1000 but also for
+> other atmel wireless driver. I'd appreciate if you could use wl instead of wilc1000.
+> 
+> And the global variable g_linux_wlan will be placed in netdevice private data
+> and finally it will be removed. I already posted some of those patches.
 
+I couldn't find the patches anywhere, but I've updated my series now
+to rename the symbols to wilc_* and to remove most but not all references to
+g_linux_wlan (or wilc_dev after my rename). Do you want me to post those
+so you can integrate them, or should I have a look at what you sent first
+(please send me a copy then).
 
-On 2015년 10월 17일 13:28, Greg KH wrote:
-> On Wed, Oct 14, 2015 at 05:52:55PM +0900, Tony Cho wrote:
->>
->> On 2015년 10월 14일 17:32, Mike Rapoport wrote:
->>> On Wed, Oct 14, 2015 at 02:55:43PM +0900, Tony Cho wrote:
->>>> From: Leo Kim <leo.kim@atmel.com>
->>>>
->>>> This patch removes goto ERRORHANDER and the result variable in wilc_mq_send.
->>>> Then, the error type is directly returned. If normal operation, freeing memory
->>>> is not needed in this function.
->>>> If an error occurs, returns an error after releasing the spin lock.
->>>>
->>>> Signed-off-by: Leo Kim <leo.kim@atmel.com>
->>>> Signed-off-by: Tony Cho <tony.cho@atmel.com>
->>>> ---
->>>> V2: add releasing spinlock before returnig an error when an error happens.
->>>> ---
->>>>   drivers/staging/wilc1000/wilc_msgqueue.c | 28 ++++++++++++----------------
->>>>   1 file changed, 12 insertions(+), 16 deletions(-)
->>>>
->>>> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
->>>> index b13809a..4dfd476 100644
->>>> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
->>>> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
->>>> @@ -56,35 +56,38 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
->>>>   int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
->>>>   			     const void *pvSendBuffer, u32 u32SendBufferSize)
->>>>   {
->>>> -	int result = 0;
->>>>   	unsigned long flags;
->>>>   	Message *pstrMessage = NULL;
->>>>   	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
->>>>   		PRINT_ER("pHandle or pvSendBuffer is null\n");
->>>> -		result = -EFAULT;
->>>> -		goto ERRORHANDLER;
->>>> +		return -EFAULT;
->>>>   	}
->>>>   	if (pHandle->bExiting) {
->>>>   		PRINT_ER("pHandle fail\n");
->>>> -		result = -EFAULT;
->>>> -		goto ERRORHANDLER;
->>>> +		return -EFAULT;
->>>>   	}
->>>>   	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
->>>>   	/* construct a new message */
->>>>   	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
->>> You can make this allocation outisde the spinlock, then there won't be
->>> need to release it if the allocation fails.
->>>
->>>> -	if (!pstrMessage)
->>>> +
->>>> +	if (!pstrMessage) {
->>>> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
->>>>   		return -ENOMEM;
->>>> +	}
->>>> +
->>>>   	pstrMessage->u32Length = u32SendBufferSize;
->>>>   	pstrMessage->pstrNext = NULL;
->>>>   	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
->>>>   					GFP_ATOMIC);
->>>> +
->>>>   	if (!pstrMessage->pvBuffer) {
->>>> -		result = -ENOMEM;
->>>> -		goto ERRORHANDLER;
->>>> +		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
->>> You are still holding pHandle->hSem here. Moreover, all error paths
->>> return while still holding pHandle->hSem.
->> Can you explain to me what you mean for holding hsem here? Basically, this function cannot release
->>
->> the semaphore (of course, this synchronization mechanism will be changed, anyway) if errors happen.
->>
->> The thread will do his work when it is released without unexpected situations.
->>
->>> I'd suggest, that instead of trying to return immediately, you'd better
->>> move error handling code to the end of the function and use goto and
->>> several labels to do appropriate cleanups depending on when the error
->>> was caught. E.g.
->> I don't want to use goto statement as possible as I can. Do you
->> concern semaphore uses in this function?
-> You should use a goto, it will make the error unwinding much easier and
-> is a very common pattern in Linux kernel code.  It will save you many
-> lines in this function, please do it that way instead.
-
-ok, I will do that,
-
-Thanks,
-
-Tony.
-
->
-> thanks,
->
-> greg k-h
-
+	Arnd
