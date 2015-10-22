@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41955 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122AbbJ1HAC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:00:02 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 24/80] staging: wilc1000: rename hSemGetLINKSPEED of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:44 +0900
-Message-ID: <1446015640-29398-24-git-send-email-glen.lee@atmel.com> (sfid-20151028_081656_931738_D6459D5C)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Received: from mga11.intel.com ([192.55.52.93]:56820 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753586AbbJVBDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2015 21:03:31 -0400
+Date: Thu, 22 Oct 2015 08:58:58 +0800
+From: kbuild test robot <lkp@intel.com>
+To: greearb@candelatech.com
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+	ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH 2/2] ath6k: implement ethtool stats.
+Message-ID: <201510220815.XZd9VwIK%fengguang.wu@intel.com> (sfid-20151022_030335_660861_A870A5DA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445471597-26091-2-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Ben,
 
-This patch renames hSemGetLINKSPEED of struct host_if_drv to sem_get_link_speed
-to avoid CamelCase naming convention.
+[auto build test WARNING on net/master -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+url:    https://github.com/0day-ci/linux/commits/greearb-candelatech-com/ath6k-break-stats-gathering-code-into-separate-method/20151022-075558
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/ath/ath6kl/cfg80211.c:3750:26: sparse: symbol 'ath6k_ethtool_ops' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 04b3056..ba643567 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2124,7 +2124,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
- 		result = -EFAULT;
- 	}
- 
--	up(&hif_drv->hSemGetLINKSPEED);
-+	up(&hif_drv->sem_get_link_speed);
- }
- 
- s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
-@@ -3839,7 +3839,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
- 		return -EFAULT;
- 	}
- 
--	down(&hif_drv->hSemGetLINKSPEED);
-+	down(&hif_drv->sem_get_link_speed);
- 
- 	if (!ps8lnkspd) {
- 		PRINT_ER("LINKSPEED pointer value is null");
-@@ -4107,7 +4107,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	sema_init(&hif_drv->sem_test_key_block, 0);
- 	sema_init(&hif_drv->sem_test_disconn_block, 0);
- 	sema_init(&hif_drv->sem_get_rssi, 0);
--	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
-+	sema_init(&hif_drv->sem_get_link_speed, 0);
- 	sema_init(&hif_drv->hSemGetCHNL, 0);
- 	sema_init(&hif_drv->hSemInactiveTime, 0);
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index b18ed17..8a68d64 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -308,7 +308,7 @@ struct host_if_drv {
- 	struct semaphore sem_test_key_block;
- 	struct semaphore sem_test_disconn_block;
- 	struct semaphore sem_get_rssi;
--	struct semaphore hSemGetLINKSPEED;
-+	struct semaphore sem_get_link_speed;
- 	struct semaphore hSemGetCHNL;
- 	struct semaphore hSemInactiveTime;
- /* timer handlers */
--- 
-1.9.1
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
