@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7815 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36916 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbbJYJAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 05:00:06 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/10] mac80211: Fix local deauth while associating
-Date: Sun, 25 Oct 2015 10:59:38 +0200
-Message-Id: <1445763582-11421-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100012_121230_5242367C)
-In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751896AbbJWHuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 03:50:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: replace ieee80211_ie_split() with an inline
+Date: Fri, 23 Oct 2015 09:50:03 +0200
+Message-Id: <1445586603-30066-1-git-send-email-johannes@sipsolutions.net> (sfid-20151023_095011_977379_1BA9465A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Local request to deauthenticate wasn't handled while associating, thus
-the association could continue even when the user space required to
-disconnect.
+The function is a very simple wrapper around another one,
+just adds a few default parameters, so replace it with a
+static inline instead of using EXPORT_SYMBOL, reducing
+the module size slightly.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ include/net/cfg80211.h | 7 +++++--
+ net/wireless/util.c    | 7 -------
+ 2 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0d0ce5c..67f0387 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4936,6 +4936,25 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 		return 0;
- 	}
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2c7bdb81d30c..e568872203a5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5173,8 +5173,11 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+  * buffer starts, which may be @ielen if the entire (remainder)
+  * of the buffer should be used.
+  */
+-size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+-			  const u8 *ids, int n_ids, size_t offset);
++static inline size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
++					const u8 *ids, int n_ids, size_t offset)
++{
++	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
++}
  
-+	if (ifmgd->assoc_data &&
-+	    ether_addr_equal(ifmgd->assoc_data->bss->bssid, req->bssid)) {
-+		sdata_info(sdata,
-+			   "aborting association with %pM by local choice (Reason: %u=%s)\n",
-+			   req->bssid, req->reason_code,
-+			   ieee80211_get_reason_code_string(req->reason_code));
-+
-+		drv_mgd_prepare_tx(sdata->local, sdata);
-+		ieee80211_send_deauth_disassoc(sdata, req->bssid,
-+					       IEEE80211_STYPE_DEAUTH,
-+					       req->reason_code, tx,
-+					       frame_buf);
-+		ieee80211_destroy_assoc_data(sdata, false);
-+		ieee80211_report_disconnect(sdata, frame_buf,
-+					    sizeof(frame_buf), true,
-+					    req->reason_code);
-+		return 0;
-+	}
-+
- 	if (ifmgd->associated &&
- 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
- 		sdata_info(sdata,
+ /**
+  * cfg80211_report_wowlan_wakeup - report wakeup from WoWLAN
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index baf7218cec15..010a3c75a677 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1325,13 +1325,6 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+ }
+ EXPORT_SYMBOL(ieee80211_ie_split_ric);
+ 
+-size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+-			  const u8 *ids, int n_ids, size_t offset)
+-{
+-	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
+-}
+-EXPORT_SYMBOL(ieee80211_ie_split);
+-
+ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 				       enum ieee80211_band *band)
+ {
 -- 
-2.1.4
+2.5.1
 
