@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58525 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51712 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbbJ0J1V (ORCPT
+	with ESMTP id S1750879AbbJWF0R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:27:21 -0400
+	Fri, 23 Oct 2015 01:26:17 -0400
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 23/27] staging: wilc1000: wilc_wlan_rxq_add: add argument wilc and use it
-Date: Tue, 27 Oct 2015 18:27:59 +0900
-Message-ID: <1445938083-20445-23-git-send-email-glen.lee@atmel.com> (sfid-20151027_104655_165287_569D6B86)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 04/28] staging: wilc1000: deinit_irq: use wilc instead of g_linux_wlan
+Date: Fri, 23 Oct 2015 14:28:20 +0900
+Message-ID: <1445578124-31486-4-git-send-email-glen.lee@atmel.com> (sfid-20151023_072619_872087_B60ADED0)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct wilc and use it instead of g_linux_wlan.
+This patch changes function parameter linux_wlan_t nic with net_dev dev and
+use wilc instead of nic and g_linux_wlan.
 
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index aebc9a6..a6b966f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -586,14 +586,14 @@ static struct txq_entry_t *wilc_wlan_txq_get_next(struct txq_entry_t *tqe)
- 	return tqe;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index e31760e..75cbacf 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -309,12 +309,18 @@ static int init_irq(struct net_device *dev)
  }
+ #endif
  
--static int wilc_wlan_rxq_add(struct rxq_entry_t *rqe)
-+static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
+-static void deinit_irq(struct wilc *nic)
++static void deinit_irq(struct net_device *dev)
  {
- 	wilc_wlan_dev_t *p = &g_wlan;
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
++
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
++
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+ 	/* Deintialize IRQ */
+-	if (&nic->dev_irq_num != 0) {
+-		free_irq(nic->dev_irq_num, g_linux_wlan);
++	if (&wl->dev_irq_num != 0) {
++		free_irq(wl->dev_irq_num, wl);
  
- 	if (p->quit)
- 		return 0;
- 
--	mutex_lock(&g_linux_wlan->rxq_cs);
-+	mutex_lock(&wilc->rxq_cs);
- 	if (p->rxq_head == NULL) {
- 		PRINT_D(RX_DBG, "Add to Queue head\n");
- 		rqe->next = NULL;
-@@ -607,7 +607,7 @@ static int wilc_wlan_rxq_add(struct rxq_entry_t *rqe)
+ 		gpio_free(GPIO_NUM);
  	}
- 	p->rxq_entries += 1;
- 	PRINT_D(RX_DBG, "Number of queue entries: %d\n", p->rxq_entries);
--	mutex_unlock(&g_linux_wlan->rxq_cs);
-+	mutex_unlock(&wilc->rxq_cs);
- 	return p->rxq_entries;
- }
+@@ -906,7 +912,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		wlan_deinitialize_threads(wl);
  
-@@ -1349,7 +1349,7 @@ _end_:
- 				rqe->buffer = buffer;
- 				rqe->buffer_size = size;
- 				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
--				wilc_wlan_rxq_add(rqe);
-+				wilc_wlan_rxq_add(wilc, rqe);
- 			}
- 		} else {
- #ifndef MEMORY_STATIC
+ 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+-		deinit_irq(wl);
++		deinit_irq(dev);
+ 
+ 		wilc_wlan_stop();
+ 
+@@ -1143,7 +1149,7 @@ _fail_irq_enable_:
+ _fail_irq_init_:
+ #endif
+ #if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+-		deinit_irq(wl);
++		deinit_irq(dev);
+ 
+ #endif
+ 		wlan_deinitialize_threads(wl);
 -- 
 1.9.1
 
