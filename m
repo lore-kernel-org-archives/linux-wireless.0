@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5494 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751329AbbJOIAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 04:00:50 -0400
-Date: Thu, 15 Oct 2015 15:59:53 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 34/40] staging: wilc1000: rename variable
- gu8FlushedJoinReqDrvHandler
-Message-ID: <201510151529.AmFWEq5L%fengguang.wu@intel.com> (sfid-20151015_100052_677490_30699D47)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51974 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbbJWF13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:27:29 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 16/28] staging: wilc1000: WILC_WFI_mgmt_rx: add argument wilc and use it
+Date: Fri, 23 Oct 2015 14:28:32 +0900
+Message-ID: <1445578124-31486-16-git-send-email-glen.lee@atmel.com> (sfid-20151023_074657_043220_44D8B7A2)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-34-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+This patch add new argument wilc and use wilc instead of g_wlan_linux.
+Declare the function in wilc_wfi_netdevice.h.
 
-[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
-
-url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'mode_11i' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'join_req_size' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'info_element_size' was not declared. Should it be static?
->> drivers/staging/wilc1000/host_interface.c:270:20: sparse: symbol 'join_req_drv' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2212:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2352:38: sparse: incompatible types for operation (>)
-   drivers/staging/wilc1000/host_interface.c:2352:38:    left side has type unsigned char [usertype] *tail
-   drivers/staging/wilc1000/host_interface.c:2352:38:    right side has type int
-
-Please review and possibly fold the followup patch.
-
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/staging/wilc1000/linux_wlan.c         | 10 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ drivers/staging/wilc1000/wilc_wlan.c          |  3 +--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2f1543d..fef6664 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1604,25 +1604,25 @@ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset)
+ 	}
+ }
+ 
+-void WILC_WFI_mgmt_rx(u8 *buff, u32 size)
++void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
+ {
+ 	int i = 0;
+ 	perInterface_wlan_t *nic;
+ 
+ 	/*Pass the frame on the monitor interface, if any.*/
+ 	/*Otherwise, pass it on p2p0 netdev, if registered on it*/
+-	for (i = 0; i < g_linux_wlan->vif_num; i++) {
+-		nic = netdev_priv(g_linux_wlan->vif[i].ndev);
++	for (i = 0; i < wilc->vif_num; i++) {
++		nic = netdev_priv(wilc->vif[i].ndev);
+ 		if (nic->monitor_flag) {
+ 			WILC_WFI_monitor_rx(buff, size);
+ 			return;
+ 		}
+ 	}
+ 
+-	nic = netdev_priv(g_linux_wlan->vif[1].ndev); /* p2p0 */
++	nic = netdev_priv(wilc->vif[1].ndev); /* p2p0 */
+ 	if ((buff[0] == nic->g_struct_frame_reg[0].frame_type && nic->g_struct_frame_reg[0].reg) ||
+ 	    (buff[0] == nic->g_struct_frame_reg[1].frame_type && nic->g_struct_frame_reg[1].reg))
+-		WILC_WFI_p2p_rx(g_linux_wlan->vif[1].ndev, buff, size);
++		WILC_WFI_p2p_rx(wilc->vif[1].ndev, buff, size);
+ }
+ 
+ void wl_wlan_cleanup(void)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index a828fab..8ba69ee 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -216,4 +216,5 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout);
+ void wl_wlan_cleanup(void);
+ int wilc_netdev_init(struct wilc **wilc);
+ void wilc1000_wlan_deinit(struct net_device *dev);
++void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index ae4b01f..531d342 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -18,7 +18,6 @@
+  ********************************************/
+ extern wilc_hif_func_t hif_sdio;
+ extern wilc_hif_func_t hif_spi;
+-extern void WILC_WFI_mgmt_rx(u8 *buff, u32 size);
+ u32 wilc_get_chipid(u8 update);
+ u16 Set_machw_change_vir_if(bool bValue);
+ 
+@@ -1178,7 +1177,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 				/* reset mgmt indicator bit, to use pkt_offeset in furthur calculations */
+ 				pkt_offset &= ~(IS_MANAGMEMENT | IS_MANAGMEMENT_CALLBACK | IS_MGMT_STATUS_SUCCES);
+ 
+-				WILC_WFI_mgmt_rx(&buffer[offset + HOST_HDR_OFFSET], pkt_len);
++				WILC_WFI_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
+ 			}
+ 			else
+ 			{
+-- 
+1.9.1
+
