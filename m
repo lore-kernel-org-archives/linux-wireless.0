@@ -1,62 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39245 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268AbbJ2Hr3 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51797 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbbJWF0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 03:47:29 -0400
-From: Sunil Dutt <usdutt@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<vkanchan@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>
-Subject: [PATCH 2/2] mac80211: Add support for aborting an ongoing scan
-Date: Thu, 29 Oct 2015 13:16:44 +0530
-Message-ID: <1446104804-8312-2-git-send-email-usdutt@qti.qualcomm.com> (sfid-20151029_084732_002633_D646E76E)
-In-Reply-To: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
-References: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
+	Fri, 23 Oct 2015 01:26:41 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/28] staging: wilc1000: linux_wlan_mac_indicate: add argument and use wilc
+Date: Fri, 23 Oct 2015 14:28:24 +0900
+Message-ID: <1445578124-31486-8-git-send-email-glen.lee@atmel.com> (sfid-20151023_072644_384884_981F6DC0)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+This patch adds argument wilc and pass the function wilc. Use wilc instead of
+g_linux_wlan and pd.
 
-This commit adds implementation for abort scan in mac80211.
-
-Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
-Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- net/mac80211/cfg.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c         | 13 ++++++-------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c          |  4 ++--
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 713cdbf..d4d78e1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3797,6 +3797,16 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
- 	return -ENOENT;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3f5ae55..af7e844 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -347,24 +347,23 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout)
+ 	return error;
  }
  
-+static int ieee80211_abort_scan(struct wiphy *wiphy, struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	/* Cancel the ongoing scan */
-+	ieee80211_scan_cancel(local);
-+	return 0;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3881,4 +3891,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-+	.abort_scan = ieee80211_abort_scan,
- };
+-void linux_wlan_mac_indicate(int flag)
++void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+ {
+ 	/*I have to do it that way becuase there is no mean to encapsulate device pointer
+ 	 * as a parameter
+ 	 */
+-	struct wilc *pd = g_linux_wlan;
+ 	int status;
+ 
+ 	if (flag == WILC_MAC_INDICATE_STATUS) {
+ 		wilc_wlan_cfg_get_val(WID_STATUS, (unsigned char *)&status, 4);
+-		if (pd->mac_status == WILC_MAC_STATUS_INIT) {
+-			pd->mac_status = status;
+-			up(&pd->sync_event);
++		if (wilc->mac_status == WILC_MAC_STATUS_INIT) {
++			wilc->mac_status = status;
++			up(&wilc->sync_event);
+ 		} else {
+-			pd->mac_status = status;
++			wilc->mac_status = status;
+ 		}
+ 
+-		if (pd->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
++		if (wilc->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
+ 		}
+ 
+ 	} else if (flag == WILC_MAC_INDICATE_SCAN) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8aa3355..a828fab 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -209,7 +209,7 @@ struct WILC_WFI_mon_priv {
+ extern struct wilc *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
+-void linux_wlan_mac_indicate(int flag);
++void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
+ void linux_wlan_rx_complete(void);
+ void linux_wlan_dbg(u8 *buff);
+ int linux_wlan_lock_timeout(void *vp, u32 timeout);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 4fc88ef..4fa956a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1199,10 +1199,10 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 						/**
+ 						 *      Call back to indicate status...
+ 						 **/
+-						linux_wlan_mac_indicate(WILC_MAC_INDICATE_STATUS);
++						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
+ 
+ 					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
+-						linux_wlan_mac_indicate(WILC_MAC_INDICATE_SCAN);
++						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
+ 					}
+ 				}
+ 			}
 -- 
-1.8.2.1
+1.9.1
 
