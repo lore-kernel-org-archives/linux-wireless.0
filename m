@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35518 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752211AbbJTGq3 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52229 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbJWF2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:29 -0400
-Received: by lffy185 with SMTP id y185so720508lff.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:27 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 11/16] rtl8xxxu: Make efuse content length a parameter
-Date: Tue, 20 Oct 2015 08:45:41 +0200
-Message-Id: <1445323546-12807-12-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084632_706024_19B99F88)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	Fri, 23 Oct 2015 01:28:35 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 27/28] staging: wilc1000: wilc_wlan_txq_add_net_pkt: add argument struct net_device
+Date: Fri, 23 Oct 2015 14:28:43 +0900
+Message-ID: <1445578124-31486-27-git-send-email-glen.lee@atmel.com> (sfid-20151023_074654_442019_7BE16557)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a preparatory step for adding support for RTL8188EU chips
-which have different efuse length.
+This patch add new argument struct net_device *dev and pass net_device to
+wilc_wlan_txq_add_net_pkt.
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c  | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.h  | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index d48db87..a7d172a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1930,6 +1930,7 @@ rtl8xxxu_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
- static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 7a2599a..0dce242 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1406,8 +1406,8 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	nic->netstats.tx_packets++;
+ 	nic->netstats.tx_bytes += tx_data->size;
+ 	tx_data->pBssid = wl->vif[nic->u8IfIdx].bssid;
+-	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
+-					       tx_data->size,
++	QueueCount = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
++					       tx_data->buff, tx_data->size,
+ 					       linux_wlan_tx_complete);
+ 
+ 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e4e9c72..6c4fef2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -502,8 +502,8 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
+ 	return 1;
+ }
+ 
+-int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
+-			      wilc_tx_complete_func_t func)
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			      u32 buffer_size, wilc_tx_complete_func_t func)
  {
- 	struct device *dev = &priv->udev->dev;
-+	int efuse_len = priv->fops->efuse_len;
- 	int i, ret = 0;
- 	u8 val8, word_mask, header, extheader;
- 	u16 val16, efuse_addr, offset;
-@@ -1978,7 +1979,7 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
- 	memset(priv->efuse_wifi.raw, 0xff, EFUSE_MAP_LEN_8723A);
- 
- 	efuse_addr = 0;
--	while (efuse_addr < EFUSE_REAL_CONTENT_LEN_8723A) {
-+	while (efuse_addr < efuse_len) {
- 		u16 map_addr;
- 
- 		ret = rtl8xxxu_read_efuse8(priv, efuse_addr++, &header);
-@@ -5780,6 +5781,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.parse_efuse = rtl8723au_parse_efuse,
- 	.load_firmware = rtl8723au_load_firmware,
- 	.power_on = rtl8723au_power_on,
-+	.efuse_len = EFUSE_REAL_CONTENT_LEN_8723A,
- 	.writeN_block_size = 1024,
- };
- 
-@@ -5787,6 +5789,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.parse_efuse = rtl8192cu_parse_efuse,
- 	.load_firmware = rtl8192cu_load_firmware,
- 	.power_on = rtl8192cu_power_on,
-+	.efuse_len = EFUSE_REAL_CONTENT_LEN_8723A,
- 	.writeN_block_size = 128,
- };
- 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 2f5f903..ccfbc10 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -677,5 +677,6 @@ struct rtl8xxxu_fileops {
- 	int (*parse_efuse) (struct rtl8xxxu_priv *priv);
- 	int (*load_firmware) (struct rtl8xxxu_priv *priv);
- 	int (*power_on) (struct rtl8xxxu_priv *priv);
-+	int efuse_len;
- 	int writeN_block_size;
- };
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	struct txq_entry_t *tqe;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index d0b2448..57e1d51 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -298,8 +298,8 @@ typedef struct {
+ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
+ int wilc_wlan_start(void);
+ int wilc_wlan_stop(void);
+-int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
+-			      wilc_tx_complete_func_t func);
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			      u32 buffer_size, wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
+ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
 -- 
-2.1.0
+1.9.1
 
