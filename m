@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29747 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbbJYN7e (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51648 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbJWFZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 09:59:34 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 0/4] wil6210 patches
-Date: Sun, 25 Oct 2015 15:59:20 +0200
-Message-Id: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151025_145938_212621_B1D09343)
+	Fri, 23 Oct 2015 01:25:57 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/28] staging: wilc1000: isr_bh_routine: remove unused variable nic
+Date: Fri, 23 Oct 2015 14:28:17 +0900
+Message-ID: <1445578124-31486-1-git-send-email-glen.lee@atmel.com> (sfid-20151023_072559_707631_C13C5A90)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Collection of small fixes
+This patch removes unused variable nic.
 
-Hamad Kadmany (1):
-  wil6210: Fix TSO overflow handling
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Vladimir Kondratiev (3):
-  wil6210: ignore selected WMI events
-  wil6210: fix device ready detection
-  wil6210: handle failure in Tx vring config
-
- drivers/net/wireless/ath/wil6210/interrupt.c |  6 +++---
- drivers/net/wireless/ath/wil6210/main.c      |  2 +-
- drivers/net/wireless/ath/wil6210/txrx.c      | 30 ++++++++++++++--------------
- drivers/net/wireless/ath/wil6210/wil6210.h   |  4 ++--
- drivers/net/wireless/ath/wil6210/wmi.c       | 20 +++++++++++--------
- 5 files changed, 33 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ce2bd53..b036b96 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -242,10 +242,6 @@ static irqreturn_t isr_uh_routine(int irq, void *user_data)
+ 
+ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ {
+-	struct wilc *nic;
+-
+-	nic = (struct wilc *)userdata;
+-
+ 	/*While mac is closing cacncel the handling of any interrupts received*/
+ 	if (g_linux_wlan->close) {
+ 		PRINT_ER("Driver is CLOSING: Can't handle BH interrupt\n");
 -- 
-2.1.4
+1.9.1
 
