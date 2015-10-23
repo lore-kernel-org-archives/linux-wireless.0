@@ -1,221 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28001 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbbJLM6G (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51728 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbJWF0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 08:58:06 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 2/7] ath10k: register per copy engine send completion callbacks
-Date: Mon, 12 Oct 2015 18:27:01 +0530
-Message-ID: <1444654626-3290-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145809_982983_4FE01AC8)
-In-Reply-To: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 23 Oct 2015 01:26:24 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/28] staging: wilc1000: wilc_handle_isr: add argument wilc to wilc_handle_isr
+Date: Fri, 23 Oct 2015 14:28:21 +0900
+Message-ID: <1445578124-31486-5-git-send-email-glen.lee@atmel.com> (sfid-20151023_072626_512922_A82D003D)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register send completion callbacks for every copy engines (CE) separately
-instead of having common completion handler. Since some of the copy
-engines delivers different type of messages, per-CE callbacks help to
-service them differently.
+This patch add new argument wilc to wilc_handle_isr and pass wilc to
+the function.
+It is void type for now because wilc_wlan.c was implemented platform
+independently at the beginning (linux_wlan.c is implementation of LINUX part)
+so the struct wilc header file cannot be included at this moment,
+but this driver is dedicated to LINUX so wilc_wlan.c and linux_wlan.c will be
+merged. After that, this void type will be changed with struct wilc as well as
+other functions which are using void type in wilc_wlan.h.
 
-Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-v2: register send_cb only for tx pipes
+ drivers/staging/wilc1000/linux_wlan.c      | 2 +-
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 7 +++++--
+ drivers/staging/wilc1000/wilc_wlan.c       | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h       | 2 +-
+ 4 files changed, 8 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath/ath10k/ce.c  |  3 +--
- drivers/net/wireless/ath/ath10k/ce.h  |  3 ++-
- drivers/net/wireless/ath/ath10k/hif.h |  2 --
- drivers/net/wireless/ath/ath10k/htc.c |  7 ++-----
- drivers/net/wireless/ath/ath10k/htc.h |  2 +-
- drivers/net/wireless/ath/ath10k/pci.c | 13 +++++++------
- 6 files changed, 13 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 8d7ab1c..ae85be8 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1077,7 +1077,6 @@ void ath10k_ce_deinit_pipe(struct ath10k *ar, unsigned int ce_id)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 75cbacf..3f5ae55 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -260,7 +260,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ 	}
  
- int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
- 			 const struct ce_attr *attr,
--			 void (*send_cb)(struct ath10k_ce_pipe *),
- 			 void (*recv_cb)(struct ath10k_ce_pipe *))
+ 	PRINT_D(INT_DBG, "Interrupt received BH\n");
+-	wilc_handle_isr();
++	wilc_handle_isr(wl);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 1f8d874..4aff953 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -27,7 +27,6 @@ struct wilc_sdio {
+ };
+ 
+ struct sdio_func *local_sdio_func;
+-extern void wilc_handle_isr(void);
+ 
+ static unsigned int sdio_default_speed;
+ 
+@@ -42,9 +41,13 @@ static const struct sdio_device_id wilc_sdio_ids[] = {
+ 
+ static void wilc_sdio_interrupt(struct sdio_func *func)
  {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -1104,7 +1103,7 @@ int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
- 	ce_state->src_sz_max = attr->src_sz_max;
- 
- 	if (attr->src_nentries)
--		ce_state->send_cb = send_cb;
-+		ce_state->send_cb = attr->send_cb;
- 
- 	if (attr->dest_nentries)
- 		ce_state->recv_cb = recv_cb;
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 5c903e15..3829e33 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -210,7 +210,6 @@ int ath10k_ce_init_pipe(struct ath10k *ar, unsigned int ce_id,
- void ath10k_ce_deinit_pipe(struct ath10k *ar, unsigned int ce_id);
- int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
- 			 const struct ce_attr *attr,
--			 void (*send_cb)(struct ath10k_ce_pipe *),
- 			 void (*recv_cb)(struct ath10k_ce_pipe *));
- void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id);
- 
-@@ -277,6 +276,8 @@ struct ce_attr {
- 
- 	/* #entries in destination ring - Must be a power of 2 */
- 	unsigned int dest_nentries;
++	struct wilc_sdio *wl_sdio;
 +
-+	void (*send_cb)(struct ath10k_ce_pipe *);
- };
- 
- #define SR_BA_ADDRESS		0x0000
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 0c92e02..3808920 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -31,8 +31,6 @@ struct ath10k_hif_sg_item {
- };
- 
- struct ath10k_hif_cb {
--	int (*tx_completion)(struct ath10k *ar,
--			     struct sk_buff *wbuf);
- 	int (*rx_completion)(struct ath10k *ar,
- 			     struct sk_buff *wbuf);
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 97c24b2..89c0e40 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -181,22 +181,20 @@ err_pull:
- 	return ret;
- }
- 
--int ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
-+void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htc *htc = &ar->htc;
- 	struct ath10k_skb_cb *skb_cb;
- 	struct ath10k_htc_ep *ep;
- 
- 	if (WARN_ON_ONCE(!skb))
--		return 0;
-+		return;
- 
- 	skb_cb = ATH10K_SKB_CB(skb);
- 	ep = &htc->endpoint[skb_cb->eid];
- 
- 	ath10k_htc_notify_tx_completion(ep, skb);
- 	/* the skb now belongs to the completion handler */
--
--	return 0;
- }
- EXPORT_SYMBOL(ath10k_htc_tx_completion_handler);
- 
-@@ -851,7 +849,6 @@ int ath10k_htc_init(struct ath10k *ar)
- 
- 	/* setup HIF layer callbacks */
- 	htc_callbacks.rx_completion = ath10k_htc_rx_completion_handler;
--	htc_callbacks.tx_completion = ath10k_htc_tx_completion_handler;
- 	htc->ar = ar;
- 
- 	/* Get HIF default pipe for HTC message exchange */
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index d1fc8e7..77b669e 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -355,7 +355,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- 		    struct sk_buff *packet);
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
--int ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- int ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- 
++	wl_sdio = sdio_get_drvdata(func);
++
+ #ifndef WILC_SDIO_IRQ_GPIO
+ 	sdio_release_host(func);
+-	wilc_handle_isr();
++	wilc_handle_isr(wl_sdio->wilc);
+ 	sdio_claim_host(func);
  #endif
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index a41d66e..11f4dcb 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -104,6 +104,7 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
- 			       struct ath10k_ce_pipe *rx_pipe,
- 			       struct bmi_xfer *xfer);
- static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar);
-+static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
- 
- static const struct ce_attr host_ce_config_wlan[] = {
- 	/* CE0: host->target HTC control and raw streams */
-@@ -112,6 +113,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 		.src_nentries = 16,
- 		.src_sz_max = 256,
- 		.dest_nentries = 0,
-+		.send_cb = ath10k_pci_htc_tx_cb,
- 	},
- 
- 	/* CE1: target->host HTT + HTC control */
-@@ -136,6 +138,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 		.src_nentries = 32,
- 		.src_sz_max = 2048,
- 		.dest_nentries = 0,
-+		.send_cb = ath10k_pci_htc_tx_cb,
- 	},
- 
- 	/* CE4: host->target HTT */
-@@ -144,6 +147,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 		.src_nentries = CE_HTT_H2T_MSG_SRC_NENTRIES,
- 		.src_sz_max = 256,
- 		.dest_nentries = 0,
-+		.send_cb = ath10k_pci_htc_tx_cb,
- 	},
- 
- 	/* CE5: unused */
-@@ -1144,11 +1148,9 @@ static int ath10k_pci_diag_write32(struct ath10k *ar, u32 address, u32 value)
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 67b0c52..be6f631 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1353,7 +1353,7 @@ _end_:
+ 	wilc_wlan_handle_rxq();
  }
  
- /* Called by lower (CE) layer when a send to Target completes. */
--static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
-+static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
+-void wilc_handle_isr(void)
++void wilc_handle_isr(void *wilc)
  {
- 	struct ath10k *ar = ce_state->ar;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ath10k_hif_cb *cb = &ar_pci->msg_callbacks_current;
- 	struct sk_buff_head list;
- 	struct sk_buff *skb;
- 	u32 ce_data;
-@@ -1166,7 +1168,7 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
- 	}
+ 	u32 int_status;
  
- 	while ((skb = __skb_dequeue(&list)))
--		cb->tx_completion(ar, skb);
-+		ath10k_htc_tx_completion_handler(ar, skb);
- }
- 
- /* Called by lower (CE) layer when data is received from the Target. */
-@@ -1622,7 +1624,7 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 
- 		ce_ring->per_transfer_context[i] = NULL;
- 
--		ar_pci->msg_callbacks_current.tx_completion(ar, skb);
-+		ath10k_htc_tx_completion_handler(ar, skb);
- 	}
- }
- 
-@@ -2043,7 +2045,6 @@ static int ath10k_pci_alloc_pipes(struct ath10k *ar)
- 		pipe->hif_ce_state = ar;
- 
- 		ret = ath10k_ce_alloc_pipe(ar, i, &host_ce_config_wlan[i],
--					   ath10k_pci_ce_send_done,
- 					   ath10k_pci_ce_recv_data);
- 		if (ret) {
- 			ath10k_err(ar, "failed to allocate copy engine pipe %d: %d\n",
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index bd89689..a07375b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -301,7 +301,7 @@ int wilc_wlan_stop(void);
+ int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
+ 			      wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(u32 *pu32TxqCount);
+-void wilc_handle_isr(void);
++void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(void);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drvHandler);
 -- 
-2.6.0
+1.9.1
 
