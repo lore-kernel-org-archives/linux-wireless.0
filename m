@@ -1,128 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53997 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755842AbbJUXxV (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35553 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbbJWTbh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 19:53:21 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath6kl@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath6k:  break stats gathering code into separate method.
-Date: Wed, 21 Oct 2015 16:53:16 -0700
-Message-Id: <1445471597-26091-1-git-send-email-greearb@candelatech.com> (sfid-20151022_015324_696208_04F27042)
+	Fri, 23 Oct 2015 15:31:37 -0400
+Received: by oifu63 with SMTP id u63so28751656oif.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 12:31:36 -0700 (PDT)
+Subject: Re: overlap of devices in rtl8xxxu and rtl8192cu
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <562A2711.9040700@gmail.com> <wrfj7fmdit3l.fsf@redhat.com>
+ <87ziz91xag.fsf@kamboji.qca.qualcomm.com> <wrfj611xhda9.fsf@redhat.com>
+ <87oafp1pk6.fsf@kamboji.qca.qualcomm.com>
+ <87k2qd1ooy.fsf@kamboji.qca.qualcomm.com> <wrfj1tcleajw.fsf@redhat.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <562A8B21.2020803@lwfinger.net> (sfid-20151023_213140_469582_42759878)
+Date: Fri, 23 Oct 2015 14:31:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <wrfj1tcleajw.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 10/23/2015 12:53 PM, Jes Sorensen wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> Like I said earlier in rtl8xxxu review, I don't want to have two drivers
+>>> supporting the same device. So either rtl8xxxu or rtlwifi supports the
+>>> devices above, not both. And to my knowledge rtl8xxxu is still lacking
+>>> in features, and it's a new driver, so it's best that rtlwifi continues
+>>> to support these for the time being. Once rtl8xxxu catches up and we
+>>> have a clear consensus we can make the switch.
+>>>
+>>> I'll send a patch in a jiffy, merge window is getting closer so we don't
+>>> have any extra time.
+>>
+>> Heh, having hilarious problems with my patch:
+>>
+>> <linux-wireless@vger.kernel.org>: host vger.kernel.org[209.132.180.67] said:
+>>      550 5.7.1 Content-Policy reject msg: The capital Triple-X in subject is way
+>>      too often associated with junk email, please rephrase.
+>>
+>> The subject was:
+>>
+>> Subject: [PATCH] rtl8xxxu: move devices supported by rtlwifi under
+>>   CONFIG_RTL8XXXU_UNTESTED
+>
+> This seems a reasonable workaround for now.
+>
+> Next time just add some extra buzzwords to the subject line and I am
+> sure it will go through :)
 
-This will allow us to call it from elsewhere when implementing
-ethtool stats.
+Well, when you try to send porn, the system will complain. :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c | 55 +++++++++++++++++++--------------
- drivers/net/wireless/ath/ath6kl/debug.h |  2 ++
- 2 files changed, 34 insertions(+), 23 deletions(-)
+I agree that this is a sensible workaround.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 81ba48d..91ff6a5 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -98,6 +98,33 @@ void ath6kl_warn(const char *fmt, ...)
- }
- EXPORT_SYMBOL(ath6kl_warn);
- 
-+int ath6k_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif)
-+{
-+	long left;
-+
-+	if (down_interruptible(&ar->sem))
-+		return -EBUSY;
-+
-+	set_bit(STATS_UPDATE_PEND, &vif->flags);
-+
-+	if (ath6kl_wmi_get_stats_cmd(ar->wmi, 0)) {
-+		up(&ar->sem);
-+		return -EIO;
-+	}
-+
-+	left = wait_event_interruptible_timeout(ar->event_wq,
-+						!test_bit(STATS_UPDATE_PEND,
-+						&vif->flags), WMI_TIMEOUT);
-+
-+	up(&ar->sem);
-+
-+	if (left <= 0)
-+		return -ETIMEDOUT;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath6k_read_tgt_stats);
-+
- #ifdef CONFIG_ATH6KL_DEBUG
- 
- void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
-@@ -544,42 +571,24 @@ static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
- 	char *buf;
- 	unsigned int len = 0, buf_len = 1500;
- 	int i;
--	long left;
- 	ssize_t ret_cnt;
-+	int rv;
- 
- 	vif = ath6kl_vif_first(ar);
- 	if (!vif)
- 		return -EIO;
- 
--	tgt_stats = &vif->target_stats;
--
- 	buf = kzalloc(buf_len, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (down_interruptible(&ar->sem)) {
-+	rv = ath6k_read_tgt_stats(ar, vif);
-+	if (rv < 0) {
- 		kfree(buf);
--		return -EBUSY;
-+		return rv;
- 	}
- 
--	set_bit(STATS_UPDATE_PEND, &vif->flags);
--
--	if (ath6kl_wmi_get_stats_cmd(ar->wmi, 0)) {
--		up(&ar->sem);
--		kfree(buf);
--		return -EIO;
--	}
--
--	left = wait_event_interruptible_timeout(ar->event_wq,
--						!test_bit(STATS_UPDATE_PEND,
--						&vif->flags), WMI_TIMEOUT);
--
--	up(&ar->sem);
--
--	if (left <= 0) {
--		kfree(buf);
--		return -ETIMEDOUT;
--	}
-+	tgt_stats = &vif->target_stats;
- 
- 	len += scnprintf(buf + len, buf_len - len, "\n");
- 	len += scnprintf(buf + len, buf_len - len, "%25s\n",
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index 19106ed..be54f19 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -59,6 +59,8 @@ enum ath6kl_war {
- 	ATH6KL_WAR_INVALID_RATE,
- };
- 
-+int ath6k_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif);
-+
- #ifdef CONFIG_ATH6KL_DEBUG
- 
- void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
--- 
-2.4.3
+Larry
+
 
