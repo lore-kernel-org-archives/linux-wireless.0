@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52172 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbbJPEi1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:38:27 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 01/40] staging: wilc1000: rename ssidLen of struct join_bss_param
-Date: Fri, 16 Oct 2015 13:37:31 +0900
-Message-ID: <1444970290-17609-1-git-send-email-tony.cho@atmel.com> (sfid-20151016_063857_247943_30D2BF44)
+Received: from mx1.redhat.com ([209.132.183.28]:55158 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbbJWO0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 10:26:08 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: overlap of devices in rtl8xxxu and rtl8192cu
+References: <562A2711.9040700@gmail.com> <wrfj7fmdit3l.fsf@redhat.com>
+	<87ziz91xag.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 23 Oct 2015 10:26:06 -0400
+In-Reply-To: <87ziz91xag.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Fri, 23 Oct 2015 17:20:39 +0300")
+Message-ID: <wrfj611xhda9.fsf@redhat.com> (sfid-20151023_162613_544872_566719C8)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>
+>> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+>>>
+>>> There is overlap of devices between rtl8xxxu and rtl8192cu:
+>>> USB_VENDER_ID_REALTEK, 0x8176
+>>> USB_VENDER_ID_REALTEK, 0x8178
+>>> USB_VENDER_ID_REALTEK, 0x817f
+>>> 0x7392, 0x7811
+>>
+>> Yes
+>
+> What, are you saying that you didn't fix that? I did say in the last
+> review round that we should not have duplicated device entries within
+> drivers/net/wireless and I assumed you took care of that.
+>
+>> and there is also a clash with USB IDs between
+>> drivers/staging/rtl8192u and drivers/net/wireless/realtek/rtlwifi -
+>> this is nothing new.
+>
+> We should do things properly in under drivers/, I don't care what
+> happens in staging and that's no excuse to do things badly.
 
-This patch renames ssidLen of struct join_bss_param to ssid_len
-to avoid CamelCase naming convention.
+As I explained earlier, there is no way I can do that unless we remove
+rtlwifi's rtl8192cu driver and that cannot happen due to the feature
+differences. There are plenty of other conflicts and this is not a bug.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+In other words I *have* done things correctly here, and Xose's complaint
+is bogus.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 04f3bc2..e2588ef 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -207,7 +207,7 @@ struct join_bss_param {
- 	u16 cap_info;
- 	u8 au8bssid[6];
- 	char ssid[MAX_SSID_LEN];
--	u8 ssidLen;
-+	u8 ssid_len;
- 	u8 supp_rates[MAX_RATES_SUPPORTED + 1];
- 	u8 ht_capable;
- 	u8 wmm_cap;
-@@ -4934,7 +4934,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
- 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
--		pNewJoinBssParam->ssidLen = ptstrNetworkInfo->u8SsidLen;
-+		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
- 		memset(pNewJoinBssParam->rsn_pcip_policy, 0xFF, 3);
- 		memset(pNewJoinBssParam->rsn_auth_policy, 0xFF, 3);
- 
--- 
-1.9.1
-
+Jes
