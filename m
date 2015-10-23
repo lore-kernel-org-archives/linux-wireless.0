@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57089 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751861AbbJEOhL (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:35802 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbbJWRdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:37:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:36 +0300
-Message-Id: <1444055820-27506-5-git-send-email-luca@coelho.fi> (sfid-20151005_163821_733678_03878A5B)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 05/29] iwlwifi: enable tracing by default
+	Fri, 23 Oct 2015 13:33:01 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, k.eugene.e@gmail.com, bjorn@kryo.se,
+	sergei.shtylyov@cogentembedded.com,
+	Punit Vara <punitvara@gmail.com>
+Subject: [PATCH v6 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
+Date: Fri, 23 Oct 2015 23:02:42 +0530
+Message-Id: <1445621562-7871-1-git-send-email-punitvara@gmail.com> (sfid-20151023_193329_112733_526826EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This warning is reported by coccicheck:
 
-Tracing, if disabled at runtime, has very low overhead with
-great returns on debugging. It therefore makes sense to have
-it enabled by default (if the kernel enables EVENT_TRACING).
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index aba0957..6e949df 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -142,6 +142,7 @@ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
- config IWLWIFI_DEVICE_TRACING
- 	bool "iwlwifi device access tracing"
- 	depends on EVENT_TRACING
-+	default y
- 	help
- 	  Say Y here to trace all commands, including TX frames and IO
- 	  accesses, sent to the device. If you say yes, iwlwifi will
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 900e72a..94bcc08 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ 
+ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ {
+-	int ret = 0;
+-
+ 	static const u32 cipher_suites[] = {
+ 		WLAN_CIPHER_SUITE_WEP40,
+ 		WLAN_CIPHER_SUITE_WEP104,
+@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
+ 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 -- 
 2.5.3
 
