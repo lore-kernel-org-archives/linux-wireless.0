@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19892 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753009AbbJZHsA convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26736 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965724AbbJWBRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 03:48:00 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>
-Subject: Re: [PATCH v2] net: tso: add support for IPv6
-Date: Mon, 26 Oct 2015 07:47:54 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B07E2@hasmsx107.ger.corp.intel.com> (sfid-20151026_084808_361232_DF1DF309)
-References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
- <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
- <562DA5FF.6040307@lab.ntt.co.jp>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 22 Oct 2015 21:17:31 -0400
+Subject: Re: [PATCH V2 03/12] staging: wilc1000: rename strInterfaceInfo in
+ the sturct wilc
+To: Dan Carpenter <dan.carpenter@oracle.com>
+References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+ <1445318816-21686-4-git-send-email-tony.cho@atmel.com>
+ <20151022111704.GN7340@mwanda> <20151022111919.GO7340@mwanda>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <56298A99.6010803@atmel.com> (sfid-20151023_031735_132433_41A8C32E)
+Date: Fri, 23 Oct 2015 10:17:13 +0900
 MIME-Version: 1.0
+In-Reply-To: <20151022111919.GO7340@mwanda>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks for your review.
+I will do it later as you mentioned.
+Tony.
 
+On 2015년 10월 22일 20:19, Dan Carpenter wrote:
+> Don't resend the series though.  Please fix it in a later patch.
+>
+> regards,
+> dan carpenter
 
-On 10/26/2015 06:03 AM, Toshiaki Makita wrote:
-> On 2015/10/26 5:02, Emmanuel Grumbach wrote:
->> Adding IPv6 for the TSO helper API is trivial:
->> * Don't play with the id (which doesn't exist in IPv6)
->> * Correctly update the payload_len (don't include the
->>   length of the IP header itself)
-> ...
->>  	memcpy(hdr, skb->data, hdr_len);
->> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
->> -	iph->id = htons(tso->ip_id);
->> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
->> +	if (skb->protocol == htons(ETH_P_IP)) {
-> 
-> I guess this should be vlan_get_protocol(skb).
-
-I truly don't know. I guess we could have VLANs, but I'd need to check
-how the packet would look like after it exits mac80211.
-If we need that, I'll likely do this check once in tso_start() and add a
-variable to struct tso_t.
-
-> 
->> +		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
->> +
->> +		iph->id = htons(tso->ip_id);
->> +		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
->> +		tso->ip_id++;
->> +	} else if (skb->protocol == htons(ETH_P_IPV6)) {
-> 
-> Likewise.
-> 
-> Toshiaki Makita
-> 
-> 
