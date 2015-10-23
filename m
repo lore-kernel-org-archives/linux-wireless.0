@@ -1,63 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36114 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173AbbJEKfK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:10 -0400
-Received: by pablk4 with SMTP id lk4so172794660pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:10 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/20] staging: wilc1000: fix return type of host_int_set_wfi_drv_handler
-Date: Mon,  5 Oct 2015 19:34:45 +0900
-Message-Id: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123514_789178_CB027908)
+Received: from mga09.intel.com ([134.134.136.24]:55796 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbbJWIUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 04:20:11 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ayala Beker <ayala.beker@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] cfg80211: Enable update of properties for unassociated station.
+Date: Fri, 23 Oct 2015 11:20:06 +0300
+Message-Id: <1445588406-13416-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151023_102017_579048_9C73073E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_set_wfi_drv_handler from s32
-to int. s32Error gets return value from wilc_mq_send that has return
-type of int. It should be changed return type by int as well as data
-type of s32Error.
+From: Ayala Beker <ayala.beker@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Currently, cfg80211 rejects updates of AID and listen interval parameters
+for existing entries. This information is known only at association stage,
+and as a result it's impossible to update entries that were added
+unassociated.
+Fix this by allowing updates of these properies for stations that the
+driver (or mac80211) assigned unassociated state.
+
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b1aa7dd..038923d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5363,9 +5363,9 @@ int host_int_wait_msg_queue_idle(void)
- 	return result;
- }
- 
--s32 host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
-+int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 205b659..aebb724 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3968,10 +3968,13 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 				  struct station_parameters *params,
+ 				  enum cfg80211_station_type statype)
  {
--	s32 s32Error = 0;
-+	int s32Error = 0;
+-	if (params->listen_interval != -1)
++	if (params->listen_interval != -1 &&
++	    statype != CFG80211_STA_AP_CLIENT_UNASSOC)
+ 		return -EINVAL;
++
+ 	if (params->aid &&
+-	    !(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
++	    !(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
++	    statype != CFG80211_STA_AP_CLIENT_UNASSOC)
+ 		return -EINVAL;
  
- 	struct host_if_msg msg;
+ 	/* When you run into this, adjust the code below for the new flag */
+@@ -4245,13 +4248,22 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bc8acde..123c508 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1186,7 +1186,7 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address);
-+int host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address);
- s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
+ 	memset(&params, 0, sizeof(params));
  
- static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent);
+-	params.listen_interval = -1;
+-
+ 	if (!rdev->ops->change_station)
+ 		return -EOPNOTSUPP;
+ 
+-	if (info->attrs[NL80211_ATTR_STA_AID])
+-		return -EINVAL;
++	/*
++	 * AID and listen_interval properties can be set only for unassociated
++	 * station. Include these parameters here and will check them in
++	 * cfg80211_check_station_change().
++	 */
++	if (info->attrs[NL80211_ATTR_PEER_AID])
++		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
++
++	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
++		params.listen_interval =
++		     nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
++	else
++		params.listen_interval = -1;
+ 
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+@@ -4278,9 +4290,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 			nla_len(info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY]);
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+-		return -EINVAL;
+-
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+ 
 -- 
-2.6.0
+2.1.4
 
