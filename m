@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28501 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639AbbJETMl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 15:12:41 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/5] wireless-regdb: Update regulatory rules for Uruguay (UY)
-Date: Mon, 5 Oct 2015 22:11:58 +0300
-Message-ID: <1444072321-20728-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20151005_211244_270962_41F5866E)
-In-Reply-To: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1444072321-20728-1-git-send-email-jouni@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48649 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752975AbbJWQJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 12:09:10 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <562A3103.705@gmail.com> <wrfj37x1it1n.fsf@redhat.com>
+Date: Fri, 23 Oct 2015 12:09:08 -0400
+In-Reply-To: <wrfj37x1it1n.fsf@redhat.com> (Jes Sorensen's message of "Fri, 23
+	Oct 2015 10:00:20 -0400")
+Message-ID: <wrfjegglefdn.fsf@redhat.com> (sfid-20151023_180918_375752_4E6E3510)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+>> Jes Sorensen wrote:
+>>
+>>> This is an alternate driver for a number of Realtek WiFi USB devices,
+>>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
+>>> It was written from scratch utilizing the Linux mac80211 stack.
+>>>[...]
+>>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
+>>> 0xff, 0xff),
+>>>[...]
+>>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
+>>> 0xff, 0xff),
+>>>[...]
+>>
+>> This device was duplicated. Delete one of them.
+>
+> You could just have sent me a patch instead of this.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+I've fixed this in my devel branch.
 
-diff --git a/db.txt b/db.txt
-index 226057e..2f2e460 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1164,9 +1164,8 @@ country US: DFS-FCC
- 
- country UY: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
-+	(5170 - 5250 @ 80), (23), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
- # Source:
--- 
-1.9.1
-
+Jes
