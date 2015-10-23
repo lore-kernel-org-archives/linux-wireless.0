@@ -1,99 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5167 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbbJ2DAR (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34244 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbbJWFYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:00:17 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 30/64] staging: wilc1000: rename ssidLen of struct user_conn_req
-Date: Thu, 29 Oct 2015 11:58:53 +0900
-Message-ID: <1446087567-16728-30-git-send-email-glen.lee@atmel.com> (sfid-20151029_041657_886678_ED3CD4EF)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	Fri, 23 Oct 2015 01:24:44 -0400
+Received: by lfaz124 with SMTP id z124so71378438lfa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 22:24:43 -0700 (PDT)
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> <wrfjeggpxdwt.fsf@redhat.com>
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 00/16] rtl8xxxu: eFUSE parsing for RTL8188EU chips
+In-reply-to: <wrfjeggpxdwt.fsf@redhat.com>
+Date: Fri, 23 Oct 2015 07:24:41 +0200
+Message-ID: <8737x2taw6.fsf@frog.home> (sfid-20151023_072447_926991_DD55E234)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, Oct 21, 2015 at 02:29 AM CEST, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Jakub Sitnicki <jsitnicki@gmail.com> writes:
+>> Hi Jes,
+>>
+>> I'm posting this patch set to show in what direction the work is
+>> going.  Hopefully any changes (e.g. renames) which you wouldn't see
+>> fit for this driver can be identified early this way.
+>>
+>> The work is nowhere near the end.  These changes only get me past the
+>> parse_efuse() step in the probe() routine.
+>>
+>> I've structured the patch set in such a way that changes that are not
+>> RTL8188EU-specific (preparatory work) come first.  All but the last
+>> two patches (tagged "rtl8188eu:") fall into this category.  If you
+>> were considering to apply any of them, note that they were not tested
+>> with any device that is known to work with rtl8xxxu, only a TP-Link
+>> TL-WN725N (RTL8188EU) dongle.
+>>
+>> The corresponding git branch for this patch set is at:
+>>
+>> git https://github.com/jsitnicki/linux.git branch rtl8xxxu-rtl8188eu
+>
+> Jakub,
+>
+> Thanks for the feedback - some of these patches are good, some of them I
+> dislike, and some of them will conflict with work I have been doing
+> since I posted the patch. I have been working on adding 8723bu and
+> 8192eu support and some of those changes should also benefit your work.
+>
+> I have pushed my current nextgen tree to git, so if you checkout the
+> rtl8xxxu-nextgen branch you will see it.
+>
+> I'll respond to the individual patches here.
 
-This patch renames ssidLen of struct user_conn_req to ssid_len
-to avoid CamelCase naming convention.
+Thanks for the prompt review and the feedback.  I'll rebase the
+RTL8188EU-related patches onto the -nextgen branch, and will be watching
+it.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 35a1262..9f70a85 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1010,7 +1010,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(hif_drv->usr_conn_req.pu8bssid, pstrHostIFconnectAttr->bssid, 6);
- 	}
- 
--	hif_drv->usr_conn_req.ssidLen = pstrHostIFconnectAttr->ssid_len;
-+	hif_drv->usr_conn_req.ssid_len = pstrHostIFconnectAttr->ssid_len;
- 	if (pstrHostIFconnectAttr->ssid) {
- 		hif_drv->usr_conn_req.pu8ssid = kmalloc(pstrHostIFconnectAttr->ssid_len + 1, GFP_KERNEL);
- 		memcpy(hif_drv->usr_conn_req.pu8ssid,
-@@ -1371,7 +1371,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 	if (result)
- 		PRINT_ER("Failed to send dissconect config packet\n");
- 
--	hif_drv->usr_conn_req.ssidLen = 0;
-+	hif_drv->usr_conn_req.ssid_len = 0;
- 	kfree(hif_drv->usr_conn_req.pu8ssid);
- 	kfree(hif_drv->usr_conn_req.pu8bssid);
- 	hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-@@ -1623,7 +1623,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 
- 			kfree(strConnectInfo.pu8ReqIEs);
- 			strConnectInfo.pu8ReqIEs = NULL;
--			hif_drv->usr_conn_req.ssidLen = 0;
-+			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
- 			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-@@ -1659,7 +1659,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 
- 			eth_zero_addr(hif_drv->assoc_bssid);
- 
--			hif_drv->usr_conn_req.ssidLen = 0;
-+			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
- 			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-@@ -2023,7 +2023,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 
- 		eth_zero_addr(hif_drv->assoc_bssid);
- 
--		hif_drv->usr_conn_req.ssidLen = 0;
-+		hif_drv->usr_conn_req.ssid_len = 0;
- 		kfree(hif_drv->usr_conn_req.pu8ssid);
- 		kfree(hif_drv->usr_conn_req.pu8bssid);
- 		hif_drv->usr_conn_req.ConnReqIEsLen = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dcb68ea..69ce8f1 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -203,7 +203,7 @@ struct user_conn_req {
- 	u8 *pu8ssid;
- 	u8 u8security;
- 	enum AUTHTYPE tenuAuth_type;
--	size_t ssidLen;
-+	size_t ssid_len;
- 	u8 *pu8ConnReqIEs;
- 	size_t ConnReqIEsLen;
- 	wilc_connect_result pfUserConnectResult;
--- 
-1.9.1
+Cheers,
+Jakub
 
