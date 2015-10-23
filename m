@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:58564 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbbJUKxz (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51827 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbbJWF0r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 06:53:55 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: glen lee <glen.lee@atmel.com>
-Cc: linux-wireless@vger.kernel.org, Rachel Kim <rachel.kim@atmel.com>,
-	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH 00/19] staging/wilc1000 cleanups
-Date: Wed, 21 Oct 2015 12:53:48 +0200
-Message-ID: <4261822.eWDaN5tlMP@wuerfel> (sfid-20151021_125420_476830_48C66FAE)
-In-Reply-To: <562763BC.5030107@atmel.com>
-References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <562763BC.5030107@atmel.com>
+	Fri, 23 Oct 2015 01:26:47 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/28] staging: wilc1000: linux_wlan_set_bssid: use wilc instead of g_linux_wlan
+Date: Fri, 23 Oct 2015 14:28:25 +0900
+Message-ID: <1445578124-31486-9-git-send-email-glen.lee@atmel.com> (sfid-20151023_074654_786415_3D962E17)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 October 2015 19:06:52 glen lee wrote:
-> Hi arnd,
-> 
-> Thanks for the all the patches. 
-> About the patch ( use proper naming for global symbols ),
-> We are planning to use this driver not only for wilc1000 but also for
-> other atmel wireless driver. I'd appreciate if you could use wl instead of wilc1000.
+This patch use netdev private data memeber wilc instead of g_linux_wlan.
 
-Hmm, while I see that 'wilc1000' is too specific here, using just 'wl' might be
-a little too general. The same namespace is used by drivers/mtd/ubi/wl.c,
-drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c, and a number of local
-identifiers in other drivers.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Would 'wilc' work as a prefix for all devices you are interested in here?
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index af7e844..b8fd4ae 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -404,10 +404,15 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
+ {
+ 	int i = 0;
+ 	int ret = -1;
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
+ 
+-	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (g_linux_wlan->vif[i].ndev == wilc_netdev) {
+-			memcpy(g_linux_wlan->vif[i].bssid, pBSSID, 6);
++	nic = netdev_priv(wilc_netdev);
++	wl = nic->wilc;
++
++	for (i = 0; i < wl->vif_num; i++)
++		if (wl->vif[i].ndev == wilc_netdev) {
++			memcpy(wl->vif[i].bssid, pBSSID, 6);
+ 			ret = 0;
+ 			break;
+ 		}
+-- 
+1.9.1
 
-> And the global variable g_linux_wlan will be placed in netdevice private data
-> and finally it will be removed. I already posted some of those patches.
-
-Ok, so we need to coordinate a bit here. My patches also go in that direction
-and remove the global variables from linux_wlan_sdio.c and linux_wlan_spi.c,
-but did not remove the one from linux_wlan.c, because doing that depends on
-the last [RFC] patch in my series, and I felt I had spent enough time on it
-at that point ;-)
-
-Would you be ok with taking my patches and rebasing them on top of yours
-with the changes you want,  or do you need help from me with that?
-
-	Arnd
