@@ -1,57 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56478 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbbJGIOs (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52122 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100AbbJWF2F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 04:14:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: egrumbach@gmail.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: iwlwifi 2015-10-05
-References: <1444044666.27220.5.camel@coelho.fi>
-Date: Wed, 07 Oct 2015 11:14:41 +0300
-In-Reply-To: <1444044666.27220.5.camel@coelho.fi> (Luca Coelho's message of
-	"Mon, 05 Oct 2015 14:31:06 +0300")
-Message-ID: <87a8rv14em.fsf@kamboji.qca.qualcomm.com> (sfid-20151007_101454_968369_7FD36196)
+	Fri, 23 Oct 2015 01:28:05 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 22/28] staging: wilc1000: GetIfHandler: add argument struct wilc and use it
+Date: Fri, 23 Oct 2015 14:28:38 +0900
+Message-ID: <1445578124-31486-22-git-send-email-glen.lee@atmel.com> (sfid-20151023_074655_423438_ED20B106)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+This patch adds new argument struct wilc and use it instead of
+g_linux_wlan. And also pass wilc to the function.
 
-> Here's a pull request for 4.3.  There are 8 patches, including a fix
-> for a kernel panic, some serious PN programming issues, a thermal
-> monitor fix and some new vendor IDs.
->
-> Let me know if there are any issues.
->
-> Luca.
->
-> The following changes since commit dd5cdb48edfd34401799056a9acf61078d773f90:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-09-03 08:08:17 -0700)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-10-05
->
-> for you to fetch changes up to dbf73d4a8bb8f4e1d1f3edd3be825692279e2ef3:
->
->   iwlwifi: mvm: flush fw_dump_wk when mvm fails to start (2015-10-05 14:04:16 +0300)
->
-> ----------------------------------------------------------------
-> * some fixes for PN key programming when entering D3;
-> * fix for CSA when the AP is stopped during a channel switch;
-> * fix firmware name for 3160 devices;
-> * add some new PCI IDs for 7265 devices;
-> * fix CT-kill entry;
-> * fix kernel panic when a sysassert occurs in the init ucode flow;
->
-> ----------------------------------------------------------------
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Pulled, thanks.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index fb12835c..9d03235 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -373,7 +373,7 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+ 
+ }
+ 
+-struct net_device *GetIfHandler(u8 *pMacHeader)
++struct net_device *GetIfHandler(struct wilc *wilc, u8 *pMacHeader)
+ {
+ 	u8 *Bssid, *Bssid1;
+ 	int i = 0;
+@@ -381,20 +381,20 @@ struct net_device *GetIfHandler(u8 *pMacHeader)
+ 	Bssid  = pMacHeader + 10;
+ 	Bssid1 = pMacHeader + 4;
+ 
+-	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (!memcmp(Bssid1, g_linux_wlan->vif[i].bssid, ETH_ALEN) ||
+-		    !memcmp(Bssid, g_linux_wlan->vif[i].bssid, ETH_ALEN))
+-			return g_linux_wlan->vif[i].ndev;
++	for (i = 0; i < wilc->vif_num; i++)
++		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
++		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
++			return wilc->vif[i].ndev;
+ 
+ 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
+ 	for (i = 0; i < 25; i++)
+ 		PRINT_D(INIT_DBG, "%02x ", pMacHeader[i]);
+ 	Bssid  = pMacHeader + 18;
+ 	Bssid1 = pMacHeader + 12;
+-	for (i = 0; i < g_linux_wlan->vif_num; i++)
+-		if (!memcmp(Bssid1, g_linux_wlan->vif[i].bssid, ETH_ALEN) ||
+-		    !memcmp(Bssid, g_linux_wlan->vif[i].bssid, ETH_ALEN))
+-			return g_linux_wlan->vif[i].ndev;
++	for (i = 0; i < wilc->vif_num; i++)
++		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
++		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
++			return wilc->vif[i].ndev;
+ 
+ 	PRINT_INFO(INIT_DBG, "\n");
+ 	return NULL;
+@@ -1560,7 +1560,7 @@ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ 	struct net_device *wilc_netdev;
+ 	perInterface_wlan_t *nic;
+ 
+-	wilc_netdev = GetIfHandler(buff);
++	wilc_netdev = GetIfHandler(wilc, buff);
+ 	if (wilc_netdev == NULL)
+ 		return;
+ 
 -- 
-Kalle Valo
+1.9.1
+
