@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33305 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933013AbbJANoj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51937 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751657AbbJWF1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:39 -0400
-Received: by pacex6 with SMTP id ex6so75453544pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:39 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/12] staging: wilc1000: set_channel: fix data type of s32Error
-Date: Thu,  1 Oct 2015 22:43:57 +0900
-Message-Id: <1443707039-18433-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154443_094368_CDBAE3AA)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 23 Oct 2015 01:27:17 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 14/28] staging: wilc1000: host_int_init: add argument net_device
+Date: Fri, 23 Oct 2015 14:28:30 +0900
+Message-ID: <1445578124-31486-14-git-send-email-glen.lee@atmel.com> (sfid-20151023_074658_229442_17DE9914)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes data type of s32Error variable from s32 to int
-because return type of this function is int.
+This patch add argument net_device *dev and pass it to kthread_run.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/host_interface.c         | 4 ++--
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 646e7e9..2fc0ce8 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4127,7 +4127,7 @@ void host_int_send_network_info_to_host
+ {
+ }
+ 
+-s32 host_int_init(struct host_if_drv **hif_drv_handler)
++s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ {
+ 	s32 result = 0;
+ 	struct host_if_drv *hif_drv;
+@@ -4177,7 +4177,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
+ 			goto _fail_;
+ 		}
+ 
+-		hif_thread_handler = kthread_run(hostIFthread, NULL, "WILC_kthread");
++		hif_thread_handler = kthread_run(hostIFthread, dev, "WILC_kthread");
+ 
+ 		if (IS_ERR(hif_thread_handler)) {
+ 			PRINT_ER("Failed to creat Thread\n");
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 146a60f..f1de52e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -911,7 +911,7 @@ void host_int_send_network_info_to_host
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-s32 host_int_init(struct host_if_drv **phWFIDrv);
++s32 host_int_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
+ 
+ /**
+  *  @brief              host interface initialization function
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 732d631..3b32a6c 100644
+index 5559aa6..7b21bea 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -663,7 +663,7 @@ static int set_channel(struct wiphy *wiphy,
- {
- 	u32 channelnum = 0;
- 	struct wilc_priv *priv;
--	s32 s32Error = 0;
-+	int s32Error = 0;
+@@ -3464,7 +3464,7 @@ int wilc_init_host_int(struct net_device *net)
+ 	priv->bInP2PlistenState = false;
  
- 	priv = wiphy_priv(wiphy);
+ 	sema_init(&(priv->hSemScanReq), 1);
+-	s32Error = host_int_init(&priv->hWILCWFIDrv);
++	s32Error = host_int_init(net, &priv->hWILCWFIDrv);
+ 	if (s32Error)
+ 		PRINT_ER("Error while initializing hostinterface\n");
  
 -- 
-2.6.0
+1.9.1
 
