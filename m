@@ -1,27 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44737 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59310 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751250AbbJLHX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:23:28 -0400
-Message-ID: <1444634602.2261.0.camel@sipsolutions.net> (sfid-20151012_092337_889631_DC28B60E)
-Subject: Re: [PATCH] iw: Fix memory leak in error path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Mon, 12 Oct 2015 09:23:22 +0200
-In-Reply-To: <1444402362-12796-1-git-send-email-ola1olsson@gmail.com> (sfid-20151009_165349_461105_89D21B18)
-References: <1444402362-12796-1-git-send-email-ola1olsson@gmail.com>
-	 (sfid-20151009_165349_461105_89D21B18)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751543AbbJWOAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 10:00:21 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <562A3103.705@gmail.com>
+Date: Fri, 23 Oct 2015 10:00:20 -0400
+In-Reply-To: <562A3103.705@gmail.com> (Xose Vazquez Perez's message of "Fri,
+	23 Oct 2015 15:07:15 +0200")
+Message-ID: <wrfj37x1it1n.fsf@redhat.com> (sfid-20151023_160034_549311_272012BB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-10-09 at 16:52 +0200, Ola Olsson wrote:
-> The leak is present if malloc fails after requesting
-> a scan with ies or meshid as input.
-> 
-Applied, thanks!
+Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+> Jes Sorensen wrote:
+>
+>> This is an alternate driver for a number of Realtek WiFi USB devices,
+>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
+>> It was written from scratch utilizing the Linux mac80211 stack.
+>>[...]
+>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
+>> 0xff, 0xff),
+>>[...]
+>>+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff,
+>> 0xff, 0xff),
+>>[...]
+>
+> This device was duplicated. Delete one of them.
 
-johannes
+You could just have sent me a patch instead of this.
