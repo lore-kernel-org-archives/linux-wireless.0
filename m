@@ -1,113 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56909 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030642AbbJ3JqJ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54186 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbbJWEul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:46:09 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 17/17] staging: wilc1000: wilc_netdev_init: use wilc instead of g_linux_wlan
-Date: Fri, 30 Oct 2015 18:47:23 +0900
-Message-ID: <1446198443-6623-17-git-send-email-glen.lee@atmel.com> (sfid-20151030_104613_095869_1256834B)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+	Fri, 23 Oct 2015 00:50:41 -0400
+From: Yanbo Li <yanbol@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
+Date: Thu, 22 Oct 2015 21:50:16 -0700
+Message-ID: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20151023_065045_178950_31947CC1)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use wilc instead of g_linux_wlan. g_liux_wlan is not used anymore, just
-delete it.
+The QCA99X0 4 addresses RX packets pad 2 bytes at the beginning of
+MSDU instead the end of ieee80211 header to keep align. The currently
+RX data path can't parse the header correctly in this case. This
+patch fixes it for QCA99X0
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
-Changes in v2: use sizeof(*wl) instead of sizeof(struct wilc).
+Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
- drivers/staging/wilc1000/linux_wlan.c         | 22 +++++++++++-----------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 -
- 2 files changed, 11 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3801a00..3422d99 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -112,7 +112,6 @@ static void wilc_set_multicast_list(struct net_device *dev);
-  * for now - in frmw_to_linux there should be private data to be passed to it
-  * and this data should be pointer to net device
-  */
--struct wilc *g_linux_wlan;
- bool bEnablePS = true;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 13de3617d5ab..3c1d07c191d5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -58,6 +58,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
+ 		.max_probe_resp_desc_thres = 0,
++		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -75,6 +76,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
+ 		.max_probe_resp_desc_thres = 0,
++		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+ 		.fw = {
+ 			.dir = QCA6174_HW_2_1_FW_DIR,
+ 			.fw = QCA6174_HW_2_1_FW_FILE,
+@@ -92,6 +94,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
+ 		.max_probe_resp_desc_thres = 0,
++		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+ 		.fw = {
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+ 			.fw = QCA6174_HW_3_0_FW_FILE,
+@@ -109,6 +112,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
+ 		.max_probe_resp_desc_thres = 0,
++		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+ 		.fw = {
+ 			/* uses same binaries as hw3.0 */
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+@@ -128,6 +132,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.continuous_frag_desc = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
++		.loc_4addr_pad = ATH10K_4ADDR_PAD_PRE,
+ 		.fw = {
+ 			.dir = QCA99X0_HW_2_0_FW_DIR,
+ 			.fw = QCA99X0_HW_2_0_FW_FILE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7cc7cdd56c95..b4db8bbf85ce 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -646,6 +646,9 @@ struct ath10k {
+ 		 */
+ 		u32 max_probe_resp_desc_thres;
  
- static const struct net_device_ops wilc_netdev_ops = {
-@@ -1702,15 +1701,16 @@ int wilc_netdev_init(struct wilc **wilc)
- 	int i;
- 	perInterface_wlan_t *nic;
- 	struct net_device *ndev;
-+	struct wilc *wl;
++		/* The padding bytes's location is different on various chips */
++		enum ath10k_loc_4addr_pad loc_4addr_pad;
++
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6060dda4e910..f25f1d7a3edf 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1114,7 +1114,19 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 	 */
  
- 	sema_init(&close_exit_sync, 0);
- 
- 	/*create the common structure*/
--	g_linux_wlan = kzalloc(sizeof(*g_linux_wlan), GFP_KERNEL);
--	if (!g_linux_wlan)
-+	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
-+	if (!wl)
- 		return -ENOMEM;
- 
--	*wilc = g_linux_wlan;
-+	*wilc = wl;
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-@@ -1737,11 +1737,11 @@ int wilc_netdev_init(struct wilc **wilc)
- 		} else
- 			strcpy(ndev->name, "p2p%d");
- 
--		nic->u8IfIdx = g_linux_wlan->vif_num;
-+		nic->u8IfIdx = wl->vif_num;
- 		nic->wilc_netdev = ndev;
--		nic->wilc = *wilc;
--		g_linux_wlan->vif[g_linux_wlan->vif_num].ndev = ndev;
--		g_linux_wlan->vif_num++;
-+		nic->wilc = wl;
-+		wl->vif[wl->vif_num].ndev = ndev;
-+		wl->vif_num++;
- 		ndev->netdev_ops = &wilc_netdev_ops;
- 
- 		{
-@@ -1781,13 +1781,13 @@ int wilc_netdev_init(struct wilc **wilc)
- 	}
- 
- 	#ifndef WILC_SDIO
--	if (!linux_spi_init(&g_linux_wlan->wilc_spidev)) {
-+	if (!linux_spi_init(&wl->wilc_spidev)) {
- 		PRINT_ER("Can't initialize SPI\n");
- 		return -1; /* ERROR */
- 	}
--	g_linux_wlan->wilc_spidev = wilc_spi_dev;
-+	wl->wilc_spidev = wilc_spi_dev;
- 	#else
--	g_linux_wlan->wilc_sdio_func = local_sdio_func;
-+	wl->wilc_sdio_func = local_sdio_func;
- 	#endif
- 
- 	return 0;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 31d5ac9..54d798c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -206,7 +206,6 @@ struct WILC_WFI_mon_priv {
- 	struct net_device *real_ndev;
+ 	/* pull decapped header and copy SA & DA */
+-	hdr = (struct ieee80211_hdr *)msdu->data;
++	if ((ar->hw_params.loc_4addr_pad  == ATH10K_4ADDR_PAD_PRE) &&
++	    ieee80211_has_a4(((struct ieee80211_hdr *)first_hdr)->frame_control)) {
++		/* The QCA99X0 4 address mode pad 2 bytes at the
++		 * beginning of MSDU
++		 */
++		hdr = (struct ieee80211_hdr *)(msdu->data + 2);
++		/* The skb length need be extended 2 as the 2 bytes at the tail
++		 * be excluded due to the padding
++		 */
++		skb_put(msdu, 2);
++	} else
++		hdr = (struct ieee80211_hdr *)(msdu->data);
++
+ 	hdr_len = ath10k_htt_rx_nwifi_hdrlen(ar, hdr);
+ 	ether_addr_copy(da, ieee80211_get_DA(hdr));
+ 	ether_addr_copy(sa, ieee80211_get_SA(hdr));
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737e35ff..efbe6fa1f356 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -282,6 +282,11 @@ enum ath10k_hw_rate_cck {
+ 	ATH10K_HW_RATE_CCK_SP_2M,
  };
  
--extern struct wilc *g_linux_wlan;
- extern struct net_device *WILC_WFI_devs[];
- void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
++enum ath10k_loc_4addr_pad {
++	ATH10K_4ADDR_PAD_AFT,
++	ATH10K_4ADDR_PAD_PRE,
++};
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
 -- 
 1.9.1
 
