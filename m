@@ -1,146 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964963AbbJVJM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:29 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 07/10] nfc: nci: rename nci_prop_ops to nci_driver_ops
-Date: Thu, 22 Oct 2015 12:11:39 +0300
-Message-Id: <1445505102-16639-8-git-send-email-robert.dolca@intel.com> (sfid-20151022_113445_324164_F4273CB2)
-In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
-References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:51861 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbbJWF0y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:26:54 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/28] staging: wilc1000: wlan_initialize_threads: change argument with net_device
+Date: Fri, 23 Oct 2015 14:28:26 +0900
+Message-ID: <1445578124-31486-10-git-send-email-glen.lee@atmel.com> (sfid-20151023_074656_449201_4360806B)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initially it was used to create hooks in the driver for proprietary
-operations. Currently it is being used for hooks for both proprietary
-and generic operations.
+This patch changes function argument with net_device dev and use netdev private
+data member wilc instead of g_linux_wlan. And there are assignment code with
+different value continuously. Take last code.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/nfc/s3fwrn5/nci.c  |  4 ++--
- drivers/nfc/st-nci/core.c  |  2 +-
- include/net/nfc/nci_core.h |  6 +++---
- net/nfc/nci/core.c         | 16 ++++++++--------
- 4 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/nfc/s3fwrn5/nci.c b/drivers/nfc/s3fwrn5/nci.c
-index ace0071..075e4e8 100644
---- a/drivers/nfc/s3fwrn5/nci.c
-+++ b/drivers/nfc/s3fwrn5/nci.c
-@@ -31,7 +31,7 @@ static int s3fwrn5_nci_prop_rsp(struct nci_dev *ndev, struct sk_buff *skb)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b8fd4ae..f6862d5 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1010,31 +1010,34 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ #endif
+ }
+ 
+-int wlan_initialize_threads(perInterface_wlan_t *nic)
++int wlan_initialize_threads(struct net_device *dev)
+ {
+-
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
+ 	int ret = 0;
+ 
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
++
+ 	PRINT_D(INIT_DBG, "Initializing Threads ...\n");
+ 
+ 	/* create tx task */
+ 	PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
+-	g_linux_wlan->txq_thread = kthread_run(linux_wlan_txq_task, (void *)g_linux_wlan, "K_TXQ_TASK");
+-	if (g_linux_wlan->txq_thread == NULL) {
++	wl->txq_thread = kthread_run(linux_wlan_txq_task, (void *)wl,
++				     "K_TXQ_TASK");
++	if (!wl->txq_thread) {
+ 		PRINT_ER("couldn't create TXQ thread\n");
+ 		ret = -ENOBUFS;
+ 		goto _fail_2;
+ 	}
+ 	/* wait for TXQ task to start. */
+-	down(&g_linux_wlan->txq_thread_started);
++	down(&wl->txq_thread_started);
+ 
  	return 0;
+ 
+ _fail_2:
+ 	/*De-Initialize 2nd thread*/
+-	g_linux_wlan->close = 1;
+-
+-	g_linux_wlan->close = 0;
++	wl->close = 0;
+ 	return ret;
  }
  
--static struct nci_prop_ops s3fwrn5_nci_prop_ops[] = {
-+static struct nci_driver_ops s3fwrn5_nci_prop_ops[] = {
- 	{
- 		.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY,
- 				NCI_PROP_AGAIN),
-@@ -79,7 +79,7 @@ static struct nci_prop_ops s3fwrn5_nci_prop_ops[] = {
- 	},
- };
+@@ -1083,7 +1086,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ #endif
  
--void s3fwrn5_nci_get_prop_ops(struct nci_prop_ops **ops, size_t *n)
-+void s3fwrn5_nci_get_prop_ops(struct nci_driver_ops **ops, size_t *n)
- {
- 	*ops = s3fwrn5_nci_prop_ops;
- 	*n = ARRAY_SIZE(s3fwrn5_nci_prop_ops);
-diff --git a/drivers/nfc/st-nci/core.c b/drivers/nfc/st-nci/core.c
-index c419d39..dd7b1c14 100644
---- a/drivers/nfc/st-nci/core.c
-+++ b/drivers/nfc/st-nci/core.c
-@@ -98,7 +98,7 @@ static int st_nci_prop_rsp_packet(struct nci_dev *ndev,
- 	return 0;
- }
- 
--static struct nci_prop_ops st_nci_prop_ops[] = {
-+static struct nci_driver_ops st_nci_prop_ops[] = {
- 	{
- 		.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY,
- 					  ST_NCI_CORE_PROP),
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index d5a1caa..5daf004 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -67,7 +67,7 @@ enum nci_state {
- 
- struct nci_dev;
- 
--struct nci_prop_ops {
-+struct nci_driver_ops {
- 	__u16 opcode;
- 	int (*rsp)(struct nci_dev *dev, struct sk_buff *skb);
- 	int (*ntf)(struct nci_dev *dev, struct sk_buff *skb);
-@@ -94,10 +94,10 @@ struct nci_ops {
- 	void  (*hci_cmd_received)(struct nci_dev *ndev, u8 pipe, u8 cmd,
- 				  struct sk_buff *skb);
- 
--	struct nci_prop_ops *prop_ops;
-+	struct nci_driver_ops *prop_ops;
- 	size_t n_prop_ops;
- 
--	struct nci_prop_ops *core_ops;
-+	struct nci_driver_ops *core_ops;
- 	size_t n_core_ops;
- };
- 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 30c2708..f66a5da 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -1242,12 +1242,12 @@ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
- }
- 
- /* Proprietary commands API */
--static struct nci_prop_ops *ops_cmd_lookup(struct nci_prop_ops *ops,
--					   size_t n_ops,
--					   __u16 opcode)
-+static struct nci_driver_ops *ops_cmd_lookup(struct nci_driver_ops *ops,
-+					     size_t n_ops,
-+					     __u16 opcode)
- {
- 	size_t i;
--	struct nci_prop_ops *op;
-+	struct nci_driver_ops *op;
- 
- 	if (!ops || !n_ops)
- 		return NULL;
-@@ -1262,10 +1262,10 @@ static struct nci_prop_ops *ops_cmd_lookup(struct nci_prop_ops *ops,
- }
- 
- static int nci_op_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
--			     struct sk_buff *skb, struct nci_prop_ops *ops,
-+			     struct sk_buff *skb, struct nci_driver_ops *ops,
- 			     size_t n_ops)
- {
--	struct nci_prop_ops *op;
-+	struct nci_driver_ops *op;
- 
- 	op = ops_cmd_lookup(ops, n_ops, rsp_opcode);
- 	if (!op || !op->rsp)
-@@ -1275,10 +1275,10 @@ static int nci_op_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
- }
- 
- static int nci_op_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
--			     struct sk_buff *skb, struct nci_prop_ops *ops,
-+			     struct sk_buff *skb, struct nci_driver_ops *ops,
- 			     size_t n_ops)
- {
--	struct nci_prop_ops *op;
-+	struct nci_driver_ops *op;
- 
- 	op = ops_cmd_lookup(ops, n_ops, ntf_opcode);
- 	if (!op || !op->ntf)
+-		ret = wlan_initialize_threads(nic);
++		ret = wlan_initialize_threads(dev);
+ 		if (ret < 0) {
+ 			PRINT_ER("Initializing Threads FAILED\n");
+ 			ret = -EIO;
 -- 
 1.9.1
 
