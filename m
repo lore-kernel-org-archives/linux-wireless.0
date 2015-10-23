@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45932 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbbJFOkE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:52253 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbJWF2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2015 10:40:04 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, shaofu <shaofu@realtek.com>
-Subject: Re: [PATCH] rtlwifi: rtl818x: Move drivers into new realtek directory
-References: <1441659556-20344-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Tue, 06 Oct 2015 17:39:58 +0300
-In-Reply-To: <1441659556-20344-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Mon, 7 Sep 2015 15:59:16 -0500")
-Message-ID: <87io6k12o1.fsf@kamboji.qca.qualcomm.com> (sfid-20151006_164016_073778_424A2A44)
+	Fri, 23 Oct 2015 01:28:40 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 28/28] staging: wilc1000: tcp_process: add argument dev and get private from it
+Date: Fri, 23 Oct 2015 14:28:44 +0900
+Message-ID: <1445578124-31486-28-git-send-email-glen.lee@atmel.com> (sfid-20151023_074657_656205_4ADAA1F2)
+In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+This patch adds new argument net_device *dev and use netdev private data member
+wilc instead of g_linux_wlan. Pass argument dev to the function as well.
 
-> Now that a new mac80211-based driver for Realtek devices has been submitted,
-> it is time to reorganize the directories. Rather than having directories
-> rtlwifi and rtl818x be in drivers/net/wireless/, they will now be in
-> drivers/net/wireless/realtek/. This change simplifies the directory
-> structure, but does not result in any configuration changes that are
-> visable to the user.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> Kalle,
->
-> This patch was generated aginst the pending branch of the wireless-drivers-next
-> git tree.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Actually I prefer to use the master branch as the baseline for new
-patches (I always rebase the pending branch) and because of that there
-was a small conflict in drivers/net/wireless/Kconfig. Also I did a small
-whitespace fix to realtek/rtlwifi/Kconfig. Please double check my
-changes before I commit this:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=pending&id=38d9ef794a3edee89c6001e576ca9000db1a19d8
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 6c4fef2..68a2fd4 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -341,7 +341,7 @@ static inline int remove_TCP_related(void)
+ 	return 0;
+ }
+ 
+-static inline int tcp_process(struct txq_entry_t *tqe)
++static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ {
+ 	int ret;
+ 	u8 *eth_hdr_ptr;
+@@ -350,8 +350,13 @@ static inline int tcp_process(struct txq_entry_t *tqe)
+ 	int i;
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	unsigned long flags;
++	perInterface_wlan_t *nic;
++	struct wilc *wl;
+ 
+-	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
++	nic = netdev_priv(dev);
++	wl = nic->wilc;
++
++	spin_lock_irqsave(&wl->txq_spinlock, flags);
+ 
+ 	eth_hdr_ptr = &buffer[0];
+ 	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
+@@ -399,7 +404,7 @@ static inline int tcp_process(struct txq_entry_t *tqe)
+ 	} else {
+ 		ret = 0;
+ 	}
+-	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
++	spin_unlock_irqrestore(&wl->txq_spinlock, flags);
+ 	return ret;
+ }
+ 
+@@ -525,7 +530,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ #ifdef TCP_ACK_FILTER
+ 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
+ 	if (is_TCP_ACK_Filter_Enabled())
+-		tcp_process(tqe);
++		tcp_process(dev, tqe);
+ #endif
+ 	wilc_wlan_txq_add_to_tail(tqe);
+ 	/*return number of itemes in the queue*/
 -- 
-Kalle Valo
+1.9.1
+
