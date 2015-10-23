@@ -1,95 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:36422 "EHLO
-	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754044AbbJSStn (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33492 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbbJWFiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 14:49:43 -0400
-Received: by qkca6 with SMTP id a6so13348759qkc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 11:49:42 -0700 (PDT)
-From: Marty Faltesek <mfaltesek@google.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Denton Gentry <dgentry@google.com>,
-	Avery Pennarun <apenwarr@google.com>,
-	Marty Faltesek <mfaltesek@google.com>
-Subject: [PATCH] mwifiex: toggle carrier state in start_ap/stop_ap.
-Date: Mon, 19 Oct 2015 14:49:10 -0400
-Message-Id: <1445280550-13673-1-git-send-email-mfaltesek@google.com> (sfid-20151019_204946_729089_A5D7AD78)
+	Fri, 23 Oct 2015 01:38:50 -0400
+Received: by lffv3 with SMTP id v3so71470229lff.0
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 22:38:49 -0700 (PDT)
+References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> <1445323546-12807-2-git-send-email-jsitnicki@gmail.com> <wrfja8rdxdvh.fsf@redhat.com>
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 01/16] rtl8xxxu: Treat REG_9346CR as an 8-bit wide register
+In-reply-to: <wrfja8rdxdvh.fsf@redhat.com>
+Date: Fri, 23 Oct 2015 07:38:47 +0200
+Message-ID: <871tcmta8o.fsf@frog.home> (sfid-20151023_073859_677439_8AFB5EB9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In uap mode the carrier is not enabled until after the first STA joins.
-The carrier triggers the bridge to start its state machine, and if STP
-is enabled, it takes 4 seconds as it transitions from disabled to
-forwarding. During this time the bridge drops all traffic, and the EAPOL
-handshake times out after 3 seconds, preventing stations from joining.
+On Wed, Oct 21, 2015 at 02:29 AM CEST, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Jakub Sitnicki <jsitnicki@gmail.com> writes:
+>> rtl8723au driver treats REG_9346CR register as either 8- or 16-bit wide,
+>> while rtl8192cu driver treats it as 8-bit wide, and so does rtl8188eu
+>> driver.  Use the lowest common denominator strategy.
+>>
+>> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> NACK - this is a 16 bit register and the vendor drivers take the lazy
+> approach of just reading/writing the lower 8 bits when they feel like
+> it.
+>
+> My code is more consistent, so this one is not going in.
 
-Follow the logic used in mac80211 and start the carrier in start_ap
-and disable it in stop_ap. This has a nice benefit of allowing the
-first station connection time to be reduced by up to 75% when STP is
-in use.
+Makes sense.  It didn't occur to me to refer to register offset
+definitions and check if REG_9346CR really is 16-bit wide.  Now that you
+pointed it out I see it:
 
-Signed-off-by: Martin Faltesek <mfaltesek@google.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c  | 12 ++++++++++++
- drivers/net/wireless/mwifiex/uap_event.c | 11 -----------
- 2 files changed, 12 insertions(+), 11 deletions(-)
+#define REG_9346CR                      0x000A
+#define REG_EE_VPD                      0x000C
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 495621f..275ce3c 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1765,6 +1765,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
- 	}
- 
-+	priv->media_connected = false;
-+	if (netif_carrier_ok(priv->netdev))
-+		netif_carrier_off(priv->netdev);
-+	mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
-+	mwifiex_clean_txrx(priv);
-+	mwifiex_del_all_sta_list(priv);
-+
- 	return 0;
- }
- 
-@@ -1863,6 +1870,11 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
- 		return -1;
- 
-+	priv->media_connected = true;
-+	if (!netif_carrier_ok(priv->netdev))
-+		netif_carrier_on(priv->netdev);
-+	mwifiex_wake_up_net_dev_queue(priv->netdev, priv->adapter);
-+
- 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
- 	kfree(bss_cfg);
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index f4794cd..c5bb6ee 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -113,19 +113,8 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 		mwifiex_del_sta_entry(priv, deauth_mac);
- 		break;
- 	case EVENT_UAP_BSS_IDLE:
--		priv->media_connected = false;
--		if (netif_carrier_ok(priv->netdev))
--			netif_carrier_off(priv->netdev);
--		mwifiex_stop_net_dev_queue(priv->netdev, adapter);
--
--		mwifiex_clean_txrx(priv);
--		mwifiex_del_all_sta_list(priv);
- 		break;
- 	case EVENT_UAP_BSS_ACTIVE:
--		priv->media_connected = true;
--		if (!netif_carrier_ok(priv->netdev))
--			netif_carrier_on(priv->netdev);
--		mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
- 		break;
- 	case EVENT_UAP_BSS_START:
- 		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
--- 
-2.6.0.rc2.230.g3dd15c0
+-Jakub
 
+>> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> index 11fcfda..5f90261 100644
+>> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> @@ -1928,10 +1928,10 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+>>  	u16 val16, efuse_addr, offset;
+>>  	u32 val32;
+>>  
+>> -	val16 = rtl8xxxu_read16(priv, REG_9346CR);
+>> -	if (val16 & EEPROM_ENABLE)
+>> +	val8 = rtl8xxxu_read8(priv, REG_9346CR);
+>> +	if (val8 & EEPROM_ENABLE)
+>>  		priv->has_eeprom = 1;
+>> -	if (val16 & EEPROM_BOOT)
+>> +	if (val8 & EEPROM_BOOT)
+>>  		priv->boot_eeprom = 1;
+>>  
+>>  	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
