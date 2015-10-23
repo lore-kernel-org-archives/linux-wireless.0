@@ -1,336 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31834 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300AbbJ0MWW (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15959 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbbJWFZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 08:22:22 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 3/4] ath10k: move static HT/VHT capability setup functions
-Date: Tue, 27 Oct 2015 17:51:13 +0530
-Message-ID: <1445948474-16738-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151027_132225_302769_6F34621F)
-In-Reply-To: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 23 Oct 2015 01:25:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
+References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Fri, 23 Oct 2015 08:24:49 +0300
+In-Reply-To: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
+	Li's message of "Thu, 22 Oct 2015 21:50:16 -0700")
+Message-ID: <877fme40ny.fsf@kamboji.qca.qualcomm.com> (sfid-20151023_072523_173157_1853EB1C)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move HT and VHT capabiltity setup static functions to avoid
-forward declaration.
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 280 +++++++++++++++++-----------------
- 1 file changed, 140 insertions(+), 140 deletions(-)
+> The QCA99X0 4 addresses RX packets pad 2 bytes at the beginning of
+> MSDU instead the end of ieee80211 header to keep align. The currently
+> RX data path can't parse the header correctly in this case. This
+> patch fixes it for QCA99X0
+>
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 13de3617d5ab..3c1d07c191d5 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -58,6 +58,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.otp_exe_param = 0,
+>  		.channel_counters_freq_hz = 88000,
+>  		.max_probe_resp_desc_thres = 0,
+> +		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+>  		.fw = {
+>  			.dir = QCA988X_HW_2_0_FW_DIR,
+>  			.fw = QCA988X_HW_2_0_FW_FILE,
+> @@ -75,6 +76,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.otp_exe_param = 0,
+>  		.channel_counters_freq_hz = 88000,
+>  		.max_probe_resp_desc_thres = 0,
+> +		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+>  		.fw = {
+>  			.dir = QCA6174_HW_2_1_FW_DIR,
+>  			.fw = QCA6174_HW_2_1_FW_FILE,
+> @@ -92,6 +94,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.otp_exe_param = 0,
+>  		.channel_counters_freq_hz = 88000,
+>  		.max_probe_resp_desc_thres = 0,
+> +		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+>  		.fw = {
+>  			.dir = QCA6174_HW_3_0_FW_DIR,
+>  			.fw = QCA6174_HW_3_0_FW_FILE,
+> @@ -109,6 +112,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.otp_exe_param = 0,
+>  		.channel_counters_freq_hz = 88000,
+>  		.max_probe_resp_desc_thres = 0,
+> +		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
+>  		.fw = {
+>  			/* uses same binaries as hw3.0 */
+>  			.dir = QCA6174_HW_3_0_FW_DIR,
+> @@ -128,6 +132,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.continuous_frag_desc = true,
+>  		.channel_counters_freq_hz = 150000,
+>  		.max_probe_resp_desc_thres = 24,
+> +		.loc_4addr_pad = ATH10K_4ADDR_PAD_PRE,
+>  		.fw = {
+>  			.dir = QCA99X0_HW_2_0_FW_DIR,
+>  			.fw = QCA99X0_HW_2_0_FW_FILE,
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 7cc7cdd56c95..b4db8bbf85ce 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -646,6 +646,9 @@ struct ath10k {
+>  		 */
+>  		u32 max_probe_resp_desc_thres;
+>  
+> +		/* The padding bytes's location is different on various chips */
+> +		enum ath10k_loc_4addr_pad loc_4addr_pad;
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4e799d4..2217494 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3757,6 +3757,146 @@ static void ath10k_check_chain_mask(struct ath10k *ar, u32 cm, const char *dbg)
- 		    dbg, cm);
- }
- 
-+static int ath10k_mac_get_vht_cap_bf_sts(struct ath10k *ar)
-+{
-+	int nsts = ar->vht_cap_info;
-+
-+	nsts &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
-+	nsts >>= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
-+
-+	/* If firmware does not deliver to host number of space-time
-+	 * streams supported, assume it support up to 4 BF STS and return
-+	 * the value for VHT CAP: nsts-1)
-+	 */
-+	if (nsts == 0)
-+		return 3;
-+
-+	return nsts;
-+}
-+
-+static int ath10k_mac_get_vht_cap_bf_sound_dim(struct ath10k *ar)
-+{
-+	int sound_dim = ar->vht_cap_info;
-+
-+	sound_dim &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+	sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+
-+	/* If the sounding dimension is not advertised by the firmware,
-+	 * let's use a default value of 1
-+	 */
-+	if (sound_dim == 0)
-+		return 1;
-+
-+	return sound_dim;
-+}
-+
-+static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
-+{
-+	struct ieee80211_sta_vht_cap vht_cap = {0};
-+	u16 mcs_map;
-+	u32 val;
-+	int i;
-+
-+	vht_cap.vht_supported = 1;
-+	vht_cap.cap = ar->vht_cap_info;
-+
-+	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)) {
-+		val = ath10k_mac_get_vht_cap_bf_sts(ar);
-+		val <<= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
-+		val &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
-+
-+		vht_cap.cap |= val;
-+	}
-+
-+	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
-+				IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)) {
-+		val = ath10k_mac_get_vht_cap_bf_sound_dim(ar);
-+		val <<= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+		val &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+
-+		vht_cap.cap |= val;
-+	}
-+
-+	mcs_map = 0;
-+	for (i = 0; i < 8; i++) {
-+		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
-+			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2);
-+		else
-+			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
-+	}
-+
-+	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
-+	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
-+
-+	return vht_cap;
-+}
-+
-+static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
-+{
-+	int i;
-+	struct ieee80211_sta_ht_cap ht_cap = {0};
-+
-+	if (!(ar->ht_cap_info & WMI_HT_CAP_ENABLED))
-+		return ht_cap;
-+
-+	ht_cap.ht_supported = 1;
-+	ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+	ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
-+	ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+	ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
-+	ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_HT20_SGI)
-+		ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_HT40_SGI)
-+		ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS) {
-+		u32 smps;
-+
-+		smps   = WLAN_HT_CAP_SM_PS_DYNAMIC;
-+		smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+		ht_cap.cap |= smps;
-+	}
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
-+		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
-+		u32 stbc;
-+
-+		stbc   = ar->ht_cap_info;
-+		stbc  &= WMI_HT_CAP_RX_STBC;
-+		stbc >>= WMI_HT_CAP_RX_STBC_MASK_SHIFT;
-+		stbc <<= IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		stbc  &= IEEE80211_HT_CAP_RX_STBC;
-+
-+		ht_cap.cap |= stbc;
-+	}
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_LDPC)
-+		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	if (ar->ht_cap_info & WMI_HT_CAP_L_SIG_TXOP_PROT)
-+		ht_cap.cap |= IEEE80211_HT_CAP_LSIG_TXOP_PROT;
-+
-+	/* max AMSDU is implicitly taken from vht_cap_info */
-+	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
-+		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
-+
-+	for (i = 0; i < ar->num_rf_chains; i++) {
-+		if (ar->cfg_rx_chainmask & BIT(i))
-+			ht_cap.mcs.rx_mask[i] = 0xFF;
-+	}
-+
-+	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
-+
-+	return ht_cap;
-+}
-+
- static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
- {
- 	int ret;
-@@ -4056,39 +4196,6 @@ static u32 get_nss_from_chainmask(u16 chain_mask)
- 	return 1;
- }
- 
--static int ath10k_mac_get_vht_cap_bf_sts(struct ath10k *ar)
--{
--	int nsts = ar->vht_cap_info;
--
--	nsts &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
--	nsts >>= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
--
--	/* If firmware does not deliver to host number of space-time
--	 * streams supported, assume it support up to 4 BF STS and return
--	 * the value for VHT CAP: nsts-1)
--	 * */
--	if (nsts == 0)
--		return 3;
--
--	return nsts;
--}
--
--static int ath10k_mac_get_vht_cap_bf_sound_dim(struct ath10k *ar)
--{
--	int sound_dim = ar->vht_cap_info;
--
--	sound_dim &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
--	sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
--
--	/* If the sounding dimension is not advertised by the firmware,
--	 * let's use a default value of 1
--	 */
--	if (sound_dim == 0)
--		return 1;
--
--	return sound_dim;
--}
--
- static int ath10k_mac_set_txbf_conf(struct ath10k_vif *arvif)
- {
- 	u32 value = 0;
-@@ -6942,113 +7049,6 @@ static const struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
- 	},
- };
- 
--static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
--{
--	struct ieee80211_sta_vht_cap vht_cap = {0};
--	u16 mcs_map;
--	u32 val;
--	int i;
--
--	vht_cap.vht_supported = 1;
--	vht_cap.cap = ar->vht_cap_info;
--
--	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
--				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)) {
--		val = ath10k_mac_get_vht_cap_bf_sts(ar);
--		val <<= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
--		val &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
--
--		vht_cap.cap |= val;
--	}
--
--	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
--				IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)) {
--		val = ath10k_mac_get_vht_cap_bf_sound_dim(ar);
--		val <<= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
--		val &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
--
--		vht_cap.cap |= val;
--	}
--
--	mcs_map = 0;
--	for (i = 0; i < 8; i++) {
--		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
--			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
--		else
--			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
--	}
--
--	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
--	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
--
--	return vht_cap;
--}
--
--static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
--{
--	int i;
--	struct ieee80211_sta_ht_cap ht_cap = {0};
--
--	if (!(ar->ht_cap_info & WMI_HT_CAP_ENABLED))
--		return ht_cap;
--
--	ht_cap.ht_supported = 1;
--	ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
--	ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
--	ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
--	ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
--	ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
--
--	if (ar->ht_cap_info & WMI_HT_CAP_HT20_SGI)
--		ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
--
--	if (ar->ht_cap_info & WMI_HT_CAP_HT40_SGI)
--		ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
--
--	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS) {
--		u32 smps;
--
--		smps   = WLAN_HT_CAP_SM_PS_DYNAMIC;
--		smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
--
--		ht_cap.cap |= smps;
--	}
--
--	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
--		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
--
--	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
--		u32 stbc;
--
--		stbc   = ar->ht_cap_info;
--		stbc  &= WMI_HT_CAP_RX_STBC;
--		stbc >>= WMI_HT_CAP_RX_STBC_MASK_SHIFT;
--		stbc <<= IEEE80211_HT_CAP_RX_STBC_SHIFT;
--		stbc  &= IEEE80211_HT_CAP_RX_STBC;
--
--		ht_cap.cap |= stbc;
--	}
--
--	if (ar->ht_cap_info & WMI_HT_CAP_LDPC)
--		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--
--	if (ar->ht_cap_info & WMI_HT_CAP_L_SIG_TXOP_PROT)
--		ht_cap.cap |= IEEE80211_HT_CAP_LSIG_TXOP_PROT;
--
--	/* max AMSDU is implicitly taken from vht_cap_info */
--	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
--		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
--
--	for (i = 0; i < ar->num_rf_chains; i++) {
--		if (ar->cfg_rx_chainmask & BIT(i))
--			ht_cap.mcs.rx_mask[i] = 0xFF;
--	}
--
--	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
--
--	return ht_cap;
--}
--
- static void ath10k_get_arvif_iter(void *data, u8 *mac,
- 				  struct ieee80211_vif *vif)
- {
+I think that loc prefix is a bit misleading, it reminds me of
+locationing/positioning etc. What about ath10k_hw_4addr_pad?
+
 -- 
-2.6.2
-
+Kalle Valo
