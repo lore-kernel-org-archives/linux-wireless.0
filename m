@@ -1,72 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41682 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457AbbJ1G6n (ORCPT
+Received: from mail-wi0-f196.google.com ([209.85.212.196]:32838 "EHLO
+	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbbJXWcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:58:43 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/80] staging: wilc1000: rename u8MacAddress of struct set_mac_addr
-Date: Wed, 28 Oct 2015 15:59:31 +0900
-Message-ID: <1446015640-29398-11-git-send-email-glen.lee@atmel.com> (sfid-20151028_081654_504492_6458FBCE)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 24 Oct 2015 18:32:10 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Punit Vara <punitvara@gmail.com>
+Subject: [PATCH 3/3] Staging: wilc1000: Remove boolean comparision
+Date: Sun, 25 Oct 2015 04:01:25 +0530
+Message-Id: <1445725885-25995-4-git-send-email-punitvara@gmail.com> (sfid-20151025_003232_863274_0BA82A15)
+In-Reply-To: <1445725885-25995-1-git-send-email-punitvara@gmail.com>
+References: <1445725885-25995-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch is to the host_interface.c file that fixes up following
+warning reported by coccicheck:
 
-This patch renames u8MacAddress of struct set_mac_addr to mac_addr
-to avoid CamelCase naming convention.
+WARNING: Comparison to bool
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Boolean tests do not need explicit comparison to true or false
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
  drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f693ea3..2d12672 100644
+index 38fead4..09a6c98 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -476,7 +476,7 @@ static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
- 		PRINT_ER("No buffer to send mac address\n");
- 		return -EFAULT;
- 	}
--	memcpy(mac_buf, pstrHostIfSetMacAddress->u8MacAddress, ETH_ALEN);
-+	memcpy(mac_buf, pstrHostIfSetMacAddress->mac_addr, ETH_ALEN);
+@@ -1440,7 +1440,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 			}
+ 		}
  
- 	wid.id = (u16)WID_MAC_ADDR;
- 	wid.type = WID_STR;
-@@ -3399,7 +3399,7 @@ s32 host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+-		if (bNewNtwrkFound == true) {
++		if (bNewNtwrkFound) {
+ 			PRINT_D(HOSTINF_DBG, "New network found\n");
  
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_MAC_ADDRESS;
--	memcpy(msg.body.set_mac_info.u8MacAddress, pu8MacAddress, ETH_ALEN);
-+	memcpy(msg.body.set_mac_info.mac_addr, pu8MacAddress, ETH_ALEN);
- 	msg.drv = hif_drv;
+ 			if (hif_drv->strWILC_UsrScanReq.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
+@@ -2714,7 +2714,7 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index e040c7e..c2f21a9 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -248,7 +248,7 @@ struct op_mode {
- };
+ 	strWID.id = (u16)WID_POWER_MANAGEMENT;
  
- struct set_mac_addr {
--	u8 u8MacAddress[ETH_ALEN];
-+	u8 mac_addr[ETH_ALEN];
- };
- 
- struct get_mac_addr {
+-	if (strPowerMgmtParam->enabled == true)
++	if (strPowerMgmtParam->enabled)
+ 		s8PowerMode = MIN_FAST_PS;
+ 	else
+ 		s8PowerMode = NO_POWERSAVE;
 -- 
-1.9.1
+2.5.3
 
