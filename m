@@ -1,126 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3568 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbbJAHFA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53354 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934AbbJXSu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 03:05:00 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/12] staging: wilc1000: remove function pointer wlan_cfg_get
-Date: Thu, 1 Oct 2015 16:03:41 +0900
-Message-ID: <1443683023-6498-10-git-send-email-tony.cho@atmel.com> (sfid-20151001_090503_485346_30586F1F)
-In-Reply-To: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
-References: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 24 Oct 2015 14:50:59 -0400
+From: Olav Haugan <ohaugan@codeaurora.org>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: davem@davemloft.net, kvalo@codeaurora.org,
+	ath9k-devel@qca.qualcomm.com, Olav Haugan <ohaugan@codeaurora.org>
+Subject: [PATCH 1/2] mac80211: add support to set_coalesce
+Date: Sat, 24 Oct 2015 11:50:51 -0700
+Message-Id: <1445712652-19327-1-git-send-email-ohaugan@codeaurora.org> (sfid-20151024_205102_100784_2A5EA54D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+Add ops in mac80211 and corresponding driver calls.
+Add trace event for set_coalesce.
 
-This patch removes function pointer wlan_cfg_get and just call
-the function wilc_wlan_cfg_get. Remove static from the function also.
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Olav Haugan <ohaugan@codeaurora.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 13 ++++---------
- drivers/staging/wilc1000/linux_wlan.c       |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c        |  3 +--
- drivers/staging/wilc1000/wilc_wlan.h        |  1 +
- drivers/staging/wilc1000/wilc_wlan_if.h     |  1 -
- 5 files changed, 7 insertions(+), 13 deletions(-)
+ include/net/mac80211.h    |  4 ++++
+ net/mac80211/cfg.c        |  9 +++++++++
+ net/mac80211/driver-ops.h | 12 ++++++++++++
+ net/mac80211/trace.h      |  5 +++++
+ 4 files changed, 30 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 4e9feca..74ff763 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -614,19 +614,14 @@ s32 send_config_pkt(u8 u8Mode, tstrWID *pstrWIDs,
- 	} else {
- 		PRINT_D(CORECONFIG_DBG, "Net Dev is initialized\n");
- 	}
--	if (gpstrWlanOps->wlan_cfg_get == NULL)	{
--		PRINT_D(CORECONFIG_DBG, "Set and Get is still not initialized\n");
--		return 1;
--	} else {
--		PRINT_D(CORECONFIG_DBG, "SET is initialized\n");
--	}
- 	if (u8Mode == GET_CFG) {
- 		for (counter = 0; counter < u32WIDsCount; counter++) {
- 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
- 				   (counter == u32WIDsCount - 1));
--			if (!gpstrWlanOps->wlan_cfg_get(!counter,
--							pstrWIDs[counter].u16WIDid,
--							(counter == u32WIDsCount - 1), drvHandler)) {
-+			if (!wilc_wlan_cfg_get(!counter,
-+					       pstrWIDs[counter].u16WIDid,
-+					       (counter == u32WIDsCount - 1),
-+					       drvHandler)) {
- 				ret = -1;
- 				printk("[Sendconfigpkt]Get Timed out\n");
- 				break;
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index ad4d64e..a1e6f68 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1284,7 +1284,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bfc5694..8bd7ccb 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3232,6 +3232,8 @@ enum ieee80211_reconfig_type {
+  *	the function call.
+  *
+  * @wake_tx_queue: Called when new packets have been added to the queue.
++ *
++ * @set_coalesce: Set coalesce parameters.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3467,6 +3469,8 @@ struct ieee80211_ops {
  
- 		wilc_bus_set_max_speed();
+ 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
+ 			      struct ieee80211_txq *txq);
++	int (*set_coalesce)(struct ieee80211_hw *hw,
++			    struct cfg80211_coalesce *coalesce);
+ };
  
--		if (g_linux_wlan->oup.wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
-+		if (wilc_wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
- 			int size;
- 			char Firmware_ver[20];
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3687a06..ce0f054 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1789,7 +1789,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 
- 	return ret_size;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a77a14..affd8ab 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3810,6 +3810,14 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
  }
--static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
-+int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	u32 offset;
-@@ -2029,7 +2029,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
- 	/**
- 	 *      export functions
- 	 **/
--	oup->wlan_cfg_get = wilc_wlan_cfg_get;
- 	oup->wlan_cfg_get_value = wilc_wlan_cfg_get_val;
  
- 	oup->wlan_add_mgmt_to_tx_que = wilc_wlan_txq_add_mgmt_pkt;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index be589f0..eb61db0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -313,4 +313,5 @@ void wilc_handle_isr(void);
- void wilc_wlan_cleanup(void);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
-+int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 8897910..31d8983 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -122,7 +122,6 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
- #define WILC_TX_ERR_NO_BUF	(-2)
++static int ieee80211_set_coalesce(struct wiphy *wiphy,
++				  struct cfg80211_coalesce *coalesce)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_coalesce(local, coalesce);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3894,4 +3902,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.set_coalesce = ieee80211_set_coalesce,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 02d9133..49856e1 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1355,4 +1355,16 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
  
- typedef struct {
--	int (*wlan_cfg_get)(int, u32, int, u32);
- 	int (*wlan_cfg_get_value)(u32, u8 *, u32);
- 	int (*wlan_add_mgmt_to_tx_que)(void *, u8 *, u32,
- 				       wilc_tx_complete_func_t);
++static inline int drv_set_coalesce(struct ieee80211_local *local,
++				   struct cfg80211_coalesce *coalesce)
++{
++	u32 ret = 0;
++
++	trace_drv_set_coalesce(local);
++	if (local->ops->set_coalesce)
++		ret = local->ops->set_coalesce(&local->hw, coalesce);
++	trace_drv_return_u32(local, ret);
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 6f14591..ff1173b 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1655,6 +1655,11 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_only_evt, drv_set_coalesce,
++	     TP_PROTO(struct ieee80211_local *local),
++	     TP_ARGS(local)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 -- 
-1.9.1
+2.6.1
 
