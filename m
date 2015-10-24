@@ -1,90 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4591 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756178AbbJ2C4e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53334 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934AbbJXSuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:56:34 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 02/64] staging: wilc1000: rename au8AssociatedBSSID of struct host_if_drv
-Date: Thu, 29 Oct 2015 11:58:25 +0900
-Message-ID: <1446087567-16728-2-git-send-email-glen.lee@atmel.com> (sfid-20151029_035637_324554_868A41E8)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 24 Oct 2015 14:50:06 -0400
+From: Olav Haugan <ohaugan@codeaurora.org>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: davem@davemloft.net, kvalo@codeaurora.org,
+	ath9k-devel@qca.qualcomm.com, Olav Haugan <ohaugan@codeaurora.org>
+Subject: [PATCH 1/2] mac80211: add support to set_coalesce
+Date: Sat, 24 Oct 2015 11:49:56 -0700
+Message-Id: <1445712597-19114-1-git-send-email-ohaugan@codeaurora.org> (sfid-20151024_205035_623799_C6615F9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Add ops in mac80211 and corresponding driver calls.
+Add trace event for set_coalesce.
 
-This patch renames au8AssociatedBSSID of struct host_if_drv to assoc_bssid
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Olav Haugan <ohaugan@codeaurora.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ include/net/mac80211.h    |  4 ++++
+ net/mac80211/cfg.c        |  9 +++++++++
+ net/mac80211/driver-ops.h | 12 ++++++++++++
+ net/mac80211/trace.h      |  5 +++++
+ 4 files changed, 30 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4e01dbd..7216d83 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1581,7 +1581,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bfc5694..8bd7ccb 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3232,6 +3232,8 @@ enum ieee80211_reconfig_type {
+  *	the function call.
+  *
+  * @wake_tx_queue: Called when new packets have been added to the queue.
++ *
++ * @set_coalesce: Set coalesce parameters.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3467,6 +3469,8 @@ struct ieee80211_ops {
  
- 				if ((u8MacStatus == MAC_CONNECTED) &&
- 				    (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE))	{
--					memcpy(hif_drv->au8AssociatedBSSID,
-+					memcpy(hif_drv->assoc_bssid,
- 					       hif_drv->usr_conn_req.pu8bssid, ETH_ALEN);
- 				}
- 			}
-@@ -1657,7 +1657,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 				PRINT_ER("Connect result callback function is NULL\n");
- 			}
+ 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
+ 			      struct ieee80211_txq *txq);
++	int (*set_coalesce)(struct ieee80211_hw *hw,
++			    struct cfg80211_coalesce *coalesce);
+ };
  
--			eth_zero_addr(hif_drv->au8AssociatedBSSID);
-+			eth_zero_addr(hif_drv->assoc_bssid);
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a77a14..affd8ab 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3810,6 +3810,14 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
+ }
  
- 			hif_drv->usr_conn_req.ssidLen = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
-@@ -1840,7 +1840,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			}
++static int ieee80211_set_coalesce(struct wiphy *wiphy,
++				  struct cfg80211_coalesce *coalesce)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_coalesce(local, coalesce);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3894,4 +3902,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.set_coalesce = ieee80211_set_coalesce,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 02d9133..49856e1 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1355,4 +1355,16 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
  
- 			if (hif_drv->hif_state == HOST_IF_CONNECTED)
--				memcpy(pu8keybuf, hif_drv->au8AssociatedBSSID, ETH_ALEN);
-+				memcpy(pu8keybuf, hif_drv->assoc_bssid, ETH_ALEN);
- 			else
- 				PRINT_ER("Couldn't handle WPARxGtk while state is not HOST_IF_CONNECTED\n");
++static inline int drv_set_coalesce(struct ieee80211_local *local,
++				   struct cfg80211_coalesce *coalesce)
++{
++	u32 ret = 0;
++
++	trace_drv_set_coalesce(local);
++	if (local->ops->set_coalesce)
++		ret = local->ops->set_coalesce(&local->hw, coalesce);
++	trace_drv_return_u32(local, ret);
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 6f14591..ff1173b 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1655,6 +1655,11 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
  
-@@ -2022,7 +2022,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 
- 		hif_drv->hif_state = HOST_IF_IDLE;
- 
--		eth_zero_addr(hif_drv->au8AssociatedBSSID);
-+		eth_zero_addr(hif_drv->assoc_bssid);
- 
- 		hif_drv->usr_conn_req.ssidLen = 0;
- 		kfree(hif_drv->usr_conn_req.pu8ssid);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dcdb9c6..fcfdd21 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -301,7 +301,7 @@ struct host_if_drv {
- 
- 	enum host_if_state hif_state;
- 
--	u8 au8AssociatedBSSID[ETH_ALEN];
-+	u8 assoc_bssid[ETH_ALEN];
- 	struct cfg_param_val strCfgValues;
- /* semaphores */
- 	struct semaphore gtOsCfgValuesSem;
++DEFINE_EVENT(local_only_evt, drv_set_coalesce,
++	     TP_PROTO(struct ieee80211_local *local),
++	     TP_ARGS(local)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 -- 
-1.9.1
+2.6.1
 
