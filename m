@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20844 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965211AbbJ3DI6 (ORCPT
+Received: from chaos.universe-factory.net ([37.72.148.22]:58264 "EHLO
+	chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752023AbbJXTdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:08:58 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/17] staging: wilc1000: wilc_wlan_start: add argument struct net_device
-Date: Fri, 30 Oct 2015 12:10:38 +0900
-Message-ID: <1446174642-28570-13-git-send-email-glen.lee@atmel.com> (sfid-20151030_040910_681715_B92C5CE5)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 24 Oct 2015 15:33:50 -0400
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix crash on mesh local link ID generation with VIFs
+Date: Sat, 24 Oct 2015 21:25:51 +0200
+Message-Id: <410200d1bd404c5c3acf66b8cabaae2860df2241.1445714370.git.mschiffer@universe-factory.net> (sfid-20151024_213417_424404_3C15B02D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct net_device and pass dev to the function.
+llid_in_use needs to be limited to stations of the same VIF, otherwise it
+will cause a NULL deref as the sta_info of non-mesh-VIFs don't have
+sta->mesh set.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Steps to reproduce:
+
+   modprobe mac80211_hwsim channels=2
+   iw phy phy0 interface add ibss0 type ibss
+   iw phy phy0 interface add mesh0 type mp
+   iw phy phy1 interface add ibss1 type ibss
+   iw phy phy1 interface add mesh1 type mp
+   ip link set ibss0 up
+   ip link set mesh0 up
+   ip link set ibss1 up
+   ip link set mesh1 up
+   iw dev ibss0 ibss join foo 2412
+   iw dev ibss1 ibss join foo 2412
+   # Ensure that ibss0 and ibss1 are actually associated; I often need to
+   # leave and join the cell on ibss1 a second time.
+   iw dev mesh0 mesh join bar
+   iw dev mesh1 mesh join bar # crash
+
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Should probably be queued for stable, at least for all kernels containing
+"mac80211: move mesh related station fields to own struct" (the bug was
+there before, but it didn't crash without that commit).
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index bb37f5b..2226ddb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -584,7 +584,7 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+
+ net/mac80211/mesh_plink.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 5838464..d1224d3 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -677,6 +677,9 @@ static bool llid_in_use(struct ieee80211_sub_if_data *sdata,
  
- 	/* start firmware */
- 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
--	ret = wilc_wlan_start();
-+	ret = wilc_wlan_start(dev);
- 	if (ret < 0) {
- 		PRINT_ER("Failed to start Firmware\n");
- 		goto _fail_;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 93fae34..894466f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1489,7 +1489,7 @@ _fail_1:
-  *      Common
-  *
-  ********************************************/
--int wilc_wlan_start(void)
-+int wilc_wlan_start(struct net_device *dev)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 reg = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index c948c25..73e01a7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -297,7 +297,7 @@ typedef struct {
- 
- int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
- 				u32 buffer_size);
--int wilc_wlan_start(void);
-+int wilc_wlan_start(struct net_device *dev);
- int wilc_wlan_stop(struct net_device *dev);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func);
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata)
++			continue;
++
+ 		if (!memcmp(&sta->mesh->llid, &llid, sizeof(llid))) {
+ 			in_use = true;
+ 			break;
 -- 
-1.9.1
+2.6.2
 
