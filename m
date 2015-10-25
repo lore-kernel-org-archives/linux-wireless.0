@@ -1,96 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5807 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752018AbbJZF4A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 01:56:00 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Marty Faltesek <mfaltesek@google.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2] mwifiex: toggle carrier state in start_ap/stop_ap.
-Date: Sun, 25 Oct 2015 22:54:01 -0700
-Message-ID: <1445838841-20253-1-git-send-email-akarwar@marvell.com> (sfid-20151026_065608_281856_A42E8EC2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751800AbbJYMBY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:01:24 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/16] iwlwifi: mvm: Dump FW's virtual image in the case of a NIC error
+Date: Sun, 25 Oct 2015 14:01:02 +0200
+Message-Id: <1445774476-24792-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130127_311773_41CAC59C)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marty Faltesek <mfaltesek@google.com>
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-In uap mode the carrier is not enabled until after the first STA joins.
-The carrier triggers the bridge to start its state machine, and if STP
-is enabled, it takes 4 seconds as it transitions from disabled to
-forwarding. During this time the bridge drops all traffic, and the EAPOL
-handshake times out after 3 seconds, preventing stations from joining.
+When paging is enabled the driver stores part of the FW's
+image in the DRAM.
 
-Follow the logic used in mac80211 and start the carrier in start_ap
-and disable it in stop_ap. This has a nice benefit of allowing the
-first station connection time to be reduced by up to 75% when STP is
-in use.
+Dump FW's virtual image in the case of a NIC error.
 
-Signed-off-by: Martin Faltesek <mfaltesek@google.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v2: Move only netdev queue status change code to start/stop AP
-handlers. Discarded other changes in v1 which had side effects
-(Avinash Patil)
----
- drivers/net/wireless/mwifiex/cfg80211.c  | 8 ++++++++
- drivers/net/wireless/mwifiex/uap_event.c | 7 -------
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 16 ++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 27 ++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index b7ac45f..4073116 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1821,6 +1821,10 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index af5b320..9dbe19c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -86,6 +86,8 @@
+  *	Structured as &struct iwl_fw_error_dump_trigger_desc.
+  * @IWL_FW_ERROR_DUMP_RB: the content of an RB structured as
+  *	&struct iwl_fw_error_dump_rb
++ * @IWL_FW_ERROR_PAGING: UMAC's image memory segments which were
++ *	paged to the DRAM.
+  */
+ enum iwl_fw_error_dump_type {
+ 	/* 0 is deprecated */
+@@ -100,6 +102,7 @@ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_MEM = 9,
+ 	IWL_FW_ERROR_DUMP_ERROR_INFO = 10,
+ 	IWL_FW_ERROR_DUMP_RB = 11,
++	IWL_FW_ERROR_DUMP_PAGING = 12,
+ 
+ 	IWL_FW_ERROR_DUMP_MAX,
+ };
+@@ -240,6 +243,19 @@ struct iwl_fw_error_dump_rb {
+ };
+ 
+ /**
++ * struct iwl_fw_error_dump_paging - content of the UMAC's image page
++ *	block on DRAM
++ * @index: the index of the page block
++ * @reserved:
++ * @data: the content of the page block
++ */
++struct iwl_fw_error_dump_paging {
++	__le32 index;
++	__le32 reserved;
++	u8 data[];
++};
++
++/**
+  * iwl_fw_error_next_data - advance fw error dump data pointer
+  * @data: previous data block
+  * Returns: next data block
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 8443e14..aaffb54 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1192,6 +1192,13 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (sram2_len)
+ 		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + sram2_len;
+ 
++	/* Make room for fw's virtual image pages, if it exists */
++	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size)
++		file_len += mvm->num_of_paging_blk *
++			(sizeof(*dump_data) +
++			 sizeof(struct iwl_fw_error_dump_paging) +
++			 PAGING_BLOCK_SIZE);
++
+ 	/* If we only want a monitor dump, reset the file length */
+ 	if (monitor_dump_only) {
+ 		file_len = sizeof(*dump_file) + sizeof(*dump_data) +
+@@ -1302,6 +1309,26 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 					 dump_mem->data, IWL8260_ICCM_LEN);
  	}
  
-+	if (netif_carrier_ok(priv->netdev))
-+		netif_carrier_off(priv->netdev);
-+	mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
++	/* Dump fw's virtual image */
++	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size) {
++		u32 i;
 +
- 	return 0;
- }
- 
-@@ -1925,6 +1929,10 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
- 		return -1;
- 
-+	if (!netif_carrier_ok(priv->netdev))
-+		netif_carrier_on(priv->netdev);
-+	mwifiex_wake_up_net_dev_queue(priv->netdev, priv->adapter);
++		for (i = 1; i < mvm->num_of_paging_blk + 1; i++) {
++			struct iwl_fw_error_dump_paging *paging;
++			struct page *pages =
++				mvm->fw_paging_db[i].fw_paging_block;
 +
- 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
- 	kfree(bss_cfg);
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 078834c..86ff542 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -179,19 +179,12 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 	case EVENT_UAP_BSS_IDLE:
- 		priv->media_connected = false;
- 		priv->port_open = false;
--		if (netif_carrier_ok(priv->netdev))
--			netif_carrier_off(priv->netdev);
--		mwifiex_stop_net_dev_queue(priv->netdev, adapter);
--
- 		mwifiex_clean_txrx(priv);
- 		mwifiex_del_all_sta_list(priv);
- 		break;
- 	case EVENT_UAP_BSS_ACTIVE:
- 		priv->media_connected = true;
- 		priv->port_open = true;
--		if (!netif_carrier_ok(priv->netdev))
--			netif_carrier_on(priv->netdev);
--		mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
- 		break;
- 	case EVENT_UAP_BSS_START:
- 		mwifiex_dbg(adapter, EVENT,
++			dump_data = iwl_fw_error_next_data(dump_data);
++			dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PAGING);
++			dump_data->len = cpu_to_le32(sizeof(*paging) +
++						     PAGING_BLOCK_SIZE);
++			paging = (void *)dump_data->data;
++			paging->index = cpu_to_le32(i);
++			memcpy(paging->data, page_address(pages),
++			       PAGING_BLOCK_SIZE);
++		}
++	}
++
+ dump_trans_data:
+ 	fw_error_dump->trans_ptr = iwl_trans_dump_data(mvm->trans,
+ 						       mvm->fw_dump_trig);
 -- 
-1.8.1.4
+2.1.4
 
