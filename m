@@ -1,73 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28211 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323AbbJ2DQX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:16:23 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 06/12] staging: wilc1000: linux_wlan_start_firmware: change argument with dev
-Date: Thu, 29 Oct 2015 12:18:46 +0900
-Message-ID: <1446088732-12301-6-git-send-email-glen.lee@atmel.com> (sfid-20151029_041626_108303_D6411BC7)
-In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:7815 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752706AbbJYJAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 05:00:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/10] mac80211: TDLS: add proper HT-oper IE
+Date: Sun, 25 Oct 2015 10:59:34 +0200
+Message-Id: <1445763582-11421-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100009_055362_E42E7A6B)
+In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes argument nic with dev and use netdev private data member
-wilc instead of g_linux_wlan, and pass dev to the function as well.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+When 11n peers performs a TDLS connection on a legacy BSS, the HT
+operation IE must be specified according to IEEE802.11-2012 section
+9.23.3.2. Otherwise HT-protection is compromised and the medium becomes
+noisy for both the TDLS and the BSS links.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+RESEND - already to the ML in August
+---
+---
+ net/mac80211/ibss.c        |  2 +-
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mesh.c        |  3 ++-
+ net/mac80211/tdls.c        | 13 ++++++++++---
+ net/mac80211/util.c        |  5 ++++-
+ 5 files changed, 18 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 69d2839..6b5f1c5 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -570,10 +570,15 @@ _fail_:
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 2001555..3b5874e 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -188,7 +188,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 		 * keep them at 0
+ 		 */
+ 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
+-						 chandef, 0);
++						 chandef, 0, false);
  
+ 		/* add VHT capability and information IEs */
+ 		if (chandef->width != NL80211_CHAN_WIDTH_20 &&
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 68680ad..5c76ba7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1962,7 +1962,7 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			      u16 cap);
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       const struct cfg80211_chan_def *chandef,
+-			       u16 prot_mode);
++			       u16 prot_mode, bool rifs_mode);
+ u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+ 			       u32 cap);
+ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 626e8de..fa28500 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -466,7 +466,8 @@ int mesh_add_ht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 
+ 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
+ 	ieee80211_ie_build_ht_oper(pos, ht_cap, &sdata->vif.bss_conf.chandef,
+-				   sdata->vif.bss_conf.ht_operation_mode);
++				   sdata->vif.bss_conf.ht_operation_mode,
++				   false);
+ 
+ 	return 0;
  }
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index ecc5e2a..c9eeb3f 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -591,12 +591,19 @@ ieee80211_tdls_add_setup_cfm_ies(struct ieee80211_sub_if_data *sdata,
+ 		offset = noffset;
+ 	}
  
--static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
-+static int linux_wlan_start_firmware(struct net_device *dev)
+-	/* if HT support is only added in TDLS, we need an HT-operation IE */
++	/*
++	 * if HT support is only added in TDLS, we need an HT-operation IE.
++	 * add the IE as required by IEEE802.11-2012 9.23.3.2.
++	 */
+ 	if (!ap_sta->sta.ht_cap.ht_supported && sta->sta.ht_cap.ht_supported) {
++		u16 prot = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
++			   IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++			   IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT;
++
+ 		pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
+-		/* send an empty HT operation IE */
+ 		ieee80211_ie_build_ht_oper(pos, &sta->sta.ht_cap,
+-					   &sdata->vif.bss_conf.chandef, 0);
++					   &sdata->vif.bss_conf.chandef, prot,
++					   true);
+ 	}
+ 
+ 	ieee80211_tdls_add_link_ie(sdata, skb, peer, initiator);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 13b07ed..7150ae2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2274,7 +2274,7 @@ u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+ 
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       const struct cfg80211_chan_def *chandef,
+-			       u16 prot_mode)
++			       u16 prot_mode, bool rifs_mode)
  {
--
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
- 	int ret = 0;
-+
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
-+
- 	/* start firmware */
- 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
- 	ret = wilc_wlan_start();
-@@ -584,7 +589,7 @@ static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
+ 	struct ieee80211_ht_operation *ht_oper;
+ 	/* Build HT Information */
+@@ -2302,6 +2302,9 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	    chandef->width != NL80211_CHAN_WIDTH_20)
+ 		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
  
- 	/* wait for mac ready */
- 	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
--	ret = linux_wlan_lock_timeout(&g_linux_wlan->sync_event, 5000);
-+	ret = linux_wlan_lock_timeout(&wilc->sync_event, 5000);
- 	if (ret) {
- 		PRINT_D(INIT_DBG, "Firmware start timed out");
- 		goto _fail_;
-@@ -1136,7 +1141,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		}
++	if (rifs_mode)
++		ht_oper->ht_param |= IEEE80211_HT_PARAM_RIFS_MODE;
++
+ 	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+ 	ht_oper->stbc_param = 0x0000;
  
- 		/* Start firmware*/
--		ret = linux_wlan_start_firmware(nic);
-+		ret = linux_wlan_start_firmware(dev);
- 		if (ret < 0) {
- 			PRINT_ER("Failed to start firmware\n");
- 			ret = -EIO;
 -- 
-1.9.1
+2.1.4
 
