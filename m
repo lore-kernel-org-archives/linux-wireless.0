@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34863 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbbJ0XTl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 19:19:41 -0400
-Received: by pasz6 with SMTP id z6so235802446pas.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:40 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/10] staging: wilc1000: fix parameter name of function declaration
-Date: Wed, 28 Oct 2015 08:19:20 +0900
-Message-Id: <1445987968-18974-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001943_915959_400FBA10)
-In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:25317 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751579AbbJYUDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 16:03:16 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, egrumbach@gmail.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] net: tso: add support for IPv6
+Date: Sun, 25 Oct 2015 22:02:51 +0200
+Message-Id: <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_210323_120785_68E82847)
+In-Reply-To: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes struct host_if_drv of host_int_add_wep_key_bss_ap
-function declaration from hWFIDrv to hif_drv.
-With this change, first parameter name of this function declaration and
-definition has same name as hif_drv.
+Adding IPv6 for the TSO helper API is trivial:
+* Don't play with the id (which doesn't exist in IPv6)
+* Correctly update the payload_len (don't include the
+  length of the IP header itself)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: add else if
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index cd6199b..0bbbf4f 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
-  *  @date		28 Feb 2013
-  *  @version		1.0
-  */
--int host_int_add_wep_key_bss_ap(struct host_if_drv *hWFIDrv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
+NOTE: instead of checking the skb->protocol, I can add a bool
+	in tso_t. This might be better in terms of cache
+	handling. Let me know if you prefer that option
+---
+ net/core/tso.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/net/core/tso.c b/net/core/tso.c
+index 630b30b..bf71bdc5 100644
+--- a/net/core/tso.c
++++ b/net/core/tso.c
+@@ -14,18 +14,24 @@ EXPORT_SYMBOL(tso_count_descs);
+ void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
+ 		   int size, bool is_last)
+ {
+-	struct iphdr *iph;
+ 	struct tcphdr *tcph;
+ 	int hdr_len = skb_transport_offset(skb) + tcp_hdrlen(skb);
+ 	int mac_hdr_len = skb_network_offset(skb);
  
- /**
-  *  @brief              adds ptk Key
+ 	memcpy(hdr, skb->data, hdr_len);
+-	iph = (struct iphdr *)(hdr + mac_hdr_len);
+-	iph->id = htons(tso->ip_id);
+-	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
++	if (skb->protocol == htons(ETH_P_IP)) {
++		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
++
++		iph->id = htons(tso->ip_id);
++		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
++		tso->ip_id++;
++	} else if (skb->protocol == htons(ETH_P_IPV6)) {
++		struct ipv6hdr *iph = (void *)(hdr + mac_hdr_len);
++
++		iph->payload_len = htons(size + tcp_hdrlen(skb));
++	}
+ 	tcph = (struct tcphdr *)(hdr + skb_transport_offset(skb));
+ 	put_unaligned_be32(tso->tcp_seq, &tcph->seq);
+-	tso->ip_id++;
+ 
+ 	if (!is_last) {
+ 		/* Clear all special flags for not last packet */
 -- 
-2.6.1
+2.1.4
 
