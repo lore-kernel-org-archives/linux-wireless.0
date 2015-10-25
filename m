@@ -1,85 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:36357 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbbJVPAc (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:33187 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701AbbJYScz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:00:32 -0400
-Received: by ioll68 with SMTP id l68so94548149iol.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 08:00:31 -0700 (PDT)
-Date: Thu, 22 Oct 2015 10:00:09 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Andrej =?utf-8?B?VmxhxaFpxIc=?= <andrej.vlasic0@gmail.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Croatia (HR)
-Message-ID: <20151022150009.GA116932@ubuntu-hedt> (sfid-20151022_170036_346826_6F17752A)
-References: <1444761084-4399-1-git-send-email-andrej.vlasic0@gmail.com>
- <20151015180408.GA31612@ubuntu-hedt>
- <CAAudh+8q-7-Wz5B5hZ+hePJ-7=QNbbpVoc7Xpf4jsmKBqvkXfQ@mail.gmail.com>
+	Sun, 25 Oct 2015 14:32:55 -0400
+Received: by lffv3 with SMTP id v3so126605489lff.0
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 11:32:54 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] ssb: add Kconfig entry for compiling SoC related code
+Date: Sun, 25 Oct 2015 19:32:43 +0100
+Message-Id: <1445797963-5968-2-git-send-email-zajec5@gmail.com> (sfid-20151025_193325_975410_BC3CABCC)
+In-Reply-To: <1445797963-5968-1-git-send-email-zajec5@gmail.com>
+References: <1445797963-5968-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAAudh+8q-7-Wz5B5hZ+hePJ-7=QNbbpVoc7Xpf4jsmKBqvkXfQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 18, 2015 at 09:44:19PM +0200, Andrej Vlašić wrote:
-> On 15 October 2015 at 20:04, Seth Forshee <seth.forshee@canonical.com> wrote:
-> > On Tue, Oct 13, 2015 at 08:31:24PM +0200, Andrej Vlasic wrote:
-> >> Update frequency allocation rules to mach data from table [1].
-> >>
-> >> Also increase allowed power limit for range 5150-5250 Mhz to 200mW.
-> >>
-> >> [1] http://tablice.hakom.hr:8280/vis?lang=en
-> >>
-> >> Signed-off-by: Andrej Vlasic <andrej.vlasic0@gmail.com>
-> >> ---
-> >>  db.txt | 14 ++++++++++----
-> >>  1 file changed, 10 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/db.txt b/db.txt
-> >> index d57ea84..3b36616 100644
-> >> --- a/db.txt
-> >> +++ b/db.txt
-> >> @@ -504,11 +504,17 @@ country HN: DFS-FCC
-> >>       (5490 - 5730 @ 160), (24), DFS
-> >>       (5735 - 5835 @ 80), (30)
-> >>
-> >> +# Data from table of frequency allocations: http://tablice.hakom.hr:8280/vis?lang=en
-> >> +# For 5ghz range see http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_85.pdf
-> >> +# and http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_86.pdf
-> >> +# and http://www.hakom.hr/UserDocsImages/op%C4%87e%20dozvole%20prosinac%202009.g/Opca_dozvola_87.pdf
-> >> +# TPC devices on range 5250-5350 can use 200mW, and 1W on range 5470-5725.
-> >> +
-> >>  country HR: DFS-ETSI
-> >> -     (2402 - 2482 @ 40), (20)
-> >> -     (5170 - 5250 @ 80), (20), AUTO-BW
-> >> -     (5250 - 5330 @ 80), (20), DFS, AUTO-BW
-> >> -     (5490 - 5710 @ 160), (27), DFS
-> >> +     (2400 - 2483.5 @ 40), (100 mW)
-> >> +     (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
-> >> +     (5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
-> >> +     (5470 - 5725 @ 160), (500 mW), DFS
-> >>       # 60 gHz band channels 1-4, ref: Etsi En 302 567
-> >>       (57000 - 66000 @ 2160), (40)
-> >
-> > In general the changes look okay to me and in line with the published
-> > regulations (I couldn't read some of the documents you linked to, but
-> > the limits do look to be in line with ERC/DEC/(01)07 and ECC/DEC/(04)08
-> > which are referenced by the frequency allocation table).
-> >
-> > It seems pretty arbitrary to change from dBm to mW however, especially
-> > for those rules whose power limit isn't actually changing. I'd prefer we
-> > leave them in dBm for consistency, in which case I think we end up with:
-> >
-> > country HR: DFS-ETSI
-> >         (2400 - 2483.5 @ 40), (20)
-> >         (5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
-> >         (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
-> >         (5470 - 5725 @ 160), (27), DFS
-> >         # 60 gHz band channels 1-4, ref: Etsi En 302 567
-> >         (57000 - 66000 @ 2160), (40)
-> >
-> > If that looks fine to you then I can fix it up when I apply the patch.
-> 
-> It's fine with me too like that.
+This allows saving a little of space when not using ssb on Broadcom SoC.
 
-Applied with the discussed changes. Thanks!
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ arch/mips/bcm47xx/Kconfig | 1 +
+ drivers/ssb/Kconfig       | 9 +++++++++
+ drivers/ssb/Makefile      | 2 +-
+ drivers/ssb/main.c        | 2 ++
+ drivers/ssb/ssb_private.h | 2 ++
+ 5 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
+index 51ed599..e970fd9 100644
+--- a/arch/mips/bcm47xx/Kconfig
++++ b/arch/mips/bcm47xx/Kconfig
+@@ -4,6 +4,7 @@ config BCM47XX_SSB
+ 	bool "SSB Support for Broadcom BCM47XX"
+ 	select SYS_HAS_CPU_BMIPS32_3300
+ 	select SSB
++	select SSB_HOST_SOC
+ 	select SSB_DRIVER_MIPS
+ 	select SSB_DRIVER_EXTIF
+ 	select SSB_EMBEDDED
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index f0d22cd..149214b 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -80,6 +80,15 @@ config SSB_SDIOHOST
+ 
+ 	  If unsure, say N
+ 
++config SSB_HOST_SOC
++	bool "Support for SSB bus on SoC"
++	depends on SSB
++	help
++	  Host interface for a SSB directly mapped into memory. This is
++	  for some Broadcom SoCs from the BCM47xx and BCM53xx lines.
++
++	  If unsure, say N
++
+ config SSB_SILENT
+ 	bool "No SSB kernel messages"
+ 	depends on SSB && EXPERT
+diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
+index 30194c5..64a0968 100644
+--- a/drivers/ssb/Makefile
++++ b/drivers/ssb/Makefile
+@@ -7,7 +7,7 @@ ssb-$(CONFIG_SSB_SPROM)			+= sprom.o
+ ssb-$(CONFIG_SSB_PCIHOST)		+= pci.o pcihost_wrapper.o
+ ssb-$(CONFIG_SSB_PCMCIAHOST)		+= pcmcia.o bridge_pcmcia_80211.o
+ ssb-$(CONFIG_SSB_SDIOHOST)		+= sdio.o
+-ssb-y					+= host_soc.o
++ssb-$(CONFIG_SSB_HOST_SOC)		+= host_soc.o
+ 
+ # built-in drivers
+ ssb-y					+= driver_chipcommon.o
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index bea823e..5d1e9a0 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -761,6 +761,7 @@ int ssb_bus_sdiobus_register(struct ssb_bus *bus, struct sdio_func *func,
+ EXPORT_SYMBOL(ssb_bus_sdiobus_register);
+ #endif /* CONFIG_SSB_PCMCIAHOST */
+ 
++#ifdef CONFIG_SSB_HOST_SOC
+ int ssb_bus_ssbbus_register(struct ssb_bus *bus, unsigned long baseaddr,
+ 			    ssb_invariants_func_t get_invariants)
+ {
+@@ -777,6 +778,7 @@ int ssb_bus_ssbbus_register(struct ssb_bus *bus, unsigned long baseaddr,
+ 
+ 	return err;
+ }
++#endif
+ 
+ int __ssb_driver_register(struct ssb_driver *drv, struct module *owner)
+ {
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 0a756c2..15bfd5c 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -161,7 +161,9 @@ static inline int ssb_sdio_init(struct ssb_bus *bus)
+  * host_soc.c
+  **************************************************/
+ 
++#ifdef CONFIG_SSB_HOST_SOC
+ extern const struct ssb_bus_ops ssb_host_soc_ops;
++#endif
+ 
+ /* scan.c */
+ extern const char *ssb_core_name(u16 coreid);
+-- 
+1.8.4.5
+
