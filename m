@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42337 "EHLO arrakis.dune.hu"
+Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755279AbbIIN2p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 09:28:45 -0400
-Subject: Re: [PATCH] ath9k: Add support for OCB mode
-To: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
-References: <1441803324-4503-1-git-send-email-kaisrja1@fel.cvut.cz>
-Cc: sojkam1@fel.cvut.cz, linux-wireless@vger.kernel.org,
-	bernd.lehmann@volkswagen.de, jan-niklas.meier@volkswagen.de,
-	s.sander@nordsys.de
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <55F033EE.7030605@openwrt.org> (sfid-20150909_153019_215533_9E84D482)
-Date: Wed, 9 Sep 2015 15:28:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <1441803324-4503-1-git-send-email-kaisrja1@fel.cvut.cz>
-Content-Type: text/plain; charset=windows-1252
+	id S1751800AbbJYMB0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:01:26 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 03/16] iwlwifi: pcie: fix (again) prepare card flow
+Date: Sun, 25 Oct 2015 14:01:03 +0200
+Message-Id: <1445774476-24792-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130130_619309_B681645E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-09-09 14:55, Jan Kaisrlik wrote:
-> The patch adds support for "outside the context of a BSS"(OCB) mode
-> to ath9k driver and extends debugfs files by OCB ralated information.
-> 
-> This patch was tested on AR9380-AL1A cards.
-> 
-> Signed-off-by: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
-> Cc: Michal Sojka <sojkam1@fel.cvut.cz>
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c          |  1 +
->  drivers/net/wireless/ath/ath9k/ath9k.h        |  1 +
->  drivers/net/wireless/ath/ath9k/debug.c        |  4 ++--
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 ++-
->  drivers/net/wireless/ath/ath9k/hw.c           |  1 +
->  drivers/net/wireless/ath/ath9k/init.c         |  3 ++-
->  drivers/net/wireless/ath/ath9k/main.c         | 11 +++++++++--
->  drivers/net/wireless/ath/ath9k/recv.c         |  2 +-
->  drivers/net/wireless/ath/debug.c              |  2 ++
->  9 files changed, 21 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> index 25e45e4..0ec2c0b 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -342,6 +342,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
->  
->  	if (is_scanning ||
->  	    (ah->opmode != NL80211_IFTYPE_STATION &&
-> +	     ah->opmode != NL80211_IFTYPE_OCB &&
->  	     ah->opmode != NL80211_IFTYPE_ADHOC)) {
->  		/*
->  		 * If we're scanning or in AP mode, the defaults (ini)
-I don't think OCB should be treated like STA/Ad-Hoc for ANI purposes.
-In fact, I think most places inside ath9k_hw should treat OCB the same
-as AP - maybe even by leaving ah->opmode at NL80211_IFTYPE_AP for OCB.
+The hardware bug in the commit mentioned below forces us
+not to re-enable the clock gating in the Host Cluster.
+The impact on the power consumption is minimal and it allows
+the WAKE_ME interrupt to propagate.
 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 1dd0339..2144362 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -1234,6 +1234,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
->  
->  	ENABLE_REG_RMW_BUFFER(ah);
->  	switch (opmode) {
-> +	case NL80211_IFTYPE_OCB:
->  	case NL80211_IFTYPE_ADHOC:
->  		if (!AR_SREV_9340_13(ah)) {
->  			set |= AR_STA_ID1_ADHOC;
-Why treat OCB like Ad-hoc for STA_ID1?
+CC: <stable@vger.kernel.org> [4.1+]
+Fixes: c9fdec9f3970 ("iwlwifi: pcie: fix prepare card flow")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index c27143b..f121ec0 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 6ba7d30..9028345 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -592,10 +592,8 @@ static int iwl_pcie_prepare_card_hw(struct iwl_trans *trans)
+ 
+ 		do {
+ 			ret = iwl_pcie_set_hw_ready(trans);
+-			if (ret >= 0) {
+-				ret = 0;
+-				goto out;
+-			}
++			if (ret >= 0)
++				return 0;
+ 
+ 			usleep_range(200, 1000);
+ 			t += 200;
+@@ -605,10 +603,6 @@ static int iwl_pcie_prepare_card_hw(struct iwl_trans *trans)
+ 
+ 	IWL_ERR(trans, "Couldn't prepare the card\n");
+ 
+-out:
+-	iwl_clear_bit(trans, CSR_DBG_LINK_PWR_MGMT_REG,
+-		      CSR_RESET_LINK_PWR_MGMT_DISABLED);
+-
+ 	return ret;
+ }
+ 
+-- 
+2.1.4
 
-> @@ -1122,7 +1127,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
->  	ath9k_hw_setopmode(ah);
->  
->  	ctx->switch_after_beacon = false;
-> -	if ((iter_data.nstations + iter_data.nadhocs + iter_data.nmeshes) > 0)
-> +	if ((iter_data.nstations + iter_data.nadhocs +
-> +	     iter_data.nmeshes + iter_data.nocbs) > 0)
->  		ah->imask |= ATH9K_INT_TSFOOR;
->  	else {
->  		ah->imask &= ~ATH9K_INT_TSFOOR;
-Enabling the TSFOOR interrupt for OCB seems completely wrong to me. If I
-understand this mode correctly, there are no beacons, hence no TSF
-synchronization.
-
-- Felix
