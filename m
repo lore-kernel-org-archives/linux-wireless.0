@@ -1,249 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:36417 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbbJTGqZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:25 -0400
-Received: by lbcao8 with SMTP id ao8so7728308lbc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:23 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 08/16] rtl8xxxu: Extract TX power fields from struct rtl8xxu_priv
-Date: Tue, 20 Oct 2015 08:45:38 +0200
-Message-Id: <1445323546-12807-9-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084647_594624_5EE537AE)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:7815 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752814AbbJYJAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 05:00:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/10] mac80211: make enable_qos parameter to ieee80211_set_wmm_default()
+Date: Sun, 25 Oct 2015 10:59:37 +0200
+Message-Id: <1445763582-11421-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100014_851327_B36F8524)
+In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 95 ++++++++++++------------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 30 ++++----
- 2 files changed, 66 insertions(+), 59 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index e1f8c62..d67c668 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1490,6 +1490,7 @@ static void rtl8723au_config_channel(struct ieee80211_hw *hw)
- static void
- rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- {
-+	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
- 	u8 cck[RTL8723A_MAX_RF_PATHS], ofdm[RTL8723A_MAX_RF_PATHS];
- 	u8 ofdmbase[RTL8723A_MAX_RF_PATHS], mcsbase[RTL8723A_MAX_RF_PATHS];
- 	u32 val32, ofdm_a, ofdm_b, mcs_a, mcs_b;
-@@ -1498,27 +1499,27 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+The function currently determines this value, for use in bss_info.qos,
+based on the interface type itself. Make it a parameter instead and
+set it with the same logic for now.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c        |  2 +-
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/iface.c       |  8 +++++---
+ net/mac80211/mlme.c        |  4 ++--
+ net/mac80211/util.c        | 11 ++---------
+ 5 files changed, 11 insertions(+), 16 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 3b5874e..337bb5d 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -356,7 +356,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
  
- 	group = rtl8723a_channel_to_group(channel);
+-	ieee80211_set_wmm_default(sdata, true);
++	ieee80211_set_wmm_default(sdata, true, false);
  
--	cck[0] = priv->cck_tx_power_index_A[group];
--	cck[1] = priv->cck_tx_power_index_B[group];
-+	cck[0] = tx_power->cck_tx_power_index_A[group];
-+	cck[1] = tx_power->cck_tx_power_index_B[group];
+ 	sdata->vif.bss_conf.ibss_joined = true;
+ 	sdata->vif.bss_conf.ibss_creator = creator;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5c76ba7..d832bd5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1769,7 +1769,7 @@ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
+ 			     int rate, int erp, int short_preamble,
+ 			     int shift);
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+-			       bool bss_notify);
++			       bool bss_notify, bool enable_qos);
+ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 		    struct sta_info *sta, struct sk_buff *skb);
  
--	ofdm[0] = priv->ht40_1s_tx_power_index_A[group];
--	ofdm[1] = priv->ht40_1s_tx_power_index_B[group];
-+	ofdm[0] = tx_power->ht40_1s_tx_power_index_A[group];
-+	ofdm[1] = tx_power->ht40_1s_tx_power_index_B[group];
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index f848c75..d0dc1bf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -661,11 +661,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		}
  
--	ofdmbase[0] = ofdm[0] +	priv->ofdm_tx_power_index_diff[group].a;
--	ofdmbase[1] = ofdm[1] +	priv->ofdm_tx_power_index_diff[group].b;
-+	ofdmbase[0] = ofdm[0] +	tx_power->ofdm_tx_power_index_diff[group].a;
-+	ofdmbase[1] = ofdm[1] +	tx_power->ofdm_tx_power_index_diff[group].b;
- 
- 	mcsbase[0] = ofdm[0];
- 	mcsbase[1] = ofdm[1];
- 	if (!ht40) {
--		mcsbase[0] += priv->ht20_tx_power_index_diff[group].a;
--		mcsbase[1] += priv->ht20_tx_power_index_diff[group].b;
-+		mcsbase[0] += tx_power->ht20_tx_power_index_diff[group].a;
-+		mcsbase[1] += tx_power->ht20_tx_power_index_diff[group].b;
+ 		/*
+-		 * set default queue parameters so drivers don't
++		 * Set default queue parameters so drivers don't
+ 		 * need to initialise the hardware if the hardware
+-		 * doesn't start up with sane defaults
++		 * doesn't start up with sane defaults.
++		 * Enable QoS for anything but station interfaces.
+ 		 */
+-		ieee80211_set_wmm_default(sdata, true);
++		ieee80211_set_wmm_default(sdata, true,
++			sdata->vif.type != NL80211_IFTYPE_STATION);
  	}
  
- 	if (priv->tx_paths > 1) {
--		if (ofdm[0] > priv->ht40_2s_tx_power_index_diff[group].a)
--			ofdm[0] -=  priv->ht40_2s_tx_power_index_diff[group].a;
--		if (ofdm[1] > priv->ht40_2s_tx_power_index_diff[group].b)
--			ofdm[1] -=  priv->ht40_2s_tx_power_index_diff[group].b;
-+		if (ofdm[0] > tx_power->ht40_2s_tx_power_index_diff[group].a)
-+			ofdm[0] -= tx_power->ht40_2s_tx_power_index_diff[group].a;
-+		if (ofdm[1] > tx_power->ht40_2s_tx_power_index_diff[group].b)
-+			ofdm[1] -= tx_power->ht40_2s_tx_power_index_diff[group].b;
- 	}
+ 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ded4b97..0d0ce5c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2077,7 +2077,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_bss_info_change_notify(sdata, changed);
  
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_CHANNEL)
-@@ -1780,39 +1781,40 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	/* disassociated - set to defaults now */
+-	ieee80211_set_wmm_default(sdata, false);
++	ieee80211_set_wmm_default(sdata, false, false);
+ 
+ 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+@@ -3048,7 +3048,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
+ 					 elems.wmm_param_len);
+ 	else
+-		ieee80211_set_wmm_default(sdata, false);
++		ieee80211_set_wmm_default(sdata, false, false);
+ 	changed |= BSS_CHANGED_QOS;
+ 
+ 	/* set AID and assoc capability,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c51ff91..29c55ce 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1105,13 +1105,13 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ }
+ 
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+-			       bool bss_notify)
++			       bool bss_notify, bool enable_qos)
  {
- 	struct rtl8723au_efuse *efuse = &priv->efuse_wifi.efuse8723;
-+	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_tx_queue_params qparam;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	int ac;
+-	bool use_11b, enable_qos;
++	bool use_11b;
+ 	bool is_ocb; /* Use another EDCA parameters if dot11OCBActivated=true */
+ 	int aCWmin, aCWmax;
  
- 	if (efuse->rtl_id != cpu_to_le16(0x8129))
- 		return -EINVAL;
+@@ -1130,13 +1130,6 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 		 !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE);
+ 	rcu_read_unlock();
  
- 	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
- 
--	memcpy(priv->cck_tx_power_index_A,
-+	memcpy(tx_power->cck_tx_power_index_A,
- 	       efuse->cck_tx_power_index_A,
--	       sizeof(priv->cck_tx_power_index_A));
--	memcpy(priv->cck_tx_power_index_B,
-+	       sizeof(tx_power->cck_tx_power_index_A));
-+	memcpy(tx_power->cck_tx_power_index_B,
- 	       efuse->cck_tx_power_index_B,
--	       sizeof(priv->cck_tx_power_index_B));
-+	       sizeof(tx_power->cck_tx_power_index_B));
- 
--	memcpy(priv->ht40_1s_tx_power_index_A,
-+	memcpy(tx_power->ht40_1s_tx_power_index_A,
- 	       efuse->ht40_1s_tx_power_index_A,
--	       sizeof(priv->ht40_1s_tx_power_index_A));
--	memcpy(priv->ht40_1s_tx_power_index_B,
-+	       sizeof(tx_power->ht40_1s_tx_power_index_A));
-+	memcpy(tx_power->ht40_1s_tx_power_index_B,
- 	       efuse->ht40_1s_tx_power_index_B,
--	       sizeof(priv->ht40_1s_tx_power_index_B));
-+	       sizeof(tx_power->ht40_1s_tx_power_index_B));
- 
--	memcpy(priv->ht20_tx_power_index_diff,
-+	memcpy(tx_power->ht20_tx_power_index_diff,
- 	       efuse->ht20_tx_power_index_diff,
--	       sizeof(priv->ht20_tx_power_index_diff));
--	memcpy(priv->ofdm_tx_power_index_diff,
-+	       sizeof(tx_power->ht20_tx_power_index_diff));
-+	memcpy(tx_power->ofdm_tx_power_index_diff,
- 	       efuse->ofdm_tx_power_index_diff,
--	       sizeof(priv->ofdm_tx_power_index_diff));
-+	       sizeof(tx_power->ofdm_tx_power_index_diff));
- 
--	memcpy(priv->ht40_max_power_offset,
-+	memcpy(tx_power->ht40_max_power_offset,
- 	       efuse->ht40_max_power_offset,
--	       sizeof(priv->ht40_max_power_offset));
--	memcpy(priv->ht20_max_power_offset,
-+	       sizeof(tx_power->ht40_max_power_offset));
-+	memcpy(tx_power->ht20_max_power_offset,
- 	       efuse->ht20_max_power_offset,
--	       sizeof(priv->ht20_max_power_offset));
-+	       sizeof(tx_power->ht20_max_power_offset));
- 
- 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
- 		 efuse->vendor_name);
-@@ -1824,6 +1826,7 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
- static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8192cu_efuse *efuse = &priv->efuse_wifi.efuse8192;
-+	struct rtl8723au_tx_power *tx_power = &priv->tx_power;
- 	int i;
- 
- 	if (efuse->rtl_id != cpu_to_le16(0x8129))
-@@ -1831,36 +1834,36 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- 
- 	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
- 
--	memcpy(priv->cck_tx_power_index_A,
-+	memcpy(tx_power->cck_tx_power_index_A,
- 	       efuse->cck_tx_power_index_A,
--	       sizeof(priv->cck_tx_power_index_A));
--	memcpy(priv->cck_tx_power_index_B,
-+	       sizeof(tx_power->cck_tx_power_index_A));
-+	memcpy(tx_power->cck_tx_power_index_B,
- 	       efuse->cck_tx_power_index_B,
--	       sizeof(priv->cck_tx_power_index_B));
-+	       sizeof(tx_power->cck_tx_power_index_B));
- 
--	memcpy(priv->ht40_1s_tx_power_index_A,
-+	memcpy(tx_power->ht40_1s_tx_power_index_A,
- 	       efuse->ht40_1s_tx_power_index_A,
--	       sizeof(priv->ht40_1s_tx_power_index_A));
--	memcpy(priv->ht40_1s_tx_power_index_B,
-+	       sizeof(tx_power->ht40_1s_tx_power_index_A));
-+	memcpy(tx_power->ht40_1s_tx_power_index_B,
- 	       efuse->ht40_1s_tx_power_index_B,
--	       sizeof(priv->ht40_1s_tx_power_index_B));
--	memcpy(priv->ht40_2s_tx_power_index_diff,
-+	       sizeof(tx_power->ht40_1s_tx_power_index_B));
-+	memcpy(tx_power->ht40_2s_tx_power_index_diff,
- 	       efuse->ht40_2s_tx_power_index_diff,
--	       sizeof(priv->ht40_2s_tx_power_index_diff));
-+	       sizeof(tx_power->ht40_2s_tx_power_index_diff));
- 
--	memcpy(priv->ht20_tx_power_index_diff,
-+	memcpy(tx_power->ht20_tx_power_index_diff,
- 	       efuse->ht20_tx_power_index_diff,
--	       sizeof(priv->ht20_tx_power_index_diff));
--	memcpy(priv->ofdm_tx_power_index_diff,
-+	       sizeof(tx_power->ht20_tx_power_index_diff));
-+	memcpy(tx_power->ofdm_tx_power_index_diff,
- 	       efuse->ofdm_tx_power_index_diff,
--	       sizeof(priv->ofdm_tx_power_index_diff));
-+	       sizeof(tx_power->ofdm_tx_power_index_diff));
- 
--	memcpy(priv->ht40_max_power_offset,
-+	memcpy(tx_power->ht40_max_power_offset,
- 	       efuse->ht40_max_power_offset,
--	       sizeof(priv->ht40_max_power_offset));
--	memcpy(priv->ht20_max_power_offset,
-+	       sizeof(tx_power->ht40_max_power_offset));
-+	memcpy(tx_power->ht20_max_power_offset,
- 	       efuse->ht20_max_power_offset,
--	       sizeof(priv->ht20_max_power_offset));
-+	       sizeof(tx_power->ht20_max_power_offset));
- 
- 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
- 		 efuse->vendor_name);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 622e6f5..1a0c88d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -564,6 +564,22 @@ struct h2c_cmd {
- 
- struct rtl8xxxu_fileops;
- 
-+struct rtl8723au_tx_power {
-+	u8 cck_tx_power_index_A[3];	/* 0x10 */
-+	u8 cck_tx_power_index_B[3];
-+	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
-+	u8 ht40_1s_tx_power_index_B[3];
-+	/*
-+	 * The following entries are half-bytes split as:
-+	 * bits 0-3: path A, bits 4-7: path B, all values 4 bits signed
-+	 */
-+	struct rtl8723au_idx ht40_2s_tx_power_index_diff[3];
-+	struct rtl8723au_idx ht20_tx_power_index_diff[3];
-+	struct rtl8723au_idx ofdm_tx_power_index_diff[3];
-+	struct rtl8723au_idx ht40_max_power_offset[3];
-+	struct rtl8723au_idx ht20_max_power_offset[3];
-+};
-+
- struct rtl8xxxu_priv {
- 	struct ieee80211_hw *hw;
- 	struct usb_device *udev;
-@@ -582,19 +598,7 @@ struct rtl8xxxu_priv {
- 
- 	u8 mac_addr[ETH_ALEN];
- 	char chip_name[8];
--	u8 cck_tx_power_index_A[3];	/* 0x10 */
--	u8 cck_tx_power_index_B[3];
--	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
--	u8 ht40_1s_tx_power_index_B[3];
 -	/*
--	 * The following entries are half-bytes split as:
--	 * bits 0-3: path A, bits 4-7: path B, all values 4 bits signed
+-	 * By default disable QoS in STA mode for old access points, which do
+-	 * not support 802.11e. New APs will provide proper queue parameters,
+-	 * that we will configure later.
 -	 */
--	struct rtl8723au_idx ht40_2s_tx_power_index_diff[3];
--	struct rtl8723au_idx ht20_tx_power_index_diff[3];
--	struct rtl8723au_idx ofdm_tx_power_index_diff[3];
--	struct rtl8723au_idx ht40_max_power_offset[3];
--	struct rtl8723au_idx ht20_max_power_offset[3];
-+	struct rtl8723au_tx_power tx_power;
- 	u32 chip_cut:4;
- 	u32 rom_rev:4;
- 	u32 is_multi_func:1;
+-	enable_qos = (sdata->vif.type != NL80211_IFTYPE_STATION);
+-
+ 	is_ocb = (sdata->vif.type == NL80211_IFTYPE_OCB);
+ 
+ 	/* Set defaults according to 802.11-2007 Table 7-37 */
 -- 
-2.1.0
+2.1.4
 
