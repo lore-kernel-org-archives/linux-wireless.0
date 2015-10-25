@@ -1,65 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:59739 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753446AbbJNOsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 10:48:54 -0400
-Date: Wed, 14 Oct 2015 16:48:43 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH][RFC][RFT] ssb: pick PCMCIA host code support from b43
- driver
-Message-ID: <20151014164843.4f9a00e3@wiggum> (sfid-20151014_164858_853464_77CB78EE)
-In-Reply-To: <CACna6rwGRM-qiXSijeGDzupwUXg62BoUDtyL3gPD-HrCJvhQmQ@mail.gmail.com>
-References: <1442826259-6270-1-git-send-email-zajec5@gmail.com>
-	<20150921182000.6d89445d@wiggum>
-	<CACna6rzSqnJF2uBS-DszR+1PFNwqM8S0WecAE+R4QRJjGYuXYQ@mail.gmail.com>
-	<20150923175801.69076f31@wiggum>
-	<CACna6rwGRM-qiXSijeGDzupwUXg62BoUDtyL3gPD-HrCJvhQmQ@mail.gmail.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33101 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbbJYC60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Oct 2015 22:58:26 -0400
+Received: by pabrc13 with SMTP id rc13so152834324pab.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2015 19:58:26 -0700 (PDT)
+Subject: Re: [PATCH] wcn36xx: introduce per-channel ring buffer locks
+To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+References: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
+Cc: wcn36xx@lists.infradead.org, k.eugene.e@gmail.com
+From: yfw <fengwei.yin@linaro.org>
+Message-ID: <562C454B.4070307@linaro.org> (sfid-20151025_035843_456102_9D2E32A5)
+Date: Sun, 25 Oct 2015 10:58:19 +0800
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/6kn8V_ZeAd8Hog1RscyFw/P"; protocol="application/pgp-signature"
+In-Reply-To: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/6kn8V_ZeAd8Hog1RscyFw/P
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi Bob,
 
-On Wed, 14 Oct 2015 13:17:16 +0200
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+On 2015/10/25 1:42, Bob Copeland wrote:
+> wcn36xx implements a ring buffer for transmitted frames for each
+> (high and low priority) DMA channel.  The ring buffers are lockless:
+> new frames are inserted at the head of the queue, while finished
+> packets are reaped from the tail.
+>
+> Unfortunately, the list manipulations are missing any kind of barriers
+> so are susceptible to various races: for example, a TX completion
+> handler might read an updated desc->ctrl before the head has actually
+> advanced, and then null out the ctl->skb pointer while it is still
+> being used in the TX path.
+>
+> Simplify things here by adding a spin lock when traversing the ring.
+> This change increased stability for me without adding any noticeable
+> overhead on my platform (xperia z).
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>   drivers/net/wireless/ath/wcn36xx/dxe.c | 27 +++++++++++++++++++--------
+>   drivers/net/wireless/ath/wcn36xx/dxe.h |  1 +
+>   2 files changed, 20 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+> index 086549b..26085f7 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+> @@ -79,6 +79,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
+>   	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
+>   	int i;
+>
+> +	spin_lock_init(&ch->lock);
+>   	for (i = 0; i < ch->desc_num; i++) {
+>   		cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
+>   		if (!cur_ctl)
+> @@ -345,7 +346,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
+>
+>   static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>   {
+> -	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
+> +	struct wcn36xx_dxe_ctl *ctl;
+>   	struct ieee80211_tx_info *info;
+>   	unsigned long flags;
+>
+> @@ -354,6 +355,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>   	 * completely full head and tail are pointing to the same element
+>   	 * and while-do will not make any cycles.
+>   	 */
+> +	spin_lock_irqsave(&ch->lock, flags);
+> +	ctl = ch->tail_blk_ctl;
+>   	do {
+>   		if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
+>   			break;
+> @@ -365,12 +368,12 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>   				/* Keep frame until TX status comes */
+>   				ieee80211_free_txskb(wcn->hw, ctl->skb);
+>   			}
+> -			spin_lock_irqsave(&ctl->skb_lock, flags);
+> +			spin_lock(&ctl->skb_lock);
+>   			if (wcn->queues_stopped) {
+>   				wcn->queues_stopped = false;
+>   				ieee80211_wake_queues(wcn->hw);
+>   			}
+> -			spin_unlock_irqrestore(&ctl->skb_lock, flags);
+> +			spin_unlock(&ctl->skb_lock);
+>
+>   			ctl->skb = NULL;
+>   		}
+> @@ -379,6 +382,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>   	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
+>
+>   	ch->tail_blk_ctl = ctl;
+> +	spin_unlock_irqrestore(&ch->lock, flags);
+>   }
+>
+>   static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
+> @@ -596,12 +600,14 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>   	struct wcn36xx_dxe_desc *desc = NULL;
+>   	struct wcn36xx_dxe_ch *ch = NULL;
+>   	unsigned long flags;
+> +	int ret;
+>
+>   	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
+>
+> +	spin_lock_irqsave(&ch->lock, flags);
+>   	ctl = ch->head_blk_ctl;
+>
+> -	spin_lock_irqsave(&ctl->next->skb_lock, flags);
+> +	spin_lock(&ctl->next->skb_lock);
+>
+>   	/*
+>   	 * If skb is not null that means that we reached the tail of the ring
+> @@ -611,10 +617,11 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>   	if (NULL != ctl->next->skb) {
+>   		ieee80211_stop_queues(wcn->hw);
+>   		wcn->queues_stopped = true;
+> -		spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+> +		spin_unlock(&ctl->next->skb_lock);
+> +		spin_unlock_irqrestore(&ch->lock, flags);
+>   		return -EBUSY;
+>   	}
+> -	spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+> +	spin_unlock(&ctl->next->skb_lock);
+>
+>   	ctl->skb = NULL;
+>   	desc = ctl->desc;
+> @@ -640,7 +647,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>   	desc = ctl->desc;
+>   	if (ctl->bd_cpu_addr) {
+>   		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
+> -		return -EINVAL;
+> +		ret = -EINVAL;
+> +		goto unlock;
+>   	}
+>
+>   	desc->src_addr_l = dma_map_single(NULL,
+> @@ -679,7 +687,10 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>   			ch->reg_ctrl, ch->def_ctrl);
+>   	}
+>
+> -	return 0;
+> +	ret = 0;
+> +unlock:
+> +	spin_unlock_irqrestore(&ch->lock, flags);
+> +	return ret;
+>   }
+>
+>   int wcn36xx_dxe_init(struct wcn36xx *wcn)
+> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
+> index 35ee7e9..3eca4f9 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/dxe.h
+> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
+> @@ -243,6 +243,7 @@ struct wcn36xx_dxe_ctl {
+>   };
+>
+>   struct wcn36xx_dxe_ch {
+> +	spinlock_t			lock;	/* protects head/tail ptrs */
+>   	enum wcn36xx_dxe_ch_type	ch_type;
+>   	void				*cpu_addr;
+>   	dma_addr_t			dma_addr;
+>
 
-> If all PCI-bus-host-specific code is always the same,
+The patch looks great to me.
 
-And that's the point. It's always the same _except_ for the device IDs.
-Which obviously are PCI-device specific.
-
---=20
-Michael
-
---Sig_/6kn8V_ZeAd8Hog1RscyFw/P
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWHmtLAAoJEPUyvh2QjYsOe8QP/RKKCOiVfm+W0aNVaqbBl+l/
-p39+NGqku4DmgjVogHlen2wlgKDDUonsc88y1IENPl32xTqgkS6QxKYoOJXuxkw3
-hE/U+qgff28fonwtVh+mSz/aV8F+icxo6GsvSOnnAzxugtDE2v7oU5vuNdHtlhVs
-QmsnuJIWYhlvUJp/dR8ZBRnd7sl8B/5M96lJICwMAhlQl/6DvYTq0s8e+lVQYS8P
-JFbE9DgiSpV54LV7CPuBNuHByI/B9CdCrY+PO6Tmp94l0OJulUJUGZibCtivjdtH
-Wf1UhwIlK4lwEFaVHzhEFyav9hLR5HGil0aQfphXE/QBd54K5/cYt9AUaMYlO4Jm
-knv5VbMEHgopUT3mWNjN2b4PWzK5pq4IVBL3O3hQYuMR0/6V7u8iT6vsm2QAFbuI
-EgxJ04YVxz2D9cOdCFitSsOgCeE2EN1wtSLdDSoDOXEYmaBoMNqFFlkTjHs4Sukh
-eXFiS8f3/Slfyf2y3aRQ+YDNTYeUPoAAjCdUQ0aW5JrCaaPSsPZdZTVj0DXj47Id
-WLcQ+Fkn+XYurHgy45xNzwwRH1oBp79iFlLrkkmey1OXebv/hRy5g38PW1wBYtCh
-TmR4Wv5ca4HrubLAptXwQS3z3M+5I8ox7pZF2W4G8ko64i/vdfCmPn7nGKlPGUnp
-bPMFhXtM7/3qz+AxE9hN
-=R/Hh
------END PGP SIGNATURE-----
-
---Sig_/6kn8V_ZeAd8Hog1RscyFw/P--
+Regards
+Yin, Fengwei
