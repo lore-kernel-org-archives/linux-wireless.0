@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58423 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbbJCGod (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Oct 2015 02:44:33 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: Fix system lockups on boot
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1443804270-3830-1-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Message-Id: <20151003064432.1B0BD13FA34@smtp.codeaurora.org> (sfid-20151003_084457_760240_A9440813)
-Date: Sat,  3 Oct 2015 06:44:32 +0000 (UTC)
+Received: from mga11.intel.com ([192.55.52.93]:56969 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752027AbbJYMCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:02:01 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/16] iwlwifi: mvm: take scan ref only on success
+Date: Sun, 25 Oct 2015 14:01:14 +0200
+Message-Id: <1445774476-24792-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_131654_813541_C865DC0C)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Eliad Peller <eliad@wizery.com>
 
-> In commit 1277fa2ab2f9 ("rtlwifi: Remove the clear interrupt routine from all
-> drivers"), the code that cleared all interrupt enable bits before setting them
-> was removed for all PCI drivers. This fixed an issue that caused TX to be
-> blocked for 3-5 seconds. On some RTL8821AE units, this change causes soft
-> lockups to occur on boot. For that reason, the portion of the earlier commit
-> that applied to rtl8821ae is reverted. Kernels 4.1 and newer are affected.
-> 
-> See http://marc.info/?l=linux-wireless&m=144373370103285&w=2 and
-> https://bugzilla.opensuse.org/show_bug.cgi?id=944978 for two cases where
-> this regression affected user systems. Note that this bug does not appear on
-> any of the developer's setups. For those users whose systems are affected
-> by the TX blockage, but do not lock up on boot, a module parameter is added
-> to disable the interrupt clear
-> 
-> Fixes: 1277fa2ab2f9 ("rtlwifi: Remove the clear interrupt routine from all drivers")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [V4.1+]
+In some cases, scan reference was taken, but wasn't
+released even though scan command wasn't actually issued.
 
-Thanks, applied to wireless-drivers.git.
+Change the current code to simply take the reference
+only on success.
 
-Kalle Valo
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 0e9d28c..d6e0c1b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1190,8 +1190,6 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
+-	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
+-
+ 	/* we should have failed registration if scan_cmd was NULL */
+ 	if (WARN_ON(!mvm->scan_cmd))
+ 		return -ENOMEM;
+@@ -1232,21 +1230,20 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		return ret;
+ 
+ 	ret = iwl_mvm_send_cmd(mvm, &hcmd);
+-	if (!ret) {
+-		IWL_DEBUG_SCAN(mvm, "Scan request was sent successfully\n");
+-		mvm->scan_status |= IWL_MVM_SCAN_REGULAR;
+-	} else {
++	if (ret) {
+ 		/* If the scan failed, it usually means that the FW was unable
+ 		 * to allocate the time events. Warn on it, but maybe we
+ 		 * should try to send the command again with different params.
+ 		 */
+ 		IWL_ERR(mvm, "Scan failed! ret %d\n", ret);
++		return ret;
+ 	}
+ 
+-	if (ret)
+-		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
++	IWL_DEBUG_SCAN(mvm, "Scan request was sent successfully\n");
++	mvm->scan_status |= IWL_MVM_SCAN_REGULAR;
++	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+-- 
+2.1.4
+
