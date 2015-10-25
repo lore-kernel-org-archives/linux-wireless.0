@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55307 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:12646 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226AbbJETTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 15:19:10 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1441032517.13980.21.camel@sipsolutions.net>
-	<wrfjmvx73u0l.fsf@redhat.com>
-	<1441120044.2441.9.camel@sipsolutions.net>
-	<wrfj4mjcqn3x.fsf@redhat.com> <wrfjvbbsp6ot.fsf@redhat.com>
-	<1441275474.2565.18.camel@sipsolutions.net>
-	<wrfjmvx2gi0m.fsf@redhat.com>
-	<21994.26976.882903.355191@gargle.gargle.HOWL>
-	<1442508413.2821.11.camel@sipsolutions.net>
-	<wrfjk2r1b16i.fsf@redhat.com>
-	<1444071403.21467.0.camel@sipsolutions.net>
-	<wrfj8u7hb0hh.fsf@redhat.com>
-	<1444072372.1962.1.camel@sipsolutions.net>
-Date: Mon, 05 Oct 2015 15:19:09 -0400
-In-Reply-To: <1444072372.1962.1.camel@sipsolutions.net> (Johannes Berg's
-	message of "Mon, 05 Oct 2015 21:12:52 +0200")
-Message-ID: <wrfjy4fh9l8y.fsf@redhat.com> (sfid-20151005_211913_697944_5E686BB6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752814AbbJYJAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 05:00:09 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/10] mac80211: Remove WARN_ON_ONCE in ieee80211_recalc_smps
+Date: Sun, 25 Oct 2015 10:59:40 +0200
+Message-Id: <1445763582-11421-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_100018_299697_CA450DBF)
+In-Reply-To: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-> On Mon, 2015-10-05 at 15:04 -0400, Jes Sorensen wrote:
->> 
->> I have this in the code - that said, I may not be getting a pointer 
->> back ever?
->> 
->> 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
->> ...
->> 		sta = ieee80211_find_sta(vif, bss_conf->bssid);
->> 		if (sta) {
->> 			sta_priv = (struct rtl8xxxu_sta_priv *)sta
->> ->drv_priv;
->> 			if (bss_conf->use_short_preamble)
->> 				sta_priv->short_preamble = true;
->> 			else
->> 				sta_priv->short_preamble = false;
->> 
->
-> Ah, ok. You'd of course get a pointer back here - but it's pointless.
->
-> You might as well store the value in some private vif data, or perhaps
-> just use vif->bss_conf.use_short_preamble in the place that you're now
-> using sta_priv->short_preamble - the point was that a per-station
-> setting of short-preamble doesn't make sense, it needs to be per-vif.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-I see - what is the correct way to get to the vif from with the .tx()
-function then?
+The recalc_smps work can run after the station disassociates.
+At this stage we already released the channel, but the work
+will be cancelled only when the interface stops.
+In this scenario we can hit the warning in ieee80211_recalc_smps, so
+just remove it.
 
-Cheers,
-Jes
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/util.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 29c55ce..4ec576b 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2142,7 +2142,13 @@ void ieee80211_recalc_smps(struct ieee80211_sub_if_data *sdata)
+ 	chanctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					lockdep_is_held(&local->chanctx_mtx));
+ 
+-	if (WARN_ON_ONCE(!chanctx_conf))
++	/*
++	 * This function can be called from a work, thus it may be possible
++	 * that the chanctx_conf is removed (due to a disconnection, for
++	 * example).
++	 * So nothing should be done in such case.
++	 */
++	if (!chanctx_conf)
+ 		goto unlock;
+ 
+ 	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-- 
+2.1.4
+
