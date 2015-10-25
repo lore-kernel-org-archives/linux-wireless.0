@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52475 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195AbbJPEkI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:40:08 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 18/40] staging: wilc1000: rename variable gapu8RcvdAssocResp
-Date: Fri, 16 Oct 2015 13:37:48 +0900
-Message-ID: <1444970290-17609-18-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_162699_7BCFACBB)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:2991 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752423AbbJYMCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:02:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Moshe Harel <moshe.harel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/16] iwlwifi: nvm: free old section data when reading nvm file
+Date: Sun, 25 Oct 2015 14:01:16 +0200
+Message-Id: <1445774476-24792-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_131654_961181_2D0D1184)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Moshe Harel <moshe.harel@intel.com>
 
-This patch renames variable gapu8RcvdAssocResp to rcv_assoc_resp
-to avoid CamelCase naming convention.
+When reading external NVM file, if a section exists both in OTP
+and in the external file, the memory that was allocated at OTP
+reading is not freed.
+This is possible only on systems that have an external NVM
+file which is typically the case on embedded systems.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Moshe Harel <moshe.harel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8c529d1..5112aee 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -249,7 +249,7 @@ static struct timer_list periodic_rssi;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index 4e4a680..2ee0f6f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -483,6 +483,7 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
+ 			ret = -ENOMEM;
+ 			break;
+ 		}
++		kfree(mvm->nvm_sections[section_id].data);
+ 		mvm->nvm_sections[section_id].data = temp;
+ 		mvm->nvm_sections[section_id].length = section_size;
  
- u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- 
--static u8 gapu8RcvdAssocResp[MAX_ASSOC_RESP_FRAME_SIZE];
-+static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
- 
- bool gbScanWhileConnected;
- 
-@@ -1567,10 +1567,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			memset(&strConnectInfo, 0, sizeof(tstrConnectInfo));
- 
- 			if (u8MacStatus == MAC_CONNECTED) {
--				memset(gapu8RcvdAssocResp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
-+				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
- 
- 				host_int_get_assoc_res_info(hif_drv,
--							    gapu8RcvdAssocResp,
-+							    rcv_assoc_resp,
- 							    MAX_ASSOC_RESP_FRAME_SIZE,
- 							    &u32RcvdAssocRespInfoLen);
- 
-@@ -1579,7 +1579,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 				if (u32RcvdAssocRespInfoLen != 0) {
- 
- 					PRINT_D(HOSTINF_DBG, "Parsing association response\n");
--					s32Err = ParseAssocRespInfo(gapu8RcvdAssocResp, u32RcvdAssocRespInfoLen,
-+					s32Err = ParseAssocRespInfo(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
- 								    &pstrConnectRespInfo);
- 					if (s32Err) {
- 						PRINT_ER("ParseAssocRespInfo() returned error %d\n", s32Err);
 -- 
-1.9.1
+2.1.4
 
