@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35987 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933013AbbJANod (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29747 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbbJYN7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 09:44:33 -0400
-Received: by pablk4 with SMTP id lk4so74731579pab.3
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2015 06:44:33 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-Date: Thu,  1 Oct 2015 22:43:55 +0900
-Message-Id: <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151001_154436_297338_5AEAB4C6)
-In-Reply-To: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 25 Oct 2015 09:59:41 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 4/4] wil6210: handle failure in Tx vring config
+Date: Sun, 25 Oct 2015 15:59:24 +0200
+Message-Id: <1445781564-24455-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151025_145944_883470_8B7C090D)
+In-Reply-To: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces int8_t with s8 that is a preferred type.
+When configuring Tx vring for new connection,
+WMI call to the firmware may fail. In this case, need to
+clean up properly. In particular, need to call
+cfg80211_del_sta() in case of AP like interface.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Perform full "disconnect" procedure for proper clean up
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d781003..56c97c9 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
- 	g_obtainingIP = false;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index aade16b..bb69a59 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -422,7 +422,7 @@ static void wil_connect_worker(struct work_struct *work)
+ 		wil->sta[cid].status = wil_sta_connected;
+ 		netif_tx_wake_all_queues(ndev);
+ 	} else {
+-		wil->sta[cid].status = wil_sta_unused;
++		wil_disconnect_cid(wil, cid, WLAN_REASON_UNSPECIFIED, true);
+ 	}
  }
  
--int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-+s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
- {
--	int8_t state = -1;
-+	s8 state = -1;
- 	int i;
- 
- 	if (u32LastScannedNtwrksCountShadow == 0) {
-@@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
- 
- void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
- {
--	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-+	s8 ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
- 	u32 ap_index = 0;
- 	u8 rssi_index = 0;
- 
 -- 
-2.6.0
+2.1.4
 
