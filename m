@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42903 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330AbbJ1HEc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:04:32 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 52/80] staging: wilc1000: host_interface.h: move local define variables
-Date: Wed, 28 Oct 2015 16:06:57 +0900
-Message-ID: <1446016045-32154-2-git-send-email-glen.lee@atmel.com> (sfid-20151028_080435_436620_B278E7B8)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751032AbbJYMBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:01:22 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/16] iwlwifi: rs: Remove workaround that disables MIMO on P2P
+Date: Sun, 25 Oct 2015 14:01:01 +0200
+Message-Id: <1445774476-24792-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130125_324199_BD7C1FDE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-This patch move local define variables to local define position.
- - ACTION
- - PROBE_REQ
- - PROBE_RESP
- - ACTION_FRM_IDX
- - PROBE_REQ_IDX
+Remove an old workaround that's no longer needed and
+enable MIMO on P2P interfaces.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/constants.h | 1 -
+ drivers/net/wireless/iwlwifi/mvm/rs.c        | 6 ------
+ 2 files changed, 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6f2cf5c..9de0267 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -10,8 +10,12 @@
- #define STATION_MODE	0x02
- #define GO_MODE		0x03
- #define CLIENT_MODE	0x04
-+#define ACTION		0xD0
-+#define PROBE_REQ	0x40
-+#define PROBE_RESP	0x50
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index a3ca6db..aa9ae1d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -101,7 +101,6 @@
+ #define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
+ #define IWL_MVM_QUOTA_THRESHOLD			4
+ #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
+-#define IWL_MVM_RS_DISABLE_P2P_MIMO		0
+ #define IWL_MVM_RS_80_20_FAR_RANGE_TWEAK	1
+ #define IWL_MVM_TOF_IS_RESPONDER		0
+ #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 34d98b2..d1ad103 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -177,9 +177,6 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
  
--
-+#define ACTION_FRM_IDX				0
-+#define PROBE_REQ_IDX				1
- #define MAX_NUM_STA				9
- #define ACTIVE_SCAN_TIME			10
- #define PASSIVE_SCAN_TIME			1200
-@@ -249,14 +253,6 @@ struct reg_frame {
- 	u8 reg_id;
- };
+ 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
+-	if (IWL_MVM_RS_DISABLE_P2P_MIMO &&
+-	    iwl_mvm_vif_low_latency(mvmvif) && mvmsta->vif->p2p)
+-		return false;
  
+ 	if (mvm->nvm_data->sku_cap_mimo_disabled)
+ 		return false;
+@@ -3071,9 +3068,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	else
+ 		rs_vht_init(mvm, sta, lq_sta, vht_cap);
+ 
+-	if (IWL_MVM_RS_DISABLE_P2P_MIMO && sta_priv->vif->p2p)
+-		lq_sta->active_mimo2_rate = 0;
 -
--#define ACTION			0xD0
--#define PROBE_REQ		0x40
--#define PROBE_RESP		0x50
--#define ACTION_FRM_IDX		0
--#define PROBE_REQ_IDX		1
--
--
- enum p2p_listen_state {
- 	P2P_IDLE,
- 	P2P_LISTEN,
+ 	lq_sta->max_legacy_rate_idx =
+ 		rs_get_max_rate_from_mask(lq_sta->active_legacy_rate);
+ 	lq_sta->max_siso_rate_idx =
 -- 
-1.9.1
+2.1.4
 
