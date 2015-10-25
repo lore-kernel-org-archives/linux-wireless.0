@@ -1,91 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8642 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbbJEG0W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:26:22 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/18] staging: wilc1000: rename tWILCpfConnectResult
-Date: Mon, 5 Oct 2015 15:25:38 +0900
-Message-ID: <1444026353-29024-3-git-send-email-tony.cho@atmel.com> (sfid-20151005_082625_071682_51546A17)
-In-Reply-To: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
-References: <1444026353-29024-1-git-send-email-tony.cho@atmel.com>
+Received: from mail.sig21.net ([80.244.240.74]:59518 "EHLO mail.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbbJYWWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 18:22:37 -0400
+Date: Sun, 25 Oct 2015 22:39:04 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Jes.Sorensen@redhat.com
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v3 0/1] rtl8xxxu (mac80211) driver for
+ rtl8188[cr]u/rtl8192cu/rtl8723au
+Message-ID: <20151025213903.GA2956@sig21.net> (sfid-20151025_232241_400729_E0030333)
+References: <1444869891-21174-1-git-send-email-Jes.Sorensen@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444869891-21174-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Jes and Larry,
 
-This patch renames tWILCpfConnectResult to wilc_connect_result.
+On Wed, Oct 14, 2015 at 08:44:50PM -0400, Jes.Sorensen@redhat.com wrote:
+> Per default only devices I have actually tested will be enabled. If
+> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+> test results back to me.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+I have one 
+7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b9b57ca..2e2a7819 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -189,7 +189,7 @@ struct connect_attr {
- 	u8 *pu8IEs;
- 	size_t IEsLen;
- 	u8 u8security;
--	tWILCpfConnectResult pfConnectResult;
-+	wilc_connect_result pfConnectResult;
- 	void *pvUserArg;
- 	AUTHTYPE_T tenuAuth_type;
- 	u8 u8channel;
-@@ -4999,7 +4999,7 @@ s32 host_int_get_start_scan_req(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8ScanSource)
- s32 host_int_set_join_req(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8bssid,
- 				  const u8 *pu8ssid, size_t ssidLen,
- 				  const u8 *pu8IEs, size_t IEsLen,
--				  tWILCpfConnectResult pfConnectResult, void *pvUserArg,
-+				  wilc_connect_result pfConnectResult, void *pvUserArg,
- 				  u8 u8security, AUTHTYPE_T tenuAuth_type,
- 				  u8 u8channel,
- 				  void *pJoinParams)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 458b1e1..bed8f98 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -184,7 +184,7 @@ typedef enum {
- typedef void (*wilc_scan_result)(tenuScanEvent, tstrNetworkInfo *, void *, void *);
- 
- /*Connect callBack function definition*/
--typedef void (*tWILCpfConnectResult)(tenuConnDisconnEvent,
-+typedef void (*wilc_connect_result)(tenuConnDisconnEvent,
- 				     tstrConnectInfo *,
- 				     u8,
- 				     tstrDisconnectNotifInfo *,
-@@ -245,7 +245,7 @@ typedef struct {
- 	u8 *pu8ConnReqIEs;
- 	size_t ConnReqIEsLen;
- 	/* Connect user call back function */
--	tWILCpfConnectResult pfUserConnectResult;
-+	wilc_connect_result pfUserConnectResult;
- 	bool IsHTCapable;
- 	/* User specific parameter to be delivered through the Connect User Callback function */
- 	void *u32UserConnectPvoid;
-@@ -698,7 +698,7 @@ s32 host_int_get_start_scan_req(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8ScanSource);
- s32 host_int_set_join_req(tstrWILC_WFIDrv *hWFIDrv, u8 *pu8bssid,
- 				  const u8 *pu8ssid, size_t ssidLen,
- 				  const u8 *pu8IEs, size_t IEsLen,
--				  tWILCpfConnectResult pfConnectResult, void *pvUserArg,
-+				  wilc_connect_result pfConnectResult, void *pvUserArg,
- 				  u8 u8security, AUTHTYPE_T tenuAuth_type,
- 				  u8 u8channel,
- 				  void *pJoinParams);
--- 
-1.9.1
+The rtlwifi/rtl8192cu driver turned out to be flaky for this device,
+usually it stalls after a few minutes.  Searching the web it seems
+this is well known and everyone uses a patched vendor driver
+(https://github.com/pvaret/rtl8192cu-fixes.git).
 
+The rtl8xxxu driver ssems to work stable (I tested
+the git branch rtl8xxxu-nextgen, commit 2e23469d74d7).
+However, thoughput is less than one half compared
+to the vendor driver.  FWIW, rtlwifi seems to be a bit
+faster when it works, but thoughput fluctuates a lot
+and eventually it stalls.  (Tested with iperf TCP in both
+directions.)
+
+>From dmesg:
+[21725.096068] usb 1-2.1: RTL8188CU rev A (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
+[21725.096072] usb 1-2.1: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+[21725.096179] usb 1-2.1: Firmware revision 80.0 (signature 0x88c1)
+
+
+Thanks,
+Johannes
