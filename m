@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20724 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757108AbbJ3DIL (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29747 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbbJYN7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:08:11 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/17] staging: wilc1000: wilc_wlan_cfg_commit: add argument struct net_device
-Date: Fri, 30 Oct 2015 12:10:30 +0900
-Message-ID: <1446174642-28570-5-git-send-email-glen.lee@atmel.com> (sfid-20151030_040815_485193_073A122B)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Oct 2015 09:59:34 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 0/4] wil6210 patches
+Date: Sun, 25 Oct 2015 15:59:20 +0200
+Message-Id: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151025_145938_212621_B1D09343)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add argument struct net_device and pass dev to the functions as well.
+Collection of small fixes
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Hamad Kadmany (1):
+  wil6210: Fix TSO overflow handling
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a72fa8c..75b0616 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1732,7 +1732,8 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 
- }
- 
--static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
-+static int wilc_wlan_cfg_commit(struct net_device *dev,
-+				int type, u32 drvHandler)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	wilc_cfg_frame_t *cfg = &p->cfg_frame;
-@@ -1796,7 +1797,7 @@ int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
- 		PRINT_D(RX_DBG, "Processing cfg_set()\n");
- 		p->cfg_frame_in_use = 1;
- 
--		if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
-+		if (wilc_wlan_cfg_commit(dev, WILC_CFG_SET, drvHandler))
- 			ret_size = 0;
- 
- 		if (linux_wlan_lock_timeout(&wilc->cfg_event,
-@@ -1837,7 +1838,7 @@ int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
- 	if (commit) {
- 		p->cfg_frame_in_use = 1;
- 
--		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
-+		if (wilc_wlan_cfg_commit(dev, WILC_CFG_QUERY, drvHandler))
- 			ret_size = 0;
- 
- 
+Vladimir Kondratiev (3):
+  wil6210: ignore selected WMI events
+  wil6210: fix device ready detection
+  wil6210: handle failure in Tx vring config
+
+ drivers/net/wireless/ath/wil6210/interrupt.c |  6 +++---
+ drivers/net/wireless/ath/wil6210/main.c      |  2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c      | 30 ++++++++++++++--------------
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  4 ++--
+ drivers/net/wireless/ath/wil6210/wmi.c       | 20 +++++++++++--------
+ 5 files changed, 33 insertions(+), 29 deletions(-)
+
 -- 
-1.9.1
+2.1.4
 
