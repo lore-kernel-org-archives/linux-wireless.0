@@ -1,107 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:64546 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533AbbJNNgY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 09:36:24 -0400
-Message-ID: <561E5A55.5070607@broadcom.com> (sfid-20151014_153629_103055_A9E9557A)
-Date: Wed, 14 Oct 2015 15:36:21 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: kbuild test robot <lkp@intel.com>, <kbuild-all@01.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/11] brcmfmac: expose device memory to devcoredump subsystem
-References: <201510090203.zZSsJ7qb%fengguang.wu@intel.com>	<87wpuspilw.fsf@kamboji.qca.qualcomm.com>	<561C1291.8060607@broadcom.com> <87lhb5n27c.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lhb5n27c.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751800AbbJYMBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:01:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/16] iwlwifi: mvm: use short timeouts in P2P low latency if supported
+Date: Sun, 25 Oct 2015 14:01:06 +0200
+Message-Id: <1445774476-24792-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130136_118791_8CAC736B)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2015 01:01 PM, Kalle Valo wrote:
-> Arend van Spriel <arend@broadcom.com> writes:
->
->> On 10/12/2015 10:59 AM, Kalle Valo wrote:
->>> kbuild test robot <lkp@intel.com> writes:
->>>
->>>> Hi Arend,
->>>>
->>>> [auto build test ERROR on next-20151008 -- if it's inappropriate base, please ignore]
->>>>
->>>> config: x86_64-randconfig-x011-201540 (attached as .config)
->>>> reproduce:
->>>>           # save the attached .config to linux build tree
->>>>           make ARCH=x86_64
->>>>
->>>> All errors (new ones prefixed by >>):
->>>>
->>>>      drivers/net/wireless/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
->>>>       void brcmf_debugfs_init(void)
->>>>            ^
->>>>      In file included from drivers/net/wireless/brcm80211/brcmfmac/bus.h:20:0,
->>>>                       from drivers/net/wireless/brcm80211/brcmfmac/debug.c:24:
->>>>      drivers/net/wireless/brcm80211/brcmfmac/debug.h:118:20: note: previous definition of 'brcmf_debugfs_init' was here
->>>>       static inline void brcmf_debugfs_init(void)
->>>>                          ^
->>>
->>> Arend, are the kbuild errors valid? I would guess they are as
->>> wireless-drivers-next should be in linux-next.
->>
->> Actually they are not. I am not sure about the build infrastructure,
->> but the errors above can only occur when CONFIG_BRCMDBG is set, but
->> DEBUG is not. However, that can not happen as we have following line
->> in drivers/net/wireless/brcm80211/Makefile:
->>
->> subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DDEBUG
->
-> I didn't check the details but I'm still not convinced :) In my opinion
-> the code should always compile, with and without -DDEBUG. Anyways, I
-> pushed this script to the pending branch to get kbuild test this patch
-> once again.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok, Kalle
+Those timeouts are used for AM-to-PSM transition.
+We already have those pairs defined for default and WOWLAN use cases.
+We expect that by using shorter threshold for low latency P2P,
+e.g. for Miracast video scenario, we might save a considerable amount of power.
 
-Let me try to be a bit more convincing ;-)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h   |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/constants.h |  3 +++
+ drivers/net/wireless/iwlwifi/mvm/power.c     | 26 +++++++++++++++++++-------
+ 3 files changed, 24 insertions(+), 7 deletions(-)
 
-I checked out linux-next/master, taken the provided .config and ran:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 847d58b..08303db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -307,6 +307,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
+  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
+  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
++ * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+  */
+@@ -332,6 +333,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
+ 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
++	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 
+ 	NUM_IWL_UCODE_TLV_CAPA
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index aa9ae1d..5c21231 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -71,6 +71,9 @@
+ #define IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT	(100 * USEC_PER_MSEC)
+ #define IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
+ #define IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
++#define IWL_MVM_SHORT_PS_TX_DATA_TIMEOUT	(2 * 1024) /* defined in TU */
++#define IWL_MVM_SHORT_PS_RX_DATA_TIMEOUT	(40 * 1024) /* defined in TU */
++#define IWL_MVM_P2P_LOWLATENCY_PS_ENABLE	0
+ #define IWL_MVM_UAPSD_RX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
+ #define IWL_MVM_UAPSD_TX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
+ #define IWL_MVM_UAPSD_QUEUES		(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO |\
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 7c354fe..bed9696 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -377,8 +377,13 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 
+ 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
+ 
+-	if (!vif->bss_conf.ps || !mvmvif->pm_enabled ||
+-	    (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p))
++	if (!vif->bss_conf.ps || !mvmvif->pm_enabled)
++		return;
++
++	if (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p &&
++	    (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS) ||
++	     !IWL_MVM_P2P_LOWLATENCY_PS_ENABLE))
+ 		return;
+ 
+ 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
+@@ -392,16 +397,23 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 
+ 	iwl_mvm_power_config_skip_dtim(mvm, vif, cmd, host_awake);
+ 
+-	if (host_awake) {
++	if (!host_awake) {
+ 		cmd->rx_data_timeout =
+-			cpu_to_le32(IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT);
++			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
+ 		cmd->tx_data_timeout =
+-			cpu_to_le32(IWL_MVM_DEFAULT_PS_TX_DATA_TIMEOUT);
++			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
++	} else if (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p &&
++		   fw_has_capa(&mvm->fw->ucode_capa,
++			       IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS)) {
++		cmd->tx_data_timeout =
++			cpu_to_le32(IWL_MVM_SHORT_PS_TX_DATA_TIMEOUT);
++		cmd->rx_data_timeout =
++			cpu_to_le32(IWL_MVM_SHORT_PS_RX_DATA_TIMEOUT);
+ 	} else {
+ 		cmd->rx_data_timeout =
+-			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
++			cpu_to_le32(IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT);
+ 		cmd->tx_data_timeout =
+-			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
++			cpu_to_le32(IWL_MVM_DEFAULT_PS_TX_DATA_TIMEOUT);
+ 	}
+ 
+ 	if (iwl_mvm_power_allow_uapsd(mvm, vif))
+-- 
+2.1.4
 
-$ make prepare
-$ make M=scripts
-$ make M=drivers/net/wireless/brcm80211
-
-   WARNING: Symbol version dump ./Module.symvers
-            is missing; modules will have no dependencies and modversions.
-
-   CC      drivers/net/wireless/brcm80211/brcmfmac/cfg80211.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/chip.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/fwil.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/fweh.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/fwsignal.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/p2p.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/proto.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/common.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/core.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/firmware.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/feature.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/btcoex.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/vendor.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/bcdc.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/sdio.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/debug.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/tracepoint.o
-   CC      drivers/net/wireless/brcm80211/brcmfmac/of.o
-   LD      drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.o
-   LD      drivers/net/wireless/brcm80211/brcmfmac/built-in.o
-   CC      drivers/net/wireless/brcm80211/brcmutil/utils.o
-   CC      drivers/net/wireless/brcm80211/brcmutil/d11.o
-   LD      drivers/net/wireless/brcm80211/brcmutil/brcmutil.o
-   LD      drivers/net/wireless/brcm80211/brcmutil/built-in.o
-   LD      drivers/net/wireless/brcm80211/built-in.o
-   Building modules, stage 2.
-   MODPOST 0 modules
-
-No compile issues.
-
-Regards,
-Arend
