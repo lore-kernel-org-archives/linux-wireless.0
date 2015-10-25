@@ -1,108 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:51728 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbbJWF0Y (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29747 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbbJYN7g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:26:24 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/28] staging: wilc1000: wilc_handle_isr: add argument wilc to wilc_handle_isr
-Date: Fri, 23 Oct 2015 14:28:21 +0900
-Message-ID: <1445578124-31486-5-git-send-email-glen.lee@atmel.com> (sfid-20151023_072626_512922_A82D003D)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Oct 2015 09:59:36 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 1/4] wil6210: ignore selected WMI events
+Date: Sun, 25 Oct 2015 15:59:21 +0200
+Message-Id: <1445781564-24455-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151025_145939_107234_BE1ADCB5)
+In-Reply-To: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1445781564-24455-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add new argument wilc to wilc_handle_isr and pass wilc to
-the function.
-It is void type for now because wilc_wlan.c was implemented platform
-independently at the beginning (linux_wlan.c is implementation of LINUX part)
-so the struct wilc header file cannot be included at this moment,
-but this driver is dedicated to LINUX so wilc_wlan.c and linux_wlan.c will be
-merged. After that, this void type will be changed with struct wilc as well as
-other functions which are using void type in wilc_wlan.h.
+Some events are ignored for purpose; such events should not
+be treated as "unhandled events". Replace info message
+saying "unhandled" with debug one saying "ignore", to reduce
+dmesg pollution
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c      | 2 +-
- drivers/staging/wilc1000/linux_wlan_sdio.c | 7 +++++--
- drivers/staging/wilc1000/wilc_wlan.c       | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h       | 2 +-
- 4 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 75cbacf..3f5ae55 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -260,7 +260,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
- 	}
- 
- 	PRINT_D(INT_DBG, "Interrupt received BH\n");
--	wilc_handle_isr();
-+	wilc_handle_isr(wl);
- 
- 	return IRQ_HANDLED;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 6112189..361f3d8 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -684,6 +684,15 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	spin_unlock_bh(&sta->tid_rx_lock);
  }
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 1f8d874..4aff953 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -27,7 +27,6 @@ struct wilc_sdio {
+ 
++/**
++ * Some events are ignored for purpose; and need not be interpreted as
++ * "unhandled events"
++ */
++static void wmi_evt_ignore(struct wil6210_priv *wil, int id, void *d, int len)
++{
++	wil_dbg_wmi(wil, "Ignore event 0x%04x len %d\n", id, len);
++}
++
+ static const struct {
+ 	int eventid;
+ 	void (*handler)(struct wil6210_priv *wil, int eventid,
+@@ -701,6 +710,7 @@ static const struct {
+ 	{WMI_RCP_ADDBA_REQ_EVENTID,	wmi_evt_addba_rx_req},
+ 	{WMI_DELBA_EVENTID,		wmi_evt_delba},
+ 	{WMI_VRING_EN_EVENTID,		wmi_evt_vring_en},
++	{WMI_DATA_PORT_OPEN_EVENTID,		wmi_evt_ignore},
  };
  
- struct sdio_func *local_sdio_func;
--extern void wilc_handle_isr(void);
- 
- static unsigned int sdio_default_speed;
- 
-@@ -42,9 +41,13 @@ static const struct sdio_device_id wilc_sdio_ids[] = {
- 
- static void wilc_sdio_interrupt(struct sdio_func *func)
- {
-+	struct wilc_sdio *wl_sdio;
-+
-+	wl_sdio = sdio_get_drvdata(func);
-+
- #ifndef WILC_SDIO_IRQ_GPIO
- 	sdio_release_host(func);
--	wilc_handle_isr();
-+	wilc_handle_isr(wl_sdio->wilc);
- 	sdio_claim_host(func);
- #endif
- }
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 67b0c52..be6f631 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1353,7 +1353,7 @@ _end_:
- 	wilc_wlan_handle_rxq();
- }
- 
--void wilc_handle_isr(void)
-+void wilc_handle_isr(void *wilc)
- {
- 	u32 int_status;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index bd89689..a07375b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -301,7 +301,7 @@ int wilc_wlan_stop(void);
- int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
- 			      wilc_tx_complete_func_t func);
- int wilc_wlan_handle_txq(u32 *pu32TxqCount);
--void wilc_handle_isr(void);
-+void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(void);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drvHandler);
+ /*
 -- 
-1.9.1
+2.1.4
 
