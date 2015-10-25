@@ -1,66 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:32775 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337AbbJFXLq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2015 19:11:46 -0400
-Date: Wed, 7 Oct 2015 00:11:34 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Jacob Kiefer <jtk54@cornell.edu>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	"open list:STAGING - REALTEK RTL8723U WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] staging: rtl8723au: Fix sparse errors in
- rtl8723a_cmd.c
-Message-ID: <20151006231134.GV22011@ZenIV.linux.org.uk> (sfid-20151007_011205_415246_4384E8F0)
-References: <1444105958-32087-1-git-send-email-jtk54@cornell.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444105958-32087-1-git-send-email-jtk54@cornell.edu>
+Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752229AbbJYMBl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2015 08:01:41 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/16] iwlwifi: avoid read/write operations if the bus is dead
+Date: Sun, 25 Oct 2015 14:01:10 +0200
+Message-Id: <1445774476-24792-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130144_748835_C9414706)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 12:32:28AM -0400, Jacob Kiefer wrote:
+From: Eliad Peller <eliad@wizery.com>
 
->  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
->  {
-> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
-> +	__le32 leparam;
-> 
-> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
-> +	leparam = cpu_to_le32(*((u32 *)param));
-> +
-> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&leparam);
+Recovery takes too much time if the bus is dead (each timeout
+is 2000ms, etc.).
+Explicitly skip fw dump in this case, as it will result in
+garbage data (and might take signifcant time)
 
-Why not fill the thing we are passing already with little-endian?  There's
-only one caller, after all...
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h    | 2 ++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 6 ++++++
+ 2 files changed, 8 insertions(+)
 
->  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
->  {
->  	u8 buf[5];
-> +	__le32 lemask;
-> 
->  	memset(buf, 0, 5);
-> -	mask = cpu_to_le32(mask);
-> -	memcpy(buf, &mask, 4);
-> +	lemask = cpu_to_le32(mask);
-> +	memcpy(buf, &lemask, 4);
->  	buf[4]  = arg;
-> 
->  	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index bb51b6f..6f76525 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -409,6 +409,7 @@ enum iwl_d3_status {
+  * @STATUS_TRANS_GOING_IDLE: shutting down the trans, only special commands
+  *	are sent
+  * @STATUS_TRANS_IDLE: the trans is idle - general commands are not to be sent
++ * @STATUS_TRANS_DEAD: trans is dead - avoid any read/write operation
+  */
+ enum iwl_trans_status {
+ 	STATUS_SYNC_HCMD_ACTIVE,
+@@ -419,6 +420,7 @@ enum iwl_trans_status {
+ 	STATUS_FW_ERROR,
+ 	STATUS_TRANS_GOING_IDLE,
+ 	STATUS_TRANS_IDLE,
++	STATUS_TRANS_DEAD,
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 5ce29ff..8e69ab2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1137,6 +1137,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	/* there's no point in fw dump if the bus is dead */
++	if (test_bit(STATUS_TRANS_DEAD, &mvm->trans->status)) {
++		IWL_ERR(mvm, "Skip fw error dump since bus is dead\n");
++		return;
++	}
++
+ 	if (mvm->fw_dump_trig &&
+ 	    mvm->fw_dump_trig->mode & IWL_FW_DBG_TRIGGER_MONITOR_ONLY)
+ 		monitor_dump_only = true;
+-- 
+2.1.4
 
-Ugh...
-	struct macid_config_eid {__le32 mask; u8 arg;} buf = {
-		.mask = cpu_to_le32(mask), .arg = arg
-	};
-
-	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, &buf);
-
-Why bother with memcpy/memset/whatnot when all you are trying to do is to
-initialize a temporary structure?  And no, it's not going to have any gaps...
