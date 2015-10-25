@@ -1,93 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5883 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755147AbbJ1Hp4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42596 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbbJYQYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:45:56 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/12] staging: wilc1000: wilc_wlan_txq_add_to_tail: add argument net_device
-Date: Wed, 28 Oct 2015 16:48:21 +0900
-Message-ID: <1446018508-17889-5-git-send-email-glen.lee@atmel.com> (sfid-20151028_084603_528602_8A51DF43)
-In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
-References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
+	Sun, 25 Oct 2015 12:24:52 -0400
+Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id D833A13EF29
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 16:24:50 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: fix unused rtl8192cu_fops compiler warning
+Date: Sun, 25 Oct 2015 18:24:38 +0200
+Message-Id: <1445790278-32156-1-git-send-email-kvalo@codeaurora.org> (sfid-20151025_172456_164689_E39432B8)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument dev and use netdev private data member wilc
-instead of g_linux_wlan, pass the function dev also.
+kbuild reported:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+rtl8xxxu.c:5786:32: warning: ‘rtl8192cu_fops’ defined but not used [-Wunused-variable]
+
+Fix it by adding temporary ifdefs around the static functions.
+
+Fixes: 033695bdf6d7 ("rtl8xxxu: move devices supported by rtlwifi under UNTESTED config")
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3dc0a80..03593b7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -190,11 +190,18 @@ wilc_wlan_txq_remove_from_head(struct net_device *dev)
- 	return tqe;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 86d864af3a32..6aed923a709a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1818,6 +1818,8 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	return 0;
  }
  
--static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
-+static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
-+				      struct txq_entry_t *tqe)
++#ifdef CONFIG_RTL8XXXU_UNTESTED
++
+ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
  {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	unsigned long flags;
--	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
+ 	int i;
+@@ -1885,6 +1887,8 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	return 0;
+ }
+ 
++#endif
 +
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
+ static int
+ rtl8xxxu_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
+ {
+@@ -2217,6 +2221,8 @@ static int rtl8723au_load_firmware(struct rtl8xxxu_priv *priv)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_RTL8XXXU_UNTESTED
 +
-+	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 
- 	if (p->txq_head == NULL) {
- 		tqe->next = NULL;
-@@ -210,14 +217,14 @@ static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
- 	p->txq_entries += 1;
- 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
- 
--	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 
- 	/**
- 	 *      wake up TX queue
- 	 **/
- 	PRINT_D(TX_DBG, "Wake the txq_handling\n");
- 
--	up(&g_linux_wlan->txq_event);
-+	up(&wilc->txq_event);
+ static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
+ {
+ 	char *fw_name;
+@@ -2234,6 +2240,8 @@ static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
+ 	return ret;
  }
  
- static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
-@@ -538,7 +545,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	if (is_TCP_ACK_Filter_Enabled())
- 		tcp_process(dev, tqe);
- #endif
--	wilc_wlan_txq_add_to_tail(tqe);
-+	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	/*return number of itemes in the queue*/
- 	return p->txq_entries;
- }
-@@ -566,7 +573,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
- #endif
- 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
--	wilc_wlan_txq_add_to_tail(tqe);
-+	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	return 1;
++#endif
++
+ static void rtl8xxxu_firmware_self_reset(struct rtl8xxxu_priv *priv)
+ {
+ 	u16 val16;
+@@ -3815,6 +3823,8 @@ exit:
+ 	return ret;
  }
  
++#ifdef CONFIG_RTL8XXXU_UNTESTED
++
+ static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+@@ -3918,6 +3928,8 @@ static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
+ 	return 0;
+ }
+ 
++#endif
++
+ static void rtl8xxxu_power_off(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+@@ -5783,6 +5795,8 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.writeN_block_size = 1024,
+ };
+ 
++#ifdef CONFIG_RTL8XXXU_UNTESTED
++
+ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.parse_efuse = rtl8192cu_parse_efuse,
+ 	.load_firmware = rtl8192cu_load_firmware,
+@@ -5790,6 +5804,8 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.writeN_block_size = 128,
+ };
+ 
++#endif
++
+ static struct usb_device_id dev_table[] = {
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8723au_fops},
 -- 
-1.9.1
+1.7.9.5
 
