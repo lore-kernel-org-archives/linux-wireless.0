@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:32930 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932556AbbJOCH5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:23393 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752267AbbJZCFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:07:57 -0400
-Received: by pabrc13 with SMTP id rc13so71280928pab.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:07:56 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 17/33] staging: wilc1000: fix return type of host_int_frame_register
-Date: Thu, 15 Oct 2015 11:06:46 +0900
-Message-Id: <1444874822-31152-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041341_449239_46983DC7)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 25 Oct 2015 22:05:51 -0400
+Message-ID: <562D8B2B.2000308@atmel.com> (sfid-20151026_030618_588418_910CC368)
+Date: Mon, 26 Oct 2015 11:08:43 +0900
+From: glen lee <glen.lee@atmel.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+Subject: Re: [PATCH 02/28] staging: wicl1000: isr_uh_routine: use netdev private
+ wilc
+References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com> <1445578124-31486-2-git-send-email-glen.lee@atmel.com> <20151025012944.GA22184@kroah.com>
+In-Reply-To: <20151025012944.GA22184@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_frame_register from s32 to
-int. s32Error gets return value of wilc_mq_send that has return type of
-int. It should be changed return type of this function as well as data
-type of s32Error.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 05e6880..fdcfc91 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4570,9 +4570,9 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
- 	return s32Error;
- }
- 
--s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool bReg)
-+int host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool bReg)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 
- 	if (!hif_drv) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c9b0533..7e95df4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1141,7 +1141,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hWFIDrv, u32 u32SessionID);
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_frame_register(struct host_if_drv *hWFIDrv, u16 u16FrameType, bool bReg);
-+int host_int_frame_register(struct host_if_drv *hWFIDrv, u16 u16FrameType, bool bReg);
- /**
-  *  @brief           host_int_set_wfi_drv_handler
-  *  @details
--- 
-2.6.1
+On 2015년 10월 25일 10:29, Greg KH wrote:
+> On Fri, Oct 23, 2015 at 02:28:18PM +0900, Glen Lee wrote:
+>> Use netdev private member wilc instead of g_linux_wlan and Change argument wilc
+>> with dev in the function request_threaded_irq to pass back to handler
+>> the function isr_uh_routine.
+>>
+>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>> ---
+>>   drivers/staging/wilc1000/linux_wlan.c | 9 +++++++--
+>>   1 file changed, 7 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+>> index b036b96..7b0614d 100644
+>> --- a/drivers/staging/wilc1000/linux_wlan.c
+>> +++ b/drivers/staging/wilc1000/linux_wlan.c
+>> @@ -229,10 +229,15 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+>>   #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+>>   static irqreturn_t isr_uh_routine(int irq, void *user_data)
+>>   {
+>> +	perInterface_wlan_t *nic;
+>> +	struct wilc *wl;
+>> +
+>> +	nic = netdev_priv(usedata);
+> This patch breaks the build, which means you didn't even test build the
+> series :(
+
+Hi greg,
+
+I built every patches I'v posted and also there is no build error for this patch.
+Would you please reconsider this patch again?
+
+> Please redo this whole series and test your patches better.
+>
+> greg k-h
 
