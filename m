@@ -1,106 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27078 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965300AbbJ2DE7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:04:59 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 48/64] staging: wilc1000: rename u8P2PConnect of struct host_if_drv
-Date: Thu, 29 Oct 2015 12:05:40 +0900
-Message-ID: <1446087956-19054-15-git-send-email-glen.lee@atmel.com> (sfid-20151029_040501_642276_62681DFF)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:5455 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753485AbbJZL6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2015 07:58:51 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Robert Dolca <robert.dolca@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH] nfc: nci: non-static functions can not be inline
+Date: Mon, 26 Oct 2015 13:58:54 +0200
+Message-Id: <1445860734-17651-1-git-send-email-robert.dolca@intel.com> (sfid-20151026_125939_619023_661F4E8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames u8P2PConnect of struct host_if_drv to p2p_connect
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 ++++++++--------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ include/net/nfc/nci_core.h |  8 ++++----
+ net/nfc/nci/core.c         | 16 ++++++++--------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c9a4ce8..60dcc36 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -265,7 +265,7 @@ struct host_if_drv {
- 	struct remain_ch remain_on_ch;
- 	u8 remain_on_ch_pending;
- 	u64 p2p_timeout;
--	u8 u8P2PConnect;
-+	u8 p2p_connect;
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index 530df66..1e3db2b 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -351,13 +351,13 @@ static inline int nci_set_vendor_cmds(struct nci_dev *ndev,
  
- 	enum host_if_state hif_state;
+ void nci_rsp_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb);
+-inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+-inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+-inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+-inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+ void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index ecf420d..0767cc1 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -1314,29 +1314,29 @@ static int nci_op_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
+ 	return op->ntf(ndev, skb);
+ }
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 116c37d..4828deb 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -564,7 +564,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 			eth_zero_addr(u8ConnectedSSID);
+-inline int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+-			       struct sk_buff *skb)
++int nci_prop_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb)
+ {
+ 	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->prop_ops,
+ 				 ndev->ops->n_prop_ops);
+ }
  
- 			/*Invalidate u8WLANChannel value on wlan0 disconnect*/
--			if (!pstrWFIDrv->u8P2PConnect)
-+			if (!pstrWFIDrv->p2p_connect)
- 				u8WLANChannel = INVALID_CHANNEL;
+-inline int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+-			       struct sk_buff *skb)
++int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb)
+ {
+ 	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->prop_ops,
+ 				 ndev->ops->n_prop_ops);
+ }
  
- 			PRINT_ER("Unspecified failure: Connection status %d : MAC status = %d\n", u16ConnectStatus, u8MacStatus);
-@@ -623,7 +623,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 		eth_zero_addr(u8ConnectedSSID);
+-inline int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+-			       struct sk_buff *skb)
++int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb)
+ {
+ 	return nci_op_rsp_packet(ndev, opcode, skb, ndev->ops->core_ops,
+ 				  ndev->ops->n_core_ops);
+ }
  
- 		/*Invalidate u8WLANChannel value on wlan0 disconnect*/
--		if (!pstrWFIDrv->u8P2PConnect)
-+		if (!pstrWFIDrv->p2p_connect)
- 			u8WLANChannel = INVALID_CHANNEL;
- 		/*Incase "P2P CLIENT Connected" send deauthentication reason by 3 to force the WPA_SUPPLICANT to directly change
- 		 *      virtual interface to station*/
-@@ -804,9 +804,10 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
- 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
- 		PRINT_D(CFG80211_DBG, "Connected to Direct network,OBSS disabled\n");
--		pstrWFIDrv->u8P2PConnect = 1;
--	} else
--		pstrWFIDrv->u8P2PConnect = 0;
-+		pstrWFIDrv->p2p_connect = 1;
-+	} else {
-+		pstrWFIDrv->p2p_connect = 0;
-+	}
- 	PRINT_INFO(CFG80211_DBG, "Required SSID = %s\n , AuthType = %d\n", sme->ssid, sme->auth_type);
- 
- 	for (i = 0; i < u32LastScannedNtwrksCountShadow; i++) {
-@@ -997,9 +998,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	curr_channel = pstrNetworkInfo->u8channel;
- 
--	if (!pstrWFIDrv->u8P2PConnect) {
-+	if (!pstrWFIDrv->p2p_connect)
- 		u8WLANChannel = pstrNetworkInfo->u8channel;
--	}
- 
- 	linux_wlan_set_bssid(dev, pstrNetworkInfo->au8bssid);
- 
-@@ -1041,7 +1041,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- 
- 	/*Invalidate u8WLANChannel value on wlan0 disconnect*/
- 	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
--	if (!pstrWFIDrv->u8P2PConnect)
-+	if (!pstrWFIDrv->p2p_connect)
- 		u8WLANChannel = INVALID_CHANNEL;
- 	linux_wlan_set_bssid(priv->dev, NullBssid);
- 
+-inline int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+-			       struct sk_buff *skb)
++int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
++			struct sk_buff *skb)
+ {
+ 	return nci_op_ntf_packet(ndev, opcode, skb, ndev->ops->core_ops,
+ 				 ndev->ops->n_core_ops);
 -- 
 1.9.1
 
