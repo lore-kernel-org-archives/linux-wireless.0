@@ -1,83 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57179 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752443AbbJEPBd (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36667 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751573AbbJZPOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:48 +0300
-Message-Id: <1444055820-27506-17-git-send-email-luca@coelho.fi> (sfid-20151005_170138_682291_9AB3CF7C)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 17/29] iwlwifi: mvm: stop using DEVICE_POWER_FLAGS_CAM_MSK
+	Mon, 26 Oct 2015 11:14:44 -0400
+Message-ID: <562E4363.3000408@candelatech.com> (sfid-20151026_161447_560611_9D1687DF)
+Date: Mon, 26 Oct 2015 08:14:43 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Manikanta <manikanta.pubbisetty@gmail.com>,
+	Albino B Neto <bino@bino.us>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: update antenna configuration after setting in
+ fw
+References: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com> <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com> <562DFC61.7080108@gmail.com>
+In-Reply-To: <562DFC61.7080108@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-The firmware has always treated these two bits to mean that
-powersave is enabled when POWER_SAVE_ENA is set and CAM is
-clear; it doesn't use them in any non-combined way.
 
-Therefore, it's pointless to send it two bits, and the API
-should be cleaned up. Prepare the driver by removing the CAM
-bit and using only POWER_SAVE_ENA to indicate whether PS is
-enabled or not.
+On 10/26/2015 03:11 AM, Manikanta wrote:
+>
+> On Monday 26 October 2015 03:35 PM, Albino B Neto wrote:
+>> 2015-10-26 7:22 GMT-02:00  <manikanta.pubbisetty@gmail.com>:
+>>> Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+>>> ---
+>>>   drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
+>>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>> index 484c1a1..8d0ce37 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>> @@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>>>          ath10k_check_chain_mask(ar, tx_ant, "tx");
+>>>          ath10k_check_chain_mask(ar, rx_ant, "rx");
+>>>
+>>> -       ar->cfg_tx_chainmask = tx_ant;
+>>> -       ar->cfg_rx_chainmask = rx_ant;
+>>> -
+>>>          if ((ar->state != ATH10K_STATE_ON) &&
+>>>              (ar->state != ATH10K_STATE_RESTARTED))
+>>>                  return 0;
+>>> @@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>>>                  return ret;
+>>>          }
+>>>
+>>> +       ar->cfg_tx_chainmask = tx_ant;
+>>> +       ar->cfg_rx_chainmask = rx_ant;
+>>> +
+>>>          return 0;
+>>>   }
+>> Sorry, I see no change in the code. script checkpatch.pl ?
+> I have moved these two lines of code from the start of the function to the end, in between there is code for setting the antenna config in firmware. You can find in commit log why I have moved the code down in the function.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 8 +-------
- drivers/net/wireless/iwlwifi/mvm/power.c        | 6 +++---
- 2 files changed, 4 insertions(+), 10 deletions(-)
+I think you should leave it as it was.  That way, you can reliably set the mask
+before the hardware is started, and as soon as it _is_ started, then the value is
+flushed to the hardware as expected.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-index 7005fa4..c8f3e25 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-@@ -192,16 +192,10 @@ struct iwl_powertable_cmd {
- /**
-  * enum iwl_device_power_flags - masks for device power command flags
-  * @DEVIC_POWER_FLAGS_POWER_SAVE_ENA_MSK: '1' Allow to save power by turning off
-- *	receiver and transmitter. '0' - does not allow. This flag should be
-- *	always set to '1' unless one need to disable actual power down for debug
-- *	purposes.
-- * @DEVICE_POWER_FLAGS_CAM_MSK: '1' CAM (Continuous Active Mode) is set, meaning
-- *	that power management is disabled. '0' Power management is enabled, one
-- *	of power schemes is applied.
-+ *	receiver and transmitter. '0' - does not allow.
- */
- enum iwl_device_power_flags {
- 	DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK	= BIT(0),
--	DEVICE_POWER_FLAGS_CAM_MSK		= BIT(13),
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 21a858d..723b537 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -471,14 +471,14 @@ static int iwl_mvm_power_send_cmd(struct iwl_mvm *mvm,
- int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
- {
- 	struct iwl_device_power_cmd cmd = {
--		.flags = cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK),
-+		.flags = 0,
- 	};
- 
- 	if (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM)
- 		mvm->ps_disabled = true;
- 
--	if (mvm->ps_disabled)
--		cmd.flags |= cpu_to_le16(DEVICE_POWER_FLAGS_CAM_MSK);
-+	if (!mvm->ps_disabled)
-+		cmd.flags |= cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	if ((mvm->cur_ucode == IWL_UCODE_WOWLAN) ? mvm->disable_power_off_d3 :
+Thanks,
+Ben
+
+
+>
+> -Manikanta
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 -- 
-2.5.3
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
