@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4709 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbbJMLC2 (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36466 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbbJZKLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:02:28 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 46/54] staging: wilc1000: rename bIsEnabled of struct set_multicast
-Date: Tue, 13 Oct 2015 20:02:04 +0900
-Message-ID: <1444734132-17858-1-git-send-email-tony.cho@atmel.com> (sfid-20151013_130231_700082_8C5552D1)
+	Mon, 26 Oct 2015 06:11:37 -0400
+Received: by pacfv9 with SMTP id fv9so192845023pac.3
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 03:11:37 -0700 (PDT)
+Message-ID: <562DFC61.7080108@gmail.com> (sfid-20151026_111141_039765_DDE95C04)
+Date: Mon, 26 Oct 2015 15:41:45 +0530
+From: Manikanta <manikanta.pubbisetty@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Albino B Neto <bino@bino.us>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: update antenna configuration after setting in
+ fw
+References: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com> <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com>
+In-Reply-To: <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames bIsEnabled of struct set_multicast to enabled to
-avoid CamelCase naming convention.
+On Monday 26 October 2015 03:35 PM, Albino B Neto wrote:
+> 2015-10-26 7:22 GMT-02:00  <manikanta.pubbisetty@gmail.com>:
+>> Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
+>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 484c1a1..8d0ce37 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>>          ath10k_check_chain_mask(ar, tx_ant, "tx");
+>>          ath10k_check_chain_mask(ar, rx_ant, "rx");
+>>
+>> -       ar->cfg_tx_chainmask = tx_ant;
+>> -       ar->cfg_rx_chainmask = rx_ant;
+>> -
+>>          if ((ar->state != ATH10K_STATE_ON) &&
+>>              (ar->state != ATH10K_STATE_RESTARTED))
+>>                  return 0;
+>> @@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>>                  return ret;
+>>          }
+>>
+>> +       ar->cfg_tx_chainmask = tx_ant;
+>> +       ar->cfg_rx_chainmask = rx_ant;
+>> +
+>>          return 0;
+>>   }
+> Sorry, I see no change in the code. script checkpatch.pl ?
+I have moved these two lines of code from the start of the function to 
+the end, in between there is code for setting the antenna config in 
+firmware. You can find in commit log why I have moved the code down in 
+the function.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 42f59fa..7ea9e01 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -140,7 +140,7 @@ struct beacon_attr {
- };
- 
- struct set_multicast {
--	bool bIsEnabled;
-+	bool enabled;
- 	u32 u32count;
- };
- 
-@@ -2796,10 +2796,10 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 		goto ERRORHANDLER;
- 
- 	pu8CurrByte = strWID.val;
--	*pu8CurrByte++ = (strHostIfSetMulti->bIsEnabled & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->bIsEnabled >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->bIsEnabled >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->bIsEnabled >> 24) & 0xFF);
-+	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
-+	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
- 
- 	*pu8CurrByte++ = (strHostIfSetMulti->u32count & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->u32count >> 8) & 0xFF);
-@@ -4912,7 +4912,7 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_SET_MULTICAST_FILTER;
- 	msg.drv = hif_drv;
- 
--	pstrMulticastFilterParam->bIsEnabled = bIsEnabled;
-+	pstrMulticastFilterParam->enabled = bIsEnabled;
- 	pstrMulticastFilterParam->u32count = u32count;
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
--- 
-1.9.1
+-Manikanta
 
