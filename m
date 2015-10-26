@@ -1,84 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:4832 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbbJMLDA (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:58180 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753000AbbJZHXM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 07:03:00 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 51/54] staging: wilc1000: rename au8IPAddr of struct set_ip_addr
-Date: Tue, 13 Oct 2015 20:02:09 +0900
-Message-ID: <1444734132-17858-6-git-send-email-tony.cho@atmel.com> (sfid-20151013_130304_096225_1190AF99)
-In-Reply-To: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
-References: <1444734132-17858-1-git-send-email-tony.cho@atmel.com>
+	Mon, 26 Oct 2015 03:23:12 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: linuxwifi <linuxwifi@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [linuxwifi] [-next] WARNING at
+ iwl_mvm_time_event_send_add+0x72/0x1b6
+Date: Mon, 26 Oct 2015 07:23:07 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B0644@hasmsx107.ger.corp.intel.com> (sfid-20151026_082332_412962_37FBF46E)
+References: <20151026063932.GA31271@swordfish>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch renames au8IPAddr of struct set_ip_addr to ip_addr to
-avoid CamelCase naming convention.
+On 10/26/2015 08:41 AM, Sergey Senozhatsky wrote:
+> Hi,
+> 
+> linux-next 20151022
+> 
+> 
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Can be reproduced reliably?
+Seems like a bad race between the end of session protection for the
+authentication and the start of the session protection for the deauth.
+I think I found the hole in the locks in there, but it is going to be
+tricky to solve.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 97d1bd8..8fb6ef5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -159,7 +159,7 @@ struct power_mgmt_param {
- };
- 
- struct set_ip_addr {
--	u8 *au8IPAddr;
-+	u8 *ip_addr;
- 	u8 idx;
- };
- 
-@@ -3079,12 +3079,12 @@ static int hostIFthread(void *pvArg)
- 
- 		case HOST_IF_MSG_SET_IPADDRESS:
- 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
--			Handle_set_IPAddress(msg.drv, msg.body.ip_info.au8IPAddr, msg.body.ip_info.idx);
-+			Handle_set_IPAddress(msg.drv, msg.body.ip_info.ip_addr, msg.body.ip_info.idx);
- 			break;
- 
- 		case HOST_IF_MSG_GET_IPADDRESS:
- 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
--			Handle_get_IPAddress(msg.drv, msg.body.ip_info.au8IPAddr, msg.body.ip_info.idx);
-+			Handle_get_IPAddress(msg.drv, msg.body.ip_info.ip_addr, msg.body.ip_info.idx);
- 			break;
- 
- 		case HOST_IF_MSG_SET_MAC_ADDRESS:
-@@ -5162,7 +5162,7 @@ s32 host_int_setup_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
- 
- 	msg.id = HOST_IF_MSG_SET_IPADDRESS;
- 
--	msg.body.ip_info.au8IPAddr = u16ipadd;
-+	msg.body.ip_info.ip_addr = u16ipadd;
- 	msg.drv = hif_drv;
- 	msg.body.ip_info.idx = idx;
- 
-@@ -5189,7 +5189,7 @@ s32 host_int_get_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
- 
- 	msg.id = HOST_IF_MSG_GET_IPADDRESS;
- 
--	msg.body.ip_info.au8IPAddr = u16ipadd;
-+	msg.body.ip_info.ip_addr = u16ipadd;
- 	msg.drv = hif_drv;
- 	msg.body.ip_info.idx = idx;
- 
--- 
-1.9.1
-
+> wlp2s0: aborting authentication with 00:04:96:61:cd:e0 by local choice (Reason: 3=DEAUTH_LEAVING)
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1006 at drivers/net/wireless/iwlwifi/mvm/time-event.c:513 iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]()
+> Modules linked in: mousedev arc4 nls_iso8859_1 nls_cp437 vfat fat serio_raw psmouse atkbd coretemp hwmon i915 libps2 iwlmvm i2c_algo_bit mac80211 drm_kms_helper cfbfillrect intel_powerclamp syscopyarea cfbimgblt sysfillrect sysimgblt crc32c_intel fb_sys_fops cfbcopyarea iwlwifi drm r8
+> CPU: 0 PID: 1006 Comm: iwconfig Not tainted 4.3.0-rc6-next-20151022-dbg-00002-g4041783-dirty #260
+>  0000000000000000 ffff8800c69479c8 ffffffff811dd4ad 0000000000000000
+>  ffff8800c6947a00 ffffffff8103db4e ffffffffa04fd261 ffff88041c7cdfc8
+>  ffff88041cc87a20 ffff88041c7ceb28 ffff8800c6947aac ffff8800c6947a10
+> Call Trace:
+>  [<ffffffff811dd4ad>] dump_stack+0x4b/0x63
+>  [<ffffffff8103db4e>] warn_slowpath_common+0x99/0xb2
+>  [<ffffffffa04fd261>] ? iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+>  [<ffffffff8103dc1a>] warn_slowpath_null+0x1a/0x1c
+>  [<ffffffffa04fd261>] iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+>  [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+>  [<ffffffffa04fdb8b>] iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+>  [<ffffffffa04fdb8b>] ? iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+>  [<ffffffffa04ecf57>] ? iwl_mvm_ref_sync+0x37/0x10c [iwlmvm]
+>  [<ffffffffa04ed475>] iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+>  [<ffffffffa04ed475>] ? iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+>  [<ffffffffa047be43>] ieee80211_mgd_deauth+0x14f/0x3b0 [mac80211]
+>  [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+>  [<ffffffffa0446758>] ieee80211_deauth+0x18/0x1a [mac80211]
+>  [<ffffffffa02bc4b2>] cfg80211_mlme_deauth+0x13c/0x28e [cfg80211]
+>  [<ffffffffa02c0f9a>] cfg80211_disconnect+0xb5/0x2f7 [cfg80211]
+>  [<ffffffffa02d901e>] cfg80211_mgd_wext_siwfreq+0xed/0x160 [cfg80211]
+>  [<ffffffffa02d8c81>] ? cfg80211_wext_freq+0x5f/0x5f [cfg80211]
+>  [<ffffffffa02d8cf7>] cfg80211_wext_siwfreq+0x76/0xf6 [cfg80211]
+>  [<ffffffff813a9809>] ioctl_standard_call+0x66/0x376
+>  [<ffffffff813a9caa>] wext_handle_ioctl+0x102/0x16d
+>  [<ffffffff8130782b>] dev_ioctl+0x6bb/0x6de
+>  [<ffffffff81113adc>] ? handle_mm_fault+0xefc/0x13f9
+>  [<ffffffff812d73d0>] sock_ioctl+0x230/0x23c
+>  [<ffffffff812d73d0>] ? sock_ioctl+0x230/0x23c
+>  [<ffffffff8115047d>] do_vfs_ioctl+0x458/0x4dc
+>  [<ffffffff813b3635>] ? retint_user+0x18/0x20
+>  [<ffffffff8115a5fe>] ? __fget_light+0x4d/0x71
+>  [<ffffffff81150544>] SyS_ioctl+0x43/0x61
+>  [<ffffffff813b2b57>] entry_SYSCALL_64_fastpath+0x12/0x6f
+> ---[ end trace 6a44e7f1588bdae7 ]---
+> 
+> 
+> 	-ss
+> -------------------------------------
+> linuxwifi@eclists.intel.com
+> https://eclists.intel.com/sympa/info/linuxwifi
+> Unsubscribe by sending email to sympa@eclists.intel.com with subject "Unsubscribe linuxwifi"
+> 
