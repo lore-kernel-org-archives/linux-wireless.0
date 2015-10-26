@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-138.163.com ([123.125.50.138]:37009 "EHLO m50-138.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751189AbbJEMqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 08:46:33 -0400
-From: Geliang Tang <geliangtang@163.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] ath6kl: drop unlikely behind WARN_ON()
-Date: Mon,  5 Oct 2015 20:46:12 +0800
-Message-Id: <61de1b17c432479ccded41edfb553e2d20ebf8ae.1444048783.git.geliangtang@163.com> (sfid-20151005_144653_996554_B200F9D1)
-In-Reply-To: <87si5p4l09.fsf@kamboji.qca.qualcomm.com>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:39722 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753287AbbJZINd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2015 04:13:33 -0400
+Subject: Re: [PATCH v2] net: tso: add support for IPv6
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
+ <562DA5FF.6040307@lab.ntt.co.jp>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E8B07E2@hasmsx107.ger.corp.intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>
+From: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>
+Message-ID: <562DE0A4.80100@lab.ntt.co.jp> (sfid-20151026_091340_085361_7E249679)
+Date: Mon, 26 Oct 2015 17:13:24 +0900
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8B07E2@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARN_ON() already contain an unlikely compiler flag. Drop it.
+On 2015/10/26 16:47, Grumbach, Emmanuel wrote:
+> On 10/26/2015 06:03 AM, Toshiaki Makita wrote:
+>> On 2015/10/26 5:02, Emmanuel Grumbach wrote:
+>>> Adding IPv6 for the TSO helper API is trivial:
+>>> * Don't play with the id (which doesn't exist in IPv6)
+>>> * Correctly update the payload_len (don't include the
+>>>   length of the IP header itself)
+>> ...
+>>>  	memcpy(hdr, skb->data, hdr_len);
+>>> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
+>>> -	iph->id = htons(tso->ip_id);
+>>> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
+>>> +	if (skb->protocol == htons(ETH_P_IP)) {
+>>
+>> I guess this should be vlan_get_protocol(skb).
+> 
+> I truly don't know. I guess we could have VLANs, but I'd need to check
+> how the packet would look like after it exits mac80211.
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
-Changes in v2:
- - change subject prefix to ath6kl.
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I don't know much about mac80211.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index a511ef3..fe38fc4 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2217,7 +2217,7 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 
- 	/* enter / leave wow suspend on first vif always */
- 	first_vif = ath6kl_vif_first(ar);
--	if (WARN_ON(unlikely(!first_vif)) ||
-+	if (WARN_ON(!first_vif) ||
- 	    !ath6kl_cfg80211_ready(first_vif))
- 		return -EIO;
- 
-@@ -2297,7 +2297,7 @@ static int ath6kl_wow_resume(struct ath6kl *ar)
- 	int ret;
- 
- 	vif = ath6kl_vif_first(ar);
--	if (WARN_ON(unlikely(!vif)) ||
-+	if (WARN_ON(!vif) ||
- 	    !ath6kl_cfg80211_ready(vif))
- 		return -EIO;
- 
--- 
-2.5.0
+What I see is that mvneta has TSO in vlan_features and it uses
+tso_build_hdr(). When vlan device is used, we cannot access network
+protocol by skb->protocol without HW vlan acceleration.
+So it looks like this change corrupts TSO functionality on mvneta.
 
+> If we need that, I'll likely do this check once in tso_start() and add a
+> variable to struct tso_t.
+
+I'm not sure if an additional variable is needed.
+At least, skb_network_offset()/ip_hdr() should correctly handle (skip)
+vlan headers.
+
+Toshiaki Makita
 
