@@ -1,162 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38694 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751591AbbJON61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:58:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/12] cfg80211: reg: fix reg_call_crda() return value bug
-Date: Thu, 15 Oct 2015 15:58:13 +0200
-Message-Id: <1444917503-19118-2-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155842_942527_E6998026)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:34169 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbbJZSVi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2015 14:21:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <1445533095-15608-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445533095-15608-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Mon, 26 Oct 2015 20:21:36 +0200
+Message-ID: <CANUX_P2oE8Hb5s68simRfJyPL+JQOhmvpyOi87zzCoW5mVjOuQ@mail.gmail.com> (sfid-20151026_192240_503182_599CEACF)
+Subject: Re: [PATCH 1/2] iwlwifi: pcie: allow to build an A-MSDU using TSO core
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>, Ido Yariv <ido@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Eric,
 
-The function reg_call_crda() can't actually validly return
-REG_REQ_IGNORE as it does now when calling CRDA fails since
-that return value isn't handled properly. Fix that.
+>
+> When the op_mode sends an skb whose payload is bigger than
+> MSS, PCIe will create an A-MSDU out of it. PCIe assumes
+> that the skb that is coming from the op_mode can fit in one
+> A-MSDU. It is the op_mode's responsibility to make sure
+> that this guarantee holds.
+>
+> Additional headers need to be built for the subframes.
+> The TSO core code takes care of the IP / TCP headers and
+> the driver takes care of the 802.11 subframe headers.
+>
+> These headers are stored on a per-cpu page that is re-used
+> for all the packets handled on that same CPU. Each skb
+> holds a reference to that page and releases the page when
+> it is reclaimed. When the page gets full, it is released
+> and a new one is allocated.
+>
+> Since any SKB that doesn't go through the fast-xmit path
+> of mac80211 will be segmented, we can assume here that the
+> packet is not WEP / TKIP and has a proper SNAP header.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 61 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 30 insertions(+), 31 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3acb51462cc6..862d67ccdbf8 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -554,15 +554,14 @@ static int call_crda(const char *alpha2)
- 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
- }
- 
--static enum reg_request_treatment
--reg_call_crda(struct regulatory_request *request)
-+static bool reg_call_crda(struct regulatory_request *request)
- {
- 	if (call_crda(request->alpha2))
--		return REG_REQ_IGNORE;
-+		return false;
- 
- 	queue_delayed_work(system_power_efficient_wq,
- 			   &reg_timeout, msecs_to_jiffies(3142));
--	return REG_REQ_OK;
-+	return true;
- }
- 
- bool reg_is_valid_request(const char *alpha2)
-@@ -1855,19 +1854,14 @@ static void reg_set_request_processed(void)
-  *
-  * The wireless subsystem can use this function to process
-  * a regulatory request issued by the regulatory core.
-- *
-- * Returns one of the different reg request treatment values.
-  */
--static enum reg_request_treatment
--reg_process_hint_core(struct regulatory_request *core_request)
-+static void reg_process_hint_core(struct regulatory_request *core_request)
- {
--
--	core_request->intersect = false;
--	core_request->processed = false;
--
--	reg_update_last_request(core_request);
--
--	return reg_call_crda(core_request);
-+	if (reg_call_crda(core_request)) {
-+		core_request->intersect = false;
-+		core_request->processed = false;
-+		reg_update_last_request(core_request);
-+	}
- }
- 
- static enum reg_request_treatment
-@@ -1912,11 +1906,8 @@ __reg_process_hint_user(struct regulatory_request *user_request)
-  *
-  * The wireless subsystem can use this function to process
-  * a regulatory request initiated by userspace.
-- *
-- * Returns one of the different reg request treatment values.
-  */
--static enum reg_request_treatment
--reg_process_hint_user(struct regulatory_request *user_request)
-+static void reg_process_hint_user(struct regulatory_request *user_request)
- {
- 	enum reg_request_treatment treatment;
- 
-@@ -1924,18 +1915,19 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 	if (treatment == REG_REQ_IGNORE ||
- 	    treatment == REG_REQ_ALREADY_SET) {
- 		reg_free_request(user_request);
--		return treatment;
-+		return;
- 	}
- 
- 	user_request->intersect = treatment == REG_REQ_INTERSECT;
- 	user_request->processed = false;
- 
--	reg_update_last_request(user_request);
--
--	user_alpha2[0] = user_request->alpha2[0];
--	user_alpha2[1] = user_request->alpha2[1];
--
--	return reg_call_crda(user_request);
-+	if (reg_call_crda(user_request)) {
-+		reg_update_last_request(user_request);
-+		user_alpha2[0] = user_request->alpha2[0];
-+		user_alpha2[1] = user_request->alpha2[1];
-+	} else {
-+		reg_free_request(user_request);
-+	}
- }
- 
- static enum reg_request_treatment
-@@ -2003,8 +1995,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	driver_request->intersect = treatment == REG_REQ_INTERSECT;
- 	driver_request->processed = false;
- 
--	reg_update_last_request(driver_request);
--
- 	/*
- 	 * Since CRDA will not be called in this case as we already
- 	 * have applied the requested regulatory domain before we just
-@@ -2012,11 +2002,17 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	 */
- 	if (treatment == REG_REQ_ALREADY_SET) {
- 		nl80211_send_reg_change_event(driver_request);
-+		reg_update_last_request(driver_request);
- 		reg_set_request_processed();
- 		return treatment;
- 	}
- 
--	return reg_call_crda(driver_request);
-+	if (reg_call_crda(driver_request))
-+		reg_update_last_request(driver_request);
-+	else
-+		reg_free_request(driver_request);
-+
-+	return REG_REQ_OK;
- }
- 
- static enum reg_request_treatment
-@@ -2099,9 +2095,12 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	country_ie_request->intersect = false;
- 	country_ie_request->processed = false;
- 
--	reg_update_last_request(country_ie_request);
-+	if (reg_call_crda(country_ie_request))
-+		reg_update_last_request(country_ie_request);
-+	else
-+		reg_free_request(country_ie_request);
- 
--	return reg_call_crda(country_ie_request);
-+	return REG_REQ_OK;
- }
- 
- /* This processes *all* regulatory hints */
--- 
-2.5.1
-
+Assuming your review queue works as a FIFO and you reviewed the TSO
+helper patch, I can assume you ACK this one? :)
+Or at least, don't NACK it :)
