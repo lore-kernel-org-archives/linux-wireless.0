@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:51693 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbbJWF0K (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36170 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252AbbJZAo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:26:10 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/28] staging: wilc1000: isr_bh_routine: use wilc instead of g_linux_wlan
-Date: Fri, 23 Oct 2015 14:28:19 +0900
-Message-ID: <1445578124-31486-3-git-send-email-glen.lee@atmel.com> (sfid-20151023_072613_984894_2538BDBE)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Oct 2015 20:44:58 -0400
+Received: by pacfv9 with SMTP id fv9so177824915pac.3
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 17:44:58 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/4] staging: wilc1000: fix parameter name of function declaration
+Date: Mon, 26 Oct 2015 09:44:43 +0900
+Message-Id: <1445820285-14433-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151026_014500_923339_7B48BE47)
+In-Reply-To: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use netdev private member wilc instead of g_linux_wlan.
+This patch changes struct host_if_drv of host_int_set_WEPDefaultKeyID
+function declaration from hWFIDrv to hif_drv in host_interface.h
+With this change, first parameter name of this function declaration and
+definition has same name as hif_drv.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 7b0614d..e31760e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -247,8 +247,14 @@ static irqreturn_t isr_uh_routine(int irq, void *user_data)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a125233..7631757 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -384,7 +384,7 @@ int host_int_remove_wep_key(struct host_if_drv *wfi_drv, u8 index);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-int host_int_set_WEPDefaultKeyID(struct host_if_drv *hWFIDrv, u8 u8Index);
++int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index);
  
- irqreturn_t isr_bh_routine(int irq, void *userdata)
- {
-+	perInterface_wlan_t *nic;
-+	struct wilc *wl;
-+
-+	nic = netdev_priv(userdata);
-+	wl = nic->wilc;
-+
- 	/*While mac is closing cacncel the handling of any interrupts received*/
--	if (g_linux_wlan->close) {
-+	if (wl->close) {
- 		PRINT_ER("Driver is CLOSING: Can't handle BH interrupt\n");
- 		return IRQ_HANDLED;
- 	}
+ /**
+  *  @brief              sets WEP deafault key
 -- 
-1.9.1
+2.6.1
 
