@@ -1,109 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33565 "EHLO sipsolutions.net"
+Received: from plane.gmane.org ([80.91.229.3]:40101 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073AbbJVPfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:35:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	id S1752708AbbJZVvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2015 17:51:00 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZqpfO-0000mC-6c
+	for linux-wireless@vger.kernel.org; Mon, 26 Oct 2015 22:50:58 +0100
+Received: from gas45-3-82-244-252-119.fbx.proxad.net ([82.244.252.119])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 22:50:58 +0100
+Received: from j.cubizolles by gas45-3-82-244-252-119.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 22:50:58 +0100
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: allow driver to prevent two stations w/ same address
-Date: Thu, 22 Oct 2015 17:35:19 +0200
-Message-Id: <1445528119-5472-1-git-send-email-johannes@sipsolutions.net> (sfid-20151022_173526_809892_63D20932)
+From: Julien Cubizolles <j.cubizolles@free.fr>
+Subject: Re: mwifiex problem: incompatible network settings
+Date: Mon, 26 Oct 2015 22:50:51 +0100
+Message-ID: <87twpd8fk4.fsf@free.fr> (sfid-20151026_225104_311793_7D14D246)
+References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Dan Williams <dcbw@redhat.com> writes:
 
-Some devices or drivers cannot deal with having the same station
-address for different virtual interfaces, say as a client to two
-virtual AP interfaces. Rather than requiring each driver with a
-limitation like that to enforce it, add a hardware flag for it.
+> On Mon, 2015-10-26 at 16:51 +0100, Julien Cubizolles wrote:
+>> I can't connect anymore to my home wifi since upgrading my machine from
+>> Ubuntu 15.04 to Ubuntuy 15.10. I was previously running kernel 4.3.0-rc2
+>> from kernel.org without any problem. After the upgrade, and with the
+>> same kernel, I couldn't connect anymore. I built 4.3.0-rc7, and the
+>> problem remains. However, I can connect to the wifi access point from my
+>> Android phone.
+>> 
+>> Here are the relevant lines from syslog. Let me know if you need more
+>> information.
+>
+> The AP uses WPA, but the driver has been told that WPA is disabled.  Are
+> you using wpa_supplicant (or NetworkManager, or something else?) to
+> control the WiFi, and if so what version is it?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h  |  6 ++++++
- net/mac80211/debugfs.c  |  1 +
- net/mac80211/sta_info.c | 18 ++++++++++++++++--
- 3 files changed, 23 insertions(+), 2 deletions(-)
+Yes, I'm using NetworkManager, version 1.0.4-ubuntu5, and I'm guessing
+it's using wpa_supplicant. I deleted the configuration for this network
+and created it again. The network is configured for WPA in
+NetworkManager but I still get the same error message.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dac575c55c62..b6f9c39ae0c7 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1901,6 +1901,11 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_BEACON_TX_STATUS: The device/driver provides TX status
-  *	for sent beacons.
-  *
-+ * @IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR: Hardware (or driver) requires that each
-+ *	station has a unique address, i.e. each station entry can be identified
-+ *	by just its MAC address; this prevents, for example, the same station
-+ *	from connecting to two virtual AP interfaces at the same time.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -1936,6 +1941,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TDLS_WIDER_BW,
- 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
- 	IEEE80211_HW_BEACON_TX_STATUS,
-+	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 3636b45440ab..78fe7f611d6a 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -125,6 +125,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(TDLS_WIDER_BW),
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
-+	FLAG(NEEDS_UNIQUE_STA_ADDR),
- 
- 	/* keep last for the build bug below */
- 	(void *)0x1
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f91d1873218c..8f630f51d9bd 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -435,6 +435,19 @@ static int sta_info_insert_check(struct sta_info *sta)
- 		    is_multicast_ether_addr(sta->sta.addr)))
- 		return -EINVAL;
- 
-+	/* Strictly speaking this isn't necessary as we hold the mutex, but
-+	 * the rhashtable code can't really deal with that distinction. We
-+	 * do require the mutex for correctness though.
-+	 */
-+	rcu_read_lock();
-+	lockdep_assert_held(&sdata->local->sta_mtx);
-+	if (ieee80211_hw_check(&sdata->local->hw, NEEDS_UNIQUE_STA_ADDR) &&
-+	    ieee80211_find_sta_by_ifaddr(&sdata->local->hw, sta->addr, NULL)) {
-+		rcu_read_unlock();
-+		return -ENOTUNIQ;
-+	}
-+	rcu_read_unlock();
-+
- 	return 0;
- }
- 
-@@ -554,14 +567,15 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
- 
- 	might_sleep();
- 
-+	mutex_lock(&local->sta_mtx);
-+
- 	err = sta_info_insert_check(sta);
- 	if (err) {
-+		mutex_unlock(&local->sta_mtx);
- 		rcu_read_lock();
- 		goto out_free;
- 	}
- 
--	mutex_lock(&local->sta_mtx);
--
- 	err = sta_info_insert_finish(sta);
- 	if (err)
- 		goto out_free;
--- 
-2.5.1
+Thanks for your help.
 
