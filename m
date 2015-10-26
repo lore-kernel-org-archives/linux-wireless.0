@@ -1,99 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5495 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876AbbJSJDb (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:33331 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753009AbbJZGkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2015 05:03:31 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V3] staging: wilc1000: wilc_msgqueue.c : add goto statement
-Date: Mon, 19 Oct 2015 18:03:15 +0900
-Message-ID: <1445245395-9976-1-git-send-email-tony.cho@atmel.com> (sfid-20151019_110335_174880_EDC60CAF)
+	Mon, 26 Oct 2015 02:40:52 -0400
+Date: Mon, 26 Oct 2015 15:39:32 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [-next] WARNING at iwl_mvm_time_event_send_add+0x72/0x1b6
+Message-ID: <20151026063932.GA31271@swordfish> (sfid-20151026_074117_944813_8341228E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch uses goto statement to separet error conditionals into release_lock
-and mem_free in wilc_mq_send. If unexpected errors happen, this function
-cannot up the semaphore, otherwise, if no errors, the semaphore should be
-released, but freeing memory is not needed in this function.
+linux-next 20151022
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
-V3: use goto statement to seperate error types into release_lock and mem_free
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index b13809a..bb4e93c 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -63,28 +63,31 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
- 		PRINT_ER("pHandle or pvSendBuffer is null\n");
- 		result = -EFAULT;
--		goto ERRORHANDLER;
-+		goto out;
- 	}
- 
- 	if (pHandle->bExiting) {
- 		PRINT_ER("pHandle fail\n");
- 		result = -EFAULT;
--		goto ERRORHANDLER;
-+		goto out;
- 	}
- 
- 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
- 
- 	/* construct a new message */
- 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
--	if (!pstrMessage)
--		return -ENOMEM;
-+	if (!pstrMessage) {
-+		result = -ENOMEM;
-+		goto release_lock;
-+	}
-+
- 	pstrMessage->u32Length = u32SendBufferSize;
- 	pstrMessage->pstrNext = NULL;
- 	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
- 					GFP_ATOMIC);
- 	if (!pstrMessage->pvBuffer) {
- 		result = -ENOMEM;
--		goto ERRORHANDLER;
-+		goto mem_free;
- 	}
- 
- 	/* add it to the message queue */
-@@ -103,13 +106,13 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 
- 	up(&pHandle->hSem);
- 
--ERRORHANDLER:
--	/* error occured, free any allocations */
--	if (pstrMessage) {
--		kfree(pstrMessage->pvBuffer);
--		kfree(pstrMessage);
--	}
-+	return 0;
- 
-+mem_free:
-+	kfree(pstrMessage);
-+release_lock:
-+	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+out:
- 	return result;
- }
- 
--- 
-1.9.1
+wlp2s0: aborting authentication with 00:04:96:61:cd:e0 by local choice (Reason: 3=DEAUTH_LEAVING)
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1006 at drivers/net/wireless/iwlwifi/mvm/time-event.c:513 iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]()
+Modules linked in: mousedev arc4 nls_iso8859_1 nls_cp437 vfat fat serio_raw psmouse atkbd coretemp hwmon i915 libps2 iwlmvm i2c_algo_bit mac80211 drm_kms_helper cfbfillrect intel_powerclamp syscopyarea cfbimgblt sysfillrect sysimgblt crc32c_intel fb_sys_fops cfbcopyarea iwlwifi drm r8
+CPU: 0 PID: 1006 Comm: iwconfig Not tainted 4.3.0-rc6-next-20151022-dbg-00002-g4041783-dirty #260
+ 0000000000000000 ffff8800c69479c8 ffffffff811dd4ad 0000000000000000
+ ffff8800c6947a00 ffffffff8103db4e ffffffffa04fd261 ffff88041c7cdfc8
+ ffff88041cc87a20 ffff88041c7ceb28 ffff8800c6947aac ffff8800c6947a10
+Call Trace:
+ [<ffffffff811dd4ad>] dump_stack+0x4b/0x63
+ [<ffffffff8103db4e>] warn_slowpath_common+0x99/0xb2
+ [<ffffffffa04fd261>] ? iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+ [<ffffffff8103dc1a>] warn_slowpath_null+0x1a/0x1c
+ [<ffffffffa04fd261>] iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+ [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+ [<ffffffffa04fdb8b>] iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+ [<ffffffffa04fdb8b>] ? iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+ [<ffffffffa04ecf57>] ? iwl_mvm_ref_sync+0x37/0x10c [iwlmvm]
+ [<ffffffffa04ed475>] iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+ [<ffffffffa04ed475>] ? iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+ [<ffffffffa047be43>] ieee80211_mgd_deauth+0x14f/0x3b0 [mac80211]
+ [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+ [<ffffffffa0446758>] ieee80211_deauth+0x18/0x1a [mac80211]
+ [<ffffffffa02bc4b2>] cfg80211_mlme_deauth+0x13c/0x28e [cfg80211]
+ [<ffffffffa02c0f9a>] cfg80211_disconnect+0xb5/0x2f7 [cfg80211]
+ [<ffffffffa02d901e>] cfg80211_mgd_wext_siwfreq+0xed/0x160 [cfg80211]
+ [<ffffffffa02d8c81>] ? cfg80211_wext_freq+0x5f/0x5f [cfg80211]
+ [<ffffffffa02d8cf7>] cfg80211_wext_siwfreq+0x76/0xf6 [cfg80211]
+ [<ffffffff813a9809>] ioctl_standard_call+0x66/0x376
+ [<ffffffff813a9caa>] wext_handle_ioctl+0x102/0x16d
+ [<ffffffff8130782b>] dev_ioctl+0x6bb/0x6de
+ [<ffffffff81113adc>] ? handle_mm_fault+0xefc/0x13f9
+ [<ffffffff812d73d0>] sock_ioctl+0x230/0x23c
+ [<ffffffff812d73d0>] ? sock_ioctl+0x230/0x23c
+ [<ffffffff8115047d>] do_vfs_ioctl+0x458/0x4dc
+ [<ffffffff813b3635>] ? retint_user+0x18/0x20
+ [<ffffffff8115a5fe>] ? __fget_light+0x4d/0x71
+ [<ffffffff81150544>] SyS_ioctl+0x43/0x61
+ [<ffffffff813b2b57>] entry_SYSCALL_64_fastpath+0x12/0x6f
+---[ end trace 6a44e7f1588bdae7 ]---
 
+
+	-ss
