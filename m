@@ -1,33 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39650 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135AbbJMNAd (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:32792 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbbJZJmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 09:00:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Jeff Johnson <jjohnson@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Cleanup ath10k_mac_register() error handling
-References: <1444320953-2154-1-git-send-email-jjohnson@qca.qualcomm.com>
-Date: Tue, 13 Oct 2015 16:00:19 +0300
-In-Reply-To: <1444320953-2154-1-git-send-email-jjohnson@qca.qualcomm.com>
-	(Jeff Johnson's message of "Thu, 8 Oct 2015 09:15:53 -0700")
-Message-ID: <87io6aq5y4.fsf@kamboji.qca.qualcomm.com> (sfid-20151013_150037_485207_CC7AAA07)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 26 Oct 2015 05:42:38 -0400
+Received: by lffv3 with SMTP id v3so140913500lff.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 02:42:37 -0700 (PDT)
+Received: from di ([80.233.186.214])
+        by smtp.gmail.com with ESMTPSA id a143sm1778058lfe.21.2015.10.26.02.42.36
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 26 Oct 2015 02:42:36 -0700 (PDT)
+Date: Mon, 26 Oct 2015 11:42:36 +0200
+From: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] Minstrel_ht: use lowest rate last
+Message-Id: <20151026114236.233d1b54e6c08f3ab2b4c41a@ubnt.com> (sfid-20151026_104242_249814_7D17020A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Johnson <jjohnson@qca.qualcomm.com> writes:
+Minstrel_ht: use lowest rate last as in minstrel.
+It should improve robustness in environments with non-stationary noise.
 
-> The logic in the error-handling path of ath10k_mac_register() is
-> divergent from the logic in ath10k_mac_unregister().  Update the
-> ath10k_mac_register() error handling logic to align with the
-> ath10k_mac_unregister() logic.
->
-> Signed-off-by: Jeff Johnson <jjohnson@qca.qualcomm.com>
+Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 8 +++++++-
+ net/mac80211/rc80211_minstrel_ht.h | 2 ++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-Applied, thanks.
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd..8abbdcc 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -906,7 +906,12 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
+ 	}
+ 
+-	rates->rate[i].idx = -1;
++	/* Use lowest rate last */
++	rates->rate[i].idx = mi->lowest_rix;
++	rates->rate[i].count = mp->max_retry;
++	rates->rate[i].count_cts = mp->max_retry;
++	rates->rate[i].count_rts = mp->max_retry;
++
+ 	rate_control_set_rates(mp->hw, mi->sta, rates);
+ }
+ 
+@@ -1127,6 +1132,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	memset(mi, 0, sizeof(*mi));
+ 
+ 	mi->sta = sta;
++	mi->lowest_rix = rate_lowest_index(sband, sta);
+ 	mi->last_stats_update = jiffies;
+ 
+ 	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1, 0);
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index e8b52a9..90b8e39 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -73,6 +73,8 @@ struct minstrel_ht_sta {
+ 	/* ampdu length (EWMA) */
+ 	unsigned int avg_ampdu_len;
+ 
++	unsigned int lowest_rix;
++
+ 	/* overall sorted rate set */
+ 	u16 max_tp_rate[MAX_THR_RATES];
+ 	u16 max_prob_rate;
 -- 
-Kalle Valo
+2.1.4
+
