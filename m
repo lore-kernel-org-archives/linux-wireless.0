@@ -1,90 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:51861 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351AbbJWF0y (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37448 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbbJZUI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:26:54 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/28] staging: wilc1000: wlan_initialize_threads: change argument with net_device
-Date: Fri, 23 Oct 2015 14:28:26 +0900
-Message-ID: <1445578124-31486-10-git-send-email-glen.lee@atmel.com> (sfid-20151023_074656_449201_4360806B)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 26 Oct 2015 16:08:28 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: jirislaby@gmail.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	sergei.shtylyov@cogentembedded.com, kvalo@codeaurora.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [PATCH v6 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
+Date: Tue, 27 Oct 2015 01:38:07 +0530
+Message-Id: <1445890087-6980-1-git-send-email-punitvara@gmail.com> (sfid-20151026_210835_335291_65AB33F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes function argument with net_device dev and use netdev private
-data member wilc instead of g_linux_wlan. And there are assignment code with
-different value continuously. Take last code.
+This patch is to the ath5k/eeprom.c that fixes up warning caught by
+coccicheck:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Unneeded variable: "ret". Return "0" on line 980
+
+Remove unneeded variable ret created to return zero.
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+Remove empty line suggested by Sergei
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b8fd4ae..f6862d5 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1010,31 +1010,34 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- #endif
- }
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 900e72a..94bcc08 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -935,8 +935,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
  
--int wlan_initialize_threads(perInterface_wlan_t *nic)
-+int wlan_initialize_threads(struct net_device *dev)
+ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
  {
+-	int ret = 0;
 -
-+	perInterface_wlan_t *nic;
-+	struct wilc *wl;
- 	int ret = 0;
+ 	static const u32 cipher_suites[] = {
+ 		WLAN_CIPHER_SUITE_WEP40,
+ 		WLAN_CIPHER_SUITE_WEP104,
+@@ -977,7 +975,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
+ 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
  
-+	nic = netdev_priv(dev);
-+	wl = nic->wilc;
-+
- 	PRINT_D(INIT_DBG, "Initializing Threads ...\n");
- 
- 	/* create tx task */
- 	PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
--	g_linux_wlan->txq_thread = kthread_run(linux_wlan_txq_task, (void *)g_linux_wlan, "K_TXQ_TASK");
--	if (g_linux_wlan->txq_thread == NULL) {
-+	wl->txq_thread = kthread_run(linux_wlan_txq_task, (void *)wl,
-+				     "K_TXQ_TASK");
-+	if (!wl->txq_thread) {
- 		PRINT_ER("couldn't create TXQ thread\n");
- 		ret = -ENOBUFS;
- 		goto _fail_2;
- 	}
- 	/* wait for TXQ task to start. */
--	down(&g_linux_wlan->txq_thread_started);
-+	down(&wl->txq_thread_started);
- 
- 	return 0;
- 
- _fail_2:
- 	/*De-Initialize 2nd thread*/
--	g_linux_wlan->close = 1;
--
--	g_linux_wlan->close = 0;
-+	wl->close = 0;
- 	return ret;
+-	return ret;
++	return 0;
  }
  
-@@ -1083,7 +1086,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		}
- #endif
- 
--		ret = wlan_initialize_threads(nic);
-+		ret = wlan_initialize_threads(dev);
- 		if (ret < 0) {
- 			PRINT_ER("Initializing Threads FAILED\n");
- 			ret = -EIO;
+ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 -- 
-1.9.1
+2.5.3
 
