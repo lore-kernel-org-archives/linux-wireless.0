@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:44556 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbbJEQPV (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36216 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252AbbJZApC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 12:15:21 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 4/5] wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
-Date: Tue,  6 Oct 2015 00:14:57 +0800
-Message-Id: <1444061698-16384-5-git-send-email-wens@csie.org> (sfid-20151005_181525_959430_FB09E7AD)
-In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
-References: <1444061698-16384-1-git-send-email-wens@csie.org>
+	Sun, 25 Oct 2015 20:45:02 -0400
+Received: by pacfv9 with SMTP id fv9so177826040pac.3
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 17:45:01 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/4] staging: wilc1000: rename u8Index in host_int_set_WEPDefaultKeyID
+Date: Mon, 26 Oct 2015 09:44:44 +0900
+Message-Id: <1445820285-14433-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151026_014505_897804_946A431D)
+In-Reply-To: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1445820285-14433-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications revised its
-frequency allocation rules [1] on 2014/11/17, opening up 5150 ~ 5250
-MHz to U-NII applications.
+This patch changes second parameter of host_int_set_WEPDefaultKeyID from
+u8Index to index to avoid camelcase.
 
-Taiwan's regulatory body, NCC, officially stated [3][4] that until
-the technical regulatory standard [2] are updated to cover this part
-of the spectrum, FCC rules (part 15E, 15.407, effective 2014/06/02)
-shall serve in its place.
-
-Also add AUTO-BW to this and the next (5250 ~ 5350 MHz) rule, so the
-system can actually use VHT160 channels spanning these two rules.
-
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-[3] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
-[4] Proposal #10312260 (p.6, Chinese),
-    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- db.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index ee6eaad..cea78d8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1127,7 +1127,9 @@ country TT: DFS-FCC
- #   (section 3.10.1, 4.7)
- country TW: DFS-JP
- 	(2400 - 2483.5 @ 40), (30)
--	(5250 - 5350 @ 80), (17), DFS
-+	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
-+	(5150 - 5250 @ 80), (23), AUTO-BW
-+	(5250 - 5350 @ 80), (17), DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (23), DFS
- 	(5725 - 5850 @ 80), (30)
-  
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 56e0859..4f1af61 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3128,7 +3128,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
+ 	return result;
+ }
+ 
+-int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
++int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -3147,7 +3147,7 @@ int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = DEFAULTKEY;
+ 	msg.drv = hif_drv;
+-	msg.body.key_info.attr.wep.index = u8Index;
++	msg.body.key_info.attr.wep.index = index;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7631757..ea91bbf 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -384,7 +384,7 @@ int host_int_remove_wep_key(struct host_if_drv *wfi_drv, u8 index);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index);
++int host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 index);
+ 
+ /**
+  *  @brief              sets WEP deafault key
 -- 
-2.5.3
+2.6.1
 
