@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3074 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbbJMKxj (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33256 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbbJZJWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:53:39 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 28/54] staging: wilc1000: rename IEsLen of struct connect_attr
-Date: Tue, 13 Oct 2015 19:49:53 +0900
-Message-ID: <1444733419-17679-28-git-send-email-tony.cho@atmel.com> (sfid-20151013_131654_774575_79A062EB)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 26 Oct 2015 05:22:08 -0400
+Received: by pacfa8 with SMTP id fa8so4148200pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 02:22:07 -0700 (PDT)
+From: manikanta.pubbisetty@gmail.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+Subject: [PATCH] ath10k: update antenna configuration after setting in fw
+Date: Mon, 26 Oct 2015 14:52:10 +0530
+Message-Id: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com> (sfid-20151026_102222_992561_ACFC2CE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
 
-This patch renames IEsLen of struct connect_attr to ies_len to
-avoid CamelCase naming convention.
+Updating tx/rx antenna configuration in ath10k is done even before
+it is set in target. If setting of the tx/rx antenna config fails then
+we will maintain incorrect configuration in ath10k and APIs like
+get_antenna will provide incorrect information.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+This patch updates the antenna configuration in ath10k after it is set
+successfully in target.
+
+Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5d0e412..545f763 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -112,7 +112,7 @@ struct connect_attr {
- 	u8 *ssid;
- 	size_t ssid_len;
- 	u8 *ies;
--	size_t IEsLen;
-+	size_t ies_len;
- 	u8 u8security;
- 	wilc_connect_result pfConnectResult;
- 	void *pvUserArg;
-@@ -1044,11 +1044,11 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		hif_drv->strWILC_UsrConnReq.pu8ssid[pstrHostIFconnectAttr->ssid_len] = '\0';
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 484c1a1..8d0ce37 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+ 	ath10k_check_chain_mask(ar, tx_ant, "tx");
+ 	ath10k_check_chain_mask(ar, rx_ant, "rx");
+ 
+-	ar->cfg_tx_chainmask = tx_ant;
+-	ar->cfg_rx_chainmask = rx_ant;
+-
+ 	if ((ar->state != ATH10K_STATE_ON) &&
+ 	    (ar->state != ATH10K_STATE_RESTARTED))
+ 		return 0;
+@@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+ 		return ret;
  	}
  
--	hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = pstrHostIFconnectAttr->IEsLen;
-+	hif_drv->strWILC_UsrConnReq.ConnReqIEsLen = pstrHostIFconnectAttr->ies_len;
- 	if (pstrHostIFconnectAttr->ies != NULL) {
--		hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs = kmalloc(pstrHostIFconnectAttr->IEsLen, GFP_KERNEL);
-+		hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
- 		memcpy(hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs, pstrHostIFconnectAttr->ies,
--			    pstrHostIFconnectAttr->IEsLen);
-+			    pstrHostIFconnectAttr->ies_len);
- 	}
++	ar->cfg_tx_chainmask = tx_ant;
++	ar->cfg_rx_chainmask = rx_ant;
++
+ 	return 0;
+ }
  
- 	hif_drv->strWILC_UsrConnReq.u8security = pstrHostIFconnectAttr->u8security;
-@@ -1263,11 +1263,11 @@ ERRORHANDLER:
- 				memcpy(strConnectInfo.au8bssid, pstrHostIFconnectAttr->bssid, 6);
- 
- 			if (pstrHostIFconnectAttr->ies != NULL) {
--				strConnectInfo.ReqIEsLen = pstrHostIFconnectAttr->IEsLen;
--				strConnectInfo.pu8ReqIEs = kmalloc(pstrHostIFconnectAttr->IEsLen, GFP_KERNEL);
-+				strConnectInfo.ReqIEsLen = pstrHostIFconnectAttr->ies_len;
-+				strConnectInfo.pu8ReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
- 				memcpy(strConnectInfo.pu8ReqIEs,
- 					    pstrHostIFconnectAttr->ies,
--					    pstrHostIFconnectAttr->IEsLen);
-+					    pstrHostIFconnectAttr->ies_len);
- 			}
- 
- 			pstrHostIFconnectAttr->pfConnectResult(CONN_DISCONN_EVENT_CONN_RESP,
-@@ -3631,7 +3631,7 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	}
- 
- 	if (pu8IEs != NULL) {
--		msg.body.con_info.IEsLen = IEsLen;
-+		msg.body.con_info.ies_len = IEsLen;
- 		msg.body.con_info.ies = kmalloc(IEsLen, GFP_KERNEL);
- 		memcpy(msg.body.con_info.ies, pu8IEs, IEsLen);
- 	}
 -- 
 1.9.1
 
