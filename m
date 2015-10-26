@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2974 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbbJMKxG (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:12849 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753002AbbJZISv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:53:06 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 23/54] staging: wilc1000: remove duplicate copy routine
-Date: Tue, 13 Oct 2015 19:49:48 +0900
-Message-ID: <1444733419-17679-23-git-send-email-tony.cho@atmel.com> (sfid-20151013_125310_331263_720C74FD)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	Mon, 26 Oct 2015 04:18:51 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>
+Subject: Re: [PATCH v2] net: tso: add support for IPv6
+Date: Mon, 26 Oct 2015 08:17:50 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B09E0@hasmsx107.ger.corp.intel.com> (sfid-20151026_091859_634571_DC53008E)
+References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
+ <562DA5FF.6040307@lab.ntt.co.jp>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E8B07E2@hasmsx107.ger.corp.intel.com>
+ <562DE0A4.80100@lab.ntt.co.jp>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch remove the duplicate bssid copy routine.
-Already ahead bssid copy routine execute.
-Therefore do not necessary in this routine.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ----
- 1 file changed, 4 deletions(-)
+On 10/26/2015 10:14 AM, Toshiaki Makita wrote:
+> On 2015/10/26 16:47, Grumbach, Emmanuel wrote:
+>> On 10/26/2015 06:03 AM, Toshiaki Makita wrote:
+>>> On 2015/10/26 5:02, Emmanuel Grumbach wrote:
+>>>> Adding IPv6 for the TSO helper API is trivial:
+>>>> * Don't play with the id (which doesn't exist in IPv6)
+>>>> * Correctly update the payload_len (don't include the
+>>>>   length of the IP header itself)
+>>> ...
+>>>>  	memcpy(hdr, skb->data, hdr_len);
+>>>> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
+>>>> -	iph->id = htons(tso->ip_id);
+>>>> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
+>>>> +	if (skb->protocol == htons(ETH_P_IP)) {
+>>>
+>>> I guess this should be vlan_get_protocol(skb).
+>>
+>> I truly don't know. I guess we could have VLANs, but I'd need to check
+>> how the packet would look like after it exits mac80211.
+> 
+> I don't know much about mac80211.
+> 
+> What I see is that mvneta has TSO in vlan_features and it uses
+> tso_build_hdr(). When vlan device is used, we cannot access network
+> protocol by skb->protocol without HW vlan acceleration.
+> So it looks like this change corrupts TSO functionality on mvneta.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0296bd9..91ea327 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1152,10 +1152,6 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8bssid, 6);
- 	pu8CurrByte += 6;
- 
--	if (pstrHostIFconnectAttr->pu8bssid != NULL)
--		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8bssid, 6);
--	pu8CurrByte += 6;
--
- 	*(pu8CurrByte++)  = (ptstrJoinBssParam->beacon_period) & 0xFF;
- 	*(pu8CurrByte++)  = ((ptstrJoinBssParam->beacon_period) >> 8) & 0xFF;
- 	PRINT_D(HOSTINF_DBG, "* Beacon Period %d*\n", (*(pu8CurrByte - 2) | ((*(pu8CurrByte - 1)) << 8)));
--- 
-1.9.1
+Convincing enough :)
 
+> 
+>> If we need that, I'll likely do this check once in tso_start() and add a
+>> variable to struct tso_t.
+> 
+> I'm not sure if an additional variable is needed.
+> At least, skb_network_offset()/ip_hdr() should correctly handle (skip)
+> vlan headers.
+> 
+
+Adding a bool to tso_t is more an optimisation than something needed for
+correctness. It avoid to call vlan_get_protocol(skb) for each MSS.
+
+> Toshiaki Makita
+> 
+> 
