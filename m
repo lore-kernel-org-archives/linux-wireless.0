@@ -1,516 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52381 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088AbbJPEje (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35930 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbbJZI3y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 12/40] staging: wilc1000: rename variable gMsgQHostIF
-Date: Fri, 16 Oct 2015 13:37:42 +0900
-Message-ID: <1444970290-17609-12-git-send-email-tony.cho@atmel.com> (sfid-20151016_064656_521973_8BC60698)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Mon, 26 Oct 2015 04:29:54 -0400
+Date: Mon, 26 Oct 2015 17:28:33 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [linuxwifi] [-next] WARNING at
+ iwl_mvm_time_event_send_add+0x72/0x1b6
+Message-ID: <20151026082833.GA592@swordfish> (sfid-20151026_093023_594851_323F0EB7)
+References: <20151026063932.GA31271@swordfish>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E8B0644@hasmsx107.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E8B0828@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8B0828@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On (10/26/15 07:51), Grumbach, Emmanuel wrote:
+> > On 10/26/2015 08:41 AM, Sergey Senozhatsky wrote:
+> >> Hi,
+> >>
+> >> linux-next 20151022
+> >>
+> >>
+> > 
+> > Can be reproduced reliably?
+> > Seems like a bad race between the end of session protection for the
+> > authentication and the start of the session protection for the deauth.
+> > I think I found the hole in the locks in there, but it is going to be
+> > tricky to solve.
+> 
+> Not sure if I found the race. Can you please send the complete log?
+> If you have timestamps, it'd greatly helps...
+> dmesg output should do.
+> 
 
-This patch renames variable gMsgQHostIF to hif_msg_q
-to avoid CamelCase naming convention.
+Hi,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+not really sure if I can reproduce this one easily. seen once.
+
 ---
- drivers/staging/wilc1000/host_interface.c | 109 +++++++++++++++---------------
- 1 file changed, 53 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4f24a05..bb770ab1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -240,7 +240,7 @@ struct host_if_drv *terminated_handle;
- bool g_obtainingIP;
- u8 P2P_LISTEN_STATE;
- static struct task_struct *hif_thread_handler;
--static WILC_MsgQueueHandle gMsgQHostIF;
-+static WILC_MsgQueueHandle hif_msg_q;
- static struct semaphore hSemHostIFthrdEnd;
- 
- struct semaphore hSemDeinitDrvHandle;
-@@ -2738,7 +2738,7 @@ static void ListenTimerCB(unsigned long arg)
- 	msg.drv = hif_drv;
- 	msg.body.remain_on_ch.u32ListenSessionID = hif_drv->strHostIfRemainOnChan.u32ListenSessionID;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- }
-@@ -2926,7 +2926,7 @@ static int hostIFthread(void *pvArg)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	while (1) {
--		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
-+		wilc_mq_recv(&hif_msg_q, &msg, sizeof(struct host_if_msg), &u32Ret);
- 		hif_drv = (struct host_if_drv *)msg.drv;
- 		if (msg.id == HOST_IF_MSG_EXIT) {
- 			PRINT_D(GENERIC_DBG, "THREAD: Exiting HostIfThread\n");
-@@ -2936,13 +2936,13 @@ static int hostIFthread(void *pvArg)
- 		if ((!g_wilc_initialized)) {
- 			PRINT_D(GENERIC_DBG, "--WAIT--");
- 			usleep_range(200 * 1000, 200 * 1000);
--			wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+			wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 			continue;
- 		}
- 
- 		if (msg.id == HOST_IF_MSG_CONNECT && hif_drv->strWILC_UsrScanReq.pfUserScanResult != NULL) {
- 			PRINT_D(HOSTINF_DBG, "Requeue connect request till scan done received\n");
--			wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+			wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 			usleep_range(2 * 1000, 2 * 1000);
- 			continue;
- 		}
-@@ -3136,7 +3136,7 @@ static void TimerCB_Scan(unsigned long arg)
- 	msg.drv = pvArg;
- 	msg.id = HOST_IF_MSG_SCAN_TIMER_FIRED;
- 
--	wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- }
- 
- static void TimerCB_Connect(unsigned long arg)
-@@ -3148,7 +3148,7 @@ static void TimerCB_Connect(unsigned long arg)
- 	msg.drv = pvArg;
- 	msg.id = HOST_IF_MSG_CONNECT_TIMER_FIRED;
- 
--	wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- }
- 
- s32 host_int_remove_key(struct host_if_drv *hif_drv, const u8 *pu8StaAddress)
-@@ -3182,7 +3182,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
- 	msg.drv = hif_drv;
- 	msg.body.key_info.attr.wep.index = index;
- 
--	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
- 	down(&hif_drv->hSemTestKeyBlock);
-@@ -3211,7 +3211,7 @@ s32 host_int_set_WEPDefaultKeyID(struct host_if_drv *hif_drv, u8 u8Index)
- 	msg.drv = hif_drv;
- 	msg.body.key_info.attr.wep.index = u8Index;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue : Default key index\n");
- 	down(&hif_drv->hSemTestKeyBlock);
-@@ -3246,7 +3246,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
- 	msg.body.key_info.attr.wep.index = u8Keyidx;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue :WEP Key\n");
- 	down(&hif_drv->hSemTestKeyBlock);
-@@ -3290,7 +3290,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 	msg.body.key_info.attr.wep.mode = u8mode;
- 	msg.body.key_info.attr.wep.auth_type = tenuAuth_type;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue :WEP Key\n");
-@@ -3355,7 +3355,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
- 	msg.body.key_info.attr.wpa.mode = u8Ciphermode;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue:  PTK Key\n");
-@@ -3418,7 +3418,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
- 	msg.body.key_info.attr.wpa.seq_len = u32KeyRSClen;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue:  RX GTK\n");
- 
-@@ -3454,7 +3454,7 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
- 			    PMKID_LEN);
- 	}
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER(" Error in sending messagequeue: PMKID Info\n");
- 
-@@ -3502,7 +3502,7 @@ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
- 	msg.body.get_mac_info.u8MacAddress = pu8MacAddress;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send get mac address\n");
- 		return -EFAULT;
-@@ -3524,7 +3524,7 @@ s32 host_int_set_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
- 	memcpy(msg.body.set_mac_info.u8MacAddress, pu8MacAddress, ETH_ALEN);
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Failed to send message queue: Set mac address\n");
- 
-@@ -3624,7 +3624,7 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	else
- 		PRINT_D(GENERIC_DBG, "Don't set state to 'connecting' as state is %d\n", hif_drv->enuHostIFstate);
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send message queue: Set join request\n");
- 		return -EFAULT;
-@@ -3658,7 +3658,7 @@ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
- 	msg.id = HOST_IF_MSG_FLUSH_CONNECT;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send message queue: Flush join request\n");
- 		return -EFAULT;
-@@ -3682,7 +3682,7 @@ s32 host_int_disconnect(struct host_if_drv *hif_drv, u16 u16ReasonCode)
- 	msg.id = HOST_IF_MSG_DISCONNECT;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Failed to send message queue: disconnect\n");
- 
-@@ -3773,7 +3773,7 @@ int host_int_set_mac_chnl_num(struct host_if_drv *hif_drv, u8 channel)
- 	msg.body.channel_info.set_ch = channel;
- 	msg.drv = hif_drv;
- 
--	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
- 		PRINT_ER("wilc mq send fail\n");
- 		return -EINVAL;
-@@ -3789,7 +3789,7 @@ int host_int_wait_msg_queue_idle(void)
- 	struct host_if_msg msg;
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_Q_IDLE;
--	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
- 		PRINT_ER("wilc mq send fail\n");
- 		result = -EINVAL;
-@@ -3810,7 +3810,7 @@ int host_int_set_wfi_drv_handler(struct host_if_drv *hif_drv)
- 	msg.body.drv.u32Address = get_id_from_handler(hif_drv);
- 	msg.drv = hif_drv;
- 
--	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
- 		PRINT_ER("wilc mq send fail\n");
- 		result = -EINVAL;
-@@ -3829,7 +3829,7 @@ int host_int_set_operation_mode(struct host_if_drv *hif_drv, u32 mode)
- 	msg.body.mode.u32Mode = mode;
- 	msg.drv = hif_drv;
- 
--	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
- 		PRINT_ER("wilc mq send fail\n");
- 		result = -EINVAL;
-@@ -3853,7 +3853,7 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
- 	msg.id = HOST_IF_MSG_GET_CHNL;
- 	msg.drv = hif_drv;
- 
--	s32Error =	wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc mq send fail\n");
- 	down(&hif_drv->hSemGetCHNL);
-@@ -3885,7 +3885,7 @@ s32 host_int_get_inactive_time(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_GET_INACTIVETIME;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Failed to send get host channel param's message queue ");
- 
-@@ -3935,7 +3935,7 @@ s32 host_int_get_rssi(struct host_if_drv *hif_drv, s8 *ps8Rssi)
- 	msg.id = HOST_IF_MSG_GET_RSSI;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send get host channel param's message queue ");
- 		return -EFAULT;
-@@ -3965,7 +3965,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
- 	msg.id = HOST_IF_MSG_GET_LINKSPEED;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send GET_LINKSPEED to message queue ");
- 		return -EFAULT;
-@@ -3996,7 +3996,7 @@ s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
- 	msg.body.data = (char *)pstrStatistics;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Failed to send get host channel param's message queue ");
- 		return -EFAULT;
-@@ -4046,7 +4046,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
- 	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
- 	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error) {
- 		PRINT_ER("Error in sending message queue\n");
- 		return -EINVAL;
-@@ -4080,7 +4080,7 @@ s32 hif_set_cfg(struct host_if_drv *hif_drv,
- 	msg.body.cfg_info.cfg_attr_info = *pstrCfgParamVal;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 
- 	return s32Error;
- 
-@@ -4204,7 +4204,7 @@ static void GetPeriodicRSSI(unsigned long arg)
- 		msg.id = HOST_IF_MSG_GET_RSSI;
- 		msg.drv = hif_drv;
- 
--		s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 		if (s32Error) {
- 			PRINT_ER("Failed to send get host channel param's message queue ");
- 			return;
-@@ -4265,7 +4265,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
- 
- 	if (clients_count == 0)	{
--		result = wilc_mq_create(&gMsgQHostIF);
-+		result = wilc_mq_create(&hif_msg_q);
- 
- 		if (result < 0) {
- 			PRINT_ER("Failed to creat MQ\n");
-@@ -4320,7 +4320,7 @@ _fail_timer_2:
- 	del_timer_sync(&hif_drv->hScanTimer);
- 	kthread_stop(hif_thread_handler);
- _fail_mq_:
--	wilc_mq_destroy(&gMsgQHostIF);
-+	wilc_mq_destroy(&hif_msg_q);
- _fail_:
- 	return result;
- }
-@@ -4379,14 +4379,13 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		msg.id = HOST_IF_MSG_EXIT;
- 		msg.drv = hif_drv;
- 
--
--		s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 		if (s32Error != 0)
- 			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", s32Error);
- 
- 		down(&hSemHostIFthrdEnd);
- 
--		wilc_mq_destroy(&gMsgQHostIF);
-+		wilc_mq_destroy(&hif_msg_q);
- 	}
- 
- 	down(&(hif_drv->gtOsCfgValuesSem));
-@@ -4430,7 +4429,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.body.net_info.buffer = kmalloc(u32Length, GFP_KERNEL);
- 	memcpy(msg.body.net_info.buffer, pu8Buffer, u32Length);
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Error in sending network info message queue message parameters: Error(%d)\n", s32Error);
- }
-@@ -4471,7 +4470,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	msg.body.async_info.buffer = kmalloc(u32Length, GFP_KERNEL);
- 	memcpy(msg.body.async_info.buffer, pu8Buffer, u32Length);
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("Error in sending message queue asynchronous message info: Error(%d)\n", s32Error);
- 
-@@ -4500,7 +4499,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
- 		msg.id = HOST_IF_MSG_RCVD_SCAN_COMPLETE;
- 		msg.drv = hif_drv;
- 
--		s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+		s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 		if (s32Error)
- 			PRINT_ER("Error in sending message queue scan complete parameters: Error(%d)\n", s32Error);
- 	}
-@@ -4535,7 +4534,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc mq send fail\n");
- 
-@@ -4559,7 +4558,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
- 	msg.drv = hif_drv;
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc mq send fail\n");
- 
-@@ -4598,7 +4597,7 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
- 	msg.body.reg_frame.bReg = bReg;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc mq send fail\n");
- 
-@@ -4648,7 +4647,7 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
- 		pstrSetBeaconParam->tail = NULL;
- 	}
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc mq send fail\n");
- 
-@@ -4679,7 +4678,7 @@ s32 host_int_del_beacon(struct host_if_drv *hif_drv)
- 	msg.drv = hif_drv;
- 	PRINT_D(HOSTINF_DBG, "Setting deleting beacon message queue params\n");
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
-@@ -4717,8 +4716,7 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
- 		pstrAddStationMsg->pu8Rates = rates;
- 	}
- 
--
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 	return s32Error;
-@@ -4747,7 +4745,7 @@ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
- 	else
- 		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 	return s32Error;
-@@ -4795,8 +4793,7 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
- 	}
- 
- 	pstrDelAllStationMsg->assoc_sta = u8AssocNumb;
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
--
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
-@@ -4837,7 +4834,7 @@ s32 host_int_edit_station(struct host_if_drv *hif_drv,
- 		pstrAddStationMsg->pu8Rates = rates;
- 	}
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
-@@ -4869,7 +4866,7 @@ s32 host_int_set_power_mgmt(struct host_if_drv *hif_drv,
- 	pstrPowerMgmtParam->enabled = bIsEnabled;
- 	pstrPowerMgmtParam->timeout = u32Timeout;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 	return s32Error;
-@@ -4899,7 +4896,7 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hif_drv,
- 	pstrMulticastFilterParam->enabled = bIsEnabled;
- 	pstrMulticastFilterParam->cnt = u32count;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 	return s32Error;
-@@ -5093,7 +5090,7 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
- 	pBASessionInfo->u8Ted = TID;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
-@@ -5123,7 +5120,7 @@ s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
- 	pBASessionInfo->u8Ted = TID;
- 	msg.drv = hif_drv;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
-@@ -5152,7 +5149,7 @@ s32 host_int_setup_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
- 	msg.drv = hif_drv;
- 	msg.body.ip_info.idx = idx;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
-@@ -5179,7 +5176,7 @@ s32 host_int_get_ipaddress(struct host_if_drv *hif_drv, u8 *u16ipadd, u8 idx)
- 	msg.drv = hif_drv;
- 	msg.body.ip_info.idx = idx;
- 
--	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-+	s32Error = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
--- 
-1.9.1
+Oct 26 15:20:51  dhclient[399]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 7
+Oct 26 15:20:58  dhclient[399]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 17
+Oct 26 15:21:09  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 7
+Oct 26 15:21:09  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:21:09  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:09  kernel: wlp2s0: authenticated
+Oct 26 15:21:09  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:09  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=24)
+Oct 26 15:21:09  kernel: wlp2s0: associated
+Oct 26 15:21:09  kernel: IPv6: ADDRCONF(NETDEV_CHANGE): wlp2s0: link becomes ready
+Oct 26 15:21:09  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:21:12  kernel: wlp2s0: authenticate with 00:04:96:61:e9:f0
+Oct 26 15:21:12  kernel: wlp2s0: send auth to 00:04:96:61:e9:f0 (try 1/3)
+Oct 26 15:21:12  kernel: wlp2s0: authenticated
+Oct 26 15:21:12  kernel: wlp2s0: associate with 00:04:96:61:e9:f0 (try 1/3)
+Oct 26 15:21:12  kernel: wlp2s0: RX AssocResp from 00:04:96:61:e9:f0 (capab=0x11 status=0 aid=16)
+Oct 26 15:21:12  kernel: wlp2s0: associated
+Oct 26 15:21:12  kernel: wlp2s0: deauthenticating from 00:04:96:61:e9:f0 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:21:16  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 10
+Oct 26 15:21:22  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:21:22  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:22  kernel: wlp2s0: authenticated
+Oct 26 15:21:22  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:22  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=25)
+Oct 26 15:21:22  kernel: wlp2s0: associated
+Oct 26 15:21:22  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:21:26  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 9
+Oct 26 15:21:35  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 12
+Oct 26 15:21:47  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:21:47  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:47  kernel: wlp2s0: authenticated
+Oct 26 15:21:47  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:21:47  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=25)
+Oct 26 15:21:47  kernel: wlp2s0: associated
+Oct 26 15:21:47  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:21:47  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 18
+Oct 26 15:22:05  dhclient[539]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 5
+Oct 26 15:22:10  dhclient[539]: No DHCPOFFERS received.
+Oct 26 15:22:10  dhclient[539]: No working leases in persistent database - sleeping.
+Oct 26 15:22:34  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:22:34  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:34  kernel: wlp2s0: authenticated
+Oct 26 15:22:34  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:34  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=29)
+Oct 26 15:22:34  kernel: wlp2s0: associated
+Oct 26 15:22:34  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:34  kernel: wlp2s0: authenticate with 00:04:96:61:cd:e0
+Oct 26 15:22:34  kernel: wlp2s0: send auth to 00:04:96:61:cd:e0 (try 1/3)
+Oct 26 15:22:34  kernel: wlp2s0: aborting authentication with 00:04:96:61:cd:e0 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:34  kernel: ------------[ cut here ]------------
+Oct 26 15:22:34  kernel: WARNING: CPU: 0 PID: 1006 at drivers/net/wireless/iwlwifi/mvm/time-event.c:513 iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]()
+Oct 26 15:22:34  kernel: Modules linked in: mousedev arc4 nls_iso8859_1 nls_cp437 vfat fat serio_raw psmouse atkbd coretemp hwmon i915 libps2 iwlmvm i2c_algo_bit mac80211 drm_kms_helper cfbfillrect intel_powerclamp syscopyarea cfbimgblt sysfillrect sysimgblt crc32c_intel fb_sys_fops cfbcopyarea iwlwifi drm r8
+Oct 26 15:22:34  kernel: CPU: 0 PID: 1006 Comm: iwconfig Not tainted 4.3.0-rc6-next-20151022-dbg-00002-g4041783-dirty #260
+Oct 26 15:22:34  kernel:  0000000000000000 ffff8800c69479c8 ffffffff811dd4ad 0000000000000000
+Oct 26 15:22:34  kernel:  ffff8800c6947a00 ffffffff8103db4e ffffffffa04fd261 ffff88041c7cdfc8
+Oct 26 15:22:34  kernel:  ffff88041cc87a20 ffff88041c7ceb28 ffff8800c6947aac ffff8800c6947a10
+Oct 26 15:22:34  kernel: Call Trace:
+Oct 26 15:22:34  kernel:  [<ffffffff811dd4ad>] dump_stack+0x4b/0x63
+Oct 26 15:22:34  kernel:  [<ffffffff8103db4e>] warn_slowpath_common+0x99/0xb2
+Oct 26 15:22:34  kernel:  [<ffffffffa04fd261>] ? iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffff8103dc1a>] warn_slowpath_null+0x1a/0x1c
+Oct 26 15:22:34  kernel:  [<ffffffffa04fd261>] iwl_mvm_time_event_send_add+0x72/0x1b6 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+Oct 26 15:22:34  kernel:  [<ffffffffa04fdb8b>] iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffffa04fdb8b>] ? iwl_mvm_protect_session+0x150/0x219 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffffa04ecf57>] ? iwl_mvm_ref_sync+0x37/0x10c [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffffa04ed475>] iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffffa04ed475>] ? iwl_mvm_mac_mgd_prepare_tx+0xa4/0xc2 [iwlmvm]
+Oct 26 15:22:34  kernel:  [<ffffffffa047be43>] ieee80211_mgd_deauth+0x14f/0x3b0 [mac80211]
+Oct 26 15:22:34  kernel:  [<ffffffff8107979f>] ? __lock_is_held+0x3c/0x57
+Oct 26 15:22:34  kernel:  [<ffffffffa0446758>] ieee80211_deauth+0x18/0x1a [mac80211]
+Oct 26 15:22:34  kernel:  [<ffffffffa02bc4b2>] cfg80211_mlme_deauth+0x13c/0x28e [cfg80211]
+Oct 26 15:22:34  kernel:  [<ffffffffa02c0f9a>] cfg80211_disconnect+0xb5/0x2f7 [cfg80211]
+Oct 26 15:22:34  kernel:  [<ffffffffa02d901e>] cfg80211_mgd_wext_siwfreq+0xed/0x160 [cfg80211]
+Oct 26 15:22:34  kernel:  [<ffffffffa02d8c81>] ? cfg80211_wext_freq+0x5f/0x5f [cfg80211]
+Oct 26 15:22:34  kernel:  [<ffffffffa02d8cf7>] cfg80211_wext_siwfreq+0x76/0xf6 [cfg80211]
+Oct 26 15:22:34  kernel:  [<ffffffff813a9809>] ioctl_standard_call+0x66/0x376
+Oct 26 15:22:34  kernel:  [<ffffffff813a9caa>] wext_handle_ioctl+0x102/0x16d
+Oct 26 15:22:34  kernel:  [<ffffffff8130782b>] dev_ioctl+0x6bb/0x6de
+Oct 26 15:22:34  kernel:  [<ffffffff81113adc>] ? handle_mm_fault+0xefc/0x13f9
+Oct 26 15:22:34  kernel:  [<ffffffff812d73d0>] sock_ioctl+0x230/0x23c
+Oct 26 15:22:34  kernel:  [<ffffffff812d73d0>] ? sock_ioctl+0x230/0x23c
+Oct 26 15:22:34  kernel:  [<ffffffff8115047d>] do_vfs_ioctl+0x458/0x4dc
+Oct 26 15:22:34  kernel:  [<ffffffff813b3635>] ? retint_user+0x18/0x20
+Oct 26 15:22:34  kernel:  [<ffffffff8115a5fe>] ? __fget_light+0x4d/0x71
+Oct 26 15:22:34  kernel:  [<ffffffff81150544>] SyS_ioctl+0x43/0x61
+Oct 26 15:22:34  kernel:  [<ffffffff813b2b57>] entry_SYSCALL_64_fastpath+0x12/0x6f
+Oct 26 15:22:34  kernel: ---[ end trace 6a44e7f1588bdae7 ]---
+Oct 26 15:22:34  kernel: wlp2s0: authenticate with 00:04:96:68:d7:60
+Oct 26 15:22:34  kernel: wlp2s0: send auth to 00:04:96:68:d7:60 (try 1/3)
+Oct 26 15:22:34  kernel: wlp2s0: send auth to 00:04:96:68:d7:60 (try 2/3)
+Oct 26 15:22:34  kernel: wlp2s0: authenticated
+Oct 26 15:22:34  kernel: wlp2s0: associate with 00:04:96:68:d7:60 (try 1/3)
+Oct 26 15:22:34  kernel: wlp2s0: RX AssocResp from 00:04:96:68:d7:60 (capab=0x411 status=0 aid=4)
+Oct 26 15:22:34  kernel: wlp2s0: associated
+Oct 26 15:22:34  kernel: wlp2s0: deauthenticating from 00:04:96:68:d7:60 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:34  dhclient[1011]: DHCPDISCOVER on wlp2s0 to 255.255.255.255 port 67 interval 8
+Oct 26 15:22:37  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:22:37  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:37  kernel: wlp2s0: authenticated
+Oct 26 15:22:37  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:37  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=29)
+Oct 26 15:22:37  kernel: wlp2s0: associated
+Oct 26 15:22:37  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:40  kernel: wlp2s0: authenticate with 00:04:96:61:e9:f0
+Oct 26 15:22:40  kernel: wlp2s0: send auth to 00:04:96:61:e9:f0 (try 1/3)
+Oct 26 15:22:40  kernel: wlp2s0: authenticated
+Oct 26 15:22:40  kernel: wlp2s0: associate with 00:04:96:61:e9:f0 (try 1/3)
+Oct 26 15:22:40  kernel: wlp2s0: RX AssocResp from 00:04:96:61:e9:f0 (capab=0x11 status=0 aid=19)
+Oct 26 15:22:40  kernel: wlp2s0: associated
+Oct 26 15:22:40  kernel: wlp2s0: deauthenticating from 00:04:96:61:e9:f0 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:42  kernel: wlp2s0: authenticate with 00:04:96:62:10:e0
+Oct 26 15:22:42  kernel: wlp2s0: send auth to 00:04:96:62:10:e0 (try 1/3)
+Oct 26 15:22:42  kernel: wlp2s0: authenticated
+Oct 26 15:22:42  kernel: wlp2s0: associate with 00:04:96:62:10:e0 (try 1/3)
+Oct 26 15:22:42  kernel: wlp2s0: RX AssocResp from 00:04:96:62:10:e0 (capab=0x411 status=0 aid=2)
+Oct 26 15:22:42  kernel: wlp2s0: associated
+Oct 26 15:22:42  kernel: wlp2s0: deauthenticating from 00:04:96:62:10:e0 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:45  kernel: wlp2s0: authenticate with 00:04:96:61:bd:90
+Oct 26 15:22:45  kernel: wlp2s0: send auth to 00:04:96:61:bd:90 (try 1/3)
+Oct 26 15:22:45  kernel: wlp2s0: authenticated
+Oct 26 15:22:45  kernel: wlp2s0: associate with 00:04:96:61:bd:90 (try 1/3)
+Oct 26 15:22:45  kernel: wlp2s0: RX AssocResp from 00:04:96:61:bd:90 (capab=0x111 status=0 aid=4)
+Oct 26 15:22:45  kernel: wlp2s0: associated
+Oct 26 15:22:45  kernel: wlp2s0: deauthenticating from 00:04:96:61:bd:90 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:55  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:22:55  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:55  kernel: wlp2s0: authenticated
+Oct 26 15:22:55  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:22:55  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=9)
+Oct 26 15:22:55  kernel: wlp2s0: associated
+Oct 26 15:22:55  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:22:57  kernel: wlp2s0: authenticate with 00:04:96:61:ed:40
+Oct 26 15:22:57  kernel: wlp2s0: send auth to 00:04:96:61:ed:40 (try 1/3)
+Oct 26 15:22:57  kernel: wlp2s0: authenticated
+Oct 26 15:22:57  kernel: wlp2s0: associate with 00:04:96:61:ed:40 (try 1/3)
+Oct 26 15:22:57  kernel: wlp2s0: RX AssocResp from 00:04:96:61:ed:40 (capab=0x11 status=0 aid=2)
+Oct 26 15:22:57  kernel: wlp2s0: associated
+Oct 26 15:22:57  kernel: wlp2s0: deauthenticating from 00:04:96:61:ed:40 by local choice (Reason: 3=DEAUTH_LEAVING)
+Oct 26 15:23:23  kernel: wlp2s0: authenticate with 00:04:96:69:0d:80
+Oct 26 15:23:23  kernel: wlp2s0: send auth to 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:23:23  kernel: wlp2s0: authenticated
+Oct 26 15:23:23  kernel: wlp2s0: associate with 00:04:96:69:0d:80 (try 1/3)
+Oct 26 15:23:23  kernel: wlp2s0: RX AssocResp from 00:04:96:69:0d:80 (capab=0x11 status=0 aid=31)
+Oct 26 15:23:23  kernel: wlp2s0: associated
+Oct 26 15:23:23  kernel: wlp2s0: deauthenticating from 00:04:96:69:0d:80 by local choice (Reason: 3=DEAUTH_LEAVING)
 
+---
+
+	-ss
