@@ -1,259 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:46366 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755442AbbJHSdZ (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34523 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbbJZCjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 14:33:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/11] brcmfmac: Rework p2p attach, use single method for p2p dev creation.
-Date: Thu, 8 Oct 2015 20:33:15 +0200
-Message-ID: <1444329201-3696-6-git-send-email-arend@broadcom.com> (sfid-20151008_203335_792977_B6675F03)
-In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Oct 2015 22:39:16 -0400
+Received: by padhk11 with SMTP id hk11so172818798pad.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2015 19:39:16 -0700 (PDT)
+From: "Yin, Fengwei" <fengwei.yin@linaro.org>
+To: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	me@bobcopeland.com, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org
+Subject: [PATCH] wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
+Date: Mon, 26 Oct 2015 10:36:22 +0800
+Message-Id: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org> (sfid-20151026_033943_662626_8EDDC2D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+arm64 has requirement that all the dma operations have actual device.
+Otherwise, following warnning message shown and dma allocation fails:
 
-When module param p2pon is used a p2p device is created at init.
-This patch reworks how this is done by using the same method as
-for a dynamically (by user space) created p2p device.
+WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106 __dma_alloc+0x24c/0x258()
+Use an actual device structure for DMA allocation
+Modules linked in: wcn36xx wcn36xx_platform
+CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
+Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
+Call trace:
+[<ffffffc000089904>] dump_backtrace+0x0/0x124
+[<ffffffc000089a38>] show_stack+0x10/0x1c
+[<ffffffc000627114>] dump_stack+0x80/0xc4
+[<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
+[<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
+[<ffffffc00009487c>] __dma_alloc+0x248/0x258
+[<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
+[<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
+[<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
+[<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
+[<ffffffc00051693c>] __dev_open+0xb0/0x120
+[<ffffffc000516c10>] __dev_change_flags+0x88/0x150
+[<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
+[<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 18 ++++++
- drivers/net/wireless/brcm80211/brcmfmac/core.c     | 33 ++++------
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  3 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      | 71 +++-------------------
- 4 files changed, 40 insertions(+), 85 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 891f4ed..2ee57c0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -6238,6 +6238,17 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 		else
- 			*cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 	}
-+	/* p2p might require that "if-events" get processed by fweh. So
-+	 * activate the already registered event handlers now and activate
-+	 * the rest when initialization has completed. drvr->config needs to
-+	 * be assigned before activating events.
-+	 */
-+	drvr->config = cfg;
-+	err = brcmf_fweh_activate_events(ifp);
-+	if (err) {
-+		brcmf_err("FWEH activation failed (%d)\n", err);
-+		goto wiphy_unreg_out;
-+	}
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 086549b..9bff361 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -169,7 +169,7 @@ void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn)
+ 	wcn36xx_dxe_free_ctl_block(&wcn->dxe_rx_h_ch);
+ }
  
- 	err = brcmf_p2p_attach(cfg, p2pdev_forced);
- 	if (err) {
-@@ -6260,6 +6271,13 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 				    brcmf_notify_tdls_peer_event);
- 	}
+-static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
++static int wcn36xx_dxe_init_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn_ch)
+ {
+ 	struct wcn36xx_dxe_desc *cur_dxe = NULL;
+ 	struct wcn36xx_dxe_desc *prev_dxe = NULL;
+@@ -178,7 +178,7 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
+ 	int i;
  
-+	/* (re-) activate FWEH event handling */
-+	err = brcmf_fweh_activate_events(ifp);
-+	if (err) {
-+		brcmf_err("FWEH activation failed (%d)\n", err);
-+		goto wiphy_unreg_out;
-+	}
-+
- 	return cfg;
- 
- wiphy_unreg_out:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index a1d39b196..d3212bf 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -828,8 +828,8 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 	} else {
- 		brcmf_dbg(INFO, "allocate netdev interface\n");
- 		/* Allocate netdev, including space for private structure */
--		ndev = alloc_netdev(sizeof(*ifp), name, NET_NAME_UNKNOWN,
--				    ether_setup);
-+		ndev = alloc_netdev(sizeof(*ifp), is_p2pdev ? "p2p%d" : name,
-+				    NET_NAME_UNKNOWN, ether_setup);
- 		if (!ndev)
- 			return ERR_PTR(-ENOMEM);
- 
-@@ -1021,12 +1021,7 @@ int brcmf_bus_start(struct device *dev)
- 	if (IS_ERR(ifp))
- 		return PTR_ERR(ifp);
- 
--	if (brcmf_p2p_enable)
--		p2p_ifp = brcmf_add_if(drvr, 1, 0, false, "p2p%d", NULL);
--	else
--		p2p_ifp = NULL;
--	if (IS_ERR(p2p_ifp))
--		p2p_ifp = NULL;
-+	p2p_ifp = NULL;
- 
- 	/* signal bus ready */
- 	brcmf_bus_change_state(bus_if, BRCMF_BUS_UP);
-@@ -1060,11 +1055,13 @@ int brcmf_bus_start(struct device *dev)
- 		goto fail;
- 	}
- 
--	ret = brcmf_fweh_activate_events(ifp);
--	if (ret < 0)
--		goto fail;
--
- 	ret = brcmf_net_attach(ifp, false);
-+
-+	if ((!ret) && (brcmf_p2p_enable)) {
-+		p2p_ifp = drvr->iflist[1];
-+		if (p2p_ifp)
-+			ret = brcmf_net_p2p_attach(p2p_ifp);
-+	}
- fail:
- 	if (ret < 0) {
- 		brcmf_err("failed: %d\n", ret);
-@@ -1076,20 +1073,12 @@ fail:
- 			brcmf_fws_del_interface(ifp);
- 			brcmf_fws_deinit(drvr);
- 		}
--		if (drvr->iflist[0]) {
-+		if (ifp)
- 			brcmf_net_detach(ifp->ndev);
--			drvr->iflist[0] = NULL;
--		}
--		if (p2p_ifp) {
-+		if (p2p_ifp)
- 			brcmf_net_detach(p2p_ifp->ndev);
--			drvr->iflist[1] = NULL;
--		}
- 		return ret;
- 	}
--	if ((brcmf_p2p_enable) && (p2p_ifp))
--		if (brcmf_net_p2p_attach(p2p_ifp) < 0)
--			brcmf_p2p_enable = 0;
--
+ 	size = wcn_ch->desc_num * sizeof(struct wcn36xx_dxe_desc);
+-	wcn_ch->cpu_addr = dma_alloc_coherent(NULL, size, &wcn_ch->dma_addr,
++	wcn_ch->cpu_addr = dma_alloc_coherent(dev, size, &wcn_ch->dma_addr,
+ 					      GFP_KERNEL);
+ 	if (!wcn_ch->cpu_addr)
+ 		return -ENOMEM;
+@@ -270,7 +270,7 @@ static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
  	return 0;
  }
  
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index 383d6fa..3878b6f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -213,7 +213,8 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 				   is_p2pdev, emsg->ifname, emsg->addr);
- 		if (IS_ERR(ifp))
- 			return;
--		brcmf_fws_add_interface(ifp);
-+		if (!is_p2pdev)
-+			brcmf_fws_add_interface(ifp);
- 		if (!drvr->fweh.evt_handler[BRCMF_E_IF])
- 			if (brcmf_net_attach(ifp, false) < 0)
- 				return;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 37a8c352..d224b3d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2353,83 +2353,30 @@ void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev)
-  * brcmf_p2p_attach() - attach for P2P.
-  *
-  * @cfg: driver private data for cfg80211 interface.
-+ * @p2pdev_forced: create p2p device interface at attach.
-  */
- s32 brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg, bool p2pdev_forced)
+-static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *ctl)
++static int wcn36xx_dxe_fill_skb(struct device *dev, struct wcn36xx_dxe_ctl *ctl)
  {
--	struct brcmf_if *pri_ifp;
--	struct brcmf_if *p2p_ifp;
--	struct brcmf_cfg80211_vif *p2p_vif;
- 	struct brcmf_p2p_info *p2p;
--	struct brcmf_pub *drvr;
--	s32 bssidx;
-+	struct brcmf_if *pri_ifp;
- 	s32 err = 0;
-+	void *err_ptr;
+ 	struct wcn36xx_dxe_desc *dxe = ctl->desc;
+ 	struct sk_buff *skb;
+@@ -279,7 +279,7 @@ static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *ctl)
+ 	if (skb == NULL)
+ 		return -ENOMEM;
  
- 	p2p = &cfg->p2p;
- 	p2p->cfg = cfg;
+-	dxe->dst_addr_l = dma_map_single(NULL,
++	dxe->dst_addr_l = dma_map_single(dev,
+ 					 skb_tail_pointer(skb),
+ 					 WCN36XX_PKT_SIZE,
+ 					 DMA_FROM_DEVICE);
+@@ -297,7 +297,7 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn,
+ 	cur_ctl = wcn_ch->head_blk_ctl;
  
--	drvr = cfg->pub;
--
--	pri_ifp = brcmf_get_ifp(drvr, 0);
-+	pri_ifp = brcmf_get_ifp(cfg->pub, 0);
- 	p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif = pri_ifp->vif;
- 
- 	if (p2pdev_forced) {
--		p2p_ifp = drvr->iflist[1];
-+		err_ptr = brcmf_p2p_create_p2pdev(p2p, NULL, NULL);
-+		if (IS_ERR(err_ptr)) {
-+			brcmf_err("P2P device creation failed.\n");
-+			err = PTR_ERR(err_ptr);
-+		}
- 	} else {
--		p2p_ifp = NULL;
- 		p2p->p2pdev_dynamically = true;
+ 	for (i = 0; i < wcn_ch->desc_num; i++) {
+-		wcn36xx_dxe_fill_skb(cur_ctl);
++		wcn36xx_dxe_fill_skb(wcn->dev, cur_ctl);
+ 		cur_ctl = cur_ctl->next;
  	}
--	if (p2p_ifp) {
--		p2p_vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_P2P_DEVICE,
--					  false);
--		if (IS_ERR(p2p_vif)) {
--			brcmf_err("could not create discovery vif\n");
--			err = -ENOMEM;
--			goto exit;
--		}
--
--		p2p_vif->ifp = p2p_ifp;
--		p2p_ifp->vif = p2p_vif;
--		p2p_vif->wdev.netdev = p2p_ifp->ndev;
--		p2p_ifp->ndev->ieee80211_ptr = &p2p_vif->wdev;
--		SET_NETDEV_DEV(p2p_ifp->ndev, wiphy_dev(cfg->wiphy));
--
--		p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = p2p_vif;
--
--		brcmf_p2p_generate_bss_mac(p2p, NULL);
--		memcpy(p2p_ifp->mac_addr, p2p->dev_addr, ETH_ALEN);
--		brcmf_p2p_set_firmware(pri_ifp, p2p->dev_addr);
--
--		brcmf_fweh_p2pdev_setup(pri_ifp, true);
--
--		/* Initialize P2P Discovery in the firmware */
--		err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
--		if (err < 0) {
--			brcmf_err("set p2p_disc error\n");
--			brcmf_free_vif(p2p_vif);
--			goto exit;
--		}
--		/* obtain bsscfg index for P2P discovery */
--		err = brcmf_fil_iovar_int_get(pri_ifp, "p2p_dev", &bssidx);
--		if (err < 0) {
--			brcmf_err("retrieving discover bsscfg index failed\n");
--			brcmf_free_vif(p2p_vif);
--			goto exit;
--		}
--		/* Verify that firmware uses same bssidx as driver !! */
--		if (p2p_ifp->bssidx != bssidx) {
--			brcmf_err("Incorrect bssidx=%d, compared to p2p_ifp->bssidx=%d\n",
--				  bssidx, p2p_ifp->bssidx);
--			brcmf_free_vif(p2p_vif);
--			goto exit;
--		}
--
--		init_completion(&p2p->send_af_done);
--		INIT_WORK(&p2p->afx_hdl.afx_work, brcmf_p2p_afx_handler);
--		init_completion(&p2p->afx_hdl.act_frm_scan);
--		init_completion(&p2p->wait_next_af);
--exit:
--		brcmf_fweh_p2pdev_setup(pri_ifp, false);
--	}
- 	return err;
- }
  
+@@ -358,7 +358,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+ 		if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
+ 			break;
+ 		if (ctl->skb) {
+-			dma_unmap_single(NULL, ctl->desc->src_addr_l,
++			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
+ 					 ctl->skb->len, DMA_TO_DEVICE);
+ 			info = IEEE80211_SKB_CB(ctl->skb);
+ 			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
+@@ -474,7 +474,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+ 		skb = ctl->skb;
+ 		dma_addr = dxe->dst_addr_l;
+-		wcn36xx_dxe_fill_skb(ctl);
++		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+ 
+ 		switch (ch->ch_type) {
+ 		case WCN36XX_DXE_CH_RX_L:
+@@ -491,7 +491,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 			wcn36xx_warn("Unknown channel\n");
+ 		}
+ 
+-		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
++		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+ 				 DMA_FROM_DEVICE);
+ 		wcn36xx_rx_skb(wcn, skb);
+ 		ctl = ctl->next;
+@@ -540,7 +540,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
+ 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
+ 
+ 	s = wcn->mgmt_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_H;
+-	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->mgmt_mem_pool.phy_addr,
++	cpu_addr = dma_alloc_coherent(wcn->dev, s, &wcn->mgmt_mem_pool.phy_addr,
+ 				      GFP_KERNEL);
+ 	if (!cpu_addr)
+ 		goto out_err;
+@@ -555,7 +555,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
+ 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
+ 
+ 	s = wcn->data_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_L;
+-	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->data_mem_pool.phy_addr,
++	cpu_addr = dma_alloc_coherent(wcn->dev, s, &wcn->data_mem_pool.phy_addr,
+ 				      GFP_KERNEL);
+ 	if (!cpu_addr)
+ 		goto out_err;
+@@ -574,13 +574,13 @@ out_err:
+ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
+ {
+ 	if (wcn->mgmt_mem_pool.virt_addr)
+-		dma_free_coherent(NULL, wcn->mgmt_mem_pool.chunk_size *
++		dma_free_coherent(wcn->dev, wcn->mgmt_mem_pool.chunk_size *
+ 				  WCN36XX_DXE_CH_DESC_NUMB_TX_H,
+ 				  wcn->mgmt_mem_pool.virt_addr,
+ 				  wcn->mgmt_mem_pool.phy_addr);
+ 
+ 	if (wcn->data_mem_pool.virt_addr) {
+-		dma_free_coherent(NULL, wcn->data_mem_pool.chunk_size *
++		dma_free_coherent(wcn->dev, wcn->data_mem_pool.chunk_size *
+ 				  WCN36XX_DXE_CH_DESC_NUMB_TX_L,
+ 				  wcn->data_mem_pool.virt_addr,
+ 				  wcn->data_mem_pool.phy_addr);
+@@ -643,7 +643,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+ 		return -EINVAL;
+ 	}
+ 
+-	desc->src_addr_l = dma_map_single(NULL,
++	desc->src_addr_l = dma_map_single(wcn->dev,
+ 					  ctl->skb->data,
+ 					  ctl->skb->len,
+ 					  DMA_TO_DEVICE);
+@@ -696,7 +696,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(&wcn->dxe_tx_l_ch);
++	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -714,7 +714,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(&wcn->dxe_tx_h_ch);
++	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -734,7 +734,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(&wcn->dxe_rx_l_ch);
++	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
+ 
+ 	/* For RX we need to preallocated buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_l_ch);
+@@ -764,7 +764,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(&wcn->dxe_rx_h_ch);
++	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch);
+ 
+ 	/* For RX we need to prealocat buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_h_ch);
 -- 
-1.9.1
+2.1.4
 
