@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6022 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933030AbbJIL1Z (ORCPT
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:36117 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbbJZEDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 07:27:25 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t99BPHxY011866
-	for <linux-wireless@vger.kernel.org>; Fri, 9 Oct 2015 04:27:24 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1xaccgxgd2-2
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2015 04:27:24 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/3] mwifiex: remove unnecessary NULL check
-Date: Fri, 9 Oct 2015 04:26:35 -0700
-Message-ID: <1444389995-4869-3-git-send-email-akarwar@marvell.com> (sfid-20151009_132735_333591_37C736FA)
-In-Reply-To: <1444389995-4869-1-git-send-email-akarwar@marvell.com>
-References: <1444389995-4869-1-git-send-email-akarwar@marvell.com>
+	Mon, 26 Oct 2015 00:03:18 -0400
+Subject: Re: [PATCH v2] net: tso: add support for IPv6
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	netdev@vger.kernel.org
+References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, egrumbach@gmail.com
+From: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>
+Message-ID: <562DA5FF.6040307@lab.ntt.co.jp> (sfid-20151026_050357_424417_B337752E)
+Date: Mon, 26 Oct 2015 13:03:11 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=iso-2022-jp
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 2015/10/26 5:02, Emmanuel Grumbach wrote:
+> Adding IPv6 for the TSO helper API is trivial:
+> * Don't play with the id (which doesn't exist in IPv6)
+> * Correctly update the payload_len (don't include the
+>   length of the IP header itself)
+...
+>  	memcpy(hdr, skb->data, hdr_len);
+> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
+> -	iph->id = htons(tso->ip_id);
+> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
+> +	if (skb->protocol == htons(ETH_P_IP)) {
 
-ra_list cannot be NULL here, so remove the unnecessary NULL check.
+I guess this should be vlan_get_protocol(skb).
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +		struct iphdr *iph = (void *)(hdr + mac_hdr_len);
+> +
+> +		iph->id = htons(tso->ip_id);
+> +		iph->tot_len = htons(size + hdr_len - mac_hdr_len);
+> +		tso->ip_id++;
+> +	} else if (skb->protocol == htons(ETH_P_IPV6)) {
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 7bbdfe4..2db51b1 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -691,7 +691,7 @@ void mwifiex_update_ralist_tx_pause_in_tdls_cs(struct mwifiex_private *priv,
- 			if (!memcmp(ra_list->ra, mac, ETH_ALEN))
- 				continue;
- 
--			if (ra_list && ra_list->tx_paused != tx_pause) {
-+			if (ra_list->tx_paused != tx_pause) {
- 				pkt_cnt += ra_list->total_pkt_count;
- 				ra_list->tx_paused = tx_pause;
- 				if (tx_pause)
--- 
-1.8.1.4
+Likewise.
+
+Toshiaki Makita
 
