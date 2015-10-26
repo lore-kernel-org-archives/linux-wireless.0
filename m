@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:54875 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483AbbJTWsN (ORCPT
+Received: from gateway21.websitewelcome.com ([192.185.45.43]:45115 "EHLO
+	gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753425AbbJZK0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 18:48:13 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-wireless@vger.kernel.org
-Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 16/19] staging/wilc1000: remove WILC_SDIO/WILC_SPI macros
-Date: Wed, 21 Oct 2015 00:47:35 +0200
-Message-Id: <1445381258-1455986-17-git-send-email-arnd@arndb.de> (sfid-20151021_005227_079585_80F829D8)
-In-Reply-To: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
-References: <1445381258-1455986-1-git-send-email-arnd@arndb.de>
+	Mon, 26 Oct 2015 06:26:11 -0400
+Received: from ham07.websitewelcome.com (unknown [192.185.81.79])
+	by gateway21.websitewelcome.com (Postfix) with ESMTP id 7B5BBE6DBFAF4
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 05:05:12 -0500 (CDT)
+Received: from br538.hostgator.com.br (br538.hostgator.com.br [108.179.252.175])
+	by ham07.websitewelcome.com (Postfix) with ESMTP id ED07D660003
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 05:05:11 -0500 (CDT)
+Received: from [209.85.220.179] (port=33539 helo=mail-qk0-f179.google.com)
+	by br538.hostgator.com.br with esmtpsa (TLSv1.2:AES128-GCM-SHA256:128)
+	(Exim 4.85)
+	(envelope-from <bino@bino.us>)
+	id 1ZqeeN-0005tp-RA
+	for linux-wireless@vger.kernel.org; Mon, 26 Oct 2015 05:05:11 -0500
+Received: by qkcy65 with SMTP id y65so106468323qkc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 03:05:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com>
+References: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com>
+Date: Mon, 26 Oct 2015 08:05:11 -0200
+Message-ID: <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com> (sfid-20151026_112614_680357_66E22F85)
+Subject: Re: [PATCH] ath10k: update antenna configuration after setting in fw
+From: Albino B Neto <bino@bino.us>
+To: manikanta.pubbisetty@gmail.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The last remaining user of WILC_SDIO macro checks for the correct
-time to wait in an interrupt for the PLL to settle. We can
-replace this with a runtime check and remove both WILC_SDIO and
-WILC_SPI, as we no longer need conditional compilation based on
-the hardware type.
+2015-10-26 7:22 GMT-02:00  <manikanta.pubbisetty@gmail.com>:
+> Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 484c1a1..8d0ce37 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>         ath10k_check_chain_mask(ar, tx_ant, "tx");
+>         ath10k_check_chain_mask(ar, rx_ant, "rx");
+>
+> -       ar->cfg_tx_chainmask = tx_ant;
+> -       ar->cfg_rx_chainmask = rx_ant;
+> -
+>         if ((ar->state != ATH10K_STATE_ON) &&
+>             (ar->state != ATH10K_STATE_RESTARTED))
+>                 return 0;
+> @@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>                 return ret;
+>         }
+>
+> +       ar->cfg_tx_chainmask = tx_ant;
+> +       ar->cfg_rx_chainmask = rx_ant;
+> +
+>         return 0;
+>  }
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/wilc1000/Makefile    | 3 +--
- drivers/staging/wilc1000/wilc_wlan.c | 5 ++++-
- drivers/staging/wilc1000/wilc_wlan.h | 7 ++-----
- 3 files changed, 7 insertions(+), 8 deletions(-)
+Sorry, I see no change in the code. script checkpatch.pl ?
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index b96fee8f94f2..9ce30e92ea3a 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -1,7 +1,6 @@
- obj-$(CONFIG_WILC1000) += wilc1000.o
- 
--ccflags-$(CONFIG_WILC1000_SDIO) += -DWILC_SDIO -DCOMPLEMENT_BOOT
--ccflags-$(CONFIG_WILC1000_SPI) += -DWILC_SPI
-+ccflags-$(CONFIG_WILC1000_SDIO) += -DCOMPLEMENT_BOOT
- 
- ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
- 		-DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index d12a4e7df32c..038c9b2eee6c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1238,7 +1238,10 @@ static void wilc_pllupdate_isr_ext(u32 int_stats)
- 	g_wlan.hif_func.hif_clear_int_ext(PLL_INT_CLR);
- 
- 	/* Waiting for PLL */
--	mdelay(WILC_PLL_TO);
-+	if (g_wlan.io_func->io_type == HIF_SDIO)
-+		mdelay(WILC_PLL_TO_SDIO);
-+	else
-+		mdelay(WILC_PLL_TO_SPI);
- 
- 	/* poll till read a valid data */
- 	while (!(ISWILC1000(wilc_get_chipid(true)) && --trials)) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 2e9b5d50ff7e..2f636534fc5d 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -143,11 +143,8 @@
- #define WILC_CFG_RSP_STATUS 2
- #define WILC_CFG_RSP_SCAN 3
- 
--#ifdef WILC_SDIO
--#define WILC_PLL_TO	4
--#else
--#define WILC_PLL_TO	2
--#endif
-+#define WILC_PLL_TO_SDIO	4
-+#define WILC_PLL_TO_SPI		2
- 
- 
- #define ABORT_INT   BIT(31)
--- 
-2.1.0.rc2
-
+    Albino
