@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38717 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753102AbbJON7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 09:59:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 12/12] cfg80211: reg: fix reg_ignore_cell_hint return type
-Date: Thu, 15 Oct 2015 15:58:23 +0200
-Message-Id: <1444917503-19118-12-git-send-email-johannes@sipsolutions.net> (sfid-20151015_155913_185366_7D08D5C2)
-In-Reply-To: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
-References: <1444917503-19118-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-wi0-f195.google.com ([209.85.212.195]:36469 "EHLO
+	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TDv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2015 15:03:51 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [RESEND PATCH 03/10] net: wireless: rtwifi: Remove duplicated arguments to |
+Date: Wed, 28 Oct 2015 00:32:38 +0530
+Message-Id: <1445972565-14963-3-git-send-email-punitvara@gmail.com> (sfid-20151027_200713_374070_0F9259B1)
+In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Remove uncessary repeated arguments COMP_EFUSE, COMP_REGD, COMP_CHAN
+ with OR(|)
 
-The return type should be enum reg_request_treatment for both
-branches of the #ifdef.
+This is patch to the debug.c file that removes following warning
+reported by coccicheck:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+-duplicated argument to & or |
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- net/wireless/reg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/debug.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ef327236e0f0..c8f43a8f850b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1353,7 +1353,8 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- 	return !(wiphy->features & NL80211_FEATURE_CELL_BASE_REG_HINTS);
- }
- #else
--static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
- 	return REG_REQ_IGNORE;
- }
+diff --git a/drivers/net/wireless/rtlwifi/debug.c b/drivers/net/wireless/rtlwifi/debug.c
+index fd25aba..b8f5540 100644
+--- a/drivers/net/wireless/rtlwifi/debug.c
++++ b/drivers/net/wireless/rtlwifi/debug.c
+@@ -37,9 +37,9 @@ void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
+ 	    COMP_BEACON | COMP_RATE | COMP_RXDESC | COMP_DIG | COMP_TXAGC |
+ 	    COMP_POWER | COMP_POWER_TRACKING | COMP_BB_POWERSAVING | COMP_SWAS |
+ 	    COMP_RF | COMP_TURBO | COMP_RATR | COMP_CMD |
+-	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_REGD | COMP_CHAN |
+-	    COMP_EASY_CONCURRENT | COMP_EFUSE | COMP_QOS | COMP_MAC80211 |
+-	    COMP_REGD | COMP_CHAN | COMP_BT_COEXIST;
++	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_CHAN |
++	    COMP_EASY_CONCURRENT | COMP_QOS | COMP_MAC80211 |
++	    COMP_REGD | COMP_BT_COEXIST;
+ 
+ 
+ 	for (i = 0; i < DBGP_TYPE_MAX; i++)
 -- 
-2.5.1
+2.5.3
 
