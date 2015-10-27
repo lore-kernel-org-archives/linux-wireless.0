@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:20819 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757187AbbJ3DIq (ORCPT
+Received: from mail-io0-f175.google.com ([209.85.223.175]:33759 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965025AbbJ0TJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 23:08:46 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/17] staging: wilc1000: wilc_wlan_firmware_download: add argument net_device
-Date: Fri, 30 Oct 2015 12:10:36 +0900
-Message-ID: <1446174642-28570-11-git-send-email-glen.lee@atmel.com> (sfid-20151030_040849_392892_22287C70)
-In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+	Tue, 27 Oct 2015 15:09:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87a8r4ybks.fsf@kamboji.qca.qualcomm.com>
+References: <1445539670-4018-1-git-send-email-punitvara@gmail.com>
+	<5629316E.60106@cogentembedded.com>
+	<CABXAfNJewoq3LL9S+cSEs3S+nQXN714JyKT_ys2+armMprVEgA@mail.gmail.com>
+	<87a8r4ybks.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 28 Oct 2015 00:39:53 +0530
+Message-ID: <CABXAfNJf5dBNx-F=6O0SsBRE3jtasK-=1-2FFb_KNDvb+hrR_g@mail.gmail.com> (sfid-20151027_201024_107585_28DF09B3)
+Subject: Re: [PATCH v4 14/15] net: wireless: ath: Remove unneeded variable ret
+ returning 0
+From: punit vara <punitvara@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	jirislaby@gmail.com, Nick Kossifidis <mickflemm@gmail.com>,
+	mcgrof@do-not-panic.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new argument struct net_device and pass dev to the function as well.
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c  | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.h  | 3 ++-
- 3 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 1019a19..bb37f5b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -624,7 +624,7 @@ static int linux_wlan_firmware_download(struct net_device *dev)
- 	 *      do the firmware download
- 	 **/
- 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
--	ret = wilc_wlan_firmware_download(wilc->firmware->data,
-+	ret = wilc_wlan_firmware_download(dev, wilc->firmware->data,
- 					  wilc->firmware->size);
- 	if (ret < 0)
- 		goto _FAIL_;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c464cd7..e8afa6b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1415,7 +1415,8 @@ void wilc_handle_isr(void *wilc)
-  *      Firmware download
-  *
-  ********************************************/
--int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
-+int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
-+				u32 buffer_size)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 offset;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index fa66783..194c24c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -295,7 +295,8 @@ typedef struct {
- 	u32 seq_no;
- } wilc_cfg_rsp_t;
- 
--int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
-+int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
-+				u32 buffer_size);
- int wilc_wlan_start(void);
- int wilc_wlan_stop(struct net_device *dev);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
--- 
-1.9.1
-
+On Tue, Oct 27, 2015 at 1:42 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> punit vara <punitvara@gmail.com> writes:
+>
+>> Will my other patches which are already correct be added to wireless
+>> tree ? or I have to resend everything ?
+>
+> Yes, please resend the whole patchset. I don't apply patches
+> individually from a patchset, it's just too time consuming and error
+> prone.
+>
+> Also, as you seem to be new here, I don't recommend sending big
+> patchsets in the beginning. Start slow, send just few a patch or two at
+> a time, and once you gain more experience send bigger patchsets.
+>
+> --
+> Kalle Valo
+Next time I will send 2-3 patches only . This time I have resent you
+all the patches that I have created before . Thank you for suggestion.
