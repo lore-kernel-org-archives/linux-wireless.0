@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36531 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752765AbbJ0AHD (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:57801 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbbJ0JZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 20:07:03 -0400
-Received: by pacfv9 with SMTP id fv9so211718084pac.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 17:07:03 -0700 (PDT)
-Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for
- arm64 dma_alloc.
-To: Bjorn Andersson <bjorn@kryo.se>
-References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
- <CAJAp7OjPmX70ZvSEDuneaDn=yJnOgJVwPTmikrE4HjX2ycdq1Q@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>, me@bobcopeland.com,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-From: yfw <fengwei.yin@linaro.org>
-Message-ID: <562EC022.4030302@linaro.org> (sfid-20151027_010709_383841_79349625)
-Date: Tue, 27 Oct 2015 08:06:58 +0800
+	Tue, 27 Oct 2015 05:25:05 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 01/27] staging: wicl1000: isr_uh_routine: use netdev private wilc
+Date: Tue, 27 Oct 2015 18:27:37 +0900
+Message-ID: <1445938083-20445-1-git-send-email-glen.lee@atmel.com> (sfid-20151027_102510_336790_9DCE9AA7)
 MIME-Version: 1.0
-In-Reply-To: <CAJAp7OjPmX70ZvSEDuneaDn=yJnOgJVwPTmikrE4HjX2ycdq1Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use netdev private member wilc instead of g_linux_wlan and change argument wilc
+with dev in the function request_threaded_irq to pass back to handler
+the function isr_uh_routine.
 
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-On 2015/10/27 2:24, Bjorn Andersson wrote:
-> On Sun, Oct 25, 2015 at 7:36 PM, Yin, Fengwei <fengwei.yin@linaro.org> wrote:
->> arm64 has requirement that all the dma operations have actual device.
->> Otherwise, following warnning message shown and dma allocation fails:
->>
->> WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106 __dma_alloc+0x24c/0x258()
->> Use an actual device structure for DMA allocation
->> Modules linked in: wcn36xx wcn36xx_platform
->> CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
->> Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
->> Call trace:
->> [<ffffffc000089904>] dump_backtrace+0x0/0x124
->> [<ffffffc000089a38>] show_stack+0x10/0x1c
->> [<ffffffc000627114>] dump_stack+0x80/0xc4
->> [<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
->> [<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
->> [<ffffffc00009487c>] __dma_alloc+0x248/0x258
->> [<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
->> [<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
->> [<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
->> [<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
->> [<ffffffc00051693c>] __dev_open+0xb0/0x120
->> [<ffffffc000516c10>] __dev_change_flags+0x88/0x150
->> [<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
->> [<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
->>
->> Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
->
-> Acked-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Thanks for the Acked-by.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ded302a..324cc57 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -229,10 +229,16 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+ static irqreturn_t isr_uh_routine(int irq, void *user_data)
+ {
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++	struct net_device *dev = (struct net_device *)user_data;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
+ 	PRINT_D(INT_DBG, "Interrupt received UH\n");
+ 
+ 	/*While mac is closing cacncel the handling of any interrupts received*/
+-	if (g_linux_wlan->close) {
++	if (wilc->close) {
+ 		PRINT_ER("Driver is CLOSING: Can't handle UH interrupt\n");
+ 		return IRQ_HANDLED;
+ 	}
+@@ -284,7 +290,7 @@ static int init_irq(struct net_device *dev)
+ 
+ 	if ((ret != -1) && (request_threaded_irq(wl->dev_irq_num, isr_uh_routine, isr_bh_routine,
+ 						  IRQF_TRIGGER_LOW | IRQF_ONESHOT,               /*Without IRQF_ONESHOT the uh will remain kicked in and dont gave a chance to bh*/
+-						  "WILC_IRQ", wl)) < 0) {
++						  "WILC_IRQ", dev)) < 0) {
+ 
+ 		PRINT_ER("Failed to request IRQ for GPIO: %d\n", GPIO_NUM);
+ 		ret = -1;
+-- 
+1.9.1
 
-Regards
-Yin, Fengwei
-
->
-> Regards,
-> Bjorn
->
