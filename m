@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52327 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbbJPEjO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57408 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810AbbJ0IM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:14 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 09/40] staging: wilc1000: rename au8StartTime of struct join_bss_param
-Date: Fri, 16 Oct 2015 13:37:39 +0900
-Message-ID: <1444970290-17609-9-git-send-email-tony.cho@atmel.com> (sfid-20151016_063918_357662_198C894E)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+	Tue, 27 Oct 2015 04:12:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: punit vara <punitvara@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	jirislaby@gmail.com, Nick Kossifidis <mickflemm@gmail.com>,
+	mcgrof@do-not-panic.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 14/15] net: wireless: ath: Remove unneeded variable ret returning 0
+References: <1445539670-4018-1-git-send-email-punitvara@gmail.com>
+	<5629316E.60106@cogentembedded.com>
+	<CABXAfNJewoq3LL9S+cSEs3S+nQXN714JyKT_ys2+armMprVEgA@mail.gmail.com>
+Date: Tue, 27 Oct 2015 10:12:19 +0200
+In-Reply-To: <CABXAfNJewoq3LL9S+cSEs3S+nQXN714JyKT_ys2+armMprVEgA@mail.gmail.com>
+	(punit vara's message of "Tue, 27 Oct 2015 01:30:21 +0530")
+Message-ID: <87a8r4ybks.fsf@kamboji.qca.qualcomm.com> (sfid-20151027_091331_291168_4D1CEF97)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+punit vara <punitvara@gmail.com> writes:
 
-This patch renames au8StartTime of struct join_bss_param to start_time
-to avoid CamelCase naming convention.
+> Will my other patches which are already correct be added to wireless
+> tree ? or I have to resend everything ?
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+Yes, please resend the whole patchset. I don't apply patches
+individually from a patchset, it's just too time consuming and error
+prone.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5cbba1a..320073e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -226,7 +226,7 @@ struct join_bss_param {
- 	u8 idx;
- 	u8 duration[4];
- 	u8 interval[4];
--	u8 au8StartTime[4];
-+	u8 start_time[4];
- };
- 
- enum scan_conn_timer {
-@@ -1208,10 +1208,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
- 
--		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
--
--		pu8CurrByte += sizeof(ptstrJoinBssParam->au8StartTime);
--
-+		memcpy(pu8CurrByte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
-+		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
- 	} else
- 		PRINT_D(HOSTINF_DBG, "NOA not present\n");
- 
-@@ -5004,7 +5002,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
- 
--				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
-+				memcpy(pNewJoinBssParam->start_time, pu8IEs + u16P2P_count, 4);
- 
- 				index += pu8IEs[index + 1] + 2;
- 				continue;
+Also, as you seem to be new here, I don't recommend sending big
+patchsets in the beginning. Start slow, send just few a patch or two at
+a time, and once you gain more experience send bigger patchsets.
+
 -- 
-1.9.1
-
+Kalle Valo
