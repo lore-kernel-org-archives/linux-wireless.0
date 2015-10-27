@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12219 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbbJLH5X (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33817 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbJ0XTr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:57:23 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 08/41] staging: wilc1000: remove typedef from tenuWIDtype
-Date: Mon, 12 Oct 2015 16:55:42 +0900
-Message-ID: <1444636575-2486-8-git-send-email-tony.cho@atmel.com> (sfid-20151012_095733_728172_A93CC7A5)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 19:19:47 -0400
+Received: by padhk11 with SMTP id hk11so236252982pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:46 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 04/10] staging: wilc1000: rename pu8WepKey in host_int_add_wep_key_bss_ap
+Date: Wed, 28 Oct 2015 08:19:22 +0900
+Message-Id: <1445987968-18974-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001950_030598_B8DCFA6F)
+In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes pu8WepKey to key that is second argument of this
+function to avoid camelcase.
 
-This patch remove typedef from the enum tenuWIDtype
-and rename it to WID_TYPE.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h | 2 +-
- drivers/staging/wilc1000/host_interface.h   | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h     | 5 ++---
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 306efc9..02faf58 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -72,7 +72,7 @@ typedef enum {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9a57d31a..4be42cb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3192,7 +3192,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ }
  
- struct wid {
- 	u16 u16WIDid;
--	tenuWIDtype enuWIDtype;
-+	enum WID_TYPE enuWIDtype;
- 	s32 s32ValueSize;
- 	s8      *ps8WidVal;
- };
+ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+-				const u8 *pu8WepKey,
++				const u8 *key,
+ 				u8 u8WepKeylen,
+ 				u8 u8Keyidx,
+ 				u8 u8mode,
+@@ -3211,14 +3211,14 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 
+ 	if (INFO) {
+ 		for (i = 0; i < u8WepKeylen; i++)
+-			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", pu8WepKey[i]);
++			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
+ 	}
+ 	msg.id = HOST_IF_MSG_KEY;
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY_AP;
+ 	msg.drv = hif_drv;
+ 	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
+-	memcpy(msg.body.key_info.attr.wep.key, pu8WepKey, (u8WepKeylen));
++	memcpy(msg.body.key_info.attr.wep.key, key, (u8WepKeylen));
+ 	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
+ 	msg.body.key_info.attr.wep.index = u8Keyidx;
+ 	msg.body.key_info.attr.wep.mode = u8mode;
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6f6362e..3ab9220 100644
+index 0bbbf4f..fa439f2 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -59,7 +59,7 @@
+@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+  *  @date		28 Feb 2013
+  *  @version		1.0
+  */
+-int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
++int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
  
- typedef struct {
- 	u16 cfg_wid;
--	WID_TYPE_T cfg_type;
-+	enum WID_TYPE cfg_type;
- 	s8     *pu8Para;
- } cfg_param_t;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 8fec64d..be972af 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -315,7 +315,7 @@ typedef enum {
- 	SW_TRIGGER_ABORT,
- } TX_ABORT_OPTION_T;
- 
--typedef enum {
-+enum WID_TYPE {
- 	WID_CHAR		= 0,
- 	WID_SHORT		= 1,
- 	WID_INT			= 2,
-@@ -326,8 +326,7 @@ typedef enum {
- 	WID_ADR			= 7,
- 	WID_UNDEF		= 8,
- 	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
--
--} WID_TYPE_T, tenuWIDtype;
-+};
- 
- typedef enum {
- 	WID_NIL				= 0xffff,
+ /**
+  *  @brief              adds ptk Key
 -- 
-1.9.1
+2.6.1
 
