@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43459 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964794AbbJ1HHF (ORCPT
+Received: from mail-wi0-f193.google.com ([209.85.212.193]:34791 "EHLO
+	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:07:05 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 78/80] staging: wilc1000: rename pstrHostIFSetChan of fuction Handle_SetChannel
-Date: Wed, 28 Oct 2015 16:07:23 +0900
-Message-ID: <1446016045-32154-28-git-send-email-glen.lee@atmel.com> (sfid-20151028_081656_633222_1E40364C)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 15:03:24 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [RESEND PATCH 01/10] net: wireless: ath: Remove unnecessary semicolon
+Date: Wed, 28 Oct 2015 00:32:36 +0530
+Message-Id: <1445972565-14963-1-git-send-email-punitvara@gmail.com> (sfid-20151027_200730_852013_94A5F4FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch is to the htt_rx.c that removes unneeded semicolon which is
+reported by coccicheck.
 
-This patch renames pstrHostIFSetChan of fuction Handle_SetChannel to hif_set_ch
-to avoid CamelCase naming convention.
+Here semicolon just create empty statement so please remote it.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6160d03..02d8935 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -325,14 +325,14 @@ static struct host_if_drv *get_handler_from_id(int id)
- }
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 1b7a043..002a633 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2077,7 +2077,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt event: ",
+ 				skb->data, skb->len);
+ 		break;
+-	};
++	}
  
- static s32 Handle_SetChannel(struct host_if_drv *hif_drv,
--			     struct channel_attr *pstrHostIFSetChan)
-+			      struct channel_attr *hif_set_ch)
- {
- 	s32 result = 0;
- 	struct wid wid;
- 
- 	wid.id = (u16)WID_CURRENT_CHANNEL;
- 	wid.type = WID_CHAR;
--	wid.val = (char *)&pstrHostIFSetChan->set_ch;
-+	wid.val = (char *)&hif_set_ch->set_ch;
- 	wid.size = sizeof(char);
- 
- 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
+ 	/* Free the indication buffer */
+ 	dev_kfree_skb_any(skb);
 -- 
-1.9.1
+2.5.3
 
