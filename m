@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:33183 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965472AbbJ0TEe (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:35456 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:04:34 -0400
+	Tue, 27 Oct 2015 15:04:28 -0400
 From: Punit Vara <punitvara@gmail.com>
 To: kvalo@qca.qualcomm.com
 Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Punit Vara <punitvara@gmail.com>
-Subject: [RESEND PATCH 10/10] net: wireless: ath: Remove unneeded variable ret returning 0
-Date: Wed, 28 Oct 2015 00:32:45 +0530
-Message-Id: <1445972565-14963-10-git-send-email-punitvara@gmail.com> (sfid-20151027_200456_216242_0FEAECA3)
+Subject: [RESEND PATCH 09/10] net: wireless: brcm80211: Remove unneeded variable ret_code returning 0
+Date: Wed, 28 Oct 2015 00:32:44 +0530
+Message-Id: <1445972565-14963-9-git-send-email-punitvara@gmail.com> (sfid-20151027_200518_696681_55ECEDA2)
 In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the ath5k/eeprom.c that fixes up warning caught by
+This patch is to the brcmsmac/stf.c that fixes up warning caught by
 coccicheck:
 
--Unneeded variable: "ret". Return "0" on line 1733
+-Unneeded variable: "ret_code". Return "0" on line 328
 
-Remove unneccesary variable ret created to return zero.
+Remove unneccesary variable ret_code created to return zero.
 
 Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/eeprom.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/stf.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 94d34ee..673ab8d 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -1707,7 +1707,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 	u32 offset;
- 	u16 val;
--	int ret = 0, i;
-+	int i;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/stf.c b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
+index dd91627..71ddf42 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/stf.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
+@@ -306,7 +306,6 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
+  */
+ int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
+ {
+-	int ret_code = 0;
+ 	u8 prev_stf_ss;
+ 	u8 upd_stf_ss;
  
- 	offset = AR5K_EEPROM_CTL(ee->ee_version) +
- 				AR5K_EEPROM_N_CTLS(ee->ee_version);
-@@ -1730,7 +1730,7 @@ ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
- 		}
+@@ -325,7 +324,7 @@ int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
+ 				    PHY_TXC1_MODE_SISO : PHY_TXC1_MODE_CDD;
+ 	} else {
+ 		if (wlc->band != band)
+-			return ret_code;
++			return 0;
+ 		upd_stf_ss = (wlc->stf->txstreams == 1) ?
+ 				PHY_TXC1_MODE_SISO : band->band_stf_ss_mode;
+ 	}
+@@ -334,7 +333,7 @@ int brcms_c_stf_ss_update(struct brcms_c_info *wlc, struct brcms_band *band)
+ 		brcms_b_band_stf_ss_set(wlc->hw, upd_stf_ss);
  	}
  
--	return ret;
+-	return ret_code;
 +	return 0;
  }
  
- 
+ int brcms_c_stf_attach(struct brcms_c_info *wlc)
 -- 
 2.5.3
 
