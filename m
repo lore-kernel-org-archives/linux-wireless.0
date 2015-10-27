@@ -1,56 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45970 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750824AbbJBIpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 04:45:08 -0400
-Date: Fri, 2 Oct 2015 10:43:47 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pascal Huerst <pascal.huerst@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt2x00: Firmware loading vs. udev rules
-Message-ID: <20151002084346.GA4149@redhat.com> (sfid-20151002_104515_073289_C06CC4B0)
-References: <560ABE7B.1080109@gmail.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58059 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654AbbJ0J0I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2015 05:26:08 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 11/27] staging: wilc1000: wilc_wlan_handle_txq: add argument and use wilc
+Date: Tue, 27 Oct 2015 18:27:47 +0900
+Message-ID: <1445938083-20445-11-git-send-email-glen.lee@atmel.com> (sfid-20151027_102612_247621_8EED2A85)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <560ABE7B.1080109@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This patch adds argument net_device dev and use netdev private data memeber
+wilc instead of g_linux_wlan.
 
-On Tue, Sep 29, 2015 at 06:38:19PM +0200, Pascal Huerst wrote:
-> on rt2x00 devices, firmware gets loaded in:
-> 
-> int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
-> 
-> which is called, when we start the interface by:
-> 
-> ifconfig wlan0 up
-> 
-> I need to lower tx power of the device and created a udev rule for that:
-> 
-> KERNEL=="wlan0", RUN+="/usr/sbin/iw dev wlan0 set txpower fixed 1800"
-> 
-> Obviously this does not work, since the firmware is not loaded, yet.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c |  4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c  | 11 ++++++++---
+ drivers/staging/wilc1000/wilc_wlan.h  |  2 +-
+ 3 files changed, 11 insertions(+), 6 deletions(-)
 
-Well, I don't think it will work even when you do this after firmware
-load due to issue on __ieee80211_recalc_txpower(), which do not work
-for drivers that don't use channel context. Command may finish without
-an error but tx power setting in driver will not be changed.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 5897f35..d9f1bf1 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -476,10 +476,10 @@ static int linux_wlan_txq_task(void *vp)
+ 		}
+ 		PRINT_D(TX_DBG, "txq_task handle the sending packet and let me go to sleep.\n");
+ #if !defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+-		ret = wilc_wlan_handle_txq(&txq_count);
++		ret = wilc_wlan_handle_txq(dev, &txq_count);
+ #else
+ 		do {
+-			ret = wilc_wlan_handle_txq(&txq_count);
++			ret = wilc_wlan_handle_txq(dev, &txq_count);
+ 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD /* && netif_queue_stopped(pd->wilc_netdev)*/) {
+ 				PRINT_D(TX_DBG, "Waking up queue\n");
+ 				/* netif_wake_queue(pd->wilc_netdev); */
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 4fa956a..907da93 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -814,7 +814,7 @@ void chip_sleep_manually(u32 u32SleepTime)
+  *      Tx, Rx queue handle functions
+  *
+  ********************************************/
+-int wilc_wlan_handle_txq(u32 *pu32TxqCount)
++int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	int i, entries = 0;
+@@ -828,13 +828,18 @@ int wilc_wlan_handle_txq(u32 *pu32TxqCount)
+ 	int counter;
+ 	int timeout;
+ 	u32 vmm_table[WILC_VMM_TBL_SIZE];
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
+ 
+ 	p->txq_exit = 0;
+ 	do {
+ 		if (p->quit)
+ 			break;
+ 
+-		linux_wlan_lock_timeout(&g_linux_wlan->txq_add_to_head_cs,
++		linux_wlan_lock_timeout(&wilc->txq_add_to_head_cs,
+ 					CFG_PKTS_TIMEOUT);
+ #ifdef	TCP_ACK_FILTER
+ 		wilc_wlan_txq_filter_dup_tcp_ack();
+@@ -1098,7 +1103,7 @@ _end_:
+ 		if (ret != 1)
+ 			break;
+ 	} while (0);
+-	up(&g_linux_wlan->txq_add_to_head_cs);
++	up(&wilc->txq_add_to_head_cs);
+ 
+ 	p->txq_exit = 1;
+ 	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index a07375b..79b35e6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -300,7 +300,7 @@ int wilc_wlan_start(void);
+ int wilc_wlan_stop(void);
+ int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
+ 			      wilc_tx_complete_func_t func);
+-int wilc_wlan_handle_txq(u32 *pu32TxqCount);
++int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
+ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(void);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+-- 
+1.9.1
 
-> Is there a reason, why the firmware is loaded so late and not earlier in
-> probe or so?
-
-Don't enable things that are not used.
-
-> Can this be done in any other proper way I don't know about?
-> I think the device should be ready for any operation, when the udev rule
-> triggers, right?
-
-Assuming channel context issue will be fixed, you can add script to
-/etc/NetworkManager/dispatcher.d/ or on older system
-use one of /etc/sysconfig/network-scripts scripts. I think systemd also
-allow you to add a custom service, which can be triggered on network
-start.
-
-Stanislaw
