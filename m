@@ -1,39 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1602 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789AbbJTEuC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 00:50:02 -0400
-Date: Tue, 20 Oct 2015 06:49:57 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RESEND PATCH] NFC: trf7970a: Add OF match table
-Message-ID: <20151020044957.GB9764@zurbaran.home> (sfid-20151020_065032_120646_3998B3E0)
-References: <1442394522-12883-1-git-send-email-javier@osg.samsung.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48858 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932095AbbJ0Iak (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2015 04:30:40 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V4] staging: wilc1000: wilc_msgqueue.c : remove goto statement
+Date: Tue, 27 Oct 2015 17:33:37 +0900
+Message-ID: <1445934817-27390-1-git-send-email-glen.lee@atmel.com> (sfid-20151027_093045_838367_3FEAD9A5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442394522-12883-1-git-send-email-javier@osg.samsung.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Javier,
+From: Leo Kim <leo.kim@atmel.com>
 
-On Wed, Sep 16, 2015 at 11:08:42AM +0200, Javier Martinez Canillas wrote:
-> The Documentation/devicetree/bindings/net/nfc/trf7970a.txt DT binding doc
-> lists "ti,trf7970a" as a compatible string but the corresponding driver
-> does not have an OF match table. Add the table to the driver so the SPI
-> core can do an OF style match.
-> 
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> 
-> ---
-> 
->  drivers/nfc/trf7970a.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-Patch applied, thanks.
+This patch removes goto statement and moves the spin lock position.
+If a memory allocation fails, directly returns an error.
+The spin lock actually protects the pHandle. Therefore, call spin lock just
+before pHandle is used.
 
-Cheers,
-Samuel.
+Signee-eff-by: Lee Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 25 ++++++++-----------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b13809a..0eff121 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -56,37 +56,35 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 			     const void *pvSendBuffer, u32 u32SendBufferSize)
+ {
+-	int result = 0;
+ 	unsigned long flags;
+ 	Message *pstrMessage = NULL;
+ 
+ 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+ 		PRINT_ER("pHandle or pvSendBuffer is null\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+ 	if (pHandle->bExiting) {
+ 		PRINT_ER("pHandle fail\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+-	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+-
+ 	/* construct a new message */
+ 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+ 	if (!pstrMessage)
+ 		return -ENOMEM;
++
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+ 					GFP_ATOMIC);
+ 	if (!pstrMessage->pvBuffer) {
+-		result = -ENOMEM;
+-		goto ERRORHANDLER;
++		kfree(pstrMessage);
++		return -ENOMEM;
+ 	}
+ 
++	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
++
+ 	/* add it to the message queue */
+ 	if (!pHandle->pstrMessageList) {
+ 		pHandle->pstrMessageList  = pstrMessage;
+@@ -103,14 +101,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	up(&pHandle->hSem);
+ 
+-ERRORHANDLER:
+-	/* error occured, free any allocations */
+-	if (pstrMessage) {
+-		kfree(pstrMessage->pvBuffer);
+-		kfree(pstrMessage);
+-	}
+-
+-	return result;
++	return 0;
+ }
+ 
+ /*!
+-- 
+1.9.1
+
