@@ -1,102 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:27085 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751578AbbJUDlq (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:32840 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485AbbJ0Hf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 23:41:46 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Avinash Patil <avinashapatil@gmail.com>,
-	Marty Faltesek <mfaltesek@google.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	Denton Gentry <dgentry@google.com>,
-	"Avery Pennarun" <apenwarr@google.com>
-Subject: RE: [PATCH] mwifiex: toggle carrier state in start_ap/stop_ap.
-Date: Wed, 21 Oct 2015 03:41:40 +0000
-Message-ID: <6a3b7114d8dd48ecba00189eb9918380@SC-EXCH04.marvell.com> (sfid-20151021_054149_774827_08B70D67)
-References: <1445280550-13673-1-git-send-email-mfaltesek@google.com>
- <CAJwzM1k-hzyu+49zk5JwB91kAFVbCDRo6vM4UZ=bpj2_cFB4xQ@mail.gmail.com>
-In-Reply-To: <CAJwzM1k-hzyu+49zk5JwB91kAFVbCDRo6vM4UZ=bpj2_cFB4xQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 27 Oct 2015 03:35:28 -0400
+Received: by lbbec13 with SMTP id ec13so54924066lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 00:35:27 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 01/14] mac80211: fix divide by zero when NOA update
+Date: Tue, 27 Oct 2015 08:35:11 +0100
+Message-Id: <1445931311-14091-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151027_083532_697903_7FE8C586)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXZpbmFzaA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
-ZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
-aGFsZiBPZiBBdmluYXNoIFBhdGlsDQo+IFNlbnQ6IFdlZG5lc2RheSwgT2N0b2JlciAyMSwgMjAx
-NSAxOjUwIEFNDQo+IFRvOiBNYXJ0eSBGYWx0ZXNlaw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50DQo+IFNhcm11a2FkYW07IERl
-bnRvbiBHZW50cnk7IEF2ZXJ5IFBlbm5hcnVuDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG13aWZp
-ZXg6IHRvZ2dsZSBjYXJyaWVyIHN0YXRlIGluIHN0YXJ0X2FwL3N0b3BfYXAuDQo+IA0KPiBIZWxs
-byBNYXJ0eSwNCj4gDQo+IA0KPiBPbiBNb24sIE9jdCAxOSwgMjAxNSBhdCAxMTo0OSBBTSwgTWFy
-dHkgRmFsdGVzZWsgPG1mYWx0ZXNla0Bnb29nbGUuY29tPg0KPiB3cm90ZToNCj4gPg0KPiA+IElu
-IHVhcCBtb2RlIHRoZSBjYXJyaWVyIGlzIG5vdCBlbmFibGVkIHVudGlsIGFmdGVyIHRoZSBmaXJz
-dCBTVEENCj4gam9pbnMuDQo+ID4gVGhlIGNhcnJpZXIgdHJpZ2dlcnMgdGhlIGJyaWRnZSB0byBz
-dGFydCBpdHMgc3RhdGUgbWFjaGluZSwgYW5kIGlmIFNUUA0KPiA+IGlzIGVuYWJsZWQsIGl0IHRh
-a2VzIDQgc2Vjb25kcyBhcyBpdCB0cmFuc2l0aW9ucyBmcm9tIGRpc2FibGVkIHRvDQo+ID4gZm9y
-d2FyZGluZy4gRHVyaW5nIHRoaXMgdGltZSB0aGUgYnJpZGdlIGRyb3BzIGFsbCB0cmFmZmljLCBh
-bmQgdGhlDQo+ID4gRUFQT0wgaGFuZHNoYWtlIHRpbWVzIG91dCBhZnRlciAzIHNlY29uZHMsIHBy
-ZXZlbnRpbmcgc3RhdGlvbnMgZnJvbQ0KPiBqb2luaW5nLg0KPiA+DQo+ID4gRm9sbG93IHRoZSBs
-b2dpYyB1c2VkIGluIG1hYzgwMjExIGFuZCBzdGFydCB0aGUgY2FycmllciBpbiBzdGFydF9hcA0K
-PiA+IGFuZCBkaXNhYmxlIGl0IGluIHN0b3BfYXAuIFRoaXMgaGFzIGEgbmljZSBiZW5lZml0IG9m
-IGFsbG93aW5nIHRoZQ0KPiA+IGZpcnN0IHN0YXRpb24gY29ubmVjdGlvbiB0aW1lIHRvIGJlIHJl
-ZHVjZWQgYnkgdXAgdG8gNzUlIHdoZW4gU1RQIGlzDQo+ID4gaW4gdXNlLg0KPiA+DQo+ID4gU2ln
-bmVkLW9mZi1ieTogTWFydGluIEZhbHRlc2VrIDxtZmFsdGVzZWtAZ29vZ2xlLmNvbT4NCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jICB8IDEyICsr
-KysrKysrKysrKw0KPiA+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdWFwX2V2ZW50LmMg
-fCAxMSAtLS0tLS0tLS0tLQ0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKyks
-IDExIGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL213aWZpZXgvY2ZnODAyMTEuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
-eC9jZmc4MDIxMS5jDQo+ID4gaW5kZXggNDk1NjIxZi4uMjc1Y2UzYyAxMDA2NDQNCj4gPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiArKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiBAQCAtMTc2NSw2ICsxNzY1
-LDEzIEBAIHN0YXRpYyBpbnQgbXdpZmlleF9jZmc4MDIxMV9zdG9wX2FwKHN0cnVjdA0KPiB3aXBo
-eSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNlICpkZXYpDQo+ID4gICAgICAgICAgICAgICAgIHJl
-dHVybiAtMTsNCj4gPiAgICAgICAgIH0NCj4gPg0KPiA+ICsgICAgICAgcHJpdi0+bWVkaWFfY29u
-bmVjdGVkID0gZmFsc2U7DQo+ID4gKyAgICAgICBpZiAobmV0aWZfY2Fycmllcl9vayhwcml2LT5u
-ZXRkZXYpKQ0KPiA+ICsgICAgICAgICAgICAgICBuZXRpZl9jYXJyaWVyX29mZihwcml2LT5uZXRk
-ZXYpOw0KPiA+ICsgICAgICAgbXdpZmlleF9zdG9wX25ldF9kZXZfcXVldWUocHJpdi0+bmV0ZGV2
-LCBwcml2LT5hZGFwdGVyKTsNCj4gPiArICAgICAgIG13aWZpZXhfY2xlYW5fdHhyeChwcml2KTsN
-Cj4gPiArICAgICAgIG13aWZpZXhfZGVsX2FsbF9zdGFfbGlzdChwcml2KTsNCj4gPiArDQo+ID4g
-ICAgICAgICByZXR1cm4gMDsNCj4gPiAgfQ0KPiA+DQo+ID4gQEAgLTE4NjMsNiArMTg3MCwxMSBA
-QCBzdGF0aWMgaW50IG13aWZpZXhfY2ZnODAyMTFfc3RhcnRfYXAoc3RydWN0DQo+IHdpcGh5ICp3
-aXBoeSwNCj4gPiAgICAgICAgIGlmIChtd2lmaWV4X3NldF9tZ210X2llcyhwcml2LCAmcGFyYW1z
-LT5iZWFjb24pKQ0KPiA+ICAgICAgICAgICAgICAgICByZXR1cm4gLTE7DQo+ID4NCj4gPiArICAg
-ICAgIHByaXYtPm1lZGlhX2Nvbm5lY3RlZCA9IHRydWU7DQo+ID4gKyAgICAgICBpZiAoIW5ldGlm
-X2NhcnJpZXJfb2socHJpdi0+bmV0ZGV2KSkNCj4gPiArICAgICAgICAgICAgICAgbmV0aWZfY2Fy
-cmllcl9vbihwcml2LT5uZXRkZXYpOw0KPiA+ICsgICAgICAgbXdpZmlleF93YWtlX3VwX25ldF9k
-ZXZfcXVldWUocHJpdi0+bmV0ZGV2LCBwcml2LT5hZGFwdGVyKTsNCj4gPiArDQo+ID4gICAgICAg
-ICBtZW1jcHkoJnByaXYtPmJzc19jZmcsIGJzc19jZmcsIHNpemVvZihwcml2LT5ic3NfY2ZnKSk7
-DQo+ID4gICAgICAgICBrZnJlZShic3NfY2ZnKTsNCj4gPiAgICAgICAgIHJldHVybiAwOw0KPiA+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3VhcF9ldmVudC5jDQo+
-ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3VhcF9ldmVudC5jDQo+ID4gaW5kZXgg
-ZjQ3OTRjZC4uYzViYjZlZSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-d2lmaWV4L3VhcF9ldmVudC5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
-eC91YXBfZXZlbnQuYw0KPiA+IEBAIC0xMTMsMTkgKzExMyw4IEBAIGludCBtd2lmaWV4X3Byb2Nl
-c3NfdWFwX2V2ZW50KHN0cnVjdA0KPiBtd2lmaWV4X3ByaXZhdGUgKnByaXYpDQo+ID4gICAgICAg
-ICAgICAgICAgIG13aWZpZXhfZGVsX3N0YV9lbnRyeShwcml2LCBkZWF1dGhfbWFjKTsNCj4gPiAg
-ICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gICAgICAgICBjYXNlIEVWRU5UX1VBUF9CU1NfSURM
-RToNCj4gPiAtICAgICAgICAgICAgICAgcHJpdi0+bWVkaWFfY29ubmVjdGVkID0gZmFsc2U7DQo+
-ID4gLSAgICAgICAgICAgICAgIGlmIChuZXRpZl9jYXJyaWVyX29rKHByaXYtPm5ldGRldikpDQo+
-ID4gLSAgICAgICAgICAgICAgICAgICAgICAgbmV0aWZfY2Fycmllcl9vZmYocHJpdi0+bmV0ZGV2
-KTsNCj4gPiAtICAgICAgICAgICAgICAgbXdpZmlleF9zdG9wX25ldF9kZXZfcXVldWUocHJpdi0+
-bmV0ZGV2LCBhZGFwdGVyKTsNCj4gPiAtDQo+ID4gLSAgICAgICAgICAgICAgIG13aWZpZXhfY2xl
-YW5fdHhyeChwcml2KTsNCj4gPiAtICAgICAgICAgICAgICAgbXdpZmlleF9kZWxfYWxsX3N0YV9s
-aXN0KHByaXYpOw0KPiA+ICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIGNhc2Ug
-RVZFTlRfVUFQX0JTU19BQ1RJVkU6DQo+ID4gLSAgICAgICAgICAgICAgIHByaXYtPm1lZGlhX2Nv
-bm5lY3RlZCA9IHRydWU7DQo+IA0KPiBJIHJlbWVtYmVyIHdlIGhhdmUgZW5jb3VudGVyZWQgYW4g
-aXNzdWUgaWYgd2UgZG93bmxvYWQgcGFja2V0cyB0bw0KPiBpbnRlcmZhY2UvRlcgYmVmb3JlIGJz
-cyBoYXMgYmVjb21lIGFjdGl2ZS4gSSB0aGluayBtZWRpYV9jb25uZWN0ZWQNCj4gY2Fubm90IGJl
-IHNldCB0byB0cnVlIGluIHN0YXJ0X2FwOyB0aGlzIG1heSBjYXVzZSBpc3N1ZXMuDQo+IA0KPiBB
-bWl0LA0KPiBJIHdvdWxkIHN1Z2dlc3QgcnVubmluZyBzb21lIHRlc3RzIHRvIHNlZSB0aGF0IEZX
-IGRvZXMgbm90IGNyYXNoIGlmIHdlDQo+IHNldCBtZWRpYV9jb25uZWN0ZWQgYmVmb3JlIEJTU19B
-Q1RJVkUgZXZlbnQuDQo+IA0KPiBBbHNvLCB0aGlzIHBhdGNoIGhhcyBzaWRlLWVmZmVjdCBvZiBj
-bGVhbmluZyBUWFJYIGFuZCBzdGF0aW9uIGxpc3QgZGF0YQ0KPiBzdHJ1Y3R1cmVzIG9ubHkgaW4g
-c3RvcF9hcC4gVGhpcyBpcyBub3QgY29ycmVjdC4gVGhlcmUgaXMgbm8gcG9pbnQgaW4NCj4gaG9s
-ZGluZyB0aGVzZSBzdHJ1Y3R1cmVzL21lbW9yeSBpZiBubyBzdGF0aW9ucyBhcmUgY29ubmVjdGVk
-Lg0KPiANCg0KVGhhbmtzIGZvciB5b3VyIHJldmlldy4NCg0KSSBzdXBwb3NlIG9ubHkgY2Fycmll
-ciBzdGF0ZSB0b2dnbGUgbG9naWMgKG5ldGlmX2NhcnJpZXJfb2ZmL29uIGxpbmVzKSBuZWVkIHRv
-IGJlIG1vdmVkIHRvIHN0YXJ0X2FwL3N0b3BfYXAgdG8gZml4IHRoZSBwcm9ibGVtLg0KSSB3aWxs
-IHJ1biBzb21lIHRlc3RzIGFuZCBzdWJtaXQgdXBkYXRlZCB2ZXJzaW9uLg0KDQpSZWdhcmRzLA0K
-QW1pdGt1bWFyDQo=
+In case of one shot NOA the interval could be 0.
+This patch fix such dump:
+
+divide error: 0000 [#1] SMP
+CPU: 4 PID: 0 Comm: swapper/4 Tainted: G        W  OE   4.3.0-rc3master-2015-10-12-00-hz250-wl-ath+ #27
+Hardware name: Dell Inc. Latitude E6430/0H3MT5, BIOS A13 09/02/2013
+task: ffff88022452d400 ti: ffff880224564000 task.ti: ffff880224564000
+RIP: 0010:[<ffffffffc08e886a>]  [<ffffffffc08e886a>] ieee80211_extend_noa_desc+0x3a/0x80 [mac80211]
+RSP: 0018:ffff88022e303da8  EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff880221649e98 RCX: 00000000ffffffff
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880221649e98
+RBP: ffff88022e303da8 R08: ffff880221649e98 R09: 0000000000000000
+R10: 0000000098ce2400 R11: 0000000000000000 R12: ffff880221649e98
+R13: ffff880221649e98 R14: 0000000000000000 R15: ffff880221649e9c
+FS:  0000000000000000(0000) GS:ffff88022e300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007feac4d4e1b8 CR3: 0000000001c10000 CR4: 00000000001406e0
+Stack:
+ffff88022e303df0 ffffffffc08e891c 98ce24a3e24e1520 ffff88022e303e0c
+0000000000000005 ffff880221649e98 ffff880221649ec8 0000000098ce24a3
+000000007fffffff ffff88022e303e38 ffffffffc08e8a17 00000000c068d1bd
+Call Trace:
+<IRQ>
+[<ffffffffc08e891c>] ieee80211_extend_absent_time+0x6c/0xb0 [mac80211]
+[<ffffffffc08e8a17>] ieee80211_update_p2p_noa+0xb7/0xe0 [mac80211]
+[<ffffffffc069cc30>] ath9k_p2p_ps_timer+0x170/0x190 [ath9k]
+[<ffffffffc070adf8>] ath_gen_timer_isr+0xc8/0xf0 [ath9k_hw]
+[<ffffffffc0691156>] ath9k_tasklet+0x296/0x2f0 [ath9k]
+[<ffffffff8107ad65>] tasklet_action+0xe5/0xf0
+[<ffffffff8107afc7>] __do_softirq+0xd7/0x2a0
+[<ffffffff8107b417>] irq_exit+0xd7/0xe0
+[<ffffffff81794506>] do_IRQ+0x56/0xd0
+[<ffffffff81792187>] common_interrupt+0x87/0x87
+<EOI>
+[<ffffffff816347e8>] ? cpuidle_enter_state+0xb8/0x220
+[<ffffffff816347c4>] ? cpuidle_enter_state+0x94/0x220
+[<ffffffff81634987>] cpuidle_enter+0x17/0x20
+[<ffffffff810b700b>] call_cpuidle+0x3b/0x70
+[<ffffffff81634963>] ? cpuidle_select+0x13/0x20
+[<ffffffff810b72ac>] cpu_startup_entry+0x26c/0x330
+[<ffffffff8104c769>] start_secondary+0x149/0x170
+Code: e5 4c 8d 04 87 45 8b 50 0c 41 8b 48 10 44 01 d1 83 e9 01 29 f1 31 f6 85 c9 7e 04 89 f0 5d c3 45 8b 58 14 31 d2 41 8d 43 ff 29 c8 <41> f7 f3 42 0f b6 54 0f 06 80 fa ff 74 0e 0f b6 ca 39 c8 7d 1b
+RIP  [<ffffffffc08e886a>] ieee80211_extend_noa_desc+0x3a/0x80 [mac80211]
+RSP <ffff88022e303da8>
+---[ end trace e9ffc912b1ac465a ]---
+Kernel panic - not syncing: Fatal exception in interrupt
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/mac80211/util.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 60c4dbf..96ec2d1 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2954,6 +2954,13 @@ ieee80211_extend_noa_desc(struct ieee80211_noa_data *data, u32 tsf, int i)
+ 	if (end > 0)
+ 		return false;
+ 
++	/* One shot NOA  */
++	if (data->count[i] == 1)
++		return false;
++
++	if (data->desc[i].interval == 0)
++		return false;
++
+ 	/* End time is in the past, check for repetitions */
+ 	skip = DIV_ROUND_UP(-end, data->desc[i].interval);
+ 	if (data->count[i] < 255) {
+-- 
+1.9.1
+
