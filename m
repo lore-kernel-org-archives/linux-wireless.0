@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:5861 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58336 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbbJ1Hpt (ORCPT
+	with ESMTP id S1752632AbbJ0J0v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:45:49 -0400
+	Tue, 27 Oct 2015 05:26:51 -0400
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/12] staging: wilc1000: wilc_wlan_txq_add_mgmt_pkt: add new argument dev
-Date: Wed, 28 Oct 2015 16:48:20 +0900
-Message-ID: <1446018508-17889-4-git-send-email-glen.lee@atmel.com> (sfid-20151028_084555_540797_D66D88D1)
-In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
-References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 18/27] staging: wilc1000: wilc_wlan_cleanup: add new argument struct net_device
+Date: Tue, 27 Oct 2015 18:27:54 +0900
+Message-ID: <1445938083-20445-18-git-send-email-glen.lee@atmel.com> (sfid-20151027_102653_677303_C30B72AB)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct net_device *dev and pass argument
-struct net_device to the function.
+This patch adds new function argument net_device and pass dev to the functions.
 
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_mon.c              | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c              | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.h              | 4 ++--
- 4 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 450af1b..589a11f 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -195,7 +195,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- 	mgmt_tx->size = len;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index bd9f715..d193af8 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -927,7 +927,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		wilc_wlan_stop();
  
- 	memcpy(mgmt_tx->buff, buf, len);
--	wilc_wlan_txq_add_mgmt_pkt(mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
-+	wilc_wlan_txq_add_mgmt_pkt(dev, mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
- 				   mgmt_tx_complete);
- 
- 	netif_wake_queue(dev);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 15e0685..bcc71ff 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2347,8 +2347,8 @@ static int mgmt_tx(struct wiphy *wiphy,
- 				jiffies, pstrWFIDrv->p2p_timeout);
- 		}
- 
--		wilc_wlan_txq_add_mgmt_pkt(mgmt_tx, mgmt_tx->buff,
--					   mgmt_tx->size,
-+		wilc_wlan_txq_add_mgmt_pkt(wdev->netdev, mgmt_tx,
-+					   mgmt_tx->buff, mgmt_tx->size,
- 					   WILC_WFI_mgmt_tx_complete);
- 	} else {
- 		PRINT_D(GENERIC_DBG, "This function transmits only management frames\n");
+ 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+-		wilc_wlan_cleanup();
++		wilc_wlan_cleanup(dev);
+ #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
+   #if defined(PLAT_ALLWINNER_A20) || defined(PLAT_ALLWINNER_A23) || defined(PLAT_ALLWINNER_A31)
+ 		PRINT_D(INIT_DBG, "Disabling IRQ 2\n");
+@@ -1178,7 +1178,7 @@ _fail_irq_init_:
+ #endif
+ 		wlan_deinitialize_threads(dev);
+ _fail_wilc_wlan_:
+-		wilc_wlan_cleanup();
++		wilc_wlan_cleanup(dev);
+ _fail_locks_:
+ 		wlan_deinit_locks(dev);
+ 		PRINT_ER("WLAN Iinitialization FAILED\n");
 diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 5dcc4d2..3dc0a80 100644
+index babd941..7473742 100644
 --- a/drivers/staging/wilc1000/wilc_wlan.c
 +++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -543,7 +543,8 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	return p->txq_entries;
+@@ -1647,7 +1647,7 @@ int wilc_wlan_stop(void)
+ 	return ret;
  }
  
--int wilc_wlan_txq_add_mgmt_pkt(void *priv, u8 *buffer, u32 buffer_size, wilc_tx_complete_func_t func)
-+int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
-+			       u32 buffer_size, wilc_tx_complete_func_t func)
+-void wilc_wlan_cleanup(void)
++void wilc_wlan_cleanup(struct net_device *dev)
  {
- 
  	wilc_wlan_dev_t *p = &g_wlan;
+ 	struct txq_entry_t *tqe;
 diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 57e1d51..2eb7e20 100644
+index 79b35e6..d0b2448 100644
 --- a/drivers/staging/wilc1000/wilc_wlan.h
 +++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -307,6 +307,6 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+@@ -302,7 +302,7 @@ int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
+ 			      wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
+ void wilc_handle_isr(void *wilc);
+-void wilc_wlan_cleanup(void);
++void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
  		      int commit, u32 drvHandler);
  int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
--int wilc_wlan_txq_add_mgmt_pkt(void *priv, u8 *buffer, u32 buffer_size,
--			       wilc_tx_complete_func_t func);
-+int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
-+			       u32 buffer_size, wilc_tx_complete_func_t func);
- #endif
 -- 
 1.9.1
 
