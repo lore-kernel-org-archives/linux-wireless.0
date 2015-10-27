@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752229AbbJYMBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:43 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/16] iwlwifi: mvm: Implement per vif frame registration API
-Date: Sun, 25 Oct 2015 14:01:11 +0200
-Message-Id: <1445774476-24792-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130146_260586_84086881)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:57855 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752229AbbJ0JZS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2015 05:25:18 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 03/27] staging: wilc1000: deinit_irq: use wilc instead of g_linux_wlan
+Date: Tue, 27 Oct 2015 18:27:39 +0900
+Message-ID: <1445938083-20445-3-git-send-email-glen.lee@atmel.com> (sfid-20151027_102522_523129_E97BD5C0)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+This patch changes function parameter linux_wlan_t nic with net_dev dev and
+use netdev private data member wilc instead of nic and g_linux_wlan.
 
-Implement config_iface_filter() driver op. Currently support only
-probe request registration for p2p client vifs, by setting
-MAC_FILTER_IN_PROBE_REQUEST flag in MAC_CONTEXT_CMD.
-This is needed since WFDS spec and certification require a P2P client
-to be discoverable on its operating channel.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |  3 +++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 22 ++++++++++++++++++++++
- 2 files changed, 25 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 9d36ba7..ad7ad72 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -843,6 +843,9 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 	ctxt_sta->listen_interval = cpu_to_le32(mvm->hw->conf.listen_interval);
- 	ctxt_sta->assoc_id = cpu_to_le32(vif->bss_conf.aid);
- 
-+	if (vif->probe_req_reg && vif->bss_conf.assoc && vif->p2p)
-+		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
-+
- 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 7d0d722..ac2bc06 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -310,12 +310,18 @@ static int init_irq(struct net_device *dev)
  }
+ #endif
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 8e69ab2..1d21e38 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1996,6 +1996,27 @@ out:
- 	*total_flags = 0;
- }
+-static void deinit_irq(struct wilc *nic)
++static void deinit_irq(struct net_device *dev)
+ {
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
++
+ #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+ 	/* Deintialize IRQ */
+-	if (&nic->dev_irq_num != 0) {
+-		free_irq(nic->dev_irq_num, g_linux_wlan);
++	if (&wilc->dev_irq_num != 0) {
++		free_irq(wilc->dev_irq_num, wilc);
  
-+static void iwl_mvm_config_iface_filter(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					unsigned int filter_flags,
-+					unsigned int changed_flags)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	/* We support only filter for probe requests */
-+	if (!(changed_flags & FIF_PROBE_REQ))
-+		return;
-+
-+	/* Supported only for p2p client interfaces */
-+	if (vif->type != NL80211_IFTYPE_STATION || !vif->bss_conf.assoc ||
-+	    !vif->p2p)
-+		return;
-+
-+	mutex_lock(&mvm->mutex);
-+	iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
-+	mutex_unlock(&mvm->mutex);
-+}
-+
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- struct iwl_bcast_iter_data {
- 	struct iwl_mvm *mvm;
-@@ -4175,6 +4196,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.config = iwl_mvm_mac_config,
- 	.prepare_multicast = iwl_mvm_prepare_multicast,
- 	.configure_filter = iwl_mvm_configure_filter,
-+	.config_iface_filter = iwl_mvm_config_iface_filter,
- 	.bss_info_changed = iwl_mvm_bss_info_changed,
- 	.hw_scan = iwl_mvm_mac_hw_scan,
- 	.cancel_hw_scan = iwl_mvm_mac_cancel_hw_scan,
+ 		gpio_free(GPIO_NUM);
+ 	}
+@@ -907,7 +913,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		wlan_deinitialize_threads(wl);
+ 
+ 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+-		deinit_irq(wl);
++		deinit_irq(dev);
+ 
+ 		wilc_wlan_stop();
+ 
+@@ -1144,7 +1150,7 @@ _fail_irq_enable_:
+ _fail_irq_init_:
+ #endif
+ #if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+-		deinit_irq(wl);
++		deinit_irq(dev);
+ 
+ #endif
+ 		wlan_deinitialize_threads(wl);
 -- 
-2.1.4
+1.9.1
 
