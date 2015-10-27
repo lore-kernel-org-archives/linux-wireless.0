@@ -1,70 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57521 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752409AbbJRSd0 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58493 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753476AbbJ0J1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 14:33:26 -0400
-Message-ID: <1445193191.31451.79.camel@decadent.org.uk> (sfid-20151018_203333_180607_4C5140EA)
-Subject: Re: [PATCH] iwlwifi: Fix module firmware information for 3160
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-firmware@kernel.org
-Date: Sun, 18 Oct 2015 19:33:11 +0100
-In-Reply-To: <1445190425.31451.70.camel@decadent.org.uk>
-References: <1445190425.31451.70.camel@decadent.org.uk>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-+RI+Eh6TXBzsrPmg4NNR"
-Mime-Version: 1.0
+	Tue, 27 Oct 2015 05:27:15 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 22/27] staging: wilc1000: Set_machw_change_vir_if: add argument struct net_device
+Date: Tue, 27 Oct 2015 18:27:58 +0900
+Message-ID: <1445938083-20445-22-git-send-email-glen.lee@atmel.com> (sfid-20151027_104654_910369_7B0A465D)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add new argument net_device and use netdev private data member wilc
+instead of g_linux_wlan. Pass argument dev to the function as well.
 
---=-+RI+Eh6TXBzsrPmg4NNR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             |  3 +--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  7 +++----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ drivers/staging/wilc1000/wilc_wlan.c              | 12 ++++++++----
+ 4 files changed, 13 insertions(+), 10 deletions(-)
 
-On Sun, 2015-10-18 at 18:47 +0100, Ben Hutchings wrote:
-> IWL3160_UCODE_API_OK is no longer defined, so we end up with this
-> in the module information:
->=20
-> firmware:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi-3160-IWL3160_U=
-CODE_API_OK.ucode
->=20
-> It looks like IWL7260_UCODE_API_OK should be used instead now.
-[...]
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1f5c8f3..d839f3b 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -46,7 +46,6 @@
+ #endif
+ 
+ extern bool g_obtainingIP;
+-extern u16 Set_machw_change_vir_if(bool bValue);
+ extern void resolve_disconnect_aberration(void *drvHandler);
+ extern u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ extern struct timer_list hDuringIpTimer;
+@@ -1244,7 +1243,7 @@ int mac_open(struct net_device *ndev)
+ 		return ret;
+ 	}
+ 
+-	Set_machw_change_vir_if(false);
++	Set_machw_change_vir_if(ndev, false);
+ 
+ 	host_int_get_MacAddress(priv->hWILCWFIDrv, mac_add);
+ 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 21d053d..bf7a2a2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -22,7 +22,6 @@
+ #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+ 
+ extern int linux_wlan_get_firmware(perInterface_wlan_t *p_nic);
+-extern u16 Set_machw_change_vir_if(bool bValue);
+ 
+ extern int mac_open(struct net_device *ndev);
+ extern int mac_close(struct net_device *ndev);
+@@ -1413,7 +1412,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ 		g_key_gtk_params.seq = NULL;
+ 
+ 		/*Reset WILC_CHANGING_VIR_IF register to allow adding futrue keys to CE H/W*/
+-		Set_machw_change_vir_if(false);
++		Set_machw_change_vir_if(netdev, false);
+ 	}
+ 
+ 	if (key_index >= 0 && key_index <= 3) {
+@@ -2562,7 +2561,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(GENERIC_DBG, "Changing virtual interface, enable scan\n");
+ 	/*Set WILC_CHANGING_VIR_IF register to disallow adding futrue keys to CE H/W*/
+ 	if (g_ptk_keys_saved && g_gtk_keys_saved) {
+-		Set_machw_change_vir_if(true);
++		Set_machw_change_vir_if(dev, true);
+ 	}
+ 
+ 	switch (type) {
+@@ -2724,7 +2723,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 			/*Refresh scan, to refresh the scan results to the wpa_supplicant. Set MachHw to false to enable further key installments*/
+ 			refresh_scan(priv, 1, true);
+-			Set_machw_change_vir_if(false);
++			Set_machw_change_vir_if(dev, false);
+ 
+ 			if (wl->initialized)	{
+ 				for (i = 0; i < num_reg_frame; i++) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index bca3e25..0bfe762 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -217,4 +217,5 @@ void wl_wlan_cleanup(void);
+ int wilc_netdev_init(struct wilc **wilc);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
++u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 35c4c32d..aebc9a6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -19,7 +19,6 @@
+ extern wilc_hif_func_t hif_sdio;
+ extern wilc_hif_func_t hif_spi;
+ u32 wilc_get_chipid(u8 update);
+-u16 Set_machw_change_vir_if(bool bValue);
+ 
+ 
+ 
+@@ -2033,13 +2032,18 @@ _fail_:
+ 
+ }
+ 
+-u16 Set_machw_change_vir_if(bool bValue)
++u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue)
+ {
+ 	u16 ret;
+ 	u32 reg;
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
+ 
+ 	/*Reset WILC_CHANGING_VIR_IF register to allow adding futrue keys to CE H/W*/
+-	mutex_lock(&g_linux_wlan->hif_cs);
++	mutex_lock(&wilc->hif_cs);
+ 	ret = (&g_wlan)->hif_func.hif_read_reg(WILC_CHANGING_VIR_IF, &reg);
+ 	if (!ret)
+ 		PRINT_ER("Error while Reading reg WILC_CHANGING_VIR_IF\n");
+@@ -2054,7 +2058,7 @@ u16 Set_machw_change_vir_if(bool bValue)
+ 	if (!ret)
+ 		PRINT_ER("Error while writing reg WILC_CHANGING_VIR_IF\n");
+ 
+-	mutex_unlock(&g_linux_wlan->hif_cs);
++	mutex_unlock(&wilc->hif_cs);
+ 
+ 	return ret;
+ }
+-- 
+1.9.1
 
-Somewhat relatedly, I noticed that iwlwifi is now requesting firmware
-files that aren't yet in linux-firmware.git. =C2=A0Please can you submit
-them for inclusion?
-
-Ben.
-
---=20
-Ben Hutchings
-A free society is one where it is safe to be unpopular. - Adlai Stevenson
---=-+RI+Eh6TXBzsrPmg4NNR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAViPl5+e/yOyVhhEJAQrFdw//b2rWJHFO2Ae6AWZjG9pOIkwWp+bV1zWN
-/po5EtoM4AUobiXVNzaEL0tQwN8/Yp8KcF/qhRp2XJNJPqPGcN+X7zzVwnqhWIst
-99f8O5UDNiEP64t8mxclT4p6MGx9zBS33A5rQ0p1ZqBFtzbYPdt0YhGU9YvCE+xJ
-HdYignrBIohmcqDJbO3KPCBcq5DCWxA2e24RXJ7itM8VO5AsRN2cEJwL3me/gZA+
-NNafdRw+Z0ZJHLnfOPCWI/iMH227+zvx895+ROYw/eJp3rXinRMnnPjhA7fNo6oU
-5z/jSioBCYmfRTEseeT6J+6WOxP8EbMCR8/j0pR6WnyBNble83Dmm5pr7im6LGN1
-/faETds8ZcEgLldY2NjxfscinAvzNx2/pR3ZPSTZvo2XkrIzOO3E7jxc7Ond/CcB
-8upMU1lvSKkbG5vCgVeGW3mRkfawesyv7lvx3nI/y43I7hM7RtAOqtmqkGjvJlZM
-5xVkaD0ZmLQkntWiSI3yzw9KVjpCrqSRsk9pFetSU2Uu4VYewD+AFvxPNTweEg63
-0fmVuuSm5NG5dloxH4qxvTQ2ZEMRh7QLTK5DY2gTnoJYHAKFp8w8kfrNq7rK/rpz
-cLehi+MSD+PQA7iBFm4P5AL59lnBd3wIoH8FvsR+Yc8xvSo7rNMIhexZgohuoUBm
-jU7Bu78+td8=
-=36kr
------END PGP SIGNATURE-----
-
---=-+RI+Eh6TXBzsrPmg4NNR--
