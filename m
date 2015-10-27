@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42024 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122AbbJ1HAI (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34905 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbbJ0XTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:00:08 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 25/80] staging: wilc1000: rename hSemGetCHNL of struct host_if_drv
-Date: Wed, 28 Oct 2015 15:59:45 +0900
-Message-ID: <1446015640-29398-25-git-send-email-glen.lee@atmel.com> (sfid-20151028_081656_108235_B237AF08)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 19:19:44 -0400
+Received: by pasz6 with SMTP id z6so235803735pas.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:43 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/10] staging: wilc1000: replace u8 with int.
+Date: Wed, 28 Oct 2015 08:19:21 +0900
+Message-Id: <1445987968-18974-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001946_859862_E1A758B4)
+In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes data type of variable i from u8 to int.
+It is used as index of an array to print its content. It's better
+to use as data type of int.
 
-This patch renames hSemGetCHNL of struct host_if_drv to sem_get_chnl
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ba643567..cc5dac01 100644
+index e0a4cf3..9a57d31a 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2076,7 +2076,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
- 		result = -EFAULT;
- 	}
+@@ -3200,7 +3200,7 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	u8 i;
++	int i;
  
--	up(&hif_drv->hSemGetCHNL);
-+	up(&hif_drv->sem_get_chnl);
- 
- 	return result;
- }
-@@ -3734,7 +3734,7 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("wilc mq send fail\n");
--	down(&hif_drv->hSemGetCHNL);
-+	down(&hif_drv->sem_get_chnl);
- 
- 	*pu8ChNo = ch_no;
- 
-@@ -4108,7 +4108,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	sema_init(&hif_drv->sem_test_disconn_block, 0);
- 	sema_init(&hif_drv->sem_get_rssi, 0);
- 	sema_init(&hif_drv->sem_get_link_speed, 0);
--	sema_init(&hif_drv->hSemGetCHNL, 0);
-+	sema_init(&hif_drv->sem_get_chnl, 0);
- 	sema_init(&hif_drv->hSemInactiveTime, 0);
- 
- 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 8a68d64..474b43d 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -309,7 +309,7 @@ struct host_if_drv {
- 	struct semaphore sem_test_disconn_block;
- 	struct semaphore sem_get_rssi;
- 	struct semaphore sem_get_link_speed;
--	struct semaphore hSemGetCHNL;
-+	struct semaphore sem_get_chnl;
- 	struct semaphore hSemInactiveTime;
- /* timer handlers */
- 	struct timer_list hScanTimer;
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
 -- 
-1.9.1
+2.6.1
 
