@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31243 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932673AbbJHRmF (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33155 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753543AbbJ0Lkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 13:42:05 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@codeaurora.org>
-CC: Peter Oh <poh@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: use pre-allocated DMA buffer in Tx
-References: <1443117270-16790-1-git-send-email-poh@qca.qualcomm.com>
-	<87fv1lvauk.fsf@kamboji.qca.qualcomm.com>
-	<5616A511.5060705@codeaurora.org>
-Date: Thu, 8 Oct 2015 20:41:48 +0300
-In-Reply-To: <5616A511.5060705@codeaurora.org> (Peter Oh's message of "Thu, 8
-	Oct 2015 10:17:05 -0700")
-Message-ID: <87fv1ltfz7.fsf@kamboji.qca.qualcomm.com> (sfid-20151008_194210_227802_039696EC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 27 Oct 2015 07:40:52 -0400
+Received: by pabla5 with SMTP id la5so27614071pab.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 04:40:52 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/8] staging: wilc1000: rename pu8WepKey in host_int_add_wep_key_bss_sta
+Date: Tue, 27 Oct 2015 20:40:34 +0900
+Message-Id: <1445946039-10390-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151027_124055_334765_0B64EC42)
+In-Reply-To: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@codeaurora.org> writes:
+This patch changes pu8WepKey to key that is second argument of
+host_int_add_wep_key_bss_sta to avoid camelcase.
 
-> Does it happen after you applied copy engine patchset or even without
-> the patchset? I saw ath10k_pci_htt_tx_cb in backtrace which is not
-> merged to master branch yet. If it only happens after the patchset,
-> I'll apply them and look into it if any possibilities are there.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Good point. I thought I was able to reproduce the bug with a clean
-master branch, but I now checked the logs and all three cases of this
-warning had ath10k_pci_htt_tx_cb in the stack trace. So I must have
-accidentally tested with a temporary branch where the pending branch was
-merged with master branch.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 702b7c8..1cb2095 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3158,7 +3158,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index)
+ }
+ 
+ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+-				 const u8 *pu8WepKey,
++				 const u8 *key,
+ 				 u8 u8WepKeylen,
+ 				 u8 u8Keyidx)
+ {
+@@ -3178,7 +3178,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	msg.body.key_info.action = ADDKEY;
+ 	msg.drv = hif_drv;
+ 	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
+-	memcpy(msg.body.key_info.attr.wep.key, pu8WepKey, u8WepKeylen);
++	memcpy(msg.body.key_info.attr.wep.key, key, u8WepKeylen);
+ 	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
+ 	msg.body.key_info.attr.wep.index = u8Keyidx;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 3579aac..55a7274 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -405,7 +405,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index);
+  *  @date		8 March 2012
+  *  @version		1.0
+  */
+-int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx);
++int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv, const u8 *key, u8 u8WepKeylen, u8 u8Keyidx);
+ /**
+  *  @brief              host_int_add_wep_key_bss_ap
+  *  @details    valid only in AP mode if External Supplicant support is enabled.
 -- 
-Kalle Valo
+2.6.1
+
