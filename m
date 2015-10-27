@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58365 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476AbbJ0J05 (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34706 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbbJ0XTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:26:57 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 19/27] staging: wilc1000: wilc_wlan_rxq_remove: add argument wilc and use it
-Date: Tue, 27 Oct 2015 18:27:55 +0900
-Message-ID: <1445938083-20445-19-git-send-email-glen.lee@atmel.com> (sfid-20151027_102659_927375_700960D5)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 19:19:37 -0400
+Received: by padhk11 with SMTP id hk11so236249200pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:37 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/10] staging: wilc1000: fix return type of host_int_add_wep_key_bss_ap
+Date: Wed, 28 Oct 2015 08:19:19 +0900
+Message-Id: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001941_162523_C78B6289)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument struct wilc and use it instead of g_linux_wlan.
-Pass wilc to wilc_wlan_rxq_remove.
+This patch changes return type of host_int_add_wep_key_bss_ap from s32
+to int. The result variable gets return value from wilc_mq_send that has
+return type of int. It should be changed return type of this function as
+well as data type of result variable.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 7473742..1461b61 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -612,7 +612,7 @@ static int wilc_wlan_rxq_add(struct rxq_entry_t *rqe)
- 	return p->rxq_entries;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5a23738..e0a4cf3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3191,14 +3191,14 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	return result;
  }
  
--static struct rxq_entry_t *wilc_wlan_rxq_remove(void)
-+static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
+-s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
++int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 				const u8 *pu8WepKey,
+ 				u8 u8WepKeylen,
+ 				u8 u8Keyidx,
+ 				u8 u8mode,
+ 				enum AUTHTYPE tenuAuth_type)
  {
- 	wilc_wlan_dev_t *p = &g_wlan;
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	u8 i;
  
-@@ -620,12 +620,12 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(void)
- 	if (p->rxq_head) {
- 		struct rxq_entry_t *rqe;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a9f7d1d..cd6199b 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+  *  @date		28 Feb 2013
+  *  @version		1.0
+  */
+-s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hWFIDrv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
++int host_int_add_wep_key_bss_ap(struct host_if_drv *hWFIDrv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
  
--		mutex_lock(&g_linux_wlan->rxq_cs);
-+		mutex_lock(&wilc->rxq_cs);
- 		rqe = p->rxq_head;
- 		p->rxq_head = p->rxq_head->next;
- 		p->rxq_entries -= 1;
- 		PRINT_D(RX_DBG, "RXQ entries decreased\n");
--		mutex_unlock(&g_linux_wlan->rxq_cs);
-+		mutex_unlock(&wilc->rxq_cs);
- 		return rqe;
- 	}
- 	PRINT_D(RX_DBG, "Nothing to get from Q\n");
-@@ -1132,7 +1132,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 			up(&wilc->cfg_event);
- 			break;
- 		}
--		rqe = wilc_wlan_rxq_remove();
-+		rqe = wilc_wlan_rxq_remove(wilc);
- 		if (rqe == NULL) {
- 			PRINT_D(RX_DBG, "nothing in the queue - exit 1st do-while\n");
- 			break;
-@@ -1654,6 +1654,11 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 	struct rxq_entry_t *rqe;
- 	u32 reg = 0;
- 	int ret;
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
-+
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
- 
- 	p->quit = 1;
- 	do {
-@@ -1666,7 +1671,7 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 	} while (1);
- 
- 	do {
--		rqe = wilc_wlan_rxq_remove();
-+		rqe = wilc_wlan_rxq_remove(wilc);
- 		if (rqe == NULL)
- 			break;
- #ifndef MEMORY_STATIC
+ /**
+  *  @brief              adds ptk Key
 -- 
-1.9.1
+2.6.1
 
