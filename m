@@ -1,81 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4728 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932491AbbJ2C5L (ORCPT
+Received: from mail-wi0-f196.google.com ([209.85.212.196]:35407 "EHLO
+	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:57:11 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 08/64] staging: wilc1000: rename hSemGetLINKSPEED of struct host_if_drv
-Date: Thu, 29 Oct 2015 11:58:31 +0900
-Message-ID: <1446087567-16728-8-git-send-email-glen.lee@atmel.com> (sfid-20151029_035715_308752_4F49B26A)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 15:04:10 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [RESEND PATCH 06/10] net: wireless: ath: simplify return flow for carl9170_regwrite_result()
+Date: Wed, 28 Oct 2015 00:32:41 +0530
+Message-Id: <1445972565-14963-6-git-send-email-punitvara@gmail.com> (sfid-20151027_200625_416604_66DFC16A)
+In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch is to the carl9170/phy.c file that fixes warning reported by
+coccicheck :
 
-This patch renames hSemGetLINKSPEED of struct host_if_drv to sem_get_link_speed
-to avoid CamelCase naming convention.
+ WARNING: end returns can be simplified
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+I have removed unneccessary variable declaration and simply return flow
+for carl9170_regwrite_result()
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/carl9170/phy.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b40ce3b..7b654c5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2123,7 +2123,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
- 		result = -EFAULT;
- 	}
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index dca6df1..f3b5434 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -966,7 +966,6 @@ static const struct carl9170_phy_freq_entry carl9170_phy_freq_params[] = {
+ static int carl9170_init_rf_bank4_pwr(struct ar9170 *ar, bool band5ghz,
+ 				      u32 freq, enum carl9170_bw bw)
+ {
+-	int err;
+ 	u32 d0, d1, td0, td1, fd0, fd1;
+ 	u8 chansel;
+ 	u8 refsel0 = 1, refsel1 = 0;
+@@ -1024,11 +1023,7 @@ static int carl9170_init_rf_bank4_pwr(struct ar9170 *ar, bool band5ghz,
+ 	carl9170_regwrite(0x1c58e8, fd1);
  
--	up(&hif_drv->hSemGetLINKSPEED);
-+	up(&hif_drv->sem_get_link_speed);
+ 	carl9170_regwrite_finish();
+-	err = carl9170_regwrite_result();
+-	if (err)
+-		return err;
+-
+-	return 0;
++	return carl9170_regwrite_result();
  }
  
- s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
-@@ -3842,7 +3842,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
- 		return -EFAULT;
- 	}
- 
--	down(&hif_drv->hSemGetLINKSPEED);
-+	down(&hif_drv->sem_get_link_speed);
- 
- 	if (!ps8lnkspd) {
- 		PRINT_ER("LINKSPEED pointer value is null");
-@@ -4110,7 +4110,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	sema_init(&hif_drv->sem_test_key_block, 0);
- 	sema_init(&hif_drv->sem_test_disconn_block, 0);
- 	sema_init(&hif_drv->sem_get_rssi, 0);
--	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
-+	sema_init(&hif_drv->sem_get_link_speed, 0);
- 	sema_init(&hif_drv->hSemGetCHNL, 0);
- 	sema_init(&hif_drv->hSemInactiveTime, 0);
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dada9c5..a603e84 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -308,7 +308,7 @@ struct host_if_drv {
- 	struct semaphore sem_test_key_block;
- 	struct semaphore sem_test_disconn_block;
- 	struct semaphore sem_get_rssi;
--	struct semaphore hSemGetLINKSPEED;
-+	struct semaphore sem_get_link_speed;
- 	struct semaphore hSemGetCHNL;
- 	struct semaphore hSemInactiveTime;
- /* timer handlers */
+ static const struct carl9170_phy_freq_params *
 -- 
-1.9.1
+2.5.3
 
