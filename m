@@ -1,153 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2485 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbbJMKvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:51:10 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/54] staging: wilc1000: rename pu8key of struct host_if_wpa_attr
-Date: Tue, 13 Oct 2015 19:49:30 +0900
-Message-ID: <1444733419-17679-5-git-send-email-tony.cho@atmel.com> (sfid-20151013_125113_533267_D3A13A0D)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+Received: from bues.ch ([80.190.117.144]:35858 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964950AbbJ0TLO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2015 15:11:14 -0400
+Date: Tue, 27 Oct 2015 20:11:11 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH 2/2] ssb: add Kconfig entry for compiling SoC related
+ code
+Message-ID: <20151027201111.1c6556e2@wiggum> (sfid-20151027_201117_169841_F854DB71)
+In-Reply-To: <1445797963-5968-2-git-send-email-zajec5@gmail.com>
+References: <1445797963-5968-1-git-send-email-zajec5@gmail.com>
+	<1445797963-5968-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+--Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-This patch renames pu8key of struct host_if_wpa_attr to key to
-avoid CamelCase naming convention.
+On Sun, 25 Oct 2015 19:32:43 +0100
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 36 +++++++++++++------------------
- 1 file changed, 15 insertions(+), 21 deletions(-)
+> This allows saving a little of space when not using ssb on Broadcom SoC.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9fe4ea9..18a2723 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -66,7 +66,7 @@ struct cfg_param_attr {
- };
- 
- struct host_if_wpa_attr {
--	u8 *pu8key;
-+	u8 *key;
- 	const u8 *pu8macaddr;
- 	u8 *pu8seq;
- 	u8 u8seqlen;
-@@ -1891,7 +1891,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
- 			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
--			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.pu8key,
-+			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
- 
- 			strWIDList[0].id = (u16)WID_11I_MODE;
-@@ -1931,7 +1931,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.pu8seq, 8);
- 			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
- 			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
--			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.pu8key,
-+			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
- 
- 			strWID.id = (u16)WID_ADD_RX_GTK;
-@@ -1946,7 +1946,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			up(&hif_drv->hSemTestKeyBlock);
- 		}
- _WPARxGtk_end_case_:
--		kfree(pstrHostIFkeyAttr->attr.wpa.pu8key);
-+		kfree(pstrHostIFkeyAttr->attr.wpa.key);
- 		kfree(pstrHostIFkeyAttr->attr.wpa.pu8seq);
- 		if (ret == -1)
- 			return ret;
-@@ -1971,7 +1971,7 @@ _WPARxGtk_end_case_:
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
- 			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8keyidx, 1);
- 			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
--			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.pu8key,
-+			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
- 
- 			strWIDList[0].id = (u16)WID_11I_MODE;
-@@ -2005,7 +2005,7 @@ _WPARxGtk_end_case_:
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.pu8macaddr, 6);
- 			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.u8Keylen, 1);
--			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->attr.wpa.pu8key,
-+			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->attr.wpa.key,
- 				    pstrHostIFkeyAttr->attr.wpa.u8Keylen);
- 
- 			strWID.id = (u16)WID_ADD_PTK;
-@@ -2020,7 +2020,7 @@ _WPARxGtk_end_case_:
- 		}
- 
- _WPAPtk_end_case_:
--		kfree(pstrHostIFkeyAttr->attr.wpa.pu8key);
-+		kfree(pstrHostIFkeyAttr->attr.wpa.key);
- 		if (ret == -1)
- 			return ret;
- 
-@@ -3352,20 +3352,18 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
- 	if (mode == STATION_MODE)
- 		msg.body.key_info.action = ADDKEY;
- 
--	msg.body.key_info.attr.wpa.pu8key = kmalloc(u8PtkKeylen, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wpa.pu8key, pu8Ptk, u8PtkKeylen);
-+	msg.body.key_info.attr.wpa.key = kmalloc(u8PtkKeylen, GFP_KERNEL);
-+	memcpy(msg.body.key_info.attr.wpa.key, pu8Ptk, u8PtkKeylen);
- 
- 	if (pu8RxMic != NULL) {
--		memcpy(msg.body.key_info.attr.wpa.pu8key + 16,
--			    pu8RxMic, RX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
- 		if (INFO) {
- 			for (i = 0; i < RX_MIC_KEY_LEN; i++)
- 				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, pu8RxMic[i]);
- 		}
- 	}
- 	if (pu8TxMic != NULL) {
--		memcpy(msg.body.key_info.attr.wpa.pu8key + 24,
--			    pu8TxMic, TX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
- 		if (INFO) {
- 			for (i = 0; i < TX_MIC_KEY_LEN; i++)
- 				PRINT_INFO(CFG80211_DBG, "PairwiseTx[%d] = %x\n", i, pu8TxMic[i]);
-@@ -3427,18 +3425,14 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	if (mode == STATION_MODE)
- 		msg.body.key_info.action = ADDKEY;
- 
--	msg.body.key_info.attr.wpa.pu8key = kmalloc(u8KeyLen, GFP_KERNEL);
--
--	memcpy(msg.body.key_info.attr.wpa.pu8key,
--		    pu8RxGtk, u8GtkKeylen);
-+	msg.body.key_info.attr.wpa.key = kmalloc(u8KeyLen, GFP_KERNEL);
-+	memcpy(msg.body.key_info.attr.wpa.key, pu8RxGtk, u8GtkKeylen);
- 
- 	if (pu8RxMic != NULL) {
--		memcpy(msg.body.key_info.attr.wpa.pu8key + 16,
--			    pu8RxMic, RX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
- 	}
- 	if (pu8TxMic != NULL) {
--		memcpy(msg.body.key_info.attr.wpa.pu8key + 24,
--			    pu8TxMic, TX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
- 	}
- 
- 	msg.body.key_info.attr.wpa.u8keyidx = u8KeyIdx;
--- 
-1.9.1
+I'm not sure whether it's worth it.
+But I don't mind having this anyway.
 
+Acked-by: Michael Buesch <m@bues.ch>
+
+--=20
+Michael
+
+--Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWL8xPAAoJEPUyvh2QjYsO6OUP/RnxCfI56jpLlDZzPGffe1YH
+Yv6E95wr6da3hc09vzQbGAmFblju4jkKjbOTbjC47XzQnKfPYAuVMngmYiaQwxNk
+anUO3qIBhMbiN7Q/RzeZEy54Id0gGpGxAYCRP4DWAgD0xOTxejPttTuQjQjz9Q6j
+/TvaKSSv712730JYUV1JheIugXjE2pwoov6LyZ5xgbwV65VCTkSF5dHdG98Iv99C
+Y6MFODHrhQWKOTCWI8ihYOEqVscZ7Wf7WWziC7FVBd1YrAJP5dJ2e6IvCVDOfozv
+IttCvbcXo6SbY9+hU9K/Ltz+iZkeV409st6aQ7b5XSW6Dd5fpz3ln1PzNA4zS9Tr
++dWZ0e0UuAv98k5Rf+SwByQVgOgFLEiOquyMcOHp1b1arItiZJFm729rJKqDQNnK
+GVpu7+Ubq7XhAqDJeDA0FNbRFa8jnrvz75bsdkhoASwzUjBwIMLcZoaULYQZT7yd
+fMiBD7MGTXAEhLKoAx3OLsLyOGpgqL4+9/l3GChzcdFOr3npAKm22e4KUMKzuLe+
+nVnI3qjSYe+Ur7USuxCBAPvbljEXDdBDUEiLdOWgw5JT1SZcZjxqaN3YeyLDlc1a
+3kyYHQOeUN7ELgGtwQn1tnFCxDq2bHstC/HMtbl7+HSys247Tcyku7Fz+jPQfxYf
+bZHXRgrsky8bTNEB5vaA
+=hweE
+-----END PGP SIGNATURE-----
+
+--Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW--
