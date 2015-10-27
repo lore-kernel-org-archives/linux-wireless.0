@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36085 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029AbbJEKgI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:55828 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329AbbJ0JRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:36:08 -0400
-Received: by pablk4 with SMTP id lk4so172817445pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:36:07 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 19/20] staging: wilc1000: fix NULL comparison in host_int_remove_wep_key
-Date: Mon,  5 Oct 2015 19:35:03 +0900
-Message-Id: <1444041304-7727-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123611_900191_6C1FD535)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 27 Oct 2015 05:17:17 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: fix build error on SPI
+Date: Tue, 27 Oct 2015 18:20:14 +0900
+Message-ID: <1445937614-12127-1-git-send-email-glen.lee@atmel.com> (sfid-20151027_101721_124433_7864AD02)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes NULL comparison style in host_int_remove_wep_key found
-by checkpatch.
+wilc_netdev_init function has parameters to pass but no argument is passed
+when bus type SPI is selected. Which causes build error.
+This patch passes argument &wilc to the function wilc_netdev_init.
 
-CHECK: Comparison to NULL could be written "!wfi_drv"
-FILE: drivers/staging/wilc1000/host_interface.c:4300
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6936bff..ade9be02 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4296,7 +4296,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
- 	int result = 0;
- 	struct host_if_msg msg;
- 
--	if (wfi_drv == NULL) {
-+	if (!wfi_drv) {
- 		result = -EFAULT;
- 		PRINT_ER("Failed to send setup multicast config packet\n");
- 		return result;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 9f899da..ded302a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1736,6 +1736,10 @@ int wilc_netdev_init(struct wilc **wilc)
+ /*The 1st function called after module inserted*/
+ static int __init init_wilc_driver(void)
+ {
++#ifdef WILC_SPI
++	struct wilc *wilc;
++#endif
++
+ #if defined(WILC_DEBUGFS)
+ 	if (wilc_debugfs_init() < 0) {
+ 		PRINT_D(GENERIC_DBG, "fail to create debugfs for wilc driver\n");
+@@ -1762,7 +1766,7 @@ static int __init init_wilc_driver(void)
+ 	}
+ #else
+ 	PRINT_D(INIT_DBG, "Initializing netdev\n");
+-	if (wilc_netdev_init())
++	if (wilc_netdev_init(&wilc))
+ 		PRINT_ER("Couldn't initialize netdev\n");
+ 	return 0;
+ #endif
 -- 
-2.6.0
+1.9.1
 
