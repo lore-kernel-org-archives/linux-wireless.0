@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:35709 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbbJ0EwL (ORCPT
+Received: from mail-wi0-f196.google.com ([209.85.212.196]:36686 "EHLO
+	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 00:52:11 -0400
-Date: Mon, 26 Oct 2015 22:08:48 -0700 (PDT)
-Message-Id: <20151026.220848.1827888098875824300.davem@davemloft.net> (sfid-20151027_055233_949490_7280B9B0)
-To: Julia.Lawall@lip6.fr
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, soren.brinkmann@xilinx.com,
-	linux-media@vger.kernel.org, linux@arm.linux.org.uk,
-	thomas.petazzoni@free-electrons.com, andrew@lunn.ch,
-	bhelgaas@google.com, jason@lakedaemon.net
-Subject: Re: [PATCH 0/8] add missing of_node_put
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1445781427-7110-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1445781427-7110-1-git-send-email-Julia.Lawall@lip6.fr>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 27 Oct 2015 15:04:15 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [RESEND PATCH 07/10] net: wireless: iwlegacy: Remove unneeded variable ret
+Date: Wed, 28 Oct 2015 00:32:42 +0530
+Message-Id: <1445972565-14963-7-git-send-email-punitvara@gmail.com> (sfid-20151027_200601_292016_40DCAB8C)
+In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Date: Sun, 25 Oct 2015 14:56:59 +0100
+This patch is to the 3945-mac.c file that fixes up following warning
+by coccicheck:
 
-> The various for_each device_node iterators performs an of_node_get on each
-> iteration, so a break out of the loop requires an of_node_put.
-> 
-> The complete semantic patch that fixes this problem is
-> (http://coccinelle.lip6.fr):
- ...
+drivers/net/wireless/iwlegacy/3945-mac.c:247:5-8: Unneeded variable:
+"ret". Return "- EOPNOTSUPP" on line 249
 
-Series applied, thanks a lot Julia.
+Return -EOPNOTSUPP directly instead of return using ret
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index af1b3e6..ff4dc44 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -244,9 +244,7 @@ il3945_set_dynamic_key(struct il_priv *il, struct ieee80211_key_conf *keyconf,
+ static int
+ il3945_remove_static_key(struct il_priv *il)
+ {
+-	int ret = -EOPNOTSUPP;
+-
+-	return ret;
++	return -EOPNOTSUPP;
+ }
+ 
+ static int
+@@ -529,7 +527,6 @@ il3945_tx_skb(struct il_priv *il,
+ 		if (unlikely(tid >= MAX_TID_COUNT))
+ 			goto drop;
+ 	}
+-
+ 	/* Descriptor for chosen Tx queue */
+ 	txq = &il->txq[txq_id];
+ 	q = &txq->q;
+-- 
+2.5.3
+
