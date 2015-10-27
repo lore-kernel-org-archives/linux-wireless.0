@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52309 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:57927 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874AbbJPEjI (ORCPT
+	with ESMTP id S1752476AbbJ0JZh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:08 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Tue, 27 Oct 2015 05:25:37 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 08/40] staging: wilc1000: rename au8Interval of struct join_bss_param
-Date: Fri, 16 Oct 2015 13:37:38 +0900
-Message-ID: <1444970290-17609-8-git-send-email-tony.cho@atmel.com> (sfid-20151016_063912_537443_6DCBAA4D)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH V2 06/27] staging: wilc1000: wilc_wlan_handle_rxq: add new argument and use wilc
+Date: Tue, 27 Oct 2015 18:27:42 +0900
+Message-ID: <1445938083-20445-6-git-send-email-glen.lee@atmel.com> (sfid-20151027_102540_496328_8D29DE68)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch adds new argument struct wilc and use it instead of g_linux_wlan.
+Pass wilc to the function as well.
 
-This patch renames au8Interval of struct join_bss_param to interval
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0c5cf08..5cbba1a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -225,7 +225,7 @@ struct join_bss_param {
- 	u8 cnt;
- 	u8 idx;
- 	u8 duration[4];
--	u8 au8Interval[4];
-+	u8 interval[4];
- 	u8 au8StartTime[4];
- };
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 5141fe0..4fc88ef 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1107,7 +1107,7 @@ _end_:
+ 	return ret;
+ }
  
-@@ -1205,9 +1205,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->duration);
+-static void wilc_wlan_handle_rxq(void)
++static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	int offset = 0, size, has_packet = 0;
+@@ -1122,7 +1122,7 @@ static void wilc_wlan_handle_rxq(void)
+ 	do {
+ 		if (p->quit) {
+ 			PRINT_D(RX_DBG, "exit 1st do-while due to Clean_UP function\n");
+-			up(&g_linux_wlan->cfg_event);
++			up(&wilc->cfg_event);
+ 			break;
+ 		}
+ 		rqe = wilc_wlan_rxq_remove();
+@@ -1194,7 +1194,7 @@ static void wilc_wlan_handle_rxq(void)
+ 						 **/
+ 						PRINT_D(RX_DBG, "p->cfg_seq_no = %d - rsp.seq_no = %d\n", p->cfg_seq_no, rsp.seq_no);
+ 						if (p->cfg_seq_no == rsp.seq_no)
+-							up(&g_linux_wlan->cfg_event);
++							up(&wilc->cfg_event);
+ 					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
+ 						/**
+ 						 *      Call back to indicate status...
+@@ -1350,7 +1350,7 @@ _end_:
+ #endif
+ 		}
+ 	}
+-	wilc_wlan_handle_rxq();
++	wilc_wlan_handle_rxq(wilc);
+ }
  
--		memcpy(pu8CurrByte, ptstrJoinBssParam->au8Interval, sizeof(ptstrJoinBssParam->au8Interval));
--
--		pu8CurrByte += sizeof(ptstrJoinBssParam->au8Interval);
-+		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
-+		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
- 
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
- 
-@@ -5002,7 +5001,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				memcpy(pNewJoinBssParam->duration, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
- 
--				memcpy(pNewJoinBssParam->au8Interval, pu8IEs + u16P2P_count, 4);
-+				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
- 
- 				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
+ void wilc_handle_isr(void *wilc)
 -- 
 1.9.1
 
