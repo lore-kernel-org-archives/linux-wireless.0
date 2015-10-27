@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:33715 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932711AbbJ1Ngc (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58589 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbbJ0J1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 09:36:32 -0400
-Received: by lbbec13 with SMTP id ec13so5912407lbb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 06:36:31 -0700 (PDT)
-Subject: Re: [RESEND PATCH 07/10] net: wireless: iwlegacy: Remove unneeded
- variable ret
-To: Punit Vara <punitvara@gmail.com>, kvalo@qca.qualcomm.com
-References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
- <1445972565-14963-7-git-send-email-punitvara@gmail.com>
- <5630CF11.8080504@cogentembedded.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <5630CF5E.1030801@cogentembedded.com> (sfid-20151028_143704_329579_6E534042)
-Date: Wed, 28 Oct 2015 16:36:30 +0300
+	Tue, 27 Oct 2015 05:27:33 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 25/27] staging: wilc1000: mac_xmit: use netdev private wilc instead of g_linux_wlan
+Date: Tue, 27 Oct 2015 18:28:01 +0900
+Message-ID: <1445938083-20445-25-git-send-email-glen.lee@atmel.com> (sfid-20151027_102741_572494_B88D8E25)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <5630CF11.8080504@cogentembedded.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2015 4:35 PM, Sergei Shtylyov wrote:
+This patch uses netdev private data member wilc instead of g_linux_wlan.
 
->> This patch is to the 3945-mac.c file that fixes up following warning
->> by coccicheck:
->>
->> drivers/net/wireless/iwlegacy/3945-mac.c:247:5-8: Unneeded variable:
->> "ret". Return "- EOPNOTSUPP" on line 249
->>
->> Return -EOPNOTSUPP directly instead of return using ret
->>
->> Signed-off-by: Punit Vara <punitvara@gmail.com>
->> ---
->>   drivers/net/wireless/iwlegacy/3945-mac.c | 5 +----
->>   1 file changed, 1 insertion(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c
->> b/drivers/net/wireless/iwlegacy/3945-mac.c
->> index af1b3e6..ff4dc44 100644
->> --- a/drivers/net/wireless/iwlegacy/3945-mac.c
->> +++ b/drivers/net/wireless/iwlegacy/3945-mac.c
->> @@ -244,9 +244,7 @@ il3945_set_dynamic_key(struct il_priv *il, struct
->> ieee80211_key_conf *keyconf,
->>   static int
->>   il3945_remove_static_key(struct il_priv *il)
->>   {
->> -    int ret = -EOPNOTSUPP;
->> -
->> -    return ret;
->> +    return -EOPNOTSUPP;
->>   }
->>
->>   static int
->> @@ -529,7 +527,6 @@ il3945_tx_skb(struct il_priv *il,
->>           if (unlikely(tid >= MAX_TID_COUNT))
->>               goto drop;
->>       }
->> -
->
->     Unrelated white space change.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-    And I've already complained about it! Please remove this hunk.
-
-MBR, Sergei
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d839f3b..9a105ceb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1366,8 +1366,10 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	char *pu8UdpBuffer;
+ 	struct iphdr *ih;
+ 	struct ethhdr *eth_h;
++	struct wilc *wilc;
+ 
+ 	nic = netdev_priv(ndev);
++	wilc = nic->wilc;
+ 
+ 	PRINT_D(TX_DBG, "Sending packet just received from TCP/IP\n");
+ 
+@@ -1410,14 +1412,14 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
+ 	nic->netstats.tx_packets++;
+ 	nic->netstats.tx_bytes += tx_data->size;
+-	tx_data->pBssid = g_linux_wlan->vif[nic->u8IfIdx].bssid;
++	tx_data->pBssid = wilc->vif[nic->u8IfIdx].bssid;
+ 	QueueCount = wilc_wlan_txq_add_net_pkt((void *)tx_data, tx_data->buff,
+ 					       tx_data->size,
+ 					       linux_wlan_tx_complete);
+ 
+ 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
+-		netif_stop_queue(g_linux_wlan->vif[0].ndev);
+-		netif_stop_queue(g_linux_wlan->vif[1].ndev);
++		netif_stop_queue(wilc->vif[0].ndev);
++		netif_stop_queue(wilc->vif[1].ndev);
+ 	}
+ 
+ 	return 0;
+-- 
+1.9.1
 
