@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:33682 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944AbbJBMpS (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:57826 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbbJ0JZM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 08:45:18 -0400
-Received: by pacex6 with SMTP id ex6so106323995pac.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 05:45:18 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 04/10] staging: wilc1000: replace PRINT_ER with pr_err
-Date: Fri,  2 Oct 2015 21:44:50 +0900
-Message-Id: <1443789896-7082-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_144522_910098_34E6A47A)
-In-Reply-To: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443789896-7082-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 27 Oct 2015 05:25:12 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 02/27] staging: wilc1000: isr_bh_routine: use wilc instead of g_linux_wlan
+Date: Tue, 27 Oct 2015 18:27:38 +0900
+Message-ID: <1445938083-20445-2-git-send-email-glen.lee@atmel.com> (sfid-20151027_102516_280044_078FADF4)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces PRINT_ER with pr_err.
-It would be better to use netdev_err, but it cannot use it in this
-function, so just use pr_err.
+Use netdev private data member wilc instead of g_linux_wlan.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 566e618..802d87a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5322,7 +5322,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
- 	struct host_if_msg msg;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 324cc57..7d0d722 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -248,8 +248,14 @@ static irqreturn_t isr_uh_routine(int irq, void *user_data)
  
- 	if (!pstrWFIDrv) {
--		PRINT_ER("driver is null\n");
-+		pr_err("driver is null\n");
- 		return -EFAULT;
+ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ {
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(userdata);
++	wilc = nic->wilc;
++
+ 	/*While mac is closing cacncel the handling of any interrupts received*/
+-	if (g_linux_wlan->close) {
++	if (wilc->close) {
+ 		PRINT_ER("Driver is CLOSING: Can't handle BH interrupt\n");
+ 		return IRQ_HANDLED;
  	}
- 
-@@ -5334,7 +5334,7 @@ int host_int_set_mac_chnl_num(tstrWILC_WFIDrv *hWFIDrv, u8 u8ChNum)
- 
- 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (result) {
--		PRINT_ER("wilc mq send fail\n");
-+		pr_err("wilc mq send fail\n");
- 		result = -EINVAL;
- 	}
- 
 -- 
-2.6.0
+1.9.1
 
