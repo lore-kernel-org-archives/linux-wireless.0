@@ -1,157 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52429 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936AbbJPEjv (ORCPT
+Received: from mail-wi0-f193.google.com ([209.85.212.193]:34155 "EHLO
+	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964950AbbJ0TEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:39:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 15/40] staging: wilc1000: rename variable hWaitResponse
-Date: Fri, 16 Oct 2015 13:37:45 +0900
-Message-ID: <1444970290-17609-15-git-send-email-tony.cho@atmel.com> (sfid-20151016_064656_779570_6C99ADAD)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 15:04:04 -0400
+From: Punit Vara <punitvara@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Punit Vara <punitvara@gmail.com>
+Subject: [RESEND PATCH 05/10] net: wireless: simplify return flow for zd1201_setconfig16
+Date: Wed, 28 Oct 2015 00:32:40 +0530
+Message-Id: <1445972565-14963-5-git-send-email-punitvara@gmail.com> (sfid-20151027_200640_170523_A80DE867)
+In-Reply-To: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch is to the zd1201.c file that fixes up warning
+reported by coccicheck:
 
-This patch renames variable hWaitResponse to hif_sema_wait_response
-to avoid CamelCase naming convention.
+WARNING: end returns can be simplified and declaration on line 1658 can
+be dropped
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Prefer direct return value instead of writing 2-3 more sentence.
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/zd1201.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 32c73b1..9346d42 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -243,7 +243,7 @@ static struct task_struct *hif_thread_handler;
- static WILC_MsgQueueHandle hif_msg_q;
- static struct semaphore hif_sema_thread;
- static struct semaphore hif_sema_driver;
--static struct semaphore hWaitResponse;
-+static struct semaphore hif_sema_wait_response;
- struct semaphore hSemHostIntDeinit;
- struct timer_list g_hPeriodicRSSI;
- 
-@@ -526,7 +526,7 @@ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
- 		PRINT_ER("Failed to get mac address\n");
- 		s32Error = -EFAULT;
- 	}
--	up(&hWaitResponse);
-+	up(&hif_sema_wait_response);
- 
- 	return s32Error;
- }
-@@ -817,7 +817,7 @@ ERRORHANDLER:
- static s32 Handle_wait_msg_q_empty(void)
+diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
+index 6f5c793..d9e67d9 100644
+--- a/drivers/net/wireless/zd1201.c
++++ b/drivers/net/wireless/zd1201.c
+@@ -1655,15 +1655,11 @@ static int zd1201_set_maxassoc(struct net_device *dev,
+     struct iw_request_info *info, struct iw_param *rrq, char *extra)
  {
- 	g_wilc_initialized = 0;
--	up(&hWaitResponse);
-+	up(&hif_sema_wait_response);
- 	return 0;
+ 	struct zd1201 *zd = netdev_priv(dev);
+-	int err;
+ 
+ 	if (!zd->ap)
+ 		return -EOPNOTSUPP;
+ 
+-	err = zd1201_setconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, rrq->value);
+-	if (err)
+-		return err;
+-	return 0;
++	return zd1201_setconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, rrq->value);
  }
  
-@@ -2253,7 +2253,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
- 	if (s32Error)
- 		PRINT_ER("Failed to send scan paramters config packet\n");
- 
--	up(&hWaitResponse);
-+	up(&hif_sema_wait_response);
- 	return 0;
- 
- }
-@@ -2508,7 +2508,7 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
- ERRORHANDLER:
- 	kfree(strWID.val);
- 
--	up(&hWaitResponse);
-+	up(&hif_sema_wait_response);
- }
- 
- static void Handle_DelStation(struct host_if_drv *hif_drv,
-@@ -2908,7 +2908,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
- 	if (strWID.val != NULL)
- 		kfree(strWID.val);
- 
--	up(&hWaitResponse);
-+	up(&hif_sema_wait_response);
- 
- 	return s32Error;
- 
-@@ -3505,7 +3505,7 @@ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
- 		return -EFAULT;
- 	}
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 	return s32Error;
- }
- 
-@@ -3792,7 +3792,7 @@ int host_int_wait_msg_queue_idle(void)
- 		result = -EINVAL;
- 	}
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 
- 	return result;
- }
-@@ -3999,7 +3999,7 @@ s32 host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
- 		return -EFAULT;
- 	}
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 	return s32Error;
- }
- 
-@@ -4229,7 +4229,7 @@ s32 host_int_init(struct host_if_drv **hif_drv_handler)
- 
- 	gbScanWhileConnected = false;
- 
--	sema_init(&hWaitResponse, 0);
-+	sema_init(&hif_sema_wait_response, 0);
- 
- 	hif_drv  = kzalloc(sizeof(struct host_if_drv), GFP_KERNEL);
- 	if (!hif_drv) {
-@@ -4795,7 +4795,7 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 
- 	return s32Error;
- 
-@@ -5091,7 +5091,7 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 
- 	return s32Error;
- }
-@@ -5121,7 +5121,7 @@ s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
- 	if (s32Error)
- 		PRINT_ER("wilc_mq_send fail\n");
- 
--	down(&hWaitResponse);
-+	down(&hif_sema_wait_response);
- 
- 	return s32Error;
- }
+ static int zd1201_get_maxassoc(struct net_device *dev,
 -- 
-1.9.1
+2.5.3
 
