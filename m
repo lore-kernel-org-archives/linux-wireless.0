@@ -1,61 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:17274 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:57944 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753797AbbJTIPe (ORCPT
+	with ESMTP id S1751646AbbJ0JZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 04:15:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Tue, 27 Oct 2015 05:25:43 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/13] staging: wilc1000: start_ap: use netdev private data wilc
-Date: Tue, 20 Oct 2015 17:14:02 +0900
-Message-ID: <1445328843-32247-12-git-send-email-tony.cho@atmel.com> (sfid-20151020_101544_715209_9E5C80FC)
-In-Reply-To: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
-References: <1445328843-32247-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH V2 07/27] staging: wilc1000: linux_wlan_mac_indicate: add argument and use wilc
+Date: Tue, 27 Oct 2015 18:27:43 +0900
+Message-ID: <1445938083-20445-7-git-send-email-glen.lee@atmel.com> (sfid-20151027_102546_330398_F8E52F06)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
-
-Use netdev private data member wilc instead of global variable g_linux_wlan.
+This patch adds argument wilc and pass the function wilc. Use wilc instead of
+g_linux_wlan and pd.
 
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 13 ++++++-------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c          |  4 ++--
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 59db1d5..5559aa6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2891,8 +2891,12 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct cfg80211_beacon_data *beacon = &(settings->beacon);
- 	struct wilc_priv *priv;
- 	s32 s32Error = 0;
-+	struct wilc *wl;
-+	perInterface_wlan_t *nic;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 54e077d..227dedb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -348,24 +348,23 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout)
+ 	return error;
+ }
  
- 	priv = wiphy_priv(wiphy);
-+	nic = netdev_priv(dev);
-+	wl = nic->wilc;
- 	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
+-void linux_wlan_mac_indicate(int flag)
++void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+ {
+ 	/*I have to do it that way becuase there is no mean to encapsulate device pointer
+ 	 * as a parameter
+ 	 */
+-	struct wilc *pd = g_linux_wlan;
+ 	int status;
  
- 	PRINT_D(HOSTAPD_DBG, "Interval = %d\n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
-@@ -2903,7 +2907,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (s32Error != 0)
- 		PRINT_ER("Error in setting channel\n");
+ 	if (flag == WILC_MAC_INDICATE_STATUS) {
+ 		wilc_wlan_cfg_get_val(WID_STATUS, (unsigned char *)&status, 4);
+-		if (pd->mac_status == WILC_MAC_STATUS_INIT) {
+-			pd->mac_status = status;
+-			up(&pd->sync_event);
++		if (wilc->mac_status == WILC_MAC_STATUS_INIT) {
++			wilc->mac_status = status;
++			up(&wilc->sync_event);
+ 		} else {
+-			pd->mac_status = status;
++			wilc->mac_status = status;
+ 		}
  
--	linux_wlan_set_bssid(dev, g_linux_wlan->vif[0].src_addr);
-+	linux_wlan_set_bssid(dev, wl->vif[0].src_addr);
+-		if (pd->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
++		if (wilc->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
+ 		}
  
- 	s32Error = host_int_add_beacon(priv->hWILCWFIDrv,
- 					settings->beacon_interval,
+ 	} else if (flag == WILC_MAC_INDICATE_SCAN) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8aa3355..a828fab 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -209,7 +209,7 @@ struct WILC_WFI_mon_priv {
+ extern struct wilc *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
+-void linux_wlan_mac_indicate(int flag);
++void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
+ void linux_wlan_rx_complete(void);
+ void linux_wlan_dbg(u8 *buff);
+ int linux_wlan_lock_timeout(void *vp, u32 timeout);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 4fc88ef..4fa956a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1199,10 +1199,10 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 						/**
+ 						 *      Call back to indicate status...
+ 						 **/
+-						linux_wlan_mac_indicate(WILC_MAC_INDICATE_STATUS);
++						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
+ 
+ 					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
+-						linux_wlan_mac_indicate(WILC_MAC_INDICATE_SCAN);
++						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
+ 					}
+ 				}
+ 			}
 -- 
 1.9.1
 
