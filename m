@@ -1,127 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54186 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbbJWEul (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:33298 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbJ0Hiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 00:50:41 -0400
-From: Yanbo Li <yanbol@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
-Date: Thu, 22 Oct 2015 21:50:16 -0700
-Message-ID: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20151023_065045_178950_31947CC1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 27 Oct 2015 03:38:46 -0400
+Received: by lbbec13 with SMTP id ec13so54971112lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 00:38:45 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
+Date: Tue, 27 Oct 2015 08:38:40 +0100
+Message-Id: <1445931520-14509-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151027_083849_961420_60172E2B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The QCA99X0 4 addresses RX packets pad 2 bytes at the beginning of
-MSDU instead the end of ieee80211 header to keep align. The currently
-RX data path can't parse the header correctly in this case. This
-patch fixes it for QCA99X0
+Add new VIF flag, that will allow get NOA update
+notification when driver will request this, even
+this is not pure P2P vif (eg. STA vif).
 
-Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ include/net/mac80211.h | 4 ++++
+ net/mac80211/mlme.c    | 6 ++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 13de3617d5ab..3c1d07c191d5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -58,6 +58,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
- 		.fw = {
- 			.dir = QCA988X_HW_2_0_FW_DIR,
- 			.fw = QCA988X_HW_2_0_FW_FILE,
-@@ -75,6 +76,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
- 		.fw = {
- 			.dir = QCA6174_HW_2_1_FW_DIR,
- 			.fw = QCA6174_HW_2_1_FW_FILE,
-@@ -92,6 +94,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
- 		.fw = {
- 			.dir = QCA6174_HW_3_0_FW_DIR,
- 			.fw = QCA6174_HW_3_0_FW_FILE,
-@@ -109,6 +112,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.loc_4addr_pad = ATH10K_4ADDR_PAD_AFT,
- 		.fw = {
- 			/* uses same binaries as hw3.0 */
- 			.dir = QCA6174_HW_3_0_FW_DIR,
-@@ -128,6 +132,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.continuous_frag_desc = true,
- 		.channel_counters_freq_hz = 150000,
- 		.max_probe_resp_desc_thres = 24,
-+		.loc_4addr_pad = ATH10K_4ADDR_PAD_PRE,
- 		.fw = {
- 			.dir = QCA99X0_HW_2_0_FW_DIR,
- 			.fw = QCA99X0_HW_2_0_FW_FILE,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7cc7cdd56c95..b4db8bbf85ce 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -646,6 +646,9 @@ struct ath10k {
- 		 */
- 		u32 max_probe_resp_desc_thres;
- 
-+		/* The padding bytes's location is different on various chips */
-+		enum ath10k_loc_4addr_pad loc_4addr_pad;
-+
- 		struct ath10k_hw_params_fw {
- 			const char *dir;
- 			const char *fw;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6060dda4e910..f25f1d7a3edf 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1114,7 +1114,19 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
- 	 */
- 
- 	/* pull decapped header and copy SA & DA */
--	hdr = (struct ieee80211_hdr *)msdu->data;
-+	if ((ar->hw_params.loc_4addr_pad  == ATH10K_4ADDR_PAD_PRE) &&
-+	    ieee80211_has_a4(((struct ieee80211_hdr *)first_hdr)->frame_control)) {
-+		/* The QCA99X0 4 address mode pad 2 bytes at the
-+		 * beginning of MSDU
-+		 */
-+		hdr = (struct ieee80211_hdr *)(msdu->data + 2);
-+		/* The skb length need be extended 2 as the 2 bytes at the tail
-+		 * be excluded due to the padding
-+		 */
-+		skb_put(msdu, 2);
-+	} else
-+		hdr = (struct ieee80211_hdr *)(msdu->data);
-+
- 	hdr_len = ath10k_htt_rx_nwifi_hdrlen(ar, hdr);
- 	ether_addr_copy(da, ieee80211_get_DA(hdr));
- 	ether_addr_copy(sa, ieee80211_get_SA(hdr));
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 2d87737e35ff..efbe6fa1f356 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -282,6 +282,11 @@ enum ath10k_hw_rate_cck {
- 	ATH10K_HW_RATE_CCK_SP_2M,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4ec6fed..1173c63 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1325,11 +1325,15 @@ struct ieee80211_channel_switch {
+  *	interface. This flag should be set during interface addition,
+  *	but may be set/cleared as late as authentication to an AP. It is
+  *	only valid for managed/station mode interfaces.
++ * @IEEE80211_VIF_GET_NOA_UPDATE: request to handle NOA attributes
++ *	and send P2P_PS notification to the driver if NOA changed, even
++ *	this is not pure P2P vif.
+  */
+ enum ieee80211_vif_flags {
+ 	IEEE80211_VIF_BEACON_FILTER		= BIT(0),
+ 	IEEE80211_VIF_SUPPORTS_CQM_RSSI		= BIT(1),
+ 	IEEE80211_VIF_SUPPORTS_UAPSD		= BIT(2),
++	IEEE80211_VIF_GET_NOA_UPDATE		= BIT(3),
  };
  
-+enum ath10k_loc_4addr_pad {
-+	ATH10K_4ADDR_PAD_AFT,
-+	ATH10K_4ADDR_PAD_PRE,
-+};
-+
- /* Target specific defines for MAIN firmware */
- #define TARGET_NUM_VDEVS			8
- #define TARGET_NUM_PEER_AST			2
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 56ef9a8..5bafd1e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1941,7 +1941,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->u.mgd.flags |= IEEE80211_STA_RESET_SIGNAL_AVE;
+ 
+-	if (sdata->vif.p2p) {
++	if (sdata->vif.p2p ||
++	    sdata->vif.driver_flags & IEEE80211_VIF_GET_NOA_UPDATE) {
+ 		const struct cfg80211_bss_ies *ies;
+ 
+ 		rcu_read_lock();
+@@ -3461,7 +3462,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	if (sdata->vif.p2p) {
++	if (sdata->vif.p2p ||
++	    sdata->vif.driver_flags & IEEE80211_VIF_GET_NOA_UPDATE) {
+ 		struct ieee80211_p2p_noa_attr noa = {};
+ 		int ret;
+ 
 -- 
 1.9.1
 
