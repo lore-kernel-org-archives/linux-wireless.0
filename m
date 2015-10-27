@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22783 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbbJWG5U (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53583 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754284AbbJ0MWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 02:57:20 -0400
-Date: Fri, 23 Oct 2015 09:57:03 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 05/28] staging: wilc1000: wilc_handle_isr: add argument
- wilc to wilc_handle_isr
-Message-ID: <20151023065703.GV7340@mwanda> (sfid-20151023_085746_610879_3A9BE0BB)
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
- <1445578124-31486-5-git-send-email-glen.lee@atmel.com>
+	Tue, 27 Oct 2015 08:22:08 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: fill HT/VHT MCS rateset only for configured chainmask
+Date: Tue, 27 Oct 2015 17:51:12 +0530
+Message-ID: <1445948474-16738-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151027_132214_931247_3E73E647)
+In-Reply-To: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445578124-31486-5-git-send-email-glen.lee@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 23, 2015 at 02:28:21PM +0900, Glen Lee wrote:
-> This patch add new argument wilc to wilc_handle_isr and pass wilc to
-> the function.
+HT/VHT MCS rateset should be filled only for configured chainmask
+rather that max supported chainmask. Fix that by checking configured
+chainmask while filling HT/VHT MCS rate map.
 
-It's not important enough to redo the patch but why are we sometimes
-using "wl" and sometimes "wilc"?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b4eb9fd..4e799d4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6972,7 +6972,7 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 
+ 	mcs_map = 0;
+ 	for (i = 0; i < 8; i++) {
+-		if (i < ar->num_rf_chains)
++		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
+ 			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
+ 		else
+ 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
+@@ -7039,8 +7039,10 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
+ 	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
+ 		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
+ 
+-	for (i = 0; i < ar->num_rf_chains; i++)
+-		ht_cap.mcs.rx_mask[i] = 0xFF;
++	for (i = 0; i < ar->num_rf_chains; i++) {
++		if (ar->cfg_rx_chainmask & BIT(i))
++			ht_cap.mcs.rx_mask[i] = 0xFF;
++	}
+ 
+ 	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+ 
+-- 
+2.6.2
 
