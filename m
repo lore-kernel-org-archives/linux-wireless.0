@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:35597 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757999AbbJ2XSD (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58398 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753476AbbJ0J1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 19:18:03 -0400
-Received: by pagq8 with SMTP id q8so5986452pag.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:03 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 04/12] staging: wilc1000: fix parameter name of host_int_del_station
-Date: Fri, 30 Oct 2015 08:17:40 +0900
-Message-Id: <1446160668-10747-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001821_211021_61C095ED)
-In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 27 Oct 2015 05:27:03 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 20/27] staging: wilc1000: frmw_to_linux: add argument struct wilc
+Date: Tue, 27 Oct 2015 18:27:56 +0900
+Message-ID: <1445938083-20445-20-git-send-email-glen.lee@atmel.com> (sfid-20151027_102706_752026_9CA99544)
+In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes struct host_if_drv of host_int_del_station function
-declaration from hWFIDrv to hif_drv.
-With this change, first parameter name of this function declaration and
-definition has same name as hif_drv.
+This patch adds new argument struct wilc and use it instead of
+g_linux_wlan. Pass argument wilc to the function as well.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-V2: resend because 11/12 patch is changed.
+ drivers/staging/wilc1000/linux_wlan.c         | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c          | 3 ++-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9eb1b3b..083def57 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
-+int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d193af8..6293410 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1557,7 +1557,7 @@ done:
+ 	return s32Error;
+ }
  
- /*!
-  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
+-void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset)
++void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ {
+ 
+ 	unsigned int frame_len = 0;
+@@ -1586,8 +1586,8 @@ void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset)
+ 			return;
+ 		}
+ 
+-		if (g_linux_wlan == NULL || wilc_netdev == NULL)
+-			PRINT_ER("wilc_netdev in g_linux_wlan is NULL");
++		if (wilc == NULL || wilc_netdev == NULL)
++			PRINT_ER("wilc_netdev in wilc is NULL");
+ 		skb->dev = wilc_netdev;
+ 
+ 		if (skb->dev == NULL)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8ba69ee..bca3e25 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -208,7 +208,7 @@ struct WILC_WFI_mon_priv {
+ 
+ extern struct wilc *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+-void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
++void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
+ void linux_wlan_rx_complete(void);
+ void linux_wlan_dbg(u8 *buff);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 1461b61..35c4c32d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1184,7 +1184,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 
+ 				if (!is_cfg_packet) {
+ 					if (pkt_len > 0) {
+-						frmw_to_linux(&buffer[offset],
++						frmw_to_linux(wilc,
++							      &buffer[offset],
+ 							      pkt_len,
+ 							      pkt_offset);
+ 						has_packet = 1;
 -- 
-2.6.1
+1.9.1
 
