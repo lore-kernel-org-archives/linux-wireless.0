@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9678 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbbJOKla (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:35016 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965972AbbJ1OEV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 06:41:30 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
-Date: Thu, 15 Oct 2015 13:40:40 +0300
-Message-ID: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20151015_124135_470356_BAA6A631)
+	Wed, 28 Oct 2015 10:04:21 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-10-25
+Date: Wed, 28 Oct 2015 14:03:25 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B4AB2@hasmsx107.ger.corp.intel.com> (sfid-20151028_150427_871220_D3B38551)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+ <87mvv3tb5d.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.bin") I
-forgot to commit board.bin file and that's why it was not included in the
-commit even I had added an entry to WHENCE. Add that now.
 
-At the same time also add Version field for firmware-4.bin.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- WHENCE                         |    1 +
- ath10k/QCA988X/hw2.0/board.bin |  Bin 0 -> 2116 bytes
- 2 files changed, 1 insertion(+)
- create mode 100644 ath10k/QCA988X/hw2.0/board.bin
+On 10/28/2015 02:45 PM, Kalle Valo wrote:
+> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+> 
+>> Last (obviously) pull request for 4.4.
+>> I came back from a long vacation and took maintenance over back from Luca.
+>> Please note that you'll have to merge mac80211-next/master (or net-next)
+>> before you pull from me. I created this pull request giving
+>> mac80211-next/master
+>> as the start point to have the correct output.
+>> I hope it will still make it.
+>>
+>> Details in the tag.
+>>
+>> Thank!
+>>
+>> The following changes since commit e5a9f8d04660da7ef3a98260aa74c3976f9cb4cd:
+>>
+>>   mac80211: move station statistics into sub-structs (2015-10-21
+>> 10:08:22 +0200)
+>>
+>> are available in the git repository at:
+>>
+>>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+> 
+> I don't see the tag name in your pull request, but I'm going to assume
+> that you meant iwlwifi-next-for-kalle-2015-10-25:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-next.git/tag/?h=iwlwifi-next-for-kalle-2015-10-25
+> 
+> Please let me know ASAP if that's not the case.
+> 
 
-diff --git a/WHENCE b/WHENCE
-index e3a3d89d387c..801b34b6fcf2 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -2390,6 +2390,7 @@ Driver: ath10k - Qualcomm Atheros support for QCA988x family of chips
- 
- File: ath10k/QCA988X/hw2.0/board.bin
- File: ath10k/QCA988X/hw2.0/firmware-4.bin
-+Version: 10.2.4.45
- 
- Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
- 
-diff --git a/ath10k/QCA988X/hw2.0/board.bin b/ath10k/QCA988X/hw2.0/board.bin
-new file mode 100644
-index 0000000000000000000000000000000000000000..8f8bd6b99ace2fcfd5a63c072856c215a86a3f59
-GIT binary patch
-literal 2116
-zcmZ?axNpG3!obWfWD>@}ki}r{$-v>l!@<D7AP>aGKnwyMf(*V876yq+977=~0{jdL
-zObiTyf{Y9Sj3CIsAV7+Cx~S!11i3LZlof89Ae=RP7-tz6911!YG4KeqFjNA`8iqoc
-z=YCWG`Hc)^K(dk{A4RmDp%^Gy#*l*~3S*K-7py7hT*CmvN^l@2qof4EA|fL1&Um@3
-zaXI4Uf{QIAB=qh~7Q-6016d5X*n&c$;!-k>POk1=K88l7=2kWg3<afg7r}5<{p1-S
-zHiTZYqo8#88W66k2dP2O*u-sWY;353i48+xpeKceMTEqJMTNzfMS(0~Awf}LAYWJn
-zgfY$WiHOPQ*|PT}pHL=4ECZiV9z!}z5iq{_gmM`Yfn+&D0g7lILlRK5lA#Diw2&bU
-zC|bi%iXz&?Pz@B#0qTGPu(=h$vWHK|kHG;&w3s0oDC)srg(8~G5CIf*W-vh#g)zyc
-zeL^yN7VN|%<z%G9uwelKfitTz7`oUNWH3;|=HcOa_ihctIj#q57zP7dKukhXTGqkM
-z!_(W>z|6wZ+LnRACnlk1%Z|NgVYFXdTHm^D`;P}DO<J_+@c;kl;@~tiVZ#;}?H2~r
-zFm2g7kox~XfG!Tx52Fd0Ut?1P%tt^HPJ{ClFl#{ox;RKB1VL!9Dj*XEVDeyo4M=GX
-zgoM)|-3Wk?hlrD#=3x2+1cgOKL?onCl#~=zl$Df}RTP!flz~`DSwTioUY?LV%$$Lu
-E0as;$_y7O^
-
-literal 0
-HcmV?d00001
-
--- 
-1.7.9.5
-
+That's right. Sorry, I created the pull request with HEAD and not with
+the tag.
