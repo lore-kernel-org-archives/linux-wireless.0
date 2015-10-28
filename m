@@ -1,107 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58059 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbbJ0J0I (ORCPT
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:33555 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384AbbJ1IVg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:26:08 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 11/27] staging: wilc1000: wilc_wlan_handle_txq: add argument and use wilc
-Date: Tue, 27 Oct 2015 18:27:47 +0900
-Message-ID: <1445938083-20445-11-git-send-email-glen.lee@atmel.com> (sfid-20151027_102612_247621_8EED2A85)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Wed, 28 Oct 2015 04:21:36 -0400
+Received: by qgeo38 with SMTP id o38so121321qge.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 01:21:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <562EC022.4030302@linaro.org>
+References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
+	<CAJAp7OjPmX70ZvSEDuneaDn=yJnOgJVwPTmikrE4HjX2ycdq1Q@mail.gmail.com>
+	<562EC022.4030302@linaro.org>
+Date: Wed, 28 Oct 2015 08:21:35 +0000
+Message-ID: <CAFSJ42ax9=eB+MPkVY_MFaS7zQNaLQ79hwnEAdKccuJ3EUhKJw@mail.gmail.com> (sfid-20151028_092143_974058_3A8CB11F)
+Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for
+ arm64 dma_alloc.
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: yfw <fengwei.yin@linaro.org>
+Cc: Bjorn Andersson <bjorn@kryo.se>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds argument net_device dev and use netdev private data memeber
-wilc instead of g_linux_wlan.
+Looks good to me.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c |  4 ++--
- drivers/staging/wilc1000/wilc_wlan.c  | 11 ++++++++---
- drivers/staging/wilc1000/wilc_wlan.h  |  2 +-
- 3 files changed, 11 insertions(+), 6 deletions(-)
+2015-10-27 0:06 GMT+00:00 yfw <fengwei.yin@linaro.org>:
+>
+>
+> On 2015/10/27 2:24, Bjorn Andersson wrote:
+>>
+>> On Sun, Oct 25, 2015 at 7:36 PM, Yin, Fengwei <fengwei.yin@linaro.org>
+>> wrote:
+>>>
+>>> arm64 has requirement that all the dma operations have actual device.
+>>> Otherwise, following warnning message shown and dma allocation fails:
+>>>
+>>> WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106
+>>> __dma_alloc+0x24c/0x258()
+>>> Use an actual device structure for DMA allocation
+>>> Modules linked in: wcn36xx wcn36xx_platform
+>>> CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
+>>> Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
+>>> Call trace:
+>>> [<ffffffc000089904>] dump_backtrace+0x0/0x124
+>>> [<ffffffc000089a38>] show_stack+0x10/0x1c
+>>> [<ffffffc000627114>] dump_stack+0x80/0xc4
+>>> [<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
+>>> [<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
+>>> [<ffffffc00009487c>] __dma_alloc+0x248/0x258
+>>> [<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
+>>> [<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
+>>> [<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
+>>> [<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
+>>> [<ffffffc00051693c>] __dev_open+0xb0/0x120
+>>> [<ffffffc000516c10>] __dev_change_flags+0x88/0x150
+>>> [<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
+>>> [<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
+>>>
+>>> Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
+>>
+>>
+>> Acked-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+>
+> Thanks for the Acked-by.
+>
+> Regards
+> Yin, Fengwei
+>
+>>
+>> Regards,
+>> Bjorn
+>>
+>
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 5897f35..d9f1bf1 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -476,10 +476,10 @@ static int linux_wlan_txq_task(void *vp)
- 		}
- 		PRINT_D(TX_DBG, "txq_task handle the sending packet and let me go to sleep.\n");
- #if !defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
--		ret = wilc_wlan_handle_txq(&txq_count);
-+		ret = wilc_wlan_handle_txq(dev, &txq_count);
- #else
- 		do {
--			ret = wilc_wlan_handle_txq(&txq_count);
-+			ret = wilc_wlan_handle_txq(dev, &txq_count);
- 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD /* && netif_queue_stopped(pd->wilc_netdev)*/) {
- 				PRINT_D(TX_DBG, "Waking up queue\n");
- 				/* netif_wake_queue(pd->wilc_netdev); */
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 4fa956a..907da93 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -814,7 +814,7 @@ void chip_sleep_manually(u32 u32SleepTime)
-  *      Tx, Rx queue handle functions
-  *
-  ********************************************/
--int wilc_wlan_handle_txq(u32 *pu32TxqCount)
-+int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	int i, entries = 0;
-@@ -828,13 +828,18 @@ int wilc_wlan_handle_txq(u32 *pu32TxqCount)
- 	int counter;
- 	int timeout;
- 	u32 vmm_table[WILC_VMM_TBL_SIZE];
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
-+
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
- 
- 	p->txq_exit = 0;
- 	do {
- 		if (p->quit)
- 			break;
- 
--		linux_wlan_lock_timeout(&g_linux_wlan->txq_add_to_head_cs,
-+		linux_wlan_lock_timeout(&wilc->txq_add_to_head_cs,
- 					CFG_PKTS_TIMEOUT);
- #ifdef	TCP_ACK_FILTER
- 		wilc_wlan_txq_filter_dup_tcp_ack();
-@@ -1098,7 +1103,7 @@ _end_:
- 		if (ret != 1)
- 			break;
- 	} while (0);
--	up(&g_linux_wlan->txq_add_to_head_cs);
-+	up(&wilc->txq_add_to_head_cs);
- 
- 	p->txq_exit = 1;
- 	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index a07375b..79b35e6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -300,7 +300,7 @@ int wilc_wlan_start(void);
- int wilc_wlan_stop(void);
- int wilc_wlan_txq_add_net_pkt(void *priv, u8 *buffer, u32 buffer_size,
- 			      wilc_tx_complete_func_t func);
--int wilc_wlan_handle_txq(u32 *pu32TxqCount);
-+int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
- void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(void);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+
+
 -- 
-1.9.1
-
+Best regards,
+Eugene
