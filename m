@@ -1,82 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57515 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750734AbbJRScF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:43366 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932509AbbJ1HGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 14:32:05 -0400
-Message-ID: <1445193116.31451.78.camel@decadent.org.uk> (sfid-20151018_203212_908422_35A5705E)
-Subject: Re: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Sun, 18 Oct 2015 19:31:56 +0100
-In-Reply-To: <1445192636.31451.74.camel@decadent.org.uk>
-References: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com>
-	 <1445192636.31451.74.camel@decadent.org.uk>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-NzPf6A/jMeFiavFvmkTH"
-Mime-Version: 1.0
+	Wed, 28 Oct 2015 03:06:35 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 73/80] staging: wilc1000: rename u16HTExtParams of struct add_sta_param
+Date: Wed, 28 Oct 2015 16:07:18 +0900
+Message-ID: <1446016045-32154-23-git-send-email-glen.lee@atmel.com> (sfid-20151028_080642_081205_BE65A89D)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
---=-NzPf6A/jMeFiavFvmkTH
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This patch renames u16HTExtParams of struct add_sta_param to ht_ext_params
+to avoid CamelCase naming convention.
 
-On Sun, 2015-10-18 at 19:23 +0100, Ben Hutchings wrote:
-> On Thu, 2015-10-15 at 13:40 +0300, Kalle Valo wrote:
-> > In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.b=
-in") I
-> > forgot to commit board.bin file and that's why it was not included in t=
-he
-> > commit even I had added an entry to WHENCE. Add that now.
-> >=20
-> > At the same time also add Version field for firmware-4.bin.
-> >=20
-> > Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> [...]
->=20
-> I've applied this and the following 4 patches. =C2=A0However, I'm not
-> entirely happy with copyright acknowledgements going into the
-> notice_ath10k*.txt files which aren't referenced anywhere. =C2=A0It would=
- be
-> easy for downstream distributors to miss that they should be packaged
-> along with the firmware blobs they relate to. =C2=A0Please can you combin=
-e
-> these with the QCA licence file or add references to these files from
-> WHENCE?
->=20
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 ++--
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-Also please make sure that all text files are encoded as UTF-8 (or
-ASCII). =C2=A0A couple of the notices had quote characters which I
-eventually worked out to be GB2312-encoded.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 976d432..fa45327 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2330,8 +2330,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	       WILC_SUPP_MCS_SET_SIZE);
+ 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
+ 
+-	*pu8CurrByte++ = pstrStationParam->u16HTExtParams & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->u16HTExtParams >> 8) & 0xFF;
++	*pu8CurrByte++ = pstrStationParam->ht_ext_params & 0xFF;
++	*pu8CurrByte++ = (pstrStationParam->ht_ext_params >> 8) & 0xFF;
+ 
+ 	*pu8CurrByte++ = pstrStationParam->u32TxBeamformingCap & 0xFF;
+ 	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 8) & 0xFF;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 48ef051..6fcbbc6 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -296,7 +296,7 @@ struct add_sta_param {
+ 	u16 ht_capa_info;
+ 	u8 ht_ampdu_params;
+ 	u8 ht_supp_mcs_set[16];
+-	u16 u16HTExtParams;
++	u16 ht_ext_params;
+ 	u32 u32TxBeamformingCap;
+ 	u8 u8ASELCap;
+ 	u16 u16FlagsMask;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c0dbd39..38ab0e7 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3028,7 +3028,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
++			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+ 		}
+@@ -3042,7 +3042,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_capa_info);
+ 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+ 			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
++		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
++			strStaParams.ht_ext_params);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
+@@ -3147,7 +3148,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
++			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+ 
+@@ -3162,7 +3163,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_capa_info);
+ 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+ 			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
++		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
++			strStaParams.ht_ext_params);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
+-- 
+1.9.1
 
-Ben.
-
---=20
-Ben Hutchings
-A free society is one where it is safe to be unpopular. - Adlai Stevenson
---=-NzPf6A/jMeFiavFvmkTH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAViPlnOe/yOyVhhEJAQq0LQ//UBT1r3CBNjLGZ8zI2pxvEY+wvO2GHGnT
-G92zw8td7FnA+tjIRgFolP5j5C+jK+YU7m2IXywJHiTagUBUG+Ea4rMIZNaO7kv7
-BSWqrc/JPr8lyYUv379iRMM+nDb5PySomv9VXCBbcaP27QFI9LM1cJi+APvZqXgy
-OF9y5XZcoFRwvU8Cg9Ze5WDOoOhv9G5iuvBbDVxZkRQUpY2pGivYv+eth7AUr4il
-P/TpRN53kw5cwqSEJJi73dC9htf9htHz/uqnPxm1lI3GXr0mnxBVfqYw909RTMUd
-XyAxy/iWqzQ5EXe16pWdYrEBFqEbVE1Q7c9g4LJDYsO/TdNsVZC55cAHYWkLnVwD
-htvy2c+z+sEO3NSCj2uNYNWGKXkyrB0GhJvX9E2Fjdo479PL3Wpxlo51/+4EpTcZ
-9K0O7rwEX7lY/PaPG+H8IdQynmRNb1DxLhIX7C6gmk2ezacGl/sziVWBR6p7svIG
-DNvD/FrPK1xhrhyJSZdB+bKqJWirc1BQyGSHG5rpMOjsjYp0cgq/QguC66/h0Sjl
-WFv3DFrTBUaKGVw0mUVue8wgfrZe4gkwNh/J4NPbVEegU2mDISSwIqGQZ123dRlv
-rXaWASpGb0xsVJ1DfEdiZz5OXLKvcZAnrNEm5EKkkip8a4AtNe23uEP2RoXAjEsE
-jvIDA030C/8=
-=tp5S
------END PGP SIGNATURE-----
-
---=-NzPf6A/jMeFiavFvmkTH--
