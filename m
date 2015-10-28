@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from odin.sdf-eu.org ([178.63.35.194]:55278 "EHLO sdfeu.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750884AbbJaURh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2015 16:17:37 -0400
-Received: from vaygach (199-119-235-162.eng.wind.ca [199.119.235.162] (may be forged))
-	(authenticated (0 bits))
-	by sdfeu.org (8.14.8/8.14.3) with ESMTP id t9VK6snM016548
-	(using TLSv1/SSLv3 with cipher AES128-GCM-SHA256 (128 bits) verified NO)
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2015 20:06:58 GMT
-Date: Sat, 31 Oct 2015 14:10:57 -0600
-From: Gerrit Renker <gerrit@sdf.org>
-To: linux-wireless@vger.kernel.org
-Subject: [WEXT/nl80211] few API questions
-Message-ID: <20151031141057.324b3274@vaygach> (sfid-20151031_211741_208909_2F737FC0)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42945 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754527AbbJ1HEn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 03:04:43 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 54/80] staging: wilc1000: rename s8RSSI of struct rf_info
+Date: Wed, 28 Oct 2015 16:06:59 +0900
+Message-ID: <1446016045-32154-4-git-send-email-glen.lee@atmel.com> (sfid-20151028_080446_421276_794ECA89)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a few short nl80211 API questions to help convert a userland
-program from WEXT to nl80211 [1].
+From: Leo Kim <leo.kim@atmel.com>
 
-The iw code has been helpful, and I have used bits of it so far. When it comes
-to kernel components, though, I don't understand that code well enough; so I'd
-appreciate help with the following:
+This patch renames s8RSSI of struct rf_info to rssi
+to avoid CamelCase naming convention.
 
- 1. Signal Level Units
-    This refers to station signal level in status ASSOCIATED, AUTHENTICATED,
-    or IBSS_JOINED.
-    
-       Q: Are the values reported via NL80211_STA_INFO_SIGNAL{,_AVG} 
-          in xxx always in dBm, or if not, what information should be used
-          (NL80211_BSS_SIGNAL_MBM, NL80211_BSS_SIGNAL_UNSPEC).
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-          The wext API sets the unit via iw_quality.updated flags (IW_QUAL_DBM),
-          is the same needed in nl80211?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a835016..46e590a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2145,7 +2145,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	strWIDList[u32WidsCount].id = WID_RSSI;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->s8RSSI;
++	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
+ 	u32WidsCount++;
+ 
+ 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 941b8d9..6502ec1 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -54,7 +54,7 @@
+ 
+ struct rf_info {
+ 	u8 link_speed;
+-	s8 s8RSSI;
++	s8 rssi;
+ 	u32 u32TxCount;
+ 	u32 u32RxCount;
+ 	u32 u32TxFailureCount;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 2c12887..5005d68 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1566,7 +1566,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 						BIT(NL80211_STA_INFO_TX_FAILED) |
+ 						BIT(NL80211_STA_INFO_TX_BITRATE);
+ 
+-		sinfo->signal		=  strStatistics.s8RSSI;
++		sinfo->signal = strStatistics.rssi;
+ 		sinfo->rx_packets   =  strStatistics.u32RxCount;
+ 		sinfo->tx_packets   =  strStatistics.u32TxCount + strStatistics.u32TxFailureCount;
+ 		sinfo->tx_failed	=  strStatistics.u32TxFailureCount;
+-- 
+1.9.1
 
-  2. Noise Level
-     It seems that the WEXT API does no longer support reporting noise floor
-     levels (IW_QUAL_NOISE_INVALID is always set).
-
-       Q: Is it correct to use NL80211_SURVEY_INFO_NOISE for the active channel
-          (NL80211_SURVEY_INFO_IN_USE) as replacement (header says it is dBm)?
-          
- 3. Link Quality
-    WEXT has the concept of a link quality metric (iw_quality.qual).
-
-       Q: Given access to signal levels in dBm or mBm, looking at
-          cfg80211_wireless_stats(); would be correct to replace the call to
-          SIOCGIWSTATS by using the nl80211 values in (1) and simply
-          interpret -110dBm and -40dBm as ends of a quality scale from 0..70?
-
-
-Thanks in advance,
-Gerrit
-
- [1] https://github.com/uoaerg/wavemon/tree/development
