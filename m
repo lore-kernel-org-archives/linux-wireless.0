@@ -1,57 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:33747 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbbJBHCq (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42284 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516AbbJ1HBI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:02:46 -0400
-Received: by vkgd64 with SMTP id d64so4433416vkg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:02:45 -0700 (PDT)
+	Wed, 28 Oct 2015 03:01:08 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 35/80] staging: wilc1000: rename pRemainOnChanExpired of struct remain_ch
+Date: Wed, 28 Oct 2015 15:59:55 +0900
+Message-ID: <1446015640-29398-35-git-send-email-glen.lee@atmel.com> (sfid-20151028_080118_453232_56E873F4)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151002060622.GK7340@mwanda>
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com>
-	<1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com>
-	<20151001154015.GJ7340@mwanda>
-	<CAKV=isutNb+AeLyZPO9x=h90FeQr8+JfTOFka0bY7SoWofwLbQ@mail.gmail.com>
-	<20151002060622.GK7340@mwanda>
-Date: Fri, 2 Oct 2015 16:02:45 +0900
-Message-ID: <CAKV=ist=jdc+wPA6emyRe4LKPD-PP3K0XZSf1a17BQfva4r3rg@mail.gmail.com> (sfid-20151002_090249_528343_A030D7F7)
-Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 2, 2015 at 3:06 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> On Fri, Oct 02, 2015 at 07:56:28AM +0900, Chaehyun Lim wrote:
->> On Fri, Oct 2, 2015 at 12:40 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->> > On Thu, Oct 01, 2015 at 10:43:55PM +0900, Chaehyun Lim wrote:
->> >> This patch replaces int8_t with s8 that is a preferred type.
->> >>
->> >
->> > It would be better to just use int.
->>
->> I always appreciate your comment. I've sent a patch before after
->> changing by int, but it was rejected.
->
-> Probably your changelog was bad.  Using s8 is hopefully a sign that you
-> are doing something very hardware specific.  In this case, it is just a
-> index.
->
-> Write the changelog.  "The int8_t should just be int.  It's used as an
-> index into an array or -1 for not found."
->
-Thank you for your comment. I'll make v2 patch after applying your suggestion.
+From: Leo Kim <leo.kim@atmel.com>
 
-regards
-Chaehyun Lim
+This patch renames pRemainOnChanExpired of struct remain_ch to expired
+to avoid CamelCase naming convention.
 
-> regards,
-> dan carpenter
->
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 75f617a..0bd0d2b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2482,7 +2482,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 
+ 	if (!hif_drv->remain_on_ch_pending) {
+ 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
+-		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
++		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
+ 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
+ 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
+ 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
+@@ -2611,9 +2611,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 			goto _done_;
+ 		}
+ 
+-		if (hif_drv->remain_on_ch.pRemainOnChanExpired) {
+-			hif_drv->remain_on_ch.pRemainOnChanExpired(hif_drv->remain_on_ch.pVoid,
+-								   pstrHostIfRemainOnChan->u32ListenSessionID);
++		if (hif_drv->remain_on_ch.expired) {
++			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
++						      pstrHostIfRemainOnChan->u32ListenSessionID);
+ 		}
+ 		P2P_LISTEN_STATE = 0;
+ 	} else {
+@@ -4366,7 +4366,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 
+ 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
+ 	msg.body.remain_on_ch.ch = chan;
+-	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
++	msg.body.remain_on_ch.expired = RemainOnChanExpired;
+ 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
+ 	msg.body.remain_on_ch.pVoid = pvUserArg;
+ 	msg.body.remain_on_ch.u32duration = u32duration;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index eea251a..58d3101 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -238,7 +238,7 @@ struct ba_session_info {
+ struct remain_ch {
+ 	u16 ch;
+ 	u32 u32duration;
+-	wilc_remain_on_chan_expired pRemainOnChanExpired;
++	wilc_remain_on_chan_expired expired;
+ 	wilc_remain_on_chan_ready pRemainOnChanReady;
+ 	void *pVoid;
+ 	u32 u32ListenSessionID;
+-- 
+1.9.1
+
