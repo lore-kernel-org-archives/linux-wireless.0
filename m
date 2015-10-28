@@ -1,69 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36642 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964788AbbJOCIk (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42087 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755122AbbJ1HAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:08:40 -0400
-Received: by pabws5 with SMTP id ws5so7362956pab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:40 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 32/33] staging: wilc1000: fix return type of host_int_scan
-Date: Thu, 15 Oct 2015 11:07:01 +0900
-Message-Id: <1444874822-31152-32-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040846_752748_FFE7EC55)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 03:00:20 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 27/80] staging: wilc1000: rename hScanTimer of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:47 +0900
+Message-ID: <1446015640-29398-27-git-send-email-glen.lee@atmel.com> (sfid-20151028_081659_792786_3FF92F93)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_scan from s32 to int.
-s32Error gets return value from wilc_mq_send that has return type of
-int. It should be changed return type of this function as well as data
-type of s32Error.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames hScanTimer of struct host_if_drv to scan_timer
+to avoid CamelCase naming convention.
+And, remove the relation comment.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 21 ++++++++++-----------
+ drivers/staging/wilc1000/host_interface.h |  4 ++--
+ 2 files changed, 12 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f419ce7..c1125f8 100644
+index 2e68f52..3f15812 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4012,13 +4012,13 @@ int host_int_get_statistics(struct host_if_drv *hif_drv, struct rf_info *pstrSta
- 	return s32Error;
- }
+@@ -921,7 +921,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
  
--s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
-+int host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
- 		  u8 u8ScanType, u8 *pu8ChnlFreqList,
- 		  u8 u8ChnlListLen, const u8 *pu8IEs,
- 		  size_t IEsLen, wilc_scan_result ScanResult,
- 		  void *pvUserArg, struct hidden_network *pstrHiddenNetwork)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 	enum scan_conn_timer enuScanConnTimer;
+ ERRORHANDLER:
+ 	if (result) {
+-		del_timer(&hif_drv->hScanTimer);
++		del_timer(&hif_drv->scan_timer);
+ 		Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
+ 	}
  
+@@ -1636,7 +1636,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 
+ 			if (hif_drv->usr_scan_req.pfUserScanResult) {
+ 				PRINT_D(HOSTINF_DBG, "\n\n<< Abort the running OBSS Scan >>\n\n");
+-				del_timer(&hif_drv->hScanTimer);
++				del_timer(&hif_drv->scan_timer);
+ 				Handle_ScanDone((void *)hif_drv, SCAN_EVENT_ABORTED);
+ 			}
+ 
+@@ -1683,7 +1683,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			PRINT_D(HOSTINF_DBG, "Received MAC_DISCONNECTED from the FW while scanning\n");
+ 			PRINT_D(HOSTINF_DBG, "\n\n<< Abort the running Scan >>\n\n");
+ 
+-			del_timer(&hif_drv->hScanTimer);
++			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.pfUserScanResult)
+ 				Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
+ 		}
+@@ -2000,7 +2000,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 		strDisconnectNotifInfo.ie_len = 0;
+ 
+ 		if (hif_drv->usr_scan_req.pfUserScanResult) {
+-			del_timer(&hif_drv->hScanTimer);
++			del_timer(&hif_drv->scan_timer);
+ 			hif_drv->usr_scan_req.pfUserScanResult(SCAN_EVENT_ABORTED, NULL,
+ 							       hif_drv->usr_scan_req.u32UserScanPvoid, NULL);
+ 
+@@ -2882,7 +2882,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_SCAN_COMPLETE:
+-			del_timer(&hif_drv->hScanTimer);
++			del_timer(&hif_drv->scan_timer);
+ 			PRINT_D(HOSTINF_DBG, "scan completed successfully\n");
+ 
+ 			if (!linux_wlan_get_num_conn_ifcs())
+@@ -3917,8 +3917,8 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
+ 	}
+ 
+ 	PRINT_D(HOSTINF_DBG, ">> Starting the SCAN timer\n");
+-	hif_drv->hScanTimer.data = (unsigned long)hif_drv;
+-	mod_timer(&hif_drv->hScanTimer,
++	hif_drv->scan_timer.data = (unsigned long)hif_drv;
++	mod_timer(&hif_drv->scan_timer,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_SCAN_TIMEOUT));
+ 
+ 	return result;
+@@ -4134,8 +4134,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
+-	setup_timer(&hif_drv->hScanTimer, TimerCB_Scan, 0);
+-
++	setup_timer(&hif_drv->scan_timer, TimerCB_Scan, 0);
+ 	setup_timer(&hif_drv->hConnectTimer, TimerCB_Connect, 0);
+ 
+ 	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
+@@ -4168,7 +4167,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ _fail_timer_2:
+ 	up(&hif_drv->sem_cfg_values);
+ 	del_timer_sync(&hif_drv->hConnectTimer);
+-	del_timer_sync(&hif_drv->hScanTimer);
++	del_timer_sync(&hif_drv->scan_timer);
+ 	kthread_stop(hif_thread_handler);
+ _fail_mq_:
+ 	wilc_mq_destroy(&hif_msg_q);
+@@ -4192,7 +4191,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 	terminated_handle = hif_drv;
+ 	PRINT_D(HOSTINF_DBG, "De-initializing host interface for client %d\n", clients_count);
+ 
+-	if (del_timer_sync(&hif_drv->hScanTimer))
++	if (del_timer_sync(&hif_drv->scan_timer))
+ 		PRINT_D(HOSTINF_DBG, ">> Scan timer is active\n");
+ 
+ 	if (del_timer_sync(&hif_drv->hConnectTimer))
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 42458c9..7b229bb 100644
+index 7236481..c596db9 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -833,7 +833,7 @@ int host_int_get_link_speed(struct host_if_drv *hWFIDrv, s8 *ps8lnkspd);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
-+int host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
- 			  u8 u8ScanType, u8 *pu8ChnlFreqList,
- 			  u8 u8ChnlListLen, const u8 *pu8IEs,
- 			  size_t IEsLen, wilc_scan_result ScanResult,
+@@ -311,8 +311,8 @@ struct host_if_drv {
+ 	struct semaphore sem_get_link_speed;
+ 	struct semaphore sem_get_chnl;
+ 	struct semaphore sem_inactive_time;
+-/* timer handlers */
+-	struct timer_list hScanTimer;
++
++	struct timer_list scan_timer;
+ 	struct timer_list hConnectTimer;
+ 	struct timer_list hRemainOnChannel;
+ 
 -- 
-2.6.1
+1.9.1
 
