@@ -1,65 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:33492 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721AbbJWFiu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:5883 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755147AbbJ1Hp4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:38:50 -0400
-Received: by lffv3 with SMTP id v3so71470229lff.0
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 22:38:49 -0700 (PDT)
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> <1445323546-12807-2-git-send-email-jsitnicki@gmail.com> <wrfja8rdxdvh.fsf@redhat.com>
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 01/16] rtl8xxxu: Treat REG_9346CR as an 8-bit wide register
-In-reply-to: <wrfja8rdxdvh.fsf@redhat.com>
-Date: Fri, 23 Oct 2015 07:38:47 +0200
-Message-ID: <871tcmta8o.fsf@frog.home> (sfid-20151023_073859_677439_8AFB5EB9)
+	Wed, 28 Oct 2015 03:45:56 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/12] staging: wilc1000: wilc_wlan_txq_add_to_tail: add argument net_device
+Date: Wed, 28 Oct 2015 16:48:21 +0900
+Message-ID: <1446018508-17889-5-git-send-email-glen.lee@atmel.com> (sfid-20151028_084603_528602_8A51DF43)
+In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
+References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 02:29 AM CEST, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Jakub Sitnicki <jsitnicki@gmail.com> writes:
->> rtl8723au driver treats REG_9346CR register as either 8- or 16-bit wide,
->> while rtl8192cu driver treats it as 8-bit wide, and so does rtl8188eu
->> driver.  Use the lowest common denominator strategy.
->>
->> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> NACK - this is a 16 bit register and the vendor drivers take the lazy
-> approach of just reading/writing the lower 8 bits when they feel like
-> it.
->
-> My code is more consistent, so this one is not going in.
+This patch adds new argument dev and use netdev private data member wilc
+instead of g_linux_wlan, pass the function dev also.
 
-Makes sense.  It didn't occur to me to refer to register offset
-definitions and check if REG_9346CR really is 16-bit wide.  Now that you
-pointed it out I see it:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-#define REG_9346CR                      0x000A
-#define REG_EE_VPD                      0x000C
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 3dc0a80..03593b7 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -190,11 +190,18 @@ wilc_wlan_txq_remove_from_head(struct net_device *dev)
+ 	return tqe;
+ }
+ 
+-static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
++static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
++				      struct txq_entry_t *tqe)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	unsigned long flags;
+-	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+ 	if (p->txq_head == NULL) {
+ 		tqe->next = NULL;
+@@ -210,14 +217,14 @@ static void wilc_wlan_txq_add_to_tail(struct txq_entry_t *tqe)
+ 	p->txq_entries += 1;
+ 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
+ 
+-	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+ 	/**
+ 	 *      wake up TX queue
+ 	 **/
+ 	PRINT_D(TX_DBG, "Wake the txq_handling\n");
+ 
+-	up(&g_linux_wlan->txq_event);
++	up(&wilc->txq_event);
+ }
+ 
+ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+@@ -538,7 +545,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	if (is_TCP_ACK_Filter_Enabled())
+ 		tcp_process(dev, tqe);
+ #endif
+-	wilc_wlan_txq_add_to_tail(tqe);
++	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	/*return number of itemes in the queue*/
+ 	return p->txq_entries;
+ }
+@@ -566,7 +573,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
+ #endif
+ 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
+-	wilc_wlan_txq_add_to_tail(tqe);
++	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	return 1;
+ }
+ 
+-- 
+1.9.1
 
--Jakub
-
->> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> index 11fcfda..5f90261 100644
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> @@ -1928,10 +1928,10 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
->>  	u16 val16, efuse_addr, offset;
->>  	u32 val32;
->>  
->> -	val16 = rtl8xxxu_read16(priv, REG_9346CR);
->> -	if (val16 & EEPROM_ENABLE)
->> +	val8 = rtl8xxxu_read8(priv, REG_9346CR);
->> +	if (val8 & EEPROM_ENABLE)
->>  		priv->has_eeprom = 1;
->> -	if (val16 & EEPROM_BOOT)
->> +	if (val8 & EEPROM_BOOT)
->>  		priv->boot_eeprom = 1;
->>  
->>  	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
