@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8402 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709AbbJBIC3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42203 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755530AbbJ1MpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 04:02:29 -0400
-Message-ID: <560E3A11.2040200@broadcom.com> (sfid-20151002_100333_789256_69DF3950)
-Date: Fri, 2 Oct 2015 10:02:25 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 28 Oct 2015 08:45:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-10-25
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Date: Wed, 28 Oct 2015 14:45:02 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Sun, 25 Oct 2015 11:58:03 +0000")
+Message-ID: <87mvv3tb5d.fsf@kamboji.qca.qualcomm.com> (sfid-20151028_134512_888847_9ABF8DA9)
 MIME-Version: 1.0
-To: Chaehyun Lim <chaehyun.lim@gmail.com>, <gregkh@linuxfoundation.org>
-CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
-	<chris.park@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>
-Subject: Re: [PATCH V2 08/12] staging: wilc1000: use int instead of int8_t
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com> <1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com>
-In-Reply-To: <1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/02/2015 09:41 AM, Chaehyun Lim wrote:
-> This patch replaces int8_t with int.
-> The int8_t should be int. It's used as an index into an array
-> or -1 for not found.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Please consider using bool instead. See my previous emails.
+> Last (obviously) pull request for 4.4.
+> I came back from a long vacation and took maintenance over back from Luca.
+> Please note that you'll have to merge mac80211-next/master (or net-next)
+> before you pull from me. I created this pull request giving
+> mac80211-next/master
+> as the start point to have the correct output.
+> I hope it will still make it.
+>
+> Details in the tag.
+>
+> Thank!
+>
+> The following changes since commit e5a9f8d04660da7ef3a98260aa74c3976f9cb4cd:
+>
+>   mac80211: move station statistics into sub-structs (2015-10-21
+> 10:08:22 +0200)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
 
-Regards,
-Arend
+I don't see the tag name in your pull request, but I'm going to assume
+that you meant iwlwifi-next-for-kalle-2015-10-25:
 
-> Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
-> V2: replaces s8 with int suggested by dan.
->
->   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index d781003..3c8c2e1 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
->   	g_obtainingIP = false;
->   }
->
-> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
-> +int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
->   {
-> -	int8_t state = -1;
-> +	int state = -1;
->   	int i;
->
->   	if (u32LastScannedNtwrksCountShadow == 0) {
-> @@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
->
->   void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
->   {
-> -	int8_t ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-> +	int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
->   	u32 ap_index = 0;
->   	u8 rssi_index = 0;
->
->
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-next.git/tag/?h=iwlwifi-next-for-kalle-2015-10-25
 
+Please let me know ASAP if that's not the case.
+
+-- 
+Kalle Valo
