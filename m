@@ -1,77 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:36788 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbbJFPPF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42144 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755122AbbJ1HAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2015 11:15:05 -0400
-Received: by wicgb1 with SMTP id gb1so170266273wic.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2015 08:15:03 -0700 (PDT)
-Date: Tue, 6 Oct 2015 16:14:59 +0100
-From: Mike Rapoport <mike.rapoport@gmail.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 02/10] staging: wilc1000: remove typedef from tenuWIDtype
-Message-ID: <20151006151459.GA25750@zed.theccd.local> (sfid-20151006_171510_224785_303BBC20)
-References: <1444124541-5663-1-git-send-email-tony.cho@atmel.com>
- <1444124541-5663-2-git-send-email-tony.cho@atmel.com>
+	Wed, 28 Oct 2015 03:00:31 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 29/80] staging: wilc1000: rename hRemainOnChannel of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:49 +0900
+Message-ID: <1446015640-29398-29-git-send-email-glen.lee@atmel.com> (sfid-20151028_081700_082677_8BD79BFD)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444124541-5663-2-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 06:42:13PM +0900, Tony Cho wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch remove typedef from the enum tenuWIDtype
-> and rename it to WID_TYPE.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.h | 2 +-
->  drivers/staging/wilc1000/host_interface.h   | 2 +-
->  drivers/staging/wilc1000/wilc_wlan_if.h     | 5 ++---
->  3 files changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> index 306efc9..02faf58 100644
+From: Leo Kim <leo.kim@atmel.com>
 
-[ snip ]
+This patch renames hRemainOnChannel of struct host_if_drv to remain_on_ch_timer
+to avoid CamelCase naming convention.
 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-> index 8fec64d..be972af 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan_if.h
-> +++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-> @@ -315,7 +315,7 @@ typedef enum {
->  	SW_TRIGGER_ABORT,
->  } TX_ABORT_OPTION_T;
->  
-> -typedef enum {
-> +enum WID_TYPE {
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-The enum name should be lowecase, i.e. 'enum wid_type'. 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8ee0a94..b29d651 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2531,8 +2531,8 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ ERRORHANDLER:
+ 	{
+ 		P2P_LISTEN_STATE = 1;
+-		hif_drv->hRemainOnChannel.data = (unsigned long)hif_drv;
+-		mod_timer(&hif_drv->hRemainOnChannel,
++		hif_drv->remain_on_ch_timer.data = (unsigned long)hif_drv;
++		mod_timer(&hif_drv->remain_on_ch_timer,
+ 			  jiffies +
+ 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+ 
+@@ -2629,7 +2629,7 @@ static void ListenTimerCB(unsigned long arg)
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
+ 
+-	del_timer(&hif_drv->hRemainOnChannel);
++	del_timer(&hif_drv->remain_on_ch_timer);
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+@@ -4136,7 +4136,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	setup_timer(&hif_drv->scan_timer, TimerCB_Scan, 0);
+ 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
+-	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
++	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
+ 
+ 	sema_init(&hif_drv->sem_cfg_values, 1);
+ 	down(&hif_drv->sem_cfg_values);
+@@ -4199,7 +4199,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 	if (del_timer_sync(&periodic_rssi))
+ 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
+ 
+-	del_timer_sync(&hif_drv->hRemainOnChannel);
++	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+ 	host_int_set_wfi_drv_handler(NULL);
+ 	down(&hif_sema_driver);
+@@ -4388,7 +4388,7 @@ s32 host_int_ListenStateExpired(struct host_if_drv *hif_drv, u32 u32SessionID)
+ 		return -EFAULT;
+ 	}
+ 
+-	del_timer(&hif_drv->hRemainOnChannel);
++	del_timer(&hif_drv->remain_on_ch_timer);
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d149fd5..1a41e3f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -314,7 +314,7 @@ struct host_if_drv {
+ 
+ 	struct timer_list scan_timer;
+ 	struct timer_list connect_timer;
+-	struct timer_list hRemainOnChannel;
++	struct timer_list remain_on_ch_timer;
+ 
+ 	bool IFC_UP;
+ };
+-- 
+1.9.1
 
->  	WID_CHAR		= 0,
->  	WID_SHORT		= 1,
->  	WID_INT			= 2,
-> @@ -326,8 +326,7 @@ typedef enum {
->  	WID_ADR			= 7,
->  	WID_UNDEF		= 8,
->  	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
-> -
-> -} WID_TYPE_T, tenuWIDtype;
-> +};
->  
->  typedef enum {
->  	WID_NIL				= 0xffff,
-> -- 
-> 1.9.1
-
---
-Sincerely yours,
-Mike.
