@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f67.google.com ([209.85.213.67]:33885 "EHLO
-	mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbbJBJDg (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:5861 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755520AbbJ1Hpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 05:03:36 -0400
-Received: by vkat63 with SMTP id t63so4544278vka.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 02:03:35 -0700 (PDT)
+	Wed, 28 Oct 2015 03:45:49 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/12] staging: wilc1000: wilc_wlan_txq_add_mgmt_pkt: add new argument dev
+Date: Wed, 28 Oct 2015 16:48:20 +0900
+Message-ID: <1446018508-17889-4-git-send-email-glen.lee@atmel.com> (sfid-20151028_084555_540797_D66D88D1)
+In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
+References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <560E3A11.2040200@broadcom.com>
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
-	<1443771681-15540-8-git-send-email-chaehyun.lim@gmail.com>
-	<560E3A11.2040200@broadcom.com>
-Date: Fri, 2 Oct 2015 18:03:35 +0900
-Message-ID: <CAKV=issQyrWfdL8jPYGbvWcpAqVqNzTn53S1_yCxEGka0desgA@mail.gmail.com> (sfid-20151002_110342_081511_00E41AAC)
-Subject: Re: [PATCH V2 08/12] staging: wilc1000: use int instead of int8_t
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, glen.lee@atmel.com,
-	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
-	devel@driverdev.osuosl.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 2, 2015 at 5:02 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 10/02/2015 09:41 AM, Chaehyun Lim wrote:
->>
->> This patch replaces int8_t with int.
->> The int8_t should be int. It's used as an index into an array
->> or -1 for not found.
->
->
-> Please consider using bool instead. See my previous emails.
+This patch adds new argument struct net_device *dev and pass argument
+struct net_device to the function.
 
-Thank you for your comment.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c              | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c              | 3 ++-
+ drivers/staging/wilc1000/wilc_wlan.h              | 4 ++--
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-As said by dan, return value is used for array index in
-add_network_to_shadow function.
-so it cannot simply changed by bool.
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 450af1b..589a11f 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -195,7 +195,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	mgmt_tx->size = len;
+ 
+ 	memcpy(mgmt_tx->buff, buf, len);
+-	wilc_wlan_txq_add_mgmt_pkt(mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
++	wilc_wlan_txq_add_mgmt_pkt(dev, mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
+ 				   mgmt_tx_complete);
+ 
+ 	netif_wake_queue(dev);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 15e0685..bcc71ff 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2347,8 +2347,8 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 				jiffies, pstrWFIDrv->p2p_timeout);
+ 		}
+ 
+-		wilc_wlan_txq_add_mgmt_pkt(mgmt_tx, mgmt_tx->buff,
+-					   mgmt_tx->size,
++		wilc_wlan_txq_add_mgmt_pkt(wdev->netdev, mgmt_tx,
++					   mgmt_tx->buff, mgmt_tx->size,
+ 					   WILC_WFI_mgmt_tx_complete);
+ 	} else {
+ 		PRINT_D(GENERIC_DBG, "This function transmits only management frames\n");
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 5dcc4d2..3dc0a80 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -543,7 +543,8 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	return p->txq_entries;
+ }
+ 
+-int wilc_wlan_txq_add_mgmt_pkt(void *priv, u8 *buffer, u32 buffer_size, wilc_tx_complete_func_t func)
++int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			       u32 buffer_size, wilc_tx_complete_func_t func)
+ {
+ 
+ 	wilc_wlan_dev_t *p = &g_wlan;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 57e1d51..2eb7e20 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -307,6 +307,6 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drvHandler);
+ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+-int wilc_wlan_txq_add_mgmt_pkt(void *priv, u8 *buffer, u32 buffer_size,
+-			       wilc_tx_complete_func_t func);
++int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			       u32 buffer_size, wilc_tx_complete_func_t func);
+ #endif
+-- 
+1.9.1
 
-Thanks
-Chaehyun Lim
-
->
-> Regards,
-> Arend
->
->
->> Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
->> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
->> ---
->> V2: replaces s8 with int suggested by dan.
->>
->>   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->> index d781003..3c8c2e1 100644
->> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
->>         g_obtainingIP = false;
->>   }
->>
->> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void
->> *pUserVoid)
->> +int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void
->> *pUserVoid)
->>   {
->> -       int8_t state = -1;
->> +       int state = -1;
->>         int i;
->>
->>         if (u32LastScannedNtwrksCountShadow == 0) {
->> @@ -288,7 +288,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo
->> *pstrNetworkInfo, void *pUserVoid)
->>
->>   void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void
->> *pUserVoid, void *pJoinParams)
->>   {
->> -       int8_t ap_found = is_network_in_shadow(pstrNetworkInfo,
->> pUserVoid);
->> +       int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
->>         u32 ap_index = 0;
->>         u8 rssi_index = 0;
->>
->>
->
