@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:35454 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756665AbbJIPvP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41702 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755443AbbJ1G6t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 11:51:15 -0400
-Received: by wicge5 with SMTP id ge5so74249926wic.0
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2015 08:51:14 -0700 (PDT)
-Message-ID: <5617E271.90007@gmail.com> (sfid-20151009_175118_990932_283D7AAE)
-Date: Fri, 09 Oct 2015 17:51:13 +0200
-From: "zefir.kurtisi@gmail.com" <zefir.kurtisi@gmail.com>
+	Wed, 28 Oct 2015 02:58:49 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 12/80] staging: wilc1000: rename u8MacAddress of struct get_mac_addr
+Date: Wed, 28 Oct 2015 15:59:32 +0900
+Message-ID: <1446015640-29398-12-git-send-email-glen.lee@atmel.com> (sfid-20151028_081658_525624_BBD4B953)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: ath9k: issues with HT40 spectral scanning
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Nick,
+From: Leo Kim <leo.kim@atmel.com>
 
-after using ath9k spectral-scanning feature for a while in 20MHz mode, today I
-gave it a first try with 40MHz and failed to get it running.
+This patch renames u8MacAddress of struct get_mac_addr to mac_addr
+to avoid CamelCase naming convention.
 
-Setup is as follows: AR9590 operating in HT40+ monitor mode; enabling
-SPECTRAL_SCAN debug flag and starting background spectral scanning I get the log
-flooded with
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
->  [12082.712198] ath: phy1: Got radar dump bw_info: 0x13,len: 138 fft_len: 138
->  [12082.712207] ath: phy1: FFT frame len: 135
->  [12082.712219] ath: phy1: FFT HT20/40 frame: lower mag 0xCE,lower_mag_idx 34, upper mag 0xD5,upper_mag_idx 70
->  [12082.712229] ath: phy1: Got lower mag: 0xCE at index 34
->  [12082.712238] ath: phy1: Got upper mag: 0xD5 at index 70
->  [12082.712266] ath: phy1: FFT report truncated(bytes left: 264)
->  [12082.713696] ath: phy1: Got radar dump bw_info: 0x13,len: 138 fft_len: 138
->  [12082.713705] ath: phy1: FFT frame len: 135
->  [12082.713718] ath: phy1: FFT HT20/40 frame: lower mag 0xAD,lower_mag_idx 36, upper mag 0x56,upper_mag_idx 67
->  [12082.713728] ath: phy1: Got lower mag: 0xAD at index 36
->  [12082.713737] ath: phy1: Got upper mag: 0x56 at index 67
->  [12082.713761] ath: phy1: FFT report truncated(bytes left: 264)
->  [12082.715193] ath: phy1: Got radar dump bw_info: 0x13,len: 138 fft_len: 138
->  [12082.715202] ath: phy1: FFT frame len: 135
->  [12082.715215] ath: phy1: FFT HT20/40 frame: lower mag 0x94,lower_mag_idx 49, upper mag 0x8F,upper_mag_idx 40
->  [12082.715225] ath: phy1: Got lower mag: 0x94 at index 49
->  [12082.715235] ath: phy1: Got upper mag: 0x8F at index 104
->  [12082.715259] ath: phy1: FFT report truncated(bytes left: 264)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2d12672..ab1617f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -503,7 +503,7 @@ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+ 
+ 	wid.id = (u16)WID_MAC_ADDR;
+ 	wid.type = WID_STR;
+-	wid.val = pstrHostIfGetMacAddress->u8MacAddress;
++	wid.val = pstrHostIfGetMacAddress->mac_addr;
+ 	wid.size = ETH_ALEN;
+ 
+ 	result = send_config_pkt(GET_CFG, &wid, 1,
+@@ -3377,7 +3377,7 @@ s32 host_int_get_MacAddress(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 	msg.id = HOST_IF_MSG_GET_MAC_ADDRESS;
+-	msg.body.get_mac_info.u8MacAddress = pu8MacAddress;
++	msg.body.get_mac_info.mac_addr = pu8MacAddress;
+ 	msg.drv = hif_drv;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c2f21a9..7fb1551 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -252,7 +252,7 @@ struct set_mac_addr {
+ };
+ 
+ struct get_mac_addr {
+-	u8 *u8MacAddress;
++	u8 *mac_addr;
+ };
+ 
+ struct ba_session_info {
+-- 
+1.9.1
 
-Last time we discussed the spectral feature, you told me you had it running on
-ath9k in 20 and 40MHz mode. Before I start digging the issue, could you confirm
-that it is still doing on ath9k/40MHz?
-
-
-Thanks,
-Zefir
