@@ -1,100 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:57944 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbbJ0JZn (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34301 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753715AbbJ1Fec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:25:43 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 07/27] staging: wilc1000: linux_wlan_mac_indicate: add argument and use wilc
-Date: Tue, 27 Oct 2015 18:27:43 +0900
-Message-ID: <1445938083-20445-7-git-send-email-glen.lee@atmel.com> (sfid-20151027_102546_330398_F8E52F06)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Wed, 28 Oct 2015 01:34:32 -0400
+Received: by padhk11 with SMTP id hk11so245790956pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 22:34:31 -0700 (PDT)
+Date: Wed, 28 Oct 2015 11:03:59 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: fix build error on SPI
+Message-ID: <20151028053359.GB10698@sudip-pc> (sfid-20151028_063435_142921_01BD3CD2)
+References: <1445937614-12127-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445937614-12127-1-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds argument wilc and pass the function wilc. Use wilc instead of
-g_linux_wlan and pd.
+On Tue, Oct 27, 2015 at 06:20:14PM +0900, Glen Lee wrote:
+> wilc_netdev_init function has parameters to pass but no argument is passed
+> when bus type SPI is selected. Which causes build error.
+> This patch passes argument &wilc to the function wilc_netdev_init.
+> 
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Fixes: 12ba5416dc77 ("staging: wilc1000: assign pointer of g_linux_wlan to sdio device data")
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 13 ++++++-------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c          |  4 ++--
- 3 files changed, 9 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 54e077d..227dedb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -348,24 +348,23 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout)
- 	return error;
- }
- 
--void linux_wlan_mac_indicate(int flag)
-+void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
- {
- 	/*I have to do it that way becuase there is no mean to encapsulate device pointer
- 	 * as a parameter
- 	 */
--	struct wilc *pd = g_linux_wlan;
- 	int status;
- 
- 	if (flag == WILC_MAC_INDICATE_STATUS) {
- 		wilc_wlan_cfg_get_val(WID_STATUS, (unsigned char *)&status, 4);
--		if (pd->mac_status == WILC_MAC_STATUS_INIT) {
--			pd->mac_status = status;
--			up(&pd->sync_event);
-+		if (wilc->mac_status == WILC_MAC_STATUS_INIT) {
-+			wilc->mac_status = status;
-+			up(&wilc->sync_event);
- 		} else {
--			pd->mac_status = status;
-+			wilc->mac_status = status;
- 		}
- 
--		if (pd->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
-+		if (wilc->mac_status == WILC_MAC_STATUS_CONNECT) {        /* Connect */
- 		}
- 
- 	} else if (flag == WILC_MAC_INDICATE_SCAN) {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 8aa3355..a828fab 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -209,7 +209,7 @@ struct WILC_WFI_mon_priv {
- extern struct wilc *g_linux_wlan;
- extern struct net_device *WILC_WFI_devs[];
- void frmw_to_linux(u8 *buff, u32 size, u32 pkt_offset);
--void linux_wlan_mac_indicate(int flag);
-+void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
- void linux_wlan_rx_complete(void);
- void linux_wlan_dbg(u8 *buff);
- int linux_wlan_lock_timeout(void *vp, u32 timeout);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 4fc88ef..4fa956a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1199,10 +1199,10 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 						/**
- 						 *      Call back to indicate status...
- 						 **/
--						linux_wlan_mac_indicate(WILC_MAC_INDICATE_STATUS);
-+						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
- 
- 					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
--						linux_wlan_mac_indicate(WILC_MAC_INDICATE_SCAN);
-+						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
- 					}
- 				}
- 			}
--- 
-1.9.1
-
+regards
+sudip
