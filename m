@@ -1,65 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33251 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932771AbbJOCIO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42528 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755472AbbJ1HCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:08:14 -0400
-Received: by pabrc13 with SMTP id rc13so71288345pab.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:14 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 23/33] staging: wilc1000: fix return type of host_int_delBASession
-Date: Thu, 15 Oct 2015 11:06:52 +0900
-Message-Id: <1444874822-31152-23-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040823_495845_6C6278E0)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 03:02:06 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 45/80] staging: wilc1000: rename astrFoundNetworkInfo of struct user_scan_req
+Date: Wed, 28 Oct 2015 16:00:05 +0900
+Message-ID: <1446015640-29398-45-git-send-email-glen.lee@atmel.com> (sfid-20151028_080210_655299_E541D625)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_delBASession from s32 to int.
-s32Error gets return value from wilc_mq_send that has return type of
-int. It should be changed return type of this function as well as data
-type of s32Error.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames astrFoundNetworkInfo of struct user_scan_req to net_info
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 83fd056..237fad1 100644
+index 8bb3480..b613258 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5077,9 +5077,9 @@ void host_int_freeJoinParams(void *pJoinParams)
- 		PRINT_ER("Unable to FREE null pointer\n");
- }
+@@ -1415,15 +1415,15 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 		}
  
--s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
-+int host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
- {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
+ 		for (i = 0; i < hif_drv->usr_scan_req.u32RcvdChCount; i++) {
+-			if ((hif_drv->usr_scan_req.astrFoundNetworkInfo[i].au8bssid) &&
++			if ((hif_drv->usr_scan_req.net_info[i].au8bssid) &&
+ 			    (pstrNetworkInfo->au8bssid)) {
+-				if (memcmp(hif_drv->usr_scan_req.astrFoundNetworkInfo[i].au8bssid,
++				if (memcmp(hif_drv->usr_scan_req.net_info[i].au8bssid,
+ 					   pstrNetworkInfo->au8bssid, 6) == 0) {
+-					if (pstrNetworkInfo->s8rssi <= hif_drv->usr_scan_req.astrFoundNetworkInfo[i].s8rssi) {
++					if (pstrNetworkInfo->s8rssi <= hif_drv->usr_scan_req.net_info[i].s8rssi) {
+ 						PRINT_D(HOSTINF_DBG, "Network previously discovered\n");
+ 						goto done;
+ 					} else {
+-						hif_drv->usr_scan_req.astrFoundNetworkInfo[i].s8rssi = pstrNetworkInfo->s8rssi;
++						hif_drv->usr_scan_req.net_info[i].s8rssi = pstrNetworkInfo->s8rssi;
+ 						bNewNtwrkFound = false;
+ 						break;
+ 					}
+@@ -1435,11 +1435,11 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 			PRINT_D(HOSTINF_DBG, "New network found\n");
  
+ 			if (hif_drv->usr_scan_req.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
+-				hif_drv->usr_scan_req.astrFoundNetworkInfo[hif_drv->usr_scan_req.u32RcvdChCount].s8rssi = pstrNetworkInfo->s8rssi;
++				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].s8rssi = pstrNetworkInfo->s8rssi;
+ 
+-				if (hif_drv->usr_scan_req.astrFoundNetworkInfo[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid &&
++				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid &&
+ 				    pstrNetworkInfo->au8bssid) {
+-					memcpy(hif_drv->usr_scan_req.astrFoundNetworkInfo[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid,
++					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid,
+ 					       pstrNetworkInfo->au8bssid, 6);
+ 
+ 					hif_drv->usr_scan_req.u32RcvdChCount++;
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index aeb3cb3..6167295 100644
+index 9d86227..2fe9f67 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1080,7 +1080,7 @@ int host_int_setup_ipaddress(struct host_if_drv *hWFIDrv, u8 *pu8IPAddr, u8 idx)
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_delBASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
-+int host_int_delBASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
+@@ -195,7 +195,7 @@ struct user_scan_req {
+ 	wilc_scan_result scan_result;
+ 	void *arg;
+ 	u32 u32RcvdChCount;
+-	struct found_net_info astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
++	struct found_net_info net_info[MAX_NUM_SCANNED_NETWORKS];
+ };
  
- /**
-  *  @brief           host_int_delBASession
+ struct user_conn_req {
 -- 
-2.6.1
+1.9.1
 
