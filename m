@@ -1,142 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54646 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751918AbbJUPHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 11:07:10 -0400
-Message-ID: <1445440026.4558.62.camel@sipsolutions.net> (sfid-20151021_170716_506533_911F0109)
-Subject: pull-request: mac80211-next 2015-10-21
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Oct 2015 17:07:06 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41527 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755152AbbJ1G5z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 02:57:55 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/80] staging: wilc1000: fixes blank lines aren't necessary brace
+Date: Wed, 28 Oct 2015 15:59:23 +0900
+Message-ID: <1446015640-29398-3-git-send-email-glen.lee@atmel.com> (sfid-20151028_075758_242019_90BF8F47)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Leo Kim <leo.kim@atmel.com>
 
-Here's another, likely final, pull request for -next. I finally caved
-in and cleaned up the regulatory code a bit, which is the bulk of the
-changes.
+This patch fixes the checks reported by checkpatch.pl
+for Blank lines aren't necessary after an open brace '{' and
+Blank lines aren't necessary before a close brace '}'.
 
-There's a new Kconfig which allows turning off CRDA, but it's hidden
-behind having the internal regdb enabled, which in turn is hidden
-behind EXPERT, so hopefully you won't even see that :) (although I am
-hoping to get rid of the internal regdb sooner rather than later)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 33 -------------------------------
+ 1 file changed, 33 deletions(-)
 
-Let me know if you see any problems.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 47064fe..74f1f9d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -615,7 +615,6 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		u8WidCnt++;
+ 	}
+ 	if (strHostIFCfgParamAttr->cfg_attr_info.flag & FRAG_THRESHOLD) {
+-
+ 		if (strHostIFCfgParamAttr->cfg_attr_info.frag_threshold > 255 && strHostIFCfgParamAttr->cfg_attr_info.frag_threshold < 7937) {
+ 			strWIDList[u8WidCnt].id = WID_FRAG_THRESHOLD;
+ 			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.frag_threshold;
+@@ -1422,7 +1421,6 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 		}
+ 
+ 		for (i = 0; i < hif_drv->strWILC_UsrScanReq.u32RcvdChCount; i++) {
+-
+ 			if ((hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid) &&
+ 			    (pstrNetworkInfo->au8bssid)) {
+ 				if (memcmp(hif_drv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid,
+@@ -1458,8 +1456,6 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 					hif_drv->strWILC_UsrScanReq.pfUserScanResult(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
+ 											hif_drv->strWILC_UsrScanReq.u32UserScanPvoid,
+ 											pJoinParams);
+-
+-
+ 				}
+ 			} else {
+ 				PRINT_WRN(HOSTINF_DBG, "Discovered networks exceeded max. limit\n");
+@@ -1549,7 +1545,6 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				PRINT_INFO(HOSTINF_DBG, "Received association response with length = %d\n", u32RcvdAssocRespInfoLen);
+ 
+ 				if (u32RcvdAssocRespInfoLen != 0) {
+-
+ 					PRINT_D(HOSTINF_DBG, "Parsing association response\n");
+ 					s32Err = ParseAssocRespInfo(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
+ 								    &pstrConnectRespInfo);
+@@ -1702,9 +1697,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			del_timer(&hif_drv->hScanTimer);
+ 			if (hif_drv->strWILC_UsrScanReq.pfUserScanResult)
+ 				Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
+-
+ 		}
+-
+ 	}
+ 
+ 	kfree(pstrRcvdGnrlAsyncInfo->buffer);
+@@ -1725,12 +1718,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 	s8 ret = 0;
+ 
+ 	switch (pstrHostIFkeyAttr->type) {
+-
+-
+ 	case WEP:
+ 
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+-
+ 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
+ 			PRINT_D(GENERIC_DBG, "ID Hostint is %d\n", pstrHostIFkeyAttr->attr.wep.index);
+ 			strWIDList[0].id = (u16)WID_11I_MODE;
+@@ -1768,8 +1758,6 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			result = send_config_pkt(SET_CFG, strWIDList, 4,
+ 						 get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+-
+-
+ 		}
+ 
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+@@ -1794,7 +1782,6 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 						 get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & REMOVEKEY) {
+-
+ 			PRINT_D(HOSTINF_DBG, "Removing key\n");
+ 			strWID.id = (u16)WID_REMOVE_WEP_KEY;
+ 			strWID.type = WID_STR;
+@@ -1895,14 +1882,11 @@ _WPARxGtk_end_case_:
+ 
+ 	case WPAPtk:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+-
+-
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+-
+ 			}
+ 
+ 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+@@ -1927,14 +1911,11 @@ _WPARxGtk_end_case_:
+ 			up(&hif_drv->hSemTestKeyBlock);
+ 		}
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+-
+-
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+ 				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+-
+ 			}
+ 
+ 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+@@ -2072,7 +2053,6 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 			kfree(info_element);
+ 			info_element = NULL;
+ 		}
+-
+ 	}
+ 
+ 	up(&hif_drv->hSemTestDisconnectBlock);
+@@ -2134,8 +2114,6 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
+ 	}
+ 
+ 	up(&hif_drv->hSemGetRSSI);
+-
+-
+ }
+ 
+ 
+@@ -2206,7 +2184,6 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 
+ 	up(&hif_sema_wait_response);
+ 	return 0;
+-
+ }
+ 
+ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+@@ -2744,7 +2721,6 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
+ 
+ ERRORHANDLER:
+ 	kfree(strWID.val);
+-
+ }
+ 
+ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+@@ -2810,7 +2786,6 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+ 	kfree(strWID.val);
+ 
+ 	return result;
+-
+ }
+ 
+ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
+@@ -3842,7 +3817,6 @@ s32 host_int_test_get_int_wid(struct host_if_drv *hif_drv, u32 *pu32TestMemAddr)
+ 		return -EINVAL;
+ 	} else {
+ 		PRINT_D(HOSTINF_DBG, "Successfully got wid value\n");
+-
+ 	}
+ 
+ 	return result;
+@@ -4009,7 +3983,6 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
+ 	}
+ 	PRINT_D(HOSTINF_DBG, "Getting configuration parameters\n");
+ 	switch (u16WID)	{
+-
+ 	case WID_BSS_TYPE:
+ 		*pu16WID_Value = (u16)hif_drv->strCfgValues.bss_type;
+ 		break;
+@@ -4416,7 +4389,6 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
+ 
+ 
+ 	return;
+-
+ }
+ 
+ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+@@ -4566,7 +4538,6 @@ ERRORHANDLER:
+ 	}
+ 
+ 	return result;
+-
+ }
+ 
+ s32 host_int_del_beacon(struct host_if_drv *hif_drv)
+@@ -4955,14 +4926,10 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				continue;
+ 			} else
+ 				index += pu8IEs[index + 1] + 2;
+-
+ 		}
+-
+-
+ 	}
+ 
+ 	return (void *)pNewJoinBssParam;
+-
+ }
+ 
+ void host_int_freeJoinParams(void *pJoinParams)
+-- 
+1.9.1
 
-Thanks,
-johannes
-
-
-
-
-The following changes since commit 6623c60dc28ee966cd85c6f12aa2fc3c952d0179:
-
-  bridge: vlan: enforce no pvid flag in vlan ranges (2015-10-12 19:59:15 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-10-21
-
-for you to fetch changes up to e5a9f8d04660da7ef3a98260aa74c3976f9cb4cd:
-
-  mac80211: move station statistics into sub-structs (2015-10-21 10:08:22 +0200)
-
-----------------------------------------------------------------
-Here's another set of patches for the current cycle:
- * I merged net-next back to avoid a conflict with the
- * cfg80211 scheduled scan API extensions
- * preparations for better scan result timestamping
- * regulatory cleanups
- * mac80211 statistics cleanups
- * a few other small cleanups and fixes
-
-----------------------------------------------------------------
-Avraham Stern (2):
-      cfg80211: Add multiple scan plans for scheduled scan
-      mac80211: Do not restart scheduled scan if multiple scan plans are set
-
-Dmitry Shmidt (1):
-      nl80211: allow BSS data to include CLOCK_BOOTTIME timestamp
-
-Felix Fietkau (1):
-      mac80211: add missing struct ieee80211_txq tid field initialization
-
-Johannes Berg (25):
-      Merge remote-tracking branch 'net-next/master' into mac80211-next
-      wireless: update robust action frame list
-      wireless: add WNM action frame categories
-      mac80211: use new cfg80211_inform_bss_frame_data() API
-      mac80211: remove PM-QoS listener
-      mac80211: clean up ieee80211_rx_h_check_dup code
-      mac80211: move sta_set_rate_info_rx() and make it static
-      mac80211: remove cfg.h
-      mac80211: remove event.c
-      cfg80211: fix gHz to GHz
-      cfg80211: reg: remove useless non-NULL check
-      cfg80211: reg: fix reg_call_crda() return value bug
-      cfg80211: reg: rename reg_call_crda to reg_query_database
-      cfg80211: reg: search built-in database directly
-      cfg80211: reg: remove useless reg_timeout scheduling
-      cfg80211: reg: make CRDA support optional
-      cfg80211: reg: rename reg_regdb_query() to reg_query_builtin()
-      cfg80211: reg: clarify 'treatment' handling in reg_process_hint()
-      cfg80211: reg: centralize freeing ignored requests
-      cfg80211: reg: fix antenna gain in chan_reg_rule_print_dbg()
-      cfg80211: reg: reduce chan_reg_rule_print_dbg() ifdef
-      cfg80211: reg: fix reg_ignore_cell_hint return type
-      mac80211: remove sta->last_ack_signal
-      mac80211: move beacon_loss_count into ifmgd
-      mac80211: move station statistics into sub-structs
-
-Tamizh chelvam (1):
-      Revert "mac80211: remove exposing 'mfp' to drivers"
-
- Documentation/DocBook/80211.tmpl           |   5 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   2 +-
- drivers/net/wireless/iwlwifi/mvm/ops.c     |   1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c    |   4 +-
- drivers/net/wireless/rt2x00/rt2x00config.c |   2 +-
- drivers/net/wireless/ti/wl12xx/scan.c      |   3 +-
- drivers/net/wireless/ti/wl18xx/scan.c      |   8 +-
- include/linux/ieee80211.h                  |   5 +
- include/net/cfg80211.h                     | 126 ++++++++++---
- include/net/mac80211.h                     |   8 +-
- include/uapi/linux/nl80211.h               |  57 +++++-
- net/mac80211/Makefile                      |   1 -
- net/mac80211/cfg.c                         |  45 +----
- net/mac80211/cfg.h                         |   9 -
- net/mac80211/debugfs_sta.c                 |   8 +-
- net/mac80211/ethtool.c                     |  29 ++-
- net/mac80211/event.c                       |  27 ---
- net/mac80211/ibss.c                        |  24 +--
- net/mac80211/ieee80211_i.h                 |  13 +-
- net/mac80211/iface.c                       |   4 +-
- net/mac80211/main.c                        |  14 --
- net/mac80211/mesh_hwmp.c                   |   2 +-
- net/mac80211/mesh_plink.c                  |   6 +-
- net/mac80211/mlme.c                        |  85 +++------
- net/mac80211/ocb.c                         |   2 +-
- net/mac80211/rx.c                          |  81 ++++----
- net/mac80211/scan.c                        |  20 +-
- net/mac80211/sta_info.c                    | 101 +++++++---
- net/mac80211/sta_info.h                    | 103 ++++------
- net/mac80211/status.c                      |  53 +++---
- net/mac80211/trace.h                       |   2 -
- net/mac80211/tx.c                          |  20 +-
- net/mac80211/util.c                        |  12 +-
- net/mac80211/wpa.c                         |   9 +-
- net/wireless/Kconfig                       |  10 +
- net/wireless/core.c                        |   5 +-
- net/wireless/core.h                        |   1 +
- net/wireless/nl80211.c                     | 288 +++++++++++++++++++++-------
- net/wireless/reg.c                         | 291 ++++++++++++++++-------------
- net/wireless/scan.c                        |  61 +++---
- net/wireless/trace.h                       |  22 +--
- 41 files changed, 910 insertions(+), 659 deletions(-)
- delete mode 100644 net/mac80211/cfg.h
- delete mode 100644 net/mac80211/event.c
