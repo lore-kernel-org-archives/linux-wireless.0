@@ -1,115 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37360 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbbJ1Ouy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 10:50:54 -0400
-Message-ID: <1446043853.24757.51.camel@redhat.com> (sfid-20151028_155057_843382_67EE3315)
-Subject: Re: mwifiex problem: incompatible network settings
-From: Dan Williams <dcbw@redhat.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 28 Oct 2015 09:50:53 -0500
-In-Reply-To: <87a8r4ugth.fsf@free.fr>
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	 <87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
-	 <87a8r4ugth.fsf@free.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:35082 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965628AbbJ1NfQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 09:35:16 -0400
+Received: by lbbes7 with SMTP id es7so5732992lbb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 06:35:14 -0700 (PDT)
+Subject: Re: [RESEND PATCH 07/10] net: wireless: iwlegacy: Remove unneeded
+ variable ret
+To: Punit Vara <punitvara@gmail.com>, kvalo@qca.qualcomm.com
+References: <1445972565-14963-1-git-send-email-punitvara@gmail.com>
+ <1445972565-14963-7-git-send-email-punitvara@gmail.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <5630CF11.8080504@cogentembedded.com> (sfid-20151028_143535_064161_62D6E610)
+Date: Wed, 28 Oct 2015 16:35:13 +0300
+MIME-Version: 1.0
+In-Reply-To: <1445972565-14963-7-git-send-email-punitvara@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-10-27 at 22:44 +0100, Julien Cubizolles wrote:
-> Amitkumar Karwar <akarwar@marvell.com> writes:
-> 
-> > Hi Julien,
-> >
-> >>Yes, I'm using NetworkManager, version 1.0.4-ubuntu5, and I'm guessing
-> >>it's using wpa_supplicant. I deleted the configuration for this network
-> >>and created it again. The network is configured for WPA in
-> >>NetworkManager but I still get the same error message.
-> >
-> > Looks like driver has received encryption mode as TKIP, but didn't
-> > receive WPA ie. Hence the configuration didn't match with AP. Could
-> > you share wpa_supplicant configuration file if possible? 
-> 
-> Here is /etc/dbus-1/system.d/wpa_supplicant.conf, is this the one you
-> need ?
+Hello.
 
-He actually meant the wpa_supplicant configuration file, not the
-supplicant's dbus config file.  But when driven by NetworkManager, there
-is no supplicant configuration file.
+On 10/27/2015 10:02 PM, Punit Vara wrote:
 
-Instead, you can find out what config NM is pushing to the supplicant by
-checking the NetworkManager logs, where NM will log lines like:
+> This patch is to the 3945-mac.c file that fixes up following warning
+> by coccicheck:
+>
+> drivers/net/wireless/iwlegacy/3945-mac.c:247:5-8: Unneeded variable:
+> "ret". Return "- EOPNOTSUPP" on line 249
+>
+> Return -EOPNOTSUPP directly instead of return using ret
+>
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> ---
+>   drivers/net/wireless/iwlegacy/3945-mac.c | 5 +----
+>   1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+> index af1b3e6..ff4dc44 100644
+> --- a/drivers/net/wireless/iwlegacy/3945-mac.c
+> +++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+> @@ -244,9 +244,7 @@ il3945_set_dynamic_key(struct il_priv *il, struct ieee80211_key_conf *keyconf,
+>   static int
+>   il3945_remove_static_key(struct il_priv *il)
+>   {
+> -	int ret = -EOPNOTSUPP;
+> -
+> -	return ret;
+> +	return -EOPNOTSUPP;
+>   }
+>
+>   static int
+> @@ -529,7 +527,6 @@ il3945_tx_skb(struct il_priv *il,
+>   		if (unlikely(tid >= MAX_TID_COUNT))
+>   			goto drop;
+>   	}
+> -
 
-NetworkManager[1163]: <info>  (wlp4s0): Activation: (wifi) connection
-'homewifi' has security, and secrets exist.  No new secrets needed.
-NetworkManager[1163]: <info>  Config: added 'ssid' value 'homewifi'
-NetworkManager[1163]: <info>  Config: added 'scan_ssid' value '1'
-NetworkManager[1163]: <info>  Config: added 'key_mgmt' value 'WPA-PSK'
-NetworkManager[1163]: <info>  Config: added 'psk' value '<omitted>'
-NetworkManager[1163]: <info>  Config: added 'proto' value 'WPA RSN'
-NetworkManager[1163]: <info>  Config: set interface ap_scan to 1
+    Unrelated white space change.
 
-That is almost exactly what would be in the wpa_supplicant config file.
-Can you grab this info from your machine for Julien?
-
-Dan
-
-> --8<---------------cut here---------------start------------->8---
-> <!DOCTYPE busconfig PUBLIC
->  "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
->  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-> <busconfig>
->         <policy user="root">
->                 <allow own="fi.epitest.hostap.WPASupplicant"/>
-> 
->                 <allow send_destination="fi.epitest.hostap.WPASupplicant"/>
->                 <allow send_interface="fi.epitest.hostap.WPASupplicant"/>
-> 
->                 <allow own="fi.w1.wpa_supplicant1"/>
-> 
->                 <allow send_destination="fi.w1.wpa_supplicant1"/>
->                 <allow send_interface="fi.w1.wpa_supplicant1"/>
->                 <allow receive_sender="fi.w1.wpa_supplicant1" receive_type="signal"/>
->         </policy>
->         <policy group="netdev">
->                 <allow send_destination="fi.epitest.hostap.WPASupplicant"/>
->                 <allow send_interface="fi.epitest.hostap.WPASupplicant"/>
-> 
->                 <allow send_destination="fi.w1.wpa_supplicant1"/>
->                 <allow send_interface="fi.w1.wpa_supplicant1"/>
->                 <allow receive_sender="fi.w1.wpa_supplicant1" receive_type="signal"/>
->         </policy>
->         <policy context="default">
->                 <deny own="fi.epitest.hostap.WPASupplicant"/>
->                 <deny send_destination="fi.epitest.hostap.WPASupplicant"/>
->                 <deny send_interface="fi.epitest.hostap.WPASupplicant"/>
-> 
->                 <deny own="fi.w1.wpa_supplicant1"/>
->                 <deny send_destination="fi.w1.wpa_supplicant1"/>
->                 <deny send_interface="fi.w1.wpa_supplicant1"/>
->                 <deny receive_sender="fi.w1.wpa_supplicant1" receive_type="signal"/>
->         </policy>
-> </busconfig>
-> 
-> --8<---------------cut here---------------end--------------->8---
-> 
-> > Also, check if "sme->ie" is received in mwifiex_cfg80211_assoc()
-> > routine.
-> 
-> Is that what the following debugging is for ? Or should I do something
-> else ?
-> 
-> > Enable driver debug for the test using "echo 0xffffffff >
-> > /sys/kernel/debug/mwifiex/mlan0/debug_mask" and share dmesg logs.
-> 
-> Please find them attached.
-> 
-> Regards,
-> 
-> Julien.
-> 
-
+MBR, Sergei
 
