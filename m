@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:7245 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755852AbbJ1OPb (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41639 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754827AbbJ1G6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 10:15:31 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Chris Kuethe <chris.kuethe@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: problems with mwifiex_usb, hangs under load, firmware in bad
- state
-Date: Wed, 28 Oct 2015 14:15:27 +0000
-Message-ID: <d866527bb2404c9f895960173159744a@SC-EXCH04.marvell.com> (sfid-20151028_151541_705503_978E69BA)
-References: <CAGHP0pK5452ixOHr0uWY=o2S2JvgoqVx8X7r6ZnQ=ezxqNg1UA@mail.gmail.com>
-In-Reply-To: <CAGHP0pK5452ixOHr0uWY=o2S2JvgoqVx8X7r6ZnQ=ezxqNg1UA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 28 Oct 2015 02:58:31 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/80] staging: wilc1000: rename u32Address of struct drv_handler
+Date: Wed, 28 Oct 2015 15:59:29 +0900
+Message-ID: <1446015640-29398-9-git-send-email-glen.lee@atmel.com> (sfid-20151028_075834_505413_1F6115E4)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQ2hyaXMsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIENocmlzIEt1ZXRoZQ0KPiBTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMjgsIDIwMTUg
-MTI6NDYgQU0NCj4gVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0
-OiBwcm9ibGVtcyB3aXRoIG13aWZpZXhfdXNiLCBoYW5ncyB1bmRlciBsb2FkLCBmaXJtd2FyZSBp
-biBiYWQNCj4gc3RhdGUNCj4gDQo+IExpa2Ugb3RoZXJzLCBJJ20gaGF2aW5nIHByb2JsZW1zIHdp
-dGggbXdpZmlleF91c2Igb24gYSBTdXJmYWNlIDIgUHJvLA0KPiB3aXRoIHRoZSBsYXRlc3QgZmly
-bXdhcmUgImRyaXZlcl92ZXJzaW9uID0gbXdpZmlleCAxLjAgKDE0LjY4LjI5LnAzOCkiDQo+IGFu
-ZCB0aGUgbGF0ZXN0IHJlbGVhc2UgY2FuZGlkYXRlIGtlcm5lbCAoNC4zLjByYzcpDQo+IA0KPiBF
-dmVyeSA1LTEwIHNlY29uZHMsIGV2ZW4gd2hpbGUgaWRsZSwgSSdsbCBnZXQgYSBrZXJuZWwgbWVz
-c2FnZToNCj4gICAgIHVzYiAxLTI6IFJ4IG9mIG1nbXQgcGFja2V0IGZhaWxlZA0KPiANCj4gVW5k
-ZXIgbG9hZCAoYSBiaWcgc2NwIG9yIGEgY291cGxlIG9mIGtlcm5lbCBzb3VyY2UgdGFyYmFsbHMg
-d2lsbCBkbyB0aGUNCj4gdHJpY2spLCBJIGdldCBhIGh1Z2UgYW1vdW50IG9mIGxvZyBzcGFtLCBv
-bmUgbWVzc2FnZSBwZXIgcGFja2V0Og0KPiAgICAgdXNiIDEtMjogZGF0YTogLUVOT1NSIGlzIHJl
-dHVybmVkDQoNClRoYW5rcyBmb3IgcmVwb3J0aW5nIHRoZSBwcm9ibGVtLiBUaGVzZSB0d28gbWVz
-c2FnZXMgYXJlIGFjdHVhbGx5IHdhcm5pbmdzIGFuZCBub3QgZ2VudWluZSBlcnJvci4gVGhleSBh
-cmUgZXhwZWN0ZWQgZHVyaW5nIGhlYXZ5IHRyYWZmaWMuDQpJIHdpbGwgc3VibWl0IGEgcGF0Y2gg
-dG8gc3VwcHJlc3MgdGhlbS4gTWVhbndoaWxlIHlvdSBjYW4gY29tbWVudCB0aGVtIG91dCBpbiB5
-b3VyIGNvZGUuDQoNCj4gDQo+IE9jY2FzaW9uYWxseSBJJ2xsIGFsc28gc2VlDQo+ICAgICB1c2Ig
-MS0yOiBtd2lmaWV4X3VzYl9zdWJtaXRfcnhfdXJiOiBkZXZfYWxsb2Nfc2tiIGZhaWxlZA0KDQpE
-byB5b3VyIG1hY2hpbmUgaGF2ZSBlbm91Z2ggc3BhY2Ugd2hlbiB0aGlzIGVycm9yIG9jY3Vycz8g
-Q2FuIHlvdSBjaGVjayBpZiB0aGlzIHByb2JsZW0gaXMgc3RpbGwgb2JzZXJ2ZWQgd2hlbiBhYm92
-ZSB0d28gZXJyb3IgbWVzc2FnZXMgYXJlIHN1cHByZXNzZWQ/DQoNCj4gDQo+IEFmdGVyIGEgd2hp
-bGUsIEkgZ2V0IHRoZSBkcmVhZGVkIGZpcm13YXJlIGJhZCBzdGF0ZSBhbmQgdGhlIG9ubHkgZml4
-IGlzDQo+IHRvIHBvd2VyIGN5Y2xlIHRoZSBtYWNoaW5lLiBTdXNwZW5kIGRvZXNuJ3QgcmVzZXQg
-dGhlIGhhcmR3YXJlLCBhbmQNCj4gYXR0ZW1wdGluZyB0byBybW1vZC9tb2Rwcm9iZSBtd2lmaWV4
-X3VzYiB3aWxsIGNyYXNoIG15IG1hY2hpbmUuDQo+IA0KPiAgdXNiIDEtMjogbXdpZmlleF9jbWRf
-dGltZW91dF9mdW5jOiBUaW1lb3V0IGNtZCBpZCA9IDB4NiwgYWN0ID0gMHgzICB1c2INCj4gMS0y
-OiBudW1fZGF0YV9oMmNfZmFpbHVyZSA9IDAgIHVzYiAxLTI6IG51bV9jbWRfaDJjX2ZhaWx1cmUg
-PSAwICB1c2IgMS0NCj4gMjogaXNfY21kX3RpbWVkb3V0ID0gMSAgdXNiIDEtMjogbnVtX3R4X3Rp
-bWVvdXQgPSAwICB1c2IgMS0yOg0KPiBsYXN0X2NtZF9pbmRleCA9IDAgIHVzYiAxLTI6IGxhc3Rf
-Y21kX2lkOiAwNiAwMCAyOCAwMCAyOCAwMCAyOCAwMCAyOCAwMA0KPiB1c2IgMS0yOiBsYXN0X2Nt
-ZF9hY3Q6IDAzIDAwIDEzIDAwIDEzIDAwIDEzIDAwIDEzIDAwICB1c2IgMS0yOg0KPiBsYXN0X2Nt
-ZF9yZXNwX2luZGV4ID0gNCAgdXNiIDEtMjogbGFzdF9jbWRfcmVzcF9pZDogMjggODAgMjggODAg
-MjggODAgMjgNCj4gODAgMjggODAgIHVzYiAxLTI6IGxhc3RfZXZlbnRfaW5kZXggPSAzICB1c2Ig
-MS0yOiBsYXN0X2V2ZW50OiAzNyAwMCAzMw0KPiAwMCAzNyAwMCAzMyAwMCAzMyAwMCAgdXNiIDEt
-MjogZGF0YV9zZW50PTAgY21kX3NlbnQ9MCAgdXNiIDEtMjoNCj4gcHNfbW9kZT0wIHBzX3N0YXRl
-PTAgIHVzYiAxLTI6IElnbm9yZSBzY2FuLiBDYXJkIHJlbW92ZWQgb3IgZmlybXdhcmUgaW4NCj4g
-YmFkIHN0YXRlICB1c2IgMS0yOiBzY2FuIGZhaWxlZDogLTE0ICB1c2IgMS0yOiBJZ25vcmUgc2Nh
-bi4gQ2FyZCByZW1vdmVkDQo+IG9yIGZpcm13YXJlIGluIGJhZCBzdGF0ZSAgdXNiIDEtMjogc2Nh
-biBmYWlsZWQ6IC0xNCAgdXNiIDEtMjogSWdub3JlDQo+IHNjYW4uIENhcmQgcmVtb3ZlZCBvciBm
-aXJtd2FyZSBpbiBiYWQgc3RhdGUgIHVzYiAxLTI6IHNjYW4gZmFpbGVkOiAtMTQNCj4gdXNiIDEt
-MjogSWdub3JlIHNjYW4uIENhcmQgcmVtb3ZlZCBvciBmaXJtd2FyZSBpbiBiYWQgc3RhdGUgIHVz
-YiAxLTI6DQo+IHNjYW4gZmFpbGVkOiAtMTQgIHVzYiAxLTI6IElnbm9yZSBzY2FuLiBDYXJkIHJl
-bW92ZWQgb3IgZmlybXdhcmUgaW4gYmFkDQo+IHN0YXRlICB1c2IgMS0yOiBzY2FuIGZhaWxlZDog
-LTE0ICB1c2IgMS0yOiBJZ25vcmUgc2Nhbi4gQ2FyZCByZW1vdmVkIG9yDQo+IGZpcm13YXJlIGlu
-IGJhZCBzdGF0ZSAgdXNiIDEtMjogc2NhbiBmYWlsZWQ6IC0xNCAgdXNiIDEtMjogSWdub3JlIHNj
-YW4uDQo+IENhcmQgcmVtb3ZlZCBvciBmaXJtd2FyZSBpbiBiYWQgc3RhdGUgIHVzYiAxLTI6IHNj
-YW4gZmFpbGVkOiAtMTQgIHVzYiAxLQ0KPiAyOiBQUkVQX0NNRDogRlcgaXMgaW4gYmFkIHN0YXRl
-ICB1c2IgMS0yOiBQUkVQX0NNRDogRlcgaXMgaW4gYmFkIHN0YXRlDQo+ICBJUHY2OiBBRERSQ09O
-RihORVRERVZfVVApOiB3bHgyODE4NzhmZDI0MzI6IGxpbmsgaXMgbm90IHJlYWR5ICB1c2IgMS0y
-Og0KPiBQUkVQX0NNRDogRlcgaXMgaW4gYmFkIHN0YXRlDQo+IA0KPiBUaGlzIGlzIHJlcHJvZHVj
-aWJsZSBhbGwgdGhlIHdheSB1cCB0byA0LjMuMC1yYzcgd2hpY2ggaW5jbHVkZXMgdGhlDQo+IHBh
-dGNoIGZyb20gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9uZXRkZXYvbXNnMzM0MzY3Lmh0
-bWwNCj4gDQo+IHRoYXQgd2FzIHN1Z2dlc3RlZCBhcyBhIGZpeCBpbg0KPiBodHRwOi8vd3d3LnNw
-aW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzEzOTA5NS5odG1sDQo+IA0KPiBJIHdh
-cyBhYmxlIHRvIHJlcHJvZHVjZSB0aGlzIHdpdGggYWZ0ZXIgdHVybmluZyB1cCBkZWJ1Z2dpbmcg
-KGVjaG8NCj4gMHhmZmZmZmZmZiA+IC9zeXMva2VybmVsL2RlYnVnL213aWZpZXgvbWxhbjAvZGVi
-dWdfbWFzaykgLSB0aGUgcmVzdWx0aW5nDQo+IHRyYWNlIGlzIDEuNEdCLiBJbnRlcmVzdGVkIHBh
-cnRpZXMgY2FuIGNvbnRhY3QgbWUgZm9yIGEgbGluaywgb3IgdGVsbCBtZQ0KPiB3aGF0IEkgc2hv
-dWxkIGdyZXAgZm9yLi4uDQo+IA0KPiAtLQ0KDQpDYW4geW91IHJlbW92ZSB0aG9zZSB0d28gbWVz
-c2FnZXMgYW5kIHNoYXJlIHRoZSBsb2cgdG8gbWUgZm9yIGFuYWx5c2lzPw0KQWxzbywgc2hhcmUg
-aWYgdGhlcmUgaXMgYW55IGRlZmluaXRlIHByb2NlZHVyZSBzbyB0aGF0IHdlIGNhbiB0cnkgdG8g
-cmVjcmVhdGUgdGhlIGlzc3VlIGF0IG91ciBlbmQuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+From: Leo Kim <leo.kim@atmel.com>
+
+This patch renames u32Address of struct drv_handler to handler
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eee53b9..a1116ef 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -356,11 +356,11 @@ static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
+ 
+ 	wid.id = (u16)WID_SET_DRV_HANDLER;
+ 	wid.type = WID_INT;
+-	wid.val = (s8 *)&pstrHostIfSetDrvHandler->u32Address;
++	wid.val = (s8 *)&pstrHostIfSetDrvHandler->handler;
+ 	wid.size = sizeof(u32);
+ 
+ 	result = send_config_pkt(SET_CFG, &wid, 1,
+-				 pstrHostIfSetDrvHandler->u32Address);
++				 pstrHostIfSetDrvHandler->handler);
+ 
+ 	if (!hif_drv)
+ 		up(&hif_sema_driver);
+@@ -3681,7 +3681,7 @@ int host_int_set_wfi_drv_handler(struct host_if_drv *hif_drv)
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
+-	msg.body.drv.u32Address = get_id_from_handler(hif_drv);
++	msg.body.drv.handler = get_id_from_handler(hif_drv);
+ 	msg.drv = hif_drv;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d4fb1d4..eb7b7d9 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -240,7 +240,7 @@ struct user_conn_req {
+ };
+ 
+ struct drv_handler {
+-	u32 u32Address;
++	u32 handler;
+ };
+ 
+ struct op_mode {
+-- 
+1.9.1
+
