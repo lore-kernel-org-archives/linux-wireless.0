@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37959 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbbJTMVw convert rfc822-to-8bit (ORCPT
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:34742 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384AbbJ1HRy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 08:21:52 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: <linux-firmware@kernel.org>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/5] ath10k: QCA988X hw2.0: add board.bin
-References: <1444905644-16296-1-git-send-email-kvalo@qca.qualcomm.com>
-	<1445192636.31451.74.camel@decadent.org.uk>
-Date: Tue, 20 Oct 2015 15:21:30 +0300
-In-Reply-To: <1445192636.31451.74.camel@decadent.org.uk> (Ben Hutchings's
-	message of "Sun, 18 Oct 2015 19:23:56 +0100")
-Message-ID: <87fv15d92t.fsf@kamboji.qca.qualcomm.com> (sfid-20151020_142156_436690_B19ECFDC)
+	Wed, 28 Oct 2015 03:17:54 -0400
+Received: by qgem9 with SMTP id m9so165227645qge.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 00:17:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Reply-To: srikanth007m@gmail.com
+Date: Wed, 28 Oct 2015 12:47:53 +0530
+Message-ID: <CANKSX+FQZpzz4KvYP3mwb3YJKUqCi-_sxSBpd1+13KtswSjsPw@mail.gmail.com> (sfid-20151028_081758_020985_4659B905)
+Subject: Wifi test suite
+From: "$rik@nth " <srikanth007m@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Hutchings <ben@decadent.org.uk> writes:
+Hi All,
 
-> On Thu, 2015-10-15 at 13:40 +0300, Kalle Valo wrote:
->> In commit 40d14143b787 ("ath10k: add firmware 10.2.4.45 as firmware-4.bin") I
->> forgot to commit board.bin file and that's why it was not included in the
->> commit even I had added an entry to WHENCE. Add that now.
->> 
->> At the same time also add Version field for firmware-4.bin.
->> 
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> [...]
->
-> I've applied this and the following 4 patches.  However, I'm not
-> entirely happy with copyright acknowledgements going into the
-> notice_ath10k*.txt files which aren't referenced anywhere.  It would be
-> easy for downstream distributors to miss that they should be packaged
-> along with the firmware blobs they relate to.  Please can you combine
-> these with the QCA licence file or add references to these files from
-> WHENCE?
+I am new to wireless developing. Before submitting the patches i would
+like to test on my workstation. So is there any test suite or
+regression suite available for WiFi or BT in order to check the
+changes aren't breaking the basic workflow.
 
-Combining with the license file is difficult as the notice.txt can be
-different between firmware versions, but I can add a reference to
-WHENCE. I guess you mean to add a new "File: " line for each .txt file?
+I've tried to get the listed ones on [1]. But those git links are
+broken. It would be great if someone points to any existing one is
+available.
 
+[1] http://linuxwireless.org/en/developers/Testing/wifi-test/#Wifi-test
 -- 
-Kalle Valo
+Thanks & Regards,
+M.Srikanth Kumar.
