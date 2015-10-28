@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3154 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932089AbbJMKyF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42640 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752375AbbJ1TB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:54:05 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 32/54] staging: wilc1000: rename tenuAuth_type of struct connect_attr
-Date: Tue, 13 Oct 2015 19:49:57 +0900
-Message-ID: <1444733419-17679-32-git-send-email-tony.cho@atmel.com> (sfid-20151013_125412_497243_ADE9ED87)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	Wed, 28 Oct 2015 15:01:57 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2] mwifiex: toggle carrier state in start_ap/stop_ap.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1445838841-20253-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Marty Faltesek <mfaltesek@google.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20151028190157.29F141415A7@smtp.codeaurora.org> (sfid-20151028_200201_067739_A8BDDD3F)
+Date: Wed, 28 Oct 2015 19:01:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames tenuAuth_type of struct connect_attr to auth_type to
-avoid CamelCase naming convention.
+> From: Marty Faltesek <mfaltesek@google.com>
+> 
+> In uap mode the carrier is not enabled until after the first STA joins.
+> The carrier triggers the bridge to start its state machine, and if STP
+> is enabled, it takes 4 seconds as it transitions from disabled to
+> forwarding. During this time the bridge drops all traffic, and the EAPOL
+> handshake times out after 3 seconds, preventing stations from joining.
+> 
+> Follow the logic used in mac80211 and start the carrier in start_ap
+> and disable it in stop_ap. This has a nice benefit of allowing the
+> first station connection time to be reduced by up to 75% when STP is
+> in use.
+> 
+> Signed-off-by: Martin Faltesek <mfaltesek@google.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0790dcb..695fd5c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -116,7 +116,7 @@ struct connect_attr {
- 	u8 security;
- 	wilc_connect_result result;
- 	void *arg;
--	enum AUTHTYPE tenuAuth_type;
-+	enum AUTHTYPE auth_type;
- 	u8 u8channel;
- 	void *pJoinParams;
- };
-@@ -1052,7 +1052,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	}
- 
- 	hif_drv->strWILC_UsrConnReq.u8security = pstrHostIFconnectAttr->security;
--	hif_drv->strWILC_UsrConnReq.tenuAuth_type = pstrHostIFconnectAttr->tenuAuth_type;
-+	hif_drv->strWILC_UsrConnReq.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
- 	hif_drv->strWILC_UsrConnReq.pfUserConnectResult = pstrHostIFconnectAttr->result;
- 	hif_drv->strWILC_UsrConnReq.u32UserConnectPvoid = pstrHostIFconnectAttr->arg;
- 
-@@ -3612,7 +3612,7 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	msg.id = HOST_IF_MSG_CONNECT;
- 
- 	msg.body.con_info.security = u8security;
--	msg.body.con_info.tenuAuth_type = tenuAuth_type;
-+	msg.body.con_info.auth_type = tenuAuth_type;
- 	msg.body.con_info.u8channel = u8channel;
- 	msg.body.con_info.result = pfConnectResult;
- 	msg.body.con_info.arg = pvUserArg;
--- 
-1.9.1
-
+Kalle Valo
