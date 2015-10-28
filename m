@@ -1,83 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33058 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751875AbbJNQhL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 12:37:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove cfg.h
-Date: Wed, 14 Oct 2015 18:37:08 +0200
-Message-Id: <1444840628-19054-1-git-send-email-johannes@sipsolutions.net> (sfid-20151014_183716_187050_8EAC4BC0)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41845 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755291AbbJ1G70 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 02:59:26 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 18/80] staging: wilc1000: rename au8AssociatedBSSID of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:38 +0900
+Message-ID: <1446015640-29398-18-git-send-email-glen.lee@atmel.com> (sfid-20151028_081659_470532_E05C7794)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-The file contains just a single declaration that can easily
-move to another file - remove it.
+This patch renames au8AssociatedBSSID of struct host_if_drv to assoc_bssid
+to avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- net/mac80211/cfg.c         | 1 -
- net/mac80211/cfg.h         | 9 ---------
- net/mac80211/ieee80211_i.h | 2 ++
- net/mac80211/main.c        | 1 -
- 4 files changed, 2 insertions(+), 11 deletions(-)
- delete mode 100644 net/mac80211/cfg.h
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 61c841aeff60..713cdbf6fb3c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -17,7 +17,6 @@
- #include <net/cfg80211.h>
- #include "ieee80211_i.h"
- #include "driver-ops.h"
--#include "cfg.h"
- #include "rate.h"
- #include "mesh.h"
- #include "wme.h"
-diff --git a/net/mac80211/cfg.h b/net/mac80211/cfg.h
-deleted file mode 100644
-index 2d51f62dc76c..000000000000
---- a/net/mac80211/cfg.h
-+++ /dev/null
-@@ -1,9 +0,0 @@
--/*
-- * mac80211 configuration hooks for cfg80211
-- */
--#ifndef __CFG_H
--#define __CFG_H
--
--extern const struct cfg80211_ops mac80211_config_ops;
--
--#endif /* __CFG_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 99735408e99d..04b62435f37e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -34,6 +34,8 @@
- #include "sta_info.h"
- #include "debug.h"
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c378129..9c6f2eb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1581,7 +1581,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
  
-+extern const struct cfg80211_ops mac80211_config_ops;
-+
- struct ieee80211_local;
+ 				if ((u8MacStatus == MAC_CONNECTED) &&
+ 				    (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE))	{
+-					memcpy(hif_drv->au8AssociatedBSSID,
++					memcpy(hif_drv->assoc_bssid,
+ 					       hif_drv->usr_conn_req.pu8bssid, ETH_ALEN);
+ 				}
+ 			}
+@@ -1657,7 +1657,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				PRINT_ER("Connect result callback function is NULL\n");
+ 			}
  
- /* Maximum number of broadcast/multicast frames to buffer when some of the
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e2514fadc3d7..273c96de4910 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -31,7 +31,6 @@
- #include "mesh.h"
- #include "wep.h"
- #include "led.h"
--#include "cfg.h"
- #include "debugfs.h"
+-			eth_zero_addr(hif_drv->au8AssociatedBSSID);
++			eth_zero_addr(hif_drv->assoc_bssid);
  
- void ieee80211_configure_filter(struct ieee80211_local *local)
+ 			hif_drv->usr_conn_req.ssidLen = 0;
+ 			kfree(hif_drv->usr_conn_req.pu8ssid);
+@@ -1840,7 +1840,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			}
+ 
+ 			if (hif_drv->hif_state == HOST_IF_CONNECTED)
+-				memcpy(pu8keybuf, hif_drv->au8AssociatedBSSID, ETH_ALEN);
++				memcpy(pu8keybuf, hif_drv->assoc_bssid, ETH_ALEN);
+ 			else
+ 				PRINT_ER("Couldn't handle WPARxGtk while \
+ 					 state is not HOST_IF_CONNECTED\n");
+@@ -2023,7 +2023,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 
+ 		hif_drv->hif_state = HOST_IF_IDLE;
+ 
+-		eth_zero_addr(hif_drv->au8AssociatedBSSID);
++		eth_zero_addr(hif_drv->assoc_bssid);
+ 
+ 		hif_drv->usr_conn_req.ssidLen = 0;
+ 		kfree(hif_drv->usr_conn_req.pu8ssid);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 246f3b3..360dda3 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -301,7 +301,7 @@ struct host_if_drv {
+ 
+ 	enum host_if_state hif_state;
+ 
+-	u8 au8AssociatedBSSID[ETH_ALEN];
++	u8 assoc_bssid[ETH_ALEN];
+ 	struct cfg_param_val strCfgValues;
+ /* semaphores */
+ 	struct semaphore gtOsCfgValuesSem;
 -- 
-2.5.1
+1.9.1
 
