@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33514 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbbJCJ2j (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42903 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbbJ1HEc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Oct 2015 05:28:39 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
-	rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 2/2] drivers: staging: wilc1000: Call kfree only for error cases
-Date: Sat,  3 Oct 2015 14:57:30 +0530
-Message-Id: <1443864450-18167-2-git-send-email-csgorentla@gmail.com> (sfid-20151003_112858_718291_B12CD46F)
-In-Reply-To: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
-References: <1443864450-18167-1-git-send-email-csgorentla@gmail.com>
+	Wed, 28 Oct 2015 03:04:32 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 52/80] staging: wilc1000: host_interface.h: move local define variables
+Date: Wed, 28 Oct 2015 16:06:57 +0900
+Message-ID: <1446016045-32154-2-git-send-email-glen.lee@atmel.com> (sfid-20151028_080435_436620_B278E7B8)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- - kfree is being called for the members of the queue without
-   de-queuing them; they are just inserted within this function;
-   they are supposed to be de-queued and freed in a function
-   for receiving the queue items
- - goto statements are removed
- - After kfree correction, there is no need for target block
-   of goto statement; hence it is removed
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+This patch move local define variables to local define position.
+ - ACTION
+ - PROBE_REQ
+ - PROBE_RESP
+ - ACTION_FRM_IDX
+ - PROBE_REQ_IDX
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 284a3f5..eae90be 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -56,32 +56,30 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 			     const void *pvSendBuffer, u32 u32SendBufferSize)
- {
--	int result = 0;
- 	unsigned long flags;
- 	Message *pstrMessage = NULL;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6f2cf5c..9de0267 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -10,8 +10,12 @@
+ #define STATION_MODE	0x02
+ #define GO_MODE		0x03
+ #define CLIENT_MODE	0x04
++#define ACTION		0xD0
++#define PROBE_REQ	0x40
++#define PROBE_RESP	0x50
  
- 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
- 		PRINT_ER("pHandle or pvSendBuffer is null\n");
--		result = -EFAULT;
--		goto ERRORHANDLER;
-+		return -EFAULT;
- 	}
- 
- 	if (pHandle->bExiting) {
- 		PRINT_ER("pHandle fail\n");
--		result = -EFAULT;
--		goto ERRORHANDLER;
-+		return -EFAULT;
- 	}
- 
- 	/* construct a new message */
- 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
- 	if (!pstrMessage)
- 		return -ENOMEM;
-+
- 	pstrMessage->u32Length = u32SendBufferSize;
- 	pstrMessage->pstrNext = NULL;
- 	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
- 	if (!pstrMessage->pvBuffer) {
--		result = -ENOMEM;
--		goto ERRORHANDLER;
-+		kfree(pstrMessage);
-+		return -ENOMEM;
- 	}
- 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
- 
-@@ -102,15 +100,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
- 	up(&pHandle->hSem);
 -
--ERRORHANDLER:
--	/* error occured, free any allocations */
--	if (pstrMessage) {
--		kfree(pstrMessage->pvBuffer);
--		kfree(pstrMessage);
--	}
--
--	return result;
-+	return 0;
- }
++#define ACTION_FRM_IDX				0
++#define PROBE_REQ_IDX				1
+ #define MAX_NUM_STA				9
+ #define ACTIVE_SCAN_TIME			10
+ #define PASSIVE_SCAN_TIME			1200
+@@ -249,14 +253,6 @@ struct reg_frame {
+ 	u8 reg_id;
+ };
  
- /*!
+-
+-#define ACTION			0xD0
+-#define PROBE_REQ		0x40
+-#define PROBE_RESP		0x50
+-#define ACTION_FRM_IDX		0
+-#define PROBE_REQ_IDX		1
+-
+-
+ enum p2p_listen_state {
+ 	P2P_IDLE,
+ 	P2P_LISTEN,
 -- 
-2.1.4
+1.9.1
 
