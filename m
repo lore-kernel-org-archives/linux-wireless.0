@@ -1,93 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43122 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509AbbJ1HFS (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:21183 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768AbbJ1Q4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:05:18 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 60/80] staging: wilc1000: rename u32RcvdChCount of struct user_scan_req
-Date: Wed, 28 Oct 2015 16:07:05 +0900
-Message-ID: <1446016045-32154-10-git-send-email-glen.lee@atmel.com> (sfid-20151028_080526_193271_4BAF2A0C)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+	Wed, 28 Oct 2015 12:56:19 -0400
+Date: Wed, 28 Oct 2015 19:56:06 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 38/80] staging: wilc1000: rename au8Bssid of struct
+ ba_session_info
+Message-ID: <20151028165606.GB18797@mwanda> (sfid-20151028_175627_342264_329B2E24)
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+ <1446015640-29398-38-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446015640-29398-38-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, Oct 28, 2015 at 03:59:58PM +0900, Glen Lee wrote:
+> From: Leo Kim <leo.kim@atmel.com>
+> 
+> This patch renames au8Bssid of struct ba_session_info to bssid
+> to avoid CamelCase naming convention.
+> And, some debug logs modified because 80 ending line over warnings.
+> 
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 32 ++++++++++++++++++-------------
+>  drivers/staging/wilc1000/host_interface.h |  2 +-
+>  2 files changed, 20 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 9ad98fd..48a232f 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2715,10 +2715,14 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
+>  	int AddbaTimeout = 100;
+>  	char *ptr = NULL;
+>  
+> -	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\nBufferSize == %d\nSessionTimeOut = %d\n",
+> -		strHostIfBASessionInfo->au8Bssid[0],
+> -		strHostIfBASessionInfo->au8Bssid[1],
+> -		strHostIfBASessionInfo->au8Bssid[2],
+> +	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with \
+> +		\nBSSID = %.2x:%.2x:%.2x \
+> +		\nBufferSize == %d \
+> +		\nSessionTimeOut = %d \
+> +		\nTID=%d\n",
+> +		strHostIfBASessionInfo->bssid[0],
+> +		strHostIfBASessionInfo->bssid[1],
+> +		strHostIfBASessionInfo->bssid[2],
+>  		strHostIfBASessionInfo->u16BufferSize,
+>  		strHostIfBASessionInfo->u16SessionTimeout,
+>  		strHostIfBASessionInfo->u8Ted);
 
-This patch renames u32RcvdChCount of struct user_scan_req to rcvd_ch_cnt
-to avoid CamelCase naming convention.
+This should be a bunch of printks so that we have the correct debug
+level at the start of each line.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 14 +++++++-------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 669f67c..9882c93 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -843,7 +843,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 
- 	PRINT_D(HOSTINF_DBG, "Setting SCAN params\n");
- 
--	hif_drv->usr_scan_req.u32RcvdChCount = 0;
-+	hif_drv->usr_scan_req.rcvd_ch_cnt = 0;
- 
- 	strWIDList[u32WidsCount].id = (u16)WID_SSID_PROBE_REQ;
- 	strWIDList[u32WidsCount].type = WID_STR;
-@@ -1414,7 +1414,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
- 			goto done;
- 		}
- 
--		for (i = 0; i < hif_drv->usr_scan_req.u32RcvdChCount; i++) {
-+		for (i = 0; i < hif_drv->usr_scan_req.rcvd_ch_cnt; i++) {
- 			if ((hif_drv->usr_scan_req.net_info[i].au8bssid) &&
- 			    (pstrNetworkInfo->au8bssid)) {
- 				if (memcmp(hif_drv->usr_scan_req.net_info[i].au8bssid,
-@@ -1434,15 +1434,15 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
- 		if (bNewNtwrkFound) {
- 			PRINT_D(HOSTINF_DBG, "New network found\n");
- 
--			if (hif_drv->usr_scan_req.u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
--				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].s8rssi = pstrNetworkInfo->s8rssi;
-+			if (hif_drv->usr_scan_req.rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
-+				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].s8rssi = pstrNetworkInfo->s8rssi;
- 
--				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid &&
-+				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].au8bssid &&
- 				    pstrNetworkInfo->au8bssid) {
--					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.u32RcvdChCount].au8bssid,
-+					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].au8bssid,
- 					       pstrNetworkInfo->au8bssid, 6);
- 
--					hif_drv->usr_scan_req.u32RcvdChCount++;
-+					hif_drv->usr_scan_req.rcvd_ch_cnt++;
- 
- 					pstrNetworkInfo->bNewNetwork = true;
- 					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 06c5826..0c6dafc 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -198,7 +198,7 @@ struct hidden_network {
- struct user_scan_req {
- 	wilc_scan_result scan_result;
- 	void *arg;
--	u32 u32RcvdChCount;
-+	u32 rcvd_ch_cnt;
- 	struct found_net_info net_info[MAX_NUM_SCANNED_NETWORKS];
- };
- 
--- 
-1.9.1
+regards,
+dan carpenter
 
