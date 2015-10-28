@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:56746 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030341AbbJ3Jpb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42550 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467AbbJ1S7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:45:31 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 11/17] staging: wilc1000: wilc_wlan_firmware_download: add argument net_device
-Date: Fri, 30 Oct 2015 18:47:17 +0900
-Message-ID: <1446198443-6623-11-git-send-email-glen.lee@atmel.com> (sfid-20151030_104654_570889_3701D844)
-In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+	Wed, 28 Oct 2015 14:59:41 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: wcn36xx: Remove warning message when dev is NULL for arm64
+ dma_alloc.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
+To: yfw <fengwei.yin@linaro.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	me@bobcopeland.com, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com, fengwei.yin@linaro.org
+Message-Id: <20151028185940.99B6C14158D@smtp.codeaurora.org> (sfid-20151028_195944_333427_88E1D94D)
+Date: Wed, 28 Oct 2015 18:59:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new argument struct net_device and pass dev to the function as well.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c  | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.h  | 3 ++-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+> arm64 has requirement that all the dma operations have actual device.
+> Otherwise, following warnning message shown and dma allocation fails:
+> 
+> WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106 __dma_alloc+0x24c/0x258()
+> Use an actual device structure for DMA allocation
+> Modules linked in: wcn36xx wcn36xx_platform
+> CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
+> Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
+> Call trace:
+> [<ffffffc000089904>] dump_backtrace+0x0/0x124
+> [<ffffffc000089a38>] show_stack+0x10/0x1c
+> [<ffffffc000627114>] dump_stack+0x80/0xc4
+> [<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
+> [<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
+> [<ffffffc00009487c>] __dma_alloc+0x248/0x258
+> [<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
+> [<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
+> [<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
+> [<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
+> [<ffffffc00051693c>] __dev_open+0xb0/0x120
+> [<ffffffc000516c10>] __dev_change_flags+0x88/0x150
+> [<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
+> [<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
+> 
+> Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
+> Acked-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 1019a19..bb37f5b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -624,7 +624,7 @@ static int linux_wlan_firmware_download(struct net_device *dev)
- 	 *      do the firmware download
- 	 **/
- 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
--	ret = wilc_wlan_firmware_download(wilc->firmware->data,
-+	ret = wilc_wlan_firmware_download(dev, wilc->firmware->data,
- 					  wilc->firmware->size);
- 	if (ret < 0)
- 		goto _FAIL_;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c464cd7..e8afa6b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1415,7 +1415,8 @@ void wilc_handle_isr(void *wilc)
-  *      Firmware download
-  *
-  ********************************************/
--int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
-+int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
-+				u32 buffer_size)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 offset;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index fa66783..194c24c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -295,7 +295,8 @@ typedef struct {
- 	u32 seq_no;
- } wilc_cfg_rsp_t;
- 
--int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
-+int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
-+				u32 buffer_size);
- int wilc_wlan_start(void);
- int wilc_wlan_stop(struct net_device *dev);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
--- 
-1.9.1
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
