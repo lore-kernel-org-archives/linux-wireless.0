@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33333 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965502AbbJILiA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 07:38:00 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Geliang Tang <geliangtang@163.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: fix a comment typo
-Date: Fri, 9 Oct 2015 11:37:49 +0000
-Message-ID: <1d4ac22c01e9451f949c1df5343c2229@SC-EXCH04.marvell.com> (sfid-20151009_134031_438096_DDFAE09A)
-References: <53a87c6aae6bae712c079bf17ed27d0f1b381016.1443948331.git.geliangtang@163.com>
-In-Reply-To: <53a87c6aae6bae712c079bf17ed27d0f1b381016.1443948331.git.geliangtang@163.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42189 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755122AbbJ1HAo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 03:00:44 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 31/80] staging: wilc1000: rename bReg of struct reg_frame
+Date: Wed, 28 Oct 2015 15:59:51 +0900
+Message-ID: <1446015640-29398-31-git-send-email-glen.lee@atmel.com> (sfid-20151028_081655_014787_91F42B71)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Geliang Tang [mailto:geliangtang@163.com]
-> Sent: Sunday, October 04, 2015 2:17 PM
-> To: Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo
-> Cc: Geliang Tang; linux-wireless@vger.kernel.org;
-> netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] mwifiex: fix a comment typo
-> 
-> Just fix a typo in the code comment.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
-> ---
->  drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c
-> b/drivers/net/wireless/mwifiex/cfg80211.c
-> index 30cbafb..b7ac45f 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -2374,7 +2374,7 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy,
-> struct net_device *dev)
->   * CFG802.11 operation handler for scan request.
->   *
->   * This function issues a scan request to the firmware based upon
-> - * the user specified scan configuration. On successfull completion,
-> + * the user specified scan configuration. On successful completion,
->   * it also informs the results.
->   */
->  static int
-> --
-> 2.5.0
-> 
+From: Leo Kim <leo.kim@atmel.com>
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+This patch renames bReg of struct reg_frame to reg
+to avoid CamelCase naming convention.
 
-Regards,
-Amitkumar
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 +++++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b29d651..83d2606 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2553,7 +2553,9 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
+ 
+-	PRINT_D(HOSTINF_DBG, "Handling frame register Flag : %d FrameType: %d\n", pstrHostIfRegisterFrame->bReg, pstrHostIfRegisterFrame->u16FrameType);
++	PRINT_D(HOSTINF_DBG, "Handling frame register : %d FrameType: %d\n",
++		pstrHostIfRegisterFrame->reg,
++		pstrHostIfRegisterFrame->u16FrameType);
+ 
+ 	wid.id = (u16)WID_REGISTER_FRAME;
+ 	wid.type = WID_STR;
+@@ -2563,7 +2565,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 
+ 	pu8CurrByte = wid.val;
+ 
+-	*pu8CurrByte++ = pstrHostIfRegisterFrame->bReg;
++	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
+ 	*pu8CurrByte++ = pstrHostIfRegisterFrame->u8Regid;
+ 	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->u16FrameType,
+ 	       sizeof(u16));
+@@ -4431,7 +4433,7 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
+ 		break;
+ 	}
+ 	msg.body.reg_frame.u16FrameType = u16FrameType;
+-	msg.body.reg_frame.bReg = bReg;
++	msg.body.reg_frame.reg = bReg;
+ 	msg.drv = hif_drv;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 627ea43..4a588c4 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -245,7 +245,7 @@ struct remain_ch {
+ };
+ 
+ struct reg_frame {
+-	bool bReg;
++	bool reg;
+ 	u16 u16FrameType;
+ 	u8 u8Regid;
+ };
+-- 
+1.9.1
+
