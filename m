@@ -1,197 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:5041 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964824AbbJ2C6z (ORCPT
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:36163 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965096AbbJ1IZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:55 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 26/64] staging: wilc1000: remove warnings line over 80 characters
-Date: Thu, 29 Oct 2015 11:58:49 +0900
-Message-ID: <1446087567-16728-26-git-send-email-glen.lee@atmel.com> (sfid-20151029_035858_218769_B805AB33)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	Wed, 28 Oct 2015 04:25:10 -0400
+Received: by qgad10 with SMTP id d10so100232qga.3
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 01:25:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <562C454B.4070307@linaro.org>
+References: <1445708535-20169-1-git-send-email-me@bobcopeland.com>
+	<562C454B.4070307@linaro.org>
+Date: Wed, 28 Oct 2015 08:25:09 +0000
+Message-ID: <CAFSJ42YSNUSTTn1Sq1mdOEfMy43BYh04LR8gVQj+jxiiCxTqDg@mail.gmail.com> (sfid-20151028_092517_814278_9BA30F54)
+Subject: Re: [PATCH] wcn36xx: introduce per-channel ring buffer locks
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: yfw <fengwei.yin@linaro.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Looks good to me!
 
-This patch removes the warnings reported by checkpatch.pl
-for line over 80 characters.
+2015-10-25 2:58 GMT+00:00 yfw <fengwei.yin@linaro.org>:
+> Hi Bob,
+>
+>
+> On 2015/10/25 1:42, Bob Copeland wrote:
+>>
+>> wcn36xx implements a ring buffer for transmitted frames for each
+>> (high and low priority) DMA channel.  The ring buffers are lockless:
+>> new frames are inserted at the head of the queue, while finished
+>> packets are reaped from the tail.
+>>
+>> Unfortunately, the list manipulations are missing any kind of barriers
+>> so are susceptible to various races: for example, a TX completion
+>> handler might read an updated desc->ctrl before the head has actually
+>> advanced, and then null out the ctl->skb pointer while it is still
+>> being used in the TX path.
+>>
+>> Simplify things here by adding a spin lock when traversing the ring.
+>> This change increased stability for me without adding any noticeable
+>> overhead on my platform (xperia z).
+>>
+>> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>> ---
+>>   drivers/net/wireless/ath/wcn36xx/dxe.c | 27 +++++++++++++++++++--------
+>>   drivers/net/wireless/ath/wcn36xx/dxe.h |  1 +
+>>   2 files changed, 20 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> b/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> index 086549b..26085f7 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> @@ -79,6 +79,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct
+>> wcn36xx_dxe_ch *ch)
+>>         struct wcn36xx_dxe_ctl *cur_ctl = NULL;
+>>         int i;
+>>
+>> +       spin_lock_init(&ch->lock);
+>>         for (i = 0; i < ch->desc_num; i++) {
+>>                 cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
+>>                 if (!cur_ctl)
+>> @@ -345,7 +346,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32
+>> status)
+>>
+>>   static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+>>   {
+>> -       struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
+>> +       struct wcn36xx_dxe_ctl *ctl;
+>>         struct ieee80211_tx_info *info;
+>>         unsigned long flags;
+>>
+>> @@ -354,6 +355,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
+>> wcn36xx_dxe_ch *ch)
+>>          * completely full head and tail are pointing to the same element
+>>          * and while-do will not make any cycles.
+>>          */
+>> +       spin_lock_irqsave(&ch->lock, flags);
+>> +       ctl = ch->tail_blk_ctl;
+>>         do {
+>>                 if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
+>>                         break;
+>> @@ -365,12 +368,12 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
+>> wcn36xx_dxe_ch *ch)
+>>                                 /* Keep frame until TX status comes */
+>>                                 ieee80211_free_txskb(wcn->hw, ctl->skb);
+>>                         }
+>> -                       spin_lock_irqsave(&ctl->skb_lock, flags);
+>> +                       spin_lock(&ctl->skb_lock);
+>>                         if (wcn->queues_stopped) {
+>>                                 wcn->queues_stopped = false;
+>>                                 ieee80211_wake_queues(wcn->hw);
+>>                         }
+>> -                       spin_unlock_irqrestore(&ctl->skb_lock, flags);
+>> +                       spin_unlock(&ctl->skb_lock);
+>>
+>>                         ctl->skb = NULL;
+>>                 }
+>> @@ -379,6 +382,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct
+>> wcn36xx_dxe_ch *ch)
+>>                !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
+>>
+>>         ch->tail_blk_ctl = ctl;
+>> +       spin_unlock_irqrestore(&ch->lock, flags);
+>>   }
+>>
+>>   static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
+>> @@ -596,12 +600,14 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>>         struct wcn36xx_dxe_desc *desc = NULL;
+>>         struct wcn36xx_dxe_ch *ch = NULL;
+>>         unsigned long flags;
+>> +       int ret;
+>>
+>>         ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
+>>
+>> +       spin_lock_irqsave(&ch->lock, flags);
+>>         ctl = ch->head_blk_ctl;
+>>
+>> -       spin_lock_irqsave(&ctl->next->skb_lock, flags);
+>> +       spin_lock(&ctl->next->skb_lock);
+>>
+>>         /*
+>>          * If skb is not null that means that we reached the tail of the
+>> ring
+>> @@ -611,10 +617,11 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>>         if (NULL != ctl->next->skb) {
+>>                 ieee80211_stop_queues(wcn->hw);
+>>                 wcn->queues_stopped = true;
+>> -               spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+>> +               spin_unlock(&ctl->next->skb_lock);
+>> +               spin_unlock_irqrestore(&ch->lock, flags);
+>>                 return -EBUSY;
+>>         }
+>> -       spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+>> +       spin_unlock(&ctl->next->skb_lock);
+>>
+>>         ctl->skb = NULL;
+>>         desc = ctl->desc;
+>> @@ -640,7 +647,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>>         desc = ctl->desc;
+>>         if (ctl->bd_cpu_addr) {
+>>                 wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
+>> -               return -EINVAL;
+>> +               ret = -EINVAL;
+>> +               goto unlock;
+>>         }
+>>
+>>         desc->src_addr_l = dma_map_single(NULL,
+>> @@ -679,7 +687,10 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>>                         ch->reg_ctrl, ch->def_ctrl);
+>>         }
+>>
+>> -       return 0;
+>> +       ret = 0;
+>> +unlock:
+>> +       spin_unlock_irqrestore(&ch->lock, flags);
+>> +       return ret;
+>>   }
+>>
+>>   int wcn36xx_dxe_init(struct wcn36xx *wcn)
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h
+>> b/drivers/net/wireless/ath/wcn36xx/dxe.h
+>> index 35ee7e9..3eca4f9 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/dxe.h
+>> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
+>> @@ -243,6 +243,7 @@ struct wcn36xx_dxe_ctl {
+>>   };
+>>
+>>   struct wcn36xx_dxe_ch {
+>> +       spinlock_t                      lock;   /* protects head/tail ptrs
+>> */
+>>         enum wcn36xx_dxe_ch_type        ch_type;
+>>         void                            *cpu_addr;
+>>         dma_addr_t                      dma_addr;
+>>
+>
+> The patch looks great to me.
+>
+> Regards
+> Yin, Fengwei
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h | 116 +++++++++++++++++++-----------
- 1 file changed, 74 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 2050fbe..486c647 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -316,82 +316,114 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				const u8 *key, u8 len, u8 index, u8 mode,
- 				enum AUTHTYPE auth_type);
--s32 host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk, u8 u8PtkKeylen,
--			     const u8 *mac_addr, const u8 *pu8RxMic, const u8 *pu8TxMic, u8 mode, u8 u8Ciphermode, u8 u8Idx);
--s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac, u32 *pu32InactiveTime);
--s32 host_int_add_rx_gtk(struct host_if_drv *hWFIDrv, const u8 *pu8RxGtk, u8 u8GtkKeylen,
--				u8 u8KeyIdx, u32 u32KeyRSClen, const u8 *KeyRSC,
--				const u8 *pu8RxMic, const u8 *pu8TxMic, u8 mode, u8 u8Ciphermode);
--s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen, u8 *pu8TxGtk, u8 u8KeyIdx);
--s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv, struct host_if_pmkid_attr *pu8PmkidInfoArray);
-+s32 host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk,
-+		     u8 u8PtkKeylen, const u8 *mac_addr,
-+		     const u8 *pu8RxMic, const u8 *pu8TxMic,
-+		     u8 mode, u8 u8Ciphermode, u8 u8Idx);
-+s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac,
-+			       u32 *pu32InactiveTime);
-+s32 host_int_add_rx_gtk(struct host_if_drv *hWFIDrv, const u8 *pu8RxGtk,
-+			u8 u8GtkKeylen,	u8 u8KeyIdx,
-+			u32 u32KeyRSClen, const u8 *KeyRSC,
-+			const u8 *pu8RxMic, const u8 *pu8TxMic,
-+			u8 mode, u8 u8Ciphermode);
-+s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen,
-+			u8 *pu8TxGtk, u8 u8KeyIdx);
-+s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
-+			    struct host_if_pmkid_attr *pu8PmkidInfoArray);
- s32 host_int_get_pmkid_info(struct host_if_drv *hWFIDrv, u8 *pu8PmkidInfoArray,
--				    u32 u32PmkidInfoLen);
--s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv, u8 *pu8PassPhrase,
--						 u8 u8Psklength);
-+			    u32 u32PmkidInfoLen);
-+s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
-+					 u8 *pu8PassPhrase,
-+					 u8 u8Psklength);
- s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
--						 u8 *pu8PassPhrase, u8 u8Psklength);
-+					 u8 *pu8PassPhrase, u8 u8Psklength);
- s32 host_int_get_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
- s32 host_int_set_MacAddress(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
- int host_int_wait_msg_queue_idle(void);
- s32 host_int_set_start_scan_req(struct host_if_drv *hWFIDrv, u8 scanSource);
- s32 host_int_get_start_scan_req(struct host_if_drv *hWFIDrv, u8 *pu8ScanSource);
- s32 host_int_set_join_req(struct host_if_drv *hWFIDrv, u8 *pu8bssid,
--				  const u8 *pu8ssid, size_t ssidLen,
--				  const u8 *pu8IEs, size_t IEsLen,
--				  wilc_connect_result pfConnectResult, void *pvUserArg,
--				  u8 u8security, enum AUTHTYPE tenuAuth_type,
--				  u8 u8channel,
--				  void *pJoinParams);
-+			  const u8 *pu8ssid, size_t ssidLen,
-+			  const u8 *pu8IEs, size_t IEsLen,
-+			  wilc_connect_result pfConnectResult, void *pvUserArg,
-+			  u8 u8security, enum AUTHTYPE tenuAuth_type,
-+			  u8 u8channel, void *pJoinParams);
- s32 host_int_flush_join_req(struct host_if_drv *hWFIDrv);
- s32 host_int_disconnect(struct host_if_drv *hWFIDrv, u16 u16ReasonCode);
- s32 host_int_disconnect_station(struct host_if_drv *hWFIDrv, u8 assoc_id);
--s32 host_int_get_assoc_req_info(struct host_if_drv *hWFIDrv, u8 *pu8AssocReqInfo,
--					u32 u32AssocReqInfoLen);
--s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv, u8 *pu8AssocRespInfo,
--					u32 u32MaxAssocRespInfoLen, u32 *pu32RcvdAssocRespInfoLen);
--s32 host_int_get_rx_power_level(struct host_if_drv *hWFIDrv, u8 *pu8RxPowerLevel,
--					u32 u32RxPowerLevelLen);
-+s32 host_int_get_assoc_req_info(struct host_if_drv *hWFIDrv,
-+				u8 *pu8AssocReqInfo,
-+				u32 u32AssocReqInfoLen);
-+s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv,
-+				u8 *pu8AssocRespInfo,
-+				u32 u32MaxAssocRespInfoLen,
-+				u32 *pu32RcvdAssocRespInfoLen);
-+s32 host_int_get_rx_power_level(struct host_if_drv *hWFIDrv,
-+				u8 *pu8RxPowerLevel,
-+				u32 u32RxPowerLevelLen);
- int host_int_set_mac_chnl_num(struct host_if_drv *wfi_drv, u8 channel);
- s32 host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
- s32 host_int_get_rssi(struct host_if_drv *hWFIDrv, s8 *ps8Rssi);
- s32 host_int_get_link_speed(struct host_if_drv *hWFIDrv, s8 *ps8lnkspd);
- s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
--			  u8 u8ScanType, u8 *pu8ChnlFreqList,
--			  u8 u8ChnlListLen, const u8 *pu8IEs,
--			  size_t IEsLen, wilc_scan_result ScanResult,
--			  void *pvUserArg,
--			  struct hidden_network *pstrHiddenNetwork);
--s32 hif_set_cfg(struct host_if_drv *hWFIDrv, struct cfg_param_val *pstrCfgParamVal);
-+		  u8 u8ScanType, u8 *pu8ChnlFreqList,
-+		  u8 u8ChnlListLen, const u8 *pu8IEs,
-+		  size_t IEsLen, wilc_scan_result ScanResult,
-+		  void *pvUserArg, struct hidden_network *pstrHiddenNetwork);
-+s32 hif_set_cfg(struct host_if_drv *hWFIDrv,
-+		struct cfg_param_val *pstrCfgParamVal);
- s32 hif_get_cfg(struct host_if_drv *hWFIDrv, u16 u16WID, u16 *pu16WID_Value);
- s32 host_int_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
- s32 host_int_deinit(struct host_if_drv *hWFIDrv);
- s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
--				u32 u32DTIMPeriod,
--				u32 u32HeadLen, u8 *pu8Head,
--				u32 u32TailLen, u8 *pu8tail);
-+			u32 u32DTIMPeriod,
-+			u32 u32HeadLen,
-+			u8 *pu8Head,
-+			u32 u32TailLen,
-+			u8 *pu8tail);
- s32 host_int_del_beacon(struct host_if_drv *hWFIDrv);
- s32 host_int_add_station(struct host_if_drv *hWFIDrv,
- 			 struct add_sta_param *pstrStaParams);
--s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALEN]);
-+s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
-+			    u8 pu8MacAddr[][ETH_ALEN]);
- s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
- s32 host_int_edit_station(struct host_if_drv *hWFIDrv,
- 			  struct add_sta_param *pstrStaParams);
--s32 host_int_set_power_mgmt(struct host_if_drv *hWFIDrv, bool bIsEnabled, u32 u32Timeout);
--s32 host_int_setup_multicast_filter(struct host_if_drv *hWFIDrv, bool bIsEnabled, u32 u32count);
--s32 host_int_setup_ipaddress(struct host_if_drv *hWFIDrv, u8 *pu8IPAddr, u8 idx);
-+s32 host_int_set_power_mgmt(struct host_if_drv *hWFIDrv,
-+			    bool bIsEnabled,
-+			    u32 u32Timeout);
-+s32 host_int_setup_multicast_filter(struct host_if_drv *hWFIDrv,
-+				    bool bIsEnabled,
-+				    u32 u32count);
-+s32 host_int_setup_ipaddress(struct host_if_drv *hWFIDrv,
-+			     u8 *pu8IPAddr,
-+			     u8 idx);
- s32 host_int_delBASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
--s32 host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
-+s32 host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv,
-+				  char *pBSSID,
-+				  char TID);
- s32 host_int_get_ipaddress(struct host_if_drv *hWFIDrv, u8 *pu8IPAddr, u8 idx);
--s32 host_int_remain_on_channel(struct host_if_drv *hWFIDrv, u32 u32SessionID, u32 u32duration, u16 chan, wilc_remain_on_chan_expired RemainOnChanExpired, wilc_remain_on_chan_ready RemainOnChanReady, void *pvUserArg);
-+s32 host_int_remain_on_channel(struct host_if_drv *hWFIDrv,
-+			       u32 u32SessionID,
-+			       u32 u32duration,
-+			       u16 chan,
-+			       wilc_remain_on_chan_expired RemainOnChanExpired,
-+			       wilc_remain_on_chan_ready RemainOnChanReady,
-+			       void *pvUserArg);
- s32 host_int_ListenStateExpired(struct host_if_drv *hWFIDrv, u32 u32SessionID);
--s32 host_int_frame_register(struct host_if_drv *hWFIDrv, u16 u16FrameType, bool bReg);
-+s32 host_int_frame_register(struct host_if_drv *hWFIDrv,
-+			    u16 u16FrameType,
-+			    bool bReg);
- int host_int_set_wfi_drv_handler(struct host_if_drv *address);
- int host_int_set_operation_mode(struct host_if_drv *wfi_drv, u32 mode);
- 
--static s32 Handle_ScanDone(struct host_if_drv *drvHandler, enum scan_event enuEvent);
-+static s32 Handle_ScanDone(struct host_if_drv *drvHandler,
-+			   enum scan_event enuEvent);
- 
- void host_int_freeJoinParams(void *pJoinParams);
- 
--s32 host_int_get_statistics(struct host_if_drv *hWFIDrv, struct rf_info *pstrStatistics);
-+s32 host_int_get_statistics(struct host_if_drv *hWFIDrv,
-+			    struct rf_info *pstrStatistics);
- 
- #endif
+
 -- 
-1.9.1
-
+Best regards,
+Eugene
