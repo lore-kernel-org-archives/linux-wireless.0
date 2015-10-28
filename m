@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35860 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029AbbJEKfz (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:15782 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754729AbbJ1Ino (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:55 -0400
-Received: by pablk4 with SMTP id lk4so172812410pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:55 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 15/20] staging: wilc1000: rename u8keyIdx in host_int_remove_wep_key
-Date: Mon,  5 Oct 2015 19:34:59 +0900
-Message-Id: <1444041304-7727-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123558_304667_73FCD25C)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 04:43:44 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: change MAINTAINERS
+Date: Wed, 28 Oct 2015 17:43:27 +0900
+Message-ID: <1446021807-2698-1-git-send-email-tony.cho@atmel.com> (sfid-20151028_094349_468206_3F82177E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces u8keyIdx with index that is secondard argument of
-host_int_remove_wep_key to avoid camelcase.
+This patch removes Rachel Kim from the MAINTAINERS list because she
+retires from her position and adds Austin shin as new MAINTAINER for
+the Atmel wireless link controller: WILC1000 and WILC3000.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index cfeb81b..ca0e8e3 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4291,7 +4291,7 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress)
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8keyIdx)
-+int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
- {
- 	int s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)wfi_drv;
-@@ -4316,7 +4316,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8keyIdx)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8492117..cc27aef 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10014,7 +10014,7 @@ F:	drivers/staging/vt665?/
  
- 
- 	msg.body.key_info.
--	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = u8keyIdx;
-+	uniHostIFkeyAttr.strHostIFwepAttr.u8Wepidx = index;
- 
- 	/* send the message */
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 372acb7..4fd18d4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -407,7 +407,7 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8Index);
-+int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index);
- /**
-  *  @brief              sets WEP deafault key
-  *  @details    Sets the index of the WEP encryption key in use,
+ STAGING - WILC1000 WIFI DRIVER
+ M:	Johnny Kim <johnny.kim@atmel.com>
+-M:	Rachel Kim <rachel.kim@atmel.com>
++M:	Austin Shin <austin.shin@atmel.com>
+ M:	Chris Park <chris.park@atmel.com>
+ M:	Tony Cho <tony.cho@atmel.com>
+ M:	Glen Lee <glen.lee@atmel.com>
 -- 
-2.6.0
+1.9.1
 
