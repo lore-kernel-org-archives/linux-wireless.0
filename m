@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37497 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752008AbbJOJrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 05:47:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/6] cfg80211: reg: remove useless non-NULL check
-Date: Thu, 15 Oct 2015 11:46:53 +0200
-Message-Id: <1444902418-25668-1-git-send-email-johannes@sipsolutions.net> (sfid-20151015_114715_469161_1CABE6A8)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12790 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbbJ1UXK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 16:23:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
+Subject: Re: [PATCH-v2 1/2] ath6k:  break stats gathering code into separate method.
+In-Reply-To: <1445530059-6276-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Thu, 22 Oct 2015 09:07:38
+	-0700")
+References: <1445530059-6276-1-git-send-email-greearb@candelatech.com>
+Date: Wed, 28 Oct 2015 22:09:46 +0200
+Message-ID: <87eggesqk5.fsf@kamboji.qca.qualcomm.com> (sfid-20151028_212326_357221_28DFCE53)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+greearb@candelatech.com writes:
 
-There's no way that the alpha2 pointer can be NULL, so
-no point in checking that it isn't.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This will allow us to call it from elsewhere when implementing
+> ethtool stats.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 3 ---
- 1 file changed, 3 deletions(-)
+I'll do s/ath6k/ath6kl/ (manually) for both patches.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7258246b7458..3acb51462cc6 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -501,9 +501,6 @@ static void reg_regdb_query(const char *alpha2)
- {
- 	struct reg_regdb_search_request *request;
- 
--	if (!alpha2)
--		return;
--
- 	request = kzalloc(sizeof(struct reg_regdb_search_request), GFP_KERNEL);
- 	if (!request)
- 		return;
 -- 
-2.5.1
-
+Kalle Valo
