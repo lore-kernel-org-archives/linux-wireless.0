@@ -1,242 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:32835 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbbJBHlg (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41872 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755412AbbJ1G7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:41:36 -0400
-Received: by pacex6 with SMTP id ex6so100063857pac.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:41:35 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 03/12] staging: wilc1000: remove if defined codes of USE_OLD_SPI_SW
-Date: Fri,  2 Oct 2015 16:41:12 +0900
-Message-Id: <1443771681-15540-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094139_061171_B996148D)
-In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 02:59:38 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 20/80] staging: wilc1000: rename gtOsCfgValuesSem of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:40 +0900
+Message-ID: <1446015640-29398-20-git-send-email-glen.lee@atmel.com> (sfid-20151028_081701_961429_B0EC6D2C)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes if defined codes of USE_OLD_SPI_SW.
-This macro is deleted because it is commented out.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames gtOsCfgValuesSem of struct host_if_drv to sem_cfg_values
+to avoid CamelCase naming convention.
+And, remove the relation comment.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-V2: resend because 08/12 patch is changed.
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ drivers/staging/wilc1000/host_interface.h |  4 ++--
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
- drivers/staging/wilc1000/wilc_spi.c | 125 ------------------------------------
- 1 file changed, 125 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 0e06fc2..8acf648 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -756,22 +756,6 @@ static int spi_internal_write(u32 adr, u32 dat)
- {
- 	int result;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 72779a1..85c376a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -525,7 +525,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 	struct wid strWIDList[32];
+ 	u8 u8WidCnt = 0;
  
--#if defined USE_OLD_SPI_SW
--	/**
--	 *      Command
--	 **/
--	result = spi_cmd(CMD_INTERNAL_WRITE, adr, dat, 4, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed internal write cmd...\n");
--		return 0;
--	}
--
--	result = spi_cmd_rsp(CMD_INTERNAL_WRITE, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed internal write cmd response...\n");
--	}
--#else
--
- #ifdef BIG_ENDIAN
- 	dat = BYTE_SWAP(dat);
- #endif
-@@ -780,7 +764,6 @@ static int spi_internal_write(u32 adr, u32 dat)
- 		PRINT_ER("[wilc spi]: Failed internal write cmd...\n");
- 	}
+-	down(&hif_drv->gtOsCfgValuesSem);
++	down(&hif_drv->sem_cfg_values);
  
--#endif
+ 	PRINT_D(HOSTINF_DBG, "Setting CFG params\n");
+ 
+@@ -797,7 +797,7 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		PRINT_ER("Error in setting CFG params\n");
+ 
+ ERRORHANDLER:
+-	up(&hif_drv->gtOsCfgValuesSem);
++	up(&hif_drv->sem_cfg_values);
  	return result;
  }
  
-@@ -788,35 +771,11 @@ static int spi_internal_read(u32 adr, u32 *data)
+@@ -3949,7 +3949,7 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
  {
- 	int result;
+ 	s32 result = 0;
  
--#if defined USE_OLD_SPI_SW
--	result = spi_cmd(CMD_INTERNAL_READ, adr, 0, 4, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed internal read cmd...\n");
--		return 0;
--	}
--
--	result = spi_cmd_rsp(CMD_INTERNAL_READ, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed internal read cmd response...\n");
--		return 0;
--	}
--
--	/**
--	 *      Data
--	 **/
--	result = spi_data_read((u8 *)data, 4);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed internal read data...\n");
--		return 0;
--	}
--#else
- 	result = spi_cmd_complete(CMD_INTERNAL_READ, adr, (u8 *)data, 4, 0);
- 	if (result != N_OK) {
- 		PRINT_ER("[wilc spi]: Failed internal read cmd...\n");
- 		return 0;
+-	down(&hif_drv->gtOsCfgValuesSem);
++	down(&hif_drv->sem_cfg_values);
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("hif_drv NULL\n");
+@@ -4033,7 +4033,7 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
+ 		break;
  	}
--#endif
--
  
- #ifdef BIG_ENDIAN
- 	*data = BYTE_SWAP(*data);
-@@ -837,24 +796,6 @@ static int spi_write_reg(u32 addr, u32 data)
- 	u8 cmd = CMD_SINGLE_WRITE;
- 	u8 clockless = 0;
- 
--
--#if defined USE_OLD_SPI_SW
--	{
--		result = spi_cmd(cmd, addr, data, 4, 0);
--		if (result != N_OK) {
--			PRINT_ER("[wilc spi]: Failed cmd, write reg (%08x)...\n", addr);
--			return 0;
--		}
--
--		result = spi_cmd_rsp(cmd, 0);
--		if (result != N_OK) {
--			PRINT_ER("[wilc spi]: Failed cmd response, write reg (%08x)...\n", addr);
--			return 0;
--		}
--
--		return 1;
--	}
--#else
- #ifdef BIG_ENDIAN
- 	data = BYTE_SWAP(data);
- #endif
-@@ -870,8 +811,6 @@ static int spi_write_reg(u32 addr, u32 data)
- 	}
+-	up(&hif_drv->gtOsCfgValuesSem);
++	up(&hif_drv->sem_cfg_values);
  
  	return result;
--#endif
--
  }
+@@ -4140,8 +4140,8 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
  
- static int spi_write(u32 addr, u8 *buf, u32 size)
-@@ -885,28 +824,11 @@ static int spi_write(u32 addr, u8 *buf, u32 size)
- 	if (size <= 4)
- 		return 0;
+ 	setup_timer(&hif_drv->hRemainOnChannel, ListenTimerCB, 0);
  
--#if defined USE_OLD_SPI_SW
--	/**
--	 *      Command
--	 **/
--	result = spi_cmd(cmd, addr, 0, size, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed cmd, write block (%08x)...\n", addr);
--		return 0;
--	}
--
--	result = spi_cmd_rsp(cmd, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi ]: Failed cmd response, write block (%08x)...\n", addr);
--		return 0;
--	}
--#else
- 	result = spi_cmd_complete(cmd, addr, NULL, size, 0);
- 	if (result != N_OK) {
- 		PRINT_ER("[wilc spi]: Failed cmd, write block (%08x)...\n", addr);
- 		return 0;
+-	sema_init(&hif_drv->gtOsCfgValuesSem, 1);
+-	down(&hif_drv->gtOsCfgValuesSem);
++	sema_init(&hif_drv->sem_cfg_values, 1);
++	down(&hif_drv->sem_cfg_values);
+ 
+ 	hif_drv->hif_state = HOST_IF_IDLE;
+ 	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
+@@ -4159,14 +4159,14 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		   hif_drv->cfg_values.passive_scan_time,
+ 		   hif_drv->cfg_values.curr_tx_rate);
+ 
+-	up(&hif_drv->gtOsCfgValuesSem);
++	up(&hif_drv->sem_cfg_values);
+ 
+ 	clients_count++;
+ 
+ 	return result;
+ 
+ _fail_timer_2:
+-	up(&hif_drv->gtOsCfgValuesSem);
++	up(&hif_drv->sem_cfg_values);
+ 	del_timer_sync(&hif_drv->hConnectTimer);
+ 	del_timer_sync(&hif_drv->hScanTimer);
+ 	kthread_stop(hif_thread_handler);
+@@ -4235,7 +4235,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
+ 		wilc_mq_destroy(&hif_msg_q);
  	}
--#endif
  
- 	/**
- 	 *      Data
-@@ -925,24 +847,6 @@ static int spi_read_reg(u32 addr, u32 *data)
- 	u8 cmd = CMD_SINGLE_READ;
- 	u8 clockless = 0;
+-	down(&hif_drv->gtOsCfgValuesSem);
++	down(&hif_drv->sem_cfg_values);
  
--#if defined USE_OLD_SPI_SW
--	result = spi_cmd(cmd, addr, 0, 4, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed cmd, read reg (%08x)...\n", addr);
--		return 0;
--	}
--	result = spi_cmd_rsp(cmd, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed cmd response, read reg (%08x)...\n", addr);
--		return 0;
--	}
--
--	result = spi_data_read((u8 *)data, 4);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed data read...\n");
--		return 0;
--	}
--#else
- 	if (addr < 0x30) {
- 		/* PRINT_ER("***** read addr %d\n\n", addr); */
- 		/* Clockless register*/
-@@ -955,8 +859,6 @@ static int spi_read_reg(u32 addr, u32 *data)
- 		PRINT_ER("[wilc spi]: Failed cmd, read reg (%08x)...\n", addr);
- 		return 0;
- 	}
--#endif
--
+ 	ret = remove_handler_in_list(hif_drv);
+ 	if (ret)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index bb18081..700b80a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -303,8 +303,8 @@ struct host_if_drv {
  
- #ifdef BIG_ENDIAN
- 	*data = BYTE_SWAP(*data);
-@@ -973,38 +875,11 @@ static int spi_read(u32 addr, u8 *buf, u32 size)
- 	if (size <= 4)
- 		return 0;
+ 	u8 assoc_bssid[ETH_ALEN];
+ 	struct cfg_param_val cfg_values;
+-/* semaphores */
+-	struct semaphore gtOsCfgValuesSem;
++
++	struct semaphore sem_cfg_values;
+ 	struct semaphore hSemTestKeyBlock;
  
--#if defined USE_OLD_SPI_SW
--	/**
--	 *      Command
--	 **/
--	result = spi_cmd(cmd, addr, 0, size, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed cmd, read block (%08x)...\n", addr);
--		return 0;
--	}
--
--	result = spi_cmd_rsp(cmd, 0);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed cmd response, read block (%08x)...\n", addr);
--		return 0;
--	}
--
--	/**
--	 *      Data
--	 **/
--	result = spi_data_read(buf, size);
--	if (result != N_OK) {
--		PRINT_ER("[wilc spi]: Failed block data read...\n");
--		return 0;
--	}
--#else
- 	result = spi_cmd_complete(cmd, addr, buf, size, 0);
- 	if (result != N_OK) {
- 		PRINT_ER("[wilc spi]: Failed cmd, read block (%08x)...\n", addr);
- 		return 0;
- 	}
--#endif
--
- 
- 	return 1;
- }
+ 	struct semaphore hSemTestDisconnectBlock;
 -- 
-2.6.0
+1.9.1
 
