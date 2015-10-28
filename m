@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:36229 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755127AbbJAAJt (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42982 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755491AbbJ1HEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 20:09:49 -0400
+	Wed, 28 Oct 2015 03:04:55 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 56/80] staging: wilc1000: rename u32RxCount of struct rf_info
+Date: Wed, 28 Oct 2015 16:07:01 +0900
+Message-ID: <1446016045-32154-6-git-send-email-glen.lee@atmel.com> (sfid-20151028_080458_035302_88AE218D)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1443639852.1859.25.camel@sipsolutions.net>
-References: <CA+5PVA4yaLG2NtJ_Bg5-BQzR-Wa5ABxPb-cLxF7bjSsf-P1_5Q@mail.gmail.com>
-	<1443637937.1859.19.camel@sipsolutions.net>
-	<1443639852.1859.25.camel@sipsolutions.net>
-Date: Wed, 30 Sep 2015 20:09:48 -0400
-Message-ID: <CA+5PVA5L2LwwbJmoxwkYtJ=PYc9Q5g4KpqwmA0urxX8CRe=L+g@mail.gmail.com> (sfid-20151001_021059_980846_BB9E9476)
-Subject: Re: Rate limiting AP bandwidth change messages in ieee80211_config_bw?
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2015 at 3:04 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->>
->> I'm not sure ratelimiting it would even work - it's not *that* high
->> frequency? Not really sure though.
->>
->> I think we can do either, it's not such a terribly important message as
->> far as I can tell.
->>
->
-> Seems like Emmanuel would like to see the message stay in some form -
+From: Leo Kim <leo.kim@atmel.com>
 
-For what purpose?  Or rather, when a user sees this in their dmesg,
-what are they supposed to do about it?
+This patch renames u32RxCount of struct rf_info to rx_cnt
+to avoid CamelCase naming convention.
 
-> perhaps we should try rate limiting it then? Could you check if that
-> actually works?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-I'll think on it, sure.  I was hoping sdata_dbg would be sufficient
-because it's much easier, but if there's value in the message I can
-look at limiting it in some fashion.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 76f9977..b399589 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2157,7 +2157,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
+ 	strWIDList[u32WidsCount].type = WID_INT;
+ 	strWIDList[u32WidsCount].size = sizeof(u32);
+-	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->u32RxCount;
++	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
+ 	u32WidsCount++;
+ 
+ 	strWIDList[u32WidsCount].id = WID_FAILED_COUNT;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c6f4a83..e163581 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -56,7 +56,7 @@ struct rf_info {
+ 	u8 link_speed;
+ 	s8 rssi;
+ 	u32 tx_cnt;
+-	u32 u32RxCount;
++	u32 rx_cnt;
+ 	u32 u32TxFailureCount;
+ };
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b80e08e..7388bba 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1567,7 +1567,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 						BIT(NL80211_STA_INFO_TX_BITRATE);
+ 
+ 		sinfo->signal = strStatistics.rssi;
+-		sinfo->rx_packets   =  strStatistics.u32RxCount;
++		sinfo->rx_packets = strStatistics.rx_cnt;
+ 		sinfo->tx_packets = strStatistics.tx_cnt + strStatistics.u32TxFailureCount;
+ 		sinfo->tx_failed	=  strStatistics.u32TxFailureCount;
+ 		sinfo->txrate.legacy = strStatistics.link_speed * 10;
+-- 
+1.9.1
 
-josh
