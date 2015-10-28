@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56848 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750901AbbJELbL (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41955 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755122AbbJ1HAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 07:31:11 -0400
-Message-ID: <1444044666.27220.5.camel@coelho.fi> (sfid-20151005_133115_114660_F09DFF2A)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: egrumbach@gmail.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 05 Oct 2015 14:31:06 +0300
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2015-10-05
+	Wed, 28 Oct 2015 03:00:02 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/80] staging: wilc1000: rename hSemGetLINKSPEED of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:44 +0900
+Message-ID: <1446015640-29398-24-git-send-email-glen.lee@atmel.com> (sfid-20151028_081656_931738_D6459D5C)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Leo Kim <leo.kim@atmel.com>
 
-Here's a pull request for 4.3.  There are 8 patches, including a fix
-for a kernel panic, some serious PN programming issues, a thermal
-monitor fix and some new vendor IDs.
+This patch renames hSemGetLINKSPEED of struct host_if_drv to sem_get_link_speed
+to avoid CamelCase naming convention.
 
-Let me know if there are any issues.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Luca.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 04b3056..ba643567 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2124,7 +2124,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 		result = -EFAULT;
+ 	}
+ 
+-	up(&hif_drv->hSemGetLINKSPEED);
++	up(&hif_drv->sem_get_link_speed);
+ }
+ 
+ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
+@@ -3839,7 +3839,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 		return -EFAULT;
+ 	}
+ 
+-	down(&hif_drv->hSemGetLINKSPEED);
++	down(&hif_drv->sem_get_link_speed);
+ 
+ 	if (!ps8lnkspd) {
+ 		PRINT_ER("LINKSPEED pointer value is null");
+@@ -4107,7 +4107,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	sema_init(&hif_drv->sem_test_key_block, 0);
+ 	sema_init(&hif_drv->sem_test_disconn_block, 0);
+ 	sema_init(&hif_drv->sem_get_rssi, 0);
+-	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
++	sema_init(&hif_drv->sem_get_link_speed, 0);
+ 	sema_init(&hif_drv->hSemGetCHNL, 0);
+ 	sema_init(&hif_drv->hSemInactiveTime, 0);
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index b18ed17..8a68d64 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -308,7 +308,7 @@ struct host_if_drv {
+ 	struct semaphore sem_test_key_block;
+ 	struct semaphore sem_test_disconn_block;
+ 	struct semaphore sem_get_rssi;
+-	struct semaphore hSemGetLINKSPEED;
++	struct semaphore sem_get_link_speed;
+ 	struct semaphore hSemGetCHNL;
+ 	struct semaphore hSemInactiveTime;
+ /* timer handlers */
+-- 
+1.9.1
 
-The following changes since commit dd5cdb48edfd34401799056a9acf61078d773f90:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-09-03 08:08:17 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-10-05
-
-for you to fetch changes up to dbf73d4a8bb8f4e1d1f3edd3be825692279e2ef3:
-
-  iwlwifi: mvm: flush fw_dump_wk when mvm fails to start (2015-10-05 14:04:16 +0300)
-
-----------------------------------------------------------------
-* some fixes for PN key programming when entering D3;
-* fix for CSA when the AP is stopped during a channel switch;
-* fix firmware name for 3160 devices;
-* add some new PCI IDs for 7265 devices;
-* fix CT-kill entry;
-* fix kernel panic when a sysassert occurs in the init ucode flow;
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: flush fw_dump_wk when mvm fails to start
-
-Arik Nemtsov (1):
-      iwlwifi: mvm: init card correctly on ctkill exit check
-
-Avraham Stern (1):
-      iwlwifi: mvm: clear csa countdown when AP is stopped
-
-Johannes Berg (4):
-      iwlwifi: mvm: fix D3 CCMP TX PN assignment
-      iwlwifi: dvm: fix D3 firmware PN programming
-      iwlwifi: mvm: fix D3 firmware PN programming
-      iwlwifi: fix firmware filename for 3160
-
-Luca Coelho (1):
-      iwlwifi: pci: add a few more PCI subvendor IDs for the 7265 series
-
- drivers/net/wireless/iwlwifi/dvm/lib.c      |  2 +-
- drivers/net/wireless/iwlwifi/iwl-7000.c     |  2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c       | 27 +++++++++++----------------
- drivers/net/wireless/iwlwifi/mvm/fw.c       |  4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 +
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  5 +++++
- drivers/net/wireless/iwlwifi/mvm/ops.c      |  1 +
- drivers/net/wireless/iwlwifi/pcie/drv.c     |  5 +++++
- 8 files changed, 27 insertions(+), 20 deletions(-)
