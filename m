@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:2850 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbbJMKwe (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:50070 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965732AbbJ1OHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:52:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 18/54] staging: wilc1000: rename IEsLen of struct scan_attr
-Date: Tue, 13 Oct 2015 19:49:43 +0900
-Message-ID: <1444733419-17679-18-git-send-email-tony.cho@atmel.com> (sfid-20151013_125237_431114_6CB30FA9)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	Wed, 28 Oct 2015 10:07:36 -0400
+Date: Wed, 28 Oct 2015 17:07:26 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 17/80] staging: wilc1000: rename enuHostIFstate of struct
+ host_if_drv
+Message-ID: <20151028140726.GA18797@mwanda> (sfid-20151028_150746_149038_DBB17F25)
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+ <1446015640-29398-17-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446015640-29398-17-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, Oct 28, 2015 at 03:59:37PM +0900, Glen Lee wrote:
+> @@ -1837,10 +1839,11 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+>  				goto _WPARxGtk_end_case_;
+>  			}
+>  
+> -			if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED)
+> +			if (hif_drv->hif_state == HOST_IF_CONNECTED)
+>  				memcpy(pu8keybuf, hif_drv->au8AssociatedBSSID, ETH_ALEN);
+>  			else
+> -				PRINT_ER("Couldn't handle WPARxGtk while enuHostIFstate is not HOST_IF_CONNECTED\n");
+> +				PRINT_ER("Couldn't handle WPARxGtk while \
+> +					 state is not HOST_IF_CONNECTED\n");
 
-This patch renames IEsLen of struct scan_attr to ies_len to
-avoid CamelCase naming convention.
+This line break is not correct.  It adds unwanted indenting to the dmesg
+output.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4a33d16..a390dee 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -101,7 +101,7 @@ struct scan_attr {
- 	u8 *ch_freq_list;
- 	u8 ch_list_len;
- 	u8 *ies;
--	size_t IEsLen;
-+	size_t ies_len;
- 	wilc_scan_result pfScanResult;
- 	void *pvUserArg;
- 	struct hidden_network strHiddenNetwork;
-@@ -892,7 +892,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
- 		strWIDList[u32WidsCount].type = WID_BIN_DATA;
- 		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->ies;
--		strWIDList[u32WidsCount].size = pstrHostIFscanAttr->IEsLen;
-+		strWIDList[u32WidsCount].size = pstrHostIFscanAttr->ies_len;
- 		u32WidsCount++;
- 	}
- 
-@@ -4066,7 +4066,7 @@ s32 host_int_scan(struct host_if_drv *hif_drv, u8 u8ScanSource,
- 	msg.body.scan_info.ch_freq_list = kmalloc(u8ChnlListLen, GFP_KERNEL);
- 	memcpy(msg.body.scan_info.ch_freq_list, pu8ChnlFreqList, u8ChnlListLen);
- 
--	msg.body.scan_info.IEsLen = IEsLen;
-+	msg.body.scan_info.ies_len = IEsLen;
- 	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
- 	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
- 
--- 
-1.9.1
+regards,
+dan carpenter
 
