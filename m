@@ -1,67 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35104 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbbJAG55 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:37320 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbbJ1GYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 02:57:57 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v3 1/5] wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan (TW)
-Date: Thu,  1 Oct 2015 14:57:43 +0800
-Message-Id: <1443682667-29814-2-git-send-email-wens@csie.org> (sfid-20151001_085815_504325_862BFDC4)
-In-Reply-To: <1443682667-29814-1-git-send-email-wens@csie.org>
-References: <1443682667-29814-1-git-send-email-wens@csie.org>
+	Wed, 28 Oct 2015 02:24:24 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V5] staging: wilc1000: wilc_msgqueue.c : remove goto statement
+Date: Wed, 28 Oct 2015 15:27:21 +0900
+Message-ID: <1446013641-4918-1-git-send-email-glen.lee@atmel.com> (sfid-20151028_072428_071574_A3294C54)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications revised its
-frequency allocation rules [1] on 2014/11/17, allowing usage of 5600 ~
-5650 MHz, previously allocated to weather radars, to U-NII applications
-with DFS support.
+From: Leo Kim <leo.kim@atmel.com>
 
-Also, the technical regulations [2] show that for 5470 ~ 5725 MHz U-NII
-applications, the peak transmit power shall not exceed the lesser of
-250 mW (slightly less than 24 dBm) or 11 dBm + 10log B, where B is the
-26dB emission bandwidth in MHz. This is slightly more than 23 dBm for
-20 MHz channels.
+This patch removes goto statement and moves the spin lock position.
+If a memory allocation fails, directly returns an error.
+The spin lock actually protects the pHandle. Therefore, call spin lock just
+before pHandle is used.
 
-This patch updates both. Also add links to the two documents into the
-database.
-
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- db.txt | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Changes in v5:
+ - fix typo 'Signee-eff-by: Lee Kim <leo.kim@atmel.com>'
 
-diff --git a/db.txt b/db.txt
-index d57ea84..e081634 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1118,11 +1118,17 @@ country TT: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 25 ++++++++-----------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b13809a..0eff121 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -56,37 +56,35 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 			     const void *pvSendBuffer, u32 u32SendBufferSize)
+ {
+-	int result = 0;
+ 	unsigned long flags;
+ 	Message *pstrMessage = NULL;
  
-+# Source:
-+# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
-+#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
-+#      filedisplay=Table+of+radio+frequency+allocation.doc
-+# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
-+#   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-+#   (section 3.10.1, 4.7)
- country TW: DFS-JP
- 	(2402 - 2472 @ 40), (30)
- 	(5270 - 5330 @ 40), (17), DFS
--	(5490 - 5590 @ 80), (30), DFS
--	(5650 - 5710 @ 40), (30), DFS
-+	(5470 - 5725 @ 160), (23), DFS
- 	(5735 - 5835 @ 80), (30)
-  
- country TZ:
+ 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+ 		PRINT_ER("pHandle or pvSendBuffer is null\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+ 	if (pHandle->bExiting) {
+ 		PRINT_ER("pHandle fail\n");
+-		result = -EFAULT;
+-		goto ERRORHANDLER;
++		return -EFAULT;
+ 	}
+ 
+-	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+-
+ 	/* construct a new message */
+ 	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
+ 	if (!pstrMessage)
+ 		return -ENOMEM;
++
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+ 					GFP_ATOMIC);
+ 	if (!pstrMessage->pvBuffer) {
+-		result = -ENOMEM;
+-		goto ERRORHANDLER;
++		kfree(pstrMessage);
++		return -ENOMEM;
+ 	}
+ 
++	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
++
+ 	/* add it to the message queue */
+ 	if (!pHandle->pstrMessageList) {
+ 		pHandle->pstrMessageList  = pstrMessage;
+@@ -103,14 +101,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	up(&pHandle->hSem);
+ 
+-ERRORHANDLER:
+-	/* error occured, free any allocations */
+-	if (pstrMessage) {
+-		kfree(pstrMessage->pvBuffer);
+-		kfree(pstrMessage);
+-	}
+-
+-	return result;
++	return 0;
+ }
+ 
+ /*!
 -- 
-2.5.3
+1.9.1
 
