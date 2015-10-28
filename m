@@ -1,66 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36322 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932858AbbJOCIX (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41581 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754999AbbJ1G6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:08:23 -0400
-Received: by pabws5 with SMTP id ws5so7355437pab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:22 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 26/33] staging: wilc1000: fix return type of host_int_edit_station
-Date: Thu, 15 Oct 2015 11:06:55 +0900
-Message-Id: <1444874822-31152-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_041237_176623_D1CC3056)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 02:58:13 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/80] staging: wilc1000: host_interface: removes unused functions
+Date: Wed, 28 Oct 2015 15:59:26 +0900
+Message-ID: <1446015640-29398-6-git-send-email-glen.lee@atmel.com> (sfid-20151028_075817_423891_FA4C1F17)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_edit_station from s32 to int.
-s32Error gets return value from wilc_mq_send that has return type of
-int. It should be changed return type of this function as well as data
-type of s32Error.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch removes unused functions at host_interface files.
+ - host_int_send_join_leave_info_to_host
+ - host_int_send_network_info_to_host
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 11 ----------
+ drivers/staging/wilc1000/host_interface.h | 34 -------------------------------
+ 2 files changed, 45 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 20d6e16..45adf62 100644
+index c3826eb..7f29abd 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4811,10 +4811,10 @@ s32 host_int_del_allstation(struct host_if_drv *hif_drv,
- 
+@@ -4037,11 +4037,6 @@ s32 hif_get_cfg(struct host_if_drv *hif_drv, u16 u16WID, u16 *pu16WID_Value)
+ 	return result;
  }
  
--s32 host_int_edit_station(struct host_if_drv *hif_drv,
-+int host_int_edit_station(struct host_if_drv *hif_drv,
- 			  struct add_sta_param *pstrStaParams)
+-void host_int_send_join_leave_info_to_host
+-	(u16 assocId, u8 *stationAddr, bool joining)
+-{
+-}
+-
+ static void GetPeriodicRSSI(unsigned long arg)
  {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
+@@ -4070,12 +4065,6 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
  
+-
+-void host_int_send_network_info_to_host
+-	(u8 *macStartAddress, u16 u16RxFrameLen, s8 s8Rssi)
+-{
+-}
+-
+ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ {
+ 	s32 result = 0;
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bed3799..66ff6f7 100644
+index 0fd2eda..d4fb1d4 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1028,7 +1028,7 @@ s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--s32 host_int_edit_station(struct host_if_drv *hWFIDrv,
-+int host_int_edit_station(struct host_if_drv *hWFIDrv,
- 			  struct add_sta_param *pstrStaParams);
- 
- /*!
+@@ -869,40 +869,6 @@ s32 hif_get_cfg(struct host_if_drv *hWFIDrv, u16 u16WID, u16 *pu16WID_Value);
+ /*							Notification Functions							 */
+ /*****************************************************************************/
+ /**
+- *  @brief              notifies host with join and leave requests
+- *  @details    This function prepares an Information frame having the
+- *                              information about a joining/leaving station.
+- *  @param[in,out] handle to the wifi driver,
+- *  @param[in]	6 byte Sta Adress
+- *                              Join or leave flag:
+- *                              Join = 1,
+- *                              Leave =0
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-void host_int_send_join_leave_info_to_host
+-	(u16 assocId, u8 *stationAddr, bool joining);
+-
+-/**
+- *  @brief              notifies host with stations found in scan
+- *  @details    sends the beacon/probe response from scan
+- *  @param[in,out] handle to the wifi driver,
+- *  @param[in]	Sta Address,
+- *                              Frame length,
+- *                              Rssi of the Station found
+- *  @return             Error code indicating success/failure
+- *  @note
+- *  @author		zsalah
+- *  @date		8 March 2012
+- *  @version		1.0
+- */
+-void host_int_send_network_info_to_host
+-	(u8 *macStartAddress, u16 u16RxFrameLen, s8 s8Rssi);
+-
+-/**
+  *  @brief              host interface initialization function
+  *  @details
+  *  @param[in,out] handle to the wifi driver,
 -- 
-2.6.1
+1.9.1
 
