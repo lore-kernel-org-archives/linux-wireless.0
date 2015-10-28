@@ -1,22 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3005 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:43413 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752942AbbJMKxU (ORCPT
+	with ESMTP id S964794AbbJ1HGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:53:20 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Wed, 28 Oct 2015 03:06:53 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 25/54] staging: wilc1000: rename pu8ssid of struct connect_attr
-Date: Tue, 13 Oct 2015 19:49:50 +0900
-Message-ID: <1444733419-17679-25-git-send-email-tony.cho@atmel.com> (sfid-20151013_125323_227805_70DBEA14)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 76/80] staging: wilc1000: rename u16FlagsMask of struct add_sta_param
+Date: Wed, 28 Oct 2015 16:07:21 +0900
+Message-ID: <1446016045-32154-26-git-send-email-glen.lee@atmel.com> (sfid-20151028_081700_704320_CACF8508)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -24,122 +22,87 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames pu8ssid of struct connect_attr to ssid to
-avoid CamelCase naming convention.
+This patch renames u16FlagsMask of struct add_sta_param to flags_mask
+to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 32 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         |  4 ++--
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b450136..3c044d2 100644
+index ebf0be4..01d84c0 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -109,7 +109,7 @@ struct scan_attr {
+@@ -2340,8 +2340,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
  
- struct connect_attr {
- 	u8 *bssid;
--	u8 *pu8ssid;
-+	u8 *ssid;
- 	size_t ssidLen;
- 	u8 *pu8IEs;
- 	size_t IEsLen;
-@@ -1037,9 +1037,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	}
+ 	*pu8CurrByte++ = pstrStationParam->ht_ante_sel;
  
- 	hif_drv->strWILC_UsrConnReq.ssidLen = pstrHostIFconnectAttr->ssidLen;
--	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
-+	if (pstrHostIFconnectAttr->ssid != NULL) {
- 		hif_drv->strWILC_UsrConnReq.pu8ssid = kmalloc(pstrHostIFconnectAttr->ssidLen + 1, GFP_KERNEL);
--		memcpy(hif_drv->strWILC_UsrConnReq.pu8ssid, pstrHostIFconnectAttr->pu8ssid,
-+		memcpy(hif_drv->strWILC_UsrConnReq.pu8ssid, pstrHostIFconnectAttr->ssid,
- 			    pstrHostIFconnectAttr->ssidLen);
- 		hif_drv->strWILC_UsrConnReq.pu8ssid[pstrHostIFconnectAttr->ssidLen] = '\0';
- 	}
-@@ -1081,7 +1081,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		strWIDList[u32WidsCount].size = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
- 		u32WidsCount++;
+-	*pu8CurrByte++ = pstrStationParam->u16FlagsMask & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->u16FlagsMask >> 8) & 0xFF;
++	*pu8CurrByte++ = pstrStationParam->flags_mask & 0xFF;
++	*pu8CurrByte++ = (pstrStationParam->flags_mask >> 8) & 0xFF;
  
--		if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 	*pu8CurrByte++ = pstrStationParam->u16FlagsSet & 0xFF;
+ 	*pu8CurrByte++ = (pstrStationParam->u16FlagsSet >> 8) & 0xFF;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 47eb5a0..ca8eb10 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -299,7 +299,7 @@ struct add_sta_param {
+ 	u16 ht_ext_params;
+ 	u32 ht_tx_bf_cap;
+ 	u8 ht_ante_sel;
+-	u16 u16FlagsMask;
++	u16 flags_mask;
+ 	u16 u16FlagsSet;
+ };
  
- 			gu32FlushedInfoElemAsocSize = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
- 			gu8FlushedInfoElemAsoc =  kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
-@@ -1095,7 +1095,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].val = (s8 *)(&(hif_drv->strWILC_UsrConnReq.u8security));
- 	u32WidsCount++;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b6d2246..1cb779d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3033,7 +3033,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
+ 		}
  
--	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		gu8Flushed11iMode = hif_drv->strWILC_UsrConnReq.u8security;
+-		strStaParams.u16FlagsMask = params->sta_flags_mask;
++		strStaParams.flags_mask = params->sta_flags_mask;
+ 		strStaParams.u16FlagsSet = params->sta_flags_set;
  
- 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", hif_drv->strWILC_UsrConnReq.u8security);
-@@ -1107,7 +1107,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].val = (s8 *)(&hif_drv->strWILC_UsrConnReq.tenuAuth_type);
- 	u32WidsCount++;
+ 		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
+@@ -3048,7 +3048,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_tx_bf_cap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
+ 			strStaParams.ht_ante_sel);
+-		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
++		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
++			strStaParams.flags_mask);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
  
--	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		gu8FlushedAuthType = (u8)hif_drv->strWILC_UsrConnReq.tenuAuth_type;
+ 		s32Error = host_int_add_station(priv->hWILCWFIDrv, &strStaParams);
+@@ -3155,7 +3156,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
+ 		}
  
- 	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", hif_drv->strWILC_UsrConnReq.tenuAuth_type);
-@@ -1119,7 +1119,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].size = 112;
- 	strWIDList[u32WidsCount].val = kmalloc(strWIDList[u32WidsCount].size, GFP_KERNEL);
+-		strStaParams.u16FlagsMask = params->sta_flags_mask;
++		strStaParams.flags_mask = params->sta_flags_mask;
+ 		strStaParams.u16FlagsSet = params->sta_flags_set;
  
--	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		gu32FlushedJoinReqSize = strWIDList[u32WidsCount].size;
- 		gu8FlushedJoinReq = kmalloc(gu32FlushedJoinReqSize, GFP_KERNEL);
- 	}
-@@ -1131,8 +1131,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	pu8CurrByte = strWIDList[u32WidsCount].val;
+ 		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
+@@ -3170,7 +3171,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_tx_bf_cap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
+ 			strStaParams.ht_ante_sel);
+-		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
++		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
++			strStaParams.flags_mask);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n", strStaParams.u16FlagsSet);
  
- 
--	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
--		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8ssid, pstrHostIFconnectAttr->ssidLen);
-+	if (pstrHostIFconnectAttr->ssid != NULL) {
-+		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssidLen);
- 		pu8CurrByte[pstrHostIFconnectAttr->ssidLen] = '\0';
- 	}
- 	pu8CurrByte += MAX_SSID_LEN;
-@@ -1223,7 +1223,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	u32WidsCount++;
- 	gu32WidConnRstHack = 0;
- 
--	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
- 		gu8FlushedJoinReqDrvHandler = hif_drv;
- 	}
-@@ -1292,9 +1292,9 @@ ERRORHANDLER:
- 		pstrHostIFconnectAttr->bssid = NULL;
- 	}
- 
--	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
--		kfree(pstrHostIFconnectAttr->pu8ssid);
--		pstrHostIFconnectAttr->pu8ssid = NULL;
-+	if (pstrHostIFconnectAttr->ssid != NULL) {
-+		kfree(pstrHostIFconnectAttr->ssid);
-+		pstrHostIFconnectAttr->ssid = NULL;
- 	}
- 
- 	if (pstrHostIFconnectAttr->pu8IEs != NULL) {
-@@ -3626,10 +3626,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 
- 	if (pu8ssid != NULL) {
- 		msg.body.con_info.ssidLen = ssidLen;
--		msg.body.con_info.pu8ssid = kmalloc(ssidLen, GFP_KERNEL);
--		memcpy(msg.body.con_info.pu8ssid,
--
--			    pu8ssid, ssidLen);
-+		msg.body.con_info.ssid = kmalloc(ssidLen, GFP_KERNEL);
-+		memcpy(msg.body.con_info.ssid, pu8ssid, ssidLen);
- 	}
- 
- 	if (pu8IEs != NULL) {
+ 		s32Error = host_int_edit_station(priv->hWILCWFIDrv, &strStaParams);
 -- 
 1.9.1
 
