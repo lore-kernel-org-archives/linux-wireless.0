@@ -1,250 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:2826 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753040AbbJZGCw (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:32962 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187AbbJ1LY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 02:02:52 -0400
-From: Shikha SINGH <shikha.singh@st.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-	Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
-	Manoj KUMAR <manoj.kumar@st.com>,
-	Sylvain FIDELIS <sylvain.fidelis@st.com>,
-	Patrick SOHN <patrick.sohn@st.com>
-Date: Mon, 26 Oct 2015 13:57:36 +0800
-Subject: RE: [[linux-nfc] PATCH v1.0 2/3] driver: nfc: st95hf: ST NFC
- Transceiver support
-Message-ID: <39576D76C6222946921EC3820C1BEC0C05B5638F10@EAPEX1MAIL1.st.com> (sfid-20151026_070256_990507_58864333)
-References: <1442042495-2407-1-git-send-email-shikha.singh@st.com>
- <1442042495-2407-3-git-send-email-shikha.singh@st.com>
- <20151022062452.GI11271@zurbaran.home>
-In-Reply-To: <20151022062452.GI11271@zurbaran.home>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 28 Oct 2015 07:24:57 -0400
+Received: by lbbec13 with SMTP id ec13so3282347lbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 04:24:54 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: add QCA9377 chipset support
+Date: Wed, 28 Oct 2015 12:24:34 +0100
+Message-Id: <1446031474-29368-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20151028_122504_165478_1CA86367)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpIaSBTYW11ZWwsDQoJVGhhbmtzIGZvciB5b3VyIHJldmlldy4NCg0KDQpPbiBTYXQsIFNlcCAx
-MiwgMjAxNSBhdCAwMzoyMTozNEFNIC0wNDAwLCBTaGlraGEgU2luZ2ggd3JvdGU6DQo+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL25mYy9zdDk1aGYvTWFrZWZpbGUgYi9kcml2ZXJzL25mYy9zdDk1aGYv
-TWFrZWZpbGUgDQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IDAwMDAwMDAuLjJkOGY4ZjMN
-Cj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9kcml2ZXJzL25mYy9zdDk1aGYvTWFrZWZpbGUNCj4g
-QEAgLTAsMCArMSw2IEBADQo+ICsjDQo+ICsjIE1ha2VmaWxlIGZvciBTVE1pY3JvZWxlY3Ryb25p
-Y3MgTkZDIHRyYW5zY2VpdmVyIFNUOTVIRiAjICMNCj4gKw0KPiArb2JqLSQoQ09ORklHX05GQ19T
-VDk1SEYpCSs9IHN0X3RyYW5zY2VpdmVyLm8NCldlIHNob3VsZCBiZSBtb3JlIHNwZWNpZmljIGFu
-ZCBjYWxsIGl0IHN0X25mY190cmFuc2NlaXZlciBmb3IgZXhhbXBsZS4NCg0KT2suDQoNCj4gKy8q
-IEZ1bmN0aW9uIHRvIHNlbmQgdXNlciBwcm92aWRlZCBidWZmZXIgdG8gU1Q5NUhGIHRocm91Z2gg
-U1BJICovIGludCANCj4gK3NwaV9zZW5kX3RvX3N0OTVoZihzdHJ1Y3Qgc3BpX2NvbnRleHQgKnNw
-aWNvbnRleHQsDQo+ICsJCSAgICAgICB1bnNpZ25lZCBjaGFyICpidWZmZXJ0eCwgaW50IGRhdGFs
-ZW4sDQo+ICsJCSAgICAgICBlbnVtIHJlcV90eXBlIHJlcXR5cGUpDQpUbyBiZSBjb25zaXN0ZW50
-IHdpdGggdGhlIHJlc3Qgb2YgeW91ciBBUEksIHRoaXMgb25lIHNob3VsZCBiZSBjYWxsZWQgc3Q5
-NWhmX3NwaV9zZW5kKCkuIEl0IG9idmlvdXNseSBpbXBsaWVzIHRoYXQgaXQgaXMgc2VuZGluZyBw
-YWNrZXRzIHRvIHRoZSB0cmFuc2NlaXZlci4NCg0KT2suDQoNCj4gK3sNCj4gKwlzdHJ1Y3Qgc3Bp
-X21lc3NhZ2UgbTsNCj4gKwlpbnQgcmVzdWx0ID0gMDsNCj4gKwlzdHJ1Y3Qgc3BpX2RldmljZSAq
-c3BpZGV2ID0gc3BpY29udGV4dC0+c3BpZGV2Ow0KPiArCXN0cnVjdCBzcGlfdHJhbnNmZXIgdHhf
-dHJhbnNmZXIgPSB7DQo+ICsJCS5yeF9idWYgPSBOVUxMLA0KPiArCQkudHhfYnVmID0gYnVmZmVy
-dHgsDQo+ICsJCS5sZW4gPSBkYXRhbGVuLA0KPiArCQkuY3NfY2hhbmdlID0gMCwNCj4gKwkJLmJp
-dHNfcGVyX3dvcmQgPSAwLA0KPiArCQkuZGVsYXlfdXNlY3MgPSAwLA0KPiArCQkuc3BlZWRfaHog
-PSAwLA0KPiArCX07DQpZb3UgZG9uJ3QgbmVlZCB0byBleHBsaWNpdGVseSBzZXQgdGhvc2UgZmll
-bGRzIHRvIE5VTEwgb3IgMCwgdGhpcyBvbmUgY291bGQgYmUgc2ltcGxpZmllZCB0bzoNCg0Kc3Ry
-dWN0IHNwaV90cmFuc2ZlciB0ID0geyAudHhfYnVmID0gYnVmZmVydHgsIC5sZW4gPSBkYXRhbGVu
-LCB9Ow0KDQpPay4NCg0KPiArCXNwaWNvbnRleHQtPnJlcGx5X2Zyb21fc3Q5NSA9IDA7DQo+ICsN
-Cj4gKwlpZiAocmVxdHlwZSA9PSBTWU5DKQ0KPiArCQlzcGljb250ZXh0LT5yZXFfaXNzeW5jID0g
-dHJ1ZTsNCj4gKwllbHNlDQo+ICsJCXNwaWNvbnRleHQtPnJlcV9pc3N5bmMgPSBmYWxzZTsNCj4g
-Kw0KPiArCXNwaV9tZXNzYWdlX2luaXQoJm0pOw0KPiArCXNwaV9tZXNzYWdlX2FkZF90YWlsKCZ0
-eF90cmFuc2ZlciwgJm0pOw0KPiArDQo+ICsJcmVzdWx0ID0gc3BpX3N5bmMoc3BpZGV2LCAmbSk7
-DQo+ICsJaWYgKHJlc3VsdCkgew0KPiArCQlkZXZfZXJyKCZzcGlkZXYtPmRldiwNCj4gKwkJCSJl
-cnJvcjogc2VuZGluZyBjbWQgdG8gc3Q5NWhmIHVzaW5nIFNQSVxuIik7DQo+ICsJCXJldHVybiBy
-ZXN1bHQ7DQo+ICsJfQ0KPiArDQo+ICsJaWYgKHJlcXR5cGUgPT0gQVNZTkMpIHsgLyogcmV0dXJu
-IGZvciBhc3luY2hyb25vdXMgb3Igbm8td2FpdCBjYXNlICovDQo+ICsJCXJldHVybiAwOw0KPiAr
-CX0NCj4gKw0KPiArCWRvIHsNCj4gKwkJcmVzdWx0ID0gd2FpdF9ldmVudF9pbnRlcnJ1cHRpYmxl
-X3RpbWVvdXQoDQo+ICsJCQkJc3BpY29udGV4dC0+c3Q5NXdhaXRfcXVldWUsDQo+ICsJCQkJc3Bp
-Y29udGV4dC0+cmVwbHlfZnJvbV9zdDk1ID09IDEsDQo+ICsJCQkJMTAwMCk7DQo+ICsJfSB3aGls
-ZSAocmVzdWx0IDwgMCk7DQpJZiByZXN1bHQgaXMgPCAwIGl0IG1lYW5zIHlvdXIgdHJhbnNmZXIg
-Z290IGludGVycnVwdGVkIGJ5IGEgc2lnbmFsLCB0aGVyZSBpcyBubyBwb2ludCBpbiBsb29waW5n
-IGFyb3VuZCByZXN1bHQuIFlvdSBtYXkganVzdCB3YW50IHRvIHJldHVybiByZXN1bHQgaW4gdGhh
-dCBjYXNlLg0KDQpBZ3JlZS4gSSB3aWxsIGNvcnJlY3QgaW4gbmV4dCB2ZXJzaW9uLg0KDQpBIGNv
-dXBsZSBtb3JlIGNvbW1lbnRzIGhlcmU6DQotIEEgY29tcGxldGlvbiBpcyBwcm9iYWJseSBlbm91
-Z2ggZm9yIHdoYXQgeW91J3JlIHRyeWluZyB0byBhY2hpZXZlLg0KDQpZZXMuIEkgd2lsbCBtYWtl
-IGNoYW5nZXMgYWNjb3JkaW5nbHkuDQoNCi0gVGhpcyBpcyByYWN5OiBJZiB5b3UgaGF2ZSAyIHRo
-cmVhZHMgY2FsbGluZyBzcGlfc2VuZF90b19zdDk1aGYoKSBhdA0KICB0aGUgc2FtZSB0aW1lIHRo
-ZXkgbWF5IGVuZCB1cCB3YWl0aW5nIG9uIHRoZSB3YWl0cXVldWUgYXQgdGhlIHNhbWUNCiAgdGlt
-ZSBhcyB3ZWxsLiBUaGUgZmlyc3QgaW50ZXJydXB0IHRoYXQgY29tZXMgd2lsbCB3YWtlIGJvdGgg
-YXQgdGhlDQogIHNhbWUgdGltZSBhbHRob3VnaCBpdCBzaG91bGQgbm90Lg0KICBJbiBvcmRlciB0
-byBhdm9pZCB0aGF0IHJhY2UsIHlvdSBuZWVkIHRvIHN5bmNocm9uaXplIHRoZSBjYWxscyB0bw0K
-ICBzcGlfc3luYyB3aXRoIGUuZy4gYSBtdXRleCBzbyB0aGF0IHlvdSBkb24ndCBpc3N1ZSBhbiBz
-cGlfc3luYyB3aGlsZQ0KICBzb21lb25lIGlzIGFscmVhZHkgb24gdGhlIHdhaXRxdWV1ZSBvciBz
-bGVlcGluZyBmb3IgY29tcGxldGlvbi4NCg0KT2suIEFsdGhvdWdoIGF0IHByZXNlbnQgdGhlcmUg
-aXMgbm8gc2l0dWF0aW9uIHdoZXJlIHNwaV9zZW5kX3RvX3N0OTVoZigpIGNhbiBiZSBjYWxsZWQg
-c2ltdWx0YW5lb3VzbHkNCmJ1dCBJIHdpbGwgYWNjb21tb2RhdGUgeW91ciBzdWdnZXN0aW9uIHRv
-IGhhdmUgYSBzYWZlIGNvZGUuIA0KDQo+ICsNCj4gKwlpZiAocmVzdWx0ID09IDApIHsNCj4gKwkJ
-ZGV2X2Vycigmc3BpZGV2LT5kZXYsICJlcnJvcjogcmVzcG9uc2Ugbm90IHJlYWR5IHRpbWVvdXRc
-biIpOw0KPiArCQlyZXR1cm4gLUVUSU1FRE9VVDsNCj4gKwl9DQo+ICsNCj4gKwlpZiAocmVzdWx0
-ID4gMCkNCj4gKwkJcmVzdWx0ID0gMDsNCj4gKw0KPiArCXJldHVybiByZXN1bHQ7DQo+ICt9DQo+
-ICtFWFBPUlRfU1lNQk9MX0dQTChzcGlfc2VuZF90b19zdDk1aGYpOw0KPiArDQo+ICsvKiBGdW5j
-dGlvbiB0byBSZWNlaXZlIGNvbW1hbmQgUmVzcG9uc2UgKi8gaW50IA0KPiArc3BpX3JlY2VpdmVf
-cmVzcG9uc2Uoc3RydWN0IHNwaV9jb250ZXh0ICpzcGljb250ZXh0LA0KPiArCQkJIHVuc2lnbmVk
-IGNoYXIgKnJlY2VpdmVidWZmLA0KPiArCQkJIGludCAqbGVuKQ0KMiB0aGluZ3M6DQoNCi0gTGV0
-J3MgY2FsbCB0aGF0IG9uZSBzdDk1aGZfc3BpX3JlY3ZfcmVzcG9uc2UoKQ0KDQpPay4NCg0KLSBJ
-dCB0eXBpY2FsbHkgc2hvdWxkIHJldHVybiB0aGUgbnVtYmVyIG9mIHJlYWQgYnl0ZXMsIGluc3Rl
-YWQgb2YNCiAgcGFzc2luZyBhIGxlbiBwb2ludGVyIHRvIHRoZSBhcmd1bWVudCBsaXN0Lg0KDQpP
-ay4NCg0KDQo+ICt7DQo+ICsJc3RydWN0IHNwaV90cmFuc2ZlciB0eF90YWtlcmVzcG9uc2UxOw0K
-PiArCXN0cnVjdCBzcGlfdHJhbnNmZXIgdHhfdGFrZXJlc3BvbnNlMjsNCj4gKwlzdHJ1Y3Qgc3Bp
-X3RyYW5zZmVyIHR4X3Rha2VkYXRhOw0KPiArCXN0cnVjdCBzcGlfbWVzc2FnZSBtOw0KPiArCXVu
-c2lnbmVkIGNoYXIgcmVhZGRhdGFfY21kID0gU1Q5NUhGX0NPTU1BTkRfUkVDRUlWRTsNCj4gKwlp
-bnQgcmV0ID0gMDsNCj4gKw0KPiArCXN0cnVjdCBzcGlfZGV2aWNlICpzcGlkZXYgPSBzcGljb250
-ZXh0LT5zcGlkZXY7DQo+ICsNCj4gKwkqbGVuID0gMDsNCj4gKw0KPiArCW1lbXNldCgmdHhfdGFr
-ZXJlc3BvbnNlMSwgMHgwLCBzaXplb2Yoc3RydWN0IHNwaV90cmFuc2ZlcikpOw0KPiArCW1lbXNl
-dCgmdHhfdGFrZXJlc3BvbnNlMiwgMHgwLCBzaXplb2Yoc3RydWN0IHNwaV90cmFuc2ZlcikpOw0K
-PiArCW1lbXNldCgmdHhfdGFrZWRhdGEsIDB4MCwgc2l6ZW9mKHN0cnVjdCBzcGlfdHJhbnNmZXIp
-KTsNCj4gKw0KPiArCXR4X3Rha2VyZXNwb25zZTEudHhfYnVmID0gJnJlYWRkYXRhX2NtZDsNCj4g
-Kwl0eF90YWtlcmVzcG9uc2UxLmxlbiA9IDE7DQo+ICsNCj4gKwl0eF90YWtlcmVzcG9uc2UyLnJ4
-X2J1ZiA9IHJlY2VpdmVidWZmOw0KPiArCS8qIDEgYnl0ZSAgUmVzcG9uc2UgY29kZSArIDEgYnl0
-ZSAgbGVuZ3RoIG9mIGRhdGEgKi8NCj4gKwl0eF90YWtlcmVzcG9uc2UyLmxlbiA9IDI7DQo+ICsJ
-LyogRG9udCBhbGxvdyB0byBtYWtlIGNoaXBzZWxlY3QgaGlnaCAqLw0KPiArCXR4X3Rha2VyZXNw
-b25zZTIuY3NfY2hhbmdlID0gMTsNCj4gKw0KPiArCXNwaV9tZXNzYWdlX2luaXQoJm0pOw0KPiAr
-CXNwaV9tZXNzYWdlX2FkZF90YWlsKCZ0eF90YWtlcmVzcG9uc2UxLCAmbSk7DQo+ICsJc3BpX21l
-c3NhZ2VfYWRkX3RhaWwoJnR4X3Rha2VyZXNwb25zZTIsICZtKTsNCg0KU28gdGhpcyB3aG9sZSBi
-bG9jayBvZiBjb2RlIGNvdWxkIGJlIHNpbXBsaWZpZWQgdG86DQoNCnN0cnVjdCBzcGlfdHJhbnNm
-ZXIgdFsyXSA9IHsgeyAudHhfYnVmID0gJnJlYWRkYXRhX2NtZCwgLmxlbiA9IDEsIH0sDQogICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIHsgLnJ4X2J1ZiA9IHJlY2VpdmVfYnVmZiwgIC5sZW4g
-PSAyICwgLmNzX2NoYW5nZSA9IDEsIH0sIH07DQoNCnNwaV9tZXNzYWdlX2luaXQoJm0pOw0Kc3Bp
-X21lc3NhZ2VfYWRkX3RhaWwoJnRbMF0sICZtKTsNCnNwaV9tZXNzYWdlX2FkZF90YWlsKCZ0WzFd
-LCAmbSk7DQoNCk9rLiANCg0KPiArCXJldCA9IHNwaV9zeW5jKHNwaWRldiwgJm0pOw0KPiArCWlm
-IChyZXQpDQo+ICsJCXJldHVybiByZXQ7DQo+ICsNCj4gKwkvKiAyIGJ5dGVzIGFyZSBhbHJlYWR5
-IHJlYWQgKi8NCj4gKwkqbGVuID0gMjsNCj4gKw0KPiArCS8qc3VwcG9ydCBvZiBsb25nIGZyYW1l
-Ki8NCk5pdHBpY2s6IFBsZWFzZSBhZGQgYSBzcGFjZSBhZnRlciAvKiBhbmQgYmVmb3JlICovDQoN
-Ck9rLiANCg0KPiArCWlmIChyZWNlaXZlYnVmZlswXSAmIDB4NjApDQo+ICsJCSpsZW4gKz0gKCgo
-cmVjZWl2ZWJ1ZmZbMF0gJiAweDYwKSA+PiA1KSA8PCA4KSB8IHJlY2VpdmVidWZmWzFdOw0KPiAr
-CWVsc2UNCj4gKwkJKmxlbiArPSByZWNlaXZlYnVmZlsxXTsNCj4gKw0KPiArCS8qIE5vdyBtYWtl
-IGEgdHJhbnNmZXIgdG8gdGFrZSBvbmx5IHJlbGV2YW50IGRhdGEgKi8NCj4gKwl0eF90YWtlZGF0
-YS5yeF9idWYgPSAmcmVjZWl2ZWJ1ZmZbMl07DQo+ICsJdHhfdGFrZWRhdGEubGVuID0gKCpsZW4p
-IC0gMjsNCj4gKwl0eF90YWtlZGF0YS5jc19jaGFuZ2UgPSAwOw0KPiArDQo+ICsJc3BpX21lc3Nh
-Z2VfaW5pdCgmbSk7DQo+ICsJc3BpX21lc3NhZ2VfYWRkX3RhaWwoJnR4X3Rha2VkYXRhLCAmbSk7
-DQo+ICsNCj4gKwlyZXR1cm4gc3BpX3N5bmMoc3BpZGV2LCAmbSk7DQo+ICt9DQo+ICtFWFBPUlRf
-U1lNQk9MX0dQTChzcGlfcmVjZWl2ZV9yZXNwb25zZSk7DQo+ICsNCj4gK2ludCBzcGlfcmVjZWl2
-ZV9lY2hvX3Jlc3BvbnNlKHN0cnVjdCBzcGlfY29udGV4dCAqc3BpY29udGV4dCwNCj4gKwkJCSAg
-ICAgIHVuc2lnbmVkIGNoYXIgKnJlY2VpdmVidWZmKQ0KU2ltaWxhciBjb21tZW50LCBwbGVhc2Ug
-Y2FsbCBpdCBzdDk1aGZfcmVjdl9lY2hvKCkuDQoNCk9rLg0KDQo+ICt7DQo+ICsJc3RydWN0IHNw
-aV90cmFuc2ZlciB0eF90YWtlcmVzcG9uc2UxOw0KPiArCXN0cnVjdCBzcGlfdHJhbnNmZXIgdHhf
-dGFrZWRhdGE7DQo+ICsJc3RydWN0IHNwaV9tZXNzYWdlIG07DQo+ICsJdW5zaWduZWQgY2hhciBy
-ZWFkZGF0YV9jbWQgPSBTVDk1SEZfQ09NTUFORF9SRUNFSVZFOw0KPiArCXN0cnVjdCBzcGlfZGV2
-aWNlICpzcGlkZXYgPSBzcGljb250ZXh0LT5zcGlkZXY7DQo+ICsNCj4gKwltZW1zZXQoJnR4X3Rh
-a2VyZXNwb25zZTEsIDB4MCwgc2l6ZW9mKHN0cnVjdCBzcGlfdHJhbnNmZXIpKTsNCj4gKwltZW1z
-ZXQoJnR4X3Rha2VkYXRhLCAweDAsIHNpemVvZihzdHJ1Y3Qgc3BpX3RyYW5zZmVyKSk7DQo+ICsN
-Cj4gKwl0eF90YWtlcmVzcG9uc2UxLnR4X2J1ZiA9ICZyZWFkZGF0YV9jbWQ7DQo+ICsJdHhfdGFr
-ZXJlc3BvbnNlMS5sZW4gPSAxOw0KPiArCXR4X3Rha2VyZXNwb25zZTEucnhfYnVmID0gTlVMTDsN
-Cj4gKw0KPiArCXR4X3Rha2VkYXRhLnJ4X2J1ZiA9IHJlY2VpdmVidWZmOw0KPiArCXR4X3Rha2Vk
-YXRhLnR4X2J1ZiA9IE5VTEw7DQo+ICsJdHhfdGFrZWRhdGEubGVuID0gMTsNCj4gKw0KPiArCXNw
-aV9tZXNzYWdlX2luaXQoJm0pOw0KPiArCXNwaV9tZXNzYWdlX2FkZF90YWlsKCZ0eF90YWtlcmVz
-cG9uc2UxLCAmbSk7DQo+ICsJc3BpX21lc3NhZ2VfYWRkX3RhaWwoJnR4X3Rha2VkYXRhLCAmbSk7
-DQpTaW1pbGFyIGNvbW1lbnQgYXMgd2VsbCwgdGhpcyBjYW4gYmUgc2ltcGxpZmllZCBhcyBkZXNj
-cmliZWQgYWJvdmUuDQoNCk9rLg0KDQo+ICsJcmV0dXJuIHNwaV9zeW5jKHNwaWRldiwgJm0pOw0K
-PiArfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwoc3BpX3JlY2VpdmVfZWNob19yZXNwb25zZSk7DQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25mYy9zdDk1aGYvc3BpLmggYi9kcml2ZXJzL25mYy9zdDk1
-aGYvc3BpLmggbmV3IA0KPiBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IDAwMDAwMDAuLmFhM2VlYTBk
-DQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvZHJpdmVycy9uZmMvc3Q5NWhmL3NwaS5oDQo+IEBA
-IC0wLDAgKzEsNDUgQEANCj4gKyAvKg0KPiArICogDQo+ICsgLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gKyAtLS0t
-LS0tLS0NCj4gKyAqIGRyaXZlcnMvbmZjL3N0OTVoZi9zcGkuaCBmdW5jdGlvbnMgZGVjbGFyYXRp
-b25zIGZvciBTUEkgDQo+ICsgY29tbXVuaWNhdGlvbg0KPiArICogDQo+ICsgLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0N
-Cj4gKyAtLS0tLS0tLS0NCj4gKyAqDQo+ICsgKiBDb3B5cmlnaHQgKEMpIDIwMTUgU1RNaWNyb2Vs
-ZWN0cm9uaWNzIOKAkyBBbGwgUmlnaHRzIFJlc2VydmVkDQo+ICsgKiBBdXRob3I6IFNoaWtoYSBT
-aW5naCA8c2hpa2hhLnNpbmdoQHN0LmNvbT4NCj4gKyAqDQo+ICsgKiBNYXkgYmUgY29waWVkIG9y
-IG1vZGlmaWVkIHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgDQo+ICsgUHVibGlj
-DQo+ICsgKiBMaWNlbnNlIFZlcnNpb24gMi4wIG9ubHkuIFNlZSBsaW51eC9DT1BZSU5HIGZvciBt
-b3JlIGluZm9ybWF0aW9uLg0KPiArICogIA0KPiArIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICsgLS0tLS0tLQ0K
-PiArICovDQo+ICsNCj4gKyNpZm5kZWYgX19MSU5VWF9TVDk1SEZfU1BJX0gNCj4gKyNkZWZpbmUg
-X19MSU5VWF9TVDk1SEZfU1BJX0gNCj4gKw0KPiArI2luY2x1ZGUgPGxpbnV4L3NwaS9zcGkuaD4N
-Cj4gKw0KPiArc3RydWN0IHNwaV9jb250ZXh0IHsNCnN0cnVjdCBzdDk1aGZfc3BpX2NvbnRleHQg
-d291bGQgYmUgbW9yZSBhcHJvcHJpYXRlLg0KDQpPay4NCg0KPiArCWludCByZXBseV9mcm9tX3N0
-OTU7DQo+ICsJd2FpdF9xdWV1ZV9oZWFkX3Qgc3Q5NXdhaXRfcXVldWU7DQpJIHRoaW5rIHRob3Nl
-IDIgY2FuIGVhc2lseSBiZSByZXBsYWNlZCBieSBhIHNpbXBsZSBjb21wbGV0aW9uIHN0cnVjdHVy
-ZS4NCg0KQWdyZWUuIEkgd2lsbCByZXBsYWNlIGl0IHdpdGggY29tcGxldGlvbiBzdHJ1Y3R1cmUg
-b2Yga2VybmVsLg0KDQo+ICtzdGF0aWMgaXJxcmV0dXJuX3QgaXJxX2hhbmRsZXIoaW50IGlycSwg
-dm9pZCAgKnN0OTVoZmNvbnRleHQpIHsNCj4gKwlzdHJ1Y3Qgc3Q5NWhmX2NvbnRleHQgKnN0Y29u
-dGV4dCAgPQ0KPiArCQkoc3RydWN0IHN0OTVoZl9jb250ZXh0ICopc3Q5NWhmY29udGV4dDsNCj4g
-Kw0KPiArCWlmIChzdGNvbnRleHQtPnNwaWNvbnRleHQucmVxX2lzc3luYykgew0KPiArCQlzdGNv
-bnRleHQtPnNwaWNvbnRleHQucmVwbHlfZnJvbV9zdDk1ID0gMTsNCj4gKwkJd2FrZV91cF9pbnRl
-cnJ1cHRpYmxlKCZzdGNvbnRleHQtPnNwaWNvbnRleHQuc3Q5NXdhaXRfcXVldWUpOw0KPiArCQly
-ZXR1cm4gSVJRX0hBTkRMRUQ7DQo+ICsJfQ0KPiArDQo+ICsJcmV0dXJuIElSUV9XQUtFX1RIUkVB
-RDsNCj4gK30NCkRvIHlvdSByZWFsbHkgbmVlZCBhIHNwZWNpZmljIElSUSBoYW5kbGVyIGZvciB0
-aGF0ID8gQ2FuJ3QgeW91IGRvIGl0IGZyb20gdGhlIHRocmVhZGVkIGludGVycnVwdCBjb250ZXh0
-ID8NCg0KQ3VycmVudGx5IHdlIGRvbid0IG5lZWQgdG8gcnVuIGFueSBzcGVjaWZpYyBjb2RlIGlu
-IGhhcmQgSVJRIGNvbnRleHQgc28geWVzIHdlIGNhbiB1c2Ugc2luZ2xlIHRocmVhZGVkIGludGVy
-cnVwdCBjb250ZXh0IGZvciBhbGwgY2FzZXMuDQpJIHdpbGwgbW9kaWZ5Lg0KDQo+ICtzdGF0aWMg
-aXJxcmV0dXJuX3QgaXJxX3RocmVhZF9oYW5kbGVyKGludCBpcnEsIHZvaWQgICpzdDk1aGZjb250
-ZXh0KSANCj4gK3sNCj4gKwlpbnQgcmVzdWx0Ow0KPiArCWludCByZXNfbGVuOw0KPiArCWludCBz
-a2JfbGVuOw0KPiArCXN0YXRpYyBib29sIHd0eDsNCj4gKwlzdHJ1Y3QgcGFyYW1fbGlzdCBuZXdf
-cGFyYW1zWzFdOw0KPiArCXN0cnVjdCBzdDk1aGZfY29udGV4dCAqc3Rjb250ZXh0ICA9DQo+ICsJ
-CShzdHJ1Y3Qgc3Q5NWhmX2NvbnRleHQgKilzdDk1aGZjb250ZXh0Ow0KPiArCXVuc2lnbmVkIGNo
-YXIgZXJyb3JfYnl0ZTsNCj4gKwlzdHJ1Y3QgZGV2aWNlICpkZXYgPSAmc3Rjb250ZXh0LT5uZmNk
-ZXYtPmRldjsNCj4gKwlzdHJ1Y3QgbmZjX2RpZ2l0YWxfZGV2ICpuZmNkZGV2ID0gc3Rjb250ZXh0
-LT5kZGV2Ow0KPiArCXVuc2lnbmVkIGNoYXIgdmFsX21tOw0KPiArDQo+ICsJc3RydWN0IHN0OTVf
-ZGlnaXRhbF9jbWRfY29tcGxldGVfYXJnICpjYl9hcmcgPQ0KPiArCQlzdGNvbnRleHQtPmNvbXBs
-ZXRlX2NiX2FyZzsNCj4gKw0KPiArCWlmICghY2JfYXJnKSB7DQo+ICsJCWRldl9lcnIoZGV2LCAi
-Y2JfYXJnIGlzIE5VTEwgaW4gdGhyZWFkZWQgSVNSXG4iKTsNCj4gKwkJQlVHKCk7DQo+ICsJfQ0K
-PiArDQo+ICsJcmVzdWx0ID0gc3BpX3JlY2VpdmVfcmVzcG9uc2UoJnN0Y29udGV4dC0+c3BpY29u
-dGV4dCwNCj4gKwkJCQkgICAgICBjYl9hcmctPnNrYl9yZXNwLT5kYXRhLA0KPiArCQkJCSAgICAg
-ICZyZXNfbGVuKTsNCj4gKwlpZiAocmVzdWx0KSB7DQo+ICsJCWRldl9lcnIoZGV2LCAicmVzIHJl
-Y2VpdmUgdGhyZWFkZWQgSVNSIGVyciA9IDB4JXhcbiIsIHJlc3VsdCk7DQo+ICsJCWdvdG8gZW5k
-Ow0KPiArCX0NCj4gKw0KPiArCWlmICgqKChjYl9hcmctPnNrYl9yZXNwLT5kYXRhKSArIDIpID09
-IFdUWF9SRVFfRlJPTV9UQUcpIHsNCj4gKwkJLyogUmVxdWVzdCBmb3IgbmV3IEZXVCBmcm9tIHRh
-ZyAqLw0KRldUID8NCg0KRldUIGlzIEZyYW1lIFdhaXRpbmcgVGltZS4NCkFjY29yZGluZyB0byBJ
-U08tREVQIHByb3RvY29sLCB0YWcgY2FuIHNlbmQgdGhlIHJlcXVlc3QgdG8gcmVhZGVyIGZvciBu
-ZXcgd2FpdGluZyB0aW1lIHVzaW5nIFdUWCByZXF1ZXN0IChXYWl0aW5nIFRpbWUgZVh0ZW5zaW9u
-KSB3aGVuIHRhZyBuZWVkIG1vcmUgdGltZSBhdCBpdHMgZW5kIGZvciBwcm9jZXNzaW5nLg0KSW4g
-dGhpcyBzaXR1YXRpb24sIGluIHJlc3BvbnNlIG9mIFdUWCByZXF1ZXN0IHJlYWRlciBpcyBhbHNv
-IHJlcXVpcmVkIHRvIGJlIHJlLWNvbmZpZ3VyZWQgdG8gaW5jcmVhc2UgaXRzIHRpbWVvdXQuIA0K
-U28gdGhhdCByZWFkZXIgd2lsbCB3YWl0IGZvciByZXNwb25zZSBmcm9tIHRhZyBmb3IgdGhlIHN1
-ZmZpY2llbnQgdGltZSBiZWZvcmUgZGVjbGFyaW5nIHRoZSB0aW1lb3V0IGVycm9yLiAgDQoNCg0K
-PiArCQlyZXN1bHQgPSBpc28xNDQ0M19jb25maWdfZmR0KHN0Y29udGV4dCwNCj4gKwkJCQkJICAg
-ICAoKigoY2JfYXJnLT5za2JfcmVzcC0+ZGF0YSkgKyAzKQ0KPiArCQkJCQkJJiAweDNmKSk7DQo+
-ICsJCWlmIChyZXN1bHQpIHsNCj4gKwkJCWRldl9lcnIoZGV2LCAiQ29uZmlnLiBzZXR0aW5nIGVy
-cm9yIG9uIFdUWCByZXEsIGVyciA9IDB4JXhcbiIsDQo+ICsJCQkJcmVzdWx0KTsNCj4gKwkJCWdv
-dG8gZW5kOw0KPiArCQl9DQo+ICsJCXd0eCA9IHRydWU7DQo+ICsNCj4gKwkJLyogQVNZTkMgcmVx
-IGFzIG5vIHJlc3BvbnNlIGV4cGVjdGVkICovDQo+ICsJCW5ld19wYXJhbXNbMF0ucGFyYW1fb2Zm
-c2V0ID0gMTsNCj4gKwkJbmV3X3BhcmFtc1swXS5uZXdfcGFyYW1fdmFsID0NCj4gKwkJCSooKGNi
-X2FyZy0+c2tiX3Jlc3AtPmRhdGEpICsgMyk7DQo+ICsNCj4gKwkJcmVzdWx0ID0gc3Q5NWhmX3Nl
-bmRfY21kKHN0Y29udGV4dCwNCj4gKwkJCQkJIFdUWF9SRVNQT05TRSwNCj4gKwkJCQkJIDEsDQo+
-ICsJCQkJCSBuZXdfcGFyYW1zKTsNCj4gKwkJaWYgKHJlc3VsdCkgew0KPiArCQkJZGV2X2Vycihk
-ZXYsICJXVFggcmVzcG9uc2Ugc2VuZCwgZXJyID0gMHgleFxuIiwgcmVzdWx0KTsNCj4gKwkJCWdv
-dG8gZW5kOw0KPiArCQl9DQo+ICsJCXJldHVybiBJUlFfSEFORExFRDsNCj4gKwl9DQpBIGZldyBj
-b21tZW50czoNCg0KLSBZb3UgcHJvYmFibHkgd2FudCB0byBkZWZpbmUgYSBzdHJ1Y3Qgc2tfYnVm
-ZiAqc2tiX3Jlc3AgPQ0KICBjYl9hcmctPnNrYl9yZXNwDQoNCk9rLiBJIHdpbGwgc2ltcGxpZnkg
-dGhlIGNvZGUgYnkgZGVmaW5pbmcgYSBsb2NhbCBzdHJ1Y3R1cmUgYXMgc3RydWN0IHNrX2J1ZmYg
-KnNrYl9yZXNwID0NCiAgY2JfYXJnLT5za2JfcmVzcC4gDQoNCi0gKigoY2JfYXJnLT5za2JfcmVz
-cC0+ZGF0YSkgKyAyKSBiZWNvbWVzIHNrYl9yZXNwLT5kYXRhWzJdDQoNCk9rLiBXaWxsIG1vZGlm
-eSB0aGUgd2hvbGUgY29kZSBhY2NvcmRpbmdseS4NCg0KLSBUaGlzIGhhbmRsZXIgaXMgYWxtb3N0
-IDIwMCBsaW5lcyBvZiBjb2RlIGxvbmcsIGl0IGNvdWxkIGJlIHNwbGl0dGVkIGluDQogIHNtYWxs
-ZXIgcm91dGluZXM6DQoJKiBPbmUgZm9yIGhhbmRsaW5nIEZXVCBmcm9tIHRhZw0KCSogT25lIGZv
-ciBoYW5kbGluZyBJL08gZXJyb3JzDQoJKiBPbmUgZm9yIGFjdHVhbGx5IHByb2Nlc3NpbmcgdGhl
-IHJlc3BvbnNlDQpPay4gDQpJIHdpbGwgc3BsaXQgdGhlIGhhbmRsZXIgdG8gbWFrZSBpdCBtb3Jl
-IG1vZHVsYXIuDQoNCj4gK3N0YXRpYyBzdHJ1Y3QgbmZjX2RpZ2l0YWxfb3BzIHN0OTVoZl9uZmNf
-ZGlnaXRhbF9vcHMgPSB7DQo+ICsJLmluX2NvbmZpZ3VyZV9odyA9IHN0OTVoZl9pbl9jb25maWd1
-cmVfaHcsDQo+ICsJLmluX3NlbmRfY21kID0gc3Q5NWhmX2luX3NlbmRfY21kLA0KPiArDQo+ICsJ
-LnRnX2xpc3RlbiA9IHN0OTVoZl90Z19saXN0ZW4sDQo+ICsJLnRnX2NvbmZpZ3VyZV9odyA9IHN0
-OTVoZl90Z19jb25maWd1cmVfaHcsDQo+ICsJLnRnX3NlbmRfY21kID0gc3Q5NWhmX3RnX3NlbmRf
-Y21kLA0KPiArCS50Z19nZXRfcmZfdGVjaCA9IHN0OTVoZl90Z19nZXRfcmZfdGVjaCwNCj4gKw0K
-PiArCS5zd2l0Y2hfcmYgPSBzdDk1aGZfc3dpdGNoX3JmLA0KPiArCS5hYm9ydF9jbWQgPSBzdDk1
-aGZfYWJvcnRfY21kLA0KQWxsIHRoZSBhYm92ZSBvcHMgY2FuIGJlIHN0YXRpYy4NCg0KT2suDQoN
-Cj4gK3N0YXRpYyBpbnQgc3Q5NWhmX3Byb2JlKHN0cnVjdCBzcGlfZGV2aWNlICpuZmNfc3BpX2Rl
-dikgew0KPiArCWludCByZXQ7DQo+ICsNCj4gKwlzdHJ1Y3Qgc3Q5NWhmX2NvbnRleHQgKnN0OTVj
-b250ZXh0Ow0KPiArCXN0cnVjdCBzcGlfY29udGV4dCAqc3BpY29udGV4dDsNCj4gKwlzdHJ1Y3Qg
-ZGV2aWNlX25vZGUgKm5wID0gbmZjX3NwaV9kZXYtPmRldi5vZl9ub2RlOw0KPiArDQo+ICsJcHJf
-aW5mbygiU1QgU1BJIFNMQVZFIERSSVZFUiAoU1Q5NUhGIFIvVyAxNDQ0M0EvQikgUFJPQkUgQ0FM
-TEVEXG4iKTsNCj4gKw0KPiArCXN0OTVjb250ZXh0ID0gZGV2bV9remFsbG9jKCZuZmNfc3BpX2Rl
-di0+ZGV2LA0KPiArCQkJCSAgIHNpemVvZihzdHJ1Y3Qgc3Q5NWhmX2NvbnRleHQpLA0KPiArCQkJ
-CSAgIEdGUF9LRVJORUwpOw0KPiArCWlmICghc3Q5NWNvbnRleHQpDQo+ICsJCXJldHVybiAtRU5P
-TUVNOw0KPiArDQo+ICsJc3BpY29udGV4dCA9ICZzdDk1Y29udGV4dC0+c3BpY29udGV4dDsNCj4g
-Kw0KPiArCXNwaWNvbnRleHQtPnNwaWRldiA9IG5mY19zcGlfZGV2Ow0KPiArDQo+ICsJc3Q5NWNv
-bnRleHQtPmZ3aSA9IA0KPiArY21kX2FycmF5W0lTTzE0NDQzQV9QUk9UT0NPTF9TRUxFQ1RdLmNt
-ZF9wYXJhbXNbMl07DQo+ICsNCj4gKwlpZiAob2ZfZ2V0X3Byb3BlcnR5KG5wLCAic3Q5NWhmdmlu
-LXN1cHBseSIsIE5VTEwpKSB7DQpQbGVhc2UgdXNlIGRldmljZV9wcm9wZXJ0eV9wcmVzZW50IHRv
-IGJlIGZpcm13YXJlIEFQSSBhZ25vc3RpYy4NCg0KT2suDQoNClRoYW5rcyEhDQpCZXN0IFJlZ2Fy
-ZHMsDQpTaGlraGENCg==
+Add the hardware name, revision and update the pci_id table.
+
+Currently there're two HW ref. designs available I'm aware of,
+with 1.0.2 and 1.1 chip revisions. I've access and been using
+the first one so far and this patch cover only it.
+
+QCA9377 inherits most of the stuff (e.g. fw interfaces)
+from QCA61x4 design, so the integration was pretty straightforward.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c      | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h        | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c       | 17 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/targaddrs.h |  3 +++
+ 4 files changed, 48 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 13de3617d5ab..828aefce8a7a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -137,6 +137,21 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+ 		},
+ 	},
++	{
++		.id = QCA9377_HW_1_0_DEV_VERSION,
++		.name = "qca9377 hw1.0",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 7,
++		.otp_exe_param = 0,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.fw = QCA9377_HW_1_0_FW_FILE,
++			.otp = QCA9377_HW_1_0_OTP_FILE,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++	},
+ };
+ 
+ static const char *const ath10k_core_fw_feature_str[] = {
+@@ -1900,6 +1915,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 		ar->hw_values = &qca988x_values;
+ 		break;
+ 	case ATH10K_HW_QCA6174:
++	case ATH10K_HW_QCA9377:
+ 		ar->regs = &qca6174_regs;
+ 		ar->hw_values = &qca6174_values;
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737e35ff..31734298d305 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -84,6 +84,16 @@ enum qca6174_chip_id_rev {
+ #define QCA99X0_HW_2_0_BOARD_DATA_FILE "board.bin"
+ #define QCA99X0_HW_2_0_PATCH_LOAD_ADDR	0x1234
+ 
++/* QCA9377 1.0 definitions */
++#define QCA9377_HW_1_0_DEV_VERSION     0x05020001
++#define QCA9377_HW_1_0_CHIP_ID_REV     0x1
++#define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
++#define QCA9377_HW_1_0_FW_FILE         "firmware.bin"
++#define QCA9377_HW_1_0_OTP_FILE        "otp.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
++#define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
++
++
+ #define ATH10K_FW_API2_FILE		"firmware-2.bin"
+ #define ATH10K_FW_API3_FILE		"firmware-3.bin"
+ 
+@@ -176,6 +186,7 @@ enum ath10k_hw_rev {
+ 	ATH10K_HW_QCA988X,
+ 	ATH10K_HW_QCA6174,
+ 	ATH10K_HW_QCA99X0,
++	ATH10K_HW_QCA9377,
+ };
+ 
+ struct ath10k_hw_regs {
+@@ -228,6 +239,7 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
+ #define QCA_REV_988X(ar) ((ar)->hw_rev == ATH10K_HW_QCA988X)
+ #define QCA_REV_6174(ar) ((ar)->hw_rev == ATH10K_HW_QCA6174)
+ #define QCA_REV_99X0(ar) ((ar)->hw_rev == ATH10K_HW_QCA99X0)
++#define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
+ 
+ /* Known pecularities:
+  *  - raw appears in nwifi decap, raw and nwifi appear in ethernet decap
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c05b0cf54a1..63de50c52a5f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -61,12 +61,14 @@ MODULE_PARM_DESC(reset_mode, "0: auto, 1: warm only (default: 0)");
+ #define QCA6164_2_1_DEVICE_ID	(0x0041)
+ #define QCA6174_2_1_DEVICE_ID	(0x003e)
+ #define QCA99X0_2_0_DEVICE_ID	(0x0040)
++#define QCA9377_1_0_DEVICE_ID	(0x0042)
+ 
+ static const struct pci_device_id ath10k_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, QCA988X_2_0_DEVICE_ID) }, /* PCI-E QCA988X V2 */
+ 	{ PCI_VDEVICE(ATHEROS, QCA6164_2_1_DEVICE_ID) }, /* PCI-E QCA6164 V2.1 */
+ 	{ PCI_VDEVICE(ATHEROS, QCA6174_2_1_DEVICE_ID) }, /* PCI-E QCA6174 V2.1 */
+ 	{ PCI_VDEVICE(ATHEROS, QCA99X0_2_0_DEVICE_ID) }, /* PCI-E QCA99X0 V2 */
++	{ PCI_VDEVICE(ATHEROS, QCA9377_1_0_DEVICE_ID) }, /* PCI-E QCA9377 V1 */
+ 	{0}
+ };
+ 
+@@ -90,6 +92,7 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
+ 	{ QCA6174_2_1_DEVICE_ID, QCA6174_HW_3_2_CHIP_ID_REV },
+ 
+ 	{ QCA99X0_2_0_DEVICE_ID, QCA99X0_HW_2_0_CHIP_ID_REV },
++	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_0_CHIP_ID_REV },
+ };
+ 
+ static void ath10k_pci_buffer_cleanup(struct ath10k *ar);
+@@ -827,6 +830,7 @@ static u32 ath10k_pci_targ_cpu_to_ce_addr(struct ath10k *ar, u32 addr)
+ 	switch (ar->hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+ 	case ATH10K_HW_QCA6174:
++	case ATH10K_HW_QCA9377:
+ 		val = (ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+ 					  CORE_CTRL_ADDRESS) &
+ 		       0x7ff) << 21;
+@@ -1513,6 +1517,7 @@ static void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
+ 	switch (ar->hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+ 	case ATH10K_HW_QCA6174:
++	case ATH10K_HW_QCA9377:
+ 		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+ 					CORE_CTRL_ADDRESS);
+ 		val &= ~CORE_CTRL_PCIE_REG_31_MASK;
+@@ -1534,6 +1539,7 @@ static void ath10k_pci_irq_msi_fw_unmask(struct ath10k *ar)
+ 	switch (ar->hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+ 	case ATH10K_HW_QCA6174:
++	case ATH10K_HW_QCA9377:
+ 		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+ 					CORE_CTRL_ADDRESS);
+ 		val |= CORE_CTRL_PCIE_REG_31_MASK;
+@@ -1911,6 +1917,8 @@ static int ath10k_pci_get_num_banks(struct ath10k *ar)
+ 			return 9;
+ 		}
+ 		break;
++	case QCA9377_1_0_DEVICE_ID:
++		return 2;
+ 	}
+ 
+ 	ath10k_warn(ar, "unknown number of banks, assuming 1\n");
+@@ -2371,6 +2379,8 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ 		return ath10k_pci_qca988x_chip_reset(ar);
+ 	else if (QCA_REV_6174(ar))
+ 		return ath10k_pci_qca6174_chip_reset(ar);
++	else if (QCA_REV_9377(ar))
++		return ath10k_pci_qca6174_chip_reset(ar);
+ 	else if (QCA_REV_99X0(ar))
+ 		return ath10k_pci_qca99x0_chip_reset(ar);
+ 	else
+@@ -3003,6 +3013,9 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		hw_rev = ATH10K_HW_QCA99X0;
+ 		pci_ps = false;
+ 		break;
++	case QCA9377_1_0_DEVICE_ID:
++		hw_rev = ATH10K_HW_QCA9377;
++		break;
+ 	default:
+ 		WARN_ON(1);
+ 		return -ENOTSUPP;
+@@ -3204,3 +3217,7 @@ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API4_FILE);
+ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API5_FILE);
+ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" QCA6174_HW_3_0_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_BOARD_API2_FILE);
++
++/* QCA9377 1.0 firmware files */
++MODULE_FIRMWARE(QCA9377_HW_1_0_FW_DIR "/" ATH10K_FW_API5_FILE);
++MODULE_FIRMWARE(QCA9377_HW_1_0_FW_DIR "/" QCA9377_HW_1_0_BOARD_DATA_FILE);
+diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
+index 768bef629099..05a421bc322a 100644
+--- a/drivers/net/wireless/ath/ath10k/targaddrs.h
++++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
+@@ -450,6 +450,9 @@ Fw Mode/SubMode Mask
+ #define QCA6174_BOARD_DATA_SZ     8192
+ #define QCA6174_BOARD_EXT_DATA_SZ 0
+ 
++#define QCA9377_BOARD_DATA_SZ     QCA6174_BOARD_DATA_SZ
++#define QCA9377_BOARD_EXT_DATA_SZ 0
++
+ #define QCA99X0_BOARD_DATA_SZ	  12288
+ #define QCA99X0_BOARD_EXT_DATA_SZ 0
+ 
+-- 
+2.1.2
+
