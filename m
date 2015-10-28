@@ -1,83 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isp-bos-03.edutel.nl ([88.159.1.186]:58720 "EHLO
-	isp-bos-03.edutel.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbbJRTQk (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:6048 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755609AbbJ1HqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2015 15:16:40 -0400
-Message-ID: <6A2F789CD935468DA0F901991B0F851C@FransW7> (sfid-20151018_211644_279654_DB907577)
-From: "Frans van de Wiel" <fvdw@fvdw.eu>
-To: "Greg KH" <greg@kroah.com>
-Cc: <Larry.Finger@lwfinger.net>, <florian.c.schilhabel@googlemail.com>,
-	<linux-wireless@vger.kernel.org>
-References: <D805188AF08F4EC2A19325C1329525E0@FransW7> <20151018154547.GA8553@kroah.com> <5845ADB79D70437C90C0CF7433F3D180@FransW7> <20151018184504.GA6332@kroah.com>
-In-Reply-To: <20151018184504.GA6332@kroah.com>
-Subject: Re: [PATCH 3.10-3.18] Driver, staging rtl8712,  add support for sitecom WLA2100
-Date: Sun, 18 Oct 2015 21:16:32 +0200
+	Wed, 28 Oct 2015 03:46:25 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/12] staging: wilc1000: linux_wlan_get_firmware: change argument p_nic with dev
+Date: Wed, 28 Oct 2015 16:48:25 +0900
+Message-ID: <1446018508-17889-9-git-send-email-glen.lee@atmel.com> (sfid-20151028_084632_855064_F9E1B0CA)
+In-Reply-To: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
+References: <1446018508-17889-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg
+This patch changes argument perInterface_wlan_t *p_nic with struct net_device
+*dev and use netdev private data nic and it's member wilc instead of
+g_linux_wlan.
 
-thanks for your reply, forget the patch, apparently it is to complicated for 
-me
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 17 ++++++++++-------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  4 +---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ 3 files changed, 12 insertions(+), 10 deletions(-)
 
-rgds, Frans
-
-
-
------Oorspronkelijk bericht----- 
-From: Greg KH
-Sent: Sunday, October 18, 2015 8:45 PM
-To: Frans van de Wiel
-Cc: Larry.Finger@lwfinger.net ; florian.c.schilhabel@googlemail.com ; 
-linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.10-3.18] Driver, staging rtl8712, add support for 
-sitecom WLA2100
-
-On Sun, Oct 18, 2015 at 07:58:30PM +0200, Frans van de Wiel wrote:
-> The staging driver rtl8712 lacks support for dongles based on sitecom
-> WLA2100.
-> The current driver doesn't contain the usb id for this device, this patch
-> add it.
->
-> reported by: Frans van de Wiel  <fvdw@fvdw.eu>
-> Signed-off-by: Frans van de Wiel  <fvdw@fvdw.eu>
-> ---
-> This patch is for stable kernels 3.14 to 3.18
-> Patch for 3.14.2 is included
-
-We can only apply new patches to the latest kernel version, not older
-ones, as we can't go back in time :)
-
-If you want a patch like this backported to older kernels, please read
-Documentation/stable_kernel_rules.txt for how to do that.
-
->
-> --- linux-3.14.2/drivers/staging/rtl8712/usb_intf.c.orig    2014-04-27
-> 02:19:26.000000000 +0200
-> +++ linux-3.14.2/drivers/staging/rtl8712/usb_intf.c    2014-03-25
-> 22:31:33.000000000 +0100
-> @@ -144,6 +144,7 @@ static struct usb_device_id rtl871x_usb_
->     {USB_DEVICE(0x0DF6, 0x0058)},
->     {USB_DEVICE(0x0DF6, 0x0049)},
->     {USB_DEVICE(0x0DF6, 0x004C)},
-> +    {USB_DEVICE(0x0DF6, 0x006C)},
->     {USB_DEVICE(0x0DF6, 0x0064)},
->     /* Skyworth */
->     {USB_DEVICE(0x14b2, 0x3300)},
-
-Your patch was line-wrapped and the whitespace all messed up, and can't
-be applied :(
-
-Please make the patch against the linux-next tree and resend it so that
-we have a chance to apply it.
-
-thanks,
-
-greg k-h 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 895eb60..971b154 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -518,14 +518,17 @@ void linux_wlan_rx_complete(void)
+ 	PRINT_D(RX_DBG, "RX completed\n");
+ }
+ 
+-int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
++int linux_wlan_get_firmware(struct net_device *dev)
+ {
+-
+-	perInterface_wlan_t *nic = p_nic;
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
+ 	int ret = 0;
+ 	const struct firmware *wilc_firmware;
+ 	char *firmware;
+ 
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
++
+ 	if (nic->iftype == AP_MODE)
+ 		firmware = AP_FIRMWARE;
+ 	else if (nic->iftype == STATION_MODE)
+@@ -550,19 +553,19 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
+ 	 *      root file system with the name specified above */
+ 
+ #ifdef WILC_SDIO
+-	if (request_firmware(&wilc_firmware, firmware, &g_linux_wlan->wilc_sdio_func->dev) != 0) {
++	if (request_firmware(&wilc_firmware, firmware, &wilc->wilc_sdio_func->dev) != 0) {
+ 		PRINT_ER("%s - firmare not available\n", firmware);
+ 		ret = -1;
+ 		goto _fail_;
+ 	}
+ #else
+-	if (request_firmware(&wilc_firmware, firmware, &g_linux_wlan->wilc_spidev->dev) != 0) {
++	if (request_firmware(&wilc_firmware, firmware, &wilc->wilc_spidev->dev) != 0) {
+ 		PRINT_ER("%s - firmare not available\n", firmware);
+ 		ret = -1;
+ 		goto _fail_;
+ 	}
+ #endif
+-	g_linux_wlan->firmware = wilc_firmware;
++	wilc->firmware = wilc_firmware;
+ 
+ _fail_:
+ 
+@@ -1126,7 +1129,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ #endif
+ 
+-		if (linux_wlan_get_firmware(nic)) {
++		if (linux_wlan_get_firmware(dev)) {
+ 			PRINT_ER("Can't get firmware\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_enable_;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index bcc71ff..f7c3648 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -21,8 +21,6 @@
+ #define IS_MGMT_STATUS_SUCCES			0x040
+ #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+ 
+-extern int linux_wlan_get_firmware(perInterface_wlan_t *p_nic);
+-
+ extern int mac_open(struct net_device *ndev);
+ extern int mac_close(struct net_device *ndev);
+ 
+@@ -2747,7 +2745,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		PRINT_D(CORECONFIG_DBG, "priv->hWILCWFIDrv[%p]\n", priv->hWILCWFIDrv);
+ 
+ 		PRINT_D(HOSTAPD_DBG, "Downloading AP firmware\n");
+-		linux_wlan_get_firmware(nic);
++		linux_wlan_get_firmware(dev);
+ 		/*If wilc is running, then close-open to actually get new firmware running (serves P2P)*/
+ 		if (wl->initialized)	{
+ 			nic->iftype = AP_MODE;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 0bfe762..0435cb5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -218,4 +218,5 @@ int wilc_netdev_init(struct wilc **wilc);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue);
++int linux_wlan_get_firmware(struct net_device *dev);
+ #endif
+-- 
+1.9.1
 
