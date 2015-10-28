@@ -1,172 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:22862 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:43142 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbbJTF1Z (ORCPT
+	with ESMTP id S964794AbbJ1HFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 01:27:25 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Wed, 28 Oct 2015 03:05:24 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 01/12] staging: wilc1000: change the type of wilc1000_initialized
-Date: Tue, 20 Oct 2015 14:26:45 +0900
-Message-ID: <1445318816-21686-2-git-send-email-tony.cho@atmel.com> (sfid-20151020_072727_672602_27E15A4E)
-In-Reply-To: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
-References: <1445318816-21686-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 61/80] staging: wilc1000: rename tenuAuth_type of struct user_conn_req
+Date: Wed, 28 Oct 2015 16:07:06 +0900
+Message-ID: <1446016045-32154-11-git-send-email-glen.lee@atmel.com> (sfid-20151028_080640_184905_40B8C9EB)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes the type of wilc1000_initialized in the struc wilc from int
-to bool and also renames it to the initialized. In addition, unnecessary
-wilc1000_initialized codes are removed in this patch.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+This patch renames tenuAuth_type of struct user_conn_req to auth_type
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c             | 13 +++++--------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 15 +++++++--------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
- 3 files changed, 13 insertions(+), 17 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 +++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b879b8b..191851b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -884,9 +884,7 @@ _fail_:
- /**************************/
- void wilc1000_wlan_deinit(struct wilc *nic)
- {
--
--	if (g_linux_wlan->wilc1000_initialized)	{
--
-+	if (g_linux_wlan->initialized)	{
- 		printk("Deinitializing wilc1000  ...\n");
- 
- 		if (nic == NULL) {
-@@ -935,7 +933,7 @@ void wilc1000_wlan_deinit(struct wilc *nic)
- 		wlan_deinit_locks(g_linux_wlan);
- 
- 		/* announce that wilc1000 is not initialized */
--		g_linux_wlan->wilc1000_initialized = 0;
-+		g_linux_wlan->initialized = false;
- 
- 		PRINT_D(INIT_DBG, "wilc1000 deinitialization Done\n");
- 
-@@ -1143,10 +1141,9 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 	perInterface_wlan_t *nic = p_nic;
- 	int ret = 0;
- 
--	if (!g_linux_wlan->wilc1000_initialized) {
-+	if (!g_linux_wlan->initialized) {
- 		g_linux_wlan->mac_status = WILC_MAC_STATUS_INIT;
- 		g_linux_wlan->close = 0;
--		g_linux_wlan->wilc1000_initialized = 0;
- 
- 		wlan_init_locks(g_linux_wlan);
- 
-@@ -1233,7 +1230,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 			goto _fail_fw_start_;
- 		}
- 
--		g_linux_wlan->wilc1000_initialized = 1;
-+		g_linux_wlan->initialized = true;
- 		return 0; /*success*/
- 
- _fail_fw_start_:
-@@ -1567,7 +1564,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 	/* struct iwreq *wrq = (struct iwreq *) req;	// tony moved to case SIOCSIWPRIV */
- 	nic = netdev_priv(ndev);
- 
--	if (!g_linux_wlan->wilc1000_initialized)
-+	if (!g_linux_wlan->initialized)
- 		return 0;
- 
- 	switch (cmd) {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index bcbf1bd..e463090 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2418,7 +2418,7 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9882c93..e5d5f37 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1028,7 +1028,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
  	}
- 	/*If mac is closed, then return*/
--	if (!g_linux_wlan->wilc1000_initialized) {
-+	if (!g_linux_wlan->initialized) {
- 		PRINT_D(GENERIC_DBG, "Return since mac is closed\n");
- 		return;
- 	}
-@@ -2571,7 +2571,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		interface_type = nic->iftype;
- 		nic->iftype = STATION_MODE;
  
--		if (g_linux_wlan->wilc1000_initialized)	{
-+		if (g_linux_wlan->initialized) {
- 			host_int_del_All_Rx_BASession(priv->hWILCWFIDrv, g_linux_wlan->strInterfaceInfo[0].aBSSID, TID);
- 			/* ensure that the message Q is empty */
- 			host_int_wait_msg_queue_idle();
-@@ -2627,7 +2627,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 					(struct key_params *)(&g_key_gtk_params));
- 			}
+ 	hif_drv->usr_conn_req.u8security = pstrHostIFconnectAttr->security;
+-	hif_drv->usr_conn_req.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
++	hif_drv->usr_conn_req.auth_type = pstrHostIFconnectAttr->auth_type;
+ 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
+ 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
  
--			if (g_linux_wlan->wilc1000_initialized)	{
-+			if (g_linux_wlan->initialized)	{
- 				for (i = 0; i < num_reg_frame; i++) {
- 					PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", nic->g_struct_frame_reg[i].frame_type,
- 						nic->g_struct_frame_reg[i].reg);
-@@ -2658,7 +2658,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		nic->iftype = CLIENT_MODE;
+@@ -1078,13 +1078,14 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)(&hif_drv->usr_conn_req.tenuAuth_type);
++	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
+ 	u32WidsCount++;
  
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+-		auth_type = (u8)hif_drv->usr_conn_req.tenuAuth_type;
++		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
  
--		if (g_linux_wlan->wilc1000_initialized)	{
-+		if (g_linux_wlan->initialized)	{
- 			/* ensure that the message Q is empty */
- 			host_int_wait_msg_queue_idle();
+-	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", hif_drv->usr_conn_req.tenuAuth_type);
++	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n",
++		   hif_drv->usr_conn_req.auth_type);
+ 	PRINT_D(HOSTINF_DBG, "Connecting to network of SSID %s on channel %d\n",
+ 		hif_drv->usr_conn_req.pu8ssid, pstrHostIFconnectAttr->ch);
  
-@@ -2712,7 +2712,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 			refresh_scan(priv, 1, true);
- 			Set_machw_change_vir_if(false);
- 
--			if (g_linux_wlan->wilc1000_initialized)	{
-+			if (g_linux_wlan->initialized)	{
- 				for (i = 0; i < num_reg_frame; i++) {
- 					PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", nic->g_struct_frame_reg[i].frame_type,
- 						nic->g_struct_frame_reg[i].reg);
-@@ -2735,9 +2735,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(HOSTAPD_DBG, "Downloading AP firmware\n");
- 		linux_wlan_get_firmware(nic);
- 		/*If wilc is running, then close-open to actually get new firmware running (serves P2P)*/
--		if (g_linux_wlan->wilc1000_initialized)	{
-+		if (g_linux_wlan->initialized)	{
- 			nic->iftype = AP_MODE;
--			g_linux_wlan->wilc1000_initialized = 1;
- 			mac_close(dev);
- 			mac_open(dev);
- 
-@@ -2826,7 +2825,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 				(struct key_params *)(&g_key_gtk_params));
- 		}
- 
--		if (g_linux_wlan->wilc1000_initialized)	{
-+		if (g_linux_wlan->initialized)	{
- 			for (i = 0; i < num_reg_frame; i++) {
- 				PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", nic->g_struct_frame_reg[i].frame_type,
- 					nic->g_struct_frame_reg[i].reg);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index c5061fd..863571a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -157,7 +157,7 @@ struct wilc_vif {
- 
- struct wilc {
- 	int mac_status;
--	int wilc1000_initialized;
-+	bool initialized;
- 	#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
- 	unsigned short dev_irq_num;
- 	#endif
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0c6dafc..891e7e1 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -206,7 +206,7 @@ struct user_conn_req {
+ 	u8 *pu8bssid;
+ 	u8 *pu8ssid;
+ 	u8 u8security;
+-	enum AUTHTYPE tenuAuth_type;
++	enum AUTHTYPE auth_type;
+ 	size_t ssid_len;
+ 	u8 *ies;
+ 	size_t ies_len;
 -- 
 1.9.1
 
