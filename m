@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56861 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751340AbbJELkz (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41665 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755404AbbJ1G6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 07:40:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 14:40:41 +0300
-Message-Id: <1444045246-9946-3-git-send-email-luca@coelho.fi> (sfid-20151005_134059_253411_4F8B0AC7)
-In-Reply-To: <1444044666.27220.5.camel@coelho.fi>
-References: <1444044666.27220.5.camel@coelho.fi>
-Subject: [PATCH 3/8] iwlwifi: mvm: fix D3 firmware PN programming
+	Wed, 28 Oct 2015 02:58:38 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/80] staging: wilc1000: rename u32Mode of struct op_mode
+Date: Wed, 28 Oct 2015 15:59:30 +0900
+Message-ID: <1446015640-29398-10-git-send-email-glen.lee@atmel.com> (sfid-20151028_075840_625547_04A0177C)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-The code to send the RX PN data (for each TID) to the firmware
-has a devastating bug: it overwrites the data for TID 0 with
-all the TID data, leaving the remaining TIDs zeroed. This will
-allow replays to actually be accepted by the firmware, which
-could allow waking up the system.
+This patch renames u32Mode of struct op_mode to mode
+to avoid CamelCase naming convention.
 
-Cc: <stable@vger.kernel.org> [3.1+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/d3.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 9578b9d..5761876 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -293,12 +293,12 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 			u8 *pn = seq.ccmp.pn;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a1116ef..f693ea3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -381,13 +381,13 @@ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
  
- 			ieee80211_get_key_rx_seq(key, i, &seq);
--			aes_sc->pn = cpu_to_le64((u64)pn[5] |
--						 ((u64)pn[4] << 8) |
--						 ((u64)pn[3] << 16) |
--						 ((u64)pn[2] << 24) |
--						 ((u64)pn[1] << 32) |
--						 ((u64)pn[0] << 40));
-+			aes_sc[i].pn = cpu_to_le64((u64)pn[5] |
-+						   ((u64)pn[4] << 8) |
-+						   ((u64)pn[3] << 16) |
-+						   ((u64)pn[2] << 24) |
-+						   ((u64)pn[1] << 32) |
-+						   ((u64)pn[0] << 40));
- 		}
- 		data->use_rsc_tsc = true;
- 		break;
+ 	wid.id = (u16)WID_SET_OPERATION_MODE;
+ 	wid.type = WID_INT;
+-	wid.val = (s8 *)&pstrHostIfSetOperationMode->u32Mode;
++	wid.val = (s8 *)&pstrHostIfSetOperationMode->mode;
+ 	wid.size = sizeof(u32);
+ 
+ 	result = send_config_pkt(SET_CFG, &wid, 1,
+ 				 get_id_from_handler(hif_drv));
+ 
+-	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
++	if ((pstrHostIfSetOperationMode->mode) == IDLE_MODE)
+ 		up(&hif_sema_driver);
+ 
+ 	if (result) {
+@@ -3700,7 +3700,7 @@ int host_int_set_operation_mode(struct host_if_drv *hif_drv, u32 mode)
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_OPERATION_MODE;
+-	msg.body.mode.u32Mode = mode;
++	msg.body.mode.mode = mode;
+ 	msg.drv = hif_drv;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index eb7b7d9..e040c7e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -244,7 +244,7 @@ struct drv_handler {
+ };
+ 
+ struct op_mode {
+-	u32 u32Mode;
++	u32 mode;
+ };
+ 
+ struct set_mac_addr {
 -- 
-2.5.3
+1.9.1
 
