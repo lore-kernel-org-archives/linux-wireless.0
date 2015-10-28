@@ -1,585 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61989 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757271AbbJ2Tnu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41779 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbbJ1G7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 15:43:50 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 7/9] brcmfmac: Use consistent naming for bsscfgidx.
-Date: Thu, 29 Oct 2015 20:33:17 +0100
-Message-ID: <1446147199-21671-8-git-send-email-arend@broadcom.com> (sfid-20151029_204401_337069_8A055BD4)
-In-Reply-To: <1446147199-21671-1-git-send-email-arend@broadcom.com>
-References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
+	Wed, 28 Oct 2015 02:59:08 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 15/80] staging: wilc1000: rename strHostIfRemainOnChan of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:35 +0900
+Message-ID: <1446015640-29398-15-git-send-email-glen.lee@atmel.com> (sfid-20151028_081700_376224_C09773A5)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-The variable bsscfgidx is used in different places with different
-names, e.g. bsscfg, bssidx, bsscfg_idx. This patch cleans this up
-by using bsscfgidx everywhere.
+This patch renames strHostIfRemainOnChan of struct host_if_drv to remain_on_ch
+to avoid CamelCase naming convention.
+And, remove the relation comment.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 16 +++--
- drivers/net/wireless/brcm80211/brcmfmac/core.c     | 78 +++++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/core.h     |  6 +-
- drivers/net/wireless/brcm80211/brcmfmac/debug.c    |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  8 +--
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c     | 28 ++++----
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  4 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  6 +-
- 10 files changed, 78 insertions(+), 74 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ drivers/staging/wilc1000/host_interface.h |  4 +---
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 8a3c9fa..0c8cc7f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -776,7 +776,8 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
- 	s32 ap = 0;
- 	s32 err = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce09879..dd09152 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2477,13 +2477,13 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	struct wid wid;
  
--	brcmf_dbg(TRACE, "Enter, idx=%d, type=%d\n", ifp->bssidx, type);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d, type=%d\n", ifp->bsscfgidx,
-+		  type);
- 
- 	/* WAR: There are a number of p2p interface related problems which
- 	 * need to be handled initially (before doing the validate).
-@@ -2921,7 +2922,7 @@ brcmf_cfg80211_escan_handler(struct brcmf_if *ifp,
- 	status = e->status;
- 
- 	if (!test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
--		brcmf_err("scan not ready, bssidx=%d\n", ifp->bssidx);
-+		brcmf_err("scan not ready, bsscfgidx=%d\n", ifp->bsscfgidx);
- 		return -EPERM;
- 	}
- 
-@@ -3877,7 +3878,8 @@ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
- 	ifp = vif->ifp;
- 	saved_ie = &vif->saved_ie;
- 
--	brcmf_dbg(TRACE, "bssidx %d, pktflag : 0x%02X\n", ifp->bssidx, pktflag);
-+	brcmf_dbg(TRACE, "bsscfgidx %d, pktflag : 0x%02X\n", ifp->bsscfgidx,
-+		  pktflag);
- 	iovar_ie_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
- 	if (!iovar_ie_buf)
- 		return -ENOMEM;
-@@ -4241,7 +4243,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("setting ssid failed %d\n", err);
- 			goto exit;
- 		}
--		bss_enable.bsscfg_idx = cpu_to_le32(ifp->bssidx);
-+		bss_enable.bsscfgidx = cpu_to_le32(ifp->bsscfgidx);
- 		bss_enable.enable = cpu_to_le32(1);
- 		err = brcmf_fil_iovar_data_set(ifp, "bss", &bss_enable,
- 					       sizeof(bss_enable));
-@@ -4308,7 +4310,7 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 		if (err < 0)
- 			brcmf_err("BRCMF_C_UP error %d\n", err);
+ 	if (!hif_drv->u8RemainOnChan_pendingreq) {
+-		hif_drv->strHostIfRemainOnChan.pVoid = pstrHostIfRemainOnChan->pVoid;
+-		hif_drv->strHostIfRemainOnChan.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
+-		hif_drv->strHostIfRemainOnChan.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
+-		hif_drv->strHostIfRemainOnChan.u16Channel = pstrHostIfRemainOnChan->u16Channel;
+-		hif_drv->strHostIfRemainOnChan.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
++		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
++		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
++		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
++		hif_drv->remain_on_ch.u16Channel = pstrHostIfRemainOnChan->u16Channel;
++		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
  	} else {
--		bss_enable.bsscfg_idx = cpu_to_le32(ifp->bssidx);
-+		bss_enable.bsscfgidx = cpu_to_le32(ifp->bsscfgidx);
- 		bss_enable.enable = cpu_to_le32(0);
- 		err = brcmf_fil_iovar_data_set(ifp, "bss", &bss_enable,
- 					       sizeof(bss_enable));
-@@ -5094,9 +5096,9 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
- 	struct brcmf_cfg80211_vif_event *event = &cfg->vif_event;
- 	struct brcmf_cfg80211_vif *vif;
- 
--	brcmf_dbg(TRACE, "Enter: action %u flags %u ifidx %u bsscfg %u\n",
-+	brcmf_dbg(TRACE, "Enter: action %u flags %u ifidx %u bsscfgidx %u\n",
- 		  ifevent->action, ifevent->flags, ifevent->ifidx,
--		  ifevent->bssidx);
-+		  ifevent->bsscfgidx);
- 
- 	mutex_lock(&event->vif_event_lock);
- 	event->action = ifevent->action;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index b743a83..8d16f50 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -80,7 +80,7 @@ char *brcmf_ifname(struct brcmf_if *ifp)
- struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx)
- {
- 	struct brcmf_if *ifp;
--	s32 bssidx;
-+	s32 bsscfgidx;
- 
- 	if (ifidx < 0 || ifidx >= BRCMF_MAX_IFS) {
- 		brcmf_err("ifidx %d out of range\n", ifidx);
-@@ -88,9 +88,9 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx)
+-		pstrHostIfRemainOnChan->u16Channel = hif_drv->strHostIfRemainOnChan.u16Channel;
++		pstrHostIfRemainOnChan->u16Channel = hif_drv->remain_on_ch.u16Channel;
  	}
  
- 	ifp = NULL;
--	bssidx = drvr->if2bss[ifidx];
--	if (bssidx >= 0)
--		ifp = drvr->iflist[bssidx];
-+	bsscfgidx = drvr->if2bss[ifidx];
-+	if (bsscfgidx >= 0)
-+		ifp = drvr->iflist[bsscfgidx];
+ 	if (hif_drv->usr_scan_req.pfUserScanResult) {
+@@ -2532,8 +2532,8 @@ ERRORHANDLER:
+ 			  jiffies +
+ 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
  
- 	return ifp;
- }
-@@ -108,7 +108,7 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
+-		if (hif_drv->strHostIfRemainOnChan.pRemainOnChanReady)
+-			hif_drv->strHostIfRemainOnChan.pRemainOnChanReady(hif_drv->strHostIfRemainOnChan.pVoid);
++		if (hif_drv->remain_on_ch.pRemainOnChanReady)
++			hif_drv->remain_on_ch.pRemainOnChanReady(hif_drv->remain_on_ch.pVoid);
  
- 	ifp = container_of(work, struct brcmf_if, multicast_work);
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	ndev = ifp->ndev;
- 
-@@ -168,7 +168,7 @@ _brcmf_set_mac_address(struct work_struct *work)
- 
- 	ifp = container_of(work, struct brcmf_if, setmacaddr_work);
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", ifp->mac_addr,
- 				       ETH_ALEN);
-@@ -206,7 +206,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	struct brcmf_pub *drvr = ifp->drvr;
- 	struct ethhdr *eh = (struct ethhdr *)(skb->data);
- 
--	brcmf_dbg(DATA, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	/* Can the device send data? */
- 	if (drvr->bus_if->state != BRCMF_BUS_UP) {
-@@ -267,8 +267,8 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 	if (!ifp || !ifp->ndev)
- 		return;
- 
--	brcmf_dbg(TRACE, "enter: idx=%d stop=0x%X reason=%d state=%d\n",
--		  ifp->bssidx, ifp->netif_stop, reason, state);
-+	brcmf_dbg(TRACE, "enter: bsscfgidx=%d stop=0x%X reason=%d state=%d\n",
-+		  ifp->bsscfgidx, ifp->netif_stop, reason, state);
- 
- 	spin_lock_irqsave(&ifp->netif_stop_lock, flags);
- 	if (state) {
-@@ -587,7 +587,7 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	return &ifp->stats;
- }
-@@ -616,7 +616,7 @@ static int brcmf_netdev_stop(struct net_device *ndev)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	brcmf_cfg80211_down(ndev);
- 
-@@ -632,7 +632,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	struct brcmf_bus *bus_if = drvr->bus_if;
- 	u32 toe_ol;
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
- 	/* If bus is not ready, can't continue */
- 	if (bus_if->state != BRCMF_BUS_UP) {
-@@ -674,7 +674,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 	struct net_device *ndev;
- 	s32 err;
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d mac=%pM\n", ifp->bssidx,
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d mac=%pM\n", ifp->bsscfgidx,
- 		  ifp->mac_addr);
- 	ndev = ifp->ndev;
- 
-@@ -706,7 +706,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 	return 0;
- 
- fail:
--	drvr->iflist[ifp->bssidx] = NULL;
-+	drvr->iflist[ifp->bsscfgidx] = NULL;
- 	ndev->netdev_ops = NULL;
- 	free_netdev(ndev);
- 	return -EBADE;
-@@ -724,7 +724,8 @@ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on)
- {
- 	struct net_device *ndev;
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d carrier=%d\n", ifp->bssidx, on);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d carrier=%d\n", ifp->bsscfgidx,
-+		  on);
- 
- 	ndev = ifp->ndev;
- 	brcmf_txflowblock_if(ifp, BRCMF_NETIF_STOP_REASON_DISCONNECTED, !on);
-@@ -771,7 +772,7 @@ static int brcmf_net_p2p_attach(struct brcmf_if *ifp)
- {
- 	struct net_device *ndev;
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d mac=%pM\n", ifp->bssidx,
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d mac=%pM\n", ifp->bsscfgidx,
- 		  ifp->mac_addr);
- 	ndev = ifp->ndev;
- 
-@@ -790,21 +791,21 @@ static int brcmf_net_p2p_attach(struct brcmf_if *ifp)
- 	return 0;
- 
- fail:
--	ifp->drvr->iflist[ifp->bssidx] = NULL;
-+	ifp->drvr->iflist[ifp->bsscfgidx] = NULL;
- 	ndev->netdev_ops = NULL;
- 	free_netdev(ndev);
- 	return -EBADE;
- }
- 
--struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
-+struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- 			      bool is_p2pdev, char *name, u8 *mac_addr)
- {
- 	struct brcmf_if *ifp;
- 	struct net_device *ndev;
- 
--	brcmf_dbg(TRACE, "Enter, idx=%d, ifidx=%d\n", bssidx, ifidx);
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d, ifidx=%d\n", bsscfgidx, ifidx);
- 
--	ifp = drvr->iflist[bssidx];
-+	ifp = drvr->iflist[bsscfgidx];
- 	/*
- 	 * Delete the existing interface before overwriting it
- 	 * in case we missed the BRCMF_E_IF_DEL event.
-@@ -815,7 +816,7 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 		if (ifidx) {
- 			netif_stop_queue(ifp->ndev);
- 			brcmf_net_detach(ifp->ndev);
--			drvr->iflist[bssidx] = NULL;
-+			drvr->iflist[bsscfgidx] = NULL;
- 		} else {
- 			brcmf_err("ignore IF event\n");
- 			return ERR_PTR(-EINVAL);
-@@ -839,15 +840,15 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 		ndev->destructor = brcmf_cfg80211_free_netdev;
- 		ifp = netdev_priv(ndev);
- 		ifp->ndev = ndev;
--		/* store mapping ifidx to bssidx */
-+		/* store mapping ifidx to bsscfgidx */
- 		if (drvr->if2bss[ifidx] == BRCMF_BSSIDX_INVALID)
--			drvr->if2bss[ifidx] = bssidx;
-+			drvr->if2bss[ifidx] = bsscfgidx;
- 	}
- 
- 	ifp->drvr = drvr;
--	drvr->iflist[bssidx] = ifp;
-+	drvr->iflist[bsscfgidx] = ifp;
- 	ifp->ifidx = ifidx;
--	ifp->bssidx = bssidx;
-+	ifp->bsscfgidx = bsscfgidx;
- 
- 	init_waitqueue_head(&ifp->pend_8021x_wait);
- 	spin_lock_init(&ifp->netif_stop_lock);
-@@ -861,21 +862,22 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 	return ifp;
- }
- 
--static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
-+static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx)
- {
- 	struct brcmf_if *ifp;
- 
--	ifp = drvr->iflist[bssidx];
--	drvr->iflist[bssidx] = NULL;
-+	ifp = drvr->iflist[bsscfgidx];
-+	drvr->iflist[bsscfgidx] = NULL;
- 	if (!ifp) {
--		brcmf_err("Null interface, idx=%d\n", bssidx);
-+		brcmf_err("Null interface, bsscfgidx=%d\n", bsscfgidx);
- 		return;
- 	}
--	brcmf_dbg(TRACE, "Enter, idx=%d, ifidx=%d\n", bssidx, ifp->ifidx);
--	if (drvr->if2bss[ifp->ifidx] == bssidx)
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d, ifidx=%d\n", bsscfgidx,
-+		  ifp->ifidx);
-+	if (drvr->if2bss[ifp->ifidx] == bsscfgidx)
- 		drvr->if2bss[ifp->ifidx] = BRCMF_BSSIDX_INVALID;
- 	if (ifp->ndev) {
--		if (bssidx == 0) {
-+		if (bsscfgidx == 0) {
- 			if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
- 				rtnl_lock();
- 				brcmf_netdev_stop(ifp->ndev);
-@@ -905,12 +907,12 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
- 
- void brcmf_remove_interface(struct brcmf_if *ifp)
- {
--	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bssidx] != ifp))
-+	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bsscfgidx] != ifp))
- 		return;
--	brcmf_dbg(TRACE, "Enter, bssidx=%d, ifidx=%d\n", ifp->bssidx,
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d, ifidx=%d\n", ifp->bsscfgidx,
- 		  ifp->ifidx);
- 	brcmf_fws_del_interface(ifp);
--	brcmf_del_if(ifp->drvr, ifp->bssidx);
-+	brcmf_del_if(ifp->drvr, ifp->bsscfgidx);
- }
- 
- int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
-@@ -925,10 +927,10 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
- 	highest = 2;
- 	for (ifidx = 0; ifidx < BRCMF_MAX_IFS; ifidx++) {
- 		if (drvr->iflist[ifidx]) {
--			if (drvr->iflist[ifidx]->bssidx == bsscfgidx)
-+			if (drvr->iflist[ifidx]->bsscfgidx == bsscfgidx)
- 				bsscfgidx = highest + 1;
--			else if (drvr->iflist[ifidx]->bssidx > highest)
--				highest = drvr->iflist[ifidx]->bssidx;
-+			else if (drvr->iflist[ifidx]->bsscfgidx > highest)
-+				highest = drvr->iflist[ifidx]->bsscfgidx;
- 		} else {
- 			available = true;
+ 		if (hif_drv->u8RemainOnChan_pendingreq)
+ 			hif_drv->u8RemainOnChan_pendingreq = 0;
+@@ -2605,9 +2605,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 			goto _done_;
  		}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-index 673d697..77d8239 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-@@ -174,7 +174,7 @@ enum brcmf_netif_stop_reason {
-  * @multicast_work: worker object for multicast provisioning.
-  * @fws_desc: interface specific firmware-signalling descriptor.
-  * @ifidx: interface index in device firmware.
-- * @bssidx: index of bss associated with this interface.
-+ * @bsscfgidx: index of bss associated with this interface.
-  * @mac_addr: assigned mac address.
-  * @netif_stop: bitmap indicates reason why netif queues are stopped.
-  * @netif_stop_lock: spinlock for update netif_stop from multiple sources.
-@@ -190,7 +190,7 @@ struct brcmf_if {
- 	struct work_struct multicast_work;
- 	struct brcmf_fws_mac_descriptor *fws_desc;
- 	int ifidx;
--	s32 bssidx;
-+	s32 bsscfgidx;
- 	u8 mac_addr[ETH_ALEN];
- 	u8 netif_stop;
- 	spinlock_t netif_stop_lock;
-@@ -208,7 +208,7 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp);
- char *brcmf_ifname(struct brcmf_if *ifp);
- struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
- int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
--struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
-+struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- 			      bool is_p2pdev, char *name, u8 *mac_addr);
- void brcmf_remove_interface(struct brcmf_if *ifp);
- int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-index 1299dcc..e64557c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-@@ -49,7 +49,7 @@ static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
- 					   const struct brcmf_event_msg *evtmsg,
- 					   void *data)
- {
--	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
  
- 	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
- 					  evtmsg->datalen);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index 3878b6f..7b26fb1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -182,8 +182,8 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 	bool is_p2pdev;
- 	int err = 0;
+-		if (hif_drv->strHostIfRemainOnChan.pRemainOnChanExpired) {
+-			hif_drv->strHostIfRemainOnChan.pRemainOnChanExpired(hif_drv->strHostIfRemainOnChan.pVoid
+-									       , pstrHostIfRemainOnChan->u32ListenSessionID);
++		if (hif_drv->remain_on_ch.pRemainOnChanExpired) {
++			hif_drv->remain_on_ch.pRemainOnChanExpired(hif_drv->remain_on_ch.pVoid,
++								   pstrHostIfRemainOnChan->u32ListenSessionID);
+ 		}
+ 		P2P_LISTEN_STATE = 0;
+ 	} else {
+@@ -2630,7 +2630,7 @@ static void ListenTimerCB(unsigned long arg)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+ 	msg.drv = hif_drv;
+-	msg.body.remain_on_ch.u32ListenSessionID = hif_drv->strHostIfRemainOnChan.u32ListenSessionID;
++	msg.body.remain_on_ch.u32ListenSessionID = hif_drv->remain_on_ch.u32ListenSessionID;
  
--	brcmf_dbg(EVENT, "action: %u idx: %u bsscfg: %u flags: %u role: %u\n",
--		  ifevent->action, ifevent->ifidx, ifevent->bssidx,
-+	brcmf_dbg(EVENT, "action: %u ifidx: %u bsscfgidx: %u flags: %u role: %u\n",
-+		  ifevent->action, ifevent->ifidx, ifevent->bsscfgidx,
- 		  ifevent->flags, ifevent->role);
- 
- 	/* The P2P Device interface event must not be ignored contrary to what
-@@ -204,12 +204,12 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 		return;
- 	}
- 
--	ifp = drvr->iflist[ifevent->bssidx];
-+	ifp = drvr->iflist[ifevent->bsscfgidx];
- 
- 	if (ifevent->action == BRCMF_E_IF_ADD) {
- 		brcmf_dbg(EVENT, "adding %s (%pM)\n", emsg->ifname,
- 			  emsg->addr);
--		ifp = brcmf_add_if(drvr, ifevent->bssidx, ifevent->ifidx,
-+		ifp = brcmf_add_if(drvr, ifevent->bsscfgidx, ifevent->ifidx,
- 				   is_p2pdev, emsg->ifname, emsg->addr);
- 		if (IS_ERR(ifp))
- 			return;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index d9a9428..5e39e2a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -219,7 +219,7 @@ struct brcmf_if_event {
- 	u8 ifidx;
- 	u8 action;
- 	u8 flags;
--	u8 bssidx;
-+	u8 bsscfgidx;
- 	u8 role;
- };
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-index dcfa0bb..bbf7abb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-@@ -293,22 +293,22 @@ brcmf_fil_iovar_int_get(struct brcmf_if *ifp, char *name, u32 *data)
- }
- 
- static u32
--brcmf_create_bsscfg(s32 bssidx, char *name, char *data, u32 datalen, char *buf,
--		    u32 buflen)
-+brcmf_create_bsscfg(s32 bsscfgidx, char *name, char *data, u32 datalen,
-+		    char *buf, u32 buflen)
- {
- 	const s8 *prefix = "bsscfg:";
- 	s8 *p;
- 	u32 prefixlen;
- 	u32 namelen;
- 	u32 iolen;
--	__le32 bssidx_le;
-+	__le32 bsscfgidx_le;
- 
--	if (bssidx == 0)
-+	if (bsscfgidx == 0)
- 		return brcmf_create_iovar(name, data, datalen, buf, buflen);
- 
- 	prefixlen = strlen(prefix);
- 	namelen = strlen(name) + 1; /* lengh of iovar  name + null */
--	iolen = prefixlen + namelen + sizeof(bssidx_le) + datalen;
-+	iolen = prefixlen + namelen + sizeof(bsscfgidx_le) + datalen;
- 
- 	if (buflen < iolen) {
- 		brcmf_err("buffer is too short\n");
-@@ -326,9 +326,9 @@ brcmf_create_bsscfg(s32 bssidx, char *name, char *data, u32 datalen, char *buf,
- 	p += namelen;
- 
- 	/* bss config index as first data */
--	bssidx_le = cpu_to_le32(bssidx);
--	memcpy(p, &bssidx_le, sizeof(bssidx_le));
--	p += sizeof(bssidx_le);
-+	bsscfgidx_le = cpu_to_le32(bsscfgidx);
-+	memcpy(p, &bsscfgidx_le, sizeof(bsscfgidx_le));
-+	p += sizeof(bsscfgidx_le);
- 
- 	/* parameter buffer follows */
- 	if (datalen)
-@@ -347,12 +347,12 @@ brcmf_fil_bsscfg_data_set(struct brcmf_if *ifp, char *name,
- 
- 	mutex_lock(&drvr->proto_block);
- 
--	brcmf_dbg(FIL, "ifidx=%d, bssidx=%d, name=%s, len=%d\n", ifp->ifidx,
--		  ifp->bssidx, name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, bsscfgidx=%d, name=%s, len=%d\n", ifp->ifidx,
-+		  ifp->bsscfgidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
--	buflen = brcmf_create_bsscfg(ifp->bssidx, name, data, len,
-+	buflen = brcmf_create_bsscfg(ifp->bsscfgidx, name, data, len,
- 				     drvr->proto_buf, sizeof(drvr->proto_buf));
- 	if (buflen) {
- 		err = brcmf_fil_cmd_data(ifp, BRCMF_C_SET_VAR, drvr->proto_buf,
-@@ -376,7 +376,7 @@ brcmf_fil_bsscfg_data_get(struct brcmf_if *ifp, char *name,
- 
- 	mutex_lock(&drvr->proto_block);
- 
--	buflen = brcmf_create_bsscfg(ifp->bssidx, name, data, len,
-+	buflen = brcmf_create_bsscfg(ifp->bsscfgidx, name, data, len,
- 				     drvr->proto_buf, sizeof(drvr->proto_buf));
- 	if (buflen) {
- 		err = brcmf_fil_cmd_data(ifp, BRCMF_C_GET_VAR, drvr->proto_buf,
-@@ -387,8 +387,8 @@ brcmf_fil_bsscfg_data_get(struct brcmf_if *ifp, char *name,
- 		err = -EPERM;
- 		brcmf_err("Creating bsscfg failed\n");
- 	}
--	brcmf_dbg(FIL, "ifidx=%d, bssidx=%d, name=%s, len=%d\n", ifp->ifidx,
--		  ifp->bssidx, name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, bsscfgidx=%d, name=%s, len=%d\n", ifp->ifidx,
-+		  ifp->bsscfgidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index daa427b..50ff69d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-@@ -170,7 +170,7 @@ struct brcmf_fil_af_params_le {
- };
- 
- struct brcmf_fil_bss_enable_le {
--	__le32 bsscfg_idx;
-+	__le32 bsscfgidx;
- 	__le32 enable;
- };
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 086cac3..ffdc7f8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -719,7 +719,7 @@ static void brcmf_fws_macdesc_init(struct brcmf_fws_mac_descriptor *desc,
- 	desc->state = BRCMF_FWS_STATE_OPEN;
- 	desc->requested_credit = 0;
- 	desc->requested_packet = 0;
--	/* depending on use may need ifp->bssidx instead */
-+	/* depending on use may need ifp->bsscfgidx instead */
- 	desc->interface_id = ifidx;
- 	desc->ac_bitmap = 0xff; /* update this when handling APSD */
- 	if (addr)
-@@ -1938,7 +1938,7 @@ void brcmf_fws_reset_interface(struct brcmf_if *ifp)
- {
- 	struct brcmf_fws_mac_descriptor *entry = ifp->fws_desc;
- 
--	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
-+	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
- 	if (!entry)
- 		return;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index d224b3d..98cf1d0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2067,7 +2067,7 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
- 	struct brcmf_if *p2p_ifp;
- 	struct brcmf_if *pri_ifp;
- 	int err;
--	u32 bssidx;
-+	u32 bsscfgidx;
- 
- 	if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
- 		return ERR_PTR(-ENOSPC);
-@@ -2113,13 +2113,13 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
- 	memcpy(&p2p_vif->wdev.address, p2p->dev_addr, sizeof(p2p->dev_addr));
- 
- 	/* verify bsscfg index for P2P discovery */
--	err = brcmf_fil_iovar_int_get(pri_ifp, "p2p_dev", &bssidx);
-+	err = brcmf_fil_iovar_int_get(pri_ifp, "p2p_dev", &bsscfgidx);
- 	if (err < 0) {
- 		brcmf_err("retrieving discover bsscfg index failed\n");
- 		goto fail;
- 	}
- 
--	WARN_ON(p2p_ifp->bssidx != bssidx);
-+	WARN_ON(p2p_ifp->bsscfgidx != bsscfgidx);
- 
- 	init_completion(&p2p->send_af_done);
- 	INIT_WORK(&p2p->afx_hdl.afx_work, brcmf_p2p_afx_handler);
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index e9bc83a..ea47a0d 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -294,9 +294,7 @@ enum p2p_listen_state {
+ struct host_if_drv {
+ 	struct user_scan_req usr_scan_req;
+ 	struct user_conn_req usr_conn_req;
+-
+-	/*Remain on channel struvture*/
+-	struct remain_ch strHostIfRemainOnChan;
++	struct remain_ch remain_on_ch;
+ 	u8 u8RemainOnChan_pendingreq;
+ 	u64 u64P2p_MgmtTimeout;
+ 	u8 u8P2PConnect;
 -- 
 1.9.1
 
