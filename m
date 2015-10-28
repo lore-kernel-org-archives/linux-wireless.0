@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27090 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41600 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965268AbbJ2DFE (ORCPT
+	with ESMTP id S1754999AbbJ1G6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:05:04 -0400
+	Wed, 28 Oct 2015 02:58:20 -0400
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 49/64] staging: wilc1000: rename au8BSSID of struct add_sta_param
-Date: Thu, 29 Oct 2015 12:05:41 +0900
-Message-ID: <1446087956-19054-16-git-send-email-glen.lee@atmel.com> (sfid-20151029_040508_758659_0762DBD7)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 07/80] staging: wilc1000: rename au8StartTime of struct join_bss_param
+Date: Wed, 28 Oct 2015 15:59:27 +0900
+Message-ID: <1446015640-29398-7-git-send-email-glen.lee@atmel.com> (sfid-20151028_075822_769974_712D33BA)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,75 +22,51 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames au8BSSID of struct add_sta_param to bssid
+This patch renames au8StartTime of struct join_bss_param to start_time
 to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 00f2717..2cf3ed5 100644
+index 7f29abd..a10ee17 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2308,7 +2308,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	pu8CurrByte = pu8Buffer;
- 
- 	PRINT_D(HOSTINF_DBG, "Packing STA params\n");
--	memcpy(pu8CurrByte, pstrStationParam->au8BSSID, ETH_ALEN);
-+	memcpy(pu8CurrByte, pstrStationParam->bssid, ETH_ALEN);
- 	pu8CurrByte +=  ETH_ALEN;
- 
- 	*pu8CurrByte++ = pstrStationParam->u16AssocID & 0xFF;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 60dcc36..58e4f92 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -288,7 +288,7 @@ struct host_if_drv {
+@@ -228,7 +228,7 @@ struct join_bss_param {
+ 	u8 idx;
+ 	u8 duration[4];
+ 	u8 interval[4];
+-	u8 au8StartTime[4];
++	u8 start_time[4];
  };
  
- struct add_sta_param {
--	u8 au8BSSID[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
- 	u16 u16AssocID;
- 	u8 u8NumRates;
- 	const u8 *pu8Rates;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 4828deb..2ec85f0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2995,7 +2995,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 	nic = netdev_priv(dev);
+ static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+@@ -1184,10 +1184,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
+ 		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
  
- 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
--		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
-+		memcpy(strStaParams.bssid, mac, ETH_ALEN);
- 		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
- 		strStaParams.u16AssocID = params->aid;
- 		strStaParams.u8NumRates = params->supported_rates_len;
-@@ -3109,13 +3109,15 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 	nic = netdev_priv(dev);
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
+-
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->au8StartTime);
+-
++		memcpy(pu8CurrByte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
++		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
+ 	} else
+ 		PRINT_D(HOSTINF_DBG, "NOA not present\n");
  
- 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
--		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
-+		memcpy(strStaParams.bssid, mac, ETH_ALEN);
- 		strStaParams.u16AssocID = params->aid;
- 		strStaParams.u8NumRates = params->supported_rates_len;
- 		strStaParams.pu8Rates = params->supported_rates;
+@@ -4827,7 +4825,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
+ 				u16P2P_count += 4;
  
--		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n", strStaParams.au8BSSID[0], strStaParams.au8BSSID[1], strStaParams.au8BSSID[2], strStaParams.au8BSSID[3], strStaParams.au8BSSID[4],
--			strStaParams.au8BSSID[5]);
-+		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n",
-+			strStaParams.bssid[0], strStaParams.bssid[1],
-+			strStaParams.bssid[2], strStaParams.bssid[3],
-+			strStaParams.bssid[4], strStaParams.bssid[5]);
- 		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.u16AssocID);
- 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n", strStaParams.u8NumRates);
+-				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
++				memcpy(pNewJoinBssParam->start_time, pu8IEs + u16P2P_count, 4);
  
+ 				index += pu8IEs[index + 1] + 2;
+ 				continue;
 -- 
 1.9.1
 
