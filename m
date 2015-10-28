@@ -1,36 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:36741 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159AbbJPQxe (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42959 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754527AbbJ1HEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 12:53:34 -0400
-Received: by obcqt19 with SMTP id qt19so17219590obc.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2015 09:53:34 -0700 (PDT)
+	Wed, 28 Oct 2015 03:04:49 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 55/80] staging: wilc1000: rename u32TxCount of struct rf_info
+Date: Wed, 28 Oct 2015 16:07:00 +0900
+Message-ID: <1446016045-32154-5-git-send-email-glen.lee@atmel.com> (sfid-20151028_080452_180810_74BE7319)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Date: Fri, 16 Oct 2015 09:53:34 -0700
-Message-ID: <CAJ+vNU2q1kLBs8wXRN++62bn24ohthFr=0htDMBh7qxsqmeodg@mail.gmail.com> (sfid-20151016_185337_802311_19A6C4D6)
-Subject: FCC DFS support
-From: Tim Harvey <tharvey@gateworks.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+From: Leo Kim <leo.kim@atmel.com>
 
-Is FCC DFS support (from the updated rules released in Aug 2014) fully
-supported in ath10k by the driver/firmware/cards?
+This patch renames u32TxCount of struct rf_info to tx_cnt
+to avoid CamelCase naming convention.
 
-The linux-wireless DFS page [1] has some great info but doesn't really
-list what is currently in place and working and doesn't mention ath10k
-specifically and I didn't see anything on the ath10k page either [2].
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for any info!
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 46e590a..76f9977 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2151,7 +2151,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
+ 	strWIDList[u32WidsCount].type = WID_INT;
+ 	strWIDList[u32WidsCount].size = sizeof(u32);
+-	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->u32TxCount;
++	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
+ 	u32WidsCount++;
+ 
+ 	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6502ec1..c6f4a83 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -55,7 +55,7 @@
+ struct rf_info {
+ 	u8 link_speed;
+ 	s8 rssi;
+-	u32 u32TxCount;
++	u32 tx_cnt;
+ 	u32 u32RxCount;
+ 	u32 u32TxFailureCount;
+ };
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5005d68..b80e08e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1568,7 +1568,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		sinfo->signal = strStatistics.rssi;
+ 		sinfo->rx_packets   =  strStatistics.u32RxCount;
+-		sinfo->tx_packets   =  strStatistics.u32TxCount + strStatistics.u32TxFailureCount;
++		sinfo->tx_packets = strStatistics.tx_cnt + strStatistics.u32TxFailureCount;
+ 		sinfo->tx_failed	=  strStatistics.u32TxFailureCount;
+ 		sinfo->txrate.legacy = strStatistics.link_speed * 10;
+ 
+-- 
+1.9.1
 
-Regards,
-
-Tim
-
-[1] - https://wireless.wiki.kernel.org/en/developers/dfs
-[2] - https://wireless.wiki.kernel.org/en/users/drivers/ath10k
