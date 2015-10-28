@@ -1,112 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3416 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41897 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbbJAHEN (ORCPT
+	with ESMTP id S1755083AbbJ1G7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 03:04:13 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Wed, 28 Oct 2015 02:59:45 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/12] staging: wilc1000: remove function pointer wlan_stop
-Date: Thu, 1 Oct 2015 16:03:34 +0900
-Message-ID: <1443683023-6498-3-git-send-email-tony.cho@atmel.com> (sfid-20151001_090416_162056_7CBB317A)
-In-Reply-To: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
-References: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 21/80] staging: wilc1000: rename hSemTestKeyBlock of struct host_if_drv
+Date: Wed, 28 Oct 2015 15:59:41 +0900
+Message-ID: <1446015640-29398-21-git-send-email-glen.lee@atmel.com> (sfid-20151028_081657_246916_5B871CA9)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-This patch removes function pointer wlan_stop and just call
-the function wilc_wlan_stop. Remove static from the function also.
+This patch renames hSemTestKeyBlock of struct host_if_drv to sem_test_key_block
+to avoid CamelCase naming convention.
 
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   | 10 ++--------
- drivers/staging/wilc1000/wilc_wlan.c    |  3 +--
- drivers/staging/wilc1000/wilc_wlan.h    |  1 +
- drivers/staging/wilc1000/wilc_wlan_if.h |  1 -
- 4 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ drivers/staging/wilc1000/host_interface.h |  3 +--
+ 2 files changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index f515fca..245357e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -983,10 +983,7 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
- 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
- 		deinit_irq(g_linux_wlan);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 85c376a..c35a6e3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1792,7 +1792,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			result = send_config_pkt(SET_CFG, &wid, 1,
+ 						 get_id_from_handler(hif_drv));
+ 		}
+-		up(&hif_drv->hSemTestKeyBlock);
++		up(&hif_drv->sem_test_key_block);
+ 		break;
  
--		if (&g_linux_wlan->oup != NULL) {
--			if (g_linux_wlan->oup.wlan_stop != NULL)
--				g_linux_wlan->oup.wlan_stop();
--		}
-+		wilc_wlan_stop();
+ 	case WPARxGtk:
+@@ -1826,7 +1826,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 						 get_id_from_handler(hif_drv));
  
- 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
- 		wilc_wlan_deinit(nic);
-@@ -1322,10 +1319,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		return 0; /*success*/
+ 			kfree(pu8keybuf);
+-			up(&hif_drv->hSemTestKeyBlock);
++			up(&hif_drv->sem_test_key_block);
+ 		}
  
- _fail_fw_start_:
--		if (&g_linux_wlan->oup != NULL) {
--			if (g_linux_wlan->oup.wlan_stop != NULL)
--				g_linux_wlan->oup.wlan_stop();
--		}
-+		wilc_wlan_stop();
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+@@ -1860,7 +1860,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 						 get_id_from_handler(hif_drv));
  
- _fail_irq_enable_:
- #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 6e2bf4c..745953c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1581,7 +1581,7 @@ void wilc_wlan_global_reset(void)
- 	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, 0x0);
- 	release_bus(RELEASE_ONLY);
+ 			kfree(pu8keybuf);
+-			up(&hif_drv->hSemTestKeyBlock);
++			up(&hif_drv->sem_test_key_block);
+ 		}
+ _WPARxGtk_end_case_:
+ 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
+@@ -1898,7 +1898,7 @@ _WPARxGtk_end_case_:
+ 			result = send_config_pkt(SET_CFG, strWIDList, 2,
+ 						 get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+-			up(&hif_drv->hSemTestKeyBlock);
++			up(&hif_drv->sem_test_key_block);
+ 		}
+ 		if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+@@ -1921,7 +1921,7 @@ _WPARxGtk_end_case_:
+ 			result = send_config_pkt(SET_CFG, &wid, 1,
+ 						 get_id_from_handler(hif_drv));
+ 			kfree(pu8keybuf);
+-			up(&hif_drv->hSemTestKeyBlock);
++			up(&hif_drv->sem_test_key_block);
+ 		}
+ 
+ _WPAPtk_end_case_:
+@@ -3077,7 +3077,7 @@ int host_int_remove_wep_key(struct host_if_drv *hif_drv, u8 index)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
  }
--static int wilc_wlan_stop(void)
-+int wilc_wlan_stop(void)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	u32 reg = 0;
-@@ -2027,7 +2027,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
- 	/**
- 	 *      export functions
- 	 **/
--	oup->wlan_stop = wilc_wlan_stop;
- 	oup->wlan_add_to_tx_que = wilc_wlan_txq_add_net_pkt;
- 	oup->wlan_handle_tx_que = wilc_wlan_handle_txq;
- 	oup->wlan_handle_rx_isr = wilc_handle_isr;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 15ae9ae..b32ba4f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -307,4 +307,5 @@ typedef struct {
+@@ -3104,7 +3104,7 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue : Default key index\n");
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
  
- int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
- int wilc_wlan_start(void);
-+int wilc_wlan_stop(void);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index e752092..9e749c7 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -122,7 +122,6 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
- #define WILC_TX_ERR_NO_BUF	(-2)
+ 	return result;
+ }
+@@ -3136,7 +3136,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue :WEP Key\n");
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
  
- typedef struct {
--	int (*wlan_stop)(void);
- 	int (*wlan_add_to_tx_que)(void *, u8 *, u32, wilc_tx_complete_func_t);
- 	int (*wlan_handle_tx_que)(u32 *);
- 	void (*wlan_handle_rx_isr)(void);
+ 	return result;
+ }
+@@ -3178,7 +3178,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue :WEP Key\n");
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+ }
+@@ -3243,7 +3243,7 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue:  PTK Key\n");
+ 
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+ }
+@@ -3305,7 +3305,7 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
+ 	if (result)
+ 		PRINT_ER("Error in sending message queue:  RX GTK\n");
+ 
+-	down(&hif_drv->hSemTestKeyBlock);
++	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+ }
+@@ -4104,7 +4104,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		sema_init(&hif_sema_deinit, 1);
+ 	}
+ 
+-	sema_init(&hif_drv->hSemTestKeyBlock, 0);
++	sema_init(&hif_drv->sem_test_key_block, 0);
+ 	sema_init(&hif_drv->hSemTestDisconnectBlock, 0);
+ 	sema_init(&hif_drv->hSemGetRSSI, 0);
+ 	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 700b80a..846a636 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -305,8 +305,7 @@ struct host_if_drv {
+ 	struct cfg_param_val cfg_values;
+ 
+ 	struct semaphore sem_cfg_values;
+-	struct semaphore hSemTestKeyBlock;
+-
++	struct semaphore sem_test_key_block;
+ 	struct semaphore hSemTestDisconnectBlock;
+ 	struct semaphore hSemGetRSSI;
+ 	struct semaphore hSemGetLINKSPEED;
 -- 
 1.9.1
 
