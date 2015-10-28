@@ -1,102 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57080 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751311AbbJEOhH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:43347 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932509AbbJ1HG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 10:37:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Moshe Harel <moshe.harel@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:33 +0300
-Message-Id: <1444055820-27506-2-git-send-email-luca@coelho.fi> (sfid-20151005_163715_392117_644F6CFF)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 02/29] iwlwifi: nvm: force 1x1 antenna in Series 8000
+	Wed, 28 Oct 2015 03:06:29 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 72/80] staging: wilc1000: rename au8SuppMCsSet of struct add_sta_param
+Date: Wed, 28 Oct 2015 16:07:17 +0900
+Message-ID: <1446016045-32154-22-git-send-email-glen.lee@atmel.com> (sfid-20151028_080634_517047_2AAFABBF)
+In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Moshe Harel <moshe.harel@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-This is a workaround to an OTP bug. In Series 8000 1x1, the OTP
-0xA052 defines 2x2 antenna configuration. This workaround overrides
-the decision based on HW id and MIMO disabled bit which is correct
-in the OTP and set to disabled.
+This patch renames au8SuppMCsSet of struct add_sta_param to ht_supp_mcs_set
+to avoid CamelCase naming convention.
 
-Signed-off-by: Moshe Harel <moshe.harel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 15 ++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.h |  2 +-
- drivers/net/wireless/iwlwifi/mvm/nvm.c       |  3 ++-
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 3 ++-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++++--
+ 3 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 3b8e85e..d829849 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -580,13 +580,15 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 	IWL_ERR_DEV(dev, "mac address is not found\n");
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6f4dd85..976d432 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2326,7 +2326,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	*pu8CurrByte++ = (pstrStationParam->ht_capa_info >> 8) & 0xFF;
  
-+#define IWL_4165_DEVICE_ID 0x5501
-+
- struct iwl_nvm_data *
- iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   u32 mac_addr0, u32 mac_addr1)
-+		   u32 mac_addr0, u32 mac_addr1, u32 hw_id)
- {
- 	struct iwl_nvm_data *data;
- 	u32 sku;
-@@ -625,6 +627,17 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 				    (sku & NVM_SKU_CAP_11AC_ENABLE);
- 	data->sku_cap_mimo_disabled = sku & NVM_SKU_CAP_MIMO_DISABLE;
+ 	*pu8CurrByte++ = pstrStationParam->ht_ampdu_params;
+-	memcpy(pu8CurrByte, pstrStationParam->au8SuppMCsSet, WILC_SUPP_MCS_SET_SIZE);
++	memcpy(pu8CurrByte, pstrStationParam->ht_supp_mcs_set,
++	       WILC_SUPP_MCS_SET_SIZE);
+ 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
  
-+	/*
-+	 * OTP 0x52 bug work around
-+	 * define antenna 1x1 according to MIMO disabled
-+	 */
-+	if (hw_id == IWL_4165_DEVICE_ID && data->sku_cap_mimo_disabled) {
-+		data->valid_tx_ant = ANT_B;
-+		data->valid_rx_ant = ANT_B;
-+		tx_chains = ANT_B;
-+		rx_chains = ANT_B;
-+	}
-+
- 	data->n_hw_addrs = iwl_get_n_hw_addrs(cfg, nvm_sw);
- 
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
-index 822ba52..9f44d81 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
-@@ -79,7 +79,7 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   u32 mac_addr0, u32 mac_addr1);
-+		   u32 mac_addr0, u32 mac_addr1, u32 hw_id);
- 
- /**
-  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index 328187d..0b3ffd5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -316,7 +316,8 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 	return iwl_parse_nvm_data(mvm->trans->dev, mvm->cfg, hw, sw, calib,
- 				  regulatory, mac_override, phy_sku,
- 				  mvm->fw->valid_tx_ant, mvm->fw->valid_rx_ant,
--				  lar_enabled, mac_addr0, mac_addr1);
-+				  lar_enabled, mac_addr0, mac_addr1,
-+				  mvm->trans->hw_id);
- }
- 
- #define MAX_NVM_FILE_LEN	16384
+ 	*pu8CurrByte++ = pstrStationParam->u16HTExtParams & 0xFF;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d2567af..48ef051 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -295,7 +295,7 @@ struct add_sta_param {
+ 	bool ht_supported;
+ 	u16 ht_capa_info;
+ 	u8 ht_ampdu_params;
+-	u8 au8SuppMCsSet[16];
++	u8 ht_supp_mcs_set[16];
+ 	u16 u16HTExtParams;
+ 	u32 u32TxBeamformingCap;
+ 	u8 u8ASELCap;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 9fcdf9e..c0dbd39 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3025,7 +3025,9 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+-			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
++			memcpy(strStaParams.ht_supp_mcs_set,
++			       &params->ht_capa->mcs,
++			       WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+@@ -3142,7 +3144,9 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+-			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
++			memcpy(strStaParams.ht_supp_mcs_set,
++			       &params->ht_capa->mcs,
++			       WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
 -- 
-2.5.3
+1.9.1
 
