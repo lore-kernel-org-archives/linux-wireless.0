@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51722 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751401AbbJMJg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 05:36:56 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use new cfg80211_inform_bss_frame_data() API
-Date: Tue, 13 Oct 2015 11:36:53 +0200
-Message-Id: <1444729013-3585-1-git-send-email-johannes@sipsolutions.net> (sfid-20151013_113659_576160_646C9BCB)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:42311 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755526AbbJ1HBN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 03:01:13 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 36/80] staging: wilc1000: rename pRemainOnChanReady of struct remain_ch
+Date: Wed, 28 Oct 2015 15:59:56 +0900
+Message-ID: <1446015640-29398-36-git-send-email-glen.lee@atmel.com> (sfid-20151028_080119_669825_65855068)
+In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-The new API is more easily extensible with a metadata struct
-passed to it, use it in mac80211.
+This patch renames pRemainOnChanReady of struct remain_ch to ready
+to avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- net/mac80211/ibss.c | 11 ++++++-----
- net/mac80211/scan.c | 19 +++++++++----------
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 7f72bc9bae2e..bd853e7bde93 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -229,7 +229,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	struct cfg80211_chan_def chandef;
- 	struct ieee80211_channel *chan;
- 	struct beacon_data *presp;
--	enum nl80211_bss_scan_width scan_width;
-+	struct cfg80211_inform_bss bss_meta = {};
- 	bool have_higher_than_11mbit;
- 	bool radar_required;
- 	int err;
-@@ -383,10 +383,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0bd0d2b..3ee25c6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2483,7 +2483,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	if (!hif_drv->remain_on_ch_pending) {
+ 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
+ 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
+-		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
++		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
+ 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
+ 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
+ 	} else {
+@@ -2537,8 +2537,8 @@ ERRORHANDLER:
+ 			  jiffies +
+ 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
  
--	scan_width = cfg80211_chandef_to_scan_width(&chandef);
--	bss = cfg80211_inform_bss_width_frame(local->hw.wiphy, chan,
--					      scan_width, mgmt,
--					      presp->head_len, 0, GFP_KERNEL);
-+	bss_meta.chan = chan;
-+	bss_meta.scan_width = cfg80211_chandef_to_scan_width(&chandef);
-+	bss = cfg80211_inform_bss_frame_data(local->hw.wiphy, &bss_meta, mgmt,
-+					     presp->head_len, GFP_KERNEL);
-+
- 	cfg80211_put_bss(local->hw.wiphy, bss);
- 	netif_carrier_on(sdata->dev);
- 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, chan, GFP_KERNEL);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 11d0901ebb7b..a368a1d6caff 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -67,24 +67,23 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
- 	int clen, srlen;
--	enum nl80211_bss_scan_width scan_width;
--	s32 signal = 0;
-+	struct cfg80211_inform_bss bss_meta = {};
- 	bool signal_valid;
+-		if (hif_drv->remain_on_ch.pRemainOnChanReady)
+-			hif_drv->remain_on_ch.pRemainOnChanReady(hif_drv->remain_on_ch.pVoid);
++		if (hif_drv->remain_on_ch.ready)
++			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
  
- 	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM))
--		signal = rx_status->signal * 100;
-+		bss_meta.signal = rx_status->signal * 100;
- 	else if (ieee80211_hw_check(&local->hw, SIGNAL_UNSPEC))
--		signal = (rx_status->signal * 100) / local->hw.max_signal;
-+		bss_meta.signal = (rx_status->signal * 100) / local->hw.max_signal;
- 
--	scan_width = NL80211_BSS_CHAN_WIDTH_20;
-+	bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_20;
- 	if (rx_status->flag & RX_FLAG_5MHZ)
--		scan_width = NL80211_BSS_CHAN_WIDTH_5;
-+		bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_5;
- 	if (rx_status->flag & RX_FLAG_10MHZ)
--		scan_width = NL80211_BSS_CHAN_WIDTH_10;
-+		bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_10;
- 
--	cbss = cfg80211_inform_bss_width_frame(local->hw.wiphy, channel,
--					       scan_width, mgmt, len, signal,
--					       GFP_ATOMIC);
-+	bss_meta.chan = channel;
-+	cbss = cfg80211_inform_bss_frame_data(local->hw.wiphy, &bss_meta,
-+					      mgmt, len, GFP_ATOMIC);
- 	if (!cbss)
- 		return NULL;
- 	/* In case the signal is invalid update the status */
+ 		if (hif_drv->remain_on_ch_pending)
+ 			hif_drv->remain_on_ch_pending = 0;
+@@ -4367,7 +4367,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
+ 	msg.body.remain_on_ch.ch = chan;
+ 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
+-	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
++	msg.body.remain_on_ch.ready = RemainOnChanReady;
+ 	msg.body.remain_on_ch.pVoid = pvUserArg;
+ 	msg.body.remain_on_ch.u32duration = u32duration;
+ 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 58d3101..bbb9690 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -239,7 +239,7 @@ struct remain_ch {
+ 	u16 ch;
+ 	u32 u32duration;
+ 	wilc_remain_on_chan_expired expired;
+-	wilc_remain_on_chan_ready pRemainOnChanReady;
++	wilc_remain_on_chan_ready ready;
+ 	void *pVoid;
+ 	u32 u32ListenSessionID;
+ };
 -- 
-2.5.1
+1.9.1
 
