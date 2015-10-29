@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24559 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbbJLM5o (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35758 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758010AbbJ2XSG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 08:57:44 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 0/7] ath10k: add copy engine fast path support
-Date: Mon, 12 Oct 2015 18:26:59 +0530
-Message-ID: <1444654626-3290-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151012_145748_127105_6B998150)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 19:18:06 -0400
+Received: by pasz6 with SMTP id z6so53895901pas.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:06 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 05/12] staging: wilc1000: rename pu8MacAddr in host_int_del_station
+Date: Fri, 30 Oct 2015 08:17:41 +0900
+Message-Id: <1446160668-10747-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001838_149568_ADC58CFD)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Below patchset adds fast path support for uplink traffic by bypassing
-HTC layer processing. This is enabled by making use of unused copy
-engine 5 to receive HTT messages directly from HIF layer. From initial
-validation in VHT80/5G mode TCP UL is improved to 900Mbps from ~840Mbps
-in conducted test.
+This patch changes pu8MacAddr to mac_addr that is second argument of
+this function to avoid camelcase.
 
--Rajkumar
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 11/12 patch is changed.
 
-v2:
- * fix invalid dma memory access (ATH10K_SKB_RXCB is used instead of
-   ATH10K_SKB_CB in htt_tx_cb)
- * register either send_cb or recv_cb callback not both for
-   appropriate CE.
- * Process CE 4 send completion first before processing rx
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index be5e652..8dba9a3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4552,7 +4552,7 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 	return result;
+ }
  
-Rajkumar Manoharan (7):
-  ath10k: export htc tx rx handlers
-  ath10k: register per copy engine send completion callbacks
-  ath10k: register per copy engine receive callbacks
-  ath10k: export htt tx rx handlers
-  ath10k: Configure copy engine 5 for HTT messages
-  ath10k: remove unused dl_is_polled
-  ath10k: remove htc polling for tx completion
-
- drivers/net/wireless/ath/ath10k/ce.c     |   8 +--
- drivers/net/wireless/ath/ath10k/ce.h     |   7 +-
- drivers/net/wireless/ath/ath10k/hif.h    |  26 +------
- drivers/net/wireless/ath/ath10k/htc.c    |  51 ++-----------
- drivers/net/wireless/ath/ath10k/htc.h    |   4 +-
- drivers/net/wireless/ath/ath10k/htt.h    |   1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |   1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c |   6 ++
- drivers/net/wireless/ath/ath10k/pci.c    | 119 +++++++++++++++++++------------
- drivers/net/wireless/ath/ath10k/pci.h    |   2 -
- 10 files changed, 98 insertions(+), 127 deletions(-)
-
+-int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4570,10 +4570,10 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ 	msg.id = HOST_IF_MSG_DEL_STATION;
+ 	msg.drv = hif_drv;
+ 
+-	if (!pu8MacAddr)
++	if (!mac_addr)
+ 		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
+ 	else
+-		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
++		memcpy(pstrDelStationMsg->mac_addr, mac_addr, ETH_ALEN);
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 083def57..be9283f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr);
+ 
+ /*!
+  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-2.6.0
+2.6.1
 
