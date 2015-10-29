@@ -1,143 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23998 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbbJYMBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2015 08:01:37 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/16] iwlwifi: mvm: let any command flag be passed to iwl_mvm_flushtx_path()
-Date: Sun, 25 Oct 2015 14:01:08 +0200
-Message-Id: <1445774476-24792-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151025_130140_202482_70ADC27C)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27090 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965268AbbJ2DFE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 23:05:04 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 49/64] staging: wilc1000: rename au8BSSID of struct add_sta_param
+Date: Thu, 29 Oct 2015 12:05:41 +0900
+Message-ID: <1446087956-19054-16-git-send-email-glen.lee@atmel.com> (sfid-20151029_040508_758659_0762DBD7)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Instead of only allowing the caller to decide whether the CMD_ASYNC
-flag is set, let it pass the entire flags bitmask.  This allows more
-flexibility and will be needed when we call this function in the
-suspend flow (where other flags are needed).
+This patch renames au8BSSID of struct add_sta_param to bssid
+to avoid CamelCase naming convention.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs.c    | 2 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 4 ++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h        | 2 +-
- drivers/net/wireless/iwlwifi/mvm/sta.c        | 4 ++--
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 2 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c         | 4 +---
- 6 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         |  2 +-
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 9b4fbb8..05928fb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -85,7 +85,7 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
- 	IWL_ERR(mvm, "FLUSHING queues: scd_q_msk = 0x%x\n", scd_q_msk);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 00f2717..2cf3ed5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2308,7 +2308,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	pu8CurrByte = pu8Buffer;
  
- 	mutex_lock(&mvm->mutex);
--	ret =  iwl_mvm_flush_tx_path(mvm, scd_q_msk, true) ? : count;
-+	ret =  iwl_mvm_flush_tx_path(mvm, scd_q_msk, 0) ? : count;
- 	mutex_unlock(&mvm->mutex);
+ 	PRINT_D(HOSTINF_DBG, "Packing STA params\n");
+-	memcpy(pu8CurrByte, pstrStationParam->au8BSSID, ETH_ALEN);
++	memcpy(pu8CurrByte, pstrStationParam->bssid, ETH_ALEN);
+ 	pu8CurrByte +=  ETH_ALEN;
  
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index aaffb54..adfcce4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1781,7 +1781,7 @@ static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
- 		 * Flush them here.
- 		 */
- 		mutex_lock(&mvm->mutex);
--		iwl_mvm_flush_tx_path(mvm, tfd_msk, true);
-+		iwl_mvm_flush_tx_path(mvm, tfd_msk, 0);
- 		mutex_unlock(&mvm->mutex);
+ 	*pu8CurrByte++ = pstrStationParam->u16AssocID & 0xFF;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 60dcc36..58e4f92 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -288,7 +288,7 @@ struct host_if_drv {
+ };
  
- 		/*
-@@ -3924,7 +3924,7 @@ static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
- 	}
+ struct add_sta_param {
+-	u8 au8BSSID[ETH_ALEN];
++	u8 bssid[ETH_ALEN];
+ 	u16 u16AssocID;
+ 	u8 u8NumRates;
+ 	const u8 *pu8Rates;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 4828deb..2ec85f0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2995,7 +2995,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	nic = netdev_priv(dev);
  
- 	if (drop) {
--		if (iwl_mvm_flush_tx_path(mvm, msk, true))
-+		if (iwl_mvm_flush_tx_path(mvm, msk, 0))
- 			IWL_ERR(mvm, "flush request fail\n");
- 		mutex_unlock(&mvm->mutex);
- 	} else {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 0d3aff1..4485bdb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1031,7 +1031,7 @@ const char *iwl_mvm_get_tx_fail_reason(u32 status);
- #else
- static inline const char *iwl_mvm_get_tx_fail_reason(u32 status) { return ""; }
- #endif
--int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, bool sync);
-+int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags);
- void iwl_mvm_async_handlers_purge(struct iwl_mvm *mvm);
+ 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
+-		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
++		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+ 		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
+ 		strStaParams.u16AssocID = params->aid;
+ 		strStaParams.u8NumRates = params->supported_rates_len;
+@@ -3109,13 +3109,15 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 	nic = netdev_priv(dev);
  
- static inline void iwl_mvm_set_tx_cmd_ccmp(struct ieee80211_tx_info *info,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index a9a3eb6..04d0cb3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -501,7 +501,7 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
- 		if (ret)
- 			return ret;
- 		/* flush its queues here since we are freeing mvm_sta */
--		ret = iwl_mvm_flush_tx_path(mvm, mvm_sta->tfd_queue_msk, true);
-+		ret = iwl_mvm_flush_tx_path(mvm, mvm_sta->tfd_queue_msk, 0);
- 		if (ret)
- 			return ret;
- 		ret = iwl_trans_wait_tx_queue_empty(mvm->trans,
-@@ -1155,7 +1155,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
+-		memcpy(strStaParams.au8BSSID, mac, ETH_ALEN);
++		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+ 		strStaParams.u16AssocID = params->aid;
+ 		strStaParams.u8NumRates = params->supported_rates_len;
+ 		strStaParams.pu8Rates = params->supported_rates;
  
- 	if (old_state >= IWL_AGG_ON) {
- 		iwl_mvm_drain_sta(mvm, mvmsta, true);
--		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), true))
-+		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
- 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
- 		iwl_trans_wait_tx_queue_empty(mvm->trans,
- 					      mvmsta->tfd_queue_msk);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index dbd7d54..7530eb2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -129,7 +129,7 @@ void iwl_mvm_roc_done_wk(struct work_struct *wk)
- 	 * issue as it will have to complete before the next command is
- 	 * executed, and a new time event means a new command.
- 	 */
--	iwl_mvm_flush_tx_path(mvm, queues, false);
-+	iwl_mvm_flush_tx_path(mvm, queues, CMD_ASYNC);
- }
+-		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n", strStaParams.au8BSSID[0], strStaParams.au8BSSID[1], strStaParams.au8BSSID[2], strStaParams.au8BSSID[3], strStaParams.au8BSSID[4],
+-			strStaParams.au8BSSID[5]);
++		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n",
++			strStaParams.bssid[0], strStaParams.bssid[1],
++			strStaParams.bssid[2], strStaParams.bssid[3],
++			strStaParams.bssid[4], strStaParams.bssid[5]);
+ 		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.u16AssocID);
+ 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n", strStaParams.u8NumRates);
  
- static void iwl_mvm_roc_finished(struct iwl_mvm *mvm)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index ff8b9bd..c652a66 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -1099,7 +1099,7 @@ out:
-  * 2) flush the Tx path
-  * 3) wait for the transport queues to be empty
-  */
--int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, bool sync)
-+int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags)
- {
- 	int ret;
- 	struct iwl_tx_path_flush_cmd flush_cmd = {
-@@ -1107,8 +1107,6 @@ int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, bool sync)
- 		.flush_ctl = cpu_to_le16(DUMP_TX_FIFO_FLUSH),
- 	};
- 
--	u32 flags = sync ? 0 : CMD_ASYNC;
--
- 	ret = iwl_mvm_send_cmd_pdu(mvm, TXPATH_FLUSH, flags,
- 				   sizeof(flush_cmd), &flush_cmd);
- 	if (ret)
 -- 
-2.1.4
+1.9.1
 
