@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42351 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4728 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932178AbbJ1HBT (ORCPT
+	with ESMTP id S932491AbbJ2C5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:01:19 -0400
+	Wed, 28 Oct 2015 22:57:11 -0400
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 37/80] staging: wilc1000: rename pVoid of struct remain_ch
-Date: Wed, 28 Oct 2015 15:59:57 +0900
-Message-ID: <1446015640-29398-37-git-send-email-glen.lee@atmel.com> (sfid-20151028_080125_270704_D59CE964)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH V2 08/64] staging: wilc1000: rename hSemGetLINKSPEED of struct host_if_drv
+Date: Thu, 29 Oct 2015 11:58:31 +0900
+Message-ID: <1446087567-16728-8-git-send-email-glen.lee@atmel.com> (sfid-20151029_035715_308752_4F49B26A)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,69 +22,60 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames pVoid of struct remain_ch to arg
+This patch renames hSemGetLINKSPEED of struct host_if_drv to sem_get_link_speed
 to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
  drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3ee25c6..9ad98fd 100644
+index b40ce3b..7b654c5 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2481,7 +2481,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	struct wid wid;
+@@ -2123,7 +2123,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 		result = -EFAULT;
+ 	}
  
- 	if (!hif_drv->remain_on_ch_pending) {
--		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
-+		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
- 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
- 		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
-@@ -2538,7 +2538,7 @@ ERRORHANDLER:
- 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+-	up(&hif_drv->hSemGetLINKSPEED);
++	up(&hif_drv->sem_get_link_speed);
+ }
  
- 		if (hif_drv->remain_on_ch.ready)
--			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
-+			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
+ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
+@@ -3842,7 +3842,7 @@ s32 host_int_get_link_speed(struct host_if_drv *hif_drv, s8 *ps8lnkspd)
+ 		return -EFAULT;
+ 	}
  
- 		if (hif_drv->remain_on_ch_pending)
- 			hif_drv->remain_on_ch_pending = 0;
-@@ -2612,7 +2612,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 		}
+-	down(&hif_drv->hSemGetLINKSPEED);
++	down(&hif_drv->sem_get_link_speed);
  
- 		if (hif_drv->remain_on_ch.expired) {
--			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
-+			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
- 						      pstrHostIfRemainOnChan->u32ListenSessionID);
- 		}
- 		P2P_LISTEN_STATE = 0;
-@@ -4368,7 +4368,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.ready = RemainOnChanReady;
--	msg.body.remain_on_ch.pVoid = pvUserArg;
-+	msg.body.remain_on_ch.arg = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
- 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
- 	msg.drv = hif_drv;
+ 	if (!ps8lnkspd) {
+ 		PRINT_ER("LINKSPEED pointer value is null");
+@@ -4110,7 +4110,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	sema_init(&hif_drv->sem_test_key_block, 0);
+ 	sema_init(&hif_drv->sem_test_disconn_block, 0);
+ 	sema_init(&hif_drv->sem_get_rssi, 0);
+-	sema_init(&hif_drv->hSemGetLINKSPEED, 0);
++	sema_init(&hif_drv->sem_get_link_speed, 0);
+ 	sema_init(&hif_drv->hSemGetCHNL, 0);
+ 	sema_init(&hif_drv->hSemInactiveTime, 0);
+ 
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bbb9690..230c95a 100644
+index dada9c5..a603e84 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -240,7 +240,7 @@ struct remain_ch {
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired expired;
- 	wilc_remain_on_chan_ready ready;
--	void *pVoid;
-+	void *arg;
- 	u32 u32ListenSessionID;
- };
- 
+@@ -308,7 +308,7 @@ struct host_if_drv {
+ 	struct semaphore sem_test_key_block;
+ 	struct semaphore sem_test_disconn_block;
+ 	struct semaphore sem_get_rssi;
+-	struct semaphore hSemGetLINKSPEED;
++	struct semaphore sem_get_link_speed;
+ 	struct semaphore hSemGetCHNL;
+ 	struct semaphore hSemInactiveTime;
+ /* timer handlers */
 -- 
 1.9.1
 
