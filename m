@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52772 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27109 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753428AbbJPEle (ORCPT
+	with ESMTP id S965268AbbJ2DFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:41:34 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Wed, 28 Oct 2015 23:05:10 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 33/40] staging: wilc1000: rename variable gu32FlushedInfoElemAsocSize
-Date: Fri, 16 Oct 2015 13:38:03 +0900
-Message-ID: <1444970290-17609-33-git-send-email-tony.cho@atmel.com> (sfid-20151016_064656_006409_CCACCCA9)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH V2 50/64] staging: wilc1000: rename u16AssocID of struct add_sta_param
+Date: Thu, 29 Oct 2015 12:05:42 +0900
+Message-ID: <1446087956-19054-17-git-send-email-glen.lee@atmel.com> (sfid-20151029_041655_356830_B0B93357)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,59 +22,85 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames variable gu32FlushedInfoElemAsocSize to info_element_size
+This patch renames u16AssocID of struct add_sta_param to aid
 to avoid CamelCase naming convention.
 
-Add to static because follow warning reported by kbuild system.
- - drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol
-   'info_element_size' was not declared. Should it be static?
-
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
- mode change 100644 => 100755 drivers/staging/wilc1000/host_interface.c
+ drivers/staging/wilc1000/host_interface.c         | 4 ++--
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-old mode 100644
-new mode 100755
-index f41a365..9d747b5
+index 2cf3ed5..512000e 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -266,7 +266,7 @@ static u8 *info_element;
- static u8 mode_11i;
- static u8 auth_type;
- static u32 join_req_size;
--u32 gu32FlushedInfoElemAsocSize;
-+static u32 info_element_size;
- struct host_if_drv *gu8FlushedJoinReqDrvHandler;
- #define REAL_JOIN_REQ 0
- #define FLUSHED_JOIN_REQ 1
-@@ -1074,11 +1074,10 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		u32WidsCount++;
+@@ -2311,8 +2311,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	memcpy(pu8CurrByte, pstrStationParam->bssid, ETH_ALEN);
+ 	pu8CurrByte +=  ETH_ALEN;
  
- 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--
--			gu32FlushedInfoElemAsocSize = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
--			info_element = kmalloc(gu32FlushedInfoElemAsocSize, GFP_KERNEL);
-+			info_element_size = hif_drv->strWILC_UsrConnReq.ConnReqIEsLen;
-+			info_element = kmalloc(info_element_size, GFP_KERNEL);
- 			memcpy(info_element, hif_drv->strWILC_UsrConnReq.pu8ConnReqIEs,
--			       gu32FlushedInfoElemAsocSize);
-+			       info_element_size);
- 		}
- 	}
- 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
-@@ -1303,7 +1302,7 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
- 	strWIDList[u32WidsCount].type = WID_BIN_DATA;
- 	strWIDList[u32WidsCount].val = info_element;
--	strWIDList[u32WidsCount].size = gu32FlushedInfoElemAsocSize;
-+	strWIDList[u32WidsCount].size = info_element_size;
- 	u32WidsCount++;
+-	*pu8CurrByte++ = pstrStationParam->u16AssocID & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->u16AssocID >> 8) & 0xFF;
++	*pu8CurrByte++ = pstrStationParam->aid & 0xFF;
++	*pu8CurrByte++ = (pstrStationParam->aid >> 8) & 0xFF;
  
- 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
+ 	*pu8CurrByte++ = pstrStationParam->u8NumRates;
+ 	if (pstrStationParam->u8NumRates > 0)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 58e4f92..7d8a166 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -289,7 +289,7 @@ struct host_if_drv {
+ 
+ struct add_sta_param {
+ 	u8 bssid[ETH_ALEN];
+-	u16 u16AssocID;
++	u16 aid;
+ 	u8 u8NumRates;
+ 	const u8 *pu8Rates;
+ 	bool bIsHTSupported;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 2ec85f0..00fa411 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2997,7 +2997,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
+ 		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+ 		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
+-		strStaParams.u16AssocID = params->aid;
++		strStaParams.aid = params->aid;
+ 		strStaParams.u8NumRates = params->supported_rates_len;
+ 		strStaParams.pu8Rates = params->supported_rates;
+ 
+@@ -3005,7 +3005,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n", priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][0], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][1], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][2], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][3], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][4],
+ 			priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][5]);
+-		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.u16AssocID);
++		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.aid);
+ 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n", strStaParams.u8NumRates);
+ 
+ 		if (params->ht_capa == NULL) {
+@@ -3110,7 +3110,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	if (nic->iftype == AP_MODE || nic->iftype == GO_MODE) {
+ 		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+-		strStaParams.u16AssocID = params->aid;
++		strStaParams.aid = params->aid;
+ 		strStaParams.u8NumRates = params->supported_rates_len;
+ 		strStaParams.pu8Rates = params->supported_rates;
+ 
+@@ -3118,7 +3118,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.bssid[0], strStaParams.bssid[1],
+ 			strStaParams.bssid[2], strStaParams.bssid[3],
+ 			strStaParams.bssid[4], strStaParams.bssid[5]);
+-		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.u16AssocID);
++		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.aid);
+ 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n", strStaParams.u8NumRates);
+ 
+ 		if (params->ht_capa == NULL) {
 -- 
 1.9.1
 
