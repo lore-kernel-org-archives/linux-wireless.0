@@ -1,116 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35305 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758910AbbJ3MCh (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5077 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756595AbbJ2C71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 08:02:37 -0400
-From: Saurabh Sengar <saurabh.truth@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Saurabh Sengar <saurabh.truth@gmail.com>
-Subject: [PATCH] NFC: added the sysfs entry for nfcsim workqueue delay
-Date: Fri, 30 Oct 2015 17:32:28 +0530
-Message-Id: <1446206548-12633-1-git-send-email-saurabh.truth@gmail.com> (sfid-20151030_130253_419764_13D4B2C8)
-In-Reply-To: <saurabh.truth@gmail.com>
-References: <saurabh.truth@gmail.com>
+	Wed, 28 Oct 2015 22:59:27 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 28/64] staging: wilc1000: rename u32UserScanPvoid of struct user_scan_req
+Date: Thu, 29 Oct 2015 11:58:51 +0900
+Message-ID: <1446087567-16728-28-git-send-email-glen.lee@atmel.com> (sfid-20151029_041656_660695_4921D96A)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-added the sysfs entry for nfcsim workqueue delay, as tx_delay
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
+This patch renames u32UserScanPvoid of struct user_scan_req to arg
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-Hi,
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ drivers/staging/wilc1000/host_interface.h |  3 +--
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-As I have understood form TODO comment, I have implemented the sysfs entry
-for this device.
-Sorry, in case this patch is not meeting the expectation.
-I am just finding my way to contribute in linux kernel :)
-
-Regards,
-Saurabh
-
- drivers/nfc/nfcsim.c | 38 +++++++++++++++++++++++++++++++++++---
- 1 file changed, 35 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
-index 93111fa..d1ace87 100644
---- a/drivers/nfc/nfcsim.c
-+++ b/drivers/nfc/nfcsim.c
-@@ -32,6 +32,8 @@
- #define NFCSIM_POLL_TARGET	2
- #define NFCSIM_POLL_DUAL	(NFCSIM_POLL_INITIATOR | NFCSIM_POLL_TARGET)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a1437e2..3648e3c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -823,7 +823,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	PRINT_D(HOSTINF_DBG, "Scanning: In [%d] state\n", hif_drv->hif_state);
  
-+#define TX_DEFAULT_DELAY	5
-+
- struct nfcsim {
- 	struct nfc_dev *nfc_dev;
+ 	hif_drv->usr_scan_req.scan_result = pstrHostIFscanAttr->result;
+-	hif_drv->usr_scan_req.u32UserScanPvoid = pstrHostIFscanAttr->arg;
++	hif_drv->usr_scan_req.arg = pstrHostIFscanAttr->arg;
  
-@@ -62,12 +64,41 @@ static struct nfcsim *dev1;
+ 	if ((hif_drv->hif_state >= HOST_IF_SCANNING) &&
+ 	    (hif_drv->hif_state < HOST_IF_CONNECTED)) {
+@@ -971,7 +971,7 @@ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
  
- static struct workqueue_struct *wq;
+ 	if (hif_drv->usr_scan_req.scan_result) {
+ 		hif_drv->usr_scan_req.scan_result(enuEvent, NULL,
+-						  hif_drv->usr_scan_req.u32UserScanPvoid, NULL);
++						  hif_drv->usr_scan_req.arg, NULL);
+ 		hif_drv->usr_scan_req.scan_result = NULL;
+ 	}
  
-+
-+static int tx_delay = TX_DEFAULT_DELAY;
-+
-+static ssize_t show_tx_delay(struct device *dev,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	int n;
-+
-+	n = scnprintf(buf, PAGE_SIZE, "%d\n", tx_delay);
-+	return n;
-+}
-+
-+static ssize_t store_tx_delay(struct device *dev,
-+					struct device_attribute *attr,
-+					const char *buf, size_t count)
-+{
-+	if (kstrtouint(buf, 0, &tx_delay) < 0)
-+		return -EINVAL;
-+
-+	if (tx_delay < 0)
-+		return -EINVAL;
-+
-+	return count;
-+}
-+
-+static DEVICE_ATTR(tx_delay, 0644, show_tx_delay, store_tx_delay);
-+
- static void nfcsim_cleanup_dev(struct nfcsim *dev, u8 shutdown)
- {
- 	DEV_DBG(dev, "shutdown=%d\n", shutdown);
+@@ -1448,7 +1448,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
  
- 	mutex_lock(&dev->lock);
+ 					hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
+-									  hif_drv->usr_scan_req.u32UserScanPvoid,
++									  hif_drv->usr_scan_req.arg,
+ 									  pJoinParams);
+ 				}
+ 			} else {
+@@ -1457,7 +1457,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 		} else {
+ 			pstrNetworkInfo->bNewNetwork = false;
+ 			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
+-							  hif_drv->usr_scan_req.u32UserScanPvoid, NULL);
++							  hif_drv->usr_scan_req.arg, NULL);
+ 		}
+ 	}
  
-+	device_remove_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
- 	dev->polling_mode = NFCSIM_POLL_NONE;
- 	dev->shutting_down = shutdown;
- 	dev->cb = NULL;
-@@ -320,10 +351,8 @@ static int nfcsim_tx(struct nfc_dev *nfc_dev, struct nfc_target *target,
- 	 * If packet transmission occurs immediately between them, we have a
- 	 * non-stop flow of several tens of thousands SYMM packets per second
- 	 * and a burning cpu.
--	 *
--	 * TODO: Add support for a sysfs entry to control this delay.
- 	 */
--	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(5));
-+	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(tx_delay));
+@@ -2001,7 +2001,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 		if (hif_drv->usr_scan_req.scan_result) {
+ 			del_timer(&hif_drv->scan_timer);
+ 			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+-							  hif_drv->usr_scan_req.u32UserScanPvoid, NULL);
++							  hif_drv->usr_scan_req.arg, NULL);
+ 			hif_drv->usr_scan_req.scan_result = NULL;
+ 		}
  
- 	mutex_unlock(&peer->lock);
+@@ -4210,7 +4210,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
  
-@@ -461,6 +490,9 @@ static struct nfcsim *nfcsim_init_dev(void)
- 	if (rc)
- 		goto free_nfc_dev;
+ 	if (hif_drv->usr_scan_req.scan_result) {
+ 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+-						  hif_drv->usr_scan_req.u32UserScanPvoid, NULL);
++						  hif_drv->usr_scan_req.arg, NULL);
+ 		hif_drv->usr_scan_req.scan_result = NULL;
+ 	}
  
-+	rc = device_create_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
-+	if (rc)
-+		pr_err("error creating sysfs entry\n");
- 	return dev;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index b90d9d2..058ea17 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -193,8 +193,7 @@ struct hidden_network {
  
- free_nfc_dev:
+ struct user_scan_req {
+ 	wilc_scan_result scan_result;
+-	void *u32UserScanPvoid;
+-
++	void *arg;
+ 	u32 u32RcvdChCount;
+ 	struct found_net_info astrFoundNetworkInfo[MAX_NUM_SCANNED_NETWORKS];
+ };
 -- 
 1.9.1
 
