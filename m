@@ -1,73 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34513 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753001AbbJEKfw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5236 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965235AbbJ2DAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:35:52 -0400
-Received: by padhy16 with SMTP id hy16so33474627pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:35:51 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 14/20] staging: wilc1000: rename hWFIDrv in host_int_remove_wep_key
-Date: Mon,  5 Oct 2015 19:34:58 +0900
-Message-Id: <1444041304-7727-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123555_631799_F5ED9A4E)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 23:00:42 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 31/64] staging: wilc1000: rename pu8ConnReqIEs of struct user_conn_req
+Date: Thu, 29 Oct 2015 11:58:54 +0900
+Message-ID: <1446087567-16728-31-git-send-email-glen.lee@atmel.com> (sfid-20151029_041656_045726_77793B15)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces hWFIDrv with wfi_drv that is first argument of
-host_int_remove_wep_key to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames pu8ConnReqIEs of struct user_conn_req to ies
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c19fb23..cfeb81b 100644
+index 9f70a85..667bd2d 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4291,10 +4291,10 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress)
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
-+int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8keyIdx)
- {
- 	int s32Error = 0;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
-+	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)wfi_drv;
- 	struct host_if_msg msg;
+@@ -1021,8 +1021,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
  
+ 	hif_drv->usr_conn_req.ConnReqIEsLen = pstrHostIFconnectAttr->ies_len;
+ 	if (pstrHostIFconnectAttr->ies) {
+-		hif_drv->usr_conn_req.pu8ConnReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
+-		memcpy(hif_drv->usr_conn_req.pu8ConnReqIEs,
++		hif_drv->usr_conn_req.ies = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
++		memcpy(hif_drv->usr_conn_req.ies,
+ 		       pstrHostIFconnectAttr->ies,
+ 		       pstrHostIFconnectAttr->ies_len);
+ 	}
+@@ -1053,14 +1053,14 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	{
+ 		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
+ 		strWIDList[u32WidsCount].type = WID_BIN_DATA;
+-		strWIDList[u32WidsCount].val = hif_drv->usr_conn_req.pu8ConnReqIEs;
++		strWIDList[u32WidsCount].val = hif_drv->usr_conn_req.ies;
+ 		strWIDList[u32WidsCount].size = hif_drv->usr_conn_req.ConnReqIEsLen;
+ 		u32WidsCount++;
  
-@@ -4311,7 +4311,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8keyIdx)
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.enuKeyType = WEP;
- 	msg.body.key_info.u8KeyAction = REMOVEKEY;
--	msg.drvHandler = hWFIDrv;
-+	msg.drvHandler = wfi_drv;
+ 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+ 			info_element_size = hif_drv->usr_conn_req.ConnReqIEsLen;
+ 			info_element = kmalloc(info_element_size, GFP_KERNEL);
+-			memcpy(info_element, hif_drv->usr_conn_req.pu8ConnReqIEs,
++			memcpy(info_element, hif_drv->usr_conn_req.ies,
+ 			       info_element_size);
+ 		}
+ 	}
+@@ -1339,11 +1339,11 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 			       hif_drv->usr_conn_req.pu8bssid, 6);
+ 		}
  
+-		if (hif_drv->usr_conn_req.pu8ConnReqIEs) {
++		if (hif_drv->usr_conn_req.ies) {
+ 			strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ConnReqIEsLen;
+ 			strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ConnReqIEsLen, GFP_KERNEL);
+ 			memcpy(strConnectInfo.pu8ReqIEs,
+-			       hif_drv->usr_conn_req.pu8ConnReqIEs,
++			       hif_drv->usr_conn_req.ies,
+ 			       hif_drv->usr_conn_req.ConnReqIEsLen);
+ 		}
  
+@@ -1375,7 +1375,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 	kfree(hif_drv->usr_conn_req.pu8ssid);
+ 	kfree(hif_drv->usr_conn_req.pu8bssid);
+ 	hif_drv->usr_conn_req.ConnReqIEsLen = 0;
+-	kfree(hif_drv->usr_conn_req.pu8ConnReqIEs);
++	kfree(hif_drv->usr_conn_req.ies);
  
+ 	eth_zero_addr(u8ConnectedSSID);
+ 
+@@ -1586,11 +1586,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				}
+ 			}
+ 
+-			if (hif_drv->usr_conn_req.pu8ConnReqIEs) {
++			if (hif_drv->usr_conn_req.ies) {
+ 				strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ConnReqIEsLen;
+ 				strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ConnReqIEsLen, GFP_KERNEL);
+ 				memcpy(strConnectInfo.pu8ReqIEs,
+-				       hif_drv->usr_conn_req.pu8ConnReqIEs,
++				       hif_drv->usr_conn_req.ies,
+ 				       hif_drv->usr_conn_req.ConnReqIEsLen);
+ 			}
+ 
+@@ -1627,7 +1627,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			kfree(hif_drv->usr_conn_req.pu8ssid);
+ 			kfree(hif_drv->usr_conn_req.pu8bssid);
+ 			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
+-			kfree(hif_drv->usr_conn_req.pu8ConnReqIEs);
++			kfree(hif_drv->usr_conn_req.ies);
+ 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
+ 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
+ 			PRINT_D(HOSTINF_DBG, "Received MAC_DISCONNECTED from the FW\n");
+@@ -1663,7 +1663,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			kfree(hif_drv->usr_conn_req.pu8ssid);
+ 			kfree(hif_drv->usr_conn_req.pu8bssid);
+ 			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
+-			kfree(hif_drv->usr_conn_req.pu8ConnReqIEs);
++			kfree(hif_drv->usr_conn_req.ies);
+ 
+ 			if (join_req && join_req_drv == hif_drv) {
+ 				kfree(join_req);
+@@ -2027,7 +2027,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 		kfree(hif_drv->usr_conn_req.pu8ssid);
+ 		kfree(hif_drv->usr_conn_req.pu8bssid);
+ 		hif_drv->usr_conn_req.ConnReqIEsLen = 0;
+-		kfree(hif_drv->usr_conn_req.pu8ConnReqIEs);
++		kfree(hif_drv->usr_conn_req.ies);
+ 
+ 		if (join_req && join_req_drv == hif_drv) {
+ 			kfree(join_req);
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d3d05fc..372acb7 100644
+index 69ce8f1..de4e7d9 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -407,7 +407,7 @@ s32 host_int_remove_key(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8StaAddress);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_remove_wep_key(tstrWILC_WFIDrv *hWFIDrv, u8 u8Index);
-+int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 u8Index);
- /**
-  *  @brief              sets WEP deafault key
-  *  @details    Sets the index of the WEP encryption key in use,
+@@ -204,7 +204,7 @@ struct user_conn_req {
+ 	u8 u8security;
+ 	enum AUTHTYPE tenuAuth_type;
+ 	size_t ssid_len;
+-	u8 *pu8ConnReqIEs;
++	u8 *ies;
+ 	size_t ConnReqIEsLen;
+ 	wilc_connect_result pfUserConnectResult;
+ 	bool IsHTCapable;
 -- 
-2.6.0
+1.9.1
 
