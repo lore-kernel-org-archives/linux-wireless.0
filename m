@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54066 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754879AbbJOHTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 03:19:17 -0400
-Date: Thu, 15 Oct 2015 15:18:34 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: kbuild-all@01.org, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 30/40] staging: wilc1000: rename variable
- gu8Flushed11iMode
-Message-ID: <201510151552.WMKP1tMV%fengguang.wu@intel.com> (sfid-20151015_091925_415969_5440CBDA)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4847 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964921AbbJ2C5w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 22:57:52 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 15/64] staging: wilc1000: rename bReg of struct reg_frame
+Date: Thu, 29 Oct 2015 11:58:38 +0900
+Message-ID: <1446087567-16728-15-git-send-email-glen.lee@atmel.com> (sfid-20151029_035755_276202_0558BB18)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444883121-31757-30-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+From: Leo Kim <leo.kim@atmel.com>
 
-[auto build test WARNING on staging/staging-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
+This patch renames bReg of struct reg_frame to reg
+to avoid CamelCase naming convention.
 
-url:    https://github.com/0day-ci/linux/commits/Tony-Cho/staging-wilc1000-rename-ssidLen-of-struct-join_bss_param/20151015-123159
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/staging/wilc1000/host_interface.c:239:20: sparse: symbol 'terminated_handle' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:241:4: sparse: symbol 'P2P_LISTEN_STATE' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:245:18: sparse: symbol 'hif_sema_driver' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:247:18: sparse: symbol 'hif_sema_deinit' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:248:19: sparse: symbol 'periodic_rssi' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:254:6: sparse: symbol 'scan_while_connected' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:264:4: sparse: symbol 'join_req' was not declared. Should it be static?
->> drivers/staging/wilc1000/host_interface.c:266:4: sparse: symbol 'mode_11i' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:267:4: sparse: symbol 'gu8FlushedAuthType' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:268:5: sparse: symbol 'gu32FlushedJoinReqSize' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:269:5: sparse: symbol 'gu32FlushedInfoElemAsocSize' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:407:5: sparse: symbol 'Handle_set_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:442:5: sparse: symbol 'Handle_get_IPAddress' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2213:5: sparse: symbol 'Handle_GetStatistics' was not declared. Should it be static?
-   drivers/staging/wilc1000/host_interface.c:2353:38: sparse: incompatible types for operation (>)
-   drivers/staging/wilc1000/host_interface.c:2353:38:    left side has type unsigned char [usertype] *tail
-   drivers/staging/wilc1000/host_interface.c:2353:38:    right side has type int
-
-Please review and possibly fold the followup patch.
-
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/staging/wilc1000/host_interface.c | 8 +++++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3cff865..41f226f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2552,7 +2552,9 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
+ 
+-	PRINT_D(HOSTINF_DBG, "Handling frame register Flag : %d FrameType: %d\n", pstrHostIfRegisterFrame->bReg, pstrHostIfRegisterFrame->u16FrameType);
++	PRINT_D(HOSTINF_DBG, "Handling frame register : %d FrameType: %d\n",
++		pstrHostIfRegisterFrame->reg,
++		pstrHostIfRegisterFrame->u16FrameType);
+ 
+ 	wid.id = (u16)WID_REGISTER_FRAME;
+ 	wid.type = WID_STR;
+@@ -2562,7 +2564,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 
+ 	pu8CurrByte = wid.val;
+ 
+-	*pu8CurrByte++ = pstrHostIfRegisterFrame->bReg;
++	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
+ 	*pu8CurrByte++ = pstrHostIfRegisterFrame->u8Regid;
+ 	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->u16FrameType,
+ 	       sizeof(u16));
+@@ -4434,7 +4436,7 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
+ 		break;
+ 	}
+ 	msg.body.reg_frame.u16FrameType = u16FrameType;
+-	msg.body.reg_frame.bReg = bReg;
++	msg.body.reg_frame.reg = bReg;
+ 	msg.drv = hif_drv;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 37e5c74..ad3071a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -245,7 +245,7 @@ struct remain_ch {
+ };
+ 
+ struct reg_frame {
+-	bool bReg;
++	bool reg;
+ 	u16 u16FrameType;
+ 	u8 u8Regid;
+ };
+-- 
+1.9.1
+
