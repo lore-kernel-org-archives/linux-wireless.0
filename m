@@ -1,87 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57209 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752205AbbJEPBv (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26753 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965235AbbJ2DDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:56 +0300
-Message-Id: <1444055820-27506-25-git-send-email-luca@coelho.fi> (sfid-20151005_170155_185347_12A61479)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 25/29] iwlwifi: mvm: fix signedness warnings in ToF debugfs
+	Wed, 28 Oct 2015 23:03:17 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 34/64] staging: wilc1000: rename IsHTCapable of struct user_conn_req
+Date: Thu, 29 Oct 2015 12:05:26 +0900
+Message-ID: <1446087956-19054-1-git-send-email-glen.lee@atmel.com> (sfid-20151029_040320_475256_E419036E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Using an int* instead of u32* as the kstrtou32() output argument
-obviously results in signedness warnings, change that.
+This patch renames IsHTCapable of struct user_conn_req to ht_capable
+to avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index 5dc1686..398bef6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -511,7 +511,8 @@ static ssize_t iwl_dbgfs_tof_enable_write(struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	int value, ret = -EINVAL;
-+	u32 value;
-+	int ret = -EINVAL;
- 	char *data;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dc94d00..f1f1ef4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1143,7 +1143,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	*(pu8CurrByte++)  = ptstrJoinBssParam->uapsd_cap;
  
- 	mutex_lock(&mvm->mutex);
-@@ -599,7 +600,8 @@ static ssize_t iwl_dbgfs_tof_responder_params_write(struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	int value, ret = 0;
-+	u32 value;
-+	int ret = 0;
- 	char *data;
+ 	*(pu8CurrByte++)  = ptstrJoinBssParam->ht_capable;
+-	hif_drv->usr_conn_req.IsHTCapable = ptstrJoinBssParam->ht_capable;
++	hif_drv->usr_conn_req.ht_capable = ptstrJoinBssParam->ht_capable;
  
- 	mutex_lock(&mvm->mutex);
-@@ -822,7 +824,8 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	int value, ret = 0;
-+	u32 value;
-+	int ret = 0;
- 	char *data;
+ 	*(pu8CurrByte++)  =  ptstrJoinBssParam->rsn_found;
+ 	PRINT_D(HOSTINF_DBG, "* rsn found %d*\n", *(pu8CurrByte - 1));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0363068..3afe432 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -207,7 +207,7 @@ struct user_conn_req {
+ 	u8 *ies;
+ 	size_t ies_len;
+ 	wilc_connect_result conn_result;
+-	bool IsHTCapable;
++	bool ht_capable;
+ 	void *u32UserConnectPvoid;
+ };
  
- 	mutex_lock(&mvm->mutex);
-@@ -1023,7 +1026,8 @@ static ssize_t iwl_dbgfs_tof_range_req_ext_write(struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	int value, ret = 0;
-+	u32 value;
-+	int ret = 0;
- 	char *data;
- 
- 	mutex_lock(&mvm->mutex);
-@@ -1127,8 +1131,8 @@ static ssize_t iwl_dbgfs_tof_range_abort_write(struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	int value, ret = 0;
--	int abort_id;
-+	u32 value;
-+	int abort_id, ret = 0;
- 	char *data;
- 
- 	mutex_lock(&mvm->mutex);
 -- 
-2.5.3
+1.9.1
 
