@@ -1,125 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:35231 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbbJTGqd (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27226 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965285AbbJ2DFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:46:33 -0400
-Received: by lbbes7 with SMTP id es7so7769484lbb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2015 23:46:32 -0700 (PDT)
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Subject: [RFC 15/16] rtl8xxxu: rtl8188eu: Add stubbed fileops and chip-specific constants
-Date: Tue, 20 Oct 2015 08:45:45 +0200
-Message-Id: <1445323546-12807-16-git-send-email-jsitnicki@gmail.com> (sfid-20151020_084654_824969_46AC6F2F)
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
+	Wed, 28 Oct 2015 23:05:51 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 57/64] staging: wilc1000: rename u16HTExtParams of struct add_sta_param
+Date: Thu, 29 Oct 2015 12:05:49 +0900
+Message-ID: <1446087956-19054-24-git-send-email-glen.lee@atmel.com> (sfid-20151029_040553_471654_45BA1A85)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 32 ++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  6 ++++-
- 2 files changed, 37 insertions(+), 1 deletion(-)
+From: Leo Kim <leo.kim@atmel.com>
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index cf3aad7..344161b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1597,6 +1597,12 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	}
- }
+This patch renames u16HTExtParams of struct add_sta_param to ht_ext_params
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 ++--
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d0a65c7..be1fcbd 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2329,8 +2329,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	       WILC_SUPP_MCS_SET_SIZE);
+ 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
  
-+static void rtl8188eu_set_tx_power(struct rtl8xxxu_priv *priv,
-+				   int channel, bool ht40)
-+{
-+	return; /* Not implemented */
-+}
-+
- static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
- 				  enum nl80211_iftype linktype)
- {
-@@ -1892,6 +1898,11 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
+-	*pu8CurrByte++ = pstrStationParam->u16HTExtParams & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->u16HTExtParams >> 8) & 0xFF;
++	*pu8CurrByte++ = pstrStationParam->ht_ext_params & 0xFF;
++	*pu8CurrByte++ = (pstrStationParam->ht_ext_params >> 8) & 0xFF;
  
-+static int rtl8188eu_parse_efuse(struct rtl8xxxu_priv *priv)
-+{
-+	return -EOPNOTSUPP; /* Not implemented */
-+}
-+
- static int
- rtl8xxxu_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
- {
-@@ -2235,6 +2246,11 @@ static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
- 	return ret;
- }
+ 	*pu8CurrByte++ = pstrStationParam->u32TxBeamformingCap & 0xFF;
+ 	*pu8CurrByte++ = (pstrStationParam->u32TxBeamformingCap >> 8) & 0xFF;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 798adcf..c8e2d3f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -296,7 +296,7 @@ struct add_sta_param {
+ 	u16 ht_capa_info;
+ 	u8 ht_ampdu_params;
+ 	u8 ht_supp_mcs_set[16];
+-	u16 u16HTExtParams;
++	u16 ht_ext_params;
+ 	u32 u32TxBeamformingCap;
+ 	u8 u8ASELCap;
+ 	u16 u16FlagsMask;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ef308da..e417785 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3018,7 +3018,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
++			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+ 		}
+@@ -3032,7 +3032,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_capa_info);
+ 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+ 			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
++		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
++			strStaParams.ht_ext_params);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
+@@ -3137,7 +3138,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
++			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
  
-+static int rtl8188eu_load_firmware(struct rtl8xxxu_priv *priv)
-+{
-+	return -EOPNOTSUPP; /* Not implemented */
-+}
-+
- static void rtl8xxxu_firmware_self_reset(struct rtl8xxxu_priv *priv)
- {
- 	u16 val16;
-@@ -3919,6 +3935,11 @@ static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
- 
-+static int rtl8188eu_power_on(struct rtl8xxxu_priv *priv)
-+{
-+	return -EOPNOTSUPP; /* Not implemented */
-+}
-+
- static void rtl8xxxu_power_off(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
-@@ -5795,6 +5816,15 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.writeN_block_size = 128,
- };
- 
-+static struct rtl8xxxu_fileops rtl8188eu_fops = {
-+	.parse_efuse = rtl8188eu_parse_efuse,
-+	.load_firmware = rtl8188eu_load_firmware,
-+	.power_on = rtl8188eu_power_on,
-+	.set_tx_power = rtl8188eu_set_tx_power,
-+	.efuse_len = EFUSE_REAL_CONTENT_LEN_88E,
-+	.writeN_block_size = 4,
-+};
-+
- static struct usb_device_id dev_table[] = {
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8723au_fops},
-@@ -5895,6 +5925,8 @@ static struct usb_device_id dev_table[] = {
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(0x2019, 0x1201, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
-+{USB_DEVICE(USB_VENDOR_ID_REALTEK, 0x8179), /* RTL8188EUS */
-+	.driver_info = (unsigned long)&rtl8188eu_fops},
- /* Currently untested 8192 series devices */
- {USB_DEVICE_AND_INTERFACE_INFO(0x04bb, 0x0950, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index e55d843..79f47e3 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -60,8 +60,12 @@
- #define EFUSE_REAL_CONTENT_LEN_8723A	512
- #define EFUSE_BT_MAP_LEN_8723A		1024
- 
-+#define EFUSE_MAP_LEN_88E		512
-+#define EFUSE_MAX_SECTION_88E		64
-+#define EFUSE_REAL_CONTENT_LEN_88E	256
-+
- /* One size fits all, that is use the highest value */
--#define EFUSE_MAP_LEN			EFUSE_MAP_LEN_8723A
-+#define EFUSE_MAP_LEN			EFUSE_MAP_LEN_88E
- #define EFUSE_MAX_WORD_UNIT		4
- 
- struct rtl8xxxu_rx_desc {
+@@ -3152,7 +3153,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_capa_info);
+ 		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+ 			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
++		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
++			strStaParams.ht_ext_params);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
+ 		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n", strStaParams.u16FlagsMask);
 -- 
-2.1.0
+1.9.1
 
