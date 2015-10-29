@@ -1,70 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:34468 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472AbbJQKdZ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4591 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756178AbbJ2C4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 06:33:25 -0400
-Received: by wicgb1 with SMTP id gb1so38241023wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2015 03:33:23 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/9] staging: vt6655: remove static inline alloc_rd_info.
-Date: Sat, 17 Oct 2015 11:32:59 +0100
-Message-Id: <1445077982-17832-6-git-send-email-tvboxspy@gmail.com> (sfid-20151017_123328_961356_5D65E8FC)
-In-Reply-To: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
-References: <1445077982-17832-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 28 Oct 2015 22:56:34 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 02/64] staging: wilc1000: rename au8AssociatedBSSID of struct host_if_drv
+Date: Thu, 29 Oct 2015 11:58:25 +0900
+Message-ID: <1446087567-16728-2-git-send-email-glen.lee@atmel.com> (sfid-20151029_035637_324554_868A41E8)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since this only contains one function and only used twice
-remove inline altogether.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This patch renames au8AssociatedBSSID of struct host_if_drv to assoc_bssid
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/vt6655/device.h      | 5 -----
- drivers/staging/vt6655/device_main.c | 4 ++--
- 2 files changed, 2 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index aca6e00..0002049 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -306,11 +306,6 @@ struct vnt_private {
- 	struct ieee80211_low_level_stats low_stats;
- };
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4e01dbd..7216d83 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1581,7 +1581,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
  
--static inline struct vnt_rd_info *alloc_rd_info(void)
--{
--	return kzalloc(sizeof(struct vnt_rd_info), GFP_ATOMIC);
--}
--
- static inline struct vnt_td_info *alloc_td_info(void)
- {
- 	return kzalloc(sizeof(struct vnt_td_info), GFP_ATOMIC);
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 8bca3fc..aa8f750 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -551,7 +551,7 @@ static void device_init_rd0_ring(struct vnt_private *priv)
- 	for (i = 0; i < priv->sOpts.rx_descs0;
- 	     i ++, curr += sizeof(struct vnt_rx_desc)) {
- 		desc = &priv->aRD0Ring[i];
--		desc->rd_info = alloc_rd_info();
-+		desc->rd_info = kzalloc(sizeof(*desc->rd_info), GFP_ATOMIC);
+ 				if ((u8MacStatus == MAC_CONNECTED) &&
+ 				    (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE))	{
+-					memcpy(hif_drv->au8AssociatedBSSID,
++					memcpy(hif_drv->assoc_bssid,
+ 					       hif_drv->usr_conn_req.pu8bssid, ETH_ALEN);
+ 				}
+ 			}
+@@ -1657,7 +1657,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 				PRINT_ER("Connect result callback function is NULL\n");
+ 			}
  
- 		if (!device_alloc_rx_buf(priv, desc))
- 			dev_err(&priv->pcid->dev, "can not alloc rx bufs\n");
-@@ -575,7 +575,7 @@ static void device_init_rd1_ring(struct vnt_private *priv)
- 	for (i = 0; i < priv->sOpts.rx_descs1;
- 	     i ++, curr += sizeof(struct vnt_rx_desc)) {
- 		desc = &priv->aRD1Ring[i];
--		desc->rd_info = alloc_rd_info();
-+		desc->rd_info = kzalloc(sizeof(*desc->rd_info), GFP_ATOMIC);
+-			eth_zero_addr(hif_drv->au8AssociatedBSSID);
++			eth_zero_addr(hif_drv->assoc_bssid);
  
- 		if (!device_alloc_rx_buf(priv, desc))
- 			dev_err(&priv->pcid->dev, "can not alloc rx bufs\n");
+ 			hif_drv->usr_conn_req.ssidLen = 0;
+ 			kfree(hif_drv->usr_conn_req.pu8ssid);
+@@ -1840,7 +1840,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 			}
+ 
+ 			if (hif_drv->hif_state == HOST_IF_CONNECTED)
+-				memcpy(pu8keybuf, hif_drv->au8AssociatedBSSID, ETH_ALEN);
++				memcpy(pu8keybuf, hif_drv->assoc_bssid, ETH_ALEN);
+ 			else
+ 				PRINT_ER("Couldn't handle WPARxGtk while state is not HOST_IF_CONNECTED\n");
+ 
+@@ -2022,7 +2022,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 
+ 		hif_drv->hif_state = HOST_IF_IDLE;
+ 
+-		eth_zero_addr(hif_drv->au8AssociatedBSSID);
++		eth_zero_addr(hif_drv->assoc_bssid);
+ 
+ 		hif_drv->usr_conn_req.ssidLen = 0;
+ 		kfree(hif_drv->usr_conn_req.pu8ssid);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index dcdb9c6..fcfdd21 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -301,7 +301,7 @@ struct host_if_drv {
+ 
+ 	enum host_if_state hif_state;
+ 
+-	u8 au8AssociatedBSSID[ETH_ALEN];
++	u8 assoc_bssid[ETH_ALEN];
+ 	struct cfg_param_val strCfgValues;
+ /* semaphores */
+ 	struct semaphore gtOsCfgValuesSem;
 -- 
-2.5.0
+1.9.1
 
