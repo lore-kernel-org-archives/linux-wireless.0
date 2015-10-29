@@ -1,37 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27323 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbbJFLoO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:28164 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756600AbbJ2DQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2015 07:44:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: implement debugfs interface for Transmit Power Control stats
-References: <20150918075706.6983.11216.stgit@potku.adurom.net>
-Date: Tue, 6 Oct 2015 14:43:50 +0300
-In-Reply-To: <20150918075706.6983.11216.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Fri, 18 Sep 2015 10:58:22 +0300")
-Message-ID: <87d1ws2pe1.fsf@kamboji.qca.qualcomm.com> (sfid-20151006_134418_675106_40BEF0DB)
+	Wed, 28 Oct 2015 23:16:00 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 02/12] staging: wilc1000: linux_wlan_firmware_download: change argument
+Date: Thu, 29 Oct 2015 12:18:42 +0900
+Message-ID: <1446088732-12301-2-git-send-email-glen.lee@atmel.com> (sfid-20151029_041603_689749_F0E29BBE)
+In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+This patch changes argument p_nic with wilc and use it instead of
+g_linux_wlan. Pass argument dev to the function.
 
-> This implements a simple interface for debugging TPC stats. I did a small hack
-> to sparse to check endian usage with signed 32 bit values.
->
-> ---
->
-> Kalle Valo (1):
->       ath10k: add a_sle32_to_cpu()
->
-> Maharaja Kennadyrajan (1):
->       ath10k: implement debugfs interface for Transmit Power Control stats
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-Applied.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2a5b36f..69d2839 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -598,12 +598,16 @@ static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
+ _fail_:
+ 	return ret;
+ }
+-static int linux_wlan_firmware_download(struct wilc *p_nic)
++static int linux_wlan_firmware_download(struct net_device *dev)
+ {
+-
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
+ 	int ret = 0;
+ 
+-	if (!g_linux_wlan->firmware) {
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
++
++	if (!wilc->firmware) {
+ 		PRINT_ER("Firmware buffer is NULL\n");
+ 		ret = -ENOBUFS;
+ 		goto _FAIL_;
+@@ -612,15 +616,15 @@ static int linux_wlan_firmware_download(struct wilc *p_nic)
+ 	 *      do the firmware download
+ 	 **/
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+-	ret = wilc_wlan_firmware_download(g_linux_wlan->firmware->data,
+-					  g_linux_wlan->firmware->size);
++	ret = wilc_wlan_firmware_download(wilc->firmware->data,
++					  wilc->firmware->size);
+ 	if (ret < 0)
+ 		goto _FAIL_;
+ 
+ 	/* Freeing FW buffer */
+ 	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+ 	PRINT_D(INIT_DBG, "Releasing firmware\n");
+-	release_firmware(g_linux_wlan->firmware);
++	release_firmware(wilc->firmware);
+ 
+ 	PRINT_D(INIT_DBG, "Download Succeeded\n");
+ 
+@@ -1124,7 +1128,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ 
+ 		/*Download firmware*/
+-		ret = linux_wlan_firmware_download(wl);
++		ret = linux_wlan_firmware_download(dev);
+ 		if (ret < 0) {
+ 			PRINT_ER("Failed to download firmware\n");
+ 			ret = -EIO;
 -- 
-Kalle Valo
+1.9.1
+
