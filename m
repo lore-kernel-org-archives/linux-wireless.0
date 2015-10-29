@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8976 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932582AbbJVJMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:12:16 -0400
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v4 02/10] nfc: nci: Add function to get max packet size for conn
-Date: Thu, 22 Oct 2015 12:11:34 +0300
-Message-Id: <1445505102-16639-3-git-send-email-robert.dolca@intel.com> (sfid-20151022_113858_308981_9B6D49C4)
-In-Reply-To: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
-References: <1445505102-16639-1-git-send-email-robert.dolca@intel.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33714 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbbJ2M3n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2015 08:29:43 -0400
+Received: by padhy1 with SMTP id hy1so34063609pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:43 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/12] staging: wilc1000: fix parameter name of host_int_del_beacon
+Date: Thu, 29 Oct 2015 21:29:18 +0900
+Message-Id: <1446121768-4953-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132946_564866_C3767030)
+In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FDP driver needs to send the firmware as regular packets
-(not fragmented). The driver should have a way to
-get the max packet size for a given connection.
+This patch changes struct host_if_drv of host_int_del_beacon function
+declaration from hWFIDrv to hif_drv.
+With this change, first parameter name of this function declaration and
+definition has same name as hif_drv.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/data.c         | 12 ++++++++++++
- 2 files changed, 13 insertions(+)
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index d0d0f1e..aaada20 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -351,6 +351,7 @@ int nci_prop_ntf_packet(struct nci_dev *ndev, __u16 opcode,
- void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
- int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
- int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb);
-+int nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id);
- void nci_data_exchange_complete(struct nci_dev *ndev, struct sk_buff *skb,
- 				__u8 conn_id, int err);
- void nci_hci_data_received_cb(void *context, struct sk_buff *skb, int err);
-diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
-index 83acd18..dbd2425 100644
---- a/net/nfc/nci/data.c
-+++ b/net/nfc/nci/data.c
-@@ -90,6 +90,18 @@ static inline void nci_push_data_hdr(struct nci_dev *ndev,
- 	nci_pbf_set((__u8 *)hdr, pbf);
- }
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 698a588..36de990 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -932,7 +932,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
+  *  @date		10 Julys 2012
+  *  @version		1.0 Description
+  */
+-int host_int_del_beacon(struct host_if_drv *hWFIDrv);
++int host_int_del_beacon(struct host_if_drv *hif_drv);
  
-+int nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id)
-+{
-+	struct nci_conn_info *conn_info;
-+
-+	conn_info = nci_get_conn_info_by_conn_id(ndev, conn_id);
-+	if (!conn_info)
-+		return -EPROTO;
-+
-+	return conn_info->max_pkt_payload_len;
-+}
-+EXPORT_SYMBOL(nci_conn_max_data_pkt_payload_size);
-+
- static int nci_queue_tx_data_frags(struct nci_dev *ndev,
- 				   __u8 conn_id,
- 				   struct sk_buff *skb) {
+ /*!
+  *  @fn		s32 host_int_add_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-1.9.1
+2.6.1
 
