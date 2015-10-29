@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4912 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964921AbbJ2C6P (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44958 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980AbbJ2Le4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:58:15 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 19/64] staging: wilc1000: rename pRemainOnChanExpired of struct remain_ch
-Date: Thu, 29 Oct 2015 11:58:42 +0900
-Message-ID: <1446087567-16728-19-git-send-email-glen.lee@atmel.com> (sfid-20151029_035819_203625_8259A562)
-In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
-References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+	Thu, 29 Oct 2015 07:34:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org
+Subject: Re: [PATCH 1/3] ath6k:  report antenna configuration.
+References: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
+Date: Thu, 29 Oct 2015 13:34:49 +0200
+In-Reply-To: <1445464401-13826-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Wed, 21 Oct 2015 14:53:19
+	-0700")
+Message-ID: <877fm5rjqe.fsf@kamboji.qca.qualcomm.com> (sfid-20151029_123459_091812_AC4060F0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+greearb@candelatech.com writes:
 
-This patch renames pRemainOnChanExpired of struct remain_ch to expired
-to avoid CamelCase naming convention.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This lets 'iw phy phy0 info' report antennas for
+> the radio device:
+>
+> ...
+> 	Available Antennas: TX 0x2 RX 0x2
+> 	Configured Antennas: TX 0x2 RX 0x2
+> ...
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+All three applied, thanks.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 99958f4..e0ba720 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2481,7 +2481,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 
- 	if (!hif_drv->remain_on_ch_pending) {
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
--		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
-+		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
- 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
- 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
-@@ -2610,9 +2610,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 			goto _done_;
- 		}
- 
--		if (hif_drv->remain_on_ch.pRemainOnChanExpired) {
--			hif_drv->remain_on_ch.pRemainOnChanExpired(hif_drv->remain_on_ch.pVoid,
--								   pstrHostIfRemainOnChan->u32ListenSessionID);
-+		if (hif_drv->remain_on_ch.expired) {
-+			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
-+						      pstrHostIfRemainOnChan->u32ListenSessionID);
- 		}
- 		P2P_LISTEN_STATE = 0;
- 	} else {
-@@ -4369,7 +4369,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
--	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
-+	msg.body.remain_on_ch.expired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
- 	msg.body.remain_on_ch.u32duration = u32duration;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dc68711..3a9f08c 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -238,7 +238,7 @@ struct ba_session_info {
- struct remain_ch {
- 	u16 ch;
- 	u32 u32duration;
--	wilc_remain_on_chan_expired pRemainOnChanExpired;
-+	wilc_remain_on_chan_expired expired;
- 	wilc_remain_on_chan_ready pRemainOnChanReady;
- 	void *pVoid;
- 	u32 u32ListenSessionID;
 -- 
-1.9.1
-
+Kalle Valo
