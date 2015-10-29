@@ -1,127 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shetland.sei.cmu.edu ([192.58.107.44]:35555 "EHLO
-	shetland.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759876AbbJ3VFu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26928 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965429AbbJ2DEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2015 17:05:50 -0400
-From: arwelle@cert.org
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211_hwsim: Adds parameter use_hwsim_mon which can be used to disable hwism0
-Date: Fri, 30 Oct 2015 17:05:45 -0400
-Message-Id: <1446239145-21119-1-git-send-email-arwelle@cert.org> (sfid-20151030_220600_217716_ECBC99E1)
+	Wed, 28 Oct 2015 23:04:02 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 38/64] staging: wilc1000: rename s8RSSI of struct rf_info
+Date: Thu, 29 Oct 2015 12:05:30 +0900
+Message-ID: <1446087956-19054-5-git-send-email-glen.lee@atmel.com> (sfid-20151029_040406_109466_3BBF3A44)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adam Welle <arwelle@cert.org>
+From: Leo Kim <leo.kim@atmel.com>
 
-A new parameter, use_hwsim_mon has been created to implement new functionalilty. use_hwsim_mon defaults to true so that normal operation remains the same. When set to false, the hwsim0 device is not created. This value is also checked before calling functions which would transmit data to the hwsim0 device.
+This patch renames s8RSSI of struct rf_info to rssi
+to avoid CamelCase naming convention.
 
-Signed-off-by: Adam Welle <arwelle@cert.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 49 +++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ee46f46..8e48869 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -61,6 +61,10 @@ static bool support_p2p_device = true;
- module_param(support_p2p_device, bool, 0444);
- MODULE_PARM_DESC(support_p2p_device, "Support P2P-Device interface type");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5399115..bee1f7f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2144,7 +2144,7 @@ s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatis
+ 	strWIDList[u32WidsCount].id = WID_RSSI;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->s8RSSI;
++	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
+ 	u32WidsCount++;
  
-+static bool use_hwsim_mon = true;
-+module_param(use_hwsim_mon, bool, 0444);
-+MODULE_PARM_DESC(use_hwsim_mon, "Create and use hwsim0 monitor device");
-+
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-@@ -1292,7 +1296,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 				       ARRAY_SIZE(txi->control.rates));
+ 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index cef952a..25f748f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -54,7 +54,7 @@
  
- 	txi->rate_driver_data[0] = channel;
--	mac80211_hwsim_monitor_rx(hw, skb, channel);
-+	if (use_hwsim_mon)
-+		mac80211_hwsim_monitor_rx(hw, skb, channel);
+ struct rf_info {
+ 	u8 link_speed;
+-	s8 s8RSSI;
++	s8 rssi;
+ 	u32 u32TxCount;
+ 	u32 u32RxCount;
+ 	u32 u32TxFailureCount;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 29b769f..632daa8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1566,7 +1566,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 						BIT(NL80211_STA_INFO_TX_FAILED) |
+ 						BIT(NL80211_STA_INFO_TX_BITRATE);
  
- 	/* wmediumd mode check */
- 	_portid = ACCESS_ONCE(wmediumd_portid);
-@@ -1305,7 +1310,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	data->tx_bytes += skb->len;
- 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb, channel);
- 
--	if (ack && skb->len >= 16) {
-+	if (ack && skb->len >= 16 && use_hwsim_mon) {
- 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 		mac80211_hwsim_monitor_ack(channel, hdr->addr2);
- 	}
-@@ -1402,7 +1407,8 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- 				       ARRAY_SIZE(txi->control.rates));
- 	}
- 
--	mac80211_hwsim_monitor_rx(hw, skb, chan);
-+	if (use_hwsim_mon)
-+		mac80211_hwsim_monitor_rx(hw, skb, chan);
- 
- 	if (_pid)
- 		return mac80211_hwsim_tx_frame_nl(hw, skb, _pid);
-@@ -3260,26 +3266,28 @@ static int __init init_mac80211_hwsim(void)
- 			goto out_free_radios;
- 	}
- 
--	hwsim_mon = alloc_netdev(0, "hwsim%d", NET_NAME_UNKNOWN,
-+	if (use_hwsim_mon) {
-+		hwsim_mon = alloc_netdev(0, "hwsim%d", NET_NAME_UNKNOWN,
- 				 hwsim_mon_setup);
--	if (hwsim_mon == NULL) {
--		err = -ENOMEM;
--		goto out_free_radios;
--	}
-+		if (hwsim_mon == NULL) {
-+			err = -ENOMEM;
-+			goto out_free_radios;
-+		}
- 
--	rtnl_lock();
--	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
--	if (err < 0) {
--		rtnl_unlock();
--		goto out_free_radios;
--	}
-+		rtnl_lock();
-+		err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
-+		if (err < 0) {
-+			rtnl_unlock();
-+			goto out_free_radios;
-+		}
- 
--	err = register_netdevice(hwsim_mon);
--	if (err < 0) {
-+		err = register_netdevice(hwsim_mon);
-+		if (err < 0) {
-+			rtnl_unlock();
-+			goto out_free_mon;
-+		}
- 		rtnl_unlock();
--		goto out_free_mon;
- 	}
--	rtnl_unlock();
- 
- 	return 0;
- 
-@@ -3300,7 +3308,10 @@ static void __exit exit_mac80211_hwsim(void)
- 	hwsim_exit_netlink();
- 
- 	mac80211_hwsim_free();
--	unregister_netdev(hwsim_mon);
-+
-+	if (hwsim_mon)
-+		unregister_netdev(hwsim_mon);
-+
- 	platform_driver_unregister(&mac80211_hwsim_driver);
- }
- module_exit(exit_mac80211_hwsim);
+-		sinfo->signal		=  strStatistics.s8RSSI;
++		sinfo->signal = strStatistics.rssi;
+ 		sinfo->rx_packets   =  strStatistics.u32RxCount;
+ 		sinfo->tx_packets   =  strStatistics.u32TxCount + strStatistics.u32TxFailureCount;
+ 		sinfo->tx_failed	=  strStatistics.u32TxFailureCount;
 -- 
-2.1.4
+1.9.1
 
