@@ -1,106 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27196 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965268AbbJ2DFj (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35071 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757249AbbJ2XcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 23:05:39 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 55/64] staging: wilc1000: rename u8AmpduParams of struct add_sta_param
-Date: Thu, 29 Oct 2015 12:05:47 +0900
-Message-ID: <1446087956-19054-22-git-send-email-glen.lee@atmel.com> (sfid-20151029_040542_492585_3079FAB5)
-In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
-References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+	Thu, 29 Oct 2015 19:32:22 -0400
+Received: by pasz6 with SMTP id z6so54194520pas.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:32:22 -0700 (PDT)
+Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for
+ arm64 dma_alloc.
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
+ <878u6lo34e.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	me@bobcopeland.com, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <5632AC81.6090905@linaro.org> (sfid-20151030_003226_164344_6D6BF838)
+Date: Fri, 30 Oct 2015 07:32:17 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <878u6lo34e.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u8AmpduParams of struct add_sta_param to ht_ampdu_params
-to avoid CamelCase naming convention.
+On 2015/10/30 4:01, Kalle Valo wrote:
+> "Yin, Fengwei" <fengwei.yin@linaro.org> writes:
+>
+>> arm64 has requirement that all the dma operations have actual device.
+>> Otherwise, following warnning message shown and dma allocation fails:
+>>
+>> WARNING: CPU: 0 PID: 954 at arch/arm64/mm/dma-mapping.c:106 __dma_alloc+0x24c/0x258()
+>> Use an actual device structure for DMA allocation
+>> Modules linked in: wcn36xx wcn36xx_platform
+>> CPU: 0 PID: 954 Comm: ifconfig Not tainted 4.0.0+ #14
+>> Hardware name: Qualcomm Technologies, Inc. MSM 8916 MTP (DT)
+>> Call trace:
+>> [<ffffffc000089904>] dump_backtrace+0x0/0x124
+>> [<ffffffc000089a38>] show_stack+0x10/0x1c
+>> [<ffffffc000627114>] dump_stack+0x80/0xc4
+>> [<ffffffc0000b2e64>] warn_slowpath_common+0x98/0xd0
+>> [<ffffffc0000b2ee8>] warn_slowpath_fmt+0x4c/0x58
+>> [<ffffffc00009487c>] __dma_alloc+0x248/0x258
+>> [<ffffffbffc009270>] wcn36xx_dxe_allocate_mem_pools+0xc4/0x108 [wcn36xx]
+>> [<ffffffbffc0079c4>] wcn36xx_start+0x38/0x240 [wcn36xx]
+>> [<ffffffc0005f161c>] ieee80211_do_open+0x1b0/0x9a4
+>> [<ffffffc0005f1e68>] ieee80211_open+0x58/0x68
+>> [<ffffffc00051693c>] __dev_open+0xb0/0x120
+>> [<ffffffc000516c10>] __dev_change_flags+0x88/0x150
+>> [<ffffffc000516cf4>] dev_change_flags+0x1c/0x5c
+>> [<ffffffc000570950>] devinet_ioctl+0x644/0x6f0
+>>
+>> Signed-off-by: Yin, Fengwei <fengwei.yin@linaro.org>
+>
+> Please fix your name. I don't know why but your name in git statistics
+> is now "yfw":
+>
+> yfw (1):
+>        wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
+>
+> The right format for both From header and Signed-off-by line is:
+>
+> First Lastname <username@example.com>
+>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
- 3 files changed, 8 insertions(+), 6 deletions(-)
+It looks like everything is fine in my side. Could you please check your
+.mailmap whether the email was mapped to "yfw"?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e6388ff..8f7d302 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2324,7 +2324,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
- 	*pu8CurrByte++ = pstrStationParam->ht_capa_info & 0xFF;
- 	*pu8CurrByte++ = (pstrStationParam->ht_capa_info >> 8) & 0xFF;
- 
--	*pu8CurrByte++ = pstrStationParam->u8AmpduParams;
-+	*pu8CurrByte++ = pstrStationParam->ht_ampdu_params;
- 	memcpy(pu8CurrByte, pstrStationParam->au8SuppMCsSet, WILC_SUPP_MCS_SET_SIZE);
- 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 782088f..bb3bf07 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -294,7 +294,7 @@ struct add_sta_param {
- 	const u8 *rates;
- 	bool ht_supported;
- 	u16 ht_capa_info;
--	u8 u8AmpduParams;
-+	u8 ht_ampdu_params;
- 	u8 au8SuppMCsSet[16];
- 	u16 u16HTExtParams;
- 	u32 u32TxBeamformingCap;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0d465c1..5ea7bd2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3014,7 +3014,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 		} else {
- 			strStaParams.ht_supported = true;
- 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
--			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
-+			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
- 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-@@ -3028,7 +3028,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_supported);
- 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
- 			strStaParams.ht_capa_info);
--		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
-+		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
-+			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
-@@ -3130,7 +3131,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 		} else {
- 			strStaParams.ht_supported = true;
- 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
--			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
-+			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
- 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
- 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
- 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
-@@ -3145,7 +3146,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 			strStaParams.ht_supported);
- 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
- 			strStaParams.ht_capa_info);
--		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
-+		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
-+			strStaParams.ht_ampdu_params);
- 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
- 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
- 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
--- 
-1.9.1
+It's possible my name was added to your .mailmap because I sent patch to
+mail list with my email client other than git-send-email. "yfw" was used
+in my email client. Thanks.
 
+Regards
+Yin, Fengwei
