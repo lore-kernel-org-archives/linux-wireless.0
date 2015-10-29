@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41442 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754167AbbJGNsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 09:48:31 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] wireless: add WNM action frame categories
-Date: Wed,  7 Oct 2015 15:48:26 +0200
-Message-Id: <1444225706-12676-2-git-send-email-johannes@sipsolutions.net> (sfid-20151007_154837_665496_57B25FAB)
-In-Reply-To: <1444225706-12676-1-git-send-email-johannes@sipsolutions.net>
-References: <1444225706-12676-1-git-send-email-johannes@sipsolutions.net>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4912 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964921AbbJ2C6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 22:58:15 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 19/64] staging: wilc1000: rename pRemainOnChanExpired of struct remain_ch
+Date: Thu, 29 Oct 2015 11:58:42 +0900
+Message-ID: <1446087567-16728-19-git-send-email-glen.lee@atmel.com> (sfid-20151029_035819_203625_8259A562)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Add the WNM and unprotected WNM categories and mark the latter
-as not robust.
+This patch renames pRemainOnChanExpired of struct remain_ch to expired
+to avoid CamelCase naming convention.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- include/linux/ieee80211.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index d55e605212e3..f4709ab4fccd 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1932,6 +1932,8 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_HT = 7,
- 	WLAN_CATEGORY_SA_QUERY = 8,
- 	WLAN_CATEGORY_PROTECTED_DUAL_OF_ACTION = 9,
-+	WLAN_CATEGORY_WNM = 10,
-+	WLAN_CATEGORY_WNM_UNPROTECTED = 11,
- 	WLAN_CATEGORY_TDLS = 12,
- 	WLAN_CATEGORY_MESH_ACTION = 13,
- 	WLAN_CATEGORY_MULTIHOP_ACTION = 14,
-@@ -2396,6 +2398,7 @@ static inline bool _ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *hdr)
- 		category = ((u8 *) hdr) + 24;
- 		return *category != WLAN_CATEGORY_PUBLIC &&
- 			*category != WLAN_CATEGORY_HT &&
-+			*category != WLAN_CATEGORY_WNM_UNPROTECTED &&
- 			*category != WLAN_CATEGORY_SELF_PROTECTED &&
- 			*category != WLAN_CATEGORY_UNPROT_DMG &&
- 			*category != WLAN_CATEGORY_VHT &&
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 99958f4..e0ba720 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2481,7 +2481,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 
+ 	if (!hif_drv->remain_on_ch_pending) {
+ 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
+-		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
++		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
+ 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
+ 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
+ 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
+@@ -2610,9 +2610,9 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 			goto _done_;
+ 		}
+ 
+-		if (hif_drv->remain_on_ch.pRemainOnChanExpired) {
+-			hif_drv->remain_on_ch.pRemainOnChanExpired(hif_drv->remain_on_ch.pVoid,
+-								   pstrHostIfRemainOnChan->u32ListenSessionID);
++		if (hif_drv->remain_on_ch.expired) {
++			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
++						      pstrHostIfRemainOnChan->u32ListenSessionID);
+ 		}
+ 		P2P_LISTEN_STATE = 0;
+ 	} else {
+@@ -4369,7 +4369,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 
+ 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
+ 	msg.body.remain_on_ch.ch = chan;
+-	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
++	msg.body.remain_on_ch.expired = RemainOnChanExpired;
+ 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
+ 	msg.body.remain_on_ch.pVoid = pvUserArg;
+ 	msg.body.remain_on_ch.u32duration = u32duration;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index dc68711..3a9f08c 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -238,7 +238,7 @@ struct ba_session_info {
+ struct remain_ch {
+ 	u16 ch;
+ 	u32 u32duration;
+-	wilc_remain_on_chan_expired pRemainOnChanExpired;
++	wilc_remain_on_chan_expired expired;
+ 	wilc_remain_on_chan_ready pRemainOnChanReady;
+ 	void *pVoid;
+ 	u32 u32ListenSessionID;
 -- 
-2.5.1
+1.9.1
 
