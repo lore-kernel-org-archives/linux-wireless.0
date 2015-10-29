@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12849 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002AbbJZISv convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61989 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757134AbbJ2Tnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 04:18:51 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Toshiaki Makita <makita.toshiaki@lab.ntt.co.jp>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>
-Subject: Re: [PATCH v2] net: tso: add support for IPv6
-Date: Mon, 26 Oct 2015 08:17:50 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B09E0@hasmsx107.ger.corp.intel.com> (sfid-20151026_091859_634571_DC53008E)
-References: <1445803107-18513-1-git-send-email-emmanuel.grumbach@intel.com>
- <1445803371-19778-1-git-send-email-emmanuel.grumbach@intel.com>
- <562DA5FF.6040307@lab.ntt.co.jp>
- <0BA3FCBA62E2DC44AF3030971E174FB32E8B07E2@hasmsx107.ger.corp.intel.com>
- <562DE0A4.80100@lab.ntt.co.jp>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 29 Oct 2015 15:43:50 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/9] brcmfmac: new device support and cleanup
+Date: Thu, 29 Oct 2015 20:33:10 +0100
+Message-ID: <1446147199-21671-1-git-send-email-arend@broadcom.com> (sfid-20151029_204353_593199_F6A0A01F)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Here a smallish series which hopefully can make it in 4.4 release. The
+highlights are:
 
+* support bcm4359 which can operate in two bands concurrently.
+* disable runtime pm for USB avoiding issues.
+* use generic pm callback in PCIe driver.
+* support wowlan wake indication reporting.
 
-On 10/26/2015 10:14 AM, Toshiaki Makita wrote:
-> On 2015/10/26 16:47, Grumbach, Emmanuel wrote:
->> On 10/26/2015 06:03 AM, Toshiaki Makita wrote:
->>> On 2015/10/26 5:02, Emmanuel Grumbach wrote:
->>>> Adding IPv6 for the TSO helper API is trivial:
->>>> * Don't play with the id (which doesn't exist in IPv6)
->>>> * Correctly update the payload_len (don't include the
->>>>   length of the IP header itself)
->>> ...
->>>>  	memcpy(hdr, skb->data, hdr_len);
->>>> -	iph = (struct iphdr *)(hdr + mac_hdr_len);
->>>> -	iph->id = htons(tso->ip_id);
->>>> -	iph->tot_len = htons(size + hdr_len - mac_hdr_len);
->>>> +	if (skb->protocol == htons(ETH_P_IP)) {
->>>
->>> I guess this should be vlan_get_protocol(skb).
->>
->> I truly don't know. I guess we could have VLANs, but I'd need to check
->> how the packet would look like after it exits mac80211.
-> 
-> I don't know much about mac80211.
-> 
-> What I see is that mvneta has TSO in vlan_features and it uses
-> tso_build_hdr(). When vlan device is used, we cannot access network
-> protocol by skb->protocol without HW vlan acceleration.
-> So it looks like this change corrupts TSO functionality on mvneta.
+The series is intended for v4.4 and applies to the master branch
+of the wireless-drivers-next repository.
 
-Convincing enough :)
+Hante Meuleman (9):
+  brcmfmac: Add support for the BCM4359 11ac RSDB PCIE device.
+  brcmfmac: Simplify and fix usage of brcmf_ifname.
+  brcmfmac: Remove unnecessary check from start_xmit.
+  brcmfmac: Remove unncessary variable irq_requested.
+  brcmfmac: Disable runtime pm for USB.
+  brcmfmac: Add RSDB support.
+  brcmfmac: Use consistent naming for bsscfgidx.
+  brcmfmac: Use new methods for pcie Power Management.
+  brcmfmac: Add wowl wake indication report.
 
-> 
->> If we need that, I'll likely do this check once in tso_start() and add a
->> variable to struct tso_t.
-> 
-> I'm not sure if an additional variable is needed.
-> At least, skb_network_offset()/ip_hdr() should correctly handle (skip)
-> vlan headers.
-> 
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |  10 +-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  87 +++++++++++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c     |   1 +
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     | 105 +++++++++------------
+ drivers/net/wireless/brcm80211/brcmfmac/core.h     |   8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c    |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c  |   1 +
+ drivers/net/wireless/brcm80211/brcmfmac/feature.h  |   5 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |   8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |  28 +++---
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  14 ++-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 104 +++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   1 -
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   2 +
+ 17 files changed, 225 insertions(+), 163 deletions(-)
 
-Adding a bool to tso_t is more an optimisation than something needed for
-correctness. It avoid to call vlan_get_protocol(skb) for each MSS.
+-- 
+1.9.1
 
-> Toshiaki Makita
-> 
-> 
