@@ -1,101 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34388 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbbJBHmF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4863 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964921AbbJ2C56 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2015 03:42:05 -0400
-Received: by padhy16 with SMTP id hy16so99952607pad.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2015 00:42:05 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 12/12] staging: wilc1000: rename u8CurrChannel
-Date: Fri,  2 Oct 2015 16:41:21 +0900
-Message-Id: <1443771681-15540-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151002_094654_489806_BC667299)
-In-Reply-To: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1443771681-15540-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 22:57:58 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 16/64] staging: wilc1000: rename u16FrameType of struct reg_frame
+Date: Thu, 29 Oct 2015 11:58:39 +0900
+Message-ID: <1446087567-16728-16-git-send-email-glen.lee@atmel.com> (sfid-20151029_035801_071528_0F6B5D60)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces u8CurrChannel with curr_channel to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames u16FrameType of struct reg_frame to frame_type
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-V2: resend because 08/12 patch is changed.
+ drivers/staging/wilc1000/host_interface.c | 7 +++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1b31fec..f1e2d06 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -97,7 +97,7 @@ struct p2p_mgmt_data {
- /*Global variable used to state the current  connected STA channel*/
- u8 u8WLANChannel = INVALID_CHANNEL;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 41f226f..3c17912 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2554,7 +2554,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
  
--u8 u8CurrChannel;
-+u8 curr_channel;
+ 	PRINT_D(HOSTINF_DBG, "Handling frame register : %d FrameType: %d\n",
+ 		pstrHostIfRegisterFrame->reg,
+-		pstrHostIfRegisterFrame->u16FrameType);
++		pstrHostIfRegisterFrame->frame_type);
  
- u8 u8P2P_oui[] = {0x50, 0x6f, 0x9A, 0x09};
- u8 u8P2Plocalrandom = 0x01;
-@@ -670,7 +670,7 @@ static int set_channel(struct wiphy *wiphy,
- 	channelnum = ieee80211_frequency_to_channel(chandef->chan->center_freq);
- 	PRINT_D(CFG80211_DBG, "Setting channel %d with frequency %d\n", channelnum, chandef->chan->center_freq);
+ 	wid.id = (u16)WID_REGISTER_FRAME;
+ 	wid.type = WID_STR;
+@@ -2566,8 +2566,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
  
--	u8CurrChannel = channelnum;
-+	curr_channel = channelnum;
- 	result = host_int_set_mac_chnl_num(priv->hWILCWFIDrv, channelnum);
+ 	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
+ 	*pu8CurrByte++ = pstrHostIfRegisterFrame->u8Regid;
+-	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->u16FrameType,
+-	       sizeof(u16));
++	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->frame_type, sizeof(u16));
  
- 	if (result != 0)
-@@ -996,7 +996,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	PRINT_INFO(CFG80211_DBG, "Group encryption value = %s\n Cipher Group = %s\n WPA version = %s\n",
- 		   pcgroup_encrypt_val, pccipher_group, pcwpa_version);
+ 	wid.size = sizeof(u16) + 2;
  
--	u8CurrChannel = pstrNetworkInfo->u8channel;
-+	curr_channel = pstrNetworkInfo->u8channel;
- 
- 	if (!pstrWFIDrv->u8P2PConnect) {
- 		u8WLANChannel = pstrNetworkInfo->u8channel;
-@@ -2093,7 +2093,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 		PRINT_D(GENERIC_DBG, "Rx Frame Type:%x\n", buff[FRAME_TYPE_ID]);
- 
- 		/*Upper layer is informed that the frame is received on this freq*/
--		s32Freq = ieee80211_channel_to_frequency(u8CurrChannel, IEEE80211_BAND_2GHZ);
-+		s32Freq = ieee80211_channel_to_frequency(curr_channel, IEEE80211_BAND_2GHZ);
- 
- 		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
- 			PRINT_D(GENERIC_DBG, "Rx Action Frame Type: %x %x\n", buff[ACTION_SUBTYPE_ID], buff[P2P_PUB_ACTION_SUBTYPE]);
-@@ -2273,7 +2273,7 @@ static int remain_on_channel(struct wiphy *wiphy,
- 		return s32Error;
+@@ -4435,7 +4434,7 @@ s32 host_int_frame_register(struct host_if_drv *hif_drv, u16 u16FrameType, bool
+ 		PRINT_D(HOSTINF_DBG, "Not valid frame type\n");
+ 		break;
  	}
+-	msg.body.reg_frame.u16FrameType = u16FrameType;
++	msg.body.reg_frame.frame_type = u16FrameType;
+ 	msg.body.reg_frame.reg = bReg;
+ 	msg.drv = hif_drv;
  
--	u8CurrChannel = chan->hw_value;
-+	curr_channel = chan->hw_value;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index ad3071a..f4239a7 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -246,7 +246,7 @@ struct remain_ch {
  
- 	/*Setting params needed by WILC_WFI_RemainOnChannelExpired()*/
- 	priv->strRemainOnChanParams.pstrListenChan = chan;
-@@ -2394,7 +2394,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 			PRINT_D(GENERIC_DBG, "Setting channel: %d\n", chan->hw_value);
- 			host_int_set_mac_chnl_num(priv->hWILCWFIDrv, chan->hw_value);
- 			/*Save the current channel after we tune to it*/
--			u8CurrChannel = chan->hw_value;
-+			curr_channel = chan->hw_value;
- 		} else if (ieee80211_is_action(mgmt->frame_control))   {
- 			PRINT_D(GENERIC_DBG, "ACTION FRAME:%x\n", (u16)mgmt->frame_control);
+ struct reg_frame {
+ 	bool reg;
+-	u16 u16FrameType;
++	u16 frame_type;
+ 	u8 u8Regid;
+ };
  
-@@ -2409,7 +2409,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 					PRINT_D(GENERIC_DBG, "Setting channel: %d\n", chan->hw_value);
- 					host_int_set_mac_chnl_num(priv->hWILCWFIDrv, chan->hw_value);
- 					/*Save the current channel after we tune to it*/
--					u8CurrChannel = chan->hw_value;
-+					curr_channel = chan->hw_value;
- 				}
- 				switch (buf[ACTION_SUBTYPE_ID])	{
- 				case GAS_INTIAL_REQ:
 -- 
-2.6.0
+1.9.1
 
