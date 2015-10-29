@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:6050 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932079AbbJOE0b (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34026 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756901AbbJ2XSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2015 00:26:31 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/40] staging: wilc1000: rename au8StartTime of struct join_bss_param
-Date: Thu, 15 Oct 2015 13:24:50 +0900
-Message-ID: <1444883121-31757-9-git-send-email-tony.cho@atmel.com> (sfid-20151015_062636_608536_BB59007A)
-In-Reply-To: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-References: <1444883121-31757-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 19:18:23 -0400
+Received: by padhk11 with SMTP id hk11so53973747pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:22 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 10/12] staging: wilc1000: rename pstrAddStationMsg in host_int_add_station
+Date: Fri, 30 Oct 2015 08:17:46 +0900
+Message-Id: <1446160668-10747-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001831_674078_CC47419C)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch renames pstrAddStationMsg to add_sta_info to avoid camelcase.
 
-This patch renames au8StartTime of struct join_bss_param to start_time
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+V2: resend because 11/12 patch is changed.
+
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5cbba1a..320073e 100644
+index 57287d4..3c5de75 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -226,7 +226,7 @@ struct join_bss_param {
- 	u8 idx;
- 	u8 duration[4];
- 	u8 interval[4];
--	u8 au8StartTime[4];
-+	u8 start_time[4];
- };
+@@ -4521,7 +4521,7 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
++	struct add_sta_param *add_sta_info = &msg.body.add_sta_info;
  
- enum scan_conn_timer {
-@@ -1208,10 +1208,8 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -4535,15 +4535,15 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ 	msg.id = HOST_IF_MSG_ADD_STATION;
+ 	msg.drv = hif_drv;
  
--		memcpy(pu8CurrByte, ptstrJoinBssParam->au8StartTime, sizeof(ptstrJoinBssParam->au8StartTime));
--
--		pu8CurrByte += sizeof(ptstrJoinBssParam->au8StartTime);
--
-+		memcpy(pu8CurrByte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
-+		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
- 	} else
- 		PRINT_D(HOSTINF_DBG, "NOA not present\n");
+-	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
+-	if (pstrAddStationMsg->u8NumRates > 0) {
+-		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
++	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
++	if (add_sta_info->u8NumRates > 0) {
++		u8 *rates = kmalloc(add_sta_info->u8NumRates, GFP_KERNEL);
  
-@@ -5004,7 +5002,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
- 				u16P2P_count += 4;
+ 		if (!rates)
+ 			return -ENOMEM;
  
--				memcpy(pNewJoinBssParam->au8StartTime, pu8IEs + u16P2P_count, 4);
-+				memcpy(pNewJoinBssParam->start_time, pu8IEs + u16P2P_count, 4);
+-		memcpy(rates, sta_param->pu8Rates, pstrAddStationMsg->u8NumRates);
+-		pstrAddStationMsg->pu8Rates = rates;
++		memcpy(rates, sta_param->pu8Rates, add_sta_info->u8NumRates);
++		add_sta_info->pu8Rates = rates;
+ 	}
  
- 				index += pu8IEs[index + 1] + 2;
- 				continue;
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
 -- 
-1.9.1
+2.6.1
 
