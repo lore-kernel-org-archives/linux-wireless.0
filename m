@@ -1,103 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57183 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752472AbbJEPBg (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:9595 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757185AbbJ2Tnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:44 +0300
-Message-Id: <1444055820-27506-13-git-send-email-luca@coelho.fi> (sfid-20151005_170141_776122_4DD8FBDF)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 13/29] iwlwifi: op-mode API: add rx_rss method
+	Thu, 29 Oct 2015 15:43:50 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/9] brcmfmac: Add support for the BCM4359 11ac RSDB PCIE device.
+Date: Thu, 29 Oct 2015 20:33:11 +0100
+Message-ID: <1446147199-21671-2-git-send-email-arend@broadcom.com> (sfid-20151029_204356_784676_6D9AFCED)
+In-Reply-To: <1446147199-21671-1-git-send-email-arend@broadcom.com>
+References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Upcoming hardware will have the ability to do L3 hashing for RSS,
-directing data packets (and perhaps some associated metadata and
-management notifications) to different MSI-X vectors.
-
-In this case, it makes no sense to go through the full RX dispatch
-since it's already known that only a subset of the possibilities
-can come in, requiring a new receive method. In addition this must
-know which queue the packet was received on.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-op-mode.h | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 3 files changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index b47fe9d..2a58d68 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -108,7 +110,8 @@ struct iwl_cfg;
-  * interact with it. The driver layer typically calls the start and stop
-  * handlers, the transport layer calls the others.
-  *
-- * All the handlers MUST be implemented
-+ * All the handlers MUST be implemented, except @rx_rss which can be left
-+ * out *iff* the opmode will never run on hardware with multi-queue capability.
-  *
-  * @start: start the op_mode. The transport layer is already allocated.
-  *	May sleep
-@@ -116,6 +119,10 @@ struct iwl_cfg;
-  *	May sleep
-  * @rx: Rx notification to the op_mode. rxb is the Rx buffer itself. Cmd is the
-  *	HCMD this Rx responds to. Can't sleep.
-+ * @rx_rss: data queue RX notification to the op_mode, for (data) notifications
-+ *	received on the RSS queue(s). The queue parameter indicates which of the
-+ *	RSS queues received this frame; it will always be non-zero.
-+ *	This method must not sleep.
-  * @queue_full: notifies that a HW queue is full.
-  *	Must be atomic and called with BH disabled.
-  * @queue_not_full: notifies that a HW queue is not full any more.
-@@ -146,6 +153,8 @@ struct iwl_op_mode_ops {
- 	void (*stop)(struct iwl_op_mode *op_mode);
- 	void (*rx)(struct iwl_op_mode *op_mode, struct napi_struct *napi,
- 		   struct iwl_rx_cmd_buffer *rxb);
-+	void (*rx_rss)(struct iwl_op_mode *op_mode, struct napi_struct *napi,
-+		       struct iwl_rx_cmd_buffer *rxb, unsigned int queue);
- 	void (*queue_full)(struct iwl_op_mode *op_mode, int queue);
- 	void (*queue_not_full)(struct iwl_op_mode *op_mode, int queue);
- 	bool (*hw_rf_kill)(struct iwl_op_mode *op_mode, bool state);
-@@ -186,6 +195,14 @@ static inline void iwl_op_mode_rx(struct iwl_op_mode *op_mode,
- 	return op_mode->ops->rx(op_mode, napi, rxb);
- }
- 
-+static inline void iwl_op_mode_rx_rss(struct iwl_op_mode *op_mode,
-+				      struct napi_struct *napi,
-+				      struct iwl_rx_cmd_buffer *rxb,
-+				      unsigned int queue)
-+{
-+	op_mode->ops->rx_rss(op_mode, napi, rxb, queue);
-+}
-+
- static inline void iwl_op_mode_queue_full(struct iwl_op_mode *op_mode,
- 					  int queue)
- {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index f04833d..82e4382 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -681,6 +681,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 	case BRCM_CC_43569_CHIP_ID:
+ 	case BRCM_CC_43570_CHIP_ID:
+ 	case BRCM_CC_4358_CHIP_ID:
++	case BRCM_CC_4359_CHIP_ID:
+ 	case BRCM_CC_43602_CHIP_ID:
+ 	case BRCM_CC_4371_CHIP_ID:
+ 		return 0x180000;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 83d8042..7982d4d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -55,6 +55,8 @@ enum brcmf_pcie_state {
+ #define BRCMF_PCIE_43570_NVRAM_NAME		"brcm/brcmfmac43570-pcie.txt"
+ #define BRCMF_PCIE_4358_FW_NAME			"brcm/brcmfmac4358-pcie.bin"
+ #define BRCMF_PCIE_4358_NVRAM_NAME		"brcm/brcmfmac4358-pcie.txt"
++#define BRCMF_PCIE_4359_FW_NAME			"brcm/brcmfmac4359-pcie.bin"
++#define BRCMF_PCIE_4359_NVRAM_NAME		"brcm/brcmfmac4359-pcie.txt"
+ #define BRCMF_PCIE_4365_FW_NAME			"brcm/brcmfmac4365b-pcie.bin"
+ #define BRCMF_PCIE_4365_NVRAM_NAME		"brcm/brcmfmac4365b-pcie.txt"
+ #define BRCMF_PCIE_4366_FW_NAME			"brcm/brcmfmac4366b-pcie.bin"
+@@ -210,6 +212,8 @@ MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_43570_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4358_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4358_NVRAM_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4359_FW_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4359_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4365_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4365_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4366_FW_NAME);
+@@ -1517,6 +1521,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
+ 		fw_name = BRCMF_PCIE_4358_FW_NAME;
+ 		nvram_name = BRCMF_PCIE_4358_NVRAM_NAME;
+ 		break;
++	case BRCM_CC_4359_CHIP_ID:
++		fw_name = BRCMF_PCIE_4359_FW_NAME;
++		nvram_name = BRCMF_PCIE_4359_NVRAM_NAME;
++		break;
+ 	case BRCM_CC_4365_CHIP_ID:
+ 		fw_name = BRCMF_PCIE_4365_FW_NAME;
+ 		nvram_name = BRCMF_PCIE_4365_NVRAM_NAME;
+@@ -2058,6 +2066,7 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4358_DEVICE_ID),
++	BRCMF_PCIE_DEVICE(BRCM_PCIE_4359_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index aa06ea2..4092d27 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -47,6 +47,7 @@
+ #define BRCM_CC_43569_CHIP_ID		43569
+ #define BRCM_CC_43570_CHIP_ID		43570
+ #define BRCM_CC_4358_CHIP_ID		0x4358
++#define BRCM_CC_4359_CHIP_ID		0x4359
+ #define BRCM_CC_43602_CHIP_ID		43602
+ #define BRCM_CC_4365_CHIP_ID		0x4365
+ #define BRCM_CC_4366_CHIP_ID		0x4366
+@@ -66,6 +67,7 @@
+ #define BRCM_PCIE_43567_DEVICE_ID	0x43d3
+ #define BRCM_PCIE_43570_DEVICE_ID	0x43d9
+ #define BRCM_PCIE_4358_DEVICE_ID	0x43e9
++#define BRCM_PCIE_4359_DEVICE_ID	0x43ef
+ #define BRCM_PCIE_43602_DEVICE_ID	0x43ba
+ #define BRCM_PCIE_43602_2G_DEVICE_ID	0x43bb
+ #define BRCM_PCIE_43602_5G_DEVICE_ID	0x43bc
 -- 
-2.5.3
+1.9.1
 
