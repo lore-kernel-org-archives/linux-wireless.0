@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:49130 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbbJDVBt (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3006 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751639AbbJ2JHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 17:01:49 -0400
-Message-ID: <561193AD.7080904@broadcom.com> (sfid-20151004_230207_851362_96FC7B69)
-Date: Sun, 4 Oct 2015 23:01:33 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 29 Oct 2015 05:07:51 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Chris Kuethe <chris.kuethe@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: problems with mwifiex_usb, hangs under load, firmware in bad
+ state
+Date: Thu, 29 Oct 2015 09:07:48 +0000
+Message-ID: <98e25f501c0a4c5191e531feb124cf8d@SC-EXCH04.marvell.com> (sfid-20151029_100817_823517_9F2266BC)
+References: <CAGHP0pK5452ixOHr0uWY=o2S2JvgoqVx8X7r6ZnQ=ezxqNg1UA@mail.gmail.com>
+	<d866527bb2404c9f895960173159744a@SC-EXCH04.marvell.com>
+	<CAGHP0pJEnqvkRgtVprGxBqOd_c9m-ybE9L_9zAtJS=c7=LbckQ@mail.gmail.com>
+	<CAGHP0pLVvi9Q_4__QF4pZx-=HYW7bzmYbd6w6sS7RWcoRPqpfw@mail.gmail.com>
+	<cce89318b3fe4b70a0f3594986035e70@SC-EXCH04.marvell.com>
+ <CAGHP0pL90miDhicw1uE0HuZh1HDx4gSTZ-c7WV8L++Gvny=ugA@mail.gmail.com>
+In-Reply-To: <CAGHP0pL90miDhicw1uE0HuZh1HDx4gSTZ-c7WV8L++Gvny=ugA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Nicholas Krause <xerofoify@gmail.com>, <brudley@broadcom.com>
-CC: <frankyl@broadcom.com>, <meuleman@broadcom.com>,
-	<kvalo@codeaurora.org>, <pieterpg@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcm80211:Use proper skb wrapper function in the function
- brcmf_sdio_txpkt_postp
-References: <1443846257-21038-1-git-send-email-xerofoify@gmail.com>
-In-Reply-To: <1443846257-21038-1-git-send-email-xerofoify@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2015 06:24 AM, Nicholas Krause wrote:
-> This uses the proper skb wrapper function sk_unlink in the function
-> brcmf_sdio_txpkt_postp to properly protect against concurrent users
-> accessing this skb_buff pointer or skb_buff_head pointer by locking
-> the spinlock as part of the passed skb_buff_head's definition due to
-> neither this function nor its callers locking this spinlock before
-> calling skb_unlink in order to avoid possible concurrent access on
-> either of these possibly shared structure pointers.
->
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> index f990e3d..6b66542 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> @@ -2308,7 +2308,7 @@ brcmf_sdio_txpkt_postp(struct brcmf_sdio *bus, struct sk_buff_head *pktq)
->   				pkt_prev = pkt_next->prev;
->   				skb_put(pkt_prev, chop_len);
->   			}
-> -			__skb_unlink(pkt_next, pktq);
-> +			skb_unlink(pkt_next, pktq);
-
-Not sure what issue you are trying to solve here. I am pretty sure I 
-used __skb_unlink here on purpose. To my knowledge there is no 
-concurrency issue so please elaborate. Your commit message seems a bit 
-hypothetical.
-
-Regards,
-Arend
-
->   			brcmu_pkt_buf_free_skb(pkt_next);
->   		} else {
->   			hdr = pkt_next->data + bus->tx_hdrlen - SDPCM_SWHDR_LEN;
->
-
+SGkgQ2hyaXMsDQoNCj4+IEJ1dCBpbiBwcmV2aW91cyBlbWFpbCwgeW91IG1lbnRpb25lZCB0aGUg
+b25seSB3YXkgaXMgdG8gcG93ZXIgY3ljbGUgdGhlIGRldmljZSB3aGVuIGZpcm13YXJlIGNyYXNo
+ZXMuDQo+PiBXZSB3aWxsIHJ1biBzb21lIHRlc3RzIGFuZCB0cnkgdG8gcmVjcmVhdGUgdGhpcyBp
+c3N1ZSwgc28gdGhhdCBvdXIgZmlybXdhcmUgZXhwZXJ0cyBjYW4gdGFrZSBhIGxvb2sgaW50byB0
+aGlzLg0KPlRoaXMgaXMgdGhlIGZpcnN0IGNoYW5jZSBJIGhhZCB0byB0ZXN0IGJvdGggYmFuZHMg
+YXQgdGhlIHNhbWUgdGltZS4NCg0KQXMgcGVyIHlvdXIgbG9nLCBzY2FuIGNvbW1hbmQgKDB4Nikg
+Z290IHRpbWVkIG91dC4gV2UgZG9uJ3QgZXhwZWN0IGZ1cnRoZXIgY29tbWFuZHMgdG8gd29yayBh
+ZnRlciB0aGlzLiBJZiBhdmFpbGFibGUsIHBsZWFzZSBzaGFyZSBtZSB0aGUgbG9nIGZvciB0aGUg
+aXNzdWUgaW4gd2hpY2ggeW91IGZhY2VkIGEgcHJvYmxlbSBmb3IgMi40R2h6LCBidXQgNUdoeiB3
+b3JrZWQgZmluZS4NCg0KDQotLS0tLS0tZmFpbHVyZSBsb2ctLS0tLS0tLS0tDQpPY3QgMjggMTE6
+NTE6MDQga2VybmVsOiBbIDEyMjkuMTc1NjI3XSB1c2IgMS0yOiBtd2lmaWV4X2NtZF90aW1lb3V0
+X2Z1bmM6IFRpbWVvdXQgY21kIGlkID0gMHg2LCBhY3QgPSAweDMNCk9jdCAyOCAxMTo1MTowNCBr
+ZXJuZWw6IFsgMTIyOS4xNzU2MzRdIHVzYiAxLTI6IG51bV9kYXRhX2gyY19mYWlsdXJlID0gMA0K
+T2N0IDI4IDExOjUxOjA0IGtlcm5lbDogWyAxMjI5LjE3NTYzN10gdXNiIDEtMjogbnVtX2NtZF9o
+MmNfZmFpbHVyZSA9IDANCk9jdCAyOCAxMTo1MTowNCBrZXJuZWw6IFsgMTIyOS4xNzU2NDBdIHVz
+YiAxLTI6IGlzX2NtZF90aW1lZG91dCA9IDENCk9jdCAyOCAxMTo1MToxOSBrZXJuZWw6IFsgMTI0
+NC43MTIwNzddIHVzYiAxLTI6IElnbm9yZSBzY2FuLiBDYXJkIHJlbW92ZWQgb3IgZmlybXdhcmUg
+aW4gYmFkIHN0YXRlDQpPY3QgMjggMTE6NTE6MTkga2VybmVsOiBbIDEyNDQuNzEyMDc5XSB1c2Ig
+MS0yOiBzY2FuIGZhaWxlZDogLTE0DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0K
+UmVnYXJkcywNCkFtaXRrdW1hcg0K
