@@ -1,124 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41514 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbbJ1G5t (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33782 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757974AbbJ2XSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 02:57:49 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/80] staging: wilc1000: fixes braces {} are not necessary for single statement blocks
-Date: Wed, 28 Oct 2015 15:59:22 +0900
-Message-ID: <1446015640-29398-2-git-send-email-glen.lee@atmel.com> (sfid-20151028_075751_860198_8A2A94ED)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 19:18:00 -0400
+Received: by padfb7 with SMTP id fb7so5896155pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:17:59 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 03/12] staging: wilc1000: fix return type of host_int_del_station
+Date: Fri, 30 Oct 2015 08:17:39 +0900
+Message-Id: <1446160668-10747-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001843_018762_72E7850B)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes return type of host_int_del_station from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-This patch fixes the warnings reported by checkpatch.pl
-for braces {} are not necessary for single statement blocks
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 34 +++++++++++++++----------------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+V2: resend because 11/12 patch is changed.
+
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index acc6552b..47064fe 100644
+index b469962..be5e652 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3339,13 +3339,13 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	msg.body.key_info.attr.wpa.key = kmalloc(u8KeyLen, GFP_KERNEL);
- 	memcpy(msg.body.key_info.attr.wpa.key, pu8RxGtk, u8GtkKeylen);
+@@ -4552,9 +4552,9 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 	return result;
+ }
  
--	if (pu8RxMic) {
--		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
--	}
-+	if (pu8RxMic)
-+		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic,
-+		       RX_MIC_KEY_LEN);
+-s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
  
--	if (pu8TxMic) {
--		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic, TX_MIC_KEY_LEN);
--	}
-+	if (pu8TxMic)
-+		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic,
-+		       TX_MIC_KEY_LEN);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 36de990..9eb1b3b 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
  
- 	msg.body.key_info.attr.wpa.index = u8KeyIdx;
- 	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
-@@ -4255,13 +4255,11 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 	terminated_handle = hif_drv;
- 	PRINT_D(HOSTINF_DBG, "De-initializing host interface for client %d\n", clients_count);
- 
--	if (del_timer_sync(&hif_drv->hScanTimer)) {
-+	if (del_timer_sync(&hif_drv->hScanTimer))
- 		PRINT_D(HOSTINF_DBG, ">> Scan timer is active\n");
--	}
- 
--	if (del_timer_sync(&hif_drv->hConnectTimer)) {
-+	if (del_timer_sync(&hif_drv->hConnectTimer))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
--	}
- 
- 	if (del_timer_sync(&periodic_rssi))
- 		PRINT_D(HOSTINF_DBG, ">> Connect timer is active\n");
-@@ -4841,9 +4839,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				pNewJoinBssParam->supp_rates[0] = suppRatesNo;
- 				index += 2;
- 
--				for (i = 0; i < suppRatesNo; i++) {
-+				for (i = 0; i < suppRatesNo; i++)
- 					pNewJoinBssParam->supp_rates[i + 1] = pu8IEs[index + i];
--				}
-+
- 				index += suppRatesNo;
- 				continue;
- 			} else if (pu8IEs[index] == EXT_SUPP_RATES_IE) {
-@@ -4853,9 +4851,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				else
- 					pNewJoinBssParam->supp_rates[0] += extSuppRatesNo;
- 				index += 2;
--				for (i = 0; i < (pNewJoinBssParam->supp_rates[0] - suppRatesNo); i++) {
-+				for (i = 0; i < (pNewJoinBssParam->supp_rates[0] - suppRatesNo); i++)
- 					pNewJoinBssParam->supp_rates[suppRatesNo + i + 1] = pu8IEs[index + i];
--				}
-+
- 				index += extSuppRatesNo;
- 				continue;
- 			} else if (pu8IEs[index] == HT_CAPABILITY_IE) {
-@@ -4930,9 +4928,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				pcipherCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
- 				rsnIndex += 2;
- 
--				for (i = pcipherTotalCount, j = 0; i < pcipherCount + pcipherTotalCount && i < 3; i++, j++) {
-+				for (i = pcipherTotalCount, j = 0; i < pcipherCount + pcipherTotalCount && i < 3; i++, j++)
- 					pNewJoinBssParam->rsn_pcip_policy[i] = pu8IEs[rsnIndex + ((j + 1) * 4) - 1];
--				}
-+
- 				pcipherTotalCount += pcipherCount;
- 				rsnIndex += jumpOffset;
- 
-@@ -4941,9 +4939,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				authCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
- 				rsnIndex += 2;
- 
--				for (i = authTotalCount, j = 0; i < authTotalCount + authCount; i++, j++) {
-+				for (i = authTotalCount, j = 0; i < authTotalCount + authCount; i++, j++)
- 					pNewJoinBssParam->rsn_auth_policy[i] = pu8IEs[rsnIndex + ((j + 1) * 4) - 1];
--				}
-+
- 				authTotalCount += authCount;
- 				rsnIndex += jumpOffset;
- 
+ /*!
+  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-1.9.1
+2.6.1
 
