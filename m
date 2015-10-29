@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52567 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbbJPEkh (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33736 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757942AbbJ2XR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:40:37 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 23/40] staging: wilc1000: rename variable gs8SetIP
-Date: Fri, 16 Oct 2015 13:37:53 +0900
-Message-ID: <1444970290-17609-23-git-send-email-tony.cho@atmel.com> (sfid-20151016_064659_404804_912219FF)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 19:17:57 -0400
+Received: by padfb7 with SMTP id fb7so5896013pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:17:56 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 02/12] staging: wilc1000: fix parameter name of host_int_del_beacon
+Date: Fri, 30 Oct 2015 08:17:38 +0900
+Message-Id: <1446160668-10747-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001819_979755_23ADA553)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes struct host_if_drv of host_int_del_beacon function
+declaration from hWFIDrv to hif_drv.
+With this change, first parameter name of this function declaration and
+definition has same name as hif_drv.
 
-This patch renames variable gs8SetIP to set_ip
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+V2: resend because 11/12 patch is changed.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c9126d0..7e436fb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -256,7 +256,7 @@ static bool scan_while_connected;
- static s8 rssi;
- static s8 link_speed;
- static u8 ch_no;
--static u8 gs8SetIP[2][4];
-+static u8 set_ip[2][4];
- static u8 gs8GetIP[2][4];
- static u32 gu32InactiveTime;
- static u8 gu8DelBcn;
-@@ -417,7 +417,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 698a588..36de990 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -932,7 +932,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
+  *  @date		10 Julys 2012
+  *  @version		1.0 Description
+  */
+-int host_int_del_beacon(struct host_if_drv *hWFIDrv);
++int host_int_del_beacon(struct host_if_drv *hif_drv);
  
- 	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
- 
--	memcpy(gs8SetIP[idx], pu8IPAddr, IP_ALEN);
-+	memcpy(set_ip[idx], pu8IPAddr, IP_ALEN);
- 
- 	strWID.id = (u16)WID_IP_ADDRESS;
- 	strWID.type = WID_STR;
-@@ -460,8 +460,8 @@ s32 Handle_get_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
- 
- 	kfree(strWID.val);
- 
--	if (memcmp(gs8GetIP[idx], gs8SetIP[idx], IP_ALEN) != 0)
--		host_int_setup_ipaddress(hif_drv, gs8SetIP[idx], idx);
-+	if (memcmp(gs8GetIP[idx], set_ip[idx], IP_ALEN) != 0)
-+		host_int_setup_ipaddress(hif_drv, set_ip[idx], idx);
- 
- 	if (s32Error != 0) {
- 		PRINT_ER("Failed to get IP address\n");
+ /*!
+  *  @fn		s32 host_int_add_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-1.9.1
+2.6.1
 
