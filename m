@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:36590 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753AbbJWFyk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38960 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbbJ2LEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:54:40 -0400
-Received: by lffz202 with SMTP id z202so71900306lff.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Oct 2015 22:54:39 -0700 (PDT)
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> <1445323546-12807-6-git-send-email-jsitnicki@gmail.com> <wrfjk2qhvvs4.fsf@redhat.com>
-From: Jakub Sitnicki <jsitnicki@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 05/16] rtl8xxxu: Unbreak a user-visible string
-In-reply-to: <wrfjk2qhvvs4.fsf@redhat.com>
-Date: Fri, 23 Oct 2015 07:54:38 +0200
-Message-ID: <87y4euruxt.fsf@frog.home> (sfid-20151023_075444_516457_C41243C0)
+	Thu, 29 Oct 2015 07:04:02 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add QCA9377 chipset support
+References: <1446041393-4652-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Thu, 29 Oct 2015 13:03:42 +0200
+In-Reply-To: <1446041393-4652-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 28 Oct 2015 15:09:53 +0100")
+Message-ID: <87bnbiq6lt.fsf@kamboji.qca.qualcomm.com> (sfid-20151029_120415_229300_9A3DBD16)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 03:46 AM CEST, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Jakub Sitnicki <jsitnicki@gmail.com> writes:
->> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> index cfb18db..e892fde 100644
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> @@ -2002,8 +2002,8 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
->>  		/* We have 8 bits to indicate validity */
->>  		map_addr = offset * 8;
->>  		if (map_addr >= EFUSE_MAP_LEN_8723A) {
->> -			dev_warn(dev, "%s: Illegal map_addr (%04x), "
->> -				 "efuse corrupt!\n",
->> +			dev_warn(dev,
->> +				 "%s: Illegal map_addr (%04x), efuse corrupt!\n",
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+
+> Add the hardware name, revision and update the pci_id table.
 >
-> This would make the line longer than 80 characters - so no.
+> Currently there're two HW ref. designs available I'm aware of,
+> with 1.0.2 and 1.1 chip revisions. I've access and been using
+> the first one so far and this patch cover only it.
 >
-> NAK
+> QCA9377 inherits most of the stuff (e.g. fw interfaces)
+> from QCA61x4 design, so the integration was pretty straightforward.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Oh, okay.  In my defense, Your Honor, Documentation/CodingStyle made me
-do it ;-)
+Applied, thanks.
 
-  [...] However, never break user-visible strings such as printk
-  messages, because that breaks the ability to grep for them.
+I pushed the firmware image here:
 
-Cheers,
-Jakub
+https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0
+
+All reports, good or bad, are very welcome.
+
+-- 
+Kalle Valo
