@@ -1,92 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36523 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbbJUMN1 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27078 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965300AbbJ2DE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2015 08:13:27 -0400
-Received: by pacfv9 with SMTP id fv9so55822168pac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2015 05:13:26 -0700 (PDT)
-From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] mesh: show mesh parameters when no args are given
-Date: Wed, 21 Oct 2015 14:13:19 +0200
-Message-Id: <1445429599-22148-1-git-send-email-ola1olsson@gmail.com> (sfid-20151021_141329_733713_FFDA515D)
+	Wed, 28 Oct 2015 23:04:59 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 48/64] staging: wilc1000: rename u8P2PConnect of struct host_if_drv
+Date: Thu, 29 Oct 2015 12:05:40 +0900
+Message-ID: <1446087956-19054-15-git-send-email-glen.lee@atmel.com> (sfid-20151029_040501_642276_62681DFF)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The help text in "<get|set> mesh_param" says that
-available parameters will be shown if no args are given
-but that is not the case - fix that.
+From: Leo Kim <leo.kim@atmel.com>
 
-Also, add help text if a parameter is given but not found.
+This patch renames u8P2PConnect of struct host_if_drv to p2p_connect
+to avoid CamelCase naming convention.
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- mesh.c |   23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 ++++++++--------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 460d0c9..f2415f3 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -286,7 +286,6 @@ static const struct mesh_param_descr *find_mesh_param(const char *name)
- 			return _mesh_param_descrs + i;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index c9a4ce8..60dcc36 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -265,7 +265,7 @@ struct host_if_drv {
+ 	struct remain_ch remain_on_ch;
+ 	u8 remain_on_ch_pending;
+ 	u64 p2p_timeout;
+-	u8 u8P2PConnect;
++	u8 p2p_connect;
  
--	print_all_mesh_param_descr();
- 	return NULL;
- }
+ 	enum host_if_state hif_state;
  
-@@ -305,8 +304,10 @@ static int set_interface_meshparam(struct nl80211_state *state,
- 	if (!container)
- 		return -ENOBUFS;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 116c37d..4828deb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -564,7 +564,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			eth_zero_addr(u8ConnectedSSID);
  
--	if (!argc)
-+	if (!argc) {
-+		print_all_mesh_param_descr();
- 		return 1;
-+	}
+ 			/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+-			if (!pstrWFIDrv->u8P2PConnect)
++			if (!pstrWFIDrv->p2p_connect)
+ 				u8WLANChannel = INVALID_CHANNEL;
  
- 	while (argc) {
- 		const char *name;
-@@ -334,8 +335,11 @@ static int set_interface_meshparam(struct nl80211_state *state,
- 		}
+ 			PRINT_ER("Unspecified failure: Connection status %d : MAC status = %d\n", u16ConnectStatus, u8MacStatus);
+@@ -623,7 +623,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 		eth_zero_addr(u8ConnectedSSID);
  
- 		mdescr = find_mesh_param(name);
--		if (!mdescr)
-+		if (!mdescr) {
-+			printf("Could not find the parameter %s.\n", name);
-+			print_all_mesh_param_descr();
- 			return 2;
-+		}
- 
- 		/* Parse the new value */
- 		ret = mdescr->parse_fn(value, &any);
-@@ -411,13 +415,18 @@ static int get_interface_meshparam(struct nl80211_state *state,
- {
- 	const struct mesh_param_descr *mdescr = NULL;
- 
--	if (argc > 1)
-+	if (argc == 0) {
-+		print_all_mesh_param_descr();
- 		return 1;
--
--	if (argc == 1) {
-+	} else if (argc == 1) {
- 		mdescr = find_mesh_param(argv[0]);
--		if (!mdescr)
-+		if (!mdescr) {
-+			printf("Could not find the parameter %s.\n", argv[0]);
-+			print_all_mesh_param_descr();
- 			return 2;
-+		}
+ 		/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+-		if (!pstrWFIDrv->u8P2PConnect)
++		if (!pstrWFIDrv->p2p_connect)
+ 			u8WLANChannel = INVALID_CHANNEL;
+ 		/*Incase "P2P CLIENT Connected" send deauthentication reason by 3 to force the WPA_SUPPLICANT to directly change
+ 		 *      virtual interface to station*/
+@@ -804,9 +804,10 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
+ 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
+ 		PRINT_D(CFG80211_DBG, "Connected to Direct network,OBSS disabled\n");
+-		pstrWFIDrv->u8P2PConnect = 1;
+-	} else
+-		pstrWFIDrv->u8P2PConnect = 0;
++		pstrWFIDrv->p2p_connect = 1;
 +	} else {
-+		return 1;
- 	}
++		pstrWFIDrv->p2p_connect = 0;
++	}
+ 	PRINT_INFO(CFG80211_DBG, "Required SSID = %s\n , AuthType = %d\n", sme->ssid, sme->auth_type);
  
- 	register_handler(print_mesh_param_handler, (void *)mdescr);
+ 	for (i = 0; i < u32LastScannedNtwrksCountShadow; i++) {
+@@ -997,9 +998,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	curr_channel = pstrNetworkInfo->u8channel;
+ 
+-	if (!pstrWFIDrv->u8P2PConnect) {
++	if (!pstrWFIDrv->p2p_connect)
+ 		u8WLANChannel = pstrNetworkInfo->u8channel;
+-	}
+ 
+ 	linux_wlan_set_bssid(dev, pstrNetworkInfo->au8bssid);
+ 
+@@ -1041,7 +1041,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 
+ 	/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+ 	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
+-	if (!pstrWFIDrv->u8P2PConnect)
++	if (!pstrWFIDrv->p2p_connect)
+ 		u8WLANChannel = INVALID_CHANNEL;
+ 	linux_wlan_set_bssid(priv->dev, NullBssid);
+ 
 -- 
-1.7.9.5
+1.9.1
 
