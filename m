@@ -1,100 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22427 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750702AbbJIMFf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 08:05:35 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>,
-	PaX Team <pageexec@freemail.hu>
-CC: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"re.emese@gmail.com" <re.emese@gmail.com>,
-	"spender@grsecurity.net" <spender@grsecurity.net>
-Subject: RE: question about potential integer truncation in
- mwifiex_set_wapi_ie and mwifiex_set_wps_ie
-Date: Fri, 9 Oct 2015 12:05:01 +0000
-Message-ID: <464d9553bace4971add4c3b448a1255f@SC-EXCH04.marvell.com> (sfid-20151009_140543_246590_4BB6A32E)
-References: <560AAC78.14106.6193CAA9@pageexec.freemail.hu>
- <20150929231038.GG8613@us.netrek.org>
-In-Reply-To: <20150929231038.GG8613@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4954 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964921AbbJ2C60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 22:58:26 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 21/64] staging: wilc1000: rename pVoid of struct remain_ch
+Date: Thu, 29 Oct 2015 11:58:44 +0900
+Message-ID: <1446087567-16728-21-git-send-email-glen.lee@atmel.com> (sfid-20151029_035829_510825_084284F8)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James/PaX Team,
+From: Leo Kim <leo.kim@atmel.com>
 
-> -----Original Message-----
-> From: quozl@laptop.org [mailto:quozl@laptop.org]
-> Sent: Wednesday, September 30, 2015 4:41 AM
-> To: PaX Team
-> Cc: Amitkumar Karwar; Avinash Patil; Kalle Valo; linux-
-> wireless@vger.kernel.org; netdev@vger.kernel.org; re.emese@gmail.com;
-> spender@grsecurity.net
-> Subject: Re: question about potential integer truncation in
-> mwifiex_set_wapi_ie and mwifiex_set_wps_ie
-> 
-> On Tue, Sep 29, 2015 at 05:21:28PM +0200, PaX Team wrote:
-> > hi all,
-> >
-> > in drivers/net/wireless/mwifiex/sta_ioctl.c the following functions
-> >
-> > 	mwifiex_set_wpa_ie_helper
-> > 	mwifiex_set_wapi_ie
-> > 	mwifiex_set_wps_ie
-> >
-> > can truncate the incoming ie_len argument from u16 to u8 when it gets
-> > stored in mwifiex_private.wpa_ie_len, mwifiex_private.wapi_ie_len and
-> > mwifiex_private.wps_ie_len, respectively. based on some light code
-> > reading it seems a length value of 256 is valid (IEEE_MAX_IE_SIZE and
-> > MWIFIEX_MAX_VSIE_LEN seem to limit it) and thus would get truncated to
-> > 0 when stored in those u8 fields. the question is whether this is
-> > intentional or a bug somewhere.
-> 
-> i agree, while there is a test to ensure ie_len is not greater than 256,
-> there is a possibility that it will be exactly 256, which means
-> 256 bytes will be given to memcpy but
-> mwifiex_private.{wpa,wapi,wps}_ie_len will be zero.
-> 
-> i suggest changing the lengths to u16.  not tested.
-> 
-> diff --git a/drivers/net/wireless/mwifiex/main.h
-> b/drivers/net/wireless/mwifiex/main.h
-> index fe12560..b66e9a7 100644
-> --- a/drivers/net/wireless/mwifiex/main.h
-> +++ b/drivers/net/wireless/mwifiex/main.h
-> @@ -512,14 +512,14 @@ struct mwifiex_private {
->  	struct mwifiex_wep_key wep_key[NUM_WEP_KEYS];
->  	u16 wep_key_curr_index;
->  	u8 wpa_ie[256];
-> -	u8 wpa_ie_len;
-> +	u16 wpa_ie_len;
->  	u8 wpa_is_gtk_set;
->  	struct host_cmd_ds_802_11_key_material aes_key;
->  	struct host_cmd_ds_802_11_key_material_v2 aes_key_v2;
->  	u8 wapi_ie[256];
-> -	u8 wapi_ie_len;
-> +	u16 wapi_ie_len;
->  	u8 *wps_ie;
-> -	u8 wps_ie_len;
-> +	u16 wps_ie_len;
->  	u8 wmm_required;
->  	u8 wmm_enabled;
->  	u8 wmm_qosinfo;
-> 
+This patch renames pVoid of struct remain_ch to arg
+to avoid CamelCase naming convention.
 
-This change makes sense. Also, we should not typecast the length to v8 while copying to mwifiex_private variable.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-./sta_ioctl.c:761:		priv->wpa_ie_len = (u8) ie_len;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c49bbbf..1ccf450 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2480,7 +2480,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ 	struct wid wid;
+ 
+ 	if (!hif_drv->remain_on_ch_pending) {
+-		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
++		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
+ 		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
+ 		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
+ 		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
+@@ -2537,7 +2537,7 @@ ERRORHANDLER:
+ 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+ 
+ 		if (hif_drv->remain_on_ch.ready)
+-			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.pVoid);
++			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
+ 
+ 		if (hif_drv->remain_on_ch_pending)
+ 			hif_drv->remain_on_ch_pending = 0;
+@@ -2611,7 +2611,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 		}
+ 
+ 		if (hif_drv->remain_on_ch.expired) {
+-			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.pVoid,
++			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+ 						      pstrHostIfRemainOnChan->u32ListenSessionID);
+ 		}
+ 		P2P_LISTEN_STATE = 0;
+@@ -4371,7 +4371,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
+ 	msg.body.remain_on_ch.ch = chan;
+ 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
+ 	msg.body.remain_on_ch.ready = RemainOnChanReady;
+-	msg.body.remain_on_ch.pVoid = pvUserArg;
++	msg.body.remain_on_ch.arg = pvUserArg;
+ 	msg.body.remain_on_ch.u32duration = u32duration;
+ 	msg.body.remain_on_ch.u32ListenSessionID = u32SessionID;
+ 	msg.drv = hif_drv;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d3dafc6..a69be55 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -240,7 +240,7 @@ struct remain_ch {
+ 	u32 u32duration;
+ 	wilc_remain_on_chan_expired expired;
+ 	wilc_remain_on_chan_ready ready;
+-	void *pVoid;
++	void *arg;
+ 	u32 u32ListenSessionID;
+ };
+ 
+-- 
+1.9.1
 
-Eventually the length stored in 'wapi_ie_len' is copied to a u16 variable.
-
-/join.c:304:		ie_header.len = cpu_to_le16(priv->wapi_ie_len);
-
-I will submit a patch to fix this.
-
-Regards,
-Amitkumar
