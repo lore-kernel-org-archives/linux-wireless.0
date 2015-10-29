@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36916 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896AbbJWHuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 03:50:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: replace ieee80211_ie_split() with an inline
-Date: Fri, 23 Oct 2015 09:50:03 +0200
-Message-Id: <1445586603-30066-1-git-send-email-johannes@sipsolutions.net> (sfid-20151023_095011_977379_1BA9465A)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:28211 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756323AbbJ2DQX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 23:16:23 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 06/12] staging: wilc1000: linux_wlan_start_firmware: change argument with dev
+Date: Thu, 29 Oct 2015 12:18:46 +0900
+Message-ID: <1446088732-12301-6-git-send-email-glen.lee@atmel.com> (sfid-20151029_041626_108303_D6411BC7)
+In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch changes argument nic with dev and use netdev private data member
+wilc instead of g_linux_wlan, and pass dev to the function as well.
 
-The function is a very simple wrapper around another one,
-just adds a few default parameters, so replace it with a
-static inline instead of using EXPORT_SYMBOL, reducing
-the module size slightly.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- include/net/cfg80211.h | 7 +++++--
- net/wireless/util.c    | 7 -------
- 2 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2c7bdb81d30c..e568872203a5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5173,8 +5173,11 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
-  * buffer starts, which may be @ielen if the entire (remainder)
-  * of the buffer should be used.
-  */
--size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
--			  const u8 *ids, int n_ids, size_t offset);
-+static inline size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
-+					const u8 *ids, int n_ids, size_t offset)
-+{
-+	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
-+}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 69d2839..6b5f1c5 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -570,10 +570,15 @@ _fail_:
  
- /**
-  * cfg80211_report_wowlan_wakeup - report wakeup from WoWLAN
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index baf7218cec15..010a3c75a677 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1325,13 +1325,6 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
  }
- EXPORT_SYMBOL(ieee80211_ie_split_ric);
  
--size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
--			  const u8 *ids, int n_ids, size_t offset)
--{
--	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
--}
--EXPORT_SYMBOL(ieee80211_ie_split);
--
- bool ieee80211_operating_class_to_band(u8 operating_class,
- 				       enum ieee80211_band *band)
+-static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
++static int linux_wlan_start_firmware(struct net_device *dev)
  {
+-
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
+ 	int ret = 0;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
++
+ 	/* start firmware */
+ 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
+ 	ret = wilc_wlan_start();
+@@ -584,7 +589,7 @@ static int linux_wlan_start_firmware(perInterface_wlan_t *nic)
+ 
+ 	/* wait for mac ready */
+ 	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
+-	ret = linux_wlan_lock_timeout(&g_linux_wlan->sync_event, 5000);
++	ret = linux_wlan_lock_timeout(&wilc->sync_event, 5000);
+ 	if (ret) {
+ 		PRINT_D(INIT_DBG, "Firmware start timed out");
+ 		goto _fail_;
+@@ -1136,7 +1141,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		}
+ 
+ 		/* Start firmware*/
+-		ret = linux_wlan_start_firmware(nic);
++		ret = linux_wlan_start_firmware(dev);
+ 		if (ret < 0) {
+ 			PRINT_ER("Failed to start firmware\n");
+ 			ret = -EIO;
 -- 
-2.5.1
+1.9.1
 
