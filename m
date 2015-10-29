@@ -1,69 +1,385 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3261 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:28308 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbbJMKyi (ORCPT
+	with ESMTP id S965569AbbJ2DQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:54:38 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Wed, 28 Oct 2015 23:16:59 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 37/54] staging: wilc1000: rename u8SetChan of struct channel_attr
-Date: Tue, 13 Oct 2015 19:50:02 +0900
-Message-ID: <1444733419-17679-37-git-send-email-tony.cho@atmel.com> (sfid-20151013_125440_961922_693D2262)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 12/12] staging: wilc1000: add argument wilc and use it instead of g_linux_wlan
+Date: Thu, 29 Oct 2015 12:18:52 +0900
+Message-ID: <1446088732-12301-12-git-send-email-glen.lee@atmel.com> (sfid-20151029_044654_550045_19130539)
+In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch adds new argument wilc to linux_sdio_cmd53 and linux_sdio_cmd52
+, and use it instead of g_linux_wlan. Pass wilc to the functions as well.
+The void type wilc will be changed with struct wilc when SDIO and SPI
+modules are reworked.
 
-This patch renames u8SetChan of struct channel_attr to set_ch to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_sdio.c |  8 ++--
+ drivers/staging/wilc1000/linux_wlan_sdio.h |  4 +-
+ drivers/staging/wilc1000/wilc_sdio.c       | 66 +++++++++++++++---------------
+ drivers/staging/wilc1000/wilc_wlan_if.h    |  4 +-
+ 4 files changed, 41 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3d0796f..cd42364 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -127,7 +127,7 @@ struct rcvd_async_info {
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index bf05e22..8150d6f 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -53,9 +53,9 @@ static void wilc_sdio_interrupt(struct sdio_func *func)
+ }
  
- struct channel_attr {
--	u8 u8SetChan;
-+	u8 set_ch;
- };
  
- struct beacon_attr {
-@@ -342,7 +342,7 @@ static s32 Handle_SetChannel(struct host_if_drv *hif_drv,
+-int linux_sdio_cmd52(sdio_cmd52_t *cmd)
++int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd)
+ {
+-	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
++	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
+ 	int ret;
+ 	u8 data;
  
- 	strWID.id = (u16)WID_CURRENT_CHANNEL;
- 	strWID.type = WID_CHAR;
--	strWID.val = (char *)&(pstrHostIFSetChan->u8SetChan);
-+	strWID.val = (char *)&(pstrHostIFSetChan->set_ch);
- 	strWID.size = sizeof(char);
+@@ -85,9 +85,9 @@ int linux_sdio_cmd52(sdio_cmd52_t *cmd)
+ }
  
- 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
-@@ -3786,7 +3786,7 @@ int host_int_set_mac_chnl_num(struct host_if_drv *hif_drv, u8 channel)
  
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_CHANNEL;
--	msg.body.channel_info.u8SetChan = channel;
-+	msg.body.channel_info.set_ch = channel;
- 	msg.drv = hif_drv;
+-int linux_sdio_cmd53(sdio_cmd53_t *cmd)
++int linux_sdio_cmd53(void *wilc, sdio_cmd53_t *cmd)
+ {
+-	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
++	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
+ 	int size, ret;
  
- 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
+ 	sdio_claim_host(func);
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
+index 4b515f5..d4b3d12 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.h
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
+@@ -5,8 +5,8 @@ extern struct sdio_driver wilc_bus;
+ 
+ int linux_sdio_init(void *);
+ void linux_sdio_deinit(void *);
+-int linux_sdio_cmd52(sdio_cmd52_t *cmd);
+-int linux_sdio_cmd53(sdio_cmd53_t *cmd);
++int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd);
++int linux_sdio_cmd53(void *wilc, sdio_cmd53_t *cmd);
+ int enable_sdio_interrupt(void);
+ void disable_sdio_interrupt(void);
+ int linux_sdio_set_max_speed(void);
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 82f68eb..b9ca142 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -16,8 +16,8 @@
+ typedef struct {
+ 	void *wilc;
+ 	u32 block_size;
+-	int (*sdio_cmd52)(sdio_cmd52_t *);
+-	int (*sdio_cmd53)(sdio_cmd53_t *);
++	int (*sdio_cmd52)(void *, sdio_cmd52_t *);
++	int (*sdio_cmd53)(void *, sdio_cmd53_t *);
+ 	int (*sdio_set_max_speed)(void);
+ 	int (*sdio_set_default_speed)(void);
+ 	wilc_debug_func dPrint;
+@@ -51,21 +51,21 @@ static int sdio_set_func0_csa_address(u32 adr)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x10c;
+ 	cmd.data = (u8)adr;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x10c data...\n");
+ 		goto _fail_;
+ 	}
+ 
+ 	cmd.address = 0x10d;
+ 	cmd.data = (u8)(adr >> 8);
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x10d data...\n");
+ 		goto _fail_;
+ 	}
+ 
+ 	cmd.address = 0x10e;
+ 	cmd.data = (u8)(adr >> 16);
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x10e data...\n");
+ 		goto _fail_;
+ 	}
+@@ -84,14 +84,14 @@ static int sdio_set_func0_block_size(u32 block_size)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x10;
+ 	cmd.data = (u8)block_size;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x10 data...\n");
+ 		goto _fail_;
+ 	}
+ 
+ 	cmd.address = 0x11;
+ 	cmd.data = (u8)(block_size >> 8);
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x11 data...\n");
+ 		goto _fail_;
+ 	}
+@@ -116,13 +116,13 @@ static int sdio_set_func1_block_size(u32 block_size)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x110;
+ 	cmd.data = (u8)block_size;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x110 data...\n");
+ 		goto _fail_;
+ 	}
+ 	cmd.address = 0x111;
+ 	cmd.data = (u8)(block_size >> 8);
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0x111 data...\n");
+ 		goto _fail_;
+ 	}
+@@ -143,7 +143,7 @@ static int sdio_clear_int(void)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x4;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 
+ 	return cmd.data;
+ #else
+@@ -170,7 +170,7 @@ u32 sdio_xfer_cnt(void)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x1C;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 	cnt = cmd.data;
+ 
+ 	cmd.read_write = 0;
+@@ -178,7 +178,7 @@ u32 sdio_xfer_cnt(void)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x1D;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 	cnt |= (cmd.data << 8);
+ 
+ 	cmd.read_write = 0;
+@@ -186,7 +186,7 @@ u32 sdio_xfer_cnt(void)
+ 	cmd.raw = 0;
+ 	cmd.address = 0x1E;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 	cnt |= (cmd.data << 16);
+ 
+ 	return cnt;
+@@ -209,7 +209,7 @@ int sdio_check_bs(void)
+ 	cmd.raw = 0;
+ 	cmd.address = 0xc;
+ 	cmd.data = 0;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Fail cmd 52, get BS register...\n");
+ 		goto _fail_;
+ 	}
+@@ -235,7 +235,7 @@ static int sdio_write_reg(u32 addr, u32 data)
+ 		cmd.raw = 0;
+ 		cmd.address = addr;
+ 		cmd.data = data;
+-		if (!g_sdio.sdio_cmd52(&cmd)) {
++		if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd 52, read reg (%08x) ...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -257,7 +257,7 @@ static int sdio_write_reg(u32 addr, u32 data)
+ 		cmd.buffer = (u8 *)&data;
+ 		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
+ 
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53, write reg (%08x)...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -320,7 +320,7 @@ static int sdio_write(u32 addr, u8 *buf, u32 size)
+ 			if (!sdio_set_func0_csa_address(addr))
+ 				goto _fail_;
+ 		}
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], block send...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -341,7 +341,7 @@ static int sdio_write(u32 addr, u8 *buf, u32 size)
+ 			if (!sdio_set_func0_csa_address(addr))
+ 				goto _fail_;
+ 		}
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], bytes send...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -363,7 +363,7 @@ static int sdio_read_reg(u32 addr, u32 *data)
+ 		cmd.function = 0;
+ 		cmd.raw = 0;
+ 		cmd.address = addr;
+-		if (!g_sdio.sdio_cmd52(&cmd)) {
++		if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd 52, read reg (%08x) ...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -384,7 +384,7 @@ static int sdio_read_reg(u32 addr, u32 *data)
+ 
+ 		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
+ 
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53, read reg (%08x)...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -451,7 +451,7 @@ static int sdio_read(u32 addr, u8 *buf, u32 size)
+ 			if (!sdio_set_func0_csa_address(addr))
+ 				goto _fail_;
+ 		}
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], block read...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -472,7 +472,7 @@ static int sdio_read(u32 addr, u8 *buf, u32 size)
+ 			if (!sdio_set_func0_csa_address(addr))
+ 				goto _fail_;
+ 		}
+-		if (!g_sdio.sdio_cmd53(&cmd)) {
++		if (!g_sdio.sdio_cmd53(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], bytes read...\n", addr);
+ 			goto _fail_;
+ 		}
+@@ -587,7 +587,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	cmd.raw = 1;
+ 	cmd.address = 0x100;
+ 	cmd.data = 0x80;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Fail cmd 52, enable csa...\n");
+ 		goto _fail_;
+ 	}
+@@ -609,7 +609,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	cmd.raw = 1;
+ 	cmd.address = 0x2;
+ 	cmd.data = 0x2;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio] Fail cmd 52, set IOE register...\n");
+ 		goto _fail_;
+ 	}
+@@ -624,7 +624,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	loop = 3;
+ 	do {
+ 		cmd.data = 0;
+-		if (!g_sdio.sdio_cmd52(&cmd)) {
++		if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Fail cmd 52, get IOR register...\n");
+ 			goto _fail_;
+ 		}
+@@ -653,7 +653,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	cmd.raw = 1;
+ 	cmd.address = 0x4;
+ 	cmd.data = 0x3;
+-	if (!g_sdio.sdio_cmd52(&cmd)) {
++	if (!g_sdio.sdio_cmd52(g_sdio.wilc, &cmd)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Fail cmd 52, set IEN register...\n");
+ 		goto _fail_;
+ 	}
+@@ -703,7 +703,7 @@ static int sdio_read_size(u32 *size)
+ 	cmd.raw = 0;
+ 	cmd.address = 0xf2;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 	tmp = cmd.data;
+ 
+ 	/* cmd.read_write = 0; */
+@@ -711,7 +711,7 @@ static int sdio_read_size(u32 *size)
+ 	/* cmd.raw = 0; */
+ 	cmd.address = 0xf3;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 	tmp |= (cmd.data << 8);
+ 
+ 	*size = tmp;
+@@ -733,7 +733,7 @@ static int sdio_read_int(u32 *int_status)
+ 	cmd.function = 1;
+ 	cmd.address = 0x04;
+ 	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
++	g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 
+ 	if (cmd.data & BIT(0))
+ 		tmp |= INT_0;
+@@ -766,7 +766,7 @@ static int sdio_read_int(u32 *int_status)
+ 		cmd.raw = 0;
+ 		cmd.address = 0xf7;
+ 		cmd.data = 0;
+-		g_sdio.sdio_cmd52(&cmd);
++		g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 		irq_flags = cmd.data & 0x1f;
+ 		tmp |= ((irq_flags >> 0) << IRG_FLAGS_OFFSET);
+ 	}
+@@ -813,7 +813,7 @@ static int sdio_clear_int_ext(u32 val)
+ 			cmd.address = 0xf8;
+ 			cmd.data = reg;
+ 
+-			ret = g_sdio.sdio_cmd52(&cmd);
++			ret = g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 			if (!ret) {
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 				goto _fail_;
+@@ -842,7 +842,7 @@ static int sdio_clear_int_ext(u32 val)
+ 						cmd.address = 0xf8;
+ 						cmd.data = BIT(i);
+ 
+-						ret = g_sdio.sdio_cmd52(&cmd);
++						ret = g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 						if (!ret) {
+ 							g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 							goto _fail_;
+@@ -886,7 +886,7 @@ static int sdio_clear_int_ext(u32 val)
+ 				cmd.raw = 0;
+ 				cmd.address = 0xf6;
+ 				cmd.data = vmm_ctl;
+-				ret = g_sdio.sdio_cmd52(&cmd);
++				ret = g_sdio.sdio_cmd52(g_sdio.wilc, &cmd);
+ 				if (!ret) {
+ 					g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf6 data (%d) ...\n", __LINE__);
+ 					goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index a6bf969..89d2d65 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -77,8 +77,8 @@ typedef struct {
+ 	void (*io_deinit)(void *);
+ 	union {
+ 		struct {
+-			int (*sdio_cmd52)(sdio_cmd52_t *);
+-			int (*sdio_cmd53)(sdio_cmd53_t *);
++			int (*sdio_cmd52)(void *, sdio_cmd52_t *);
++			int (*sdio_cmd53)(void *, sdio_cmd53_t *);
+ 			int (*sdio_set_max_speed)(void);
+ 			int (*sdio_set_default_speed)(void);
+ 		} sdio;
 -- 
 1.9.1
 
