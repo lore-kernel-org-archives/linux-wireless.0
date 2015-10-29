@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:48042 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754196AbbJIN43 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 09:56:29 -0400
-Subject: Re: [RESEND PATCH] NFC: trf7970a: Add OF match table
-To: linux-kernel@vger.kernel.org
-References: <1442394522-12883-1-git-send-email-javier@osg.samsung.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <5617C787.2030409@osg.samsung.com> (sfid-20151009_155645_859597_928E4512)
-Date: Fri, 9 Oct 2015 15:56:23 +0200
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39245 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268AbbJ2Hr3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2015 03:47:29 -0400
+From: Sunil Dutt <usdutt@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
+	<vkanchan@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
+	<usdutt@qti.qualcomm.com>
+Subject: [PATCH 2/2] mac80211: Add support for aborting an ongoing scan
+Date: Thu, 29 Oct 2015 13:16:44 +0530
+Message-ID: <1446104804-8312-2-git-send-email-usdutt@qti.qualcomm.com> (sfid-20151029_084732_002633_D646E76E)
+In-Reply-To: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
+References: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1442394522-12883-1-git-send-email-javier@osg.samsung.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
 
-On 09/16/2015 11:08 AM, Javier Martinez Canillas wrote:
-> The Documentation/devicetree/bindings/net/nfc/trf7970a.txt DT binding doc
-> lists "ti,trf7970a" as a compatible string but the corresponding driver
-> does not have an OF match table. Add the table to the driver so the SPI
-> core can do an OF style match.
-> 
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> 
-> ---
-> 
->  drivers/nfc/trf7970a.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 70b0707fd9a9..123aa981c9d8 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
-> @@ -2211,6 +2211,12 @@ static const struct dev_pm_ops trf7970a_pm_ops = {
->  			trf7970a_pm_runtime_resume, NULL)
->  };
->  
-> +static const struct of_device_id trf7970a_of_match[] = {
-> +	{ .compatible = "ti,trf7970a", },
-> +	{ /* sentinel */ },
-> +};
-> +MODULE_DEVICE_TABLE(of, trf7970a_of_match);
-> +
->  static const struct spi_device_id trf7970a_id_table[] = {
->  	{ "trf7970a", 0 },
->  	{ }
-> @@ -2223,6 +2229,7 @@ static struct spi_driver trf7970a_spi_driver = {
->  	.id_table	= trf7970a_id_table,
->  	.driver		= {
->  		.name	= "trf7970a",
-> +		.of_match_table = of_match_ptr(trf7970a_of_match),
->  		.owner	= THIS_MODULE,
->  		.pm	= &trf7970a_pm_ops,
->  	},
-> 
+This commit adds implementation for abort scan in mac80211.
 
-Any comments about this patch?
+Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+---
+ net/mac80211/cfg.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Best regards,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 713cdbf..d4d78e1 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3797,6 +3797,16 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
+ }
+ 
++static int ieee80211_abort_scan(struct wiphy *wiphy, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++
++	/* Cancel the ongoing scan */
++	ieee80211_scan_cancel(local);
++	return 0;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3881,4 +3891,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.abort_scan = ieee80211_abort_scan,
+ };
 -- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+1.8.2.1
+
