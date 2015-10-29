@@ -1,126 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:52871 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbbJPEmC (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34111 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474AbbJ2MaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 00:42:02 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 38/40] staging: wilc1000: fixes unnecessary variable replacement
-Date: Fri, 16 Oct 2015 13:38:08 +0900
-Message-ID: <1444970290-17609-38-git-send-email-tony.cho@atmel.com> (sfid-20151016_064654_752726_15747351)
-In-Reply-To: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-References: <1444970290-17609-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 08:30:17 -0400
+Received: by padhk11 with SMTP id hk11so40063807pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:30:16 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 12/12] staging: wilc1000: remove rates in host_int_add_station
+Date: Thu, 29 Oct 2015 21:29:28 +0900
+Message-Id: <1446121768-4953-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_134654_525699_5BB51FE8)
+In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Instead of using rates variable, it is used as add_sta_info->pu8Rates
+directly.
 
-This patch removes an unnecessary variable use for the errors and
-returns errors directly without a result variable.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 28 +++++++++-------------------
- 1 file changed, 9 insertions(+), 19 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 02c9763..08f70d8 100644
+index 6b804e6..e2bdac8 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3200,9 +3200,8 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 	struct host_if_msg msg;
+@@ -4537,13 +4537,11 @@ int host_int_add_station(struct host_if_drv *hif_drv,
  
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
-@@ -3237,9 +3236,8 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 	u8 i;
- 
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
-@@ -3279,9 +3277,8 @@ s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
- 	u32 i;
- 
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 	if (pu8RxMic != NULL)
- 		u8KeyLen += RX_MIC_KEY_LEN;
-@@ -3344,9 +3341,8 @@ s32 host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *pu8RxGtk,
- 	u8 u8KeyLen = u8GtkKeylen;
- 
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
-@@ -3403,9 +3399,8 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
- 
- 
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
-@@ -3548,9 +3543,8 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 	enum scan_conn_timer enuScanConnTimer;
- 
- 	if (!hif_drv || pfConnectResult == NULL) {
--		result = -EFAULT;
- 		PRINT_ER("Driver is null\n");
--		return result;
-+		return -EFAULT;
- 	}
- 
- 	if (pJoinParams == NULL) {
-@@ -3610,16 +3604,12 @@ s32 host_int_flush_join_req(struct host_if_drv *hif_drv)
- 	s32 result = 0;
- 	struct host_if_msg msg;
- 
--	if (!join_req) {
--		result = -EFAULT;
--		return result;
--	}
+ 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
+ 	if (add_sta_info->u8NumRates > 0) {
+-		u8 *rates = kmemdup(sta_param->pu8Rates,
+-				    add_sta_info->u8NumRates,
+-				    GFP_KERNEL);
+-		if (!rates)
++		add_sta_info->pu8Rates = kmemdup(sta_param->pu8Rates,
++						 add_sta_info->u8NumRates,
++						 GFP_KERNEL);
++		if (!add_sta_info->pu8Rates)
+ 			return -ENOMEM;
 -
-+	if (!join_req)
-+		return -EFAULT;
- 
- 	if (!hif_drv) {
--		result = -EFAULT;
- 		PRINT_ER("Driver is null\n");
--		return result;
-+		return -EFAULT;
+-		add_sta_info->pu8Rates = rates;
  	}
  
- 	msg.id = HOST_IF_MSG_FLUSH_CONNECT;
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
 -- 
-1.9.1
+2.6.1
 
