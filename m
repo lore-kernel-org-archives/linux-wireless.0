@@ -1,215 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:34541 "EHLO gsystem.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932232AbbJPTE0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 15:04:26 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/2] airo: Track APList_rid in struct airo_info
-Date: Fri, 16 Oct 2015 21:04:13 +0200
-Message-Id: <1445022254-30428-1-git-send-email-linux@rainbow-software.org> (sfid-20151016_210445_084921_B6AB24E1)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27067 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965300AbbJ2DEx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2015 23:04:53 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 47/64] staging: wilc1000: rename u64P2p_MgmtTimeout of struct host_if_drv
+Date: Thu, 29 Oct 2015 12:05:39 +0900
+Message-ID: <1446087956-19054-14-git-send-email-glen.lee@atmel.com> (sfid-20151029_040455_948554_8D747C04)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of dynamically allocating APList, make it a member of struct
-airo_info to always track state of APList_rid.
-This simplifies suspend/resume and allows removal of readAPListRid.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+This patch renames u64P2p_MgmtTimeout of struct host_if_drv to p2p_timeout
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/airo.c |   57 +++++++++++++++----------------------------
- 1 file changed, 19 insertions(+), 38 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         |  2 +-
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 8ae838d..4ef2f98 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1231,7 +1231,7 @@ struct airo_info {
- 	dma_addr_t		shared_dma;
- 	pm_message_t		power;
- 	SsidRid			*SSID;
--	APListRid		*APList;
-+	APListRid		APList;
- #define	PCI_SHARED_LEN		2*MPI_MAX_FIDS*PKTSIZE+RIDSIZE
- 	char			proc_name[IFNAMSIZ];
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 294f90c..00f2717 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4158,7 +4158,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	hif_drv->cfg_values.passive_scan_time = PASSIVE_SCAN_TIME;
+ 	hif_drv->cfg_values.curr_tx_rate = AUTORATE;
  
-@@ -1848,11 +1848,6 @@ static int readStatusRid(struct airo_info *ai, StatusRid *statr, int lock)
- 	return PC4500_readrid(ai, RID_STATUS, statr, sizeof(*statr), lock);
- }
+-	hif_drv->u64P2p_MgmtTimeout = 0;
++	hif_drv->p2p_timeout = 0;
  
--static int readAPListRid(struct airo_info *ai, APListRid *aplr)
--{
--	return PC4500_readrid(ai, RID_APLIST, aplr, sizeof(*aplr), 1);
--}
--
- static int writeAPListRid(struct airo_info *ai, APListRid *aplr, int lock)
- {
- 	return PC4500_writerid(ai, RID_APLIST, aplr, sizeof(*aplr), lock);
-@@ -2413,7 +2408,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
+ 	PRINT_INFO(HOSTINF_DBG, "Initialization values, Site survey value: %d\n Scan source: %d\n Active scan time: %d\n Passive scan time: %d\nCurrent tx Rate = %d\n",
+ 		   hif_drv->cfg_values.site_survey_enabled,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 8450e22..c9a4ce8 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -264,7 +264,7 @@ struct host_if_drv {
+ 	struct user_conn_req usr_conn_req;
+ 	struct remain_ch remain_on_ch;
+ 	u8 remain_on_ch_pending;
+-	u64 u64P2p_MgmtTimeout;
++	u64 p2p_timeout;
+ 	u8 u8P2PConnect;
  
- 	kfree(ai->flash);
- 	kfree(ai->rssi);
--	kfree(ai->APList);
- 	kfree(ai->SSID);
- 	if (freeres) {
- 		/* PCMCIA frees this stuff, so only for PCI and ISA */
-@@ -2809,6 +2803,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	init_waitqueue_head (&ai->thr_wait);
- 	ai->tfm = NULL;
- 	add_airo_dev(ai);
-+	ai->APList.len = cpu_to_le16(sizeof(struct APListRid));
+ 	enum host_if_state hif_state;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3060b8d..116c37d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1050,7 +1050,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 	u8P2Plocalrandom = 0x01;
+ 	u8P2Precvrandom = 0x00;
+ 	bWilc_ie = false;
+-	pstrWFIDrv->u64P2p_MgmtTimeout = 0;
++	pstrWFIDrv->p2p_timeout = 0;
  
- 	if (airo_networks_allocate (ai))
- 		goto err_out_free;
-@@ -3852,8 +3847,6 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
- 		tdsRssiRid rssi_rid;
- 		CapabilityRid cap_rid;
+ 	s32Error = host_int_disconnect(priv->hWILCWFIDrv, reason_code);
+ 	if (s32Error != 0) {
+@@ -1958,7 +1958,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
+ 			PRINT_D(GENERIC_DBG, "Rx Action Frame Type: %x %x\n", buff[ACTION_SUBTYPE_ID], buff[P2P_PUB_ACTION_SUBTYPE]);
  
--		kfree(ai->APList);
--		ai->APList = NULL;
- 		kfree(ai->SSID);
- 		ai->SSID = NULL;
- 		// general configuration (read/modify/write)
-@@ -5130,31 +5123,31 @@ static void proc_APList_on_close( struct inode *inode, struct file *file ) {
- 	struct proc_data *data = file->private_data;
- 	struct net_device *dev = PDE_DATA(inode);
- 	struct airo_info *ai = dev->ml_priv;
--	APListRid APList_rid;
-+	APListRid *APList_rid = &ai->APList;
- 	int i;
- 
- 	if ( !data->writelen ) return;
- 
--	memset( &APList_rid, 0, sizeof(APList_rid) );
--	APList_rid.len = cpu_to_le16(sizeof(APList_rid));
-+	memset(APList_rid, 0, sizeof(*APList_rid));
-+	APList_rid->len = cpu_to_le16(sizeof(*APList_rid));
- 
- 	for( i = 0; i < 4 && data->writelen >= (i+1)*6*3; i++ ) {
- 		int j;
- 		for( j = 0; j < 6*3 && data->wbuffer[j+i*6*3]; j++ ) {
- 			switch(j%3) {
- 			case 0:
--				APList_rid.ap[i][j/3]=
-+				APList_rid->ap[i][j/3]=
- 					hex_to_bin(data->wbuffer[j+i*6*3])<<4;
- 				break;
- 			case 1:
--				APList_rid.ap[i][j/3]|=
-+				APList_rid->ap[i][j/3]|=
- 					hex_to_bin(data->wbuffer[j+i*6*3]);
- 				break;
+-			if (priv->bCfgScanning && time_after_eq(jiffies, (unsigned long)pstrWFIDrv->u64P2p_MgmtTimeout)) {
++			if (priv->bCfgScanning && time_after_eq(jiffies, (unsigned long)pstrWFIDrv->p2p_timeout)) {
+ 				PRINT_D(GENERIC_DBG, "Receiving action frames from wrong channels\n");
+ 				return;
  			}
+@@ -2331,10 +2331,10 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 			}
+ 
+ 			PRINT_D(GENERIC_DBG, "TX: ACTION FRAME Type:%x : Chan:%d\n", buf[ACTION_SUBTYPE_ID], chan->hw_value);
+-			pstrWFIDrv->u64P2p_MgmtTimeout = (jiffies + msecs_to_jiffies(wait));
+-
+-			PRINT_D(GENERIC_DBG, "Current Jiffies: %lu Timeout:%llu\n", jiffies, pstrWFIDrv->u64P2p_MgmtTimeout);
++			pstrWFIDrv->p2p_timeout = (jiffies + msecs_to_jiffies(wait));
+ 
++			PRINT_D(GENERIC_DBG, "Current Jiffies: %lu Timeout:%llu\n",
++				jiffies, pstrWFIDrv->p2p_timeout);
  		}
- 	}
- 	disable_MAC(ai, 1);
--	writeAPListRid(ai, &APList_rid, 1);
-+	writeAPListRid(ai, APList_rid, 1);
- 	enable_MAC(ai, 1);
- }
  
-@@ -5408,7 +5401,7 @@ static int proc_APList_open( struct inode *inode, struct file *file ) {
- 	struct airo_info *ai = dev->ml_priv;
- 	int i;
- 	char *ptr;
--	APListRid APList_rid;
-+	APListRid *APList_rid = &ai->APList;
+ 		wilc_wlan_txq_add_mgmt_pkt(mgmt_tx, mgmt_tx->buff,
+@@ -2358,7 +2358,7 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
  
- 	if ((file->private_data = kzalloc(sizeof(struct proc_data ), GFP_KERNEL)) == NULL)
- 		return -ENOMEM;
-@@ -5426,13 +5419,12 @@ static int proc_APList_open( struct inode *inode, struct file *file ) {
- 	}
- 	data->on_close = proc_APList_on_close;
  
--	readAPListRid(ai, &APList_rid);
- 	ptr = data->rbuffer;
- 	for( i = 0; i < 4; i++ ) {
- // We end when we find a zero MAC
--		if ( !*(int*)APList_rid.ap[i] &&
--		     !*(int*)&APList_rid.ap[i][2]) break;
--		ptr += sprintf(ptr, "%pM\n", APList_rid.ap[i]);
-+		if ( !*(int*)APList_rid->ap[i] &&
-+		     !*(int*)&APList_rid->ap[i][2]) break;
-+		ptr += sprintf(ptr, "%pM\n", APList_rid->ap[i]);
- 	}
- 	if (i==0) ptr += sprintf(ptr, "Not using specific APs\n");
+ 	PRINT_D(GENERIC_DBG, "Tx Cancel wait :%lu\n", jiffies);
+-	pstrWFIDrv->u64P2p_MgmtTimeout = jiffies;
++	pstrWFIDrv->p2p_timeout = jiffies;
  
-@@ -5596,15 +5588,10 @@ static int airo_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	Cmd cmd;
- 	Resp rsp;
- 
--	if (!ai->APList)
--		ai->APList = kmalloc(sizeof(APListRid), GFP_KERNEL);
--	if (!ai->APList)
--		return -ENOMEM;
- 	if (!ai->SSID)
- 		ai->SSID = kmalloc(sizeof(SsidRid), GFP_KERNEL);
- 	if (!ai->SSID)
- 		return -ENOMEM;
--	readAPListRid(ai, ai->APList);
- 	readSsidRid(ai, ai->SSID);
- 	memset(&cmd, 0, sizeof(cmd));
- 	/* the lock will be released at the end of the resume callback */
-@@ -5652,11 +5639,7 @@ static int airo_pci_resume(struct pci_dev *pdev)
- 		kfree(ai->SSID);
- 		ai->SSID = NULL;
- 	}
--	if (ai->APList) {
--		writeAPListRid(ai, ai->APList, 0);
--		kfree(ai->APList);
--		ai->APList = NULL;
--	}
-+	writeAPListRid(ai, &ai->APList, 0);
- 	writeConfigRid(ai, 0);
- 	enable_MAC(ai, 0);
- 	ai->power = PMSG_ON;
-@@ -5954,7 +5937,7 @@ static int airo_set_wap(struct net_device *dev,
- 	struct airo_info *local = dev->ml_priv;
- 	Cmd cmd;
- 	Resp rsp;
--	APListRid APList_rid;
-+	APListRid *APList_rid = &local->APList;
- 
- 	if (awrq->sa_family != ARPHRD_ETHER)
- 		return -EINVAL;
-@@ -5967,11 +5950,11 @@ static int airo_set_wap(struct net_device *dev,
- 		issuecommand(local, &cmd, &rsp);
- 		up(&local->sem);
- 	} else {
--		memset(&APList_rid, 0, sizeof(APList_rid));
--		APList_rid.len = cpu_to_le16(sizeof(APList_rid));
--		memcpy(APList_rid.ap[0], awrq->sa_data, ETH_ALEN);
-+		memset(APList_rid, 0, sizeof(*APList_rid));
-+		APList_rid->len = cpu_to_le16(sizeof(*APList_rid));
-+		memcpy(APList_rid->ap[0], awrq->sa_data, ETH_ALEN);
- 		disable_MAC(local, 1);
--		writeAPListRid(local, &APList_rid, 1);
-+		writeAPListRid(local, APList_rid, 1);
- 		enable_MAC(local, 1);
- 	}
- 	return 0;
-@@ -7505,10 +7488,8 @@ static int airo_config_commit(struct net_device *dev,
- 	 * parameters. It's now time to commit them in the card */
- 	disable_MAC(local, 1);
- 	if (test_bit (FLAG_RESET, &local->flags)) {
--		APListRid APList_rid;
- 		SsidRid SSID_rid;
- 
--		readAPListRid(local, &APList_rid);
- 		readSsidRid(local, &SSID_rid);
- 		if (test_bit(FLAG_MPI,&local->flags))
- 			setup_card(local, dev->dev_addr, 1 );
-@@ -7516,7 +7497,7 @@ static int airo_config_commit(struct net_device *dev,
- 			reset_airo_card(dev);
- 		disable_MAC(local, 1);
- 		writeSsidRid(local, &SSID_rid, 1);
--		writeAPListRid(local, &APList_rid, 1);
-+		writeAPListRid(local, &local->APList, 1);
- 	}
- 	if (down_interruptible(&local->sem))
- 		return -ERESTARTSYS;
+ 	if (!priv->bInP2PlistenState) {
+ 		cfg80211_remain_on_channel_expired(priv->wdev,
 -- 
-Ondrej Zary
+1.9.1
 
