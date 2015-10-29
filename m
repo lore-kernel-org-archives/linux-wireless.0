@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57224 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751872AbbJEPB7 (ORCPT
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35513 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbbJ2Gqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 11:01:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Oct 2015 17:36:50 +0300
-Message-Id: <1444055820-27506-19-git-send-email-luca@coelho.fi> (sfid-20151005_170205_062609_0697B5D1)
-In-Reply-To: <1444050759.27220.15.camel@coelho.fi>
-References: <1444050759.27220.15.camel@coelho.fi>
-Subject: [PATCH 19/29] iwlwifi: mvm: rs: remove overflowing debug message
+	Thu, 29 Oct 2015 02:46:33 -0400
+Received: by igpw7 with SMTP id w7so21260003igp.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2015 23:46:32 -0700 (PDT)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 29 Oct 2015 12:16:13 +0530
+Message-ID: <CABPxzYJNCFzCWgbRYxGbkrf1x6BPupC8+O5R7167FDL1rK+4mA@mail.gmail.com> (sfid-20151029_074636_568910_169BDB70)
+Subject: Undocumented Sleep Requirements for ieee80211_ops
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi,
 
-This message isn't very useful and creates clutter.
-Remove it.
+>From the documentation:(mac80211.h) For the ieee80211_ops
+(un)assign_vif_chanctx, there is no mention of explicit sleep
+requirements (allowed/disallwoed) for the callback.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 1 -
- 1 file changed, 1 deletion(-)
+>From a quick glance at the code calling the OP, looks like we can
+sleep (mutexes are used). So how should we handle such OPS? is it ok
+to sleep in the callback?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 98f4d78..49cf311 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2584,7 +2584,6 @@ static struct rs_rate *rs_get_optimal_rate(struct iwl_mvm *mvm,
- 		}
- 	}
- 
--	rs_dump_rate(mvm, rate, "OPTIMAL RATE");
- 	return rate;
- }
- 
+We have a requirement where we need to wait for channel programming to
+be done, before we allow data packets and it might take a while.
+
 -- 
-2.5.3
-
+Thanks,
+Regards,
+Chaitanya T K.
