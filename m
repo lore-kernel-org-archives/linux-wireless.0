@@ -1,42 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:33492 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbbJWOT2 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:4744 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756426AbbJ2C5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 10:19:28 -0400
-Received: by qkcy65 with SMTP id y65so76735762qkc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2015 07:19:27 -0700 (PDT)
+	Wed, 28 Oct 2015 22:57:17 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 09/64] staging: wilc1000: rename hSemGetCHNL of struct host_if_drv
+Date: Thu, 29 Oct 2015 11:58:32 +0900
+Message-ID: <1446087567-16728-9-git-send-email-glen.lee@atmel.com> (sfid-20151029_035720_263906_1645BE67)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Date: Fri, 23 Oct 2015 17:19:26 +0300
-Message-ID: <CAFSVvRdboZtYGYAjX7WziNmqv=CmN_hAtXVELZM8Lnu14_5x6w@mail.gmail.com> (sfid-20151023_161931_686278_CD93FA90)
-Subject: Regression in minstrel_ht vs minstrel?
-From: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+From: Leo Kim <leo.kim@atmel.com>
 
-While investigating a case of intermittent extreme packet loss, I've
-found that minstrel_ht algo has one possible regression compared to
-non-HT version of minstrel. It does not add lowest rate to the last
-element of rate table array.
+This patch renames hSemGetCHNL of struct host_if_drv to sem_get_chnl
+to avoid CamelCase naming convention.
 
-Minstrel:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-    /* Use lowest rate last */
-    ratetbl->rate[i].idx = mi->lowest_rix;
-    ratetbl->rate[i].count = mp->max_retry;
-    ratetbl->rate[i].count_cts = mp->max_retry;
-    ratetbl->rate[i].count_rts = mp->max_retry;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7b654c5..b59551a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2075,7 +2075,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
+ 		result = -EFAULT;
+ 	}
+ 
+-	up(&hif_drv->hSemGetCHNL);
++	up(&hif_drv->sem_get_chnl);
+ 
+ 	return result;
+ }
+@@ -3737,7 +3737,7 @@ s32 host_int_get_host_chnl_num(struct host_if_drv *hif_drv, u8 *pu8ChNo)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		PRINT_ER("wilc mq send fail\n");
+-	down(&hif_drv->hSemGetCHNL);
++	down(&hif_drv->sem_get_chnl);
+ 
+ 	*pu8ChNo = ch_no;
+ 
+@@ -4111,7 +4111,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	sema_init(&hif_drv->sem_test_disconn_block, 0);
+ 	sema_init(&hif_drv->sem_get_rssi, 0);
+ 	sema_init(&hif_drv->sem_get_link_speed, 0);
+-	sema_init(&hif_drv->hSemGetCHNL, 0);
++	sema_init(&hif_drv->sem_get_chnl, 0);
+ 	sema_init(&hif_drv->hSemInactiveTime, 0);
+ 
+ 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a603e84..8d12099 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -309,7 +309,7 @@ struct host_if_drv {
+ 	struct semaphore sem_test_disconn_block;
+ 	struct semaphore sem_get_rssi;
+ 	struct semaphore sem_get_link_speed;
+-	struct semaphore hSemGetCHNL;
++	struct semaphore sem_get_chnl;
+ 	struct semaphore hSemInactiveTime;
+ /* timer handlers */
+ 	struct timer_list hScanTimer;
+-- 
+1.9.1
 
-Minstrel HT:
-
-    rates->rate[i].idx = -1;
-
-This difference can be easily patched. I have two otherwise identical
-ath9k-based stations under test for the last two days sitting in the
-same noisy environment. So far, patched one seems to be more robust.
-
-Is this difference an intentional design decision or should I submit the patch?
