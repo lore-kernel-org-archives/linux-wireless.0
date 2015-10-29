@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36466 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806AbbJZKLh (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34786 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756717AbbJ2M3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2015 06:11:37 -0400
-Received: by pacfv9 with SMTP id fv9so192845023pac.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2015 03:11:37 -0700 (PDT)
-Message-ID: <562DFC61.7080108@gmail.com> (sfid-20151026_111141_039765_DDE95C04)
-Date: Mon, 26 Oct 2015 15:41:45 +0530
-From: Manikanta <manikanta.pubbisetty@gmail.com>
-MIME-Version: 1.0
-To: Albino B Neto <bino@bino.us>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: update antenna configuration after setting in
- fw
-References: <1445851330-18736-1-git-send-email-manikanta.pubbisetty@gmail.com> <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com>
-In-Reply-To: <CAMu38xLre1jS7Vjsc3sL80oTkVhg5YQJV-U-CXeEQo8k2Zqp-A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 29 Oct 2015 08:29:50 -0400
+Received: by padhk11 with SMTP id hk11so40053161pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:50 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 04/12] staging: wilc1000: fix parameter name of host_int_del_station
+Date: Thu, 29 Oct 2015 21:29:20 +0900
+Message-Id: <1446121768-4953-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132953_057839_58066D36)
+In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch changes struct host_if_drv of host_int_del_station function
+declaration from hWFIDrv to hif_drv.
+With this change, first parameter name of this function declaration and
+definition has same name as hif_drv.
 
-On Monday 26 October 2015 03:35 PM, Albino B Neto wrote:
-> 2015-10-26 7:22 GMT-02:00  <manikanta.pubbisetty@gmail.com>:
->> Signed-off-by: Manikanta Pubbisetty <manikanta.pubbisetty@gmail.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 484c1a1..8d0ce37 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -3771,9 +3771,6 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
->>          ath10k_check_chain_mask(ar, tx_ant, "tx");
->>          ath10k_check_chain_mask(ar, rx_ant, "rx");
->>
->> -       ar->cfg_tx_chainmask = tx_ant;
->> -       ar->cfg_rx_chainmask = rx_ant;
->> -
->>          if ((ar->state != ATH10K_STATE_ON) &&
->>              (ar->state != ATH10K_STATE_RESTARTED))
->>                  return 0;
->> @@ -3794,6 +3791,9 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
->>                  return ret;
->>          }
->>
->> +       ar->cfg_tx_chainmask = tx_ant;
->> +       ar->cfg_rx_chainmask = rx_ant;
->> +
->>          return 0;
->>   }
-> Sorry, I see no change in the code. script checkpatch.pl ?
-I have moved these two lines of code from the start of the function to 
-the end, in between there is code for setting the antenna config in 
-firmware. You can find in commit log why I have moved the code down in 
-the function.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--Manikanta
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 9eb1b3b..083def57 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
+ 
+ /*!
+  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
+-- 
+2.6.1
 
