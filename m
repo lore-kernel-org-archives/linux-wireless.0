@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:51993 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100AbbJWF1f (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35836 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758044AbbJ2XSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:27:35 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 17/28] staging: wilc1000: wlan_deinitialize_threads: change argument and use wilc
-Date: Fri, 23 Oct 2015 14:28:33 +0900
-Message-ID: <1445578124-31486-17-git-send-email-glen.lee@atmel.com> (sfid-20151023_074658_805312_09634703)
-In-Reply-To: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-References: <1445578124-31486-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 19:18:13 -0400
+Received: by pasz6 with SMTP id z6so53898222pas.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:12 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 07/12] staging: wilc1000: fix return type of host_int_add_station
+Date: Fri, 30 Oct 2015 08:17:43 +0900
+Message-Id: <1446160668-10747-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001825_618286_0222FD66)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes function parameter type struct wilc with struct net_device
-and use netdev private data member wilc instead of g_linux_wlan.
+This patch changes return type of host_int_add_station from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+V2: resend because 11/12 patch is changed.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index fef6664..75dad3e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -96,7 +96,7 @@ static struct notifier_block g_dev_notifier = {
- static struct semaphore close_exit_sync;
- 
- static int wlan_deinit_locks(struct wilc *wilc);
--static void wlan_deinitialize_threads(struct wilc *nic);
-+static void wlan_deinitialize_threads(struct net_device *dev);
- extern void WILC_WFI_monitor_rx(u8 *buff, u32 size);
- extern void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
- 
-@@ -918,7 +918,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
- 			up(&wl->txq_event);
- 
- 		PRINT_D(INIT_DBG, "Deinitializing Threads\n");
--		wlan_deinitialize_threads(wl);
-+		wlan_deinitialize_threads(dev);
- 
- 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
- 		deinit_irq(dev);
-@@ -1046,18 +1046,23 @@ _fail_2:
- 	return ret;
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index fe4ccdb..0f36825 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4516,10 +4516,10 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
+ 	return result;
  }
  
--static void wlan_deinitialize_threads(struct wilc *nic)
-+static void wlan_deinitialize_threads(struct net_device *dev)
+-s32 host_int_add_station(struct host_if_drv *hif_drv,
++int host_int_add_station(struct host_if_drv *hif_drv,
+ 			 struct add_sta_param *pstrStaParams)
  {
-+	perInterface_wlan_t *nic;
-+	struct wilc *wl;
-+
-+	nic = netdev_priv(dev);
-+	wl = nic->wilc;
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
  
--	g_linux_wlan->close = 1;
-+	wl->close = 1;
- 	PRINT_D(INIT_DBG, "Deinitializing Threads\n");
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index be9283f..3fcff7a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -948,7 +948,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
+  *  @date		12 July 2012
+  *  @version		1.0 Description
+  */
+-s32 host_int_add_station(struct host_if_drv *hWFIDrv,
++int host_int_add_station(struct host_if_drv *hWFIDrv,
+ 			 struct add_sta_param *pstrStaParams);
  
--	if (&g_linux_wlan->txq_event != NULL)
--		up(&g_linux_wlan->txq_event);
-+	if (&wl->txq_event != NULL)
-+		up(&wl->txq_event);
- 
--	if (g_linux_wlan->txq_thread != NULL) {
--		kthread_stop(g_linux_wlan->txq_thread);
--		g_linux_wlan->txq_thread = NULL;
-+	if (wl->txq_thread != NULL) {
-+		kthread_stop(wl->txq_thread);
-+		wl->txq_thread = NULL;
- 	}
- }
- 
-@@ -1164,7 +1169,7 @@ _fail_irq_init_:
- 		deinit_irq(dev);
- 
- #endif
--		wlan_deinitialize_threads(wl);
-+		wlan_deinitialize_threads(dev);
- _fail_wilc_wlan_:
- 		wilc_wlan_cleanup();
- _fail_locks_:
+ /*!
 -- 
-1.9.1
+2.6.1
 
