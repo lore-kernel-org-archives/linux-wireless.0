@@ -1,49 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36636 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbbJ0LlF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:5371 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965235AbbJ2DBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 07:41:05 -0400
-Received: by pacfv9 with SMTP id fv9so230468697pac.3
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 04:41:04 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 7/8] staging: wilc1000: fix line over 80 characters
-Date: Tue, 27 Oct 2015 20:40:38 +0900
-Message-Id: <1445946039-10390-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151027_124109_111987_715409D3)
-In-Reply-To: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445946039-10390-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 23:01:32 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 33/64] staging: wilc1000: rename pfUserConnectResult of struct user_conn_req
+Date: Thu, 29 Oct 2015 11:58:56 +0900
+Message-ID: <1446087567-16728-33-git-send-email-glen.lee@atmel.com> (sfid-20151029_041654_519218_13F3FBF6)
+In-Reply-To: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+References: <1446087567-16728-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes line over 80 characters found by checkpatch.
+From: Leo Kim <leo.kim@atmel.com>
 
-WARNING: line over 80 characters
-FILE: drivers/staging/wilc1000/host_interface.h:408:
+This patch renames pfUserConnectResult of struct user_conn_req to conn_result
+to avoid CamelCase naming convention.
+And, some comments modification that has been included
+name 'pfUserConnectResult'.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 57 +++++++++++++++++--------------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 32 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bc899e8..dc94d00 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1029,7 +1029,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 
+ 	hif_drv->usr_conn_req.u8security = pstrHostIFconnectAttr->security;
+ 	hif_drv->usr_conn_req.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
+-	hif_drv->usr_conn_req.pfUserConnectResult = pstrHostIFconnectAttr->result;
++	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
+ 	hif_drv->usr_conn_req.u32UserConnectPvoid = pstrHostIFconnectAttr->arg;
+ 
+ 	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
+@@ -1333,7 +1333,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 
+ 	memset(&strConnectInfo, 0, sizeof(tstrConnectInfo));
+ 
+-	if (hif_drv->usr_conn_req.pfUserConnectResult) {
++	if (hif_drv->usr_conn_req.conn_result) {
+ 		if (hif_drv->usr_conn_req.pu8bssid) {
+ 			memcpy(strConnectInfo.au8bssid,
+ 			       hif_drv->usr_conn_req.pu8bssid, 6);
+@@ -1347,11 +1347,11 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 			       hif_drv->usr_conn_req.ies_len);
+ 		}
+ 
+-		hif_drv->usr_conn_req.pfUserConnectResult(CONN_DISCONN_EVENT_CONN_RESP,
+-							  &strConnectInfo,
+-							  MAC_DISCONNECTED,
+-							  NULL,
+-							  hif_drv->usr_conn_req.u32UserConnectPvoid);
++		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
++						  &strConnectInfo,
++						  MAC_DISCONNECTED,
++						  NULL,
++						  hif_drv->usr_conn_req.u32UserConnectPvoid);
+ 
+ 		kfree(strConnectInfo.pu8ReqIEs);
+ 		strConnectInfo.pu8ReqIEs = NULL;
+@@ -1500,7 +1500,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 	    (hif_drv->hif_state == HOST_IF_CONNECTED) ||
+ 	    hif_drv->usr_scan_req.scan_result) {
+ 		if (!pstrRcvdGnrlAsyncInfo->buffer ||
+-		    !hif_drv->usr_conn_req.pfUserConnectResult) {
++		    !hif_drv->usr_conn_req.conn_result) {
+ 			PRINT_ER("driver is null\n");
+ 			return -EINVAL;
+ 		}
+@@ -1595,11 +1595,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			}
+ 
+ 			del_timer(&hif_drv->connect_timer);
+-			hif_drv->usr_conn_req.pfUserConnectResult(CONN_DISCONN_EVENT_CONN_RESP,
+-								  &strConnectInfo,
+-								  u8MacStatus,
+-								  NULL,
+-								  hif_drv->usr_conn_req.u32UserConnectPvoid);
++			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
++							  &strConnectInfo,
++							  u8MacStatus,
++							  NULL,
++							  hif_drv->usr_conn_req.u32UserConnectPvoid);
+ 
+ 			if ((u8MacStatus == MAC_CONNECTED) &&
+ 			    (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE))	{
+@@ -1644,15 +1644,15 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
+ 			strDisconnectNotifInfo.ie = NULL;
+ 			strDisconnectNotifInfo.ie_len = 0;
+ 
+-			if (hif_drv->usr_conn_req.pfUserConnectResult) {
++			if (hif_drv->usr_conn_req.conn_result) {
+ 				g_obtainingIP = false;
+ 				host_int_set_power_mgmt(hif_drv, 0, 0);
+ 
+-				hif_drv->usr_conn_req.pfUserConnectResult(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+-									  NULL,
+-									  0,
+-									  &strDisconnectNotifInfo,
+-									  hif_drv->usr_conn_req.u32UserConnectPvoid);
++				hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
++								  NULL,
++								  0,
++								  &strDisconnectNotifInfo,
++								  hif_drv->usr_conn_req.u32UserConnectPvoid);
+ 			} else {
+ 				PRINT_ER("Connect result callback function is NULL\n");
+ 			}
+@@ -2000,21 +2000,26 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 
+ 		if (hif_drv->usr_scan_req.scan_result) {
+ 			del_timer(&hif_drv->scan_timer);
+-			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+-							  hif_drv->usr_scan_req.arg, NULL);
++			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED,
++							  NULL,
++							  hif_drv->usr_scan_req.arg,
++							  NULL);
+ 			hif_drv->usr_scan_req.scan_result = NULL;
+ 		}
+ 
+-		if (hif_drv->usr_conn_req.pfUserConnectResult) {
++		if (hif_drv->usr_conn_req.conn_result) {
+ 			if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
+ 				PRINT_D(HOSTINF_DBG, "Upper layer requested termination of connection\n");
+ 				del_timer(&hif_drv->connect_timer);
+ 			}
+ 
+-			hif_drv->usr_conn_req.pfUserConnectResult(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL,
+-								  0, &strDisconnectNotifInfo, hif_drv->usr_conn_req.u32UserConnectPvoid);
++			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
++							  NULL,
++							  0,
++							  &strDisconnectNotifInfo,
++							  hif_drv->usr_conn_req.u32UserConnectPvoid);
+ 		} else {
+-			PRINT_ER("usr_conn_req.pfUserConnectResult = NULL\n");
++			PRINT_ER("usr_conn_req.conn_result = NULL\n");
+ 		}
+ 
+ 		scan_while_connected = false;
+@@ -4298,7 +4303,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 		return;
+ 	}
+ 
+-	if (!hif_drv->usr_conn_req.pfUserConnectResult) {
++	if (!hif_drv->usr_conn_req.conn_result) {
+ 		PRINT_ER("Received mac status is not needed when there is no current Connect Reques\n");
+ 		up(&hif_sema_deinit);
+ 		return;
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 1e134d4..a9f7d1d 100644
+index b2fe8f9..0363068 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -405,7 +405,8 @@ int host_int_set_wep_default_key(struct host_if_drv *hif_drv, u8 index);
-  *  @date		8 March 2012
-  *  @version		1.0
-  */
--int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv, const u8 *key, u8 len, u8 index);
-+int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
-+				 const u8 *key, u8 len, u8 index);
- /**
-  *  @brief              host_int_add_wep_key_bss_ap
-  *  @details    valid only in AP mode if External Supplicant support is enabled.
+@@ -206,7 +206,7 @@ struct user_conn_req {
+ 	size_t ssid_len;
+ 	u8 *ies;
+ 	size_t ies_len;
+-	wilc_connect_result pfUserConnectResult;
++	wilc_connect_result conn_result;
+ 	bool IsHTCapable;
+ 	void *u32UserConnectPvoid;
+ };
 -- 
-2.6.1
+1.9.1
 
