@@ -1,52 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13288 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbbJ2KrY (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40693 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757134AbbJ2Tnp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 06:47:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Manikanta <manikanta.pubbisetty@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: add FW API support to test mode
-References: <20151020112513.14879.47438.stgit@potku.adurom.net>
-	<5625E6BD.6020307@gmail.com>
-	<CA+BoTQnSQmdCCqF43+Q5cxyVVLrM_BxRMT+Ydpfe6_5yRV2+Lw@mail.gmail.com>
-	<56273D3F.6080804@gmail.com>
-	<CA+BoTQ=y3-AmpTbpurCvEd2RxQHmMjbU+r7Gy57oz9LsC3VR1Q@mail.gmail.com>
-Date: Thu, 29 Oct 2015 12:47:05 +0200
-In-Reply-To: <CA+BoTQ=y3-AmpTbpurCvEd2RxQHmMjbU+r7Gy57oz9LsC3VR1Q@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 21 Oct 2015 09:28:08 +0200")
-Message-ID: <87wpu6q7di.fsf@kamboji.qca.qualcomm.com> (sfid-20151029_114728_269768_1243E8FA)
+	Thu, 29 Oct 2015 15:43:45 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 9/9] brcmfmac: Add wowl wake indication report.
+Date: Thu, 29 Oct 2015 20:33:19 +0100
+Message-ID: <1446147199-21671-10-git-send-email-arend@broadcom.com> (sfid-20151029_204348_446028_AA35C5FB)
+In-Reply-To: <1446147199-21671-1-git-send-email-arend@broadcom.com>
+References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Hante Meuleman <meuleman@broadcom.com>
 
->> Hmmm, this way we will have a unified firmware parsing logic. Is this a task
->> which can be taken up easily or any other hidden complexities are invloved
->> ?.
->
-> Decoupling the parsing logic should be rather easy. I don't think
-> there are any gotchas.
+On wakeup of the system (resume) a wowl wakeup indication report
+can be sent to cfg80211. This patch adds support for this. The
+report specifies if the device was responsible for the wakeup
+and if so, will specify the exact reason.
 
-I agree.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 67 +++++++++++++++++++++-
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 12 ++++
+ 2 files changed, 77 insertions(+), 2 deletions(-)
 
->> I mean can we do the changes for current parsing logic and then rework the
->> test mode patch ? what is your suggestion ?
->
-> If you want to do the unified parsing logic approach you should first
-> decouple the logic (i.e. make it not fill `struct ath10k` directly)
-> and then rework the testmode patch on top of that.
-
-Actually I prefer the other way around, I can first apply the test mode
-patch and later someone can decouple the logic in a new patch. The code
-size benefits that from all pretty small so I don't think it's sensible
-to delay this patch. But decoupling the logic would be nice cleanup to
-do.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 0c8cc7f..998c521 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -3062,6 +3062,67 @@ static s32 brcmf_config_wowl_pattern(struct brcmf_if *ifp, u8 cmd[4],
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PM
++
++static void brcmf_report_wowl_wakeind(struct wiphy *wiphy, struct brcmf_if *ifp)
++{
++	struct brcmf_wowl_wakeind_le wake_ind_le;
++	struct cfg80211_wowlan_wakeup wakeup_data;
++	struct cfg80211_wowlan_wakeup *wakeup;
++	u32 wakeind;
++	s32 err;
++
++	err = brcmf_fil_iovar_data_get(ifp, "wowl_wakeind", &wake_ind_le,
++				       sizeof(wake_ind_le));
++	if (!err) {
++		brcmf_err("Get wowl_wakeind failed, err = %d\n", err);
++		return;
++	}
++
++	wakeind = le32_to_cpu(wake_ind_le.ucode_wakeind);
++	if (wakeind & (BRCMF_WOWL_MAGIC | BRCMF_WOWL_DIS | BRCMF_WOWL_BCN |
++		       BRCMF_WOWL_RETR | BRCMF_WOWL_NET)) {
++		wakeup = &wakeup_data;
++		memset(&wakeup_data, 0, sizeof(wakeup_data));
++		wakeup_data.pattern_idx = -1;
++
++		if (wakeind & BRCMF_WOWL_MAGIC) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_MAGIC\n");
++			wakeup_data.magic_pkt = true;
++		}
++		if (wakeind & BRCMF_WOWL_DIS) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_DIS\n");
++			wakeup_data.disconnect = true;
++		}
++		if (wakeind & BRCMF_WOWL_BCN) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_BCN\n");
++			wakeup_data.disconnect = true;
++		}
++		if (wakeind & BRCMF_WOWL_RETR) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_RETR\n");
++			wakeup_data.disconnect = true;
++		}
++		if (wakeind & BRCMF_WOWL_NET) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_NET\n");
++			/* For now always map to pattern 0, no API to get
++			 * correct information available at the moment.
++			 */
++			wakeup_data.pattern_idx = 0;
++		}
++	} else {
++		wakeup = NULL;
++	}
++	cfg80211_report_wowlan_wakeup(&ifp->vif->wdev, wakeup, GFP_KERNEL);
++}
++
++#else
++
++static void brcmf_report_wowl_wakeind(struct wiphy *wiphy, struct brcmf_if *ifp)
++{
++}
++
++#endif /* CONFIG_PM */
++
+ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+@@ -3071,11 +3132,12 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (cfg->wowl_enabled) {
++		brcmf_report_wowl_wakeind(wiphy, ifp);
++		brcmf_fil_iovar_int_set(ifp, "wowl_clear", 0);
++		brcmf_config_wowl_pattern(ifp, "clr", NULL, 0, NULL, 0);
+ 		brcmf_configure_arp_offload(ifp, true);
+ 		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM,
+ 				      cfg->pre_wowl_pmmode);
+-		brcmf_fil_iovar_int_set(ifp, "wowl_clear", 0);
+-		brcmf_config_wowl_pattern(ifp, "clr", NULL, 0, NULL, 0);
+ 		cfg->wowl_enabled = false;
+ 	}
+ 	return 0;
+@@ -3109,6 +3171,7 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
+ 				wowl->patterns[i].pkt_offset);
+ 		}
+ 	}
++	brcmf_fil_iovar_data_set(ifp, "wowl_wakeind", "clear", strlen("clear"));
+ 	brcmf_fil_iovar_int_set(ifp, "wowl", wowl_config);
+ 	brcmf_fil_iovar_int_set(ifp, "wowl_activate", 1);
+ 	brcmf_bus_wowl_config(cfg->pub->bus_if, true);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 50ff69d..92ee1ad 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -634,4 +634,16 @@ struct brcmf_assoclist_le {
+ 	u8 mac[BRCMF_MAX_ASSOCLIST][ETH_ALEN];
+ };
+ 
++/**
++ * struct brcmf_wowl_wakeind_le - Wakeup indicators
++ *	Note: note both fields contain same information.
++ *
++ * @pci_wakeind: Whether PCI PMECSR PMEStatus bit was set.
++ * @ucode_wakeind: What wakeup-event indication was set by ucode
++ */
++struct brcmf_wowl_wakeind_le {
++	__le32 pci_wakeind;
++	__le32 ucode_wakeind;
++};
++
+ #endif /* FWIL_TYPES_H_ */
 -- 
-Kalle Valo
+1.9.1
+
