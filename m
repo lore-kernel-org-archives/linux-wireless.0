@@ -1,150 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:33949 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbbJJT3A (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27196 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965268AbbJ2DFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2015 15:29:00 -0400
-Received: by qgez77 with SMTP id z77so94741716qge.1
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2015 12:28:59 -0700 (PDT)
-From: Jacob Kiefer <jtk54@cornell.edu>
-Cc: Jacob Kiefer <jtk54@cornell.edu>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	Anjana Sasindran <anjanasasindran123@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Haneen Mohammed <hamohammed.sa@gmail.com>,
-	Nicholas Mc Guire <hofrat@osadl.org>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
-	WIRELESS DRIVER),
-	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/2 v3] drivers: staging: rtl8723au: Changed raid_cmd to little-endian mask
-Date: Sat, 10 Oct 2015 15:28:17 -0400
-Message-Id: <1444505324-2924-2-git-send-email-jtk54@cornell.edu> (sfid-20151010_212929_330506_5B374A05)
-In-Reply-To: <1444505324-2924-1-git-send-email-jtk54@cornell.edu>
-References: <1444505324-2924-1-git-send-email-jtk54@cornell.edu>
-To: unlisted-recipients:; (no To-header on input)
+	Wed, 28 Oct 2015 23:05:39 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 55/64] staging: wilc1000: rename u8AmpduParams of struct add_sta_param
+Date: Thu, 29 Oct 2015 12:05:47 +0900
+Message-ID: <1446087956-19054-22-git-send-email-glen.lee@atmel.com> (sfid-20151029_040542_492585_3079FAB5)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jacob Kiefer <jtk54@cornell.edu>
+From: Leo Kim <leo.kim@atmel.com>
 
-Changed raid_cmd interface to accept le32 mask instead of
-u32 and converting internally. Updated existing calls to raid_cmd.
-This patch pushes responsibility to the caller to convert
-the mask to le32 and opts for a temp local struct instead of
-memset/memcpy. This cleans up the code considerably.
-Also removed magic numbers.
+This patch renames u8AmpduParams of struct add_sta_param to ht_ampdu_params
+to avoid CamelCase naming convention.
 
-This patch fixes the following sparse error:
-  CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-...
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: \
-  warning: incorrect type in assignment (different base types)
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: \
-  expected unsigned int [unsigned] [usertype] mask
-drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: \
-  got restricted __le32 [usertype] <noident>
-...
-
-Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-In v3, opted to change the interface rather than just the internal
-code, and removed ugly memcpy/memset. This clears sparse errors
-and makes the code more sane.
----
- drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c |  2 +-
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c        | 17 ++++++++---------
- drivers/staging/rtl8723au/hal/usb_halinit.c         |  2 +-
- drivers/staging/rtl8723au/include/rtl8723a_cmd.h    |  2 +-
- 4 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         |  2 +-
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++++++----
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-index cf15f80..2b369b6 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-@@ -5870,7 +5870,7 @@ btdm_1AntUpdateHalRAMask(struct rtw_adapter *padapter, u32 mac_id, u32 filter)
- 		("[BTCoex], Update FW RAID entry, MASK = 0x%08x, "
- 		 "arg = 0x%02x\n", mask, arg));
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e6388ff..8f7d302 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2324,7 +2324,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	*pu8CurrByte++ = pstrStationParam->ht_capa_info & 0xFF;
+ 	*pu8CurrByte++ = (pstrStationParam->ht_capa_info >> 8) & 0xFF;
  
--	rtl8723a_set_raid_cmd(padapter, mask, arg);
-+	rtl8723a_set_raid_cmd(padapter, cpu_to_le32(mask), arg);
+-	*pu8CurrByte++ = pstrStationParam->u8AmpduParams;
++	*pu8CurrByte++ = pstrStationParam->ht_ampdu_params;
+ 	memcpy(pu8CurrByte, pstrStationParam->au8SuppMCsSet, WILC_SUPP_MCS_SET_SIZE);
+ 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
  
- 	psta->init_rate = init_rate;
- 	pdmpriv->INIDATA_RATE[mac_id] = init_rate;
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-index 97d23c3..0e0d3f1 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-@@ -26,6 +26,7 @@
- #define MESSAGE_BOX_SIZE		4
- #define EX_MESSAGE_BOX_SIZE		2
- #define RSSI_CMD_LEN			3
-+#define RAID_CMD_LEN			5
- 
- static u8 _is_fw_read_cmd_down(struct rtw_adapter *padapter, u8 msgbox_num)
- {
-@@ -121,16 +122,14 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param)
- 	return _SUCCESS;
- }
- 
--int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
-+int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, __le32 mask, u8 arg)
- {
--	u8 buf[5];
-+	struct macid_config_eid {__le32 mask; u8 arg; } buf = {
-+		.mask = mask,
-+		.arg = arg
-+	};
- 
--	memset(buf, 0, 5);
--	mask = cpu_to_le32(mask);
--	memcpy(buf, &mask, 4);
--	buf[4]  = arg;
--
--	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
-+	FillH2CCmd(padapter, MACID_CONFIG_EID, RAID_CMD_LEN, (u8 *)&buf);
- 
- 	return _SUCCESS;
- }
-@@ -152,7 +151,7 @@ void rtl8723a_add_rateatid(struct rtw_adapter *pAdapter, u32 bitmap, u8 arg, u8
- 
- 	bitmap |= raid;
- 
--	rtl8723a_set_raid_cmd(pAdapter, bitmap, arg);
-+	rtl8723a_set_raid_cmd(pAdapter, cpu_to_le32(bitmap), arg);
- }
- 
- void rtl8723a_set_FwPwrMode_cmd(struct rtw_adapter *padapter, u8 Mode)
-diff --git a/drivers/staging/rtl8723au/hal/usb_halinit.c b/drivers/staging/rtl8723au/hal/usb_halinit.c
-index 68156a1..fb6f900 100644
---- a/drivers/staging/rtl8723au/hal/usb_halinit.c
-+++ b/drivers/staging/rtl8723au/hal/usb_halinit.c
-@@ -1262,7 +1262,7 @@ void rtl8723a_update_ramask(struct rtw_adapter *padapter,
- 
- 	DBG_8723A("update raid entry, mask = 0x%x, arg = 0x%x\n", mask, arg);
- 
--	rtl8723a_set_raid_cmd(padapter, mask, arg);
-+	rtl8723a_set_raid_cmd(padapter, cpu_to_le32(mask), arg);
- 
- 	/* set ra_id */
- 	psta->raid = raid;
-diff --git a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-index e281543..a7f7921 100644
---- a/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-+++ b/drivers/staging/rtl8723au/include/rtl8723a_cmd.h
-@@ -150,7 +150,7 @@ void rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(struct rtw_adapter *padapter);
- #define rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(padapter) do {} while(0)
- #endif
- int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, __le32 param);
--int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg);
-+int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, __le32 mask, u8 arg);
- void rtl8723a_add_rateatid(struct rtw_adapter *padapter, u32 bitmap, u8 arg, u8 rssi_level);
- 
- int FillH2CCmd(struct rtw_adapter *padapter, u8 ElementID, u32 CmdLen, u8 *pCmdBuffer);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 782088f..bb3bf07 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -294,7 +294,7 @@ struct add_sta_param {
+ 	const u8 *rates;
+ 	bool ht_supported;
+ 	u16 ht_capa_info;
+-	u8 u8AmpduParams;
++	u8 ht_ampdu_params;
+ 	u8 au8SuppMCsSet[16];
+ 	u16 u16HTExtParams;
+ 	u32 u32TxBeamformingCap;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 0d465c1..5ea7bd2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3014,7 +3014,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 		} else {
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+-			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
++			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+ 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+@@ -3028,7 +3028,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported);
+ 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
+ 			strStaParams.ht_capa_info);
+-		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
++		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
++			strStaParams.ht_ampdu_params);
+ 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
+@@ -3130,7 +3131,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 		} else {
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+-			strStaParams.u8AmpduParams = params->ht_capa->ampdu_params_info;
++			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+ 			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+@@ -3145,7 +3146,8 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported);
+ 		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
+ 			strStaParams.ht_capa_info);
+-		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n", strStaParams.u8AmpduParams);
++		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
++			strStaParams.ht_ampdu_params);
+ 		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n", strStaParams.u16HTExtParams);
+ 		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n", strStaParams.u32TxBeamformingCap);
+ 		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n", strStaParams.u8ASELCap);
 -- 
-1.8.3.2
+1.9.1
 
