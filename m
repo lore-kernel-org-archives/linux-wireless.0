@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58650 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038AbbJ0J1p (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53656 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbbJ2KyV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 05:27:45 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 27/27] staging: wilc1000: tcp_process: add argument dev and use private data
-Date: Tue, 27 Oct 2015 18:28:03 +0900
-Message-ID: <1445938083-20445-27-git-send-email-glen.lee@atmel.com> (sfid-20151027_102753_699352_903916B9)
-In-Reply-To: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
-References: <1445938083-20445-1-git-send-email-glen.lee@atmel.com>
+	Thu, 29 Oct 2015 06:54:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add FW API support to test mode
+References: <20151020112513.14879.47438.stgit@potku.adurom.net>
+Date: Thu, 29 Oct 2015 12:54:05 +0200
+In-Reply-To: <20151020112513.14879.47438.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Tue, 20 Oct 2015 14:25:13 +0300")
+Message-ID: <87si4uq71u.fsf@kamboji.qca.qualcomm.com> (sfid-20151029_115442_664576_AEB06A97)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new argument net_device and use netdev private data member
-wilc instead of g_linux_wlan. Pass argument dev to the function as well.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+> From: Alan Liu <alanliu@qca.qualcomm.com>
+>
+> Add WMI-TLV and FW API support in ath10k testmode.
+> Ath10k can get right wmi command format from UTF image
+> to communicate UTF firmware.
+>
+> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 14a56d6..c026657 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -341,7 +341,7 @@ static inline int remove_TCP_related(void)
- 	return 0;
- }
- 
--static inline int tcp_process(struct txq_entry_t *tqe)
-+static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- {
- 	int ret;
- 	u8 *eth_hdr_ptr;
-@@ -350,8 +350,13 @@ static inline int tcp_process(struct txq_entry_t *tqe)
- 	int i;
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	unsigned long flags;
-+	perInterface_wlan_t *nic;
-+	struct wilc *wilc;
- 
--	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
-+	nic = netdev_priv(dev);
-+	wilc = nic->wilc;
-+
-+	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 
- 	eth_hdr_ptr = &buffer[0];
- 	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
-@@ -399,7 +404,7 @@ static inline int tcp_process(struct txq_entry_t *tqe)
- 	} else {
- 		ret = 0;
- 	}
--	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 	return ret;
- }
- 
-@@ -525,7 +530,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- #ifdef TCP_ACK_FILTER
- 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
- 	if (is_TCP_ACK_Filter_Enabled())
--		tcp_process(tqe);
-+		tcp_process(dev, tqe);
- #endif
- 	wilc_wlan_txq_add_to_tail(tqe);
- 	/*return number of itemes in the queue*/
+Applied, thanks.
+
 -- 
-1.9.1
-
+Kalle Valo
