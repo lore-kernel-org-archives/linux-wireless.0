@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14445 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbbJTPN6 (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:35397 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474AbbJ2MaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 11:13:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH v2] ath10k: add notice.txt references to WHENCE
-Date: Tue, 20 Oct 2015 18:13:29 +0300
-Message-ID: <1445354009-20338-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20151020_171401_906043_16E90EA3)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 29 Oct 2015 08:30:13 -0400
+Received: by pasz6 with SMTP id z6so40016799pas.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:30:13 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/12] staging: use kmemdup in host_int_add_station
+Date: Thu, 29 Oct 2015 21:29:27 +0900
+Message-Id: <1446121768-4953-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_134654_769301_75BB8BD3)
+In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to make sure that the notice files get automatically included.
+This patch replaces kmalloc followed by memcpy with kmemdup.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- WHENCE |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/WHENCE b/WHENCE
-index 9b7e8e8526aa..ded2e7ad161b 100755
---- a/WHENCE
-+++ b/WHENCE
-@@ -2393,17 +2393,22 @@ Driver: ath10k - Qualcomm Atheros support for QCA988x family of chips
- File: ath10k/QCA988X/hw2.0/board.bin
- File: ath10k/QCA988X/hw2.0/firmware-4.bin
- Version: 10.2.4.45
-+Licence: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-4.txt
- File: ath10k/QCA988X/hw2.0/firmware-5.bin
- Version: 10.2.4.70.9-2
-+Licence: ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt
- File: ath10k/QCA6174/hw2.1/board.bin
- File: ath10k/QCA6174/hw2.1/firmware-5.bin
- Version: WLAN.RM.1.1-00141
-+Licence: ath10k/QCA6174/hw2.1/notice_ath10k_firmware-5.txt
- File: ath10k/QCA6174/hw3.0/board.bin
- File: ath10k/QCA6174/hw3.0/firmware-4.bin
- Version: WLAN.RM.2.0-00180-QCARMSWPZ-1
-+Licence: ath10k/QCA6174/hw3.0/notice_ath10k_firmware-4.txt
- File: ath10k/QCA99X0/hw2.0/board.bin
- File: ath10k/QCA99X0/hw2.0/firmware-5.bin
- Version: 10.4.1.00030-1
-+Licence: ath10k/QCA99X0/hw2.0/notice_ath10k_firmware-5.txt
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3c5de75..6b804e6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4537,12 +4537,12 @@ int host_int_add_station(struct host_if_drv *hif_drv,
  
- Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
+ 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
+ 	if (add_sta_info->u8NumRates > 0) {
+-		u8 *rates = kmalloc(add_sta_info->u8NumRates, GFP_KERNEL);
+-
++		u8 *rates = kmemdup(sta_param->pu8Rates,
++				    add_sta_info->u8NumRates,
++				    GFP_KERNEL);
+ 		if (!rates)
+ 			return -ENOMEM;
+ 
+-		memcpy(rates, sta_param->pu8Rates, add_sta_info->u8NumRates);
+ 		add_sta_info->pu8Rates = rates;
+ 	}
  
 -- 
-1.7.9.5
+2.6.1
 
