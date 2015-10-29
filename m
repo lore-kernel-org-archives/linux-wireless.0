@@ -1,101 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:33827 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbbJCTao (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:28298 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965569AbbJ2DQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Oct 2015 15:30:44 -0400
-Received: by wicfx3 with SMTP id fx3so71872339wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2015 12:30:43 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/6] staging: vt6655: device_main replace pRD with rd.
-Date: Sat,  3 Oct 2015 20:30:25 +0100
-Message-Id: <1443900627-2924-4-git-send-email-tvboxspy@gmail.com> (sfid-20151003_213050_283148_90DD71F1)
-In-Reply-To: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
-References: <1443900627-2924-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 28 Oct 2015 23:16:53 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 11/12] staging: wilc1000: rename os_context to wilc
+Date: Thu, 29 Oct 2015 12:18:51 +0900
+Message-ID: <1446088732-12301-11-git-send-email-glen.lee@atmel.com> (sfid-20151029_044654_941382_7B3BB500)
+In-Reply-To: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case.
+This patch rename os_context to wilc because it is used as struct wilc and
+move os_private from struct wilc_wlan_os_context_t to struct wilc_wlan_inp_t.
+Finally, delete wilc_wlan_os_context_t.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/vt6655/device_main.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c   | 2 +-
+ drivers/staging/wilc1000/wilc_sdio.c    | 6 +++---
+ drivers/staging/wilc1000/wilc_spi.c     | 6 +++---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 6 +-----
+ 4 files changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index b330379..7e76176 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -702,37 +702,37 @@ static void device_free_td1_ring(struct vnt_private *priv)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 017799f..d0161cd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1012,7 +1012,7 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
  
- static int device_rx_srv(struct vnt_private *priv, unsigned int uIdx)
- {
--	struct vnt_rx_desc *pRD;
-+	struct vnt_rx_desc *rd;
- 	int works = 0;
+ 	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
  
--	for (pRD = priv->pCurrRD[uIdx];
--	     pRD->rd0.owner == OWNED_BY_HOST;
--	     pRD = pRD->next) {
-+	for (rd = priv->pCurrRD[uIdx];
-+	     rd->rd0.owner == OWNED_BY_HOST;
-+	     rd = rd->next) {
- 		if (works++ > 15)
- 			break;
+-	nwi->os_context.os_private = (void *)nic;
++	nwi->wilc = (void *)nic;
  
--		if (!pRD->rd_info->skb)
-+		if (!rd->rd_info->skb)
- 			break;
+ #ifdef WILC_SDIO
+ 	nwi->io_func.io_type = HIF_SDIO;
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 300c571..82f68eb 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -14,7 +14,7 @@
+ #define WILC_SDIO_BLOCK_SIZE 512
  
--		if (vnt_receive_frame(priv, pRD)) {
--			if (!device_alloc_rx_buf(priv, pRD)) {
-+		if (vnt_receive_frame(priv, rd)) {
-+			if (!device_alloc_rx_buf(priv, rd)) {
- 				dev_err(&priv->pcid->dev,
- 					"can not allocate rx buf\n");
- 				break;
- 			}
+ typedef struct {
+-	void *os_context;
++	void *wilc;
+ 	u32 block_size;
+ 	int (*sdio_cmd52)(sdio_cmd52_t *);
+ 	int (*sdio_cmd53)(sdio_cmd53_t *);
+@@ -563,10 +563,10 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
+ 
+ 	g_sdio.dPrint = func;
+-	g_sdio.os_context = inp->os_context.os_private;
++	g_sdio.wilc = inp->wilc;
+ 
+ 	if (inp->io_func.io_init) {
+-		if (!inp->io_func.io_init(g_sdio.os_context)) {
++		if (!inp->io_func.io_init(g_sdio.wilc)) {
+ 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
+ 			return 0;
  		}
--		pRD->rd0.owner = OWNED_BY_NIC;
-+		rd->rd0.owner = OWNED_BY_NIC;
- 	}
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 599508b..9a72fbb 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -12,7 +12,7 @@
+ #include "wilc_wlan.h"
  
--	priv->pCurrRD[uIdx] = pRD;
-+	priv->pCurrRD[uIdx] = rd;
+ typedef struct {
+-	void *os_context;
++	void *wilc;
+ 	int (*spi_tx)(u8 *, u32);
+ 	int (*spi_rx)(u8 *, u32);
+ 	int (*spi_trx)(u8 *, u8 *, u32);
+@@ -968,9 +968,9 @@ static int spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	memset(&g_spi, 0, sizeof(wilc_spi_t));
  
- 	return works;
- }
+ 	g_spi.dPrint = func;
+-	g_spi.os_context = inp->os_context.os_private;
++	g_spi.wilc = inp->wilc;
+ 	if (inp->io_func.io_init) {
+-		if (!inp->io_func.io_init(g_spi.os_context)) {
++		if (!inp->io_func.io_init(g_spi.wilc)) {
+ 			PRINT_ER("[wilc spi]: Failed io init bus...\n");
+ 			return 0;
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 139cc6d..a6bf969 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -99,11 +99,7 @@ typedef struct {
+ #define WILC_MAC_INDICATE_SCAN		0x2
  
- static bool device_alloc_rx_buf(struct vnt_private *priv,
--				struct vnt_rx_desc *pRD)
-+				struct vnt_rx_desc *rd)
- {
--	struct vnt_rd_info *rd_info = pRD->rd_info;
-+	struct vnt_rd_info *rd_info = rd->rd_info;
+ typedef struct {
+-	void *os_private;
+-} wilc_wlan_os_context_t;
+-
+-typedef struct {
+-	wilc_wlan_os_context_t os_context;
++	void *wilc;
+ 	wilc_wlan_io_func_t io_func;
+ } wilc_wlan_inp_t;
  
- 	rd_info->skb = dev_alloc_skb((int)priv->rx_buf_sz);
- 	if (rd_info->skb == NULL)
-@@ -743,12 +743,12 @@ static bool device_alloc_rx_buf(struct vnt_private *priv,
- 			       skb_put(rd_info->skb, skb_tailroom(rd_info->skb)),
- 			       priv->rx_buf_sz, DMA_FROM_DEVICE);
- 
--	*((unsigned int *)&pRD->rd0) = 0; /* FIX cast */
-+	*((unsigned int *)&rd->rd0) = 0; /* FIX cast */
- 
--	pRD->rd0.res_count = cpu_to_le16(priv->rx_buf_sz);
--	pRD->rd0.owner = OWNED_BY_NIC;
--	pRD->rd1.req_count = cpu_to_le16(priv->rx_buf_sz);
--	pRD->buff_addr = cpu_to_le32(rd_info->skb_dma);
-+	rd->rd0.res_count = cpu_to_le16(priv->rx_buf_sz);
-+	rd->rd0.owner = OWNED_BY_NIC;
-+	rd->rd1.req_count = cpu_to_le16(priv->rx_buf_sz);
-+	rd->buff_addr = cpu_to_le32(rd_info->skb_dma);
- 
- 	return true;
- }
 -- 
-2.5.0
+1.9.1
 
