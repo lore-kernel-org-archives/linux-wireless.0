@@ -1,77 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33817 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbbJ0XTr (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27213 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965353AbbJ2DFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 19:19:47 -0400
-Received: by padhk11 with SMTP id hk11so236252982pad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2015 16:19:46 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 04/10] staging: wilc1000: rename pu8WepKey in host_int_add_wep_key_bss_ap
-Date: Wed, 28 Oct 2015 08:19:22 +0900
-Message-Id: <1445987968-18974-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151028_001950_030598_B8DCFA6F)
-In-Reply-To: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1445987968-18974-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 28 Oct 2015 23:05:45 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 56/64] staging: wilc1000: rename au8SuppMCsSet of struct add_sta_param
+Date: Thu, 29 Oct 2015 12:05:48 +0900
+Message-ID: <1446087956-19054-23-git-send-email-glen.lee@atmel.com> (sfid-20151029_040547_900091_26865BEA)
+In-Reply-To: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+References: <1446087956-19054-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes pu8WepKey to key that is second argument of this
-function to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames au8SuppMCsSet of struct add_sta_param to ht_supp_mcs_set
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 3 ++-
+ drivers/staging/wilc1000/host_interface.h         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++++--
+ 3 files changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9a57d31a..4be42cb 100644
+index 8f7d302..d0a65c7 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3192,7 +3192,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- }
+@@ -2325,7 +2325,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	*pu8CurrByte++ = (pstrStationParam->ht_capa_info >> 8) & 0xFF;
  
- int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
--				const u8 *pu8WepKey,
-+				const u8 *key,
- 				u8 u8WepKeylen,
- 				u8 u8Keyidx,
- 				u8 u8mode,
-@@ -3211,14 +3211,14 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	*pu8CurrByte++ = pstrStationParam->ht_ampdu_params;
+-	memcpy(pu8CurrByte, pstrStationParam->au8SuppMCsSet, WILC_SUPP_MCS_SET_SIZE);
++	memcpy(pu8CurrByte, pstrStationParam->ht_supp_mcs_set,
++	       WILC_SUPP_MCS_SET_SIZE);
+ 	pu8CurrByte += WILC_SUPP_MCS_SET_SIZE;
  
- 	if (INFO) {
- 		for (i = 0; i < u8WepKeylen; i++)
--			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", pu8WepKey[i]);
-+			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
- 	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
- 	msg.drv = hif_drv;
- 	msg.body.key_info.attr.wep.key = kmalloc(u8WepKeylen, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wep.key, pu8WepKey, (u8WepKeylen));
-+	memcpy(msg.body.key_info.attr.wep.key, key, (u8WepKeylen));
- 	msg.body.key_info.attr.wep.key_len = (u8WepKeylen);
- 	msg.body.key_info.attr.wep.index = u8Keyidx;
- 	msg.body.key_info.attr.wep.mode = u8mode;
+ 	*pu8CurrByte++ = pstrStationParam->u16HTExtParams & 0xFF;
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 0bbbf4f..fa439f2 100644
+index bb3bf07..798adcf 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -421,7 +421,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
-  *  @date		28 Feb 2013
-  *  @version		1.0
-  */
--int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *pu8WepKey, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
-+int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv, const u8 *key, u8 u8WepKeylen, u8 u8Keyidx, u8 u8mode, enum AUTHTYPE tenuAuth_type);
- 
- /**
-  *  @brief              adds ptk Key
+@@ -295,7 +295,7 @@ struct add_sta_param {
+ 	bool ht_supported;
+ 	u16 ht_capa_info;
+ 	u8 ht_ampdu_params;
+-	u8 au8SuppMCsSet[16];
++	u8 ht_supp_mcs_set[16];
+ 	u16 u16HTExtParams;
+ 	u32 u32TxBeamformingCap;
+ 	u8 u8ASELCap;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5ea7bd2..ef308da 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3015,7 +3015,9 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+-			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
++			memcpy(strStaParams.ht_supp_mcs_set,
++			       &params->ht_capa->mcs,
++			       WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
+@@ -3132,7 +3134,9 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = true;
+ 			strStaParams.ht_capa_info = params->ht_capa->cap_info;
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+-			memcpy(strStaParams.au8SuppMCsSet, &params->ht_capa->mcs, WILC_SUPP_MCS_SET_SIZE);
++			memcpy(strStaParams.ht_supp_mcs_set,
++			       &params->ht_capa->mcs,
++			       WILC_SUPP_MCS_SET_SIZE);
+ 			strStaParams.u16HTExtParams = params->ht_capa->extended_ht_cap_info;
+ 			strStaParams.u32TxBeamformingCap = params->ht_capa->tx_BF_cap_info;
+ 			strStaParams.u8ASELCap = params->ht_capa->antenna_selection_info;
 -- 
-2.6.1
+1.9.1
 
