@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44777 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbbJDVGL (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33984 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965336AbbJ2XST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 17:06:11 -0400
-Message-ID: <561194C0.7030102@broadcom.com> (sfid-20151004_230614_927919_3E46C64A)
-Date: Sun, 4 Oct 2015 23:06:08 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Chaehyun Lim <chaehyun.lim@gmail.com>,
-	<gregkh@linuxfoundation.org>, <johnny.kim@atmel.com>,
-	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH 08/12] staging: wilc1000: use s8 instead of int8_t
-References: <1443707039-18433-1-git-send-email-chaehyun.lim@gmail.com> <1443707039-18433-8-git-send-email-chaehyun.lim@gmail.com> <560E3628.4000105@broadcom.com> <20151002113701.GN7289@mwanda>
-In-Reply-To: <20151002113701.GN7289@mwanda>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 29 Oct 2015 19:18:19 -0400
+Received: by padhk11 with SMTP id hk11so53972553pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 16:18:19 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 09/12] staging: wilc1000: rename pstrStaParams in host_int_add_station
+Date: Fri, 30 Oct 2015 08:17:45 +0900
+Message-Id: <1446160668-10747-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151030_001834_398032_3E9A5CC7)
+In-Reply-To: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446160668-10747-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/02/2015 01:37 PM, Dan Carpenter wrote:
-> On Fri, Oct 02, 2015 at 09:45:44AM +0200, Arend van Spriel wrote:
->> On 10/01/2015 03:43 PM, Chaehyun Lim wrote:
->>> This patch replaces int8_t with s8 that is a preferred type.
->>>
->>> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
->>> ---
->>>   drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
->>>   1 file changed, 3 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->>> index d781003..56c97c9 100644
->>> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->>> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->>> @@ -263,9 +263,9 @@ static void clear_duringIP(unsigned long arg)
->>>   	g_obtainingIP = false;
->>>   }
->>>
->>> -int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
->>> +s8 is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
->>
->> It seems to make more sense to use bool type here.
->
-> That doesn't work, but you're right that the function is poorly named.
+This patch renames pstrStaParams to sta_param to avoid camelcase.
 
-Ah, yes. The return value was assigned to a variable named ap_found so I 
-did not look further, but that variable is further down assigned to 
-ap_index. Gosh! Been a while since I faced true staging code ;-)
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: resend because 11/12 patch is changed.
 
-Regards,
-Arend
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-> It could be renamed to get_ap_index_or_something() in a later patch.
-> Returning directly is also a good idea.
->
-> regards,
-> dan carpenter
->
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0f36825..57287d4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4517,7 +4517,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
+ }
+ 
+ int host_int_add_station(struct host_if_drv *hif_drv,
+-			 struct add_sta_param *pstrStaParams)
++			 struct add_sta_param *sta_param)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4535,14 +4535,14 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ 	msg.id = HOST_IF_MSG_ADD_STATION;
+ 	msg.drv = hif_drv;
+ 
+-	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
++	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
+ 	if (pstrAddStationMsg->u8NumRates > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->u8NumRates, GFP_KERNEL);
+ 
+ 		if (!rates)
+ 			return -ENOMEM;
+ 
+-		memcpy(rates, pstrStaParams->pu8Rates, pstrAddStationMsg->u8NumRates);
++		memcpy(rates, sta_param->pu8Rates, pstrAddStationMsg->u8NumRates);
+ 		pstrAddStationMsg->pu8Rates = rates;
+ 	}
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7c9c4c6..aa92762 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -949,7 +949,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
+  *  @version		1.0 Description
+  */
+ int host_int_add_station(struct host_if_drv *hif_drv,
+-			 struct add_sta_param *pstrStaParams);
++			 struct add_sta_param *sta_param);
+ 
+ /*!
+  *  @fn		s32 host_int_del_allstation(WILC_WFIDrvHandle hWFIDrv, const u8* pu8MacAddr)
+-- 
+2.6.1
 
