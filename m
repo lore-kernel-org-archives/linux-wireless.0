@@ -1,127 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41828 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933182AbbJIQO3 (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:36354 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756717AbbJ2M3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 12:14:29 -0400
-Subject: Re: [PATCH] mac80211: Take bitrates into account when building IEs.
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1442610145-8759-1-git-send-email-greearb@candelatech.com>
- <1444296337.2131.9.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5617E7E5.9070401@candelatech.com> (sfid-20151009_181433_457505_C8EC993B)
-Date: Fri, 9 Oct 2015 09:14:29 -0700
-MIME-Version: 1.0
-In-Reply-To: <1444296337.2131.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Thu, 29 Oct 2015 08:29:47 -0400
+Received: by pacfv9 with SMTP id fv9so41651467pac.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:29:46 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/12] staging: wilc1000: fix return type of host_int_del_station
+Date: Thu, 29 Oct 2015 21:29:19 +0900
+Message-Id: <1446121768-4953-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_132949_871545_3FB90F68)
+In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/08/2015 02:25 AM, Johannes Berg wrote:
-> On Fri, 2015-09-18 at 14:02 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> If a user restricts the rateset for some reason, then the
->> probe requests should not advertise rates that are not
->> selected by the user.
->>
->> To implement this, we save the requested bitrates at
->> the mac80211 level and take it into account when building
->> the IEs.
->>
->> This allows one to create a more realistic /b mode
->> station on modern hardware, for instance.  Good for
->> testing, and likely good for other things as well.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   include/net/mac80211.h     |  4 ++
->>   net/mac80211/cfg.c         |  3 ++
->>   net/mac80211/ieee80211_i.h | 15 ++++++-
->>   net/mac80211/scan.c        | 26 ++++++++++++-
->>   net/mac80211/util.c        | 97 ++++++++++++++++++++++++++++++++++++++++++----
->>   5 files changed, 135 insertions(+), 10 deletions(-)
->>
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index d52914b..be069bd 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -1838,10 +1838,14 @@ struct ieee80211_hw {
->>    * struct ieee80211_scan_request - hw scan request
->>    *
->>    * @ies: pointers different parts of IEs (in req.ie)
->> + * @disable_ht: Ensure nothing related to HT is in the probe request?
->> + * @disable_vht: Ensure nothing related to VHT is in the probe request?
->
-> what's with the question marks? :)
+This patch changes return type of host_int_del_station from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-Cause it's a boolean?  Easily remedied either way.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
->
-> I don't really see why it should be in this struct - the driver
-> shouldn't have to access it even for hardware scan?
-
-ath10k firmware wants to add it's own IEs when doing hardware
-scan.  It has flags to the scan request that determines what IEs
-it will build...so I was using these booleans to determine how to
-build the ath10k scan-request message.
-
->
->> +++ b/net/mac80211/cfg.c
->> @@ -2466,6 +2466,9 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
->>   > 	> if (!ieee80211_sdata_running(sdata))
->>   > 	> 	> return -ENETDOWN;
->>
->> +> 	> memcpy(&sdata->cfg_bitrate_mask, mask, sizeof(*mask));
->> +> 	> sdata->cfg_bitrate_mask_set = true;
->
->
-> I'm not entirely convinced of this ...
->
-> The documentation for @NL80211_CMD_SET_TX_BITRATE_MASK doesn't really
-> state this - it clearly states it's for TX only. Settings it up this
-> way now might be rather confusing.
->
-> Consider P2P for example, the bitrate mask might be set w/o CCK, but
-> perhaps other networks can be found?
-
-How about a new flag to 'set-bitrates' logic that tells the mac80211
-stack whether the bitrates mask is for probe-requests and similar
-vs being for actually just tx-rate-mask limitations?
-
-Then it should be fully backwards compat with existing behaviour, and also
-give the new behaviour that I want.  In my case, I think this is better anyway
-because I might want to fix tx-rate at 6Mbps but allow at least the
-basic rates to be used for probe requests and such.
-
-This approach should let us re-use the bulk of the rates parsing logic
-in iw and/or hostapd/supplicant (and the kernel, for that matter).
-
->
->> +> 	> /* Store bitrate mask configured from user-space */
->> +> 	> struct cfg80211_bitrate_mask cfg_bitrate_mask;
->> +> 	> bool cfg_bitrate_mask_set; /* Has user set the mask? */
->
-> I'm also not really happy with such stateful API in general. If you set
-> this, and forget to reset it ...
->
-> Obviously that's already the case for the TX bitrates, but it's
-> typically used in pretty restricted situations.
->
-> Perhaps, for the use case you're considering, it would make more sense
-> to be able to in general change the device capabilities in some way?
-
-Changing the device won't help me I think..I want to have multiple vdevs
-on the same radio using different rate-encoding schemes...so one
-STA/VAP will be /b, next /b/g, and another /n, all on the same
-radio.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b469962..be5e652 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4552,9 +4552,9 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 36de990..9eb1b3b 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -979,7 +979,7 @@ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv, u8 pu8MacAddr[][ETH_ALE
+  *  @date		15 July 2012
+  *  @version		1.0 Description
+  */
+-s32 host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hWFIDrv, const u8 *pu8MacAddr);
+ 
+ /*!
+  *  @fn		s32 host_int_edit_station(WILC_WFIDrvHandle hWFIDrv,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.6.1
 
