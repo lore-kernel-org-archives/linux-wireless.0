@@ -1,61 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:34102 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbbJMSwA (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64097 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756994AbbJ2Tnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 14:52:00 -0400
-Received: by iow1 with SMTP id 1so31537326iow.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2015 11:52:00 -0700 (PDT)
-Date: Tue, 13 Oct 2015 13:37:33 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 0/5] wireless-regdb: Update TW and US rules to latest
- regulations
-Message-ID: <20151013183733.GB50632@ubuntu-hedt> (sfid-20151013_205205_942529_8D532F86)
-References: <1444061698-16384-1-git-send-email-wens@csie.org>
+	Thu, 29 Oct 2015 15:43:37 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 8/9] brcmfmac: Use new methods for pcie Power Management.
+Date: Thu, 29 Oct 2015 20:33:18 +0100
+Message-ID: <1446147199-21671-9-git-send-email-arend@broadcom.com> (sfid-20151029_204341_122617_4BF4DC46)
+In-Reply-To: <1446147199-21671-1-git-send-email-arend@broadcom.com>
+References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444061698-16384-1-git-send-email-wens@csie.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 12:14:53AM +0800, Chen-Yu Tsai wrote:
-> Hi Seth,
-> 
-> This is v4 of my TW/US 5GHz updates series. Hopefully this one will go
-> in without further work.
-> 
-> Changes since v3:
-> 
->   - Moved power limit increase of 5250 ~ 5350 MHz band from patch 4 to
->     patch 5.
-> 
-> Changes since v2:
-> 
->   - Moved the US U-NII-1 (5150 ~ 5250 MHz) patch in front of the TW patch
-> 
->   - Drop U-NII-1 power limit from 24 dBm to 23 dBm, to be on the safe
->     side of 250mW
-> 
-> 
-> Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
-> the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
-> weather radars. The transmission power limit is also corrected to
-> match the regulations.
-> 
-> Patch 2 changes the boundary frequencies for each rule for Taiwan to
-> match the frequency allocation table. The "regulation" database shouldn't
-> care about artificial channel boundaries.
-> 
-> Patch 3 updates the transmission power limits for 5150 ~ 5250 MHz for
-> the US.
-> 
-> Patch 4 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
-> 
-> Patch 5 updates the transmission power limits for Taiwan, per the NCC's
-> official reply. This patch may be slightly controversial, as there is
-> no official English document. Either someone will have to independently
-> verify this, or translate the Chinese document.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Applied all 5, thanks.
+Currently the legacy methods suspend and resume are used for pcie
+devices. This is not the preferable method and is also causing
+issues with some setups when doing hibernate. Changing this to
+use the new PM methods.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 89 +++++++++++---------------
+ 1 file changed, 37 insertions(+), 52 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 0edaaf5..e08bc64 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -1388,10 +1388,6 @@ static void brcmf_pcie_wowl_config(struct device *dev, bool enabled)
+ 
+ 	brcmf_dbg(PCIE, "Configuring WOWL, enabled=%d\n", enabled);
+ 	devinfo->wowl_enabled = enabled;
+-	if (enabled)
+-		device_set_wakeup_enable(&devinfo->pdev->dev, true);
+-	else
+-		device_set_wakeup_enable(&devinfo->pdev->dev, false);
+ }
+ 
+ 
+@@ -1961,15 +1957,14 @@ brcmf_pcie_remove(struct pci_dev *pdev)
+ #ifdef CONFIG_PM
+ 
+ 
+-static int brcmf_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
++static int brcmf_pcie_pm_enter_D3(struct device *dev)
+ {
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_bus *bus;
+-	int err;
+ 
+-	brcmf_dbg(PCIE, "Enter, state=%d, pdev=%p\n", state.event, pdev);
++	brcmf_err("Enter\n");
+ 
+-	bus = dev_get_drvdata(&pdev->dev);
++	bus = dev_get_drvdata(dev);
+ 	devinfo = bus->bus_priv.pcie->devinfo;
+ 
+ 	brcmf_bus_change_state(bus, BRCMF_BUS_DOWN);
+@@ -1984,62 +1979,45 @@ static int brcmf_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		brcmf_err("Timeout on response for entering D3 substate\n");
+ 		return -EIO;
+ 	}
+-	brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D0_INFORM_IN_USE);
+ 
+-	err = pci_save_state(pdev);
+-	if (err)
+-		brcmf_err("pci_save_state failed, err=%d\n", err);
+-	if ((err) || (!devinfo->wowl_enabled)) {
+-		brcmf_chip_detach(devinfo->ci);
+-		devinfo->ci = NULL;
+-		brcmf_pcie_remove(pdev);
+-		return 0;
+-	}
++	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
+ 
+-	return pci_prepare_to_sleep(pdev);
++	return 0;
+ }
+ 
+-static int brcmf_pcie_resume(struct pci_dev *pdev)
++
++static int brcmf_pcie_pm_leave_D3(struct device *dev)
+ {
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_bus *bus;
++	struct pci_dev *pdev;
+ 	int err;
+ 
+-	bus = dev_get_drvdata(&pdev->dev);
+-	brcmf_dbg(PCIE, "Enter, pdev=%p, bus=%p\n", pdev, bus);
++	brcmf_err("Enter\n");
+ 
+-	err = pci_set_power_state(pdev, PCI_D0);
+-	if (err) {
+-		brcmf_err("pci_set_power_state failed, err=%d\n", err);
+-		goto cleanup;
+-	}
+-	pci_restore_state(pdev);
+-	pci_enable_wake(pdev, PCI_D3hot, false);
+-	pci_enable_wake(pdev, PCI_D3cold, false);
++	bus = dev_get_drvdata(dev);
++	devinfo = bus->bus_priv.pcie->devinfo;
++	brcmf_dbg(PCIE, "Enter, dev=%p, bus=%p\n", dev, bus);
+ 
+ 	/* Check if device is still up and running, if so we are ready */
+-	if (bus) {
+-		devinfo = bus->bus_priv.pcie->devinfo;
+-		if (brcmf_pcie_read_reg32(devinfo,
+-					  BRCMF_PCIE_PCIE2REG_INTMASK) != 0) {
+-			if (brcmf_pcie_send_mb_data(devinfo,
+-						    BRCMF_H2D_HOST_D0_INFORM))
+-				goto cleanup;
+-			brcmf_dbg(PCIE, "Hot resume, continue....\n");
+-			brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+-			brcmf_bus_change_state(bus, BRCMF_BUS_UP);
+-			brcmf_pcie_intr_enable(devinfo);
+-			return 0;
+-		}
++	if (brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_INTMASK) != 0) {
++		brcmf_dbg(PCIE, "Try to wakeup device....\n");
++		if (brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D0_INFORM))
++			goto cleanup;
++		brcmf_dbg(PCIE, "Hot resume, continue....\n");
++		devinfo->state = BRCMFMAC_PCIE_STATE_UP;
++		brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
++		brcmf_bus_change_state(bus, BRCMF_BUS_UP);
++		brcmf_pcie_intr_enable(devinfo);
++		return 0;
+ 	}
+ 
+ cleanup:
+-	if (bus) {
+-		devinfo = bus->bus_priv.pcie->devinfo;
+-		brcmf_chip_detach(devinfo->ci);
+-		devinfo->ci = NULL;
+-		brcmf_pcie_remove(pdev);
+-	}
++	brcmf_chip_detach(devinfo->ci);
++	devinfo->ci = NULL;
++	pdev = devinfo->pdev;
++	brcmf_pcie_remove(pdev);
++
+ 	err = brcmf_pcie_probe(pdev, NULL);
+ 	if (err)
+ 		brcmf_err("probe after resume failed, err=%d\n", err);
+@@ -2048,6 +2026,14 @@ cleanup:
+ }
+ 
+ 
++static const struct dev_pm_ops brcmf_pciedrvr_pm = {
++	.suspend = brcmf_pcie_pm_enter_D3,
++	.resume = brcmf_pcie_pm_leave_D3,
++	.freeze = brcmf_pcie_pm_enter_D3,
++	.restore = brcmf_pcie_pm_leave_D3,
++};
++
++
+ #endif /* CONFIG_PM */
+ 
+ 
+@@ -2086,9 +2072,8 @@ static struct pci_driver brcmf_pciedrvr = {
+ 	.probe = brcmf_pcie_probe,
+ 	.remove = brcmf_pcie_remove,
+ #ifdef CONFIG_PM
+-	.suspend = brcmf_pcie_suspend,
+-	.resume = brcmf_pcie_resume
+-#endif /* CONFIG_PM */
++	.driver.pm = &brcmf_pciedrvr_pm,
++#endif
+ };
+ 
+ 
+-- 
+1.9.1
+
