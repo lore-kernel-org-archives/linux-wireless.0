@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53583 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754284AbbJ0MWI (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40045 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759024AbbJ3K1z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 08:22:08 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: fill HT/VHT MCS rateset only for configured chainmask
-Date: Tue, 27 Oct 2015 17:51:12 +0530
-Message-ID: <1445948474-16738-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151027_132214_931247_3E73E647)
-In-Reply-To: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 30 Oct 2015 06:27:55 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Ujjal Roy <royujjal@gmail.com>
+CC: Julien Cubizolles <j.cubizolles@free.fr>,
+	Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nishant Sarmukadam" <nishants@marvell.com>
+Subject: RE: mwifiex problem: incompatible network settings
+Date: Fri, 30 Oct 2015 10:27:48 +0000
+Message-ID: <c7491c5378de4d0699db031084325485@SC-EXCH04.marvell.com> (sfid-20151030_112759_248142_7C218E01)
+References: <CAE2MWkmxL9Ez81VizxYcCMdmmpXVbjSp8NLVy_sTK6xDvJs2iw@mail.gmail.com>
+In-Reply-To: <CAE2MWkmxL9Ez81VizxYcCMdmmpXVbjSp8NLVy_sTK6xDvJs2iw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HT/VHT MCS rateset should be filled only for configured chainmask
-rather that max supported chainmask. Fix that by checking configured
-chainmask while filling HT/VHT MCS rate map.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b4eb9fd..4e799d4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6972,7 +6972,7 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 
- 	mcs_map = 0;
- 	for (i = 0; i < 8; i++) {
--		if (i < ar->num_rf_chains)
-+		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
- 			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
- 		else
- 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
-@@ -7039,8 +7039,10 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
- 	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
- 		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
- 
--	for (i = 0; i < ar->num_rf_chains; i++)
--		ht_cap.mcs.rx_mask[i] = 0xFF;
-+	for (i = 0; i < ar->num_rf_chains; i++) {
-+		if (ar->cfg_rx_chainmask & BIT(i))
-+			ht_cap.mcs.rx_mask[i] = 0xFF;
-+	}
- 
- 	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
- 
--- 
-2.6.2
-
+PiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51
+eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgVWpqYWwg
+Um95DQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDI5LCAyMDE1IDc6NTkgUE0NCj4gVG86IEFt
+aXRrdW1hciBLYXJ3YXINCj4gQ2M6IEp1bGllbiBDdWJpem9sbGVzOyBEYW4gV2lsbGlhbXM7IGxp
+bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsNCj4gTmlzaGFudCBTYXJtdWthZGFtDQo+IFN1
+YmplY3Q6IFJlOiBtd2lmaWV4IHByb2JsZW06IGluY29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdz
+DQo+IA0KPiBIaSBBbWl0L0p1bGllbiwNCj4gDQo+IE9uIFRodSwgT2N0IDI5LCAyMDE1IGF0IDU6
+NTcgUE0sIEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+IHdyb3RlOg0K
+PiA+DQo+ID4gSGkgSnVsaWVuLA0KPiA+DQo+ID4gPiBGcm9tOiBKdWxpZW4gQ3ViaXpvbGxlcyBb
+bWFpbHRvOmouY3ViaXpvbGxlc0BmcmVlLmZyXQ0KPiA+ID4gU2VudDogVGh1cnNkYXksIE9jdG9i
+ZXIgMjksIDIwMTUgMzowOSBBTQ0KPiA+ID4gVG86IERhbiBXaWxsaWFtcw0KPiA+ID4gQ2M6IEFt
+aXRrdW1hciBLYXJ3YXI7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gU3Vi
+amVjdDogUmU6IG13aWZpZXggcHJvYmxlbTogaW5jb21wYXRpYmxlIG5ldHdvcmsgc2V0dGluZ3MN
+Cj4gPiA+DQo+ID4gPiBEYW4gV2lsbGlhbXMgPGRjYndAcmVkaGF0LmNvbT4gd3JpdGVzOg0KPiA+
+ID4NCj4gPiA+ID4gSGUgYWN0dWFsbHkgbWVhbnQgdGhlIHdwYV9zdXBwbGljYW50IGNvbmZpZ3Vy
+YXRpb24gZmlsZSwgbm90IHRoZQ0KPiA+ID4gPiBzdXBwbGljYW50J3MgZGJ1cyBjb25maWcgZmls
+ZS4gIEJ1dCB3aGVuIGRyaXZlbiBieSBOZXR3b3JrTWFuYWdlciwNCj4gPiA+ID4gdGhlcmUgaXMg
+bm8gc3VwcGxpY2FudCBjb25maWd1cmF0aW9uIGZpbGUuDQo+ID4gPg0KPiA+ID4gU29ycnkgYWJv
+dXQgdGhhdC4NCj4gPiA+DQo+ID4gPiA+IEluc3RlYWQsIHlvdSBjYW4gZmluZCBvdXQgd2hhdCBj
+b25maWcgTk0gaXMgcHVzaGluZyB0byB0aGUNCj4gPiA+ID4gc3VwcGxpY2FudCBieSBjaGVja2lu
+ZyB0aGUgTmV0d29ya01hbmFnZXIgbG9ncywgd2hlcmUgTk0gd2lsbCBsb2cNCj4gbGluZXMgbGlr
+ZToNCj4gPiA+DQo+ID4gPiBIZXJlIGFyZSB0aGUgcmVsZXZhbnQgZW50cmllcyBmcm9tIHRoZSBz
+eXNsb2cgZmlsZToNCj4gPiA+DQo+ID4gPiBJIGluY2x1ZGVkIHRoZSBmYWlsZWQgYXR0ZW1wdCB0
+byBjb25uZWN0IHRvIHRoZSBXUEEgcHJvdGVjdGVkDQo+ID4gPiBuZXR3b3JrIG5hbWVkICJzb3V0
+aGNlbnRyYWwiIGFuZCB0aGUgc3VjY2Vzc2Z1bCBvbmUgdG8gYSBub24NCj4gPiA+IHByb3RlY3Rl
+ZCBvbmUgbmFtZWQgIkZyZWVXaWZpIi4NCj4gPiA+DQo+ID4NCj4gPiBUaGFua3MgZm9yIHRoZSBs
+b2dzLiBJIGNvbXBhcmVkIHlvdXIgbmV0d29yayBtYW5hZ2VyIGxvZyB3aXRoIHRoZSBvbmUNCj4g
+b24gbXkgc2V0dXAuIEJvdGggYXJlIHNhbWUuIEJhc2ljYWxseSBuZXR3b3JrIG1hbmFnZXIgbG9n
+IGRvZXNuJ3Qgc2hvdw0KPiBzZWN1cml0eSBpbmZvIChXUEEvV1BBMiwgZW5jcnlwdGlvbiBtb2Rl
+IGV0YykuIFNvIHdlIGNhbid0IHJlbHkgb24gdGhhdC4NCj4gPiBJIGNoZWNrZWQgeW91ciBrZXJu
+ZWwgbG9nIHNoYXJlZCBpbiBwcmV2aW91cyBlbWFpbC4gSXQncyBpbmNvbXBsZXRlLg0KPiBJdCBk
+aWRuJ3QgaW5jbHVkZSBpbmZvcm1hdGlvbiB3aGVuIGNvbm5lY3Rpb24gd2FzIGFjdHVhbGx5IGF0
+dGVtcHRlZC4NCj4gUHJvYmFibHkgeW91IGNhbiBydW4gImRtZXNnIC1jID4+IGRtZXNnLmxvZyIg
+aW4gbG9vcCB3aXRoIHNvbWUgZGVsYXkgdG8NCj4gY2FwdHVyZSBjb21wbGV0ZSBpbmZvLiBPdGhl
+cndpc2Ugc2hhcmluZyAiL3Zhci9sb2cvbWVzc2FnZXMiIGlzIGFsc28gYW4NCj4gb3B0aW9uLg0K
+PiA+IEkgaGF2ZSBjcmVhdGVkIGEgZHJpdmVyIGRlYnVnIHBhdGNoKGF0dGFjaGVkKS4gQ291bGQg
+eW91IHBsZWFzZSBhcHBseQ0KPiBpdCBhbmQgc2hhcmUgY29tcGxldGUgZG1lc2cgbG9nPw0KPiA+
+DQo+ID4gQnR3LCBkbyB5b3Ugc2VlIHRoZSBwcm9ibGVtIGlmIEFQIGlzIGNvbmZpZ3VyZWQgaW4g
+V1BBMiBzZWN1cml0eSBtb2RlPw0KPiA+DQo+IA0KPiBZb3UgY291bGQgY2hlY2sgaXQgYnkgZGlz
+YWJsaW5nIHRoZSBOZXR3b3JrTWFuYWdlciBhbmQgY29ubmVjdCB1c2luZw0KPiB3cGFfc3VwcGxp
+Y2FudCBtYW51YWxseS4gU29tZXRpbWVzIE5ldHdvcmtNYW5hZ2VyIGRvZXMgc29tZSBwcm9ibGVt
+DQo+IHdoaWNoIGlzIHNvbHZlZCBieSBkaXNhYmxpbmcgdGhlIE5ldHdvcmtNYW5hZ2VyLg0KPiAN
+Cg0KTWFrZXMgc2Vuc2UuIFRoaXMgd2lsbCBuYXJyb3cgZG93biB0aGUgaXNzdWUgZnVydGhlci4N
+Ckp1bGllbiwgbGV0IG1lIGtub3cgaWYgYW55IGhlbHAgaXMgbmVlZGVkIGZvciB0aGlzLg0KDQpS
+ZWdhcmRzLA0KQW1pdGt1bWFyDQo=
