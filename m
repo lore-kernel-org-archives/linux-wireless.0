@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42248 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755526AbbJ1HBC (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33355 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471AbbJ3Gl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:01:02 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 34/80] staging: wilc1000: rename u16Channel of struct remain_ch
-Date: Wed, 28 Oct 2015 15:59:54 +0900
-Message-ID: <1446015640-29398-34-git-send-email-glen.lee@atmel.com> (sfid-20151028_080119_076652_19F222D5)
-In-Reply-To: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
+	Fri, 30 Oct 2015 02:41:58 -0400
+Received: by padhy1 with SMTP id hy1so59022917pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 23:41:58 -0700 (PDT)
+Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for
+ arm64 dma_alloc.
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
+ <878u6lo34e.fsf@kamboji.qca.qualcomm.com> <5632AC81.6090905@linaro.org>
+ <5632ACFA.1090709@linaro.org>
+ <CAP71Wjwc5HcfG6UKy-XFwtmB1ZxgJvM0FWf5NT3G6DjNOKwDqA@mail.gmail.com>
+ <874mh9ne7x.fsf@kamboji.qca.qualcomm.com> <20151030054923.GA11592@gmail.com>
+ <87ziz0nbbz.fsf@kamboji.qca.qualcomm.com>
+Cc: Nicolas Dechesne <nicolas.dechesne@linaro.org>,
+	wcn36xx@lists.infradead.org, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	k.eugene.e@gmail.com
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <5633112F.7060406@linaro.org> (sfid-20151030_074201_953160_69C4503F)
+Date: Fri, 30 Oct 2015 14:41:51 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87ziz0nbbz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames u16Channel of struct remain_ch to ch
-to avoid CamelCase naming convention.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 11 ++++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+On 2015/10/30 14:02, Kalle Valo wrote:
+> yfw <fengwei.yin@linaro.org> writes:
+>
+>> On Fri, Oct 30, 2015 at 06:59:46AM +0200, Kalle Valo wrote:
+>>> Nicolas Dechesne <nicolas.dechesne@linaro.org> writes:
+>>>
+>>>> fwiw.. I applied the original patch from the list locally, and I don't
+>>>> see this issue after git am <file>:
+>>>>
+>>>> $ git shortlog -1
+>>>> Yin, Fengwei (1):
+>>>>        wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
+>>>
+>>> Ah, I think it's coming from patchwork:
+>>>
+>>> "Submitter	yfw"
+>>>
+>>> https://patchwork.kernel.org/patch/7484791/
+>>>
+>>> Fengwei, please fix your name in patchwork. It should be easy to do.
+>>
+>> Kalle, any clue about how to change the name in patchwork? I can't find
+>> how on the patchwork website.
+>
+> Not sure. I think first need to register with the same email address:
+>
+> https://patchwork.kernel.org/register/
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 543d223..75f617a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2484,10 +2484,10 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		hif_drv->remain_on_ch.pVoid = pstrHostIfRemainOnChan->pVoid;
- 		hif_drv->remain_on_ch.pRemainOnChanExpired = pstrHostIfRemainOnChan->pRemainOnChanExpired;
- 		hif_drv->remain_on_ch.pRemainOnChanReady = pstrHostIfRemainOnChan->pRemainOnChanReady;
--		hif_drv->remain_on_ch.u16Channel = pstrHostIfRemainOnChan->u16Channel;
-+		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
- 		hif_drv->remain_on_ch.u32ListenSessionID = pstrHostIfRemainOnChan->u32ListenSessionID;
- 	} else {
--		pstrHostIfRemainOnChan->u16Channel = hif_drv->remain_on_ch.u16Channel;
-+		pstrHostIfRemainOnChan->ch = hif_drv->remain_on_ch.ch;
- 	}
- 
- 	if (hif_drv->usr_scan_req.pfUserScanResult) {
-@@ -2508,7 +2508,8 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		goto ERRORHANDLER;
- 	}
- 
--	PRINT_D(HOSTINF_DBG, "Setting channel :%d\n", pstrHostIfRemainOnChan->u16Channel);
-+	PRINT_D(HOSTINF_DBG, "Setting channel :%d\n",
-+		pstrHostIfRemainOnChan->ch);
- 
- 	u8remain_on_chan_flag = true;
- 	wid.id = (u16)WID_REMAIN_ON_CHAN;
-@@ -2521,7 +2522,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	}
- 
- 	wid.val[0] = u8remain_on_chan_flag;
--	wid.val[1] = (s8)pstrHostIfRemainOnChan->u16Channel;
-+	wid.val[1] = (s8)pstrHostIfRemainOnChan->ch;
- 
- 	result = send_config_pkt(SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
-@@ -4364,7 +4365,7 @@ s32 host_int_remain_on_channel(struct host_if_drv *hif_drv, u32 u32SessionID,
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
--	msg.body.remain_on_ch.u16Channel = chan;
-+	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.pRemainOnChanExpired = RemainOnChanExpired;
- 	msg.body.remain_on_ch.pRemainOnChanReady = RemainOnChanReady;
- 	msg.body.remain_on_ch.pVoid = pvUserArg;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 14563d3..eea251a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -236,7 +236,7 @@ struct ba_session_info {
- };
- 
- struct remain_ch {
--	u16 u16Channel;
-+	u16 ch;
- 	u32 u32duration;
- 	wilc_remain_on_chan_expired pRemainOnChanExpired;
- 	wilc_remain_on_chan_ready pRemainOnChanReady;
--- 
-1.9.1
+v2 was updated here:
+https://patchwork.kernel.org/patch/7524381/
 
+Regards
+Yin, Fengwei
+
+>
+>>> Anyway, my original comment still stands. The correct format for name
+>>> is:
+>>>
+>>>          Random J Developer <random@developer.example.org>
+>>>
+>>> NOT:
+>>>
+>>>          Developer, Random J <random@developer.example.org>
+>>>
+>>> See SubmittingPatches.
+>>
+>> Will update the patch. Thanks.
+>
+> It's too late for this patch as I already applied it.
+>
