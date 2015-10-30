@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36140 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbbJEKgL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48146 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966062AbbJ3OJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:36:11 -0400
-Received: by pablk4 with SMTP id lk4so172818792pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2015 03:36:11 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 20/20] staging: wilc1000: remove unnecessary parentheses in host_int_remove_wep_key
-Date: Mon,  5 Oct 2015 19:35:04 +0900
-Message-Id: <1444041304-7727-20-git-send-email-chaehyun.lim@gmail.com> (sfid-20151005_123615_394316_55E998BD)
-In-Reply-To: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444041304-7727-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 30 Oct 2015 10:09:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v3 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
+References: <1444869891-21174-1-git-send-email-Jes.Sorensen@redhat.com>
+	<20151025213903.GA2956@sig21.net>
+Date: Fri, 30 Oct 2015 16:09:01 +0200
+In-Reply-To: <20151025213903.GA2956@sig21.net> (Johannes Stezenbach's message
+	of "Sun, 25 Oct 2015 22:39:04 +0100")
+Message-ID: <87si4smosi.fsf@kamboji.qca.qualcomm.com> (sfid-20151030_150919_271571_660EC33A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary parentheses in host_int_remove_wep_key
-found by checkpatch.
+Johannes Stezenbach <js@sig21.net> writes:
 
-CHECK: Unnecessary parentheses around wfi_drv->hSemTestKeyBlock
-FILE: drivers/staging/wilc1000/host_interface.c:4320:
+> Hi Jes and Larry,
+>
+> On Wed, Oct 14, 2015 at 08:44:50PM -0400, Jes.Sorensen@redhat.com wrote:
+>> Per default only devices I have actually tested will be enabled. If
+>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+>> test results back to me.
+>
+> I have one 
+> 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
+>
+> The rtlwifi/rtl8192cu driver turned out to be flaky for this device,
+> usually it stalls after a few minutes.  Searching the web it seems
+> this is well known and everyone uses a patched vendor driver
+> (https://github.com/pvaret/rtl8192cu-fixes.git).
+>
+> The rtl8xxxu driver ssems to work stable (I tested
+> the git branch rtl8xxxu-nextgen, commit 2e23469d74d7).
+> However, thoughput is less than one half compared
+> to the vendor driver.  FWIW, rtlwifi seems to be a bit
+> faster when it works, but thoughput fluctuates a lot
+> and eventually it stalls.  (Tested with iperf TCP in both
+> directions.)
+>
+> From dmesg:
+> [21725.096068] usb 1-2.1: RTL8188CU rev A (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
+> [21725.096072] usb 1-2.1: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+> [21725.096179] usb 1-2.1: Firmware revision 80.0 (signature 0x88c1)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you, these kind of reports are valuable. Please keep them coming.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ade9be02..9878cb1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4317,7 +4317,7 @@ int host_int_remove_wep_key(tstrWILC_WFIDrv *wfi_drv, u8 index)
- 	result = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
--	down(&(wfi_drv->hSemTestKeyBlock));
-+	down(&wfi_drv->hSemTestKeyBlock);
- 
- 	return result;
- }
 -- 
-2.6.0
-
+Kalle Valo
