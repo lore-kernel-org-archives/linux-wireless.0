@@ -1,101 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3493 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbbJMKzR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42324 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965336AbbJ3J2T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 06:55:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 43/54] staging: wilc1000: rename pu8Tail of struct beacon_attr
-Date: Tue, 13 Oct 2015 19:50:08 +0900
-Message-ID: <1444733419-17679-43-git-send-email-tony.cho@atmel.com> (sfid-20151013_125521_501543_6A28FEF6)
-In-Reply-To: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
-References: <1444733419-17679-1-git-send-email-tony.cho@atmel.com>
+	Fri, 30 Oct 2015 05:28:19 -0400
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH v2] ath10k: Add support for pktlog in QCA99X0
+Date: Fri, 30 Oct 2015 14:57:58 +0530
+Message-ID: <1446197278-6164-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20151030_102823_662755_9DDAC611)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch adds pktlog support for 10.4 fw versions.
 
-This patch renames pu8Tail of struct beacon_attr to tail to
-avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+v2: Move pktlog_completion_handler to htt_rx.c
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2a2361a..42081f8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -136,7 +136,7 @@ struct beacon_attr {
- 	u32 head_len;
- 	u8 *head;
- 	u32 tail_len;
--	u8 *pu8Tail;
-+	u8 *tail;
- };
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 10 ++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c    | 11 +++++++++++
+ 4 files changed, 35 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 2bad50e..74ccfb29 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1598,5 +1598,7 @@ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb);
  
- struct set_multicast {
-@@ -2367,8 +2367,8 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6060dda..d1dc1ba 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2127,6 +2127,18 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
  
--	if (pstrSetBeaconParam->pu8Tail > 0)
--		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->tail_len);
-+	if (pstrSetBeaconParam->tail > 0)
-+		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
- 	pu8CurrByte += pstrSetBeaconParam->tail_len;
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb)
++{
++	struct ath10k_pktlog_10_4_hdr *hdr =
++		(struct ath10k_pktlog_10_4_hdr *)skb->data;
++
++	trace_ath10k_htt_pktlog(ar, hdr->payload,
++				sizeof(*hdr) + __le16_to_cpu(hdr->size));
++	dev_kfree_skb_any(skb);
++}
++EXPORT_SYMBOL(ath10k_htt_rx_pktlog_completion_handler);
++
+ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ {
+ 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737..2fd5dc1 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -261,6 +261,16 @@ struct ath10k_pktlog_hdr {
+ 	u8 payload[0];
+ } __packed;
  
- 	s32Error = send_config_pkt(SET_CFG, &strWID, 1,
-@@ -2379,7 +2379,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- ERRORHANDLER:
- 	kfree(strWID.val);
- 	kfree(pstrSetBeaconParam->head);
--	kfree(pstrSetBeaconParam->pu8Tail);
-+	kfree(pstrSetBeaconParam->tail);
++struct ath10k_pktlog_10_4_hdr {
++	__le16 flags;
++	__le16 missed_cnt;
++	__le16 log_type;
++	__le16 size;
++	__le32 timestamp;
++	__le32 type_specific_data;
++	u8 payload[0];
++} __packed;
++
+ enum ath10k_hw_rate_ofdm {
+ 	ATH10K_HW_RATE_OFDM_48M = 0,
+ 	ATH10K_HW_RATE_OFDM_24M,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c05b0c..5fed194 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -108,6 +108,7 @@ static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -186,6 +187,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 128,
++		.recv_cb = ath10k_pci_pktlog_rx_cb,
+ 	},
+ 
+ 	/* CE9 target autonomous qcache memcpy */
+@@ -1230,6 +1232,15 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
  }
  
- static void Handle_DelBeacon(struct host_if_drv *hif_drv)
-@@ -4653,14 +4653,14 @@ s32 host_int_add_beacon(struct host_if_drv *hif_drv, u32 u32Interval,
- 	pstrSetBeaconParam->tail_len = u32TailLen;
- 
- 	if (u32TailLen > 0) {
--		pstrSetBeaconParam->pu8Tail = kmalloc(u32TailLen, GFP_KERNEL);
--		if (pstrSetBeaconParam->pu8Tail == NULL) {
-+		pstrSetBeaconParam->tail = kmalloc(u32TailLen, GFP_KERNEL);
-+		if (pstrSetBeaconParam->tail == NULL) {
- 			s32Error = -ENOMEM;
- 			goto ERRORHANDLER;
- 		}
--		memcpy(pstrSetBeaconParam->pu8Tail, pu8Tail, u32TailLen);
-+		memcpy(pstrSetBeaconParam->tail, pu8Tail, u32TailLen);
- 	} else {
--		pstrSetBeaconParam->pu8Tail = NULL;
-+		pstrSetBeaconParam->tail = NULL;
- 	}
- 
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
-@@ -4672,8 +4672,8 @@ ERRORHANDLER:
- 		if (pstrSetBeaconParam->head != NULL)
- 			kfree(pstrSetBeaconParam->head);
- 
--		if (pstrSetBeaconParam->pu8Tail != NULL)
--			kfree(pstrSetBeaconParam->pu8Tail);
-+		if (pstrSetBeaconParam->tail != NULL)
-+			kfree(pstrSetBeaconParam->tail);
- 	}
- 
- 	return s32Error;
++/* Called by lower (CE) layer when data is received from the Target.
++ * Only 10.4 firmware uses separate CE to transfer pktlog data.
++ */
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_pci_process_rx_cb(ce_state,
++				 ath10k_htt_rx_pktlog_completion_handler);
++}
++
+ /* Called by lower (CE) layer when a send to HTT Target completes. */
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
+ {
 -- 
 1.9.1
 
