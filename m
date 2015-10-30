@@ -1,70 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12838 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbbJLH6i (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35555 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbbJ3Rq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:58:38 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 19/41] staging: wilc1000: remove typedef from tenuHostIFstate
-Date: Mon, 12 Oct 2015 16:55:53 +0900
-Message-ID: <1444636575-2486-19-git-send-email-tony.cho@atmel.com> (sfid-20151012_095841_346580_A505DDEE)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 30 Oct 2015 13:46:27 -0400
+Received: by pasz6 with SMTP id z6so80392148pas.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2015 10:46:27 -0700 (PDT)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH] mac80211: Handle sleep requirements for channel context ops.
+Date: Fri, 30 Oct 2015 23:16:15 +0530
+Message-Id: <1446227175-28942-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20151030_184630_987819_57741181)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
 
-This patch removes typedef from the enum tenuHostIFstate and
-rename it to host_if_state.
+Channel context OPs can sleep, so add might_sleep() and
+also document sleep requirements for those OPs.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ include/net/mac80211.h    |  6 ++++++
+ net/mac80211/driver-ops.c |  2 ++
+ net/mac80211/driver-ops.h | 10 ++++++++++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9cf1e99..0460af2 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -72,8 +72,7 @@ typedef struct _tstrStatistics {
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4b9dd07..3876739 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3170,18 +3170,24 @@ enum ieee80211_reconfig_type {
+  *	The callback is optional and can sleep.
+  *
+  * @add_chanctx: Notifies device driver about new channel context creation.
++ *	This callback may sleep.
+  * @remove_chanctx: Notifies device driver about channel context destruction.
++ *	This callback may sleep.
+  * @change_chanctx: Notifies device driver about channel context changes that
+  *	may happen when combining different virtual interfaces on the same
+  *	channel context with different settings
++ *	This callback may sleep.
+  * @assign_vif_chanctx: Notifies device driver about channel context being bound
+  *	to vif. Possible use is for hw queue remapping.
++ *	This callback may sleep.
+  * @unassign_vif_chanctx: Notifies device driver about channel context being
+  *	unbound from vif.
++ *	This callback may sleep.
+  * @switch_vif_chanctx: switch a number of vifs from one chanctx to
+  *	another, as specified in the list of
+  *	@ieee80211_vif_chanctx_switch passed to the driver, according
+  *	to the mode defined in &ieee80211_chanctx_switch_mode.
++ *	This callback may sleep.
+  *
+  * @start_ap: Start operation on the AP interface, this is called after all the
+  *	information in bss_conf is set and beacon can be retrieved. A channel
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index a1d5431..578403a 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -192,6 +192,8 @@ int drv_switch_vif_chanctx(struct ieee80211_local *local,
+ 	int ret = 0;
+ 	int i;
  
- } tstrStatistics;
++	might_sleep();
++
+ 	if (!local->ops->switch_vif_chanctx)
+ 		return -EOPNOTSUPP;
  
--
--typedef enum {
-+enum host_if_state {
- 	HOST_IF_IDLE			= 0,
- 	HOST_IF_SCANNING		= 1,
- 	HOST_IF_CONNECTING		= 2,
-@@ -81,7 +80,7 @@ typedef enum {
- 	HOST_IF_CONNECTED		= 4,
- 	HOST_IF_P2P_LISTEN		= 5,
- 	HOST_IF_FORCE_32BIT		= 0xFFFFFFFF
--} tenuHostIFstate;
-+};
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 3098709..5869bc6 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -871,6 +871,8 @@ static inline int drv_add_chanctx(struct ieee80211_local *local,
+ {
+ 	int ret = -EOPNOTSUPP;
  
- struct host_if_pmkid {
- 	u8 bssid[ETH_ALEN];
-@@ -313,7 +312,7 @@ struct host_if_drv {
- 	u64 u64P2p_MgmtTimeout;
- 	u8 u8P2PConnect;
++	might_sleep();
++
+ 	trace_drv_add_chanctx(local, ctx);
+ 	if (local->ops->add_chanctx)
+ 		ret = local->ops->add_chanctx(&local->hw, &ctx->conf);
+@@ -884,6 +886,8 @@ static inline int drv_add_chanctx(struct ieee80211_local *local,
+ static inline void drv_remove_chanctx(struct ieee80211_local *local,
+ 				      struct ieee80211_chanctx *ctx)
+ {
++	might_sleep();
++
+ 	if (WARN_ON(!ctx->driver_present))
+ 		return;
  
--	tenuHostIFstate enuHostIFstate;
-+	enum host_if_state enuHostIFstate;
+@@ -898,6 +902,8 @@ static inline void drv_change_chanctx(struct ieee80211_local *local,
+ 				      struct ieee80211_chanctx *ctx,
+ 				      u32 changed)
+ {
++	might_sleep();
++
+ 	trace_drv_change_chanctx(local, ctx, changed);
+ 	if (local->ops->change_chanctx) {
+ 		WARN_ON_ONCE(!ctx->driver_present);
+@@ -912,6 +918,8 @@ static inline int drv_assign_vif_chanctx(struct ieee80211_local *local,
+ {
+ 	int ret = 0;
  
- 	u8 au8AssociatedBSSID[ETH_ALEN];
- 	struct cfg_param_val strCfgValues;
++	might_sleep();
++
+ 	if (!check_sdata_in_driver(sdata))
+ 		return -EIO;
+ 
+@@ -931,6 +939,8 @@ static inline void drv_unassign_vif_chanctx(struct ieee80211_local *local,
+ 					    struct ieee80211_sub_if_data *sdata,
+ 					    struct ieee80211_chanctx *ctx)
+ {
++	might_sleep();
++
+ 	if (!check_sdata_in_driver(sdata))
+ 		return;
+ 
 -- 
 1.9.1
 
