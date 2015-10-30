@@ -1,264 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:4575 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56539 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbbJ2C43 (ORCPT
+	with ESMTP id S965478AbbJ3Joo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 22:56:29 -0400
+	Fri, 30 Oct 2015 05:44:44 -0400
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 01/64] staging: wilc1000: rename enuHostIFstate of struct host_if_drv
-Date: Thu, 29 Oct 2015 11:58:24 +0900
-Message-ID: <1446087567-16728-1-git-send-email-glen.lee@atmel.com> (sfid-20151029_035632_487043_58D3CDF5)
+Subject: [PATCH V2 04/17] staging: wilc1000: wilc_wlan_cfg_set: add argument struct net_device
+Date: Fri, 30 Oct 2015 18:47:10 +0900
+Message-ID: <1446198443-6623-4-git-send-email-glen.lee@atmel.com> (sfid-20151030_104447_651810_D102FC8B)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch adds new argument net_device and use netdev private data member
+wilc instead of g_linux_wlan, pass dev to the functions also.
 
-This patch renames enuHostIFstate of struct host_if_drv to hif_state
-to avoid CamelCase naming convention.
-And, some comments modification that has been included name 'enuHostIFstate'.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 62 ++++++++++++++++---------------
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 34 insertions(+), 30 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c |  3 +-
+ drivers/staging/wilc1000/linux_wlan.c       | 86 ++++++++++++++---------------
+ drivers/staging/wilc1000/wilc_wlan.c        |  9 ++-
+ drivers/staging/wilc1000/wilc_wlan.h        |  4 +-
+ 4 files changed, 53 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dbbe72c..4e01dbd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -820,13 +820,15 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 	u8 *pu8HdnNtwrksWidVal = NULL;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 530d64a..74fb556 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -616,7 +616,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
+ 	} else if (mode == SET_CFG) {
+ 		for (counter = 0; counter < count; counter++) {
+ 			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].id);
+-			if (!wilc_wlan_cfg_set(!counter,
++			if (!wilc_wlan_cfg_set(dev,
++					       !counter,
+ 					       wids[counter].id,
+ 					       wids[counter].val,
+ 					       wids[counter].size,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4ed324c..6ffa2a1 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -662,53 +662,53 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
  
- 	PRINT_D(HOSTINF_DBG, "Setting SCAN params\n");
--	PRINT_D(HOSTINF_DBG, "Scanning: In [%d] state\n", hif_drv->enuHostIFstate);
-+	PRINT_D(HOSTINF_DBG, "Scanning: In [%d] state\n", hif_drv->hif_state);
+ 	*(int *)c_val = 1;
  
- 	hif_drv->usr_scan_req.pfUserScanResult = pstrHostIFscanAttr->result;
- 	hif_drv->usr_scan_req.u32UserScanPvoid = pstrHostIFscanAttr->arg;
+-	if (!wilc_wlan_cfg_set(1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+ 		goto _fail_;
  
--	if ((hif_drv->enuHostIFstate >= HOST_IF_SCANNING) && (hif_drv->enuHostIFstate < HOST_IF_CONNECTED)) {
--		PRINT_D(GENERIC_DBG, "Don't scan we are already in [%d] state\n", hif_drv->enuHostIFstate);
-+	if ((hif_drv->hif_state >= HOST_IF_SCANNING) &&
-+	    (hif_drv->hif_state < HOST_IF_CONNECTED)) {
-+		PRINT_D(GENERIC_DBG, "Don't scan already in [%d] state\n",
-+			hif_drv->hif_state);
- 		PRINT_ER("Already scan\n");
- 		result = -EBUSY;
- 		goto ERRORHANDLER;
-@@ -904,9 +906,9 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].val = (s8 *)&pstrHostIFscanAttr->src;
- 	u32WidsCount++;
+ 	/*to tell fw that we are going to use PC test - WILC specific*/
+ 	c_val[0] = 0;
+-	if (!wilc_wlan_cfg_set(0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--	if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED)
-+	if (hif_drv->hif_state == HOST_IF_CONNECTED)
- 		scan_while_connected = true;
--	else if (hif_drv->enuHostIFstate == HOST_IF_IDLE)
-+	else if (hif_drv->hif_state == HOST_IF_IDLE)
- 		scan_while_connected = false;
+ 	c_val[0] = INFRASTRUCTURE;
+-	if (!wilc_wlan_cfg_set(0, WID_BSS_TYPE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- 	result = send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
-@@ -1214,7 +1216,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		goto ERRORHANDLER;
- 	} else {
- 		PRINT_D(GENERIC_DBG, "set HOST_IF_WAITING_CONN_RESP\n");
--		hif_drv->enuHostIFstate = HOST_IF_WAITING_CONN_RESP;
-+		hif_drv->hif_state = HOST_IF_WAITING_CONN_RESP;
- 	}
+ 	/* c_val[0] = RATE_AUTO; */
+ 	c_val[0] = RATE_AUTO;
+-	if (!wilc_wlan_cfg_set(0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- ERRORHANDLER:
-@@ -1244,7 +1246,7 @@ ERRORHANDLER:
- 							       MAC_DISCONNECTED,
- 							       NULL,
- 							       pstrHostIFconnectAttr->arg);
--			hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+			hif_drv->hif_state = HOST_IF_IDLE;
- 			kfree(strConnectInfo.pu8ReqIEs);
- 			strConnectInfo.pu8ReqIEs = NULL;
+ 	c_val[0] = G_MIXED_11B_2_MODE;
+-	if (!wilc_wlan_cfg_set(0, WID_11G_OPERATING_MODE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11G_OPERATING_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
-@@ -1325,7 +1327,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 		return result;
- 	}
+ 	c_val[0] = 1;
+-	if (!wilc_wlan_cfg_set(0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--	hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+	hif_drv->hif_state = HOST_IF_IDLE;
+ 	c_val[0] = G_SHORT_PREAMBLE;
+-	if (!wilc_wlan_cfg_set(0, WID_PREAMBLE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_PREAMBLE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- 	scan_while_connected = false;
+ 	c_val[0] = AUTO_PROT;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
+ 		goto _fail_;
  
-@@ -1491,11 +1493,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 		PRINT_ER("Driver handler is NULL\n");
- 		return -ENODEV;
- 	}
--	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n", hif_drv->enuHostIFstate,
--		pstrRcvdGnrlAsyncInfo->buffer[7]);
-+	PRINT_D(GENERIC_DBG, "Current State = %d,Received state = %d\n",
-+		hif_drv->hif_state, pstrRcvdGnrlAsyncInfo->buffer[7]);
+ 	c_val[0] = ACTIVE_SCAN;
+-	if (!wilc_wlan_cfg_set(0, WID_SCAN_TYPE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_SCAN_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--	if ((hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) ||
--	    (hif_drv->enuHostIFstate == HOST_IF_CONNECTED) ||
-+	if ((hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) ||
-+	    (hif_drv->hif_state == HOST_IF_CONNECTED) ||
- 	    hif_drv->usr_scan_req.pfUserScanResult) {
- 		if (!pstrRcvdGnrlAsyncInfo->buffer ||
- 		    !hif_drv->usr_conn_req.pfUserConnectResult) {
-@@ -1518,7 +1520,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 		u8MacStatusReasonCode = pstrRcvdGnrlAsyncInfo->buffer[8];
- 		u8MacStatusAdditionalInfo = pstrRcvdGnrlAsyncInfo->buffer[9];
- 		PRINT_INFO(HOSTINF_DBG, "Recieved MAC status = %d with Reason = %d , Info = %d\n", u8MacStatus, u8MacStatusReasonCode, u8MacStatusAdditionalInfo);
--		if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
-+		if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
- 			u32 u32RcvdAssocRespInfoLen;
- 			tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+ 	c_val[0] = SITE_SURVEY_OFF;
+-	if (!wilc_wlan_cfg_set(0, WID_SITE_SURVEY, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_SITE_SURVEY, c_val, 1, 0, 0))
+ 		goto _fail_;
  
-@@ -1604,7 +1606,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 				host_int_set_power_mgmt(hif_drv, 0, 0);
+ 	*((int *)c_val) = 0xffff; /* Never use RTS-CTS */
+-	if (!wilc_wlan_cfg_set(0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
+ 		goto _fail_;
  
- 				PRINT_D(HOSTINF_DBG, "MAC status : CONNECTED and Connect Status : Successful\n");
--				hif_drv->enuHostIFstate = HOST_IF_CONNECTED;
-+				hif_drv->hif_state = HOST_IF_CONNECTED;
+ 	*((int *)c_val) = 2346;
+-	if (!wilc_wlan_cfg_set(0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
+ 		goto _fail_;
  
- 				PRINT_D(GENERIC_DBG, "Obtaining an IP, Disable Scan\n");
- 				g_obtainingIP = true;
-@@ -1612,7 +1614,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 					  jiffies + msecs_to_jiffies(10000));
- 			} else {
- 				PRINT_D(HOSTINF_DBG, "MAC status : %d and Connect Status : %d\n", u8MacStatus, strConnectInfo.u16ConnectStatus);
--				hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+				hif_drv->hif_state = HOST_IF_IDLE;
- 				scan_while_connected = false;
- 			}
+ 	/*  SSID                                                                 */
+@@ -719,23 +719,23 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*                      to enable Broadcast SSID suppport )              */
+ 	/*  --------------------------------------------------------------       */
+ 	c_val[0] = 0;
+-	if (!wilc_wlan_cfg_set(0, WID_BCAST_SSID, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_BCAST_SSID, c_val, 1, 0, 0))
+ 		goto _fail_;
  
-@@ -1627,7 +1629,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 			hif_drv->usr_conn_req.ConnReqIEsLen = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ConnReqIEs);
- 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
--			   (hif_drv->enuHostIFstate == HOST_IF_CONNECTED)) {
-+			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
- 			PRINT_D(HOSTINF_DBG, "Received MAC_DISCONNECTED from the FW\n");
+ 	c_val[0] = 1;
+-	if (!wilc_wlan_cfg_set(0, WID_QOS_ENABLE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_QOS_ENABLE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- 			memset(&strDisconnectNotifInfo, 0, sizeof(tstrDisconnectNotifInfo));
-@@ -1673,7 +1675,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct host_if_drv *hif_drv,
- 				info_element = NULL;
- 			}
+ 	c_val[0] = NO_POWERSAVE;
+-	if (!wilc_wlan_cfg_set(0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--			hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+			hif_drv->hif_state = HOST_IF_IDLE;
- 			scan_while_connected = false;
+ 	c_val[0] = NO_ENCRYPT; /* NO_ENCRYPT, 0x79 */
+-	if (!wilc_wlan_cfg_set(0, WID_11I_MODE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11I_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
-@@ -1837,10 +1839,10 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 				goto _WPARxGtk_end_case_;
- 			}
+ 	c_val[0] = OPEN_SYSTEM;
+-	if (!wilc_wlan_cfg_set(0, WID_AUTH_TYPE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_AUTH_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--			if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED)
-+			if (hif_drv->hif_state == HOST_IF_CONNECTED)
- 				memcpy(pu8keybuf, hif_drv->au8AssociatedBSSID, ETH_ALEN);
- 			else
--				PRINT_ER("Couldn't handle WPARxGtk while enuHostIFstate is not HOST_IF_CONNECTED\n");
-+				PRINT_ER("Couldn't handle WPARxGtk while state is not HOST_IF_CONNECTED\n");
+ 	/*  WEP/802 11I Configuration                                            */
+@@ -747,7 +747,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*  ------------------------------------------------------------------   */
  
- 			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
- 			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
-@@ -2005,7 +2007,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 		}
+ 	strcpy(c_val, "123456790abcdef1234567890");
+-	if (!wilc_wlan_cfg_set(0, WID_WEP_KEY_VALUE, c_val, (strlen(c_val) + 1), 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_WEP_KEY_VALUE, c_val, (strlen(c_val) + 1), 0, 0))
+ 		goto _fail_;
  
- 		if (hif_drv->usr_conn_req.pfUserConnectResult) {
--			if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
-+			if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
- 				PRINT_D(HOSTINF_DBG, "Upper layer requested termination of connection\n");
- 				del_timer(&hif_drv->hConnectTimer);
- 			}
-@@ -2018,7 +2020,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
+ 	/*  WEP/802 11I Configuration                                            */
+@@ -757,7 +757,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*                  and less than 64 bytes                               */
+ 	/*  ------------------------------------------------------------------   */
+ 	strcpy(c_val, "12345678");
+-	if (!wilc_wlan_cfg_set(0, WID_11I_PSK, c_val, (strlen(c_val)), 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11I_PSK, c_val, (strlen(c_val)), 0, 0))
+ 		goto _fail_;
  
- 		scan_while_connected = false;
+ 	/*  IEEE802.1X Key Configuration                                         */
+@@ -767,7 +767,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*                  and less than 65 bytes                               */
+ 	/*  ------------------------------------------------------------------   */
+ 	strcpy(c_val, "password");
+-	if (!wilc_wlan_cfg_set(0, WID_1X_KEY, c_val, (strlen(c_val) + 1), 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_1X_KEY, c_val, (strlen(c_val) + 1), 0, 0))
+ 		goto _fail_;
  
--		hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+		hif_drv->hif_state = HOST_IF_IDLE;
+ 	/*   IEEE802.1X Server Address Configuration                             */
+@@ -779,31 +779,31 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	c_val[1] = 168;
+ 	c_val[2] = 1;
+ 	c_val[3] = 112;
+-	if (!wilc_wlan_cfg_set(0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
+ 		goto _fail_;
  
- 		eth_zero_addr(hif_drv->au8AssociatedBSSID);
+ 	c_val[0] = 3;
+-	if (!wilc_wlan_cfg_set(0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
+ 		goto _fail_;
  
-@@ -2046,7 +2048,8 @@ void resolve_disconnect_aberration(struct host_if_drv *hif_drv)
+ 	c_val[0] = 3;
+-	if (!wilc_wlan_cfg_set(0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = NORMAL_ACK;
+-	if (!wilc_wlan_cfg_set(0, WID_ACK_POLICY, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_ACK_POLICY, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 0;
+-	if (!wilc_wlan_cfg_set(0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 48;
+-	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 28;
+-	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	/*  Beacon Interval                                                      */
+@@ -813,11 +813,11 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*  -------------------------------------------------------------------- */
+ 
+ 	*((int *)c_val) = 100;
+-	if (!wilc_wlan_cfg_set(0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = REKEY_DISABLE;
+-	if (!wilc_wlan_cfg_set(0, WID_REKEY_POLICY, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_POLICY, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	/*  Rekey Time (s) (Used only when the Rekey policy is 2 or 4)           */
+@@ -826,7 +826,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*  Values to set : 32-bit value                                         */
+ 	/*  -------------------------------------------------------------------- */
+ 	*((int *)c_val) = 84600;
+-	if (!wilc_wlan_cfg_set(0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
+ 		goto _fail_;
+ 
+ 	/*  Rekey Packet Count (in 1000s; used when Rekey Policy is 3)           */
+@@ -835,59 +835,59 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	/*  Values to set : 32-bit Value                                         */
+ 	/*  -------------------------------------------------------------------- */
+ 	*((int *)c_val) = 500;
+-	if (!wilc_wlan_cfg_set(0, WID_REKEY_PACKET_COUNT, c_val, 4, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_PACKET_COUNT, c_val, 4, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 1;
+-	if (!wilc_wlan_cfg_set(0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = G_SELF_CTS_PROT;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 1;  /* Enable N */
+-	if (!wilc_wlan_cfg_set(0, WID_11N_ENABLE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_ENABLE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = HT_MIXED_MODE;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_OPERATING_MODE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_OPERATING_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 1;   /* TXOP Prot disable in N mode: No RTS-CTS on TX A-MPDUs to save air-time. */
+-	if (!wilc_wlan_cfg_set(0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	memcpy(c_val, mac_add, 6);
+ 
+-	if (!wilc_wlan_cfg_set(0, WID_MAC_ADDR, c_val, 6, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_MAC_ADDR, c_val, 6, 0, 0))
+ 		goto _fail_;
+ 
+ 	/**
+ 	 *      AP only
+ 	 **/
+ 	c_val[0] = DETECT_PROTECT_REPORT;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = RTS_CTS_NONHT_PROT;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 0;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = MIMO_MODE;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 7;
+-	if (!wilc_wlan_cfg_set(0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0, 0))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
+ 	c_val[0] = 1; /* Enable N with immediate block ack. */
+-	if (!wilc_wlan_cfg_set(0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, 1))
++	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, 1))
+ 		goto _fail_;
+ 
+ 	return 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 768fd30..a72fa8c 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1768,13 +1768,16 @@ static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
+ 	return 0;
+ }
+ 
+-int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+-		      int commit, u32 drvHandler)
++int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
++		      u32 buffer_size, int commit, u32 drvHandler)
  {
- 	if (!hif_drv)
- 		return;
--	if ((hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) || (hif_drv->enuHostIFstate == HOST_IF_CONNECTING)) {
-+	if ((hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) ||
-+	    (hif_drv->hif_state == HOST_IF_CONNECTING)) {
- 		PRINT_D(HOSTINF_DBG, "\n\n<< correcting Supplicant state machine >>\n\n");
- 		host_int_disconnect(hif_drv, 1);
- 	}
-@@ -2492,7 +2495,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 		result = -EBUSY;
- 		goto ERRORHANDLER;
- 	}
--	if (hif_drv->enuHostIFstate == HOST_IF_WAITING_CONN_RESP) {
-+	if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
- 		PRINT_INFO(GENERIC_DBG, "Required to remain on chan while connecting return\n");
- 		result = -EBUSY;
- 		goto ERRORHANDLER;
-@@ -3497,10 +3500,11 @@ s32 host_int_set_join_req(struct host_if_drv *hif_drv, u8 *pu8bssid,
- 		msg.body.con_info.ies = kmalloc(IEsLen, GFP_KERNEL);
- 		memcpy(msg.body.con_info.ies, pu8IEs, IEsLen);
- 	}
--	if (hif_drv->enuHostIFstate < HOST_IF_CONNECTING)
--		hif_drv->enuHostIFstate = HOST_IF_CONNECTING;
-+	if (hif_drv->hif_state < HOST_IF_CONNECTING)
-+		hif_drv->hif_state = HOST_IF_CONNECTING;
- 	else
--		PRINT_D(GENERIC_DBG, "Don't set state to 'connecting' as state is %d\n", hif_drv->enuHostIFstate);
-+		PRINT_D(GENERIC_DBG, "Don't set state to 'connecting' : %d\n",
-+			hif_drv->hif_state);
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+ 	int ret_size;
++	perInterface_wlan_t *nic = netdev_priv(dev);
++	struct wilc *wilc;
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
-@@ -4046,7 +4050,7 @@ static void GetPeriodicRSSI(unsigned long arg)
- 		return;
- 	}
++	wilc = nic->wilc;
  
--	if (hif_drv->enuHostIFstate == HOST_IF_CONNECTED) {
-+	if (hif_drv->hif_state == HOST_IF_CONNECTED) {
- 		s32 result = 0;
- 		struct host_if_msg msg;
+ 	if (p->cfg_frame_in_use)
+ 		return 0;
+@@ -1796,7 +1799,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
+ 			ret_size = 0;
  
-@@ -4142,7 +4146,7 @@ s32 host_int_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	sema_init(&hif_drv->gtOsCfgValuesSem, 1);
- 	down(&hif_drv->gtOsCfgValuesSem);
- 
--	hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+	hif_drv->hif_state = HOST_IF_IDLE;
- 	hif_drv->strCfgValues.site_survey_enabled = SITE_SURVEY_OFF;
- 	hif_drv->strCfgValues.scan_source = DEFAULT_SCAN;
- 	hif_drv->strCfgValues.active_scan_time = ACTIVE_SCAN_TIME;
-@@ -4211,7 +4215,7 @@ s32 host_int_deinit(struct host_if_drv *hif_drv)
- 		hif_drv->usr_scan_req.pfUserScanResult = NULL;
- 	}
- 
--	hif_drv->enuHostIFstate = HOST_IF_IDLE;
-+	hif_drv->hif_state = HOST_IF_IDLE;
- 
- 	scan_while_connected = false;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index b854db5..dcdb9c6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -299,7 +299,7 @@ struct host_if_drv {
- 	u64 u64P2p_MgmtTimeout;
- 	u8 u8P2PConnect;
- 
--	enum host_if_state enuHostIFstate;
-+	enum host_if_state hif_state;
- 
- 	u8 au8AssociatedBSSID[ETH_ALEN];
- 	struct cfg_param_val strCfgValues;
+-		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
++		if (linux_wlan_lock_timeout(&wilc->cfg_event,
+ 					    CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Set Timed Out\n");
+ 			ret_size = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 2879a93..519f352 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -303,8 +303,8 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
+ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+-int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+-		      int commit, u32 drvHandler);
++int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
++		      u32 buffer_size, int commit, u32 drvHandler);
+ int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
+ 		      u32 drvHandler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
 -- 
 1.9.1
 
