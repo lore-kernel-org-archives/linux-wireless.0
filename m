@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46135 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752725AbbJUA3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 20:29:55 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 01/16] rtl8xxxu: Treat REG_9346CR as an 8-bit wide register
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-	<1445323546-12807-2-git-send-email-jsitnicki@gmail.com>
-Date: Tue, 20 Oct 2015 20:29:54 -0400
-In-Reply-To: <1445323546-12807-2-git-send-email-jsitnicki@gmail.com> (Jakub
-	Sitnicki's message of "Tue, 20 Oct 2015 08:45:31 +0200")
-Message-ID: <wrfja8rdxdvh.fsf@redhat.com> (sfid-20151021_022958_643628_D662A979)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42386 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758915AbbJ3KhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2015 06:37:20 -0400
+Date: Fri, 30 Oct 2015 12:37:03 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sunil Dutt <usdutt@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <vkanchan@qti.qualcomm.com>,
+	<amarnath@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] cfg80211: Add support for aborting an ongoing scan
+Message-ID: <20151030103703.GA6731@jouni.qca.qualcomm.com> (sfid-20151030_113729_990653_DFDD8E78)
+References: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
+ <1446197640.3261.15.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1446197640.3261.15.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Sitnicki <jsitnicki@gmail.com> writes:
-> rtl8723au driver treats REG_9346CR register as either 8- or 16-bit wide,
-> while rtl8192cu driver treats it as 8-bit wide, and so does rtl8188eu
-> driver.  Use the lowest common denominator strategy.
->
-> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+On Fri, Oct 30, 2015 at 10:34:00AM +0100, Johannes Berg wrote:
+> > + * @NL80211_CMD_ABORT_SCAN: stop an ongoing scan. Returns -ENOENT if a scan is
+> > + *	not running.
 
-NACK - this is a 16 bit register and the vendor drivers take the lazy
-approach of just reading/writing the lower 8 bits when they feel like
-it.
+> I think we might need to indicate in nl80211 exported capabilities
+> whether or not this command is available?
+> 
+> The return code requirement should probably also be documented in
+> cfg80211.h, and the fact that you get a scan-done message should be
+> here as well.
+> 
+> Or is that not necessary - i.e. no relevant races are possible - and
+> the function return can be void?
 
-My code is more consistent, so this one is not going in.
+The currently identified use cases do not seem to care much about the
+actual result of this command since there is going to be a wait for the
+scan completed event anyway and the call is not even used unless there
+is a known ongoing scan. As such, even the difference of a driver
+supporting this command or not is not that significant taken into
+account this is used only as an optimization to speed up the following
+operation when a long scan operation was in progress. Things work fine
+(though without that speed benefit) even if the driver does not
+support this. Anyway, making cfg80211 advertise whether the new command
+is available could obviously be done should someone come up with a use
+case that depends on knowing that the optimization is available.
 
-Jes
+The wpa_supplicant patches I'm planning on pushing in as soon as the
+nl80211 command ID gets assigned are here:
+http://w1.fi/p/scan/
 
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> index 11fcfda..5f90261 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> @@ -1928,10 +1928,10 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
->  	u16 val16, efuse_addr, offset;
->  	u32 val32;
->  
-> -	val16 = rtl8xxxu_read16(priv, REG_9346CR);
-> -	if (val16 & EEPROM_ENABLE)
-> +	val8 = rtl8xxxu_read8(priv, REG_9346CR);
-> +	if (val8 & EEPROM_ENABLE)
->  		priv->has_eeprom = 1;
-> -	if (val16 & EEPROM_BOOT)
-> +	if (val8 & EEPROM_BOOT)
->  		priv->boot_eeprom = 1;
->  
->  	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
+-- 
+Jouni Malinen                                            PGP id EFC895FA
