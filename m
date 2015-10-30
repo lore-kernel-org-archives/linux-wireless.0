@@ -1,77 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39059 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbbJDIsM (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56521 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965478AbbJ3Joh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Oct 2015 04:48:12 -0400
-Date: Sun, 4 Oct 2015 09:48:08 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Jacob Kiefer <jtk54@cornell.edu>
-Cc: "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	"open list:STAGING - REALTEK RTL8723U WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	open list <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au: Fix Sparse errors in rtl8723a_cmd.c
-Message-ID: <20151004084808.GA30827@kroah.com> (sfid-20151004_104837_733709_94F38F5C)
-References: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
+	Fri, 30 Oct 2015 05:44:37 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 03/17] staging: wilc1000: wilc_wlan_cfg_get: add argument struct net_device
+Date: Fri, 30 Oct 2015 18:47:09 +0900
+Message-ID: <1446198443-6623-3-git-send-email-glen.lee@atmel.com> (sfid-20151030_104440_627182_E82157CF)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443832594-29663-1-git-send-email-jtk54@cornell.edu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 08:36:28PM -0400, Jacob Kiefer wrote:
-> From: Jacob Kiefer <jtk54@cornell.edu>
-> 
-> This patch fixes the following sparse errors:
-> 
-> 
->   CHECK   drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> ...
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25: warning: incorrect type in assignment (different base types)
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    expected unsigned int [unsigned] [usertype] <noident>
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:118:25:    got restricted __le32 [usertype] <noident>
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14: warning: incorrect type in assignment (different base types)
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    expected unsigned int [unsigned] [usertype] mask
-> drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:130:14:    got restricted __le32 [usertype] <noident>
->   CC [M]  drivers/staging/rtl8723au/hal/rtl8723a_cmd.o
-> 
-> Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
-> ---
->  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> index 9733aa6..111a24d 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> @@ -115,9 +115,11 @@ exit:
->  
->  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
->  {
-> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
-> +	__le32 leparam;
+Adds argument struct net_device and use netdev private data member wilc
+instead of g_linux_wlan, pass dev to the functions as well.
 
-Why __le32?  Does this variable go across the user/kernel boundry
-somehow?  If not, just use le32.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 3 ++-
+ drivers/staging/wilc1000/linux_wlan.c       | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c        | 8 ++++++--
+ drivers/staging/wilc1000/wilc_wlan.h        | 3 ++-
+ 4 files changed, 11 insertions(+), 5 deletions(-)
 
->  
-> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
-> +	leparam = cpu_to_le32(*((u32 *)param));
-> +
-> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&leparam);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3b4a950..530d64a 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -595,7 +595,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
+ 		for (counter = 0; counter < count; counter++) {
+ 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
+ 				   (counter == count - 1));
+-			if (!wilc_wlan_cfg_get(!counter,
++			if (!wilc_wlan_cfg_get(dev,
++					       !counter,
+ 					       wids[counter].id,
+ 					       (counter == count - 1),
+ 					       drv)) {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d0161cd..4ed324c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1153,7 +1153,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 
+ 		wilc_bus_set_max_speed();
+ 
+-		if (wilc_wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
++		if (wilc_wlan_cfg_get(dev, 1, WID_FIRMWARE_VERSION, 1, 0)) {
+ 			int size;
+ 			char Firmware_ver[20];
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 16224ce..768fd30 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1809,12 +1809,16 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 
+ 	return ret_size;
+ }
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
++int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
++		      u32 drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+ 	int ret_size;
++	perInterface_wlan_t *nic = netdev_priv(dev);
++	struct wilc *wilc;
+ 
++	wilc = nic->wilc;
+ 
+ 	if (p->cfg_frame_in_use)
+ 		return 0;
+@@ -1834,7 +1838,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 			ret_size = 0;
+ 
+ 
+-		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
++		if (linux_wlan_lock_timeout(&wilc->cfg_event,
+ 					    CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Get Timed Out\n");
+ 			ret_size = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 2eb7e20..2879a93 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -305,7 +305,8 @@ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drvHandler);
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
++int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
++		      u32 drvHandler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			       u32 buffer_size, wilc_tx_complete_func_t func);
+-- 
+1.9.1
 
-At first glance, you aren't doing ths same logic in this function as the
-original did, please look at this very closely again and verify that you
-are doing this correctly.
-
-Don't just blindly quiet tools like sparse, it is warning for a reason,
-but be careful about your fix.
-
-thanks,
-
-greg k-h
