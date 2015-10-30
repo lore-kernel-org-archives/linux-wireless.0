@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41853 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbbJEQCY (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56664 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030288AbbJ3JpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2015 12:02:24 -0400
-From: Vivek Natarajan <nataraja@qti.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH v3] ath10k: Use station's current operating mode from assoc request
-Date: Mon, 5 Oct 2015 21:32:08 +0530
-Message-ID: <1444060928-5702-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20151005_180232_382647_76CF800F)
+	Fri, 30 Oct 2015 05:45:12 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 08/17] staging: wilc1000: remove unused function remove_TCP_related
+Date: Fri, 30 Oct 2015 18:47:14 +0900
+Message-ID: <1446198443-6623-8-git-send-email-glen.lee@atmel.com> (sfid-20151030_104516_259529_F16A7295)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current number of spatial streams used by the client is advertised
-as a separate IE in assoc request. Use this information to set
-the NSS operating mode.
+Just remove unused function remove_TCP_related.
 
-Fixes: 45c9abc059fa ("ath10k: implement more versatile set_bitrate_mask").
-Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-v3: Fix max_nss type.
+ drivers/staging/wilc1000/wilc_wlan.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
- drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 79490ad..32ad6f3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2084,7 +2084,8 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 	enum ieee80211_band band;
- 	const u8 *ht_mcs_mask;
- 	const u16 *vht_mcs_mask;
--	int i, n, max_nss;
-+	int i, n;
-+	u8 max_nss;
- 	u32 stbc;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
-@@ -2169,7 +2170,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 			arg->peer_ht_rates.rates[i] = i;
- 	} else {
- 		arg->peer_ht_rates.num_rates = n;
--		arg->peer_num_spatial_streams = max_nss;
-+		arg->peer_num_spatial_streams = min(sta->rx_nss, max_nss);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index b503f07..c8ce1f6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -349,16 +349,6 @@ static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_ent
  	}
+ 	return 0;
+ }
+-static inline int remove_TCP_related(void)
+-{
+-	wilc_wlan_dev_t *p = &g_wlan;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+-
+-	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+-	return 0;
+-}
  
- 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
+ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ {
 -- 
 1.9.1
 
