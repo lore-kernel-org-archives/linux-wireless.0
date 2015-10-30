@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:43142 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:49337 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964794AbbJ1HFY (ORCPT
+	with ESMTP id S1759148AbbJ3IrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 03:05:24 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 61/80] staging: wilc1000: rename tenuAuth_type of struct user_conn_req
-Date: Wed, 28 Oct 2015 16:07:06 +0900
-Message-ID: <1446016045-32154-11-git-send-email-glen.lee@atmel.com> (sfid-20151028_080640_184905_40B8C9EB)
-In-Reply-To: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
-References: <1446016045-32154-1-git-send-email-glen.lee@atmel.com>
+	Fri, 30 Oct 2015 04:47:05 -0400
+Message-ID: <56332F3B.5080406@atmel.com> (sfid-20151030_094714_722734_98A66456)
+Date: Fri, 30 Oct 2015 17:50:03 +0900
+From: glen lee <glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<tony.cho@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+Subject: Re: [PATCH 17/17] staging: wilc1000: wilc_netdev_init: use wilc instead
+ of g_linux_wlan
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com> <1446174642-28570-17-git-send-email-glen.lee@atmel.com> <20151030083544.GD18797@mwanda>
+In-Reply-To: <20151030083544.GD18797@mwanda>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames tenuAuth_type of struct user_conn_req to auth_type
-to avoid CamelCase naming convention.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 +++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 6 insertions(+), 5 deletions(-)
+On 2015년 10월 30일 17:35, Dan Carpenter wrote:
+> On Fri, Oct 30, 2015 at 12:10:42PM +0900, Glen Lee wrote:
+>>   	/*create the common structure*/
+>> -	g_linux_wlan = kzalloc(sizeof(*g_linux_wlan), GFP_KERNEL);
+>> -	if (!g_linux_wlan)
+>> +	wl = kzalloc(sizeof(struct wilc), GFP_KERNEL);
+> This introduces a checkpatch.pl warning.  The prefered style is:
+>
+> 	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+>
+> But the larger point is that please use checkpatch.pl.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9882c93..e5d5f37 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1028,7 +1028,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	}
- 
- 	hif_drv->usr_conn_req.u8security = pstrHostIFconnectAttr->security;
--	hif_drv->usr_conn_req.tenuAuth_type = pstrHostIFconnectAttr->auth_type;
-+	hif_drv->usr_conn_req.auth_type = pstrHostIFconnectAttr->auth_type;
- 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
- 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
- 
-@@ -1078,13 +1078,14 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
- 	strWIDList[u32WidsCount].type = WID_CHAR;
- 	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)(&hif_drv->usr_conn_req.tenuAuth_type);
-+	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
--		auth_type = (u8)hif_drv->usr_conn_req.tenuAuth_type;
-+		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
- 
--	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", hif_drv->usr_conn_req.tenuAuth_type);
-+	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n",
-+		   hif_drv->usr_conn_req.auth_type);
- 	PRINT_D(HOSTINF_DBG, "Connecting to network of SSID %s on channel %d\n",
- 		hif_drv->usr_conn_req.pu8ssid, pstrHostIFconnectAttr->ch);
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 0c6dafc..891e7e1 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -206,7 +206,7 @@ struct user_conn_req {
- 	u8 *pu8bssid;
- 	u8 *pu8ssid;
- 	u8 u8security;
--	enum AUTHTYPE tenuAuth_type;
-+	enum AUTHTYPE auth_type;
- 	size_t ssid_len;
- 	u8 *ies;
- 	size_t ies_len;
--- 
-1.9.1
+Thank you for the review, I will use preferred style in v2.
+
+regards,
+
+glen lee
+
+>
+> regards,
+> dan carpenter
+>
 
