@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:9459 "EHLO
-	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751086AbbJQJn2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2015 05:43:28 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: kernel-janitors@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] NFC: delete null dereference
-Date: Sat, 17 Oct 2015 11:32:19 +0200
-Message-Id: <1445074340-21955-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20151017_114445_075548_072EC232)
-In-Reply-To: <1445074340-21955-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1445074340-21955-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58108 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758776AbbJ3K6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2015 06:58:19 -0400
+Message-ID: <1446202696.3261.24.camel@sipsolutions.net> (sfid-20151030_115822_395732_29184AC2)
+Subject: Re: [PATCH 1/2] cfg80211: Add support for aborting an ongoing scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Sunil Dutt <usdutt@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, vkanchan@qti.qualcomm.com,
+	amarnath@qca.qualcomm.com
+Date: Fri, 30 Oct 2015 11:58:16 +0100
+In-Reply-To: <20151030103703.GA6731@jouni.qca.qualcomm.com>
+References: <1446104804-8312-1-git-send-email-usdutt@qti.qualcomm.com>
+	 <1446197640.3261.15.camel@sipsolutions.net>
+	 <20151030103703.GA6731@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The exit label performs device_unlock(&dev->dev);, which will fail when dev
-is NULL, and nfc_put_device(dev);, which is not useful when dev is NULL, so
-just exit the function immediately.
+On Fri, 2015-10-30 at 12:37 +0200, Jouni Malinen wrote:
+> 
+> The currently identified use cases do not seem to care much about the
+> actual result of this command since there is going to be a wait for 
+> the
+> scan completed event anyway and the call is not even used unless 
+> there
+> is a known ongoing scan. As such, even the difference of a driver
+> supporting this command or not is not that significant taken into
+> account this is used only as an optimization to speed up the 
+> following
+> operation when a long scan operation was in progress. Things work 
+> fine
+> (though without that speed benefit) even if the driver does not
+> support this. Anyway, making cfg80211 advertise whether the new 
+> command
+> is available could obviously be done should someone come up with a 
+> use
+> case that depends on knowing that the optimization is available.
+> 
 
-Problem found using scripts/coccinelle/null/deref_null.cocci
+Fair point. In that case though, making the driver operation void would
+make sense.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- net/nfc/netlink.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 853172c..f040532 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -1109,10 +1109,8 @@ static int nfc_genl_llc_sdreq(struct sk_buff *skb, struct genl_info *info)
- 	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
- 
- 	dev = nfc_get_device(idx);
--	if (!dev) {
--		rc = -ENODEV;
--		goto exit;
--	}
-+	if (!dev)
-+		return -ENODEV;
- 
- 	device_lock(&dev->dev);
- 
-
+johannes
