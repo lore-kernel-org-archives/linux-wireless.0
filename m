@@ -1,31 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51655 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751086AbbJMJON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 05:14:13 -0400
-Message-ID: <1444727650.1961.10.camel@sipsolutions.net> (sfid-20151013_111418_164077_692F560A)
-Subject: Re: [PATCH] ocb: use correct "MHz" instead of "MHZ"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Tue, 13 Oct 2015 11:14:10 +0200
-In-Reply-To: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com> (sfid-20151012_093612_262159_2B330C8E)
-References: <1444635356-19975-1-git-send-email-ola1olsson@gmail.com>
-	 (sfid-20151012_093612_262159_2B330C8E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63410 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758605AbbJ3PEj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2015 11:04:39 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH V4] ath10k: Debugfs entry to enable/disable WLAN&Blutooth Coexist feature
+References: <1445644464-8454-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Fri, 30 Oct 2015 17:04:17 +0200
+In-Reply-To: <1445644464-8454-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
+	Li's message of "Fri, 23 Oct 2015 16:54:24 -0700")
+Message-ID: <87h9l8mm8e.fsf@kamboji.qca.qualcomm.com> (sfid-20151030_160444_241316_D3D75879)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ola,
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-Thanks for all the patches - I just applied this and three others.
+> As some radio have no connection with BT modules, enable the WLAN/Bluetooth
+> coexist(BTC) feature will has some side effect if the radio's GPIO connect
+> with any other HW modules. Add the control switcher "btc_feature" at
+> debugfs and set the feature as disable by default to avoid such case.
+>
+> The FW support this feature since 10.2.4.54 on 2G-only board, dual band
+> or 5G boards don't support the feature
+>
+> To enable this feature, execute:
+> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/btc_feature
+> To disable:
+> echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/btc_feature
+>
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
-Note that I've reworded the subject for some - I prefer the subject to
-state in active voice what the change is doing - i.e. be something you
-read before the actual change, rather than afterwards. I'd appreciate
-if you could do the same for future patches.
+You missed some of my comments from v1, especially about the file name.
+Let me send v5.
 
-Thanks,
-johannes
+https://patchwork.kernel.org/patch/6313091/
+
+> +static ssize_t ath10k_write_btc_feature(struct file *file,
+> +					const char __user *ubuf,
+> +					size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	char buf[32];
+> +	size_t buf_size;
+> +	bool val;
+> +	int ret;
+> +
+> +	buf_size = min(count, (sizeof(buf) - 1));
+> +	if (copy_from_user(buf, ubuf, buf_size))
+> +		return -EFAULT;
+> +
+> +	buf[buf_size] = '\0';
+> +	if (strtobool(buf, &val) != 0) {
+> +		ath10k_warn(ar, "Wrong BTcoex feature setting\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	mutex_lock(&ar->conf_mutex);
+> +
+> +	if (ar->state != ATH10K_STATE_ON) {
+> +		ret = -ENETDOWN;
+> +		goto err_unlock;
+> +	}
+> +
+> +	if (val != test_bit(ATH10K_FLAG_BTCOEX_ENABLE, &ar->dev_flags)) {
+> +		if (val)
+> +			set_bit(ATH10K_FLAG_BTCOEX_ENABLE, &ar->dev_flags);
+> +		else
+> +			clear_bit(ATH10K_FLAG_BTCOEX_ENABLE, &ar->dev_flags);
+> +		queue_work(ar->workqueue, &ar->restart_work);
+> +	}
+
+I don't think this is a good idea, now you cannot change the value while
+interface is down. I think it would be more user friendly to allow
+changing the value but obviously not reboot the firmware as it's not
+running.
+
+-- 
+Kalle Valo
