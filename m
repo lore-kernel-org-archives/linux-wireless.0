@@ -1,86 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41687 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965219AbbJILgw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2015 07:36:52 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "y2038@lists.linaro.org" <y2038@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 04/12] mwifiex: use ktime_get_real for timestamping
-Date: Fri, 9 Oct 2015 11:36:44 +0000
-Message-ID: <89eb0939d50045ff8d248e6f8fd87d1a@SC-EXCH04.marvell.com> (sfid-20151009_133720_996359_37CCC565)
-References: <1443612402-3000775-1-git-send-email-arnd@arndb.de>
- <1443612402-3000775-5-git-send-email-arnd@arndb.de>
-In-Reply-To: <1443612402-3000775-5-git-send-email-arnd@arndb.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56909 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030642AbbJ3JqJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2015 05:46:09 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 17/17] staging: wilc1000: wilc_netdev_init: use wilc instead of g_linux_wlan
+Date: Fri, 30 Oct 2015 18:47:23 +0900
+Message-ID: <1446198443-6623-17-git-send-email-glen.lee@atmel.com> (sfid-20151030_104613_095869_1256834B)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd,
+Use wilc instead of g_linux_wlan. g_liux_wlan is not used anymore, just
+delete it.
 
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Wednesday, September 30, 2015 4:57 PM
-> To: netdev@vger.kernel.org
-> Cc: y2038@lists.linaro.org; linux-kernel@vger.kernel.org; David S.
-> Miller; Arnd Bergmann; Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo;
-> linux-wireless@vger.kernel.org
-> Subject: [PATCH 04/12] mwifiex: use ktime_get_real for timestamping
-> 
-> The mwifiex_11n_aggregate_pkt() function creates a ktime_t from a
-> timeval returned by do_gettimeofday, which is slow and causes an
-> overflow in 2038 on 32-bit architectures.
-> 
-> This solves both problems by using the appropriate ktime_get_real()
-> function.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> ---
->  drivers/net/wireless/mwifiex/11n_aggr.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c
-> b/drivers/net/wireless/mwifiex/11n_aggr.c
-> index f7c717253a66..78853c51774d 100644
-> --- a/drivers/net/wireless/mwifiex/11n_aggr.c
-> +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-> @@ -173,7 +173,6 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private
-> *priv,
->  	int pad = 0, aggr_num = 0, ret;
->  	struct mwifiex_tx_param tx_param;
->  	struct txpd *ptx_pd = NULL;
-> -	struct timeval tv;
->  	int headroom = adapter->iface_type == MWIFIEX_USB ? 0 :
-> INTF_HEADER_LEN;
-> 
->  	skb_src = skb_peek(&pra_list->skb_head); @@ -203,8 +202,7 @@
-> mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
->  	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
->  	skb_aggr->priority = skb_src->priority;
-> 
-> -	do_gettimeofday(&tv);
-> -	skb_aggr->tstamp = timeval_to_ktime(tv);
-> +	skb_aggr->tstamp = ktime_get_real();
-> 
->  	do {
->  		/* Check if AMSDU can accommodate this MSDU */
-> --
-> 2.1.0.rc2
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+Changes in v2: use sizeof(*wl) instead of sizeof(struct wilc).
 
-Looks good.
+ drivers/staging/wilc1000/linux_wlan.c         | 22 +++++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 -
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3801a00..3422d99 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -112,7 +112,6 @@ static void wilc_set_multicast_list(struct net_device *dev);
+  * for now - in frmw_to_linux there should be private data to be passed to it
+  * and this data should be pointer to net device
+  */
+-struct wilc *g_linux_wlan;
+ bool bEnablePS = true;
+ 
+ static const struct net_device_ops wilc_netdev_ops = {
+@@ -1702,15 +1701,16 @@ int wilc_netdev_init(struct wilc **wilc)
+ 	int i;
+ 	perInterface_wlan_t *nic;
+ 	struct net_device *ndev;
++	struct wilc *wl;
+ 
+ 	sema_init(&close_exit_sync, 0);
+ 
+ 	/*create the common structure*/
+-	g_linux_wlan = kzalloc(sizeof(*g_linux_wlan), GFP_KERNEL);
+-	if (!g_linux_wlan)
++	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
++	if (!wl)
+ 		return -ENOMEM;
+ 
+-	*wilc = g_linux_wlan;
++	*wilc = wl;
+ 
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+@@ -1737,11 +1737,11 @@ int wilc_netdev_init(struct wilc **wilc)
+ 		} else
+ 			strcpy(ndev->name, "p2p%d");
+ 
+-		nic->u8IfIdx = g_linux_wlan->vif_num;
++		nic->u8IfIdx = wl->vif_num;
+ 		nic->wilc_netdev = ndev;
+-		nic->wilc = *wilc;
+-		g_linux_wlan->vif[g_linux_wlan->vif_num].ndev = ndev;
+-		g_linux_wlan->vif_num++;
++		nic->wilc = wl;
++		wl->vif[wl->vif_num].ndev = ndev;
++		wl->vif_num++;
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		{
+@@ -1781,13 +1781,13 @@ int wilc_netdev_init(struct wilc **wilc)
+ 	}
+ 
+ 	#ifndef WILC_SDIO
+-	if (!linux_spi_init(&g_linux_wlan->wilc_spidev)) {
++	if (!linux_spi_init(&wl->wilc_spidev)) {
+ 		PRINT_ER("Can't initialize SPI\n");
+ 		return -1; /* ERROR */
+ 	}
+-	g_linux_wlan->wilc_spidev = wilc_spi_dev;
++	wl->wilc_spidev = wilc_spi_dev;
+ 	#else
+-	g_linux_wlan->wilc_sdio_func = local_sdio_func;
++	wl->wilc_sdio_func = local_sdio_func;
+ 	#endif
+ 
+ 	return 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 31d5ac9..54d798c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -206,7 +206,6 @@ struct WILC_WFI_mon_priv {
+ 	struct net_device *real_ndev;
+ };
+ 
+-extern struct wilc *g_linux_wlan;
+ extern struct net_device *WILC_WFI_devs[];
+ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
+-- 
+1.9.1
 
-Regards,
-Amitkumar
