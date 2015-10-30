@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41652 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755239AbbJ1Sua (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20844 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965211AbbJ3DI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 14:50:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-10-25
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-Date: Wed, 28 Oct 2015 20:50:23 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8AF6CC@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Sun, 25 Oct 2015 11:58:03 +0000")
-Message-ID: <87eggeu8sw.fsf@kamboji.qca.qualcomm.com> (sfid-20151028_195033_395872_231390D4)
+	Thu, 29 Oct 2015 23:08:58 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/17] staging: wilc1000: wilc_wlan_start: add argument struct net_device
+Date: Fri, 30 Oct 2015 12:10:38 +0900
+Message-ID: <1446174642-28570-13-git-send-email-glen.lee@atmel.com> (sfid-20151030_040910_681715_B92C5CE5)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+This patch adds new argument struct net_device and pass dev to the function.
 
-> Hi Kalle,
->
-> Last (obviously) pull request for 4.4.
-> I came back from a long vacation and took maintenance over back from Luca.
-> Please note that you'll have to merge mac80211-next/master (or net-next)
-> before you pull from me. I created this pull request giving
-> mac80211-next/master
-> as the start point to have the correct output.
-> I hope it will still make it.
->
-> Details in the tag.
->
-> Thank!
->
-> The following changes since commit e5a9f8d04660da7ef3a98260aa74c3976f9cb4cd:
->
->   mac80211: move station statistics into sub-structs (2015-10-21
-> 10:08:22 +0200)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
->
-> for you to fetch changes up to 2edb7a3372c76c9379d0fc00e4274ea8f018248a:
->
->   iwlwifi: nvm: free old section data when reading nvm file (2015-10-25
-> 13:45:09 +0200)
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-I pulled iwlwifi-next-for-kalle-2015-10-25 now, thanks.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index bb37f5b..2226ddb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -584,7 +584,7 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 
+ 	/* start firmware */
+ 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
+-	ret = wilc_wlan_start();
++	ret = wilc_wlan_start(dev);
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to start Firmware\n");
+ 		goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 93fae34..894466f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1489,7 +1489,7 @@ _fail_1:
+  *      Common
+  *
+  ********************************************/
+-int wilc_wlan_start(void)
++int wilc_wlan_start(struct net_device *dev)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index c948c25..73e01a7 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -297,7 +297,7 @@ typedef struct {
+ 
+ int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
+ 				u32 buffer_size);
+-int wilc_wlan_start(void);
++int wilc_wlan_start(struct net_device *dev);
+ int wilc_wlan_stop(struct net_device *dev);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func);
 -- 
-Kalle Valo
+1.9.1
+
