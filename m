@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34792 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932771AbbJOCIL (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56688 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030341AbbJ3JpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2015 22:08:11 -0400
-Received: by payp3 with SMTP id p3so23397812pay.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2015 19:08:11 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 22/33] staging: wilc1000: fix return type of host_int_del_All_Rx_BASession
-Date: Thu, 15 Oct 2015 11:06:51 +0900
-Message-Id: <1444874822-31152-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20151015_040822_874869_209FB124)
-In-Reply-To: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1444874822-31152-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 30 Oct 2015 05:45:18 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 09/17] staging: wilc1000: wilc_wlan_stop: add argument struct net_device
+Date: Fri, 30 Oct 2015 18:47:15 +0900
+Message-ID: <1446198443-6623-9-git-send-email-glen.lee@atmel.com> (sfid-20151030_104522_494909_E0641B27)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_del_All_Rx_BASession from s32
-to int. s32Error gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of s32Error.
+This patch adds new argument struct net_device and pass dev to the functions.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 90fe5479..83fd056 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -5105,11 +5105,11 @@ s32 host_int_delBASession(struct host_if_drv *hif_drv, char *pBSSID, char TID)
- 	return s32Error;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6ffa2a1..1019a19 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -935,7 +935,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+ 		deinit_irq(dev);
+ 
+-		wilc_wlan_stop();
++		wilc_wlan_stop(dev);
+ 
+ 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+ 		wilc_wlan_cleanup(dev);
+@@ -1176,7 +1176,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		return 0; /*success*/
+ 
+ _fail_fw_start_:
+-		wilc_wlan_stop();
++		wilc_wlan_stop(dev);
+ 
+ _fail_irq_enable_:
+ #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c8ce1f6..d4eef3d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1598,7 +1598,7 @@ void wilc_wlan_global_reset(void)
+ 	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, 0x0);
+ 	release_bus(RELEASE_ONLY);
  }
- 
--s32 host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
-+int host_int_del_All_Rx_BASession(struct host_if_drv *hif_drv,
- 				  char *pBSSID,
- 				  char TID)
+-int wilc_wlan_stop(void)
++int wilc_wlan_stop(struct net_device *dev)
  {
--	s32 s32Error = 0;
-+	int s32Error = 0;
- 	struct host_if_msg msg;
- 	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 519f352..fa66783 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -297,7 +297,7 @@ typedef struct {
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7719f06..aeb3cb3 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1091,7 +1091,7 @@ s32 host_int_delBASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
-  *  @date
-  *  @version	1.0
-  */
--s32 host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
-+int host_int_del_All_Rx_BASession(struct host_if_drv *hWFIDrv, char *pBSSID, char TID);
- 
- 
- /**
+ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
+ int wilc_wlan_start(void);
+-int wilc_wlan_stop(void);
++int wilc_wlan_stop(struct net_device *dev);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
 -- 
-2.6.1
+1.9.1
 
