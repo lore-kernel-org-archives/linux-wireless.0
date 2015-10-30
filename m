@@ -1,97 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:34542 "EHLO gsystem.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932310AbbJPTE0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2015 15:04:26 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/2] airo: fix scan after SIOCSIWAP (airo_set_wap)
-Date: Fri, 16 Oct 2015 21:04:14 +0200
-Message-Id: <1445022254-30428-2-git-send-email-linux@rainbow-software.org> (sfid-20151016_210458_281055_9B817C69)
-In-Reply-To: <1445022254-30428-1-git-send-email-linux@rainbow-software.org>
-References: <1445022254-30428-1-git-send-email-linux@rainbow-software.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38939 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbbJ3E7z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2015 00:59:55 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Nicolas Dechesne <nicolas.dechesne@linaro.org>
+Cc: "fengwei.yin" <fengwei.yin@linaro.org>,
+	wcn36xx@lists.infradead.org, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	k.eugene.e@gmail.com
+Subject: Re: [PATCH] wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
+References: <1445826982-4023-1-git-send-email-fengwei.yin@linaro.org>
+	<878u6lo34e.fsf@kamboji.qca.qualcomm.com>
+	<5632AC81.6090905@linaro.org> <5632ACFA.1090709@linaro.org>
+	<CAP71Wjwc5HcfG6UKy-XFwtmB1ZxgJvM0FWf5NT3G6DjNOKwDqA@mail.gmail.com>
+Date: Fri, 30 Oct 2015 06:59:46 +0200
+In-Reply-To: <CAP71Wjwc5HcfG6UKy-XFwtmB1ZxgJvM0FWf5NT3G6DjNOKwDqA@mail.gmail.com>
+	(Nicolas Dechesne's message of "Fri, 30 Oct 2015 00:41:40 +0100")
+Message-ID: <874mh9ne7x.fsf@kamboji.qca.qualcomm.com> (sfid-20151030_055958_601731_01054D3D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SIOCSIWAP (airo_set_wap) affects scan: only the AP specified by
-SIOCSIWAP is present in scan results.
+Nicolas Dechesne <nicolas.dechesne@linaro.org> writes:
 
-This makes NetworkManager work for the first time but then unable to
-find any other APs.
+> On Fri, Oct 30, 2015 at 12:34 AM, fengwei.yin <fengwei.yin@linaro.org> wrote:
+>>>>
+>>>>
+>>>> Please fix your name. I don't know why but your name in git statistics
+>>>> is now "yfw":
+>>>>
+>>>> yfw (1):
+>>>>        wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
+>>>>
+>>>> The right format for both From header and Signed-off-by line is:
+>>>>
+>>>> First Lastname <username@example.com>
+>>>>
+>>>
+>>> It looks like everything is fine in my side. Could you please check your
+>>> .mailmap whether the email was mapped to "yfw"?
+>>
+>>                    ~~~~~~~~~~ typo fix: "my email address"
+>
+> fwiw.. I applied the original patch from the list locally, and I don't
+> see this issue after git am <file>:
+>
+> $ git shortlog -1
+> Yin, Fengwei (1):
+>       wcn36xx: Remove warning message when dev is NULL for arm64 dma_alloc.
 
-Clear APList before starting scan and set it back after scan completes
-to work-around the problem.
+Ah, I think it's coming from patchwork:
 
-To avoid losing packets during scan, modify disable_MAC() to omit
-netif_carrier_off() call when lock == 2.
+"Submitter	yfw"
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
----
- drivers/net/wireless/airo.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+https://patchwork.kernel.org/patch/7484791/
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 4ef2f98..17c40f0 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -3037,6 +3037,11 @@ static void airo_process_scan_results (struct airo_info *ai) {
- 	}
- 
- out:
-+	/* write APList back (we cleared it in airo_set_scan) */
-+	disable_MAC(ai, 2);
-+	writeAPListRid(ai, &ai->APList, 0);
-+	enable_MAC(ai, 0);
-+
- 	ai->scan_timeout = 0;
- 	clear_bit(JOB_SCAN_RESULTS, &ai->jobs);
- 	up(&ai->sem);
-@@ -3608,17 +3613,18 @@ static void disable_MAC( struct airo_info *ai, int lock ) {
-         Cmd cmd;
- 	Resp rsp;
- 
--	if (lock && down_interruptible(&ai->sem))
-+	if (lock == 1 && down_interruptible(&ai->sem))
- 		return;
- 
- 	if (test_bit(FLAG_ENABLED, &ai->flags)) {
--		netif_carrier_off(ai->dev);
-+		if (lock != 2) /* lock == 2 means don't disable carrier */
-+			netif_carrier_off(ai->dev);
- 		memset(&cmd, 0, sizeof(cmd));
- 		cmd.cmd = MAC_DISABLE; // disable in case already enabled
- 		issuecommand(ai, &cmd, &rsp);
- 		clear_bit(FLAG_ENABLED, &ai->flags);
- 	}
--	if (lock)
-+	if (lock == 1)
- 		up(&ai->sem);
- }
- 
-@@ -7216,6 +7222,7 @@ static int airo_set_scan(struct net_device *dev,
- 	Cmd cmd;
- 	Resp rsp;
- 	int wake = 0;
-+	APListRid APList_rid_empty;
- 
- 	/* Note : you may have realised that, as this is a SET operation,
- 	 * this is privileged and therefore a normal user can't
-@@ -7233,6 +7240,13 @@ static int airo_set_scan(struct net_device *dev,
- 	if (ai->scan_timeout > 0)
- 		goto out;
- 
-+	/* Clear APList as it affects scan results */
-+	memset(&APList_rid_empty, 0, sizeof(APList_rid_empty));
-+	APList_rid_empty.len = cpu_to_le16(sizeof(APList_rid_empty));
-+	disable_MAC(ai, 2);
-+	writeAPListRid(ai, &APList_rid_empty, 0);
-+	enable_MAC(ai, 0);
-+
- 	/* Initiate a scan command */
- 	ai->scan_timeout = RUN_AT(3*HZ);
- 	memset(&cmd, 0, sizeof(cmd));
+Fengwei, please fix your name in patchwork. It should be easy to do.
+
+Anyway, my original comment still stands. The correct format for name
+is:
+
+        Random J Developer <random@developer.example.org>
+
+NOT:
+
+        Developer, Random J <random@developer.example.org>
+
+See SubmittingPatches.
+
 -- 
-Ondrej Zary
-
+Kalle Valo
