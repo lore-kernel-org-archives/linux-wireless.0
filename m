@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33925 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbbJ2MaD (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20724 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757108AbbJ3DIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2015 08:30:03 -0400
-Received: by padhk11 with SMTP id hk11so40058107pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2015 05:30:03 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/12] staging: wilc1000: fix parameter name of host_int_add_station
-Date: Thu, 29 Oct 2015 21:29:24 +0900
-Message-Id: <1446121768-4953-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151029_133008_413850_07BBDBBE)
-In-Reply-To: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446121768-4953-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 29 Oct 2015 23:08:11 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/17] staging: wilc1000: wilc_wlan_cfg_commit: add argument struct net_device
+Date: Fri, 30 Oct 2015 12:10:30 +0900
+Message-ID: <1446174642-28570-5-git-send-email-glen.lee@atmel.com> (sfid-20151030_040815_485193_073A122B)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes struct host_if_drv of host_int_add_station function
-declaration from hWFIDrv to hif_drv.
-With this change, first parameter name of this function declaration and
-definition has same name as hif_drv.
+Add argument struct net_device and pass dev to the functions as well.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 3fcff7a..7c9c4c6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -948,7 +948,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv);
-  *  @date		12 July 2012
-  *  @version		1.0 Description
-  */
--int host_int_add_station(struct host_if_drv *hWFIDrv,
-+int host_int_add_station(struct host_if_drv *hif_drv,
- 			 struct add_sta_param *pstrStaParams);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a72fa8c..75b0616 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1732,7 +1732,8 @@ void wilc_wlan_cleanup(struct net_device *dev)
  
- /*!
+ }
+ 
+-static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
++static int wilc_wlan_cfg_commit(struct net_device *dev,
++				int type, u32 drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	wilc_cfg_frame_t *cfg = &p->cfg_frame;
+@@ -1796,7 +1797,7 @@ int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
+ 		PRINT_D(RX_DBG, "Processing cfg_set()\n");
+ 		p->cfg_frame_in_use = 1;
+ 
+-		if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
++		if (wilc_wlan_cfg_commit(dev, WILC_CFG_SET, drvHandler))
+ 			ret_size = 0;
+ 
+ 		if (linux_wlan_lock_timeout(&wilc->cfg_event,
+@@ -1837,7 +1838,7 @@ int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
+ 	if (commit) {
+ 		p->cfg_frame_in_use = 1;
+ 
+-		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
++		if (wilc_wlan_cfg_commit(dev, WILC_CFG_QUERY, drvHandler))
+ 			ret_size = 0;
+ 
+ 
 -- 
-2.6.1
+1.9.1
 
