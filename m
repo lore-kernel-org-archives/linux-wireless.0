@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:35858 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964950AbbJ0TLO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 15:11:14 -0400
-Date: Tue, 27 Oct 2015 20:11:11 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH 2/2] ssb: add Kconfig entry for compiling SoC related
- code
-Message-ID: <20151027201111.1c6556e2@wiggum> (sfid-20151027_201117_169841_F854DB71)
-In-Reply-To: <1445797963-5968-2-git-send-email-zajec5@gmail.com>
-References: <1445797963-5968-1-git-send-email-zajec5@gmail.com>
-	<1445797963-5968-2-git-send-email-zajec5@gmail.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20819 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757187AbbJ3DIq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2015 23:08:46 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/17] staging: wilc1000: wilc_wlan_firmware_download: add argument net_device
+Date: Fri, 30 Oct 2015 12:10:36 +0900
+Message-ID: <1446174642-28570-11-git-send-email-glen.lee@atmel.com> (sfid-20151030_040849_392892_22287C70)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Add new argument struct net_device and pass dev to the function as well.
 
-On Sun, 25 Oct 2015 19:32:43 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c  | 3 ++-
+ drivers/staging/wilc1000/wilc_wlan.h  | 3 ++-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-> This allows saving a little of space when not using ssb on Broadcom SoC.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1019a19..bb37f5b 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -624,7 +624,7 @@ static int linux_wlan_firmware_download(struct net_device *dev)
+ 	 *      do the firmware download
+ 	 **/
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+-	ret = wilc_wlan_firmware_download(wilc->firmware->data,
++	ret = wilc_wlan_firmware_download(dev, wilc->firmware->data,
+ 					  wilc->firmware->size);
+ 	if (ret < 0)
+ 		goto _FAIL_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c464cd7..e8afa6b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1415,7 +1415,8 @@ void wilc_handle_isr(void *wilc)
+  *      Firmware download
+  *
+  ********************************************/
+-int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
++int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
++				u32 buffer_size)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index fa66783..194c24c 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -295,7 +295,8 @@ typedef struct {
+ 	u32 seq_no;
+ } wilc_cfg_rsp_t;
+ 
+-int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
++int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
++				u32 buffer_size);
+ int wilc_wlan_start(void);
+ int wilc_wlan_stop(struct net_device *dev);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+-- 
+1.9.1
 
-I'm not sure whether it's worth it.
-But I don't mind having this anyway.
-
-Acked-by: Michael Buesch <m@bues.ch>
-
---=20
-Michael
-
---Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWL8xPAAoJEPUyvh2QjYsO6OUP/RnxCfI56jpLlDZzPGffe1YH
-Yv6E95wr6da3hc09vzQbGAmFblju4jkKjbOTbjC47XzQnKfPYAuVMngmYiaQwxNk
-anUO3qIBhMbiN7Q/RzeZEy54Id0gGpGxAYCRP4DWAgD0xOTxejPttTuQjQjz9Q6j
-/TvaKSSv712730JYUV1JheIugXjE2pwoov6LyZ5xgbwV65VCTkSF5dHdG98Iv99C
-Y6MFODHrhQWKOTCWI8ihYOEqVscZ7Wf7WWziC7FVBd1YrAJP5dJ2e6IvCVDOfozv
-IttCvbcXo6SbY9+hU9K/Ltz+iZkeV409st6aQ7b5XSW6Dd5fpz3ln1PzNA4zS9Tr
-+dWZ0e0UuAv98k5Rf+SwByQVgOgFLEiOquyMcOHp1b1arItiZJFm729rJKqDQNnK
-GVpu7+Ubq7XhAqDJeDA0FNbRFa8jnrvz75bsdkhoASwzUjBwIMLcZoaULYQZT7yd
-fMiBD7MGTXAEhLKoAx3OLsLyOGpgqL4+9/l3GChzcdFOr3npAKm22e4KUMKzuLe+
-nVnI3qjSYe+Ur7USuxCBAPvbljEXDdBDUEiLdOWgw5JT1SZcZjxqaN3YeyLDlc1a
-3kyYHQOeUN7ELgGtwQn1tnFCxDq2bHstC/HMtbl7+HSys247Tcyku7Fz+jPQfxYf
-bZHXRgrsky8bTNEB5vaA
-=hweE
------END PGP SIGNATURE-----
-
---Sig_/P4RqWWUMPYdQ4Gaqp=TMvtW--
