@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45792 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbbJUA3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2015 20:29:08 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 00/16] rtl8xxxu: eFUSE parsing for RTL8188EU chips
-References: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com>
-Date: Tue, 20 Oct 2015 20:29:06 -0400
-In-Reply-To: <1445323546-12807-1-git-send-email-jsitnicki@gmail.com> (Jakub
-	Sitnicki's message of "Tue, 20 Oct 2015 08:45:30 +0200")
-Message-ID: <wrfjeggpxdwt.fsf@redhat.com> (sfid-20151021_022913_707665_4903B80C)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20792 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757187AbbJ3DIe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2015 23:08:34 -0400
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/17] staging: wilc1000: wilc_wlan_stop: add argument struct net_device
+Date: Fri, 30 Oct 2015 12:10:34 +0900
+Message-ID: <1446174642-28570-9-git-send-email-glen.lee@atmel.com> (sfid-20151030_040836_605009_3960AFEB)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Sitnicki <jsitnicki@gmail.com> writes:
-> Hi Jes,
->
-> I'm posting this patch set to show in what direction the work is
-> going.  Hopefully any changes (e.g. renames) which you wouldn't see
-> fit for this driver can be identified early this way.
->
-> The work is nowhere near the end.  These changes only get me past the
-> parse_efuse() step in the probe() routine.
->
-> I've structured the patch set in such a way that changes that are not
-> RTL8188EU-specific (preparatory work) come first.  All but the last
-> two patches (tagged "rtl8188eu:") fall into this category.  If you
-> were considering to apply any of them, note that they were not tested
-> with any device that is known to work with rtl8xxxu, only a TP-Link
-> TL-WN725N (RTL8188EU) dongle.
->
-> The corresponding git branch for this patch set is at:
->
-> git https://github.com/jsitnicki/linux.git branch rtl8xxxu-rtl8188eu
+This patch adds new argument struct net_device and pass dev to the functions.
 
-Jakub,
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Thanks for the feedback - some of these patches are good, some of them I
-dislike, and some of them will conflict with work I have been doing
-since I posted the patch. I have been working on adding 8723bu and
-8192eu support and some of those changes should also benefit your work.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6ffa2a1..1019a19 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -935,7 +935,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+ 		deinit_irq(dev);
+ 
+-		wilc_wlan_stop();
++		wilc_wlan_stop(dev);
+ 
+ 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+ 		wilc_wlan_cleanup(dev);
+@@ -1176,7 +1176,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		return 0; /*success*/
+ 
+ _fail_fw_start_:
+-		wilc_wlan_stop();
++		wilc_wlan_stop(dev);
+ 
+ _fail_irq_enable_:
+ #if (defined WILC_SDIO) && (!defined WILC_SDIO_IRQ_GPIO)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c8ce1f6..d4eef3d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1598,7 +1598,7 @@ void wilc_wlan_global_reset(void)
+ 	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, 0x0);
+ 	release_bus(RELEASE_ONLY);
+ }
+-int wilc_wlan_stop(void)
++int wilc_wlan_stop(struct net_device *dev)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 519f352..fa66783 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -297,7 +297,7 @@ typedef struct {
+ 
+ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
+ int wilc_wlan_start(void);
+-int wilc_wlan_stop(void);
++int wilc_wlan_stop(struct net_device *dev);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
+-- 
+1.9.1
 
-I have pushed my current nextgen tree to git, so if you checkout the
-rtl8xxxu-nextgen branch you will see it.
-
-I'll respond to the individual patches here.
-
-Cheers,
-Jes
