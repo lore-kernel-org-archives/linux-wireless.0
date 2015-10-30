@@ -1,121 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:38193 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20695 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646AbbJHJME (ORCPT
+	with ESMTP id S1757191AbbJ3DH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 05:12:04 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Thu, 29 Oct 2015 23:07:58 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/11] staging: wilc1000: rename u8WepKeylen of struct host_if_wep_attr
-Date: Thu, 8 Oct 2015 18:10:53 +0900
-Message-ID: <1444295456-25818-8-git-send-email-tony.cho@atmel.com> (sfid-20151008_111241_314096_8001B2F0)
-In-Reply-To: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
-References: <1444295456-25818-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/17] staging: wilc1000: wilc_wlan_cfg_get: add argument struct net_device
+Date: Fri, 30 Oct 2015 12:10:28 +0900
+Message-ID: <1446174642-28570-3-git-send-email-glen.lee@atmel.com> (sfid-20151030_040802_083337_AB69B79D)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8WepKeylen of struct host_if_wep_attr to key_len to
-avoid CamelCase naming convention.
+Adds argument struct net_device and use netdev private data member wilc
+instead of g_linux_wlan, pass dev to the functions as well.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 3 ++-
+ drivers/staging/wilc1000/linux_wlan.c       | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c        | 8 ++++++--
+ drivers/staging/wilc1000/wilc_wlan.h        | 3 ++-
+ 4 files changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 931dcb5..7919851 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -108,7 +108,7 @@ struct host_if_wpa_attr {
-  */
- struct host_if_wep_attr {
- 	u8 *key;
--	u8 u8WepKeylen;
-+	u8 key_len;
- 	u8 u8Wepidx;
- 	u8 u8mode;
- 	enum AUTHTYPE tenuAuth_type;
-@@ -2368,7 +2368,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWIDList[2].size = sizeof(char);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3b4a950..530d64a 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -595,7 +595,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
+ 		for (counter = 0; counter < count; counter++) {
+ 			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
+ 				   (counter == count - 1));
+-			if (!wilc_wlan_cfg_get(!counter,
++			if (!wilc_wlan_cfg_get(dev,
++					       !counter,
+ 					       wids[counter].id,
+ 					       (counter == count - 1),
+ 					       drv)) {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d0161cd..4ed324c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1153,7 +1153,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 
+ 		wilc_bus_set_max_speed();
+ 
+-		if (wilc_wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
++		if (wilc_wlan_cfg_get(dev, 1, WID_FIRMWARE_VERSION, 1, 0)) {
+ 			int size;
+ 			char Firmware_ver[20];
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 16224ce..768fd30 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1809,12 +1809,16 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 
+ 	return ret_size;
+ }
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
++int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
++		      u32 drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+ 	int ret_size;
++	perInterface_wlan_t *nic = netdev_priv(dev);
++	struct wilc *wilc;
+ 
++	wilc = nic->wilc;
+ 
+ 	if (p->cfg_frame_in_use)
+ 		return 0;
+@@ -1834,7 +1838,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 			ret_size = 0;
  
  
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, GFP_KERNEL);
- 
- 
- 			if (pu8keybuf == NULL) {
-@@ -2377,14 +2377,14 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			}
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
- 
- 
- 			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
- 
- 			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
- 			strWIDList[3].type = WID_STR;
--			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen;
-+			strWIDList[3].size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len;
- 			strWIDList[3].val = (s8 *)pu8keybuf;
- 
- 
-@@ -2397,24 +2397,24 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 		if (pstrHostIFkeyAttr->u8KeyAction & ADDKEY) {
- 			PRINT_D(HOSTINF_DBG, "Handling WEP key\n");
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2, GFP_KERNEL);
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
- 				PRINT_ER("No buffer to send Key\n");
- 				return -1;
- 			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8Wepidx;
- 
--			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen, 1);
-+			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len, 1);
- 
- 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key,
--				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen);
-+				    pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len);
- 
- 			kfree(pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key);
- 
- 			strWID.id = (u16)WID_ADD_WEP_KEY;
- 			strWID.type = WID_STR;
- 			strWID.val = (s8 *)pu8keybuf;
--			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.u8WepKeylen + 2;
-+			strWID.size = pstrHostIFkeyAttr->uniHostIFkeyAttr.wep.key_len + 2;
- 
- 			s32Error = send_config_pkt(SET_CFG, &strWID, 1,
- 						   get_id_from_handler(hif_drv));
-@@ -4206,7 +4206,7 @@ s32 host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
- 		    pu8WepKey, u8WepKeylen);
- 
- 
--	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
-@@ -4275,7 +4275,7 @@ s32 host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 		    pu8WepKey, (u8WepKeylen));
- 
- 
--	msg.body.key_info.uniHostIFkeyAttr.wep.u8WepKeylen = (u8WepKeylen);
-+	msg.body.key_info.uniHostIFkeyAttr.wep.key_len = (u8WepKeylen);
- 
- 	msg.body.key_info.uniHostIFkeyAttr.wep.u8Wepidx = u8Keyidx;
- 
+-		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
++		if (linux_wlan_lock_timeout(&wilc->cfg_event,
+ 					    CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Get Timed Out\n");
+ 			ret_size = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 2eb7e20..2879a93 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -305,7 +305,8 @@ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drvHandler);
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
++int wilc_wlan_cfg_get(struct net_device *dev, int start, u32 wid, int commit,
++		      u32 drvHandler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			       u32 buffer_size, wilc_tx_complete_func_t func);
 -- 
 1.9.1
 
