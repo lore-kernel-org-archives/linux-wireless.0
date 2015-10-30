@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:55463 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754779AbbJAKvE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22426 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030780AbbJ3NpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 06:51:04 -0400
-Subject: [PATCH 3/6] ath10k: brace style fixes
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 01 Oct 2015 13:50:59 +0300
-Message-ID: <20151001105059.8770.12429.stgit@potku.adurom.net> (sfid-20151001_125107_491721_49184F47)
-In-Reply-To: <20151001105001.8770.96252.stgit@potku.adurom.net>
-References: <20151001105001.8770.96252.stgit@potku.adurom.net>
+	Fri, 30 Oct 2015 09:45:19 -0400
+From: Sunil Dutt <usdutt@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
+	<vkanchan@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
+	<usdutt@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] mac80211: Add support for aborting an ongoing scan
+Date: Fri, 30 Oct 2015 19:14:50 +0530
+Message-ID: <1446212690-326-2-git-send-email-usdutt@qti.qualcomm.com> (sfid-20151030_144523_529386_E67B7763)
+In-Reply-To: <1446212690-326-1-git-send-email-usdutt@qti.qualcomm.com>
+References: <1446212690-326-1-git-send-email-usdutt@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/ath/ath10k/htt_tx.c:457: braces {} are not necessary for single statement blocks
-drivers/net/wireless/ath/ath10k/htt_tx.c:545: braces {} are not necessary for single statement blocks
-drivers/net/wireless/ath/ath10k/mac.c:200: braces {} are not necessary for single statement blocks
+From: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This commit adds implementation for abort scan in mac80211.
+
+Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c |    8 ++++----
- drivers/net/wireless/ath/ath10k/mac.c    |    3 +--
- 2 files changed, 5 insertions(+), 6 deletions(-)
+v2: Change return value of ieee80211_abort_scan to void
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index eb5ba9bb8b4d..a31d508fc397 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -454,9 +454,9 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
- 	spin_unlock_bh(&htt->tx_lock);
--	if (res < 0) {
-+	if (res < 0)
- 		goto err_tx_dec;
--	}
+ net/mac80211/cfg.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 713cdbf..4eda313 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3797,6 +3797,15 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
+ }
+ 
++static void ieee80211_abort_scan(struct wiphy *wiphy, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
 +
- 	msdu_id = res;
- 
- 	txdesc = ath10k_htc_alloc_skb(ar, len);
-@@ -542,9 +542,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
- 	spin_unlock_bh(&htt->tx_lock);
--	if (res < 0) {
-+	if (res < 0)
- 		goto err_tx_dec;
--	}
++	/* Cancel the ongoing scan */
++	ieee80211_scan_cancel(local);
++}
 +
- 	msdu_id = res;
- 
- 	prefetch_len = min(htt->prefetch_len, msdu->len);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1b4b53b9ffc1..3316aec16043 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -197,9 +197,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--	}
- 
- 	if (cmd == DISABLE_KEY) {
- 		arg.key_cipher = WMI_CIPHER_NONE;
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3881,4 +3890,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.abort_scan = ieee80211_abort_scan,
+ };
+-- 
+1.8.2.1
 
