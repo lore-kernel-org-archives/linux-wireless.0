@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:32573 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:20776 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718AbbJHBtw (ORCPT
+	with ESMTP id S1757187AbbJ3DI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2015 21:49:52 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Thu, 29 Oct 2015 23:08:28 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/14] staging: wilc1000: remove typedef from tenuHostIFstate
-Date: Thu, 8 Oct 2015 10:49:10 +0900
-Message-ID: <1444268961-7551-3-git-send-email-tony.cho@atmel.com> (sfid-20151008_034954_958829_83AF63C5)
-In-Reply-To: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
-References: <1444268961-7551-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/17] staging: wilc1000: remove unused function remove_TCP_related
+Date: Fri, 30 Oct 2015 12:10:33 +0900
+Message-ID: <1446174642-28570-8-git-send-email-glen.lee@atmel.com> (sfid-20151030_040831_136174_0D31FA93)
+In-Reply-To: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Just remove unused function remove_TCP_related.
 
-This patch removes typedef from the enum tenuHostIFstate and
-rename it to host_if_state.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 73d9509..5026500 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -72,8 +72,7 @@ typedef struct _tstrStatistics {
- 
- } tstrStatistics;
- 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index b503f07..c8ce1f6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -349,16 +349,6 @@ static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_ent
+ 	}
+ 	return 0;
+ }
+-static inline int remove_TCP_related(void)
+-{
+-	wilc_wlan_dev_t *p = &g_wlan;
+-	unsigned long flags;
 -
--typedef enum {
-+enum host_if_state {
- 	HOST_IF_IDLE			= 0,
- 	HOST_IF_SCANNING		= 1,
- 	HOST_IF_CONNECTING		= 2,
-@@ -81,7 +80,7 @@ typedef enum {
- 	HOST_IF_CONNECTED		= 4,
- 	HOST_IF_P2P_LISTEN		= 5,
- 	HOST_IF_FORCE_32BIT		= 0xFFFFFFFF
--} tenuHostIFstate;
-+};
+-	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
+-
+-	spin_unlock_irqrestore(&g_linux_wlan->txq_spinlock, flags);
+-	return 0;
+-}
  
- struct host_if_pmkid {
- 	u8 bssid[ETH_ALEN];
-@@ -313,7 +312,7 @@ struct host_if_drv {
- 	u64 u64P2p_MgmtTimeout;
- 	u8 u8P2PConnect;
- 
--	tenuHostIFstate enuHostIFstate;
-+	enum host_if_state enuHostIFstate;
- 
- 	u8 au8AssociatedBSSID[ETH_ALEN];
- 	struct cfg_param_val strCfgValues;
+ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ {
 -- 
 1.9.1
 
