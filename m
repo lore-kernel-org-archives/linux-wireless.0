@@ -1,110 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12651 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:56840 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbbJLH6M (ORCPT
+	with ESMTP id S1030642AbbJ3Jp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2015 03:58:12 -0400
-From: Tony Cho <tony.cho@atmel.com>
+	Fri, 30 Oct 2015 05:45:57 -0400
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 15/41] staging: wilc1000: remove typedef from tstrJoinBssParam
-Date: Mon, 12 Oct 2015 16:55:49 +0900
-Message-ID: <1444636575-2486-15-git-send-email-tony.cho@atmel.com> (sfid-20151012_095820_962616_A7A42EBE)
-In-Reply-To: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
-References: <1444636575-2486-1-git-send-email-tony.cho@atmel.com>
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 15/17] staging: wilc1000: release_bus: add argument struct wilc
+Date: Fri, 30 Oct 2015 18:47:21 +0900
+Message-ID: <1446198443-6623-15-git-send-email-glen.lee@atmel.com> (sfid-20151030_104600_545679_861C47A1)
+In-Reply-To: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch adds new argument struct wilc and use it instead of g_linux_wlan,
+pass wilc to the functions as well.
 
-This patch removes typedef from the struct tstrJoinBssParam
-and renames it to join_bss_param.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 44 ++++++++++++++++++------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 89b6cdd..0d83351 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -407,7 +407,7 @@ struct host_if_msg {
- };
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a61dbea..898f60e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -122,13 +122,13 @@ static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
+ 	}
  
- /*Struct containg joinParam of each AP*/
--typedef struct _tstrJoinBssParam {
-+struct join_bss_param {
- 	BSSTYPE_T bss_type;
- 	u8 dtim_period;
- 	u16 beacon_period;
-@@ -435,7 +435,7 @@ typedef struct _tstrJoinBssParam {
- 	u8 au8Duration[4];
- 	u8 au8Interval[4];
- 	u8 au8StartTime[4];
--} tstrJoinBssParam;
-+};
- 
- typedef enum {
- 	SCAN_TIMER = 0,
-@@ -1438,7 +1438,7 @@ static s32 Handle_Connect(struct host_if_drv *drvHandler,
- 	u32 u32WidsCount = 0, dummyval = 0;
- 	/* char passphrase[] = "12345678"; */
- 	u8 *pu8CurrByte = NULL;
--	tstrJoinBssParam *ptstrJoinBssParam;
-+	struct join_bss_param *ptstrJoinBssParam;
- 
- 	PRINT_D(GENERIC_DBG, "Handling connect request\n");
- 
-@@ -1453,7 +1453,7 @@ static s32 Handle_Connect(struct host_if_drv *drvHandler,
- 
- 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
- 
--	ptstrJoinBssParam = (tstrJoinBssParam *)pstrHostIFconnectAttr->pJoinParams;
-+	ptstrJoinBssParam = (struct join_bss_param *)pstrHostIFconnectAttr->pJoinParams;
- 	if (ptstrJoinBssParam == NULL) {
- 		PRINT_ER("Required BSSID not found\n");
- 		s32Error = -ENOENT;
-@@ -6700,7 +6700,7 @@ s32 host_int_setup_multicast_filter(struct host_if_drv *hWFIDrv, bool bIsEnabled
-  *  @version		1.0**/
- static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- {
--	tstrJoinBssParam *pNewJoinBssParam = NULL;
-+	struct join_bss_param *pNewJoinBssParam = NULL;
- 	u8 *pu8IEs;
- 	u16 u16IEsLen;
- 	u16 index = 0;
-@@ -6716,9 +6716,9 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 	pu8IEs = ptstrNetworkInfo->pu8IEs;
- 	u16IEsLen = ptstrNetworkInfo->u16IEsLen;
- 
--	pNewJoinBssParam = kmalloc(sizeof(tstrJoinBssParam), GFP_KERNEL);
-+	pNewJoinBssParam = kmalloc(sizeof(struct join_bss_param), GFP_KERNEL);
- 	if (pNewJoinBssParam != NULL) {
--		memset(pNewJoinBssParam, 0, sizeof(tstrJoinBssParam));
-+		memset(pNewJoinBssParam, 0, sizeof(struct join_bss_param));
- 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
- 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
- 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
-@@ -6902,8 +6902,8 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 
- void host_int_freeJoinParams(void *pJoinParams)
- {
--	if ((tstrJoinBssParam *)pJoinParams != NULL)
--		kfree((tstrJoinBssParam *)pJoinParams);
-+	if ((struct bss_param *)pJoinParams != NULL)
-+		kfree((struct bss_param *)pJoinParams);
- 	else
- 		PRINT_ER("Unable to FREE null pointer\n");
  }
+-static inline void release_bus(BUS_RELEASE_T release)
++static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
+ {
+ 	#ifdef WILC_OPTIMIZE_SLEEP_INT
+ 	if (release == RELEASE_ALLOW_SLEEP)
+ 		chip_allow_sleep();
+ 	#endif
+-	mutex_unlock(&g_linux_wlan->hif_cs);
++	mutex_unlock(&wilc->hif_cs);
+ }
+ /********************************************
+  *
+@@ -831,7 +831,7 @@ void chip_sleep_manually(struct net_device *dev, u32 u32SleepTime)
+ 	g_wlan.hif_func.hif_write_reg(0x10a8, 1);
+ 
+ 	genuChipPSstate = CHIP_SLEEPING_MANUAL;
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ 
+ }
+ 
+@@ -954,7 +954,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ 				 *      wait for vmm table is ready
+ 				 **/
+ 				PRINT_WRN(GENERIC_DBG, "[wilc txq]: warn, vmm table not clear yet, wait...\n");
+-				release_bus(RELEASE_ALLOW_SLEEP);
++				release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 				usleep_range(3000, 3000);
+ 				acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 			}
+@@ -1002,7 +1002,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ 					entries = ((reg >> 3) & 0x3f);
+ 					break;
+ 				} else {
+-					release_bus(RELEASE_ALLOW_SLEEP);
++					release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 					usleep_range(3000, 3000);
+ 					acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 					PRINT_WRN(GENERIC_DBG, "Can't get VMM entery - reg = %2x\n", reg);
+@@ -1047,7 +1047,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ 
+ 		/* since copying data into txb takes some time, then
+ 		 * allow the bus lock to be released let the RX task go. */
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 
+ 		/**
+ 		 *      Copy data to the TX buffer
+@@ -1126,7 +1126,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ 
+ _end_:
+ 
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		if (ret != 1)
+ 			break;
+ 	} while (0);
+@@ -1412,7 +1412,7 @@ void wilc_handle_isr(void *wilc)
+ #endif
+ 		wilc_unknown_isr_ext();
+ 	}
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ }
+ 
+ /********************************************
+@@ -1473,7 +1473,7 @@ int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
+ 			offset += size2;
+ 			size -= size2;
+ 		}
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 
+ 		if (!ret) {
+ 			/*EIO	5*/
+@@ -1522,7 +1522,7 @@ int wilc_wlan_start(struct net_device *dev)
+ 	ret = p->hif_func.hif_write_reg(WILC_VMM_CORE_CFG, reg);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail write reg vmm_core_cfg...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		/* EIO  5*/
+ 		ret = -5;
+ 		return ret;
+@@ -1563,7 +1563,7 @@ int wilc_wlan_start(struct net_device *dev)
+ 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_1, reg);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail write WILC_GP_REG_1 ...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		/* EIO  5*/
+ 		ret = -5;
+ 		return ret;
+@@ -1577,7 +1577,7 @@ int wilc_wlan_start(struct net_device *dev)
+ 	ret = p->hif_func.hif_read_reg(0x1000, &chipid);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail read reg 0x1000 ...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		/* EIO  5*/
+ 		ret = -5;
+ 		return ret;
+@@ -1598,7 +1598,7 @@ int wilc_wlan_start(struct net_device *dev)
+ 	reg |= BIT(10);
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 	p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ 
+ 	return (ret < 0) ? ret : 0;
+ }
+@@ -1621,7 +1621,7 @@ int wilc_wlan_stop(struct net_device *dev)
+ 	ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while reading reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		return ret;
+ 	}
+ 
+@@ -1631,7 +1631,7 @@ int wilc_wlan_stop(struct net_device *dev)
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while writing reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		return ret;
+ 	}
+ 
+@@ -1641,7 +1641,7 @@ int wilc_wlan_stop(struct net_device *dev)
+ 		ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 		if (!ret) {
+ 			PRINT_ER("Error while reading reg\n");
+-			release_bus(RELEASE_ALLOW_SLEEP);
++			release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 			return ret;
+ 		}
+ 		PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
+@@ -1656,7 +1656,7 @@ int wilc_wlan_stop(struct net_device *dev)
+ 			ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 			if (!ret) {
+ 				PRINT_ER("Error while reading reg\n");
+-				release_bus(RELEASE_ALLOW_SLEEP);
++				release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 				return ret;
+ 			}
+ 			PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
+@@ -1672,7 +1672,7 @@ int wilc_wlan_stop(struct net_device *dev)
+ 
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 
+ 	return ret;
+ }
+@@ -1726,15 +1726,15 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 	ret = p->hif_func.hif_read_reg(WILC_GP_REG_0, &reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while reading reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	}
+ 	PRINT_ER("Writing ABORT reg\n");
+ 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_0, (reg | ABORT_INT));
+ 	if (!ret) {
+ 		PRINT_ER("Error while writing reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	}
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	/**
+ 	 *      io clean up
+ 	 **/
+@@ -1931,7 +1931,7 @@ u32 init_chip(struct net_device *dev)
+ 		}
+ 	}
+ 
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ 
+ 	return ret;
+ 
 -- 
 1.9.1
 
