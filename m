@@ -1,61 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23091 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755554AbbJHSd0 (ORCPT
+Received: from shetland.sei.cmu.edu ([192.58.107.44]:35555 "EHLO
+	shetland.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759876AbbJ3VFu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2015 14:33:26 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 06/11] brcmfmac: Fix station info rate information.
-Date: Thu, 8 Oct 2015 20:33:16 +0200
-Message-ID: <1444329201-3696-7-git-send-email-arend@broadcom.com> (sfid-20151008_203334_578981_BCD5082B)
-In-Reply-To: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-References: <1444329201-3696-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 30 Oct 2015 17:05:50 -0400
+From: arwelle@cert.org
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211_hwsim: Adds parameter use_hwsim_mon which can be used to disable hwism0
+Date: Fri, 30 Oct 2015 17:05:45 -0400
+Message-Id: <1446239145-21119-1-git-send-email-arwelle@cert.org> (sfid-20151030_220600_217716_ECBC99E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Adam Welle <arwelle@cert.org>
 
-Txrate and rxrate in get_station got assigned first with value
-in kbps and then divided by 100 to get it in 100kbps unit. The
-problem with that is that type of rate is u16 which resulted
-in incorrect values for high data rate values.
+A new parameter, use_hwsim_mon has been created to implement new functionalilty. use_hwsim_mon defaults to true so that normal operation remains the same. When set to false, the hwsim0 device is not created. This value is also checked before calling functions which would transmit data to the hwsim0 device.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Adam Welle <arwelle@cert.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 49 +++++++++++++++++++++--------------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 2ee57c0..73eddad 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -2478,13 +2478,13 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 		sinfo->rx_packets += le32_to_cpu(sta_info_le.rx_mcast_pkts);
- 		if (sinfo->tx_packets) {
- 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
--			sinfo->txrate.legacy = le32_to_cpu(sta_info_le.tx_rate);
--			sinfo->txrate.legacy /= 100;
-+			sinfo->txrate.legacy =
-+				le32_to_cpu(sta_info_le.tx_rate) / 100;
- 		}
- 		if (sinfo->rx_packets) {
- 			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
--			sinfo->rxrate.legacy = le32_to_cpu(sta_info_le.rx_rate);
--			sinfo->rxrate.legacy /= 100;
-+			sinfo->rxrate.legacy =
-+				le32_to_cpu(sta_info_le.rx_rate) / 100;
- 		}
- 		if (le16_to_cpu(sta_info_le.ver) >= 4) {
- 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ee46f46..8e48869 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -61,6 +61,10 @@ static bool support_p2p_device = true;
+ module_param(support_p2p_device, bool, 0444);
+ MODULE_PARM_DESC(support_p2p_device, "Support P2P-Device interface type");
+ 
++static bool use_hwsim_mon = true;
++module_param(use_hwsim_mon, bool, 0444);
++MODULE_PARM_DESC(use_hwsim_mon, "Create and use hwsim0 monitor device");
++
+ /**
+  * enum hwsim_regtest - the type of regulatory tests we offer
+  *
+@@ -1292,7 +1296,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 				       ARRAY_SIZE(txi->control.rates));
+ 
+ 	txi->rate_driver_data[0] = channel;
+-	mac80211_hwsim_monitor_rx(hw, skb, channel);
++	if (use_hwsim_mon)
++		mac80211_hwsim_monitor_rx(hw, skb, channel);
+ 
+ 	/* wmediumd mode check */
+ 	_portid = ACCESS_ONCE(wmediumd_portid);
+@@ -1305,7 +1310,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	data->tx_bytes += skb->len;
+ 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb, channel);
+ 
+-	if (ack && skb->len >= 16) {
++	if (ack && skb->len >= 16 && use_hwsim_mon) {
+ 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 		mac80211_hwsim_monitor_ack(channel, hdr->addr2);
+ 	}
+@@ -1402,7 +1407,8 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 				       ARRAY_SIZE(txi->control.rates));
+ 	}
+ 
+-	mac80211_hwsim_monitor_rx(hw, skb, chan);
++	if (use_hwsim_mon)
++		mac80211_hwsim_monitor_rx(hw, skb, chan);
+ 
+ 	if (_pid)
+ 		return mac80211_hwsim_tx_frame_nl(hw, skb, _pid);
+@@ -3260,26 +3266,28 @@ static int __init init_mac80211_hwsim(void)
+ 			goto out_free_radios;
+ 	}
+ 
+-	hwsim_mon = alloc_netdev(0, "hwsim%d", NET_NAME_UNKNOWN,
++	if (use_hwsim_mon) {
++		hwsim_mon = alloc_netdev(0, "hwsim%d", NET_NAME_UNKNOWN,
+ 				 hwsim_mon_setup);
+-	if (hwsim_mon == NULL) {
+-		err = -ENOMEM;
+-		goto out_free_radios;
+-	}
++		if (hwsim_mon == NULL) {
++			err = -ENOMEM;
++			goto out_free_radios;
++		}
+ 
+-	rtnl_lock();
+-	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
+-	if (err < 0) {
+-		rtnl_unlock();
+-		goto out_free_radios;
+-	}
++		rtnl_lock();
++		err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
++		if (err < 0) {
++			rtnl_unlock();
++			goto out_free_radios;
++		}
+ 
+-	err = register_netdevice(hwsim_mon);
+-	if (err < 0) {
++		err = register_netdevice(hwsim_mon);
++		if (err < 0) {
++			rtnl_unlock();
++			goto out_free_mon;
++		}
+ 		rtnl_unlock();
+-		goto out_free_mon;
+ 	}
+-	rtnl_unlock();
+ 
+ 	return 0;
+ 
+@@ -3300,7 +3308,10 @@ static void __exit exit_mac80211_hwsim(void)
+ 	hwsim_exit_netlink();
+ 
+ 	mac80211_hwsim_free();
+-	unregister_netdev(hwsim_mon);
++
++	if (hwsim_mon)
++		unregister_netdev(hwsim_mon);
++
+ 	platform_driver_unregister(&mac80211_hwsim_driver);
+ }
+ module_exit(exit_mac80211_hwsim);
 -- 
-1.9.1
+2.1.4
 
