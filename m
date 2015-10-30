@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20545 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752946AbbJMMzB (ORCPT
+Received: from smtp.danego.net ([195.246.116.61]:55293 "EHLO smtp.danego.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751231AbbJ3Qo1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2015 08:55:01 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix cleanup in ath10k_thermal_unregister
-References: <1444300383-9645-1-git-send-email-mohammed@qca.qualcomm.com>
-Date: Tue, 13 Oct 2015 15:54:48 +0300
-In-Reply-To: <1444300383-9645-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Thu, 8 Oct 2015 16:03:03
-	+0530")
-Message-ID: <87mvvnormv.fsf@kamboji.qca.qualcomm.com> (sfid-20151013_145506_300999_C7FF8DA0)
+	Fri, 30 Oct 2015 12:44:27 -0400
+Received: from POBOX.postoffice.danego.net ([195.246.116.58])
+        by smtp.danego.net (IceWarp 10.4.0) with ESMTP (SSL) id RAK55910
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2015 17:32:10 +0100
+From: =?iso-8859-1?Q?Robert_Deli=EBn?= <robert@delien.nl>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath6kl reverting to US region after starting AP mode
+Date: Fri, 30 Oct 2015 16:32:21 +0000
+Message-ID: <6EA3E0BCC03CC34B89B01BD57ECBC718B1785A9F@POBOX.postoffice.danego.net> (sfid-20151030_174431_044404_65DBE75A)
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+Dear Experts,
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> First remove the 'cooling_device#n' syslink created
-> for ath10k and then unregsiter from the thermal subsystem(cooling)
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+I am experiencing a problem with an ath6kl wireless NIC on a Digi connectcard wi-i.mx28. After the Kernel driver is loaded, cfg80211 is calling CRDA to update world regulatory domain. Immediately after that, it calls again for country US. I'm not sure why, but I can live with that.
 
-Applied, thanks.
+A little later, my startup script sets the CRDA world regulatory domain to NL and this is accepted. Again a little later hostapd is started, properly configured for region NL, but while AP mode is enabled, the world regulatory domain reverts back the US again. After that I can put it back to NL again, but that doesn't seem appropriate because that's too late to use specific NL channels for my AP.
 
--- 
-Kalle Valo
+For some time I have though that it was following other APs in the building, broadcasting regulatory domain US, but that doesn't seem to be the case. I have tried a number of different ath6kl firmware versions, but the problem remains. So I have traced the source code a little and it seems like the firmware is sending a WMI_REGDOMAIN_EVENTID with US to the driver. Is that how it works?
+
+Is there any way to avoid this switching?
+
+Thanks a lot in advance for any information on this!
+
+Robert.
