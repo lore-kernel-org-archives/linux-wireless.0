@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0253.hostedemail.com ([216.40.44.253]:43912 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754946AbbJ1RGZ (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:30644 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751047AbbJaTMm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2015 13:06:25 -0400
-Message-ID: <1446051981.2757.118.camel@perches.com> (sfid-20151028_180628_825816_E65FF84B)
-Subject: Re: [PATCH 38/80] staging: wilc1000: rename au8Bssid of struct
- ba_session_info
-From: Joe Perches <joe@perches.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Glen Lee <glen.lee@atmel.com>, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Date: Wed, 28 Oct 2015 10:06:21 -0700
-In-Reply-To: <20151028165606.GB18797@mwanda>
-References: <1446015640-29398-1-git-send-email-glen.lee@atmel.com>
-	 <1446015640-29398-38-git-send-email-glen.lee@atmel.com>
-	 <20151028165606.GB18797@mwanda>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sat, 31 Oct 2015 15:12:42 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Pushpal Sidhu <psidhu@gateworks.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Intel 7260 - limited in 5GHz spectrum
+Date: Sat, 31 Oct 2015 19:12:38 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com> (sfid-20151031_201245_671086_717A0BBD)
+References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-10-28 at 19:56 +0300, Dan Carpenter wrote:
-> On Wed, Oct 28, 2015 at 03:59:58PM +0900, Glen Lee wrote:
-> > From: Leo Kim <leo.kim@atmel.com>
-> > 
-> > This patch renames au8Bssid of struct ba_session_info to bssid
-> > to avoid CamelCase naming convention.
-> > And, some debug logs modified because 80 ending line over warnings.
+Hi,
 
-Don't worry about some 80 column warnings.
-
-> > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-[]
-> > @@ -2715,10 +2715,14 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
-> >  	int AddbaTimeout = 100;
-> >  	char *ptr = NULL;
-> >  
-> > -	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\nBufferSize == %d\nSessionTimeOut = %d\n",
-> > -		strHostIfBASessionInfo->au8Bssid[0],
-> > -		strHostIfBASessionInfo->au8Bssid[1],
-> > -		strHostIfBASessionInfo->au8Bssid[2],
-> > +	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with \
-> > +		\nBSSID = %.2x:%.2x:%.2x \
-> > +		\nBufferSize == %d \
-> > +		\nSessionTimeOut = %d \
-> > +		\nTID=%d\n",
-> > +		strHostIfBASessionInfo->bssid[0],
-> > +		strHostIfBASessionInfo->bssid[1],
-> > +		strHostIfBASessionInfo->bssid[2],
-> >  		strHostIfBASessionInfo->u16BufferSize,
-> >  		strHostIfBASessionInfo->u16SessionTimeout,
-> >  		strHostIfBASessionInfo->u8Ted);
+On 10/30/2015 06:37 PM, Pushpal Sidhu wrote:
+> Hi,
 > 
-> This should be a bunch of printks so that we have the correct debug
-> level at the start of each line.
+> I've been working with the Intel 7260 card which advertises itself as
+> dual band wireless AC card. However, I cannot get it working in AP
+> mode in the 5GHz range. An $(iw list) shows that the entire 5GHz band
+> has 'no IR' next to it so as not to allow device radiation (please see
+> pastebin here: http://pastebin.com/T4BWnBmn).
+> 
+> After searching around the internet a bit, it seems that the card
+> doesn't allow for this mode (And is thus not really dual band?). I'd
+> like to know if this is a firmware limitation and if there's a fix in
+> place, or if not, why is this card limited to the spectrum it can
+> radiate at?
+> 
 
-Also, don't use continuation \
-as this adds undesired whitespace for each new line
 
-Realistically, this should just be a single line output.
-
-	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with BSSID = %02x:%02x:%02x TID=%d BufferSize == %d SessionTimeOut = %d\n",
-		etc...
-
-But why are only 3 bytes of the bssid desired/emitted?
-
-
+7260 does not (and will not) support AP mode in 5GHz band. This is of
+course not a hardware limitation since it can function as a station in
+this band. The limitation is due to regulatory concerns. Later devices
+(8260) have the ability to be an AP in 5GHz under certain circumstances.
