@@ -1,43 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f195.google.com ([209.85.212.195]:32966 "EHLO
-	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754308AbbJ0RV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2015 13:21:58 -0400
-From: Punit Vara <punitvara@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, johnny.kim@atmel.com,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH v2] Staging: wilc1000: Prefer eth_broadcast_addr over memset()
-Date: Tue, 27 Oct 2015 22:51:39 +0530
-Message-Id: <1445966499-6175-1-git-send-email-punitvara@gmail.com> (sfid-20151027_182249_461616_56D166C6)
+Received: from bay004-omc2s22.hotmail.com ([65.54.190.97]:54625 "EHLO
+	BAY004-OMC2S22.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750715AbbJaPRU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2015 11:17:20 -0400
+Message-ID: <BAY172-W2715DF22AB028F126503C6E02E0@phx.gbl> (sfid-20151031_161748_290040_E441A88C)
+From: sunder <sunder_k@hotmail.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Beam forming support
+Date: Sat, 31 Oct 2015 15:17:19 +0000
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the host_interface.c that fixes up following
-warning by checkpatch:
+Is beam forming support in ath10K driver ?
 
--prefer eth_broadcast_addr() over memset()
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Best Regards,
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5f81eab..53e21cd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4642,7 +4642,7 @@ s32 host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
- 	msg.drv = hif_drv;
- 
- 	if (!pu8MacAddr)
--		memset(pstrDelStationMsg->mac_addr, 255, ETH_ALEN);
-+		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
- 	else
- 		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
- 
--- 
-2.5.3
-
+ k.sunder 		 	   		  
