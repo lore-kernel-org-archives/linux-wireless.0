@@ -1,251 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:15788 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754707AbbJVQ6Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2015 12:58:24 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org,
-	sara.sharon@intel.com, ido@wizery.com,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: mvm: send large SKBs to the transport
-Date: Thu, 22 Oct 2015 19:58:15 +0300
-Message-Id: <1445533095-15608-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151022_185843_126930_D0FFEAF5)
-In-Reply-To: <1445533095-15608-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445533095-15608-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58850 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbbJaJHu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2015 05:07:50 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Yanbo Li <yanbol@qca.qualcomm.com>
+Subject: [PATCH] ath10k: debugfs file to enable Bluetooth coexistence feature
+Date: Sat, 31 Oct 2015 11:07:21 +0200
+Message-ID: <1446282441-19368-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20151031_100756_377994_CD7B647C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that PCIe knows how to create A-MSDUs, use this
-capability and prepare SKBs that are large enough to
-build an A-MSDU.
-Advertise TSO support towards the network stack and
-segment the packet with gso_size set to be the maximal
-A-MSDU length (after having taken the headers to be added
-into account) to make sure that the skb that is passed
-down to the transport are not longer than the maximal
-A-MSDU allowed.
+From: Yanbo Li <yanbol@qca.qualcomm.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-No change since RFCv4
----
- drivers/net/wireless/iwlwifi/mvm/tx.c | 143 ++++++++++++++++++++++++++++++++--
- 1 file changed, 135 insertions(+), 8 deletions(-)
+As not all QCA98XX radios are not connected to Bluetooth modules, enabling the
+BT coex feature in firmware will have side effects if the radio's GPIO are
+connected with other (non-BT) HW modules. Add debugfs file to control the
+firmware BT coex logic and set the feature as disable by default to avoid that
+btcoex is accidentally enabled.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index be9d7e4..d325de4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -65,6 +65,7 @@
- #include <linux/ieee80211.h>
- #include <linux/etherdevice.h>
- #include <linux/tcp.h>
-+#include <net/ip.h>
+To enable this feature, execute:
+
+echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/btcoex
+
+To disable:
+
+echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/btcoex
+
+The firmware support this feature since 10.2.4.54 on 2G-only board, dual band
+or 5G boards don't support this. The feature's name is WMI_SERVICE_COEX_GPIO
+and the btcoex file is not created if firmware doesn't support it.
+
+Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+[kvalo@qca.qualcomm.com: use btcoex filename and other smaller fixes]
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+
+v5:
+
+* use filename btcoex to match with ath9k
+* allow changing the value when interface is down
+* print a reason why firmware is restarted
+* only create the btcoex file if the WMI service is enabled
+
+ drivers/net/wireless/ath/ath10k/core.h  |    3 ++
+ drivers/net/wireless/ath/ath10k/debug.c |   66 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c   |    5 ++-
+ 3 files changed, 73 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4a2301589902..ea10dac7c811 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -534,6 +534,9 @@ enum ath10k_dev_flags {
  
- #include "iwl-trans.h"
- #include "iwl-eeprom-parse.h"
-@@ -181,7 +182,8 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
- 	/* Total # bytes to be transmitted */
--	tx_cmd->len = cpu_to_le16((u16)skb->len);
-+	tx_cmd->len = cpu_to_le16((u16)skb->len +
-+		(uintptr_t)info->driver_data[0]);
- 	tx_cmd->next_frame_len = 0;
- 	tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
- 	tx_cmd->sta_id = sta_id;
-@@ -356,7 +358,6 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	memset(&info->status, 0, sizeof(info->status));
- 
--	info->driver_data[0] = NULL;
- 	info->driver_data[1] = dev_cmd;
- 
- 	return dev_cmd;
-@@ -379,6 +380,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 			  info->hw_queue != info->control.vif->cab_queue)))
- 		return -1;
- 
-+	/* This holds the amsdu headers length */
-+	info->driver_data[0] = (void *)(uintptr_t)0;
+ 	/* Disable HW crypto engine */
+ 	ATH10K_FLAG_HW_CRYPTO_DISABLED,
 +
- 	/*
- 	 * IWL_MVM_OFFCHANNEL_QUEUE is used for ROC packets that can be used
- 	 * in 2 different types of vifs, P2P & STATION. P2P uses the offchannel
-@@ -435,29 +439,148 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
++	/* Bluetooth coexistance enabled */
++	ATH10K_FLAG_BTCOEX,
+ };
+ 
+ enum ath10k_cal_mode {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 6cc1aa3449c8..145c066b5087 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2074,6 +2074,68 @@ static const struct file_operations fops_quiet_period = {
+ 	.open = simple_open
+ };
+ 
++static ssize_t ath10k_write_btcoex(struct file *file,
++				   const char __user *ubuf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	char buf[32];
++	size_t buf_size;
++	bool val;
++
++	buf_size = min(count, (sizeof(buf) - 1));
++	if (copy_from_user(buf, ubuf, buf_size))
++		return -EFAULT;
++
++	buf[buf_size] = '\0';
++
++	if (strtobool(buf, &val) != 0)
++		return -EINVAL;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags) ^ val))
++		goto exit;
++
++	if (val)
++		set_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags);
++	else
++		clear_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags);
++
++	if (ar->state != ATH10K_STATE_ON)
++		goto exit;
++
++	ath10k_info(ar, "restarting firmware due to btcoex change");
++
++	queue_work(ar->workqueue, &ar->restart_work);
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++
++	return count;
++}
++
++static ssize_t ath10k_read_btcoex(struct file *file, char __user *ubuf,
++				  size_t count, loff_t *ppos)
++{
++	char buf[32];
++	struct ath10k *ar = file->private_data;
++	int len = 0;
++
++	mutex_lock(&ar->conf_mutex);
++	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
++			test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags));
++	mutex_unlock(&ar->conf_mutex);
++
++	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_btcoex = {
++	.read = ath10k_read_btcoex,
++	.write = ath10k_write_btcoex,
++	.open = simple_open
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+@@ -2183,6 +2245,10 @@ int ath10k_debug_register(struct ath10k *ar)
+ 	debugfs_create_file("tpc_stats", S_IRUSR,
+ 			    ar->debug.debugfs_phy, ar, &fops_tpc_stats);
+ 
++	if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map))
++		debugfs_create_file("btcoex", S_IRUGO | S_IWUSR,
++				    ar->debug.debugfs_phy, ar, &fops_btcoex);
++
  	return 0;
  }
  
--static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
-+static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			  struct ieee80211_sta *sta,
- 			  struct sk_buff_head *mpdus_skb)
- {
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	unsigned int mss = skb_shinfo(skb)->gso_size;
- 	struct sk_buff *tmp, *next;
--	char cb[sizeof(skb_gso->cb)];
-+	char cb[sizeof(skb->cb)];
-+	unsigned int num_subframes, tcp_payload_len, subf_len;
-+	u16 amsdu_add, snap_ip_tcp, pad, i = 0;
-+	/* Not used in IPv6 */
-+	u16 ip_base_id = ntohs(ip_hdr(skb)->id);
-+
-+	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
-+		tcp_hdrlen(skb);
-+
-+	if (!sta->max_amsdu_len ||
-+	    !ieee80211_is_data_qos(hdr->frame_control)) {
-+		num_subframes = 1;
-+		/* TODO: for the compiler... */
-+		pad = 0;
-+		goto segment;
-+	}
-+
-+	/*
-+	 * Limit A-MSDU in A-MPDU to 4095 bytes when VHT is not
-+	 * supported. This is a spec requirement (IEEE 802.11-2015
-+	 * section 8.7.3 NOTE 3).
-+	 */
-+
-+	/* TODO: for now, disable A-MSDU inside AMPDU */
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		num_subframes = 1;
-+		/* TODO: for the compiler... */
-+		pad = 0;
-+		goto segment;
-+	}
-+
-+	/* Sub frame header + SNAP + IP header + TCP header + MSS */
-+	subf_len = sizeof(struct ethhdr) + snap_ip_tcp + mss;
-+	pad = (4 - subf_len) & 0x3;
-+
-+	/*
-+	 * If we have N subframes in the A-MSDU, then the A-MSDU's size is
-+	 * N * subf_len + (N - 1) * pad.
-+	 */
-+	num_subframes = (sta->max_amsdu_len + pad) / (subf_len + pad);
-+	if (num_subframes > 1) {
-+		u8 *qc = ieee80211_get_qos_ctl((void *)skb->data);
-+
-+		*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+	}
-+
-+	tcp_payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
-+		tcp_hdrlen(skb) + skb->data_len;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 7569db0f69b5..5e402a24f8e7 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5431,8 +5431,11 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 	cmd = (struct wmi_init_cmd_10_2 *)buf->data;
  
--	memcpy(cb, skb_gso->cb, sizeof(cb));
--	next = skb_gso_segment(skb_gso, 0);
--	if (IS_ERR(next))
-+	/*
-+	 * Make sure we have enough TBs for the A-MSDU:
-+	 *	2 for each subframe
-+	 *	1 more for each fragment
-+	 *	1 more for the potential data in the header
-+	 */
-+	num_subframes =
-+		min_t(unsigned int, num_subframes,
-+		      (mvm->trans->max_skb_frags - 1 -
-+		       skb_shinfo(skb)->nr_frags) / 2);
+ 	features = WMI_10_2_RX_BATCH_MODE;
+-	if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map))
 +
-+	/* This skb fits in one single A-MSDU */
-+	if (num_subframes * mss >= tcp_payload_len) {
-+		/*
-+		 * Compute the length of all the data added for the A-MSDU.
-+		 * This will be used to compute the length to write in the TX
-+		 * command. We have: SNAP + IP + TCP for n -1 subframes and
-+		 * ETH header for n subframes. Note that the original skb
-+		 * already had one set of SNAP / IP / TCP headers.
-+		 */
-+		num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
-+		info = IEEE80211_SKB_CB(skb);
-+		amsdu_add = num_subframes * sizeof(struct ethhdr) +
-+			(num_subframes - 1) * (snap_ip_tcp + pad);
-+		/* This holds the amsdu headers length */
-+		info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
++	if (test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags) &&
++	    test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map))
+ 		features |= WMI_10_2_COEX_GPIO;
 +
-+		__skb_queue_tail(mpdus_skb, skb);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Trick the segmentation function to make it
-+	 * create SKBs that can fit into one A-MSDU.
-+	 */
-+segment:
-+	skb_shinfo(skb)->gso_size = num_subframes * mss;
-+	memcpy(cb, skb->cb, sizeof(cb));
-+
-+	next = skb_gso_segment(skb,
-+			       mvm->hw->netdev_features & ~NETIF_F_ALL_TSO);
-+	if (WARN_ON_ONCE(IS_ERR(next)))
- 		return -EINVAL;
- 	else if (next)
--		consume_skb(skb_gso);
-+		consume_skb(skb);
+ 	cmd->resource_config.feature_mask = __cpu_to_le32(features);
  
- 	while (next) {
- 		tmp = next;
- 		next = tmp->next;
-+
- 		memcpy(tmp->cb, cb, sizeof(tmp->cb));
-+		/*
-+		 * Compute the length of all the data added for the A-MSDU.
-+		 * This will be used to compute the length to write in the TX
-+		 * command. We have: SNAP + IP + TCP for n -1 subframes and
-+		 * ETH header for n subframes.
-+		 */
-+		tcp_payload_len = skb_tail_pointer(tmp) -
-+			skb_transport_header(tmp) -
-+			tcp_hdrlen(tmp) + tmp->data_len;
-+
-+		if (skb->protocol == htons(ETH_P_IP))
-+			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
-+
-+		if (tcp_payload_len > mss) {
-+			num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
-+			info = IEEE80211_SKB_CB(tmp);
-+			amsdu_add = num_subframes * sizeof(struct ethhdr) +
-+				(num_subframes - 1) * (snap_ip_tcp + pad);
-+			info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
-+			skb_shinfo(tmp)->gso_size = mss;
-+		} else {
-+			u8 *qc = ieee80211_get_qos_ctl((void *)tmp->data);
-+
-+			if (skb->protocol == htons(ETH_P_IP))
-+				ip_send_check(ip_hdr(tmp));
-+			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+			skb_shinfo(tmp)->gso_size = 0;
-+		}
- 
- 		tmp->prev = NULL;
- 		tmp->next = NULL;
- 
- 		__skb_queue_tail(mpdus_skb, tmp);
-+		i++;
- 	}
- 
- 	return 0;
-@@ -567,6 +690,7 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		   struct ieee80211_sta *sta)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct sk_buff_head mpdus_skbs;
- 	unsigned int payload_len;
- 	int ret;
-@@ -577,6 +701,9 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (WARN_ON_ONCE(mvmsta->sta_id == IWL_MVM_STATION_COUNT))
- 		return -1;
- 
-+	/* This holds the amsdu headers length */
-+	info->driver_data[0] = (void *)(uintptr_t)0;
-+
- 	payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
- 		tcp_hdrlen(skb) + skb->data_len;
- 
+ 	memcpy(&cmd->resource_config.common, &config, sizeof(config));
 -- 
-2.1.4
+1.7.9.5
 
