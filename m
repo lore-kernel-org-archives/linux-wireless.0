@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38133 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752494AbbKZRFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:05:00 -0500
-Message-ID: <1448557497.2167.24.camel@sipsolutions.net> (sfid-20151126_180504_547174_BF69C011)
-Subject: Re: [PATCH] iwlwifi: mvm: add hwmon device for the temperature
- sensor
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kaufman, Liad" <liad.kaufman@intel.com>
-Date: Thu, 26 Nov 2015 18:04:57 +0100
-In-Reply-To: <874mg8vh2h.fsf@nemi.mork.no>
-References: <541F23D2.90600@gmail.com>
-	 <1411327338-23099-13-git-send-email-egrumbach@gmail.com>
-	 <87ppeoc4s0.fsf@nemi.mork.no>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
-	 <87d2amd24t.fsf@nemi.mork.no>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com>
-	 <1411760678.18773.5.camel@dubbel>
-	 <A66968BA-6B95-4437-8A95-5EBFD6BCF583@mork.no>
-	 <877flbuke9.fsf_-_@nemi.mork.no>
-	 <1448552793.2167.17.camel@sipsolutions.net> <874mg8vh2h.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7870 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753267AbbKBIv0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 03:51:26 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 32/38] staging: wilc1000: remove goto from wlan_initialize_threads
+Date: Mon, 2 Nov 2015 17:51:15 +0900
+Message-ID: <1446454281-22484-32-git-send-email-glen.lee@atmel.com> (sfid-20151102_101656_981784_9819495D)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
-> Ah, right.  I wondered a bit about that, but concluded that you
-> probably
-> didn't want it since you had all your own temp limit handling.
-> 
+This patch remove goto feature from wlan_initialize_threads function.
+Goto feature is 'wilc->close=0' & return result.
+So, remove goto feature and it was replaced with the return value directly,
+as well as removed unused ret variable.
+Also, execute 'wilc->close=0' before return.
 
-:)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-We do, but we're going to have to be able to handle requests from the
-platform to ask the device to do its part to reduce heating.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 98c3cd0..0750412e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -916,7 +916,6 @@ int wlan_initialize_threads(struct net_device *dev)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct wilc *wilc;
+-	int ret = 0;
+ 
+ 	nic = netdev_priv(dev);
+ 	wilc = nic->wilc;
+@@ -927,16 +926,12 @@ int wlan_initialize_threads(struct net_device *dev)
+ 				     "K_TXQ_TASK");
+ 	if (!wilc->txq_thread) {
+ 		PRINT_ER("couldn't create TXQ thread\n");
+-		ret = -ENOBUFS;
+-		goto _fail_2;
++		wilc->close = 0;
++		return -ENOBUFS;
+ 	}
+ 	down(&wilc->txq_thread_started);
+ 
+ 	return 0;
+-
+-_fail_2:
+-	wilc->close = 0;
+-	return ret;
+ }
+ 
+ static void wlan_deinitialize_threads(struct net_device *dev)
+-- 
+1.9.1
 
-johannes
