@@ -1,122 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5425 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbbKDMGi (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:55021 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754047AbbKBVfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 07:06:38 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 3/3] ath10k: Fix peerid configuration in htt tx desc for htt version < 3.4
-Date: Wed, 4 Nov 2015 17:35:37 +0530
-Message-ID: <1446638737-7953-4-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151104_130641_666696_180AA6B8)
-In-Reply-To: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Mon, 2 Nov 2015 16:35:08 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: glen lee <glen.lee@atmel.com>, linux-wireless@vger.kernel.org,
+	Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Leo Kim <leo.kim@atmel.com>
+Subject: Re: [PATCH 00/19] staging/wilc1000 cleanups
+Date: Mon, 02 Nov 2015 22:34:57 +0100
+Message-ID: <8161154.QXKLTXIdJW@wuerfel> (sfid-20151102_223533_412600_BBEAEFE3)
+In-Reply-To: <5629E6F1.502@atmel.com>
+References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <56298F43.7000909@atmel.com> <5629E6F1.502@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Of a word in struct htt_data_tx_desc htt version >= 3.4 firmware uses
-LSB 16-bit for frequency configuration which is used for offchannel tx
-and MSB 16-bit is for peerid. But other firmwares using version 2.X
-(10.1, 10.2.2, 10.2.4 and 10.4) are using 32-bit for peerid in htt tx
-desc. So far no issue is found with the existing code setting peerid and
-freq for HTT version 2.X, this could be mainly because of 0 as frequecy
-(home channel) is being always passed with those firmwares. There may be
-issues when non-zero freq is passed with firmware using < 3.4 htt version.
-To be safe use target_version_major and target_version_minor along with
-htt-op-version before configuring peer id and freq in htt tx desc. This
-patch extends ath10k_mac_tx_frm_has_freq() to check for htt_op_version_tlv
-and uses the helper while setting peerid in htt_tx_desc.
+On Friday 23 October 2015 16:51:13 Tony Cho wrote:
+> Hi Arnd,
+> First of all, I would like to say "thank you" for your efforts and 
+> contributions.
+> We are updating the driver because new revision came up and making new 
+> patches
+> to make it stable and elegant as Linux driver. In these days, we are 
+> sending big changes
+> while testing such patches and also doing updates at once.
+> 
+> As you did, we are scheduled to provide the patches making device tree 
+> and delete all of platform
+> dependencies as you removed WILC_SDIO_IRQ_GPIO as well as other things. 
+> So, I would like to
+> discuss with you for your series of patch.
+> 
+> In this time, I think it's important to make the driver to be compiled 
+> even if the link problem
+> happens as you reported. So, how about deleting all of SPI related files 
+> from source tree and
+> even from Kconfig for the time being because new bus driver will come or 
+> revert
+> the Kconfig and then can we expect the best patch in the near feature?
+> 
+> I respect your efforts and patches, so your opinion is very important to me.
 
-Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |  9 +++++++--
- drivers/net/wireless/ath/ath10k/htt_tx.c | 11 +++++++++--
- drivers/net/wireless/ath/ath10k/mac.c    |  5 +++--
- drivers/net/wireless/ath/ath10k/mac.h    |  1 +
- 4 files changed, 20 insertions(+), 6 deletions(-)
+Hi Tony,
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 2bad50e..44fb4f2 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -166,8 +166,13 @@ struct htt_data_tx_desc {
- 	__le16 len;
- 	__le16 id;
- 	__le32 frags_paddr;
--	__le16 peerid;
--	__le16 freq;
-+	union {
-+		__le32 peerid;
-+		struct {
-+			__le16 peerid;
-+			__le16 freq;
-+		} __packed offchan_tx;
-+	} __packed;
- 	u8 prefetch[0]; /* start of frame, for FW classification engine */
- } __packed;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 1682397..2dcea48 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -681,8 +681,15 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
- 	skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
- 	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
--	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
--	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
-+	if (ath10k_mac_tx_frm_has_freq(ar)) {
-+		skb_cb->htt.txbuf->cmd_tx.offchan_tx.peerid =
-+				__cpu_to_le16(HTT_INVALID_PEERID);
-+		skb_cb->htt.txbuf->cmd_tx.offchan_tx.freq =
-+				__cpu_to_le16(skb_cb->htt.freq);
-+	} else {
-+		skb_cb->htt.txbuf->cmd_tx.peerid =
-+				__cpu_to_le32(HTT_INVALID_PEERID);
-+	}
- 
- 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
- 	ath10k_dbg(ar, ATH10K_DBG_HTT,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f121021..7fe51bf 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3280,7 +3280,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
- 	}
- }
- 
--static bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
-+bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
- {
- 	/* FIXME: Not really sure since when the behaviour changed. At some
- 	 * point new firmware stopped requiring creation of peer entries for
-@@ -3289,7 +3289,8 @@ static bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
- 	 * because that's when the `freq` was introduced to TX_FRM HTT command.
- 	 */
- 	return (ar->htt.target_version_major >= 3 &&
--		ar->htt.target_version_minor >= 4);
-+		ar->htt.target_version_minor >= 4 &&
-+		ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_TLV);
- }
- 
- static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index e3cefe4..f504804 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -74,6 +74,7 @@ void ath10k_mac_tx_lock(struct ath10k *ar, int reason);
- void ath10k_mac_tx_unlock(struct ath10k *ar, int reason);
- void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason);
- void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif, int reason);
-+bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar);
- 
- static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
- {
--- 
-1.9.1
+I've seen you have merged the patches that you mentioned into Greg's
+tree. I have now rebased my patches on top, including the separate SPI
+driver. Once we merge those, it should work fine, and having multiple
+front-end drivers gives a nice template for adding future hardware
+specific variations like another bus, or a newer model on the same
+bus. I'll post my patches after some more testing.
 
+	Arnd
