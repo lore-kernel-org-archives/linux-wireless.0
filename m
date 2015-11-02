@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35363 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161036AbbKFKMH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7659 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbbKBIue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 05:12:07 -0500
-Received: by pasz6 with SMTP id z6so122962723pas.2
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:07 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 09/12] staging: wilc1000: rename pstrStaParams in host_int_add_station
-Date: Fri,  6 Nov 2015 19:11:18 +0900
-Message-Id: <1446804681-8873-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111212_808432_2D8A3E1C)
-In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 2 Nov 2015 03:50:34 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 23/38] staging: wilc1000: rename function GetIfHandler
+Date: Mon, 2 Nov 2015 17:51:06 +0900
+Message-ID: <1446454281-22484-23-git-send-email-glen.lee@atmel.com> (sfid-20151102_095036_488879_C05DC40D)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrStaParams to sta_param to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames GetIfHandler function name to get_if_handler
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-V3: rebase latest staging-testing.
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dc5f45a..dcf77ed 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4527,7 +4527,7 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 753405e..8321b76 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -332,7 +332,7 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+ 	}
  }
  
- int host_int_add_station(struct host_if_drv *hif_drv,
--			 struct add_sta_param *pstrStaParams)
-+			 struct add_sta_param *sta_param)
+-struct net_device *GetIfHandler(struct wilc *wilc, u8 *pMacHeader)
++struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
  {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4545,14 +4545,14 @@ int host_int_add_station(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_ADD_STATION;
- 	msg.drv = hif_drv;
+ 	u8 *Bssid, *Bssid1;
+ 	int i = 0;
+@@ -1427,7 +1427,7 @@ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ 	struct net_device *wilc_netdev;
+ 	perInterface_wlan_t *nic;
  
--	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
-+	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
- 	if (pstrAddStationMsg->rates_len > 0) {
- 		u8 *rates = kmalloc(pstrAddStationMsg->rates_len, GFP_KERNEL);
+-	wilc_netdev = GetIfHandler(wilc, buff);
++	wilc_netdev = get_if_handler(wilc, buff);
+ 	if (!wilc_netdev)
+ 		return;
  
- 		if (!rates)
- 			return -ENOMEM;
- 
--		memcpy(rates, pstrStaParams->rates,
-+		memcpy(rates, sta_param->rates,
- 		       pstrAddStationMsg->rates_len);
- 		pstrAddStationMsg->rates = rates;
- 	}
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9788e6d..c16a9d9 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -379,7 +379,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
- 			u8 *pu8tail);
- int host_int_del_beacon(struct host_if_drv *hif_drv);
- int host_int_add_station(struct host_if_drv *hif_drv,
--			 struct add_sta_param *pstrStaParams);
-+			 struct add_sta_param *sta_param);
- s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
- 			    u8 pu8MacAddr[][ETH_ALEN]);
- int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr);
 -- 
-2.6.3
+1.9.1
 
