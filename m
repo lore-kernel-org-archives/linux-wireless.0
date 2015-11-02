@@ -1,176 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37456 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292AbbKYN71 (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:34809 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653AbbKBOEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 08:59:27 -0500
-Received: by wmww144 with SMTP id w144so70468091wmw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2015 05:59:26 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 2 Nov 2015 09:04:12 -0500
+Received: by lfgh9 with SMTP id h9so15345959lfg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:10 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Sven Eckelmann <sven@open-mesh.com>
-Subject: [PATCH v3 1/4] iw: prepare get_cf1 for use in join_* functions
-Date: Wed, 25 Nov 2015 14:59:15 +0100
-Message-Id: <1448459959-23641-1-git-send-email-sven@open-mesh.com> (sfid-20151125_145931_857597_60A458AA)
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 8/8] ath10k: store msdu_id instead of txbuf pointers
+Date: Mon,  2 Nov 2015 15:03:08 +0100
+Message-Id: <1446472988-2603-9-git-send-email-michal.kazior@tieto.com> (sfid-20151102_150421_778017_9F0F2E55)
+In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chanmode structure and the function get_cf1 to calculate the center
-frequency one can be used by not only the ibss join code but also by the
-mesh and ocb join code.
+Txbuf is no longer a DMA pool and can be easily
+tracked with a mere msdu_id. This saves 10 bytes
+on 64bit systems and 6 bytes on 32bit systems of
+precious sk_buff control buffer.
 
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v3:
- * split patch into two different patches (0001/0002) as request by
-   Julian Calaby <julian.calaby@gmail.com>
- * change join_ocb to also use get_cf1
- * move NOHT to the last entry in the mesh/ibss join usage texts as
-   requested by Julian Calaby <julian.calaby@gmail.com>
-v2:
- * rebase from v4.3-ish version to current master
+ drivers/net/wireless/ath/ath10k/core.h   |  6 +---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 53 ++++++++++++++++----------------
+ 2 files changed, 27 insertions(+), 32 deletions(-)
 
- ibss.c | 33 ---------------------------------
- iw.h   |  9 +++++++++
- mesh.c | 10 +++-------
- util.c | 26 ++++++++++++++++++++++++++
- 4 files changed, 38 insertions(+), 40 deletions(-)
-
-diff --git a/ibss.c b/ibss.c
-index 024981a..a761794 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -16,39 +16,6 @@
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 728a5cbe9dfd..f8092a83be2d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -92,12 +92,8 @@ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	u8 flags;
+ 	u8 eid;
++	u16 msdu_id;
+ 	struct ieee80211_vif *vif;
+-
+-	struct {
+-		struct ath10k_htt_txbuf *txbuf;
+-		u32 txbuf_paddr;
+-	} __packed htt;
+ } __packed;
  
- SECTION(ibss);
+ struct ath10k_skb_rxcb {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a6fd96a18023..ce81babcc8bd 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -532,8 +532,6 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	memcpy(cmd->mgmt_tx.hdr, msdu->data,
+ 	       min_t(int, msdu->len, HTT_MGMT_FRM_HDR_DOWNLOAD_LEN));
  
--struct chanmode {
--	const char *name;
--	unsigned int width;
--	int freq1_diff;
--	int chantype; /* for older kernel */
--};
+-	skb_cb->htt.txbuf = NULL;
 -
--static int get_cf1(const struct chanmode *chanmode, unsigned long freq)
--{
--	unsigned int cf1 = freq, j;
--	unsigned int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
--
--	switch (chanmode->width) {
--	case NL80211_CHAN_WIDTH_80:
--	        /* setup center_freq1 */
--		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
--			if (freq >= vht80[j] && freq < vht80[j] + 80)
--				break;
--		}
--
--		if (j == ARRAY_SIZE(vht80))
--			break;
--
--		cf1 = vht80[j] + 30;
--		break;
--	default:
--		cf1 = freq + chanmode->freq1_diff;
--		break;
--	}
--
--	return cf1;
--}
--
- static int join_ibss(struct nl80211_state *state,
- 		     struct nl_msg *msg,
- 		     int argc, char **argv,
-diff --git a/iw.h b/iw.h
-index 263e8b1..d91a33e 100644
---- a/iw.h
-+++ b/iw.h
-@@ -59,6 +59,13 @@ struct cmd {
- 	const struct cmd *parent;
- };
+ 	res = ath10k_htc_send(&htt->ar->htc, htt->eid, txdesc);
+ 	if (res)
+ 		goto err_unmap_msdu;
+@@ -563,6 +561,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+ 	struct ath10k_hif_sg_item sg_items[2];
++	struct ath10k_htt_txbuf *txbuf;
+ 	struct htt_data_tx_desc_frag *frags;
+ 	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
+ 	u8 tid = ath10k_htt_tx_get_tid(msdu);
+@@ -572,6 +571,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	u16 msdu_id, flags1 = 0;
+ 	u16 freq = 0;
+ 	u32 frags_paddr = 0;
++	u32 txbuf_paddr;
+ 	struct htt_msdu_ext_desc *ext_desc = NULL;
+ 	bool limit_mgmt_desc = false;
+ 	bool is_probe_resp = false;
+@@ -599,9 +599,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
  
-+struct chanmode {
-+	const char *name;
-+	unsigned int width;
-+	int freq1_diff;
-+	int chantype; /* for older kernel */
-+};
-+
- #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
- #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
+-	skb_cb->htt.txbuf = &htt->txbuf.vaddr[msdu_id];
+-	skb_cb->htt.txbuf_paddr = htt->txbuf.paddr +
+-		(sizeof(struct ath10k_htt_txbuf) * msdu_id);
++	txbuf = &htt->txbuf.vaddr[msdu_id];
++	txbuf_paddr = htt->txbuf.paddr +
++		      (sizeof(struct ath10k_htt_txbuf) * msdu_id);
  
-@@ -174,6 +181,8 @@ void print_ies(unsigned char *ie, int ielen, bool unknown,
- void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
- void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
+ 	if ((ieee80211_is_action(hdr->frame_control) ||
+ 	     ieee80211_is_deauth(hdr->frame_control) ||
+@@ -645,14 +645,14 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 			frags_paddr =  htt->frag_desc.paddr +
+ 				(sizeof(struct htt_msdu_ext_desc) * msdu_id);
+ 		} else {
+-			frags = skb_cb->htt.txbuf->frags;
++			frags = txbuf->frags;
+ 			frags[0].dword_addr.paddr =
+ 				__cpu_to_le32(skb_cb->paddr);
+ 			frags[0].dword_addr.len = __cpu_to_le32(msdu->len);
+ 			frags[1].dword_addr.paddr = 0;
+ 			frags[1].dword_addr.len = 0;
  
-+int get_cf1(const struct chanmode *chanmode, unsigned long freq);
-+
- #define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs>] " \
- 	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] [randomise[=<addr>/<mask>]]"
- int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
-diff --git a/mesh.c b/mesh.c
-index f2415f3..593ab7a 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -448,12 +448,8 @@ static int join_mesh(struct nl80211_state *state,
- 	char *end, *value = NULL, *sptr = NULL;
- 	unsigned int i;
- 	unsigned long freq = 0;
--	static const struct {
--		const char *name;
--		unsigned int width;
--		int freq1_diff;
--		int chantype; /* for older kernel */
--	} *chanmode_selected = NULL, chanmode[] = {
-+	const struct chanmode *chanmode_selected = NULL;
-+	static const struct chanmode chanmode[] = {
- 		{ .name = "HT20",
- 		  .width = NL80211_CHAN_WIDTH_20,
- 		  .freq1_diff = 0,
-@@ -506,7 +502,7 @@ static int join_mesh(struct nl80211_state *state,
- 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
- 				    chanmode_selected->width);
- 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
--				    freq + chanmode_selected->freq1_diff);
-+				    get_cf1(chanmode_selected, freq));
- 			if (chanmode_selected->chantype != -1)
- 				NLA_PUT_U32(msg,
- 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-diff --git a/util.c b/util.c
-index 55e1e26..da3be32 100644
---- a/util.c
-+++ b/util.c
-@@ -726,3 +726,29 @@ void iw_hexdump(const char *prefix, const __u8 *buf, size_t size)
- 	}
- 	printf("\n\n");
- }
-+
-+int get_cf1(const struct chanmode *chanmode, unsigned long freq)
-+{
-+	unsigned int cf1 = freq, j;
-+	unsigned int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
-+
-+	switch (chanmode->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+	        /* setup center_freq1 */
-+		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
-+			if (freq >= vht80[j] && freq < vht80[j] + 80)
-+				break;
-+		}
-+
-+		if (j == ARRAY_SIZE(vht80))
-+			break;
-+
-+		cf1 = vht80[j] + 30;
-+		break;
-+	default:
-+		cf1 = freq + chanmode->freq1_diff;
-+		break;
-+	}
-+
-+	return cf1;
-+}
+-			frags_paddr = skb_cb->htt.txbuf_paddr;
++			frags_paddr = txbuf_paddr;
+ 		}
+ 		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ 		break;
+@@ -681,12 +681,11 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	 * avoid extra memory allocations, compress data structures and thus
+ 	 * improve performance. */
+ 
+-	skb_cb->htt.txbuf->htc_hdr.eid = htt->eid;
+-	skb_cb->htt.txbuf->htc_hdr.len = __cpu_to_le16(
+-			sizeof(skb_cb->htt.txbuf->cmd_hdr) +
+-			sizeof(skb_cb->htt.txbuf->cmd_tx) +
+-			prefetch_len);
+-	skb_cb->htt.txbuf->htc_hdr.flags = 0;
++	txbuf->htc_hdr.eid = htt->eid;
++	txbuf->htc_hdr.len = __cpu_to_le16(sizeof(txbuf->cmd_hdr) +
++					   sizeof(txbuf->cmd_tx) +
++					   prefetch_len);
++	txbuf->htc_hdr.flags = 0;
+ 
+ 	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+@@ -707,14 +706,14 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	 */
+ 	flags1 |= HTT_DATA_TX_DESC_FLAGS1_POSTPONED;
+ 
+-	skb_cb->htt.txbuf->cmd_hdr.msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
+-	skb_cb->htt.txbuf->cmd_tx.flags0 = flags0;
+-	skb_cb->htt.txbuf->cmd_tx.flags1 = __cpu_to_le16(flags1);
+-	skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
+-	skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+-	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+-	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+-	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(freq);
++	txbuf->cmd_hdr.msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
++	txbuf->cmd_tx.flags0 = flags0;
++	txbuf->cmd_tx.flags1 = __cpu_to_le16(flags1);
++	txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
++	txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
++	txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
++	txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
++	txbuf->cmd_tx.freq = __cpu_to_le16(freq);
+ 
+ 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+@@ -728,12 +727,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 
+ 	sg_items[0].transfer_id = 0;
+ 	sg_items[0].transfer_context = NULL;
+-	sg_items[0].vaddr = &skb_cb->htt.txbuf->htc_hdr;
+-	sg_items[0].paddr = skb_cb->htt.txbuf_paddr +
+-			    sizeof(skb_cb->htt.txbuf->frags);
+-	sg_items[0].len = sizeof(skb_cb->htt.txbuf->htc_hdr) +
+-			  sizeof(skb_cb->htt.txbuf->cmd_hdr) +
+-			  sizeof(skb_cb->htt.txbuf->cmd_tx);
++	sg_items[0].vaddr = &txbuf->htc_hdr;
++	sg_items[0].paddr = txbuf_paddr +
++			    sizeof(txbuf->frags);
++	sg_items[0].len = sizeof(txbuf->htc_hdr) +
++			  sizeof(txbuf->cmd_hdr) +
++			  sizeof(txbuf->cmd_tx);
+ 
+ 	sg_items[1].transfer_id = 0;
+ 	sg_items[1].transfer_context = NULL;
 -- 
-2.6.2
+2.1.4
 
