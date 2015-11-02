@@ -1,113 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36768 "EHLO
-	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbbKLKrs (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7966 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753158AbbKBIvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 05:47:48 -0500
-Received: by iofh3 with SMTP id h3so61041641iof.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 02:47:47 -0800 (PST)
+	Mon, 2 Nov 2015 03:51:50 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 36/38] staging: wilc1000: rename s32Error of mac_ioctl function
+Date: Mon, 2 Nov 2015 17:51:19 +0900
+Message-ID: <1446454281-22484-36-git-send-email-glen.lee@atmel.com> (sfid-20151102_101700_539554_3273ED19)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1447266082-10933-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1447266082-10933-1-git-send-email-ryanhsu@qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 12 Nov 2015 21:47:28 +1100
-Message-ID: <CAGRGNgXOPDF1fK6X2b-qiTBOLqh+fcScEDDZAoEWTJLDrXPFuA@mail.gmail.com> (sfid-20151112_114752_506646_97FE3908)
-Subject: Re: [PATCH v3] ath10k: Override CE5 configuration for QCA6147 device
-To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ryan,
+From: Leo Kim <leo.kim@atmel.com>
 
-On Thu, Nov 12, 2015 at 5:21 AM, Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
-> 'Commit a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")'
-> Introduces to use the unused CE5 for target to host message.
->
-> For the device like QCA6174, CE5 already assigned for other feature.
-> So for QCA6174, override the CE5 configuration and use the CE1 instead.
->
-> This patch is based on Rajkumar's earlier patch.
->
-> Fixes: a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c | 32 +++++++++++++++++++++++++++++---
->  1 file changed, 29 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index 5c91a67..2a48376 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -113,7 +113,7 @@ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
->  static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
->  static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
->
-> -static const struct ce_attr host_ce_config_wlan[] = {
-> +static struct ce_attr host_ce_config_wlan[] = {
->         /* CE0: host->target HTC control and raw streams */
->         {
->                 .flags = CE_ATTR_FLAGS,
-> @@ -219,7 +219,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
->  };
->
->  /* Target firmware's Copy Engine configuration. */
-> -static const struct ce_pipe_config target_ce_config_wlan[] = {
-> +static struct ce_pipe_config target_ce_config_wlan[] = {
->         /* CE0: host->target HTC control and raw streams */
->         {
->                 .pipenum = __cpu_to_le32(0),
-> @@ -332,7 +332,7 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
->   * This table is derived from the CE_PCI TABLE, above.
->   * It is passed to the Target at startup for use by firmware.
->   */
-> -static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
-> +static struct service_to_pipe target_service_to_ce_map_wlan[] = {
->         {
->                 __cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
->                 __cpu_to_le32(PIPEDIR_OUT),     /* out = UL = host -> target */
-> @@ -2038,6 +2038,29 @@ static int ath10k_pci_init_config(struct ath10k *ar)
->         return 0;
->  }
->
-> +static void ath10k_pci_override_ce_config(struct ath10k *ar)
-> +{
-> +       struct ce_attr *attr;
-> +       struct ce_pipe_config *config;
-> +
-> +       /* For QCA6174 we're overriding the Copy Engine 5 configuration,
-> +        * since it is currently used for other feature.
-> +        */
-> +
-> +       /* Override Host's Copy Engine 5 configuration */
-> +       attr = &host_ce_config_wlan[5];
-> +       attr->src_sz_max = 0;
-> +       attr->dest_nentries = 0;
-> +
-> +       /* Override Target firmware's Copy Engine configuration */
-> +       config = &target_ce_config_wlan[5];
-> +       config->pipedir = __cpu_to_le32(PIPEDIR_OUT);
-> +       config->nbytes_max = __cpu_to_le32(2048);
-> +
-> +       /* Map from service/endpoint to Copy Engine */
-> +       target_service_to_ce_map_wlan[15].pipenum = __cpu_to_le32(1);
-> +}
-> +
+This patch rename s32Error variable of mac_ioctl function to ret
+to avoid CamelCase naming convention.
 
-Stupid question: Why not have two different versions of each struct?
-One for QCA6174 and one for everyone else, and choose the appropriate
-one when they're uploaded to the firmware / used?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-I believe there's a struct full of part specific data, it could
-potentially go in there.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8370a90..0eba943 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1349,7 +1349,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 	u32 size = 0, length = 0;
+ 	perInterface_wlan_t *nic;
+ 	struct wilc_priv *priv;
+-	s32 s32Error = 0;
++	s32 ret = 0;
+ 	struct wilc *wilc;
+ 
+ 	nic = netdev_priv(ndev);
+@@ -1373,8 +1373,9 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 
+ 			if (strncasecmp(buff, "RSSI", length) == 0) {
+ 				priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+-				s32Error = host_int_get_rssi(priv->hWILCWFIDrv, &(rssi));
+-				if (s32Error)
++				ret = host_int_get_rssi(priv->hWILCWFIDrv,
++							&rssi);
++				if (ret)
+ 					PRINT_ER("Failed to send get rssi param's message queue ");
+ 				PRINT_INFO(GENERIC_DBG, "RSSI :%d\n", rssi);
+ 
+@@ -1384,7 +1385,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 
+ 				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
+ 					PRINT_ER("%s: failed to copy data to user buffer\n", __func__);
+-					s32Error = -EFAULT;
++					ret = -EFAULT;
+ 					goto done;
+ 				}
+ 			}
+@@ -1395,7 +1396,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 	default:
+ 	{
+ 		PRINT_INFO(GENERIC_DBG, "Command - %d - has been received\n", cmd);
+-		s32Error = -EOPNOTSUPP;
++		ret = -EOPNOTSUPP;
+ 		goto done;
+ 	}
+ 	}
+@@ -1404,7 +1405,7 @@ done:
+ 
+ 	kfree(buff);
+ 
+-	return s32Error;
++	return ret;
+ }
+ 
+ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
