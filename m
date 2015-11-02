@@ -1,61 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59251 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757688AbbKSGyx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:54:53 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 18/26] staging: wilc1000: reset_shadow_found: remove unused argument
-Date: Thu, 19 Nov 2015 15:56:27 +0900
-Message-ID: <1447916195-24851-18-git-send-email-glen.lee@atmel.com> (sfid-20151119_082252_569707_F0E297CA)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+Received: from max.feld.cvut.cz ([147.32.192.36]:56742 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754014AbbKBSjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 13:39:03 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
+	s.sander@nordsys.de, wireless-regdb@lists.infradead.org,
+	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	Jan =?utf-8?Q?Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>
+Subject: Re: [PATCH v2] ath9k: Add support for ITS-G5 band (5.9 GHz)
+In-Reply-To: <20151102174637.GA2350@w1.fi>
+References: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz> <20151102165516.GA817@w1.fi> <87k2q0qpae.fsf@steelpick.2x.cz> <20151102174637.GA2350@w1.fi>
+Date: Mon, 02 Nov 2015 19:38:57 +0100
+Message-ID: <87h9l4qm9q.fsf@steelpick.2x.cz> (sfid-20151102_193907_331253_1BF08AFA)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Mon, Nov 02 2015, Jouni Malinen wrote:
+> On Mon, Nov 02, 2015 at 06:33:45PM +0100, Michal Sojka wrote:
+>> Can this be solved by having proper/new regulatory flags on these
+>> channels that would prohibit running AP or scanning on these channels?
+>
+> I'm not sure that alone is sufficient, but yes, I think this should be
+> done as part of the solution. On the 5.9 GHz band, cfg80211 should allow
+> only the operations modes that are appropriate for that band.
 
-This patch removes pUserVoid that is first argument of
-reset_shadow_found function because it is not used in this function.
-Remove argument in the function call also.
+We discussed that about a year ago [1]. The thing is that regulatory
+documents do not talk about modes (at least in Europe). They only talk
+about channel widths, EIRP etc. and say that the band is designated for
+Intelligent Transportation System (ITS) applications. Only the ITS
+standards (e.g. ETSI EN 302 663) talk about OCB mode. From the last
+year's discussion I took away that we should not restrict these bands to
+OCB only, because regulatory documents do not require it. But I might
+get it wrong.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+[1] http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg656581.html
+>
+>> I expect that there will be quite a lot applications/devices that will
+>> need to communicate in this band. From technical point of view, it might
+>> be beneficial if there is one solid implementation available in the
+>> upstream Linux. I'm not sure about the legal point of view.
+>
+> I agree that it would be convenient and maybe even beneficial in the end
+> as long as it is done in a way that meets the requirements for enforcing
+> rules on the licensed band.
+>
+>> Can you image this "proper regulatory rule enforcement" as a part of
+>> upstream Linux? Do you have an idea how it would look like?
+>
+> I'm not sure what would be sufficient. In general, I'm hesitant on
+> enabling any licensed bands for Wi-Fi operations by default regardless
+> of what the kernel configuration is.
+>
+>> Would kernel config option + custom regdb be sufficient?
+>
+> That would certainly be much closer to what I'd like to see from the
+> regulatory enforcement view point; not sure how convenient this is to
+> use with ath9k.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 55cf444..5032705 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -276,7 +276,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 
- }
- 
--static void reset_shadow_found(void *pUserVoid)
-+static void reset_shadow_found(void)
- {
- 	int i;
- 
-@@ -731,9 +731,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 	priv->u32RcvdChCount = 0;
- 
- 	wilc_set_wfi_drv_handler(priv->hWILCWFIDrv);
--
--
--	reset_shadow_found(priv);
-+	reset_shadow_found();
- 
- 	priv->bCfgScanning = true;
- 	if (request->n_channels <= MAX_NUM_SCANNED_NETWORKS) { /* TODO: mostafa: to be replaced by */
--- 
-1.9.1
+Hmm, ath9k is the hardware that we can currently play with. Can you
+suggest another hardware that supports 5.9 GHz and a driver that would
+be more convenient to develop with?
 
+> I think the custom regdb route (i.e., require someone to knowingly
+> generate the explicit rules to enable the licensed bands and only
+> distribute the regdb with these changes to properly licensed users)
+> was one of the approaches discussed in the past for this type of use
+> cases.
+
+Thanks for all the input. We will try to come up with another solution.
+
+Regards.
+-Michal
