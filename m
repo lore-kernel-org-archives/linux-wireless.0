@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35064 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315AbbKQW1G (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7352 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbbKBItQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 17:27:06 -0500
-Received: by igl9 with SMTP id 9so89620042igl.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 14:27:05 -0800 (PST)
+	Mon, 2 Nov 2015 03:49:16 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/38] staging: wilc1000: linux_wlan: remove unused define CUSTOMER_PLATFORM
+Date: Mon, 2 Nov 2015 17:50:53 +0900
+Message-ID: <1446454281-22484-10-git-send-email-glen.lee@atmel.com> (sfid-20151102_094919_436581_DCE87617)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <CALupW3CrA=q5dBAqYdRwbNpAECXNahf1NaL31jpcsEf=BkbzHg@mail.gmail.com>
-References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
- <CAGRGNgXezDJhLkYKVexKQOOF7OrLLXg+M8h4M7=OJSF_qLgQvA@mail.gmail.com> <CALupW3CrA=q5dBAqYdRwbNpAECXNahf1NaL31jpcsEf=BkbzHg@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 18 Nov 2015 09:26:45 +1100
-Message-ID: <CAGRGNgX3D=J4djzRvWGC_1uCbW3q5EpE9HpmdM_khnJkmks4HA@mail.gmail.com> (sfid-20151117_232710_744129_3423B46A)
-Subject: Re: [PATCH 0/2] ath6kl_sdio: add control of CHIP_PWD_L via GPIO
-To: Steve deRosier <derosier@gmail.com>
-Cc: ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Steve,
+From: Leo Kim <leo.kim@atmel.com>
 
-Firstly, always reply-to-all, don't drop the CCs.
+This patch remove unused define CUSTOMER_PLATFORM from linux_wlan.c.
 
-On Wed, Nov 18, 2015 at 4:14 AM, Steve deRosier <derosier@gmail.com> wrote:
-> Hi Julian,
->
-> On Mon, Nov 16, 2015 at 10:10 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>
->>
->> I want to say that this should go in DeviceTree or equivalent, however
->> ath6kl doesn't have DeviceTree support, so...
->>
->
-> I can't disagree.  In fact, my first try was via DT, but the driver
-> doesn't really support it and I couldn't just "bolt it on". I realized
-> the chunk of DT support that is there (for bdata files) would need a
-> bit of rearchitecting and I didn't have the stomach for that yet.
-> Hence this approach. Later I'd like to go and move it to DT, but
-> that's a different chunk of work.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-I'm not the maintainer of the driver, so I can't say whether or not
-your patches should be applied or not, however this really is
-something that should be in DT and I suspect that your patches might
-not be applied because of this.
-
-I'll discuss this more in my reply to your other email.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a483f79..05f33ec 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -32,18 +32,11 @@
+ #include "linux_wlan_spi.h"
+ #endif
+ 
+-#if defined(CUSTOMER_PLATFORM)
+-/*
+- TODO : Write power control functions as customer platform.
+- */
+-#else
+-
+  #define _linux_wlan_device_power_on()		{}
+  #define _linux_wlan_device_power_off()		{}
+ 
+  #define _linux_wlan_device_detection()		{}
+  #define _linux_wlan_device_removal()		{}
+-#endif
+ 
+ extern bool g_obtainingIP;
+ extern void resolve_disconnect_aberration(void *drvHandler);
+@@ -278,15 +271,7 @@ static int init_irq(struct net_device *dev)
+ 	/*GPIO request*/
+ 	if ((gpio_request(GPIO_NUM, "WILC_INTR") == 0) &&
+ 	    (gpio_direction_input(GPIO_NUM) == 0)) {
+-#if defined(CUSTOMER_PLATFORM)
+-/*
+- TODO : save the registerd irq number to the private wilc context in kernel.
+- *
+- * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+- */
+-#else
+ 		wl->dev_irq_num = gpio_to_irq(GPIO_NUM);
+-#endif
+ 	} else {
+ 		ret = -1;
+ 		PRINT_ER("could not obtain gpio for WILC_INTR\n");
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
