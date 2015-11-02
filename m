@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32181 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbbKSGTT (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7782 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753248AbbKBIvC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:19:19 -0500
-Date: Thu, 19 Nov 2015 09:19:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: remove define COMPLEMENT_BOOT
-Message-ID: <20151119061907.GQ18797@mwanda> (sfid-20151119_071922_678800_027FA7F8)
-References: <1447898761-6938-1-git-send-email-glen.lee@atmel.com>
+	Mon, 2 Nov 2015 03:51:02 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 28/38] staging: wilc1000: fixes braces {} should be used on all arms of this statement
+Date: Mon, 2 Nov 2015 17:51:11 +0900
+Message-ID: <1446454281-22484-28-git-send-email-glen.lee@atmel.com> (sfid-20151102_101656_366429_F7E20F64)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447898761-6938-1-git-send-email-glen.lee@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 19, 2015 at 11:05:58AM +0900, Glen Lee wrote:
-> This patch removes define COMPLEMENT_BOOT in Makefile. The feature was removed
-> by the following commit but the define was not removed. So remove completely.
-> 
-> b46d68825c2d3af70ad18b53dfed6516e393b7fa
+From: Leo Kim <leo.kim@atmel.com>
 
-Put some human readable text next to the hash.  The standard thing is to
-include only the first 12 characters of the hash.  If there are fewer
-than 12 characters then we could get collisions but including the whole
-hash is excessive.
+This patch fixes the checks reported by checkpatch.pl
+for braces {} should be used on all arms of this statement.
 
-This patch removes define COMPLEMENT_BOOT in Makefile. The feature was
-removed by commit b46d68825c2d ('staging: wilc1000: remove
-COMPLEMENT_BOOT') but the define was not removed. So remove completely.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c397952..1e9d67f 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -482,12 +482,11 @@ int linux_wlan_get_firmware(struct net_device *dev)
+ 	nic = netdev_priv(dev);
+ 	wilc = nic->wilc;
+ 
+-	if (nic->iftype == AP_MODE)
++	if (nic->iftype == AP_MODE) {
+ 		firmware = AP_FIRMWARE;
+-	else if (nic->iftype == STATION_MODE)
++	} else if (nic->iftype == STATION_MODE) {
+ 		firmware = STA_FIRMWARE;
+-
+-	else {
++	} else {
+ 		PRINT_D(INIT_DBG, "Get P2P_CONCURRENCY_FIRMWARE\n");
+ 		firmware = P2P_CONCURRENCY_FIRMWARE;
+ 	}
+-- 
+1.9.1
 
