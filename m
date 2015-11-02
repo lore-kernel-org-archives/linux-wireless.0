@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26979 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7827 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030300AbbKEFgS (ORCPT
+	with ESMTP id S1752989AbbKBIvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:18 -0500
+	Mon, 2 Nov 2015 03:51:14 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 29/38] staging: wilc1000: remove goto from linux_wlan_start_firmware
-Date: Thu, 5 Nov 2015 14:36:30 +0900
-Message-ID: <1446701799-24870-29-git-send-email-glen.lee@atmel.com> (sfid-20151105_063756_645905_F259D402)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 30/38] staging: wilc1000: remove goto from linux_wlan_firmware_download
+Date: Mon, 2 Nov 2015 17:51:13 +0900
+Message-ID: <1446454281-22484-30-git-send-email-glen.lee@atmel.com> (sfid-20151102_101655_784496_49C0D399)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,43 +22,45 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch remove goto feature from linux_wlan_start_firmware function.
+This patch remove goto feature from linux_wlan_firmware_download function.
 Goto feature is return result.
 So, remove goto functions and it was replaced with the return value directly.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 893c741..fcc8119 100644
+index f091a3c..aaa938f 100644
 --- a/drivers/staging/wilc1000/linux_wlan.c
 +++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -529,19 +529,18 @@ static int linux_wlan_start_firmware(struct net_device *dev)
- 	ret = wilc_wlan_start();
- 	if (ret < 0) {
- 		PRINT_ER("Failed to start Firmware\n");
--		goto _fail_;
-+		return ret;
- 	}
+@@ -558,14 +558,13 @@ static int linux_wlan_firmware_download(struct net_device *dev)
  
- 	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
- 	ret = linux_wlan_lock_timeout(&wilc->sync_event, 5000);
- 	if (ret) {
- 		PRINT_D(INIT_DBG, "Firmware start timed out");
--		goto _fail_;
-+		return ret;
+ 	if (!wilc->firmware) {
+ 		PRINT_ER("Firmware buffer is NULL\n");
+-		ret = -ENOBUFS;
+-		goto _FAIL_;
++		return -ENOBUFS;
  	}
- 	PRINT_D(INIT_DBG, "Firmware successfully started\n");
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+ 	ret = wilc_wlan_firmware_download(dev, wilc->firmware->data,
+ 					  wilc->firmware->size);
+ 	if (ret < 0)
+-		goto _FAIL_;
++		return ret;
  
--_fail_:
--	return ret;
-+	return 0;
+ 	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+ 	PRINT_D(INIT_DBG, "Releasing firmware\n");
+@@ -573,7 +572,6 @@ static int linux_wlan_firmware_download(struct net_device *dev)
+ 
+ 	PRINT_D(INIT_DBG, "Download Succeeded\n");
+ 
+-_FAIL_:
+ 	return ret;
  }
- static int linux_wlan_firmware_download(struct net_device *dev)
- {
+ 
 -- 
 1.9.1
 
