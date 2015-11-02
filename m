@@ -1,127 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35076 "EHLO sipsolutions.net"
+Received: from max.feld.cvut.cz ([147.32.192.36]:52525 "EHLO max.feld.cvut.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965567AbbKDQWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 11:22:13 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/4] ipv6: add option to drop unicast encapsulated in L2 multicast
-Date: Wed,  4 Nov 2015 17:22:05 +0100
-Message-Id: <1446654127-26826-2-git-send-email-johannes@sipsolutions.net> (sfid-20151104_172246_188427_036BF344)
-In-Reply-To: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
-References: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+	id S1751420AbbKBKXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 05:23:13 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2] ath9k: Add support for ITS-G5 band (5.9 GHz)
+Date: Mon,  2 Nov 2015 11:22:57 +0100
+Message-Id: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151102_112317_313810_544EA4AA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
 
-In order to solve a problem with 802.11, the so-called hole-196 attack,
-add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-enabled, causes the stack to drop IPv6 unicast packets encapsulated in
-link-layer multi- or broadcast frames. Such frames can (as an attack)
-be created by any member of the same wireless network and transmitted
-as valid encrypted frames since the symmetric key for broadcast frames
-is shared between all stations.
+The patch adds support for Intelligent Transportation System (ITS-G5)
+band to the ath9k driver.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>
 ---
- Documentation/networking/ip-sysctl.txt |  6 ++++++
- include/linux/ipv6.h                   |  1 +
- include/uapi/linux/ipv6.h              |  1 +
- net/ipv6/addrconf.c                    |  8 ++++++++
- net/ipv6/ip6_input.c                   | 10 ++++++++++
- 5 files changed, 26 insertions(+)
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 35c4c43dd8de..a2169651254e 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1660,6 +1660,12 @@ stable_secret - IPv6 address
- 
- 	By default the stable secret is unset.
- 
-+drop_unicast_in_l2_multicast - BOOLEAN
-+	Drop any unicast IPv6 packets that are received in link-layer
-+	multicast (or broadcast) frames.
+Hi all,
+
+in this second version of the patch we removed dependency on
+CFG80211_CERTIFICATION_ONUS as suggested by Johannes. We are, however,
+not sure whether this is the right thing to do.
+
+The problem is that ath9k uses (REGULATORY_STRICT_REG |
+REGULATORY_CUSTOM_REG), which means that in order to use the 5.9 GHz
+band, ath9k's private regdomain has to be extended. This in turn means
+that the 5.9 GHz band is enabled by default in many configurations. It
+can be disabled if one sends a regulatory hint and has valid regdb in
+user space, but this cannot be relied upon.
+
+As I already wrote, I don't think that regulatory documents allow such
+behavior:
+
+  In EU, regulatory (ECC Decision (08)01) reads:
+
+    ... decides ... that CEPT administrations shall designate the
+    frequency sub-band 5875-5905 MHz on a non-exclusive basis for ITS
+    traffic safety applications;
+
+  I understand this that the band can be used only by "traffic safety
+  applications" and not by random laptops running Linux.
+
+  In US, regulatory (FCC 03-324) says among others:
+
+    § 95.603 (h) Each Dedicated Short-Range Communications Service
+    On-Board Unit (DSRCS-OBU) that operates or is intended to operate
+    in the DSRCS (5.850-5.925 GHz) must be certified in accordance
+    with subpart L of this part and subpart J of part 2 of this
+    chapter.
+
+Especially the US regulatory suggests that using
+CFG80211_CERTIFICATION_ONUS might have sense (see the previous version
+http://www.mail-archive.com/linux-wireless@vger.kernel.org/msg15228.html).
+What do you think?
+
+Thanks.
+-Michal & Jan
+
+
+ drivers/net/wireless/ath/ath9k/common-init.c | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h          |  2 +-
+ drivers/net/wireless/ath/regd.c              | 17 ++++++++++++-----
+ 3 files changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
+index a006c14..0b61c63 100644
+--- a/drivers/net/wireless/ath/ath9k/common-init.c
++++ b/drivers/net/wireless/ath/ath9k/common-init.c
+@@ -86,6 +86,25 @@ static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
+ 	CHAN5G(5785, 35), /* Channel 157 */
+ 	CHAN5G(5805, 36), /* Channel 161 */
+ 	CHAN5G(5825, 37), /* Channel 165 */
 +
-+	By default this is turned off.
-+
- icmp/*:
- ratelimit - INTEGER
- 	Limit the maximal rates for sending ICMPv6 packets.
-diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
-index 0ef2a97ccdb5..34317cb6a6fc 100644
---- a/include/linux/ipv6.h
-+++ b/include/linux/ipv6.h
-@@ -50,6 +50,7 @@ struct ipv6_devconf {
- 	__s32		mc_forwarding;
- #endif
- 	__s32		disable_ipv6;
-+	__s32		drop_unicast_in_l2_multicast;
- 	__s32		accept_dad;
- 	__s32		force_tllao;
- 	__s32           ndisc_notify;
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index 38b4fef20219..4c413570efe8 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -174,6 +174,7 @@ enum {
- 	DEVCONF_USE_OIF_ADDRS_ONLY,
- 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
- 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
-+	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
- 	DEVCONF_MAX
++	/* ITS-G5B */
++	CHAN5G(5855, 38), /* Channel 171 */
++	CHAN5G(5860, 39), /* Channel 172 */
++	CHAN5G(5865, 40), /* Channel 173 */
++	CHAN5G(5870, 41), /* Channel 174 */
++	/* ITS-G5A */
++	CHAN5G(5875, 42), /* Channel 175 */
++	CHAN5G(5880, 43), /* Channel 176 */
++	CHAN5G(5885, 44), /* Channel 177 */
++	CHAN5G(5890, 45), /* Channel 178 */
++	CHAN5G(5895, 46), /* Channel 179 */
++	CHAN5G(5900, 47), /* Channel 180 */
++	CHAN5G(5905, 48), /* Channel 181 */
++	/* ITS-G5D */
++	CHAN5G(5910, 49), /* Channel 182 */
++	CHAN5G(5915, 50), /* Channel 183 */
++	CHAN5G(5920, 51), /* Channel 184 */
++	CHAN5G(5925, 52), /* Channel 185 */
  };
  
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index d72fa90d6feb..35f880bcf626 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -4672,6 +4672,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
- 	array[DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN] = cnf->ignore_routes_with_linkdown;
- 	/* we omit DEVCONF_STABLE_SECRET for now */
- 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
-+	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
- }
+ /* Atheros hardware rate code addition for short premble */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e8454db..debf609 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -73,7 +73,7 @@
  
- static inline size_t inet6_ifla6_size(void)
-@@ -5734,6 +5735,13 @@ static struct addrconf_sysctl_table
- 			.proc_handler	= addrconf_sysctl_ignore_routes_with_linkdown,
- 		},
- 		{
-+			.procname	= "drop_unicast_in_l2_multicast",
-+			.data		= &ipv6_devconf.drop_unicast_in_l2_multicast,
-+			.maxlen		= sizeof(int),
-+			.mode		= 0644,
-+			.proc_handler	= proc_dointvec,
-+		},
-+		{
- 			/* sentinel */
- 		}
- 	},
-diff --git a/net/ipv6/ip6_input.c b/net/ipv6/ip6_input.c
-index 9075acf081dd..31ac3c56da4b 100644
---- a/net/ipv6/ip6_input.c
-+++ b/net/ipv6/ip6_input.c
-@@ -134,6 +134,16 @@ int ipv6_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt
- 	    IPV6_ADDR_MC_SCOPE(&hdr->daddr) == 1)
- 		goto err;
+ #define ATH9K_RSSI_BAD			-128
  
-+	/* If enabled, drop unicast packets that were encapsulated in link-layer
-+	 * multicast or broadcast to protected against the so-called "hole-196"
-+	 * attack in 802.11 wireless.
-+	 */
-+	if (!ipv6_addr_is_multicast(&hdr->daddr) &&
-+	    (skb->pkt_type == PACKET_BROADCAST ||
-+	     skb->pkt_type == PACKET_MULTICAST) &&
-+	    idev->cnf.drop_unicast_in_l2_multicast)
-+		goto err;
+-#define ATH9K_NUM_CHANNELS	38
++#define ATH9K_NUM_CHANNELS	53
+ 
+ /* Register read/write primitives */
+ #define REG_WRITE(_ah, _reg, _val) \
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 444bd28..1f8b209 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -50,6 +50,8 @@ static int __ath_regd_init(struct ath_regulatory *reg);
+ #define ATH9K_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 80, 0, 30,\
+ 					 NL80211_RRF_NO_IR)
+ 
++#define ATH9K_5GHZ_ITSG5	REG_RULE(5855-5, 5925+5, 10, 0, 33, 0)
 +
- 	/* RFC4291 2.7
- 	 * Nodes must not originate a packet to a multicast address whose scope
- 	 * field contains the reserved value 0; if such a packet is received, it
+ #define ATH9K_2GHZ_ALL		ATH9K_2GHZ_CH01_11, \
+ 				ATH9K_2GHZ_CH12_13, \
+ 				ATH9K_2GHZ_CH14
+@@ -64,53 +66,58 @@ static int __ath_regd_init(struct ath_regulatory *reg);
+ /* Can be used for:
+  * 0x60, 0x61, 0x62 */
+ static const struct ieee80211_regdomain ath_world_regdom_60_61_62 = {
+-	.n_reg_rules = 5,
++	.n_reg_rules = 6,
+ 	.alpha2 =  "99",
+ 	.reg_rules = {
+ 		ATH9K_2GHZ_ALL,
+ 		ATH9K_5GHZ_ALL,
++		ATH9K_5GHZ_ITSG5,
+ 	}
+ };
+ 
+ /* Can be used by 0x63 and 0x65 */
+ static const struct ieee80211_regdomain ath_world_regdom_63_65 = {
+-	.n_reg_rules = 4,
++	.n_reg_rules = 5,
+ 	.alpha2 =  "99",
+ 	.reg_rules = {
+ 		ATH9K_2GHZ_CH01_11,
+ 		ATH9K_2GHZ_CH12_13,
+ 		ATH9K_5GHZ_NO_MIDBAND,
++		ATH9K_5GHZ_ITSG5,
+ 	}
+ };
+ 
+ /* Can be used by 0x64 only */
+ static const struct ieee80211_regdomain ath_world_regdom_64 = {
+-	.n_reg_rules = 3,
++	.n_reg_rules = 4,
+ 	.alpha2 =  "99",
+ 	.reg_rules = {
+ 		ATH9K_2GHZ_CH01_11,
+ 		ATH9K_5GHZ_NO_MIDBAND,
++		ATH9K_5GHZ_ITSG5,
+ 	}
+ };
+ 
+ /* Can be used by 0x66 and 0x69 */
+ static const struct ieee80211_regdomain ath_world_regdom_66_69 = {
+-	.n_reg_rules = 3,
++	.n_reg_rules = 4,
+ 	.alpha2 =  "99",
+ 	.reg_rules = {
+ 		ATH9K_2GHZ_CH01_11,
+ 		ATH9K_5GHZ_ALL,
++		ATH9K_5GHZ_ITSG5,
+ 	}
+ };
+ 
+ /* Can be used by 0x67, 0x68, 0x6A and 0x6C */
+ static const struct ieee80211_regdomain ath_world_regdom_67_68_6A_6C = {
+-	.n_reg_rules = 4,
++	.n_reg_rules = 5,
+ 	.alpha2 =  "99",
+ 	.reg_rules = {
+ 		ATH9K_2GHZ_CH01_11,
+ 		ATH9K_2GHZ_CH12_13,
+ 		ATH9K_5GHZ_ALL,
++		ATH9K_5GHZ_ITSG5,
+ 	}
+ };
+ 
 -- 
-2.6.2
+2.5.3
 
