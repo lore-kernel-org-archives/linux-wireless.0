@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35112 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbKNGwh (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7985 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbbKBIvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2015 01:52:37 -0500
-Received: by pacej9 with SMTP id ej9so14972827pac.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 22:52:37 -0800 (PST)
-Date: Sat, 14 Nov 2015 12:22:29 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: remove new line around else and braces
-Message-ID: <20151114065229.GC3685@sudip-pc> (sfid-20151114_075304_765702_7EA4F182)
-References: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
+	Mon, 2 Nov 2015 03:51:55 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 37/38] staging: wilc1000: rename QueueCount of mac_xmit function
+Date: Mon, 2 Nov 2015 17:51:20 +0900
+Message-ID: <1446454281-22484-37-git-send-email-glen.lee@atmel.com> (sfid-20151102_101656_686660_2E2C7A60)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2015 at 11:59:47PM +0200, Panayiotis Tembriotis wrote:
-> Remove excess new line characters as suggested by checkpatch.pl:
-> ERROR: else should follow close brace '}'
-> ERROR: that open brace { should be on the previous line
-> 
-> Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
-> ---
+From: Leo Kim <leo.kim@atmel.com>
 
-This has already been done. please use staging-testing tree.
+This patch rename QueueCount variable of mac_xmit function to queue_count
+to avoid CamelCase naming convention.
 
-regards
-sudip
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 0eba943..5d1a547 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1223,7 +1223,7 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct tx_complete_data *tx_data = NULL;
+-	int QueueCount;
++	int queue_count;
+ 	char *pu8UdpBuffer;
+ 	struct iphdr *ih;
+ 	struct ethhdr *eth_h;
+@@ -1267,11 +1267,11 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	nic->netstats.tx_packets++;
+ 	nic->netstats.tx_bytes += tx_data->size;
+ 	tx_data->pBssid = wilc->vif[nic->u8IfIdx].bssid;
+-	QueueCount = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
+-					       tx_data->buff, tx_data->size,
+-					       linux_wlan_tx_complete);
++	queue_count = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
++						tx_data->buff, tx_data->size,
++						linux_wlan_tx_complete);
+ 
+-	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
++	if (queue_count > FLOW_CONTROL_UPPER_THRESHOLD) {
+ 		netif_stop_queue(wilc->vif[0].ndev);
+ 		netif_stop_queue(wilc->vif[1].ndev);
+ 	}
+-- 
+1.9.1
+
