@@ -1,188 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37657 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031547AbbKFCRe (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:35536 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616AbbKBOEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:17:34 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 55/73] staging: wilc1000: remove warnings line over 80 characters
-Date: Fri, 6 Nov 2015 11:19:54 +0900
-Message-ID: <1446776412-30670-6-git-send-email-glen.lee@atmel.com> (sfid-20151106_031751_266099_1B24838C)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 2 Nov 2015 09:04:08 -0500
+Received: by lbbes7 with SMTP id es7so88523437lbb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:07 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/8] ath10k: remove freq from skb_cb
+Date: Mon,  2 Nov 2015 15:03:05 +0100
+Message-Id: <1446472988-2603-6-git-send-email-michal.kazior@tieto.com> (sfid-20151102_150426_389787_7333AF22)
+In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+It was wasteful to keep it in the struct.
 
-This patch removes the warnings reported by checkpatch.pl
-for line over 80 characters.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 50 ++++++++++++++++++++++++------------
- 1 file changed, 34 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   | 1 -
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 9 +++++++--
+ drivers/net/wireless/ath/ath10k/mac.c    | 5 +----
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 70d794b..ffe7baa 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -361,7 +361,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 				dropped_acks++;
- 				tqe->status = 1;
- 				if (tqe->tx_complete_func)
--					tqe->tx_complete_func(tqe->priv, tqe->status);
-+					tqe->tx_complete_func(tqe->priv,
-+							      tqe->status);
- 				kfree(tqe);
- 				dropped++;
- 			}
-@@ -747,7 +748,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index f24a5feb2220..64a248f780b9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -88,7 +88,6 @@ struct ath10k_skb_cb {
  
- 				PRINT_D(TX_DBG, "VMM Size AFTER alignment = %d\n", vmm_sz);
- 				vmm_table[i] = vmm_sz / 4;
--				PRINT_D(TX_DBG, "VMMTable entry size = %d\n", vmm_table[i]);
-+				PRINT_D(TX_DBG, "VMMTable entry size = %d\n",
-+					vmm_table[i]);
+ 	struct {
+ 		u8 tid;
+-		u16 freq;
+ 		bool nohwcrypt;
+ 		struct ath10k_htt_txbuf *txbuf;
+ 		u32 txbuf_paddr;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index bada9695a4fb..05ce99ad6ca2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -531,6 +531,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	struct ath10k *ar = htt->ar;
+ 	struct device *dev = ar->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+ 	struct ath10k_hif_sg_item sg_items[2];
+ 	struct htt_data_tx_desc_frag *frags;
+@@ -540,6 +541,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	int res;
+ 	u8 flags0 = 0;
+ 	u16 msdu_id, flags1 = 0;
++	u16 freq = 0;
+ 	u32 frags_paddr = 0;
+ 	struct htt_msdu_ext_desc *ext_desc = NULL;
+ 	bool limit_mgmt_desc = false;
+@@ -591,6 +593,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 		goto err_free_msdu_id;
+ 	}
  
- 				if (tqe->type == WILC_CFG_PKT) {
- 					vmm_table[i] |= BIT(10);
-@@ -883,7 +885,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- #endif
- 				vmm_sz = (vmm_table[i] & 0x3ff);
- 				vmm_sz *= 4;
--				header = (tqe->type << 31) | (tqe->buffer_size << 15) | vmm_sz;
-+				header = (tqe->type << 31) |
-+					 (tqe->buffer_size << 15) |
-+					 vmm_sz;
- 				if (tqe->type == WILC_MGMT_PKT)
- 					header |= BIT(30);
- 				else
-@@ -904,12 +908,14 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 					buffer_offset = HOST_HDR_OFFSET;
- 				}
++	if (unlikely(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN))
++		freq = ar->scan.roc_freq;
++
+ 	switch (txmode) {
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+@@ -680,13 +685,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+ 	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+ 	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+-	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
++	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(freq);
  
--				memcpy(&txb[offset + buffer_offset], tqe->buffer, tqe->buffer_size);
-+				memcpy(&txb[offset + buffer_offset],
-+				       tqe->buffer, tqe->buffer_size);
- 				offset += vmm_sz;
- 				i++;
- 				tqe->status = 1;
- 				if (tqe->tx_complete_func)
--					tqe->tx_complete_func(tqe->priv, tqe->status);
-+					tqe->tx_complete_func(tqe->priv,
-+							      tqe->status);
- 				#ifdef TCP_ACK_FILTER
- 				if (tqe->index != NOT_TCP_ACK)
- 					pending_acks_info[tqe->index].txqe = NULL;
-@@ -970,7 +976,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 		}
- 		buffer = rqe->buffer;
- 		size = rqe->buffer_size;
--		PRINT_D(RX_DBG, "rxQ entery Size = %d - Address = %p\n", size, buffer);
-+		PRINT_D(RX_DBG, "rxQ entery Size = %d - Address = %p\n",
-+			size, buffer);
- 		offset = 0;
+ 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %08x, msdu_paddr %08x vdev %hhu tid %hhu freq %hu\n",
+ 		   flags0, flags1, msdu->len, msdu_id, frags_paddr,
+-		   (u32)skb_cb->paddr, vdev_id, tid, skb_cb->htt.freq);
++		   (u32)skb_cb->paddr, vdev_id, tid, freq);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
+ 			msdu->data, msdu->len);
+ 	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9c76934b3bf0..ddf2ad2f3955 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3517,6 +3517,7 @@ void __ath10k_scan_finish(struct ath10k *ar)
+ 	case ATH10K_SCAN_STARTING:
+ 		ar->scan.state = ATH10K_SCAN_IDLE;
+ 		ar->scan_channel = NULL;
++		ar->scan.roc_freq = 0;
+ 		ath10k_offchan_tx_purge(ar);
+ 		cancel_delayed_work(&ar->scan.timeout);
+ 		complete_all(&ar->scan.completed);
+@@ -3672,7 +3673,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
  
- 		do {
-@@ -983,7 +990,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- #ifdef BIG_ENDIAN
- 			header = BYTE_SWAP(header);
- #endif
--			PRINT_D(RX_DBG, "Header = %04x - Offset = %d\n", header, offset);
-+			PRINT_D(RX_DBG, "Header = %04x - Offset = %d\n",
-+				header, offset);
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
  
- 			is_cfg_packet = (header >> 31) & 0x1;
- 			pkt_offset = (header >> 22) & 0x1ff;
-@@ -1000,7 +1008,9 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 			#define IS_MGMT_STATUS_SUCCES			0x040
+-	ATH10K_SKB_CB(skb)->htt.freq = 0;
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+@@ -3697,13 +3697,10 @@ static void ath10k_tx(struct ieee80211_hw *hw,
  
- 			if (pkt_offset & IS_MANAGMEMENT) {
--				pkt_offset &= ~(IS_MANAGMEMENT | IS_MANAGMEMENT_CALLBACK | IS_MGMT_STATUS_SUCCES);
-+				pkt_offset &= ~(IS_MANAGMEMENT |
-+						IS_MANAGMEMENT_CALLBACK |
-+						IS_MGMT_STATUS_SUCCES);
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+ 		spin_lock_bh(&ar->data_lock);
+-		ATH10K_SKB_CB(skb)->htt.freq = ar->scan.roc_freq;
+ 		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
+ 		spin_unlock_bh(&ar->data_lock);
  
- 				WILC_WFI_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
- 			} else {
-@@ -1356,22 +1366,26 @@ int wilc_wlan_stop(void)
- 			release_bus(RELEASE_ALLOW_SLEEP);
- 			return ret;
- 		}
--		PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
-+		PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n",
-+			reg, timeout);
+ 		if (ath10k_mac_need_offchan_tx_work(ar)) {
+-			ATH10K_SKB_CB(skb)->htt.freq = 0;
+-
+ 			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %p\n",
+ 				   skb);
  
- 		if ((reg & BIT(10))) {
--			PRINT_D(GENERIC_DBG, "Bit 10 not reset : Retry %d\n", timeout);
-+			PRINT_D(GENERIC_DBG, "Bit 10 not reset : Retry %d\n",
-+				timeout);
- 			reg &= ~BIT(10);
- 			ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
- 			timeout--;
- 		} else {
--			PRINT_D(GENERIC_DBG, "Bit 10 reset after : Retry %d\n", timeout);
-+			PRINT_D(GENERIC_DBG, "Bit 10 reset after : Retry %d\n",
-+				timeout);
- 			ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
- 			if (!ret) {
- 				PRINT_ER("Error while reading reg\n");
- 				release_bus(RELEASE_ALLOW_SLEEP);
- 				return ret;
- 			}
--			PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n", reg, timeout);
-+			PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n",
-+				reg, timeout);
- 			break;
- 		}
- 
-@@ -1492,7 +1506,8 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 	p->cfg_frame_offset = offset;
- 
- 	if (commit) {
--		PRINT_D(TX_DBG, "[WILC]PACKET Commit with sequence number %d\n", p->cfg_seq_no);
-+		PRINT_D(TX_DBG, "[WILC]PACKET Commit with sequence number %d\n",
-+			p->cfg_seq_no);
- 		PRINT_D(RX_DBG, "Processing cfg_set()\n");
- 		p->cfg_frame_in_use = 1;
- 
-@@ -1641,21 +1656,24 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
- 	memset((void *)&g_wlan, 0, sizeof(wilc_wlan_dev_t));
--	memcpy((void *)&g_wlan.io_func, (void *)&inp->io_func, sizeof(wilc_wlan_io_func_t));
-+	memcpy((void *)&g_wlan.io_func, (void *)&inp->io_func,
-+	       sizeof(wilc_wlan_io_func_t));
- 
- 	if ((inp->io_func.io_type & 0x1) == HIF_SDIO) {
- 		if (!hif_sdio.hif_init(inp, wilc_debug)) {
- 			ret = -5;
- 			goto _fail_;
- 		}
--		memcpy((void *)&g_wlan.hif_func, &hif_sdio, sizeof(wilc_hif_func_t));
-+		memcpy((void *)&g_wlan.hif_func, &hif_sdio,
-+		       sizeof(wilc_hif_func_t));
- 	} else {
- 		if ((inp->io_func.io_type & 0x1) == HIF_SPI) {
- 			if (!hif_spi.hif_init(inp, wilc_debug)) {
- 				ret = -5;
- 				goto _fail_;
- 			}
--			memcpy((void *)&g_wlan.hif_func, &hif_spi, sizeof(wilc_hif_func_t));
-+			memcpy((void *)&g_wlan.hif_func, &hif_spi,
-+			       sizeof(wilc_hif_func_t));
- 		} else {
- 			ret = -5;
- 			goto _fail_;
 -- 
-1.9.1
+2.1.4
 
