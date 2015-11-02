@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49777 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373AbbKQNxI (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:34305 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbbKBK1G convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 08:53:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2015-11-15
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
-Date: Tue, 17 Nov 2015 15:52:59 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Sun, 15 Nov 2015 19:30:30 +0000")
-Message-ID: <87si44ybpg.fsf@kamboji.qca.qualcomm.com> (sfid-20151117_145328_097530_F0D14DE8)
+	Mon, 2 Nov 2015 05:27:06 -0500
+Received: by wmff134 with SMTP id f134so54701913wmf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 02:27:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446453229-22982-2-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1446453229-22982-1-git-send-email-vthiagar@qti.qualcomm.com>
+	<1446453229-22982-2-git-send-email-vthiagar@qti.qualcomm.com>
+Date: Mon, 2 Nov 2015 11:27:04 +0100
+Message-ID: <CA+BoTQn4WHGU8nbrcqZyBTm1tkdJZk5NJT63SXi4s7tp=mGiXg@mail.gmail.com> (sfid-20151102_112711_387324_5C9014FD)
+Subject: Re: [PATCH 2/2] ath10k: Fix peerid configuration in htt tx desc for
+ htt version < 3.4
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On 2 November 2015 at 09:33, Vasanthakumar Thiagarajan
+<vthiagar@qti.qualcomm.com> wrote:
+> Of a word in struct htt_data_tx_desc htt version >= 3.4 firmware uses LSB 16-bit
+> for frequency configuration which is used for offchannel tx and MSB 16-bit
+> is for peerid. But other firmwares using version 2.X (10.1, 10.2.2, 10.2.4
+> and 10.4) are using 32-bit for peerid in htt tx desc. So far no issue is found
+> with the existing code setting peerid and freq for HTT version 2.X, this could
+> be mainly because of 0 as frequecy (home channel) is being always passed with
+> those firmwares. There may be issues when non-zero freq is passed with firmware
+> using < 3.4 htt version. To be safe use target_version_major and target_version_minor
+> along with htt-op-version before configuring peer id and freq in htt tx desc.
+>
+> Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/htt.h    |  9 +++++++--
+>  drivers/net/wireless/ath/ath10k/htt_tx.c | 13 +++++++++++--
+>  2 files changed, 18 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+> index 2bad50e..44fb4f2 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt.h
+> +++ b/drivers/net/wireless/ath/ath10k/htt.h
+> @@ -166,8 +166,13 @@ struct htt_data_tx_desc {
+>         __le16 len;
+>         __le16 id;
+>         __le32 frags_paddr;
+> -       __le16 peerid;
+> -       __le16 freq;
+> +       union {
+> +               __le32 peerid;
+> +               struct {
+> +                       __le16 peerid;
+> +                       __le16 freq;
+> +               } __packed offchan_tx;
+> +       } __packed;
+>         u8 prefetch[0]; /* start of frame, for FW classification engine */
+>  } __packed;
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> index 1682397..bf19247 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> @@ -681,8 +681,17 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+>         skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
+>         skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+>         skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+> -       skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+> -       skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
+> +       if (ar->htt.target_version_major >= 3 &&
+> +           ar->htt.target_version_minor >= 4 &&
+> +           ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_TLV) {
 
-> Hi Kalle,
->
-> Here is the first pull request for 4.4. I admit that the FW API is
-> borderline but since we are very early in the cycle, I think it is fine.
-> The firmware is far from being released yet (so that this patch doesn't
-> change much now), but having this patch in will allow me to provide the
-> new firmware to the 4.4 users.
-> Along with that various bug fixes, a fix for a NULL pointer exception
-> other things as explained in the tag.
->
-> Please pull - thanks!
->
->
-> The following changes since commit a493bcf8d6caf28f062c5f8f2ba486fdbf1ae899:
->
->   Merge tag 'wireless-drivers-next-for-davem-2015-10-29' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next (2015-10-30
-> 20:38:24 +0900)
->
-> are available in the git repository at:
->
->  
-> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-11-15
->
-> for you to fetch changes up to 9513c5e18a0dc55a1fc9c890715098ba2315830b:
->
->   iwlwifi: mvm: Avoid dereferencing sta if it was already flushed
-> (2015-11-15 21:18:01 +0200)
->
-> ----------------------------------------------------------------
-> * bump API to firmware 19 - not released yet.
-> * fix D3 flows (Luca)
-> * new device IDs (Oren)
-> * fix NULL pointer dereference (Avri)
->
-> ----------------------------------------------------------------
+Hmm.. I think it'd be better to rename
+ath10k_mac_need_offchan_tx_work() to, e.g.
+ath10k_htt_tx_frm_has_freq() and add the htt.op_version check to it.
 
-Pulled, thanks.
 
--- 
-Kalle Valo
+Michał
