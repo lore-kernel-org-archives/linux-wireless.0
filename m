@@ -1,150 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45465 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891AbbKDN0P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 08:26:15 -0500
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] wil6210: hold wil->mutex while managing vrings
-Date: Wed,  4 Nov 2015 15:26:00 +0200
-Message-Id: <1446643560-31133-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20151104_142619_084710_802B574C)
+Received: from vsmtp14.tin.it ([212.216.176.118]:44910 "EHLO vsmtp14.tin.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751425AbbKBVpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 16:45:13 -0500
+Received: from i-m-services.net (87.0.155.236) by vsmtp14.tin.it (8.6.060.43)
+        id 561FED1A015AC167 for linux-wireless@vger.kernel.org; Mon, 2 Nov 2015 22:39:58 +0100
+Received: from alby.localnet (unknown [192.168.0.219])
+	by i-m-services.net (Postfix) with ESMTP id 46BF92CE0AF
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2015 22:39:42 +0100 (CET)
+From: Alberto Mattea <alberto@mattea.info>
+To: linux-wireless@vger.kernel.org
+Subject: Ralink RT5592 5Ghz capability not working
+Date: Mon, 02 Nov 2015 22:39:45 +0100
+Message-ID: <1536816.BKcYzaDQTT@alby> (sfid-20151102_224519_687081_2D0748A0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Hello,
+this is about the mini-pcie version used in some embedded products (for example the Buffalo WHR-600D and the Asus RP-N53).
+It has an RT5592 chip and the hardware supports both 2.4 and 5Ghz (5Ghz works with the proprietary driver supplied with the devices), but rt2800pci seems to see only the 2.4 Ghz capability.
 
-To prevent race when connect flow may run in parallel with
-the disconnect event.
+dmesg:
 
-Scenario leading to the bug is: while running connect flow on the AP,
-STA sends disconnect. log follows.
+[   14.070000] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev 0222 detected
+[   14.080000] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0001 detected
+[   14.100000] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+[  134.420000] ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2860.bin'
+[  134.460000] ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.34
 
-<7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Configure for connection CID 1
-<7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_init_tx() max_mpdu_size 2048
-<7>[  668.736301] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_alloc()
-<7>[  668.736363] wil6210 0000:01:00.0: wlan0: DBG[MISC]vring[1024] 0xffbe8000:d962ce08 0xdb244000
-<7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Head 0x00880300 -> 0x00880308
-<7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI command 0x0821 [28]
-<7>[  668.736426] DBG[ WMI]Cmd 00000000: 20 00 24 00 00 00 00 00 00 00 21 08 00 00 00 00   .$.......!.....
-<7>[  668.736426] DBG[ WMI]cmd 00000000: 00 00 00 00 00 00 5f 5c 00 00 00 00 00 04 00 08  ......_\........
-<7>[  668.736457] DBG[ WMI]cmd 00000010: 01 01 00 00 00 00 00 00 00 00 ff 0f              ............
-<7>[  668.736488] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Pseudo IRQ 0x00000004
-<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1824 (reply_id 0x1821)
-<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_mask_irq_pseudo()
-<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]ISR MISC 0x20000000
-<7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1003 (reply_id 0x1821)
-<7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Disconnect 04:ce:14:00:07:70 reason [proto 3 wmi 4]
-<7>[  668.736582] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
-<7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread IRQ
-<7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread ISR MISC 0x20000000
-<7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]MBOX event
-<7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox head 00880330 tail 00880328
-<7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox evt 001a 0010 0000 00
-<7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI event 0x1821 MID 0 @3255145 msec
-<7>[  668.736707] DBG[ WMI]evt 00000000: 1a 00 10 00 00 00 00 10 00 00 21 18 69 ab 31 00  ..........!.i.1.
-<7>[  668.736707] DBG[ WMI]evt 00000010: 01 01 00 00 00 00 00 00                          ........
-<7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]queue_work -> 0
-<7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_recv_cmd -> 1 events queued
-<7>[  668.736769] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_unmask_irq_pseudo()
-<7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=1, reason=3
-<7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_disconnect_cid(CID 1, status 1)
-<7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_fini_tx() id=1
-<7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0xffbe8000:d962ce08 0xdb244000
-<7>[  668.736957] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1821 (reply_id 0x1821)
-<7>[  668.736988] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Complete WMI 0x1821
-<7>[  668.737019] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_call(0x0821->0x1821) completed in 0 msec
-<3>[  668.737019] wil6210 0000:01:00.0: wlan0: Tx config failed, status 0x01
-<7>[  668.739518] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_cfg80211_del_station(04:ce:14:00:07:70, reason=2)
-<7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
-<7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]_wil6210_disconnect(bssid=04:ce:14:00:07:70, reason=2, ev-)
-<7>[  668.739581] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=-2, reason=2
-<7>[  668.742705] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0x  (null):d962ce08 0x  (null)
-<3>[  668.742736] __dma_free_remap: trying to free invalid coherent area:   (null)
+The weird thing is that in lspci it is reported as an RT3091, due to the 0x3091 pci device id:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 18 +++++++++++++-----
- drivers/net/wireless/ath/wil6210/txrx.c |  3 +++
- 2 files changed, 16 insertions(+), 5 deletions(-)
+01:00.0 Network controller [0280]: Ralink corp. RT3091 Wireless 802.11n 1T/2R PCIe [1814:3091]
+        Subsystem: Ralink corp. RT3091 Wireless 802.11n 1T/2R PCIe [1814:3091]
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 80 bytes
+        Interrupt: pin A routed to IRQ 4
+        Region 0: Memory at 20000000 (32-bit, non-prefetchable) [size=64K]
+        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Region 3: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Region 4: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Region 5: Memory at <unassigned> (32-bit, non-prefetchable) [size=2]
+        Expansion ROM at <unassigned> [disabled] [size=2]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME+
+        Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <512ns, L1 <64us
+                        ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [140 v1] Device Serial Number 08-68-35-ff-fe-60-a8-86
+        Kernel driver in use: rt2800pci
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index bb69a59..48687f1 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -401,20 +401,26 @@ void wil_bcast_fini(struct wil6210_priv *wil)
- 
- static void wil_connect_worker(struct work_struct *work)
- {
--	int rc;
-+	int rc, cid, ringid;
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						connect_worker);
- 	struct net_device *ndev = wil_to_ndev(wil);
- 
--	int cid = wil->pending_connect_cid;
--	int ringid = wil_find_free_vring(wil);
-+	mutex_lock(&wil->mutex);
- 
-+	cid = wil->pending_connect_cid;
- 	if (cid < 0) {
- 		wil_err(wil, "No connection pending\n");
--		return;
-+		goto out;
-+	}
-+	ringid = wil_find_free_vring(wil);
-+	if (ringid < 0) {
-+		wil_err(wil, "No free vring found\n");
-+		goto out;
- 	}
- 
--	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
-+	wil_dbg_wmi(wil, "Configure for connection CID %d vring %d\n",
-+		    cid, ringid);
- 
- 	rc = wil_vring_init_tx(wil, ringid, 1 << tx_ring_order, cid, 0);
- 	wil->pending_connect_cid = -1;
-@@ -424,6 +430,8 @@ static void wil_connect_worker(struct work_struct *work)
- 	} else {
- 		wil_disconnect_cid(wil, cid, WLAN_REASON_UNSPECIFIED, true);
- 	}
-+out:
-+	mutex_unlock(&wil->mutex);
- }
- 
- int wil_priv_init(struct wil6210_priv *wil)
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 3bc9bc0..edd3ed3 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -160,6 +160,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
- 	struct device *dev = wil_to_dev(wil);
- 	size_t sz = vring->size * sizeof(vring->va[0]);
- 
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
- 	if (tx) {
- 		int vring_index = vring - wil->vring_tx;
- 
-@@ -749,6 +750,7 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
- 
- 	wil_dbg_misc(wil, "%s() max_mpdu_size %d\n", __func__,
- 		     cmd.vring_cfg.tx_sw_ring.max_mpdu_size);
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
- 
- 	if (vring->va) {
- 		wil_err(wil, "Tx ring [%d] already allocated\n", id);
-@@ -821,6 +823,7 @@ int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size)
- 
- 	wil_dbg_misc(wil, "%s() max_mpdu_size %d\n", __func__,
- 		     cmd.vring_cfg.tx_sw_ring.max_mpdu_size);
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
- 
- 	if (vring->va) {
- 		wil_err(wil, "Tx ring [%d] already allocated\n", id);
--- 
-1.8.5.2
+So maybe due to this (i'm not sure), rt2800pci only enables the 2.4 Ghz band support:
 
+# iw phy0 info
+Wiphy phy0
+        max # scan SSIDs: 4
+        max scan IEs length: 2257 bytes
+        Retry short limit: 7
+        Retry long limit: 4
+        Coverage class: 0 (up to 0m)
+        Available Antennas: TX 0 RX 0
+        Supported interface modes:
+                 * IBSS
+                 * managed
+                 * AP
+                 * AP/VLAN
+                 * WDS
+                 * monitor
+                 * mesh point
+        Band 1:
+                Capabilities: 0x272
+                        HT20/HT40
+                        Static SM Power Save
+                        RX Greenfield
+                        RX HT20 SGI
+                        RX HT40 SGI
+                        RX STBC 2-streams
+                        Max AMSDU length: 3839 bytes
+                        No DSSS/CCK HT40
+                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+                Minimum RX AMPDU time spacing: 2 usec (0x04)
+                HT RX MCS rate indexes supported: 0-15, 32
+                TX unequal modulation not supported
+                HT TX Max spatial streams: 1
+                HT TX MCS rate indexes supported may differ
+                Frequencies:
+                        * 2412 MHz [1] (20.0 dBm)
+                        * 2417 MHz [2] (20.0 dBm)
+                        * 2422 MHz [3] (20.0 dBm)
+                        * 2427 MHz [4] (20.0 dBm)
+                        * 2432 MHz [5] (20.0 dBm)
+                        * 2437 MHz [6] (20.0 dBm)
+                        * 2442 MHz [7] (20.0 dBm)
+                        * 2447 MHz [8] (20.0 dBm)
+                        * 2452 MHz [9] (20.0 dBm)
+                        * 2457 MHz [10] (20.0 dBm)
+                        * 2462 MHz [11] (20.0 dBm)
+                        * 2467 MHz [12] (20.0 dBm)
+                        * 2472 MHz [13] (20.0 dBm)
+                        * 2484 MHz [14] (disabled)
+        valid interface combinations:
+                 * #{ managed, AP, mesh point } <= 8,
+                   total <= 8, #channels <= 1
+        HT Capability overrides:
+                 * MCS: ff ff ff ff ff ff ff ff ff ff
+                 * maximum A-MSDU length
+                 * supported channel width
+                 * short GI for 40 MHz
+                 * max A-MPDU length exponent
+                 * min MPDU start spacing
+
+All this with kernel 3.18 (openwrt 15.05 Chaos Calmer).
+Any ideas?
+
+Thanks
+
+Alberto Mattea
