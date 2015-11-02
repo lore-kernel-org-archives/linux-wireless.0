@@ -1,72 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:54732 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656AbbKWS1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 13:27:54 -0500
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
-	Michal Sojka <sojkam1@fel.cvut.cz>
-Subject: [PATCH v2 7/8] cfg80211: Add Kconfig option for ITS-G5 band (5.9 GHz)
-Date: Mon, 23 Nov 2015 19:27:20 +0100
-Message-Id: <1448303241-27747-8-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192812_681832_AF626F8A)
-In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14341 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbbKBKy1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 05:54:27 -0500
+Message-ID: <563740CE.7080806@qti.qualcomm.com> (sfid-20151102_115430_887320_D5706BD1)
+Date: Mon, 2 Nov 2015 16:24:06 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: Fix peerid configuration in htt tx desc for
+ htt version < 3.4
+References: <1446453229-22982-1-git-send-email-vthiagar@qti.qualcomm.com>	<1446453229-22982-2-git-send-email-vthiagar@qti.qualcomm.com> <CA+BoTQn4WHGU8nbrcqZyBTm1tkdJZk5NJT63SXi4s7tp=mGiXg@mail.gmail.com>
+In-Reply-To: <CA+BoTQn4WHGU8nbrcqZyBTm1tkdJZk5NJT63SXi4s7tp=mGiXg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This option is meant for use by drivers and other subsystems to enable
-support for the Intelligent Transportation System (ITS-G5) band. The
-option depends on CFG80211_CERTIFICATION_ONUS as the use of this band is
-restricted. EU allows using it only for certain applications, USA
-require certification.
+On Monday 02 November 2015 03:57 PM, Michal Kazior wrote:
+> On 2 November 2015 at 09:33, Vasanthakumar Thiagarajan
+> <vthiagar@qti.qualcomm.com> wrote:
+>> Of a word in struct htt_data_tx_desc htt version >= 3.4 firmware uses LSB 16-bit
+>> for frequency configuration which is used for offchannel tx and MSB 16-bit
+>> is for peerid. But other firmwares using version 2.X (10.1, 10.2.2, 10.2.4
+>> and 10.4) are using 32-bit for peerid in htt tx desc. So far no issue is found
+>> with the existing code setting peerid and freq for HTT version 2.X, this could
+>> be mainly because of 0 as frequecy (home channel) is being always passed with
+>> those firmwares. There may be issues when non-zero freq is passed with firmware
+>> using < 3.4 htt version. To be safe use target_version_major and target_version_minor
+>> along with htt-op-version before configuring peer id and freq in htt tx desc.
+>>
+>> Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/htt.h    |  9 +++++++--
+>>   drivers/net/wireless/ath/ath10k/htt_tx.c | 13 +++++++++++--
+>>   2 files changed, 18 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+>> index 2bad50e..44fb4f2 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt.h
+>> +++ b/drivers/net/wireless/ath/ath10k/htt.h
+>> @@ -166,8 +166,13 @@ struct htt_data_tx_desc {
+>>          __le16 len;
+>>          __le16 id;
+>>          __le32 frags_paddr;
+>> -       __le16 peerid;
+>> -       __le16 freq;
+>> +       union {
+>> +               __le32 peerid;
+>> +               struct {
+>> +                       __le16 peerid;
+>> +                       __le16 freq;
+>> +               } __packed offchan_tx;
+>> +       } __packed;
+>>          u8 prefetch[0]; /* start of frame, for FW classification engine */
+>>   } __packed;
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> index 1682397..bf19247 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> @@ -681,8 +681,17 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+>>          skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
+>>          skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+>>          skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+>> -       skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+>> -       skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
+>> +       if (ar->htt.target_version_major >= 3 &&
+>> +           ar->htt.target_version_minor >= 4 &&
+>> +           ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_TLV) {
+>
+> Hmm.. I think it'd be better to rename
+> ath10k_mac_need_offchan_tx_work() to, e.g.
+> ath10k_htt_tx_frm_has_freq() and add the htt.op_version check to it.
 
-Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
----
- net/wireless/Kconfig | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index da72ed3..faa0ab1 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -132,6 +132,33 @@ config CFG80211_REG_RELAX_NO_IR
- 	 support this feature by declaring the appropriate channel flags and
- 	 capabilities in their registration flow.
- 
-+config CFG80211_REG_ITSG5_BAND
-+	bool "cfg80211 support for ITS-G5 band (5.9 GHz)"
-+	def_bool n
-+	depends on CFG80211_CERTIFICATION_ONUS
-+	---help---
-+	This option enables support for Inteligent Transportation System (ITS)
-+	band i.e. frequencies from 5.850 to 5.925 GHz. In Europe, the band is
-+	standardized in the ETSI EN 302 663 standard. The use of this band is
-+	restricted by regulatory documents mentioned below. Enable this option
-+	only if you comply with them.
-+
-+	In Europe, the band is split into several sub-bands regulated by
-+	separate documents:
-+
-+	- ITS-G5A (5.875 to 5.905 GHz) band is reserved for ITS road safety
-+	  related applications and is regulated by Commission Decision
-+	  2008/671/EC.
-+
-+	- ITS-G5B (5.855 to 5.875 GHz) band is reserved for ITS non-safety
-+	  applications and is regulated by ECC Recommendation ECC/REC/(08)01.
-+
-+	- ITS-G5D (5.905 to 5.925 GHz) band is reserved for future ITS
-+	  applications and is regulated by ECC Decision ECC/DEC(02)01.
-+
-+	In the US, the band is regulated by FCC 03-324 and the devices using it
-+	must be certified.
-+
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
- 	depends on CFG80211
--- 
-2.5.3
+Sure, thanks.
+
+Vasanth
 
