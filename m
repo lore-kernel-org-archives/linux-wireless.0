@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51470 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858AbbKMVzB (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7424 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbbKBIte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 16:55:01 -0500
-Subject: Re: Does mac80211 guarantee no data frames are sent to driver until
- encryption is setup?
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-References: <564535ED.6080703@candelatech.com>
- <CALhHN=qF55mHxqz6iX0PSHdBcMa_t6XYgXdkSt+Tt4W9gkFFYA@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56465C34.1090503@candelatech.com> (sfid-20151113_225510_656241_D889E74E)
-Date: Fri, 13 Nov 2015 13:55:00 -0800
+	Mon, 2 Nov 2015 03:49:34 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/38] staging: wilc1000: rename pstrWFIDrv of function wilc_set_multicast_list
+Date: Mon, 2 Nov 2015 17:50:56 +0900
+Message-ID: <1446454281-22484-13-git-send-email-glen.lee@atmel.com> (sfid-20151102_094937_808827_E34A7F4E)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=qF55mHxqz6iX0PSHdBcMa_t6XYgXdkSt+Tt4W9gkFFYA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2015 10:14 PM, Janusz Dziedzic wrote:
-> On 13 November 2015 at 01:59, Ben Greear <greearb@candelatech.com> wrote:
->> A certain firmware tries to do EAPOL inspection and only allow data pkts
->> to be sent after the 4-way M4 has been sent, for instance.
->>
->> This was breaking .11r because in that case you don't do the 4-way after
->> roaming, so the firmware was waiting forever for an M4 to be sent and
->> thus all tx data was hung.
->>
->> I managed to get this working by just removing all of the EAPOL inspection
->> from the firmware,
->> but I am thinking that if the stack will send data packets to the driver
->> before 4-way auth is completed and keys are set, then maybe I would
->> be opening up a race where un-encrypted frames could hit the air.
->>
->> Any idea what protections, if any, the mac80211 stack provides
->> for this case?
->>
-> Check WLAN_STA_AUTHORIZED in mac80211.
+From: Leo Kim <leo.kim@atmel.com>
 
-Thanks for the hint.  Looks like my firmware change should
-be perfectly safe in that case.
+This patch renames pstrWFIDrv of function wilc_set_multicast_list to hif_drv
+to avoid CamelCase naming convention.
 
-Thanks,
-Ben
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 312e91a..4dffae5 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1294,11 +1294,11 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 
+ 	struct netdev_hw_addr *ha;
+ 	struct wilc_priv *priv;
+-	struct host_if_drv *pstrWFIDrv;
++	struct host_if_drv *hif_drv;
+ 	int i = 0;
+ 
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
+ 
+ 	if (!dev)
+ 		return;
+@@ -1318,14 +1318,14 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 	if ((dev->flags & IFF_ALLMULTI) || (dev->mc.count) > WILC_MULTICAST_TABLE_SIZE) {
+ 		PRINT_D(INIT_DBG, "Disable multicast filter, retrive all multicast packets\n");
+ 		/* get all multicast packets */
+-		host_int_setup_multicast_filter(pstrWFIDrv, false, 0);
++		host_int_setup_multicast_filter(hif_drv, false, 0);
+ 		return;
+ 	}
+ 
+ 	/* No multicast?  Just get our own stuff */
+ 	if ((dev->mc.count) == 0) {
+ 		PRINT_D(INIT_DBG, "Enable multicast filter, retrive directed packets only.\n");
+-		host_int_setup_multicast_filter(pstrWFIDrv, true, 0);
++		host_int_setup_multicast_filter(hif_drv, true, 0);
+ 		return;
+ 	}
+ 
+@@ -1343,7 +1343,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 		i++;
+ 	}
+ 
+-	host_int_setup_multicast_filter(pstrWFIDrv, true, (dev->mc.count));
++	host_int_setup_multicast_filter(hif_drv, true, (dev->mc.count));
+ 
+ 	return;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
