@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:51142 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7123 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934750AbbKTB06 (ORCPT
+	with ESMTP id S1752829AbbKBIs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 20:26:58 -0500
-Message-ID: <564E77A9.2020200@atmel.com> (sfid-20151120_022723_154040_CC4CBD2A)
-Date: Fri, 20 Nov 2015 10:30:17 +0900
-From: glen lee <glen.lee@atmel.com>
+	Mon, 2 Nov 2015 03:48:28 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/38] staging: wilc1000: rename firmwareIPAddress of fuction Handle_set_IPAddress
+Date: Mon, 2 Nov 2015 17:50:45 +0900
+Message-ID: <1446454281-22484-2-git-send-email-glen.lee@atmel.com> (sfid-20151102_094831_175524_41057C22)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: Dan Carpenter <dan.carpenter@oracle.com>,
-	<devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
-	<adel.noureldin@atmel.com>, <tony.cho@atmel.com>,
-	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
-Subject: Re: [PATCH 3/4] staging: wilc1000: rename index to tcp_pending_ack_idx
-References: <1447898761-6938-1-git-send-email-glen.lee@atmel.com> <1447898761-6938-3-git-send-email-glen.lee@atmel.com> <20151119062343.GR18797@mwanda> <564D71EE.20704@atmel.com> <20151119154551.GB7601@kroah.com>
-In-Reply-To: <20151119154551.GB7601@kroah.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch renames firmwareIPAddress of fuction Handle_set_IPAddress to
+firmware_ip_addr to avoid CamelCase naming convention.
 
-On 2015년 11월 20일 00:45, Greg KH wrote:
-> On Thu, Nov 19, 2015 at 03:53:34PM +0900, glen lee wrote:
->>
->> On 2015년 11월 19일 15:23, Dan Carpenter wrote:
->>> On Thu, Nov 19, 2015 at 11:06:00AM +0900, Glen Lee wrote:
->>>> This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
->>>> this name could be confused index of txq_entry_t. It is index of tcp pending
->>>> ack.
->>>>
->>>> It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
->>>>
->>> It is just a cleanup patch and not a bugfix patch so "fix" is the wrong
->>> word here.  But the correct format for fixes tags is:
->>>
->>> Fixes: 123456789012 ('Title of patch')
->> I see, I learned another one. Thanks.
-> Git can do this automatically for you:
-> 	 git show -s --abbrev-commit --abbrev=12 --pretty=format:"%h (\"%s\")%n"
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This is helpful for me. Thanks.
-
-regards,
-glen lee
-
-> I have an alias for this to make it easier to use frequently.
->
-> greg k-h
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4cb491f..d2628fd 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -408,7 +408,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	char firmwareIPAddress[4] = {0};
++	char firmware_ip_addr[4] = {0};
+ 	struct net_device *dev;
+ 
+ 	dev = hif_drv->priv->dev;
+@@ -429,7 +429,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
+ 	result = send_config_pkt(dev, SET_CFG, &wid, 1,
+ 				 get_id_from_handler(hif_drv));
+ 
+-	host_int_get_ipaddress(hif_drv, firmwareIPAddress, idx);
++	host_int_get_ipaddress(hif_drv, firmware_ip_addr, idx);
+ 
+ 	if (result) {
+ 		PRINT_ER("Failed to set IP address\n");
+-- 
+1.9.1
 
