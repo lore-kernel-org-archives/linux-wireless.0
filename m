@@ -1,144 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37669 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031554AbbKFCRk (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:34781 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216AbbKBOEF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:17:40 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 56/73] staging: wilc1000: replace numeric type to kernel error type
-Date: Fri, 6 Nov 2015 11:19:55 +0900
-Message-ID: <1446776412-30670-7-git-send-email-glen.lee@atmel.com> (sfid-20151106_031751_924851_8592E7E3)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 2 Nov 2015 09:04:05 -0500
+Received: by lbbwb3 with SMTP id wb3so88525787lbb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:03 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/8] ath10k: rename function to adhere to naming convention
+Date: Mon,  2 Nov 2015 15:03:02 +0100
+Message-Id: <1446472988-2603-3-git-send-email-michal.kazior@tieto.com> (sfid-20151102_150412_725943_92386A3D)
+In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+All functions should have ath10k_{filename}_
+prefixes.
 
-This patch replaces numeric type to generic type by kernel style.
- -5 -> -EIO
- -105 -> -ENOBUFS
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index ffe7baa..283c506 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1194,7 +1194,7 @@ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 58230cd04174..14a705ca87b2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3139,8 +3139,10 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+ }
  
- 	dma_buffer = kmalloc(blksz, GFP_KERNEL);
- 	if (!dma_buffer) {
--		ret = -5;
-+		ret = -EIO;
- 		PRINT_ER("Can't allocate buffer for firmware download IO error\n ");
- 		goto _fail_1;
- 	}
-@@ -1229,7 +1229,7 @@ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
- 		release_bus(RELEASE_ONLY);
+ static enum ath10k_hw_txrx_mode
+-ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta, struct sk_buff *skb)
++ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct sk_buff *skb)
+ {
+ 	const struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+@@ -3653,7 +3655,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+-	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
++	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
++								skb);
  
- 		if (!ret) {
--			ret = -5;
-+			ret = -EIO;
- 			PRINT_ER("Can't download firmware IO error\n ");
- 			goto _fail_;
- 		}
-@@ -1263,7 +1263,7 @@ int wilc_wlan_start(void)
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail write reg vmm_core_cfg...\n");
- 		release_bus(RELEASE_ONLY);
--		ret = -5;
-+		ret = -EIO;
- 		return ret;
- 	}
- 	reg = 0;
-@@ -1298,7 +1298,7 @@ int wilc_wlan_start(void)
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail write WILC_GP_REG_1 ...\n");
- 		release_bus(RELEASE_ONLY);
--		ret = -5;
-+		ret = -EIO;
- 		return ret;
- 	}
- 
-@@ -1308,7 +1308,7 @@ int wilc_wlan_start(void)
- 	if (!ret) {
- 		wilc_debug(N_ERR, "[wilc start]: fail read reg 0x1000 ...\n");
- 		release_bus(RELEASE_ONLY);
--		ret = -5;
-+		ret = -EIO;
- 		return ret;
- 	}
- 
-@@ -1661,7 +1661,7 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 
- 	if ((inp->io_func.io_type & 0x1) == HIF_SDIO) {
- 		if (!hif_sdio.hif_init(inp, wilc_debug)) {
--			ret = -5;
-+			ret = -EIO;
- 			goto _fail_;
- 		}
- 		memcpy((void *)&g_wlan.hif_func, &hif_sdio,
-@@ -1669,19 +1669,19 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 	} else {
- 		if ((inp->io_func.io_type & 0x1) == HIF_SPI) {
- 			if (!hif_spi.hif_init(inp, wilc_debug)) {
--				ret = -5;
-+				ret = -EIO;
- 				goto _fail_;
- 			}
- 			memcpy((void *)&g_wlan.hif_func, &hif_spi,
- 			       sizeof(wilc_hif_func_t));
- 		} else {
--			ret = -5;
-+			ret = -EIO;
- 			goto _fail_;
- 		}
- 	}
- 
- 	if (!wilc_wlan_cfg_init(wilc_debug)) {
--		ret = -105;
-+		ret = -ENOBUFS;
- 		goto _fail_;
- 	}
- 
-@@ -1690,7 +1690,7 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 	PRINT_D(TX_DBG, "g_wlan.tx_buffer = %p\n", g_wlan.tx_buffer);
- 
- 	if (!g_wlan.tx_buffer) {
--		ret = -105;
-+		ret = -ENOBUFS;
- 		PRINT_ER("Can't allocate Tx Buffer");
- 		goto _fail_;
- 	}
-@@ -1700,14 +1700,14 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 		g_wlan.rx_buffer = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
- 	PRINT_D(TX_DBG, "g_wlan.rx_buffer =%p\n", g_wlan.rx_buffer);
- 	if (!g_wlan.rx_buffer) {
--		ret = -105;
-+		ret = -ENOBUFS;
- 		PRINT_ER("Can't allocate Rx Buffer");
- 		goto _fail_;
- 	}
- #endif
- 
- 	if (!init_chip(dev)) {
--		ret = -5;
-+		ret = -EIO;
- 		goto _fail_;
- 	}
- #ifdef	TCP_ACK_FILTER
+ 	switch (ATH10K_SKB_CB(skb)->txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
 -- 
-1.9.1
+2.1.4
 
