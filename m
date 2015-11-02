@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37057 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCN7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:13:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 35/73] staging: wilc1000: rename EnableTCPAckFilter variable
-Date: Fri, 6 Nov 2015 11:12:56 +0900
-Message-ID: <1446776014-28094-35-git-send-email-glen.lee@atmel.com> (sfid-20151106_033800_975316_A6869E29)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:50722 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbbKBM1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 07:27:19 -0500
+Message-ID: <1446467233.3205.16.camel@sipsolutions.net> (sfid-20151102_132722_214590_7D6DDE17)
+Subject: Re: [RFC] mac80211_hwsim: Implements a check for ATTR_FREQ inside
+ hwsim_cloned_frame_received_nl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: arwelle@cert.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Nov 2015 13:27:13 +0100
+In-Reply-To: <1446238820-21004-1-git-send-email-arwelle@cert.org>
+References: <1446238820-21004-1-git-send-email-arwelle@cert.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, 2015-10-30 at 17:00 -0400, arwelle@cert.org wrote:
+> From: Adam Welle <arwelle@cert.org>
+> 
+> If a frame is received from netlink with this value set it is checked 
+> against the current radio's frequency and discarded if different.
 
-This patch rename the EnableTCPAckFilter variable to enabled
-to avoid CamelCase naming convention.
+Please line-break the commit log to <=72 characters/line.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> +	/* Check ATTR_FREQ if it exists, and throw away off-channel 
+> packets */
+> +	if (info->attrs[HWSIM_ATTR_FREQ])
+> +		rx_status.freq = nla_get_u32(info
+> ->attrs[HWSIM_ATTR_FREQ]);
+> +	else
+> +		rx_status.freq = data2->channel->center_freq;
+> +
+> +	/* Drop packet if not on the same frequency as this radio */
+> +	if (rx_status.freq != data2->channel->center_freq)
+> +		goto out;
+> 
+I think it'd make sense to have that check only in the case that the
+attribute existed. I'm not too concerned about performance here, but
+more generally it looks odd if you're checking when you know it can't
+be different.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 283ab52..0bfd1bd 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -389,16 +389,16 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- }
- #endif
- 
--bool EnableTCPAckFilter = false;
-+bool enabled = false;
- 
- void Enable_TCP_ACK_Filter(bool value)
- {
--	EnableTCPAckFilter = value;
-+	enabled = value;
- }
- 
- bool is_TCP_ACK_Filter_Enabled(void)
- {
--	return EnableTCPAckFilter;
-+	return enabled;
- }
- 
- static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
--- 
-1.9.1
-
+johannes
