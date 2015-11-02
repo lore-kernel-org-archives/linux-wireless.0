@@ -1,102 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51197 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429AbbKLIr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 03:47:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Michal Marek <mmarek@suse.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v4 1/8] mac80211: add ieee80211_hw_clear()
-Date: Thu, 12 Nov 2015 09:47:46 +0100
-Message-Id: <1447318073-22669-2-git-send-email-johannes@sipsolutions.net> (sfid-20151112_094803_480586_5FA0BE60)
-In-Reply-To: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
-References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7090 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829AbbKBIsS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 03:48:18 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/38] staging: wilc1000: rename pu8IPAddr of fuction Handle_set_IPAddress
+Date: Mon, 2 Nov 2015 17:50:44 +0900
+Message-ID: <1446454281-22484-1-git-send-email-glen.lee@atmel.com> (sfid-20151102_094821_804910_C9D5A3D0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-There are a few hardware flags that *are* valid to change, at least
-under certain circumstances. Since drivers are doing that, add an
-inline to make it easier to do correctly. They still need to take
-care of locking themselves.
+This patch renames pu8IPAddr of fuction Handle_set_IPAddress to ip_addr
+to avoid CamelCase naming convention.
 
-While at it, remove the pointless return in ieee80211_hw_set().
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/adm8211.c              | 2 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 2 +-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 2 +-
- include/net/mac80211.h                      | 9 ++++++++-
- 4 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 15f057ed41ad..bdfd60f39078 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1375,7 +1375,7 @@ static void adm8211_configure_filter(struct ieee80211_hw *dev,
- 	if (priv->nar & ADM8211_NAR_PR)
- 		ieee80211_hw_set(dev, RX_INCLUDES_FCS);
- 	else
--		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, dev->flags);
-+		ieee80211_hw_clear(dev, RX_INCLUDES_FCS);
- 
- 	if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
- 		adm8211_set_bssid(dev, bcast);
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index b3ad34e8bf5a..d4918a5f7bd7 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1356,7 +1356,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
- 	if (vif->type == NL80211_IFTYPE_MONITOR)
- 		ieee80211_hw_set(priv->hw, RX_INCLUDES_FCS);
- 	else
--		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, priv->hw->flags);
-+		ieee80211_hw_clear(priv->hw, RX_INCLUDES_FCS);
- 
- 	err = iwl_setup_interface(priv, ctx);
- 	if (!err || reset)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index ad7ad720d2e7..ca944d3f7401 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -1289,7 +1289,7 @@ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	mvmvif->uploaded = false;
- 
- 	if (vif->type == NL80211_IFTYPE_MONITOR)
--		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, mvm->hw->flags);
-+		ieee80211_hw_clear(mvm->hw, RX_INCLUDES_FCS);
- 
- 	return 0;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2a8330e..4cb491f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -404,7 +404,7 @@ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
+ 	return result;
  }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 82045fca388b..47274d829115 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2081,10 +2081,17 @@ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
- static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
- 				     enum ieee80211_hw_flags flg)
+ 
+-s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
++s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
  {
--	return __set_bit(flg, hw->flags);
-+	__set_bit(flg, hw->flags);
- }
- #define ieee80211_hw_set(hw, flg)	_ieee80211_hw_set(hw, IEEE80211_HW_##flg)
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -413,16 +413,17 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
  
-+static inline void _ieee80211_hw_clear(struct ieee80211_hw *hw,
-+				       enum ieee80211_hw_flags flg)
-+{
-+	__clear_bit(flg, hw->flags);
-+}
-+#define ieee80211_hw_clear(hw, flg)	_ieee80211_hw_clear(hw, IEEE80211_HW_##flg)
-+
- /**
-  * struct ieee80211_scan_request - hw scan request
-  *
+ 	dev = hif_drv->priv->dev;
+ 
+-	if (pu8IPAddr[0] < 192)
+-		pu8IPAddr[0] = 0;
++	if (ip_addr[0] < 192)
++		ip_addr[0] = 0;
+ 
+-	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
++	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n",
++		   idx, ip_addr);
+ 
+-	memcpy(set_ip[idx], pu8IPAddr, IP_ALEN);
++	memcpy(set_ip[idx], ip_addr, IP_ALEN);
+ 
+ 	wid.id = (u16)WID_IP_ADDRESS;
+ 	wid.type = WID_STR;
+-	wid.val = (u8 *)pu8IPAddr;
++	wid.val = (u8 *)ip_addr;
+ 	wid.size = IP_ALEN;
+ 
+ 	result = send_config_pkt(dev, SET_CFG, &wid, 1,
 -- 
-2.6.2
+1.9.1
 
