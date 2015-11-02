@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27737 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174AbbKDRyF (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7263 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbbKBIs7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 12:54:05 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ath10k: add QCA9377 hw1.0 support
-References: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
-	<1446638015-23310-5-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 4 Nov 2015 19:53:45 +0200
-In-Reply-To: <1446638015-23310-5-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 4 Nov 2015 12:53:35 +0100")
-Message-ID: <87lhadbqhi.fsf@kamboji.qca.qualcomm.com> (sfid-20151104_185411_257134_05F3D82D)
+	Mon, 2 Nov 2015 03:48:59 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/38] staging: wilc1000: remove return type of Handle_wait_msg_q_empty
+Date: Mon, 2 Nov 2015 17:50:50 +0900
+Message-ID: <1446454281-22484-7-git-send-email-glen.lee@atmel.com> (sfid-20151102_094904_030502_F90B3F84)
+In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> Add new BMI target version and chip id revision. Register it
-> on supported chips list.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+This patch changes return type of Handle_wait_msg_q_empty from s32 with void
+because return value is not used.
 
-This one has whitespace issues:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-drivers/net/wireless/ath/ath10k/core.c:163: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:163: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:164: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:164: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:165: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:165: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:166: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:166: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:167: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:167: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:168: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:168: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:169: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:169: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:170: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:170: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:171: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:171: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/core.c:172: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/core.c:172: please, no spaces at the start of a line
-
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6abba23..584f718 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -835,11 +835,10 @@ ERRORHANDLER:
+ 	return result;
+ }
+ 
+-static s32 Handle_wait_msg_q_empty(void)
++static void Handle_wait_msg_q_empty(void)
+ {
+ 	g_wilc_initialized = 0;
+ 	up(&hif_sema_wait_response);
+-	return 0;
+ }
+ 
+ static s32 Handle_Scan(struct host_if_drv *hif_drv,
 -- 
-Kalle Valo
+1.9.1
+
