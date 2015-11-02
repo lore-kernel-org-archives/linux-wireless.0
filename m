@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36291 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161036AbbKFKMK (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42911 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbbKBIeY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 05:12:10 -0500
-Received: by pacdm15 with SMTP id dm15so94623479pac.3
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:10 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 10/12] staging: wilc1000: rename pstrAddStationMsg in host_int_add_station
-Date: Fri,  6 Nov 2015 19:11:19 +0900
-Message-Id: <1446804681-8873-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111216_550704_D04F51E3)
-In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 2 Nov 2015 03:34:24 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: Fix peerid configuration in htt tx desc for htt version < 3.4
+Date: Mon, 2 Nov 2015 14:03:49 +0530
+Message-ID: <1446453229-22982-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151102_093428_755049_A07A69E1)
+In-Reply-To: <1446453229-22982-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1446453229-22982-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrAddStationMsg to add_sta_info to avoid camelcase.
+Of a word in struct htt_data_tx_desc htt version >= 3.4 firmware uses LSB 16-bit
+for frequency configuration which is used for offchannel tx and MSB 16-bit
+is for peerid. But other firmwares using version 2.X (10.1, 10.2.2, 10.2.4
+and 10.4) are using 32-bit for peerid in htt tx desc. So far no issue is found
+with the existing code setting peerid and freq for HTT version 2.X, this could
+be mainly because of 0 as frequecy (home channel) is being always passed with
+those firmwares. There may be issues when non-zero freq is passed with firmware
+using < 3.4 htt version. To be safe use target_version_major and target_version_minor
+along with htt-op-version before configuring peer id and freq in htt tx desc.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
-V3: rebase latest staging-testing.
+ drivers/net/wireless/ath/ath10k/htt.h    |  9 +++++++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 13 +++++++++++--
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dcf77ed..501b2e9a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4531,7 +4531,7 @@ int host_int_add_station(struct host_if_drv *hif_drv,
- {
- 	int result = 0;
- 	struct host_if_msg msg;
--	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
-+	struct add_sta_param *add_sta_info = &msg.body.add_sta_info;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 2bad50e..44fb4f2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -166,8 +166,13 @@ struct htt_data_tx_desc {
+ 	__le16 len;
+ 	__le16 id;
+ 	__le32 frags_paddr;
+-	__le16 peerid;
+-	__le16 freq;
++	union {
++		__le32 peerid;
++		struct {
++			__le16 peerid;
++			__le16 freq;
++		} __packed offchan_tx;
++	} __packed;
+ 	u8 prefetch[0]; /* start of frame, for FW classification engine */
+ } __packed;
  
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -4545,16 +4545,16 @@ int host_int_add_station(struct host_if_drv *hif_drv,
- 	msg.id = HOST_IF_MSG_ADD_STATION;
- 	msg.drv = hif_drv;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 1682397..bf19247 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -681,8 +681,17 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
+ 	skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+ 	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+-	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+-	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
++	if (ar->htt.target_version_major >= 3 &&
++	    ar->htt.target_version_minor >= 4 &&
++	    ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_TLV) {
++		skb_cb->htt.txbuf->cmd_tx.offchan_tx.peerid =
++				__cpu_to_le16(HTT_INVALID_PEERID);
++		skb_cb->htt.txbuf->cmd_tx.offchan_tx.freq =
++				__cpu_to_le16(skb_cb->htt.freq);
++	} else {
++		skb_cb->htt.txbuf->cmd_tx.peerid =
++				__cpu_to_le32(HTT_INVALID_PEERID);
++	}
  
--	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
--	if (pstrAddStationMsg->rates_len > 0) {
--		u8 *rates = kmalloc(pstrAddStationMsg->rates_len, GFP_KERNEL);
-+	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
-+	if (add_sta_info->rates_len > 0) {
-+		u8 *rates = kmalloc(add_sta_info->rates_len, GFP_KERNEL);
- 
- 		if (!rates)
- 			return -ENOMEM;
- 
- 		memcpy(rates, sta_param->rates,
--		       pstrAddStationMsg->rates_len);
--		pstrAddStationMsg->rates = rates;
-+		       add_sta_info->rates_len);
-+		add_sta_info->rates = rates;
- 	}
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
 -- 
-2.6.3
+1.9.1
 
