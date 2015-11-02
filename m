@@ -1,64 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0006.hostedemail.com ([216.40.44.6]:42605 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752188AbbKKOpT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 09:45:19 -0500
-Date: Wed, 11 Nov 2015 09:45:16 -0500
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-	Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
-Message-ID: <20151111094516.07d5d1d5@gandalf.local.home> (sfid-20151111_154523_285282_5A490E4E)
-In-Reply-To: <1447252142.2276.19.camel@sipsolutions.net>
-References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
-	<1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
-	<1447201345.2475.15.camel@coelho.fi>
-	<1447227472.2276.7.camel@sipsolutions.net>
-	<20151111083430.1e77c329@gandalf.local.home>
-	<1447249156.2276.17.camel@sipsolutions.net>
-	<20151111091859.55f6a4fd@gandalf.local.home>
-	<1447252142.2276.19.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:34846 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368AbbKBIWK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 03:22:10 -0500
+Received: by lbbes7 with SMTP id es7so82664692lbb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 00:22:09 -0800 (PST)
+From: Jakub Sitnicki <jsitnicki@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Subject: [PATCH] rtl8xxxu: rtl8192eu: Map out EFUSE TX power area
+Date: Mon,  2 Nov 2015 09:21:57 +0100
+Message-Id: <1446452517-14920-1-git-send-email-jsitnicki@gmail.com> (sfid-20151102_092237_793024_799F543B)
+In-Reply-To: <wrfjh9ld34ng.fsf@redhat.com>
+References: <wrfjh9ld34ng.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 11 Nov 2015 15:29:02 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+TX power values are laid out differently in EFUSE found in RTL8192EU &
+RTL8188EU devices.  TX power indices and differences for each RF path
+are not interleaved (A, B, A, B), as in other chips, but follow one
+another (A, B, C, D).
 
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+---
 
-config MY_DRIVER_1
-	SELECT SET_FLAG
+Jes,
 
-config MY_DRIVER_2
-	SELECT SET_FLAG
+I reckon this is as "pretty" as it gets.  I even took the time to draw
+it out:
 
-[...]
+  https://github.com/jsitnicki/realtek-notes/blob/master/efuse-tx-power.pdf
 
+The whole TX power area is aligned to a multiple of 8, but subareas
+for each RF path are not aligned (they are 18 bytes long each).
 
-config FLAG_ALL_SET
-  default y
-  depends on MY_DRIVER_1 && !MY_DRIVER_2 && ... && MY_DRIVER_N
+Patch is for rtl8xxxu-nextgen, of course.  Anything you would rename?
 
+Cheers,
+Jakub
 
-> Right. Basically it'd be one of three options:
->  * all compiled drivers want the flag set:
->    use a static key to make the fast case "flag set"
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |  4 ++--
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 22 +++++++++++++++++-----
+ 2 files changed, 19 insertions(+), 7 deletions(-)
 
-#if defined(CONFIG_SET_FLAG) && defined(CONFIG_FLAG_ALL_SET)
-
->  * no compiled driver wants the flag set:
->    use a static key to make the fast case "flag unset"
-
-#ifndef CONFIG_SET_FLAG
-
->  * different drivers are compiled:
->    don't use a static key since we don't know which one will get used
-
-#if defined(CONFIG_FLAG_SET) && !defined(CONFIG_FLAGS_ALL_SET)
-
--- Steve
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 8c7d2da..6a89710 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2300,7 +2300,7 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 		return -EINVAL;
+ 
+ 	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
+-
++#if 0
+ 	memcpy(priv->cck_tx_power_index_A, efuse->cck_tx_power_index_A,
+ 	       sizeof(priv->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B, efuse->cck_tx_power_index_B,
+@@ -2310,7 +2310,7 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	       sizeof(priv->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B, efuse->ht40_1s_tx_power_index_B,
+ 	       sizeof(priv->ht40_1s_tx_power_index_B));
+-#if 0
++
+ 	memcpy(priv->ht40_2s_tx_power_index_diff,
+ 	       efuse->ht40_2s_tx_power_index_diff,
+ 	       sizeof(priv->ht40_2s_tx_power_index_diff));
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 4b8431d..b223831 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -543,14 +543,26 @@ struct rtl8723bu_efuse {
+ 	u8 res12[0x4];
+ };
+ 
++struct rtl8192eu_efuse_tx_power {
++	u8 cck_base[6];
++	u8 ht40_base[5];
++	struct rtl8723au_idx ht20_ofdm_1s_diff;
++	struct rtl8723au_idx ht40_ht20_2s_diff;
++	struct rtl8723au_idx ofdm_cck_2s_diff; /* not used */
++	struct rtl8723au_idx ht40_ht20_3s_diff;
++	struct rtl8723au_idx ofdm_cck_3s_diff; /* not used */
++	struct rtl8723au_idx ht40_ht20_4s_diff;
++	struct rtl8723au_idx ofdm_cck_4s_diff; /* not used */
++};
++
+ struct rtl8192eu_efuse {
+ 	__le16 rtl_id;
+ 	u8 res0[0x0e];
+-	u8 cck_tx_power_index_A[3];	/* 0x10 */
+-	u8 cck_tx_power_index_B[3];
+-	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
+-	u8 ht40_1s_tx_power_index_B[3];
+-	u8 res1[0x9c];
++	struct rtl8192eu_efuse_tx_power tx_power_index_A;	/* 0x10 */
++	struct rtl8192eu_efuse_tx_power tx_power_index_B;	/* 0x22 */
++	struct rtl8192eu_efuse_tx_power tx_power_index_C;	/* 0x34 */
++	struct rtl8192eu_efuse_tx_power tx_power_index_D;	/* 0x46 */
++	u8 res1[0x60];
+ 	u8 channel_plan;		/* 0xb8 */
+ 	u8 xtal_k;
+ 	u8 thermal_meter;
+-- 
+2.1.0
 
