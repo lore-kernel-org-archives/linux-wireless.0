@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:33418 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752191AbbKSRlJ (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37137 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216AbbKBOEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 12:41:09 -0500
-Received: by qgea14 with SMTP id a14so55941215qge.0
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2015 09:41:08 -0800 (PST)
-Date: Thu, 19 Nov 2015 12:41:07 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: yfw <fengwei.yin@linaro.org>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
- trigger_ba
-Message-ID: <20151119174107.GB12931@localhost> (sfid-20151119_184113_858804_03C8CD03)
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
- <20151109154040.GD5395@localhost>
- <56419805.4090902@linaro.org>
- <20151110141336.GF5395@localhost>
- <564D3FEE.1000208@linaro.org>
+	Mon, 2 Nov 2015 09:04:02 -0500
+Received: by wmff134 with SMTP id f134so61422255wmf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:01 -0800 (PST)
+Received: from ?IPv6:2001:6a8:500:e076:b8a1:5dff:fe25:7954? ([2001:6a8:500:e076:b8a1:5dff:fe25:7954])
+        by smtp.gmail.com with ESMTPSA id bk2sm22543565wjc.3.2015.11.02.05.55.40
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 02 Nov 2015 05:55:40 -0800 (PST)
+Message-ID: <56376B5B.7070608@gmail.com> (sfid-20151102_150407_408826_C4F35318)
+Date: Mon, 02 Nov 2015 14:55:39 +0100
+From: Wim Torfs <wtorfs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <564D3FEE.1000208@linaro.org>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 chanctx usage
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 19, 2015 at 11:20:14AM +0800, yfw wrote:
-> Hi Bob,
-> 
-> On 2015年11月10日 22:13, Bob Copeland wrote:
-> >On Tue, Nov 10, 2015 at 03:08:53PM +0800, fengwei.yin wrote:
-> >>Even on 3620, not all cmds switch to wcn36xx_smd_rsp_status_check_v2.
-> >>And I don't think wcn36xx_smd_rsp_status_check_v2 should bind to 3620 (it
-> >>may be related with firmware).
-> >>
-> >>In patch v2, the wcn36xx_smd_rsp_status_check_v2 is not bind to 3620. If
-> >>you could test on none-3620 platform (I don't have none-3620 plafrom), that
-> >>will be great.
-> >
-> >Sure, I'll take a look today or tomorrow on my hardware.
-> >
-> 
-> Ping...
+Hi,
 
-Oops, sorry.  I can confirm my hardware uses this format.
+What is the idea behind channel contexts? Is it just to create an 
+abstraction between the different vifs regarding the channel (each vif 
+is allowed to operate on its own channel)? In case I want just a single 
+vif, can I ignore the chanctx (specify that the driver does not support 
+chanctx) or is this not recommended due perhaps some updates that were 
+done on the chanctx code and not on the alternative branch?
 
-Turns out, in my backports snapshot I was already carrying a patch for it:
 
-https://github.com/KrasnikovEugene/wcn36xx/commit/7d41270b8c3eee0f72713b4553ca047807c0a00e
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+
+
