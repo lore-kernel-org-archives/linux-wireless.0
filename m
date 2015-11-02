@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47486 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032984AbbKFJjE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:04 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 18/26] staging: wilc1000: remove function pointer spi_max_speed
-Date: Fri, 6 Nov 2015 18:40:15 +0900
-Message-ID: <1446802823-22598-19-git-send-email-glen.lee@atmel.com> (sfid-20151106_103908_340474_30048E63)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:50709 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752749AbbKBMY5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2015 07:24:57 -0500
+Message-ID: <1446467094.3205.14.camel@sipsolutions.net> (sfid-20151102_132500_700362_D6597BD3)
+Subject: Re: [RFC] mac80211_hwsim: Adds parameter use_hwsim_mon which can be
+ used to disable hwism0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: arwelle@cert.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Nov 2015 13:24:54 +0100
+In-Reply-To: <1446239145-21119-1-git-send-email-arwelle@cert.org>
+References: <1446239145-21119-1-git-send-email-arwelle@cert.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes function pointer spi_max_speed of wilc_spi_t and just call
-the function linux_spi_set_max_speed directly.
+On Fri, 2015-10-30 at 17:05 -0400, arwelle@cert.org wrote:
+> From: Adam Welle <arwelle@cert.org>
+> 
+> A new parameter, use_hwsim_mon has been created to implement new 
+> functionalilty. use_hwsim_mon defaults to true so that normal 
+> operation remains the same. When set to false, the hwsim0 device is 
+> not created. This value is also checked before calling functions 
+> which would transmit data to the hwsim0 device.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+I understand the use case (since you explained it to me off-list), but
+I don't think I want to apply this since in almost all cases having
+hwsim0 around but unused isn't actually harmful.
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 789635b..bda7b10 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -14,7 +14,6 @@
- 
- typedef struct {
- 	void *os_context;
--	int (*spi_max_speed)(void);
- 	wilc_debug_func dPrint;
- 	int crc_off;
- 	int nint;
-@@ -975,7 +974,6 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	} else {
- 		return 0;
- 	}
--	g_spi.spi_max_speed = inp->io_func.u.spi.spi_max_speed;
- 
- 	/**
- 	 *      configure protocol
-@@ -1025,7 +1023,7 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 
- static void wilc_spi_max_bus_speed(void)
- {
--	g_spi.spi_max_speed();
-+	linux_spi_set_max_speed();
- }
- 
- static void wilc_spi_default_bus_speed(void)
--- 
-1.9.1
+FWIW,
 
+> -	mac80211_hwsim_monitor_rx(hw, skb, channel);
+> +	if (use_hwsim_mon)
+> +		mac80211_hwsim_monitor_rx(hw, skb, channel);
+
+Had I wanted to apply this, I'd probably have insisted to move the
+check into the function instead of outside of it, since that leaves no
+chances of getting it wrong when changing the code in the future.
+
+johannes
