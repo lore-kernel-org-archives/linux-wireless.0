@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58224 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1162000AbbKTJul (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:40407 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbbKCO3w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 04:50:41 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v4 1/3] NFC: digital: Add Type4A tags support
-Date: Fri, 20 Nov 2015 04:49:55 -0500
-Message-ID: <1448012997-6000-2-git-send-email-shikha.singh@st.com> (sfid-20151120_105046_904590_3DD26804)
-In-Reply-To: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
-References: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
+	Tue, 3 Nov 2015 09:29:52 -0500
+Date: Tue, 3 Nov 2015 17:29:44 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: christophe.ricard@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: NFC: nci: Create pipe on specific gate in nci_hci_connect_gate
+Message-ID: <20151103142944.GE28591@mwanda> (sfid-20151103_152955_332727_2A057DC5)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The definition of DIGITAL_PROTO_NFCA_RF_TECH is modified to support
-ISO14443 Type4A tags. Without this change it is not possible to start
-polling for ISO14443 Type4A tags from the initiator side.
+Hello Christophe Ricard,
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
----
- net/nfc/digital_core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The patch a1b0b9415817: "NFC: nci: Create pipe on specific gate in
+nci_hci_connect_gate" from Oct 25, 2015, leads to the following
+static checker warning:
 
-diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
-index 23c2a11..dd9003f 100644
---- a/net/nfc/digital_core.c
-+++ b/net/nfc/digital_core.c
-@@ -20,7 +20,8 @@
- #include "digital.h"
- 
- #define DIGITAL_PROTO_NFCA_RF_TECH \
--	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | NFC_PROTO_NFC_DEP_MASK)
-+	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | \
-+	NFC_PROTO_NFC_DEP_MASK | NFC_PROTO_ISO14443_MASK)
- 
- #define DIGITAL_PROTO_NFCB_RF_TECH	NFC_PROTO_ISO14443_B_MASK
- 
--- 
-1.8.2.1
+	net/nfc/nci/hci.c:679 nci_hci_connect_gate()
+	warn: impossible condition '(pipe < 0) => (0-255 < 0)'
 
+net/nfc/nci/hci.c
+   655  int nci_hci_connect_gate(struct nci_dev *ndev,
+   656                           u8 dest_host, u8 dest_gate, u8 pipe)
+   657  {
+   658          bool pipe_created = false;
+   659          int r;
+   660  
+   661          if (pipe == NCI_HCI_DO_NOT_OPEN_PIPE)
+   662                  return 0;
+   663  
+   664          if (ndev->hci_dev->gate2pipe[dest_gate] != NCI_HCI_INVALID_PIPE)
+   665                  return -EADDRINUSE;
+   666  
+   667          if (pipe != NCI_HCI_INVALID_PIPE)
+   668                  goto open_pipe;
+   669  
+   670          switch (dest_gate) {
+   671          case NCI_HCI_LINK_MGMT_GATE:
+   672                  pipe = NCI_HCI_LINK_MGMT_PIPE;
+   673          break;
+   674          case NCI_HCI_ADMIN_GATE:
+   675                  pipe = NCI_HCI_ADMIN_PIPE;
+   676          break;
+   677          default:
+   678                  pipe = nci_hci_create_pipe(ndev, dest_host, dest_gate, &r);
+   679                  if (pipe < 0)
+                            ^^^^^^^^
+Unsigned never less than zero.
+
+   680                          return r;
+   681                  pipe_created = true;
+   682                  break;
+   683          }
+   684  
+   685  open_pipe:
+   686          r = nci_hci_open_pipe(ndev, pipe);
+
+
+regards,
+dan carpenter
