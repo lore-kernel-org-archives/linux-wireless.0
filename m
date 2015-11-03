@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:38593 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032897AbbKEGlF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 01:41:05 -0500
-Received: by wmeg8 with SMTP id g8so4400815wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2015 22:41:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <563A9B8C.3060503@candelatech.com>
-References: <563A9B8C.3060503@candelatech.com>
-Date: Thu, 5 Nov 2015 07:41:03 +0100
-Message-ID: <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com> (sfid-20151105_080710_589478_5E61DC5E)
-Subject: Re: Configurable scan dwell time?
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:55424 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752370AbbKCJav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 04:30:51 -0500
+Message-ID: <1446543047.29010.4.camel@sipsolutions.net> (sfid-20151103_103233_106206_1B7E0AD6)
+Subject: Re: [PATCH 09/10] mac80211: allow null chandef in tracing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Date: Tue, 03 Nov 2015 10:30:47 +0100
+In-Reply-To: <1445763582-11421-9-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1445763582-11421-9-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 November 2015 at 00:58, Ben Greear <greearb@candelatech.com> wrote:
-> It looks to me like the channel dwell time when scanning (SW scanning,
-> mac80211)
-> is fixed at 1/9 of a second.  I'd like to make this configurable...is that
-> something
-> that might be welcome upstream?
->
-> My plan is to add to the netlink API around starting a scan and allow
-> user-space to
-> configure a dwell time in milliseconds.
+On Sun, 2015-10-25 at 10:59 +0200, Emmanuel Grumbach wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> In TDLS channel-switch operations the chandef can sometimes be NULL.
+> Avoid an oops in the trace code for these cases and just print a
+> chandef full of zeros.
+> 
+Applied, thanks.
 
-I've actually tried doing something like this some time ago:
-
- - http://thread.gmane.org/gmane.linux.kernel.wireless.general/111255
- - http://thread.gmane.org/gmane.linux.kernel.wireless.general/111251
-
-
-Michał
+johannes
