@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53572 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030696AbbKDRio (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18285 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558AbbKCGV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 12:38:44 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 3 Nov 2015 01:21:56 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
-CC: Yanbo Li <yanbol@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: debugfs file to enable Bluetooth coexistence feature
-References: <1446282441-19368-1-git-send-email-kvalo@qca.qualcomm.com>
-Date: Wed, 4 Nov 2015 19:38:26 +0200
-In-Reply-To: <1446282441-19368-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
-	Valo's message of "Sat, 31 Oct 2015 11:07:21 +0200")
-Message-ID: <87twp1br71.fsf@kamboji.qca.qualcomm.com> (sfid-20151104_183850_518941_04325BBF)
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] ath10k: fix invalid NSS for 4x4 devices
+Date: Tue, 3 Nov 2015 11:51:33 +0530
+Message-ID: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151103_072256_348034_BE949E37)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+The number of spatial streams that are derived from chain mask
+for 4x4 devices is using wrong bitmask and conditional check.
+This is affecting downlink throughput for QCA99x0 devices. Earlier
+cfg_tx_chainmask is not filled by default until user configured it
+and so get_nss_from_chainmask never be called. This issue is exposed
+by recent commit 166de3f1895d ("ath10k: remove supported chain mask").
+By default maximum supported chain mask is filled in cfg_tx_chainmask.
 
-> From: Yanbo Li <yanbol@qca.qualcomm.com>
->
-> As not all QCA98XX radios are not connected to Bluetooth modules, enabling the
-> BT coex feature in firmware will have side effects if the radio's GPIO are
-> connected with other (non-BT) HW modules. Add debugfs file to control the
-> firmware BT coex logic and set the feature as disable by default to avoid that
-> btcoex is accidentally enabled.
->
-> To enable this feature, execute:
->
-> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/btcoex
->
-> To disable:
->
-> echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/btcoex
->
-> The firmware support this feature since 10.2.4.54 on 2G-only board, dual band
-> or 5G boards don't support this. The feature's name is WMI_SERVICE_COEX_GPIO
-> and the btcoex file is not created if firmware doesn't support it.
->
-> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
-> [kvalo@qca.qualcomm.com: use btcoex filename and other smaller fixes]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: stable@vger.kernel.org
+Fixes: 5572a95b4b ("ath10k: apply chainmask settings to vdev on
+creation")
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied, thanks.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a7411fe..95a55405 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4225,7 +4225,7 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ static u32 get_nss_from_chainmask(u16 chain_mask)
+ {
+-	if ((chain_mask & 0x15) == 0x15)
++	if ((chain_mask & 0xf) == 0xf)
+ 		return 4;
+ 	else if ((chain_mask & 0x7) == 0x7)
+ 		return 3;
 -- 
-Kalle Valo
+2.6.2
+
