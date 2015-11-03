@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33959 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbbKSGXz (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34922 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbbKCGcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:23:55 -0500
-Date: Thu, 19 Nov 2015 09:23:44 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 3/4] staging: wilc1000: rename index to
- tcp_pending_ack_idx
-Message-ID: <20151119062343.GR18797@mwanda> (sfid-20151119_072358_502045_5B57FAA0)
-References: <1447898761-6938-1-git-send-email-glen.lee@atmel.com>
- <1447898761-6938-3-git-send-email-glen.lee@atmel.com>
+	Tue, 3 Nov 2015 01:32:06 -0500
+Message-ID: <563854E5.4010508@candelatech.com> (sfid-20151103_073501_503049_2904931D)
+Date: Mon, 02 Nov 2015 22:32:05 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447898761-6938-3-git-send-email-glen.lee@atmel.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] ath10k: fix invalid NSS for 4x4 devices
+References: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 19, 2015 at 11:06:00AM +0900, Glen Lee wrote:
-> This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
-> this name could be confused index of txq_entry_t. It is index of tcp pending
-> ack.
-> 
-> It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
-> 
+I'm a bit embarrassed about that 0x15..thanks for catching that!
 
-It is just a cleanup patch and not a bugfix patch so "fix" is the wrong
-word here.  But the correct format for fixes tags is:
+Ben
 
-Fixes: 123456789012 ('Title of patch')
+On 11/02/2015 10:21 PM, Rajkumar Manoharan wrote:
+> The number of spatial streams that are derived from chain mask
+> for 4x4 devices is using wrong bitmask and conditional check.
+> This is affecting downlink throughput for QCA99x0 devices. Earlier
+> cfg_tx_chainmask is not filled by default until user configured it
+> and so get_nss_from_chainmask never be called. This issue is exposed
+> by recent commit 166de3f1895d ("ath10k: remove supported chain mask").
+> By default maximum supported chain mask is filled in cfg_tx_chainmask.
+>
+> Cc: stable@vger.kernel.org
+> Fixes: 5572a95b4b ("ath10k: apply chainmask settings to vdev on
+> creation")
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index a7411fe..95a55405 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4225,7 +4225,7 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+>
+>   static u32 get_nss_from_chainmask(u16 chain_mask)
+>   {
+> -	if ((chain_mask & 0x15) == 0x15)
+> +	if ((chain_mask & 0xf) == 0xf)
+>   		return 4;
+>   	else if ((chain_mask & 0x7) == 0x7)
+>   		return 3;
+>
 
-regards,
-dan carpenter
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
