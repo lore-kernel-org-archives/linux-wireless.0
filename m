@@ -1,87 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:28140 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751675AbbKNQdt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2015 11:33:49 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: constify brcmf_bus_ops structures
-Date: Sat, 14 Nov 2015 17:22:07 +0100
-Message-Id: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20151114_173443_174010_3EDF5204)
+Received: from s3.sipsolutions.net ([5.9.151.49]:56843 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbbKCOkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 09:40:07 -0500
+Message-ID: <1446561602.29010.23.camel@sipsolutions.net> (sfid-20151103_154017_121016_D4F5C564)
+Subject: pull-request: mac80211 2015-11-03
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Tue, 03 Nov 2015 15:40:02 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmf_bus_ops structures are never modified, so declare them as const.
+Hi,
 
-Done with the help of Coccinelle.
+After the travel I got a whole bunch of things in - I've sorted through
+and taken the fix-like things.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Note that this is in the mac80211 tree, but based on net-next, since I
+thought you might decide to pull this in before you send a pull request
+to Linus.
+However, the content is only things I'd also send after -rc1 (with the
+WMM stuff being a bit borderline, since it's fairly big, but it's a
+huge improvement with broken APs and we've had it in our Intel tree
+testing there for quite a while.)
 
----
- drivers/net/wireless/brcm80211/brcmfmac/bus.h  |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c  |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+Let me know if you run into any problems.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-index 230cad7..36093f9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-@@ -137,7 +137,7 @@ struct brcmf_bus {
- 	bool always_use_fws_queue;
- 	bool wowl_supported;
- 
--	struct brcmf_bus_ops *ops;
-+	const struct brcmf_bus_ops *ops;
- 	struct brcmf_bus_msgbuf *msgbuf;
- };
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 83d8042..65ae3b0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -1419,7 +1419,7 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
- }
- 
- 
--static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
-+static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
- 	.txdata = brcmf_pcie_tx,
- 	.stop = brcmf_pcie_down,
- 	.txctl = brcmf_pcie_tx_ctlpkt,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 7e74ac3..01f359e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -4025,7 +4025,7 @@ brcmf_sdio_watchdog(unsigned long data)
- 	}
- }
- 
--static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
-+static const struct brcmf_bus_ops brcmf_sdio_bus_ops = {
- 	.stop = brcmf_sdio_bus_stop,
- 	.preinit = brcmf_sdio_bus_preinit,
- 	.txdata = brcmf_sdio_bus_txdata,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 689e64d..4bdd3b3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1163,7 +1163,7 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
- 		device_set_wakeup_enable(devinfo->dev, false);
- }
- 
--static struct brcmf_bus_ops brcmf_usb_bus_ops = {
-+static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
- 	.txdata = brcmf_usb_tx,
- 	.stop = brcmf_usb_down,
- 	.txctl = brcmf_usb_tx_ctlpkt,
+johannes
 
+
+
+The following changes since commit e9829b9745b6e1683fd2a90842da498a2197299e:
+
+  Merge tag 'mac80211-next-for-davem-2015-10-21' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next (2015-10-22 07:28:41 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-11-03
+
+for you to fetch changes up to e4208427247ecc7306c8f71ab3c5c08e08cf9fda:
+
+  cfg80211: allow AID/listen interval changes for unassociated station (2015-11-03 11:20:29 +0100)
+
+----------------------------------------------------------------
+Another set of fixes:
+ * remove a warning on a check that can trigger without any
+   errors having happened (Andrei)
+ * correctly handle deauth request while in the process of
+   associating (Andrei)
+ * fix TDLS HT operation (Arik)
+ * allow changing AID/listen interval during client setup (Ayala)
+ * be more forgiving with WMM parameters to get HT/VHT in case of
+   broken APs with bad WMM settings (Emmanuel, myself)
+ * a number of other fixes (some in documentation)
+
+----------------------------------------------------------------
+Andrei Otcheretianski (2):
+      mac80211: Fix local deauth while associating
+      mac80211: Remove WARN_ON_ONCE in ieee80211_recalc_smps
+
+Arik Nemtsov (2):
+      mac80211: allow null chandef in tracing
+      mac80211: TDLS: add proper HT-oper IE
+
+Ayala Beker (1):
+      cfg80211: allow AID/listen interval changes for unassociated station
+
+Chaitanya T K (1):
+      mac80211: document sleep requirements for channel context ops
+
+Eliad Peller (3):
+      mac80211: use freezable workqueue for restart work
+      mac80211: call drv_stop only if driver is started
+      mac80211: don't reconfigure sched scan in case of wowlan
+
+Emmanuel Grumbach (1):
+      mac80211: fixup AIFSN instead of disabling WMM
+
+Janusz.Dziedzic@tieto.com (1):
+      mac80211: fix divide by zero when NOA update
+
+Johannes Berg (4):
+      cfg80211/mac80211: clarify RSSI CQM reporting requirements
+      mac80211: make enable_qos parameter to ieee80211_set_wmm_default()
+      mac80211: treat bad WMM parameters more gracefully
+      mac80211: further improve "no supported rates" warning
+
+Matthias Schiffer (1):
+      mac80211: fix crash on mesh local link ID generation with VIFs
+
+Ola Olsson (1):
+      nl80211: Fix potential memory leak from parse_acl_data
+
+ include/net/cfg80211.h     |   4 ++
+ include/net/mac80211.h     |  10 ++-
+ net/mac80211/cfg.c         |   6 +-
+ net/mac80211/driver-ops.c  |  46 ++++++++++++
+ net/mac80211/driver-ops.h  |  42 ++++-------
+ net/mac80211/ibss.c        |   4 +-
+ net/mac80211/ieee80211_i.h |   6 +-
+ net/mac80211/iface.c       |   8 ++-
+ net/mac80211/main.c        |   2 +-
+ net/mac80211/mesh.c        |   3 +-
+ net/mac80211/mesh_plink.c  |   3 +
+ net/mac80211/mlme.c        | 173 +++++++++++++++++++--------------------------
+ net/mac80211/pm.c          |  11 +++
+ net/mac80211/rate.c        |   2 +-
+ net/mac80211/scan.c        |  12 ++--
+ net/mac80211/tdls.c        |  13 +++-
+ net/mac80211/trace.h       |  10 +--
+ net/mac80211/util.c        |  94 ++++++++++++++----------
+ net/wireless/nl80211.c     |  39 ++++++----
+ 19 files changed, 277 insertions(+), 211 deletions(-)
