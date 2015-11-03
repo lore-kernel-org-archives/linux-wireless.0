@@ -1,218 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:8964 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbbKCHS6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 02:18:58 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 5/5] staging: wilc1000: move send_config_pkt to wilc_wlan.c
-Date: Tue, 3 Nov 2015 16:21:02 +0900
-Message-ID: <1446535262-19817-5-git-send-email-glen.lee@atmel.com> (sfid-20151103_082137_505028_A0B13F51)
-In-Reply-To: <1446535262-19817-1-git-send-email-glen.lee@atmel.com>
-References: <1446535262-19817-1-git-send-email-glen.lee@atmel.com>
+Received: from vsmtp14.tin.it ([212.216.176.118]:32998 "EHLO vsmtp14.tin.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751201AbbKCSK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 13:10:58 -0500
+From: Alberto Mattea <alberto@mattea.info>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: Ralink RT5592 5Ghz capability not working
+Date: Tue, 03 Nov 2015 19:10:53 +0100
+Message-ID: <13779729.DhZWn6HO5Q@alby> (sfid-20151103_191102_777149_D57BA53C)
+In-Reply-To: <5638B98F.2080908@gmail.com>
+References: <5638B98F.2080908@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-send_config_pkt function and it's related structure wid_type is moved to
-wilc_wlan.c because wilc_wlan.c handle message transport. the coreconfigurator
-is all about frames, so it will be frame.[ch] later.
+Hey, thanks for your answer. The device definitely isn't a RT3091, so do you 
+think it's some sort of an OEM hybrid? Do you think it would be better to 
+report this to the openwrt bugzilla? 
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 64 -----------------------------
- drivers/staging/wilc1000/coreconfigurator.h |  9 ----
- drivers/staging/wilc1000/wilc_wlan.c        | 49 ++++++++++++++++++++++
- drivers/staging/wilc1000/wilc_wlan.h        |  9 ++++
- 4 files changed, 58 insertions(+), 73 deletions(-)
+Thanks
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3ddbe23..1caa66e 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -570,67 +570,3 @@ s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo)
- 
- 	return s32Error;
- }
--
--/**
-- *  @brief              sends certain Configuration Packet based on the input WIDs pstrWIDs
-- *  using driver config layer
-- *
-- *  @details
-- *  @param[in]  pstrWIDs WIDs to be sent in the configuration packet
-- *  @param[in]  u32WIDsCount number of WIDs to be sent in the configuration packet
-- *  @param[out]         pu8RxResp The received Packet Response
-- *  @param[out]         ps32RxRespLen Length of the received Packet Response
-- *  @return     Error code indicating success/failure
-- *  @note
-- *  @author	mabubakr
-- *  @date		1 Mar 2012
-- *  @version	1.0
-- */
--s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
--		    u32 count, u32 drv)
--{
--	s32 counter = 0, ret = 0;
--
--	if (mode == GET_CFG) {
--		for (counter = 0; counter < count; counter++) {
--			netdev_info(dev, "Sending CFG packet [%d][%d]\n",
--				    !counter, (counter == count - 1));
--			if (!wilc_wlan_cfg_get(dev,
--					       !counter,
--					       wids[counter].id,
--					       (counter == count - 1),
--					       drv)) {
--				ret = -EBUSY;
--				netdev_err(dev,
--					   "[Sendconfigpkt]Get Timed out\n");
--				break;
--			}
--		}
--		counter = 0;
--		for (counter = 0; counter < count; counter++) {
--			wids[counter].size = wilc_wlan_cfg_get_val(
--					wids[counter].id,
--					wids[counter].val,
--					wids[counter].size);
--		}
--	} else if (mode == SET_CFG) {
--		for (counter = 0; counter < count; counter++) {
--			netdev_info(dev, "Sending config SET PACKET WID:%x\n",
--				    wids[counter].id);
--			if (!wilc_wlan_cfg_set(dev,
--					       !counter,
--					       wids[counter].id,
--					       wids[counter].val,
--					       wids[counter].size,
--					       (counter == count - 1),
--					       drv)) {
--				ret = -EBUSY;
--				netdev_err(dev,
--					   "[Sendconfigpkt]Set Timed out\n");
--				break;
--			}
--		}
--	}
--
--	return ret;
--}
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 7545856..7702a0f 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -70,13 +70,6 @@ typedef enum {
- 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
- } tenuConnectSts;
- 
--struct wid {
--	u16 id;
--	enum wid_type type;
--	s32 size;
--	s8 *val;
--};
--
- typedef struct {
- 	u8 u8Full;
- 	u8 u8Index;
-@@ -127,8 +120,6 @@ typedef struct {
- 	size_t ie_len;
- } tstrDisconnectNotifInfo;
- 
--s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
--		    u32 count, u32 drv);
- s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
- s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 152dba5..44787b0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -2104,3 +2104,52 @@ u16 set_machw_change_vir_if(struct net_device *dev, bool bValue)
- 
- 	return ret;
- }
-+
-+s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
-+		    u32 count, u32 drv)
-+{
-+	s32 counter = 0, ret = 0;
-+
-+	if (mode == GET_CFG) {
-+		for (counter = 0; counter < count; counter++) {
-+			netdev_info(dev, "Sending CFG packet [%d][%d]\n",
-+				    !counter, (counter == count - 1));
-+			if (!wilc_wlan_cfg_get(dev,
-+					       !counter,
-+					       wids[counter].id,
-+					       (counter == count - 1),
-+					       drv)) {
-+				ret = -EBUSY;
-+				netdev_err(dev,
-+					   "[Sendconfigpkt]Get Timed out\n");
-+				break;
-+			}
-+		}
-+		counter = 0;
-+		for (counter = 0; counter < count; counter++) {
-+			wids[counter].size = wilc_wlan_cfg_get_val(
-+					wids[counter].id,
-+					wids[counter].val,
-+					wids[counter].size);
-+		}
-+	} else if (mode == SET_CFG) {
-+		for (counter = 0; counter < count; counter++) {
-+			netdev_info(dev, "Sending config SET PACKET WID:%x\n",
-+				    wids[counter].id);
-+			if (!wilc_wlan_cfg_set(dev,
-+					       !counter,
-+					       wids[counter].id,
-+					       wids[counter].val,
-+					       wids[counter].size,
-+					       (counter == count - 1),
-+					       drv)) {
-+				ret = -EBUSY;
-+				netdev_err(dev,
-+					   "[Sendconfigpkt]Set Timed out\n");
-+				break;
-+			}
-+		}
-+	}
-+
-+	return ret;
-+}
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 73e01a7..e5dcea9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -295,6 +295,13 @@ typedef struct {
- 	u32 seq_no;
- } wilc_cfg_rsp_t;
- 
-+struct wid {
-+	u16 id;
-+	enum wid_type type;
-+	s32 size;
-+	s8 *val;
-+};
-+
- int wilc_wlan_firmware_download(struct net_device *dev, const u8 *buffer,
- 				u32 buffer_size);
- int wilc_wlan_start(struct net_device *dev);
-@@ -312,4 +319,6 @@ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			       u32 buffer_size, wilc_tx_complete_func_t func);
- void chip_sleep_manually(struct net_device *dev, u32 u32SleepTime);
-+s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
-+		    u32 count, u32 drv);
- #endif
--- 
-1.9.1
+In data mar 3 novembre 2015 14:41:35, Xose Vazquez Perez ha scritto:
+> Alberto Mattea wrote:
+> > this is about the mini-pcie version used in some embedded products
+> > (for example the Buffalo WHR-600D and the Asus RP-N53).
+> > It has an RT5592 chip and the hardware supports both 2.4 and 5Ghz
+> > (5Ghz works with the proprietary driver supplied with the devices),
+> > but rt2800pci seems to see only the 2.4 Ghz capability.
+> 
+> As far as I know, RT5592 PCIe devices are unsupported by rt2800pci.
+> 
+> > dmesg:
+> > 
+> > [   14.070000] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev
+> > 0222 detected [   14.080000] ieee80211 phy0: rt2x00_set_rf: Info - RF
+> > chipset 0001 detected [   14.100000] ieee80211 phy0: Selected rate
+> > control algorithm 'minstrel_ht' [  134.420000] ieee80211 phy0:
+> > rt2x00lib_request_firmware: Info - Loading firmware file 'rt2860.bin' [ 
+> > 134.460000] ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware
+> > detected - version: 0.34
+> Here is the output of a real RT5592 PCIe device with rt2800pci driver(Feb
+> 2013):
+> 
+> phy1 -> rt2x00_set_chip: Info - Chipset detected - rt: 5592, rf: 000f, rev:
+> 0222. phy1 -> rt2800_init_eeprom: Error - Invalid RT chipset 0x5592
+> detected. phy1 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
+> 
+> > The weird thing is that in lspci it is reported as an RT3091, due to the
+> > 0x3091 pci device id:
+> > 
+> > 01:00.0 Network controller [0280]: Ralink corp. RT3091 Wireless 802.11n
+> > 1T/2R PCIe [1814:3091]> 
+> >         Subsystem: Ralink corp. RT3091 Wireless 802.11n 1T/2R PCIe
+> >         [1814:3091]
+> > 
+> > [...]
+> 
+> 06:00.0 Network controller [0280]: Ralink corp. Device [1814:5592]
+>         Subsystem: ASUSTeK Computer Inc. Device [1043:851a]
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR+ FastB2B- DisINTx- Status: Cap+ 66MHz- UDF- FastB2B- ParErr-
+> DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx- Latency: 0,
+> Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: Memory at fe500000 (32-bit, non-prefetchable) [size=64K]
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-) Status: D0 NoSoftRst- PME-Enable- DSel=0
+> DScale=0 PME- Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+> Address: 0000000000000000  Data: 0000
+>         Capabilities: [70] Express (v2) Endpoint, MSI 00
+>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
+> <512ns, L1 unlimited ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+> DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported- RlxdOrd-
+> ExtTag- PhantFunc- AuxPwr- NoSnoop- MaxPayload 128 bytes, MaxReadReq 128
+> bytes DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
+> LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns,
+> L1 <64us ClockPM+ Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain-
+> CommClk+ ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- LnkSta: Speed
+> 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+> DevCap2: Completion Timeout: Not Supported, TimeoutDis+ DevCtl2: Completion
+> Timeout: 50us to 50ms, TimeoutDis- LnkCtl2: Target Link Speed: 2.5GT/s,
+> EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB Transmit Margin:
+> Normal Operating Range, EnterModifiedCompliance- ComplianceSOS- Compliance
+> De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -6dB,
+> EqualizationComplete-, EqualizationPhase1- EqualizationPhase2-,
+> EqualizationPhase3-, LinkEqualizationRequest- Capabilities: [100 v1]
+> Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol- UEMsk:  DLP- SDES- TLP- FCP-
+> CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+> UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
+> ECRC- UnsupReq- ACSViol- CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> NonFatalErr+ CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+> NonFatalErr+ AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
+> ChkEn- Capabilities: [140 v1] Device Serial Number c1-a5-f3-ff-fe-a9-85-30
+> > So maybe due to this (i'm not sure), rt2800pci only enables the 2.4 Ghz 
+band support:
+> Your device does not look like a real RT5592 chip.
+> 
+> > All this with kernel 3.18 (openwrt 15.05 Chaos Calmer).
+> > Any ideas?
+> 
+> OpenWrt brings _a lot of_ code out upstream kernel.
+> Who knows what is running.
 
