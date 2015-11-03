@@ -1,95 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34944 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933334AbbKROq6 (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:33573 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754191AbbKCGaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:58 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 24/27] mediatek: unify Kconfig with other vendors
-Date: Wed, 18 Nov 2015 16:46:03 +0200
-Message-Id: <1447857966-19560-25-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154835_533892_2212F62B)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	Tue, 3 Nov 2015 01:30:12 -0500
+Received: by wijp11 with SMTP id p11so65140321wij.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 22:30:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1446531596-3719-1-git-send-email-nataraja@qti.qualcomm.com>
+References: <1446531596-3719-1-git-send-email-nataraja@qti.qualcomm.com>
+Date: Tue, 3 Nov 2015 12:00:11 +0530
+Message-ID: <CAJqpcCSvh+xOK9Q=PT=n5Wv2GwcF-vcbC-MnxWJB62w5S_wg1g@mail.gmail.com> (sfid-20151103_073500_881103_6F4AC9DF)
+Subject: Re: [PATCH v2] ath10k: Add support for pktlog in QCA99X0
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Vivek Natarajan <nataraja@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
+On Tue, Nov 3, 2015 at 11:49 AM, Vivek Natarajan
+<nataraja@qti.qualcomm.com> wrote:
+> This patch adds pktlog support for 10.4 fw versions.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/Kconfig          |    2 +-
- drivers/net/wireless/Makefile         |    3 +--
- drivers/net/wireless/mediatek/Kconfig |   16 ++++++++++------
- 3 files changed, 12 insertions(+), 9 deletions(-)
+Some issues with the mail client. Please ignore.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index c58e244b5079..2225e06611fa 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -24,6 +24,7 @@ source "drivers/net/wireless/cisco/Kconfig"
- source "drivers/net/wireless/intel/Kconfig"
- source "drivers/net/wireless/intersil/Kconfig"
- source "drivers/net/wireless/marvell/Kconfig"
-+source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/ralink/Kconfig"
- source "drivers/net/wireless/realtek/Kconfig"
- source "drivers/net/wireless/rsi/Kconfig"
-@@ -98,7 +99,6 @@ config MAC80211_HWSIM
- 	  called mac80211_hwsim.  If unsure, say N.
- 
- source "drivers/net/wireless/ath/Kconfig"
--source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 8ac72fd44d17..0fa909072846 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -9,6 +9,7 @@ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
- obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
- obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
- obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
-+obj-$(CONFIG_WLAN_VENDOR_MEDIATEK) += mediatek/
- obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
- obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
- obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
-@@ -21,8 +22,6 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
- 
- obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- 
--obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
--
- obj-$(CONFIG_ATH_CARDS)		+= ath/
- 
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/mediatek/Kconfig b/drivers/net/wireless/mediatek/Kconfig
-index cba300c6b5da..28843fed750a 100644
---- a/drivers/net/wireless/mediatek/Kconfig
-+++ b/drivers/net/wireless/mediatek/Kconfig
-@@ -1,10 +1,14 @@
--menuconfig WL_MEDIATEK
--	bool "Mediatek Wireless LAN support"
-+config WLAN_VENDOR_MEDIATEK
-+	bool "MediaTek devices"
-+	default y
- 	---help---
--	  Enable community drivers for MediaTek WiFi devices.
--	  Those drivers make use of the Linux mac80211 stack.
-+	  If you have a wireless card belonging to this class, say Y.
- 
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
- 
--if WL_MEDIATEK
-+if WLAN_VENDOR_MEDIATEK
- source "drivers/net/wireless/mediatek/mt7601u/Kconfig"
--endif # WL_MEDIATEK
-+endif # WLAN_VENDOR_MEDIATEK
--- 
-1.7.9.5
-
+Thanks
+Vivek.
