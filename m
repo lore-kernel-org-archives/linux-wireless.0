@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36174 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbbKVJIO (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35853 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbbKCJhq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 04:08:14 -0500
-Received: by wmww144 with SMTP id w144so63722853wmw.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:13 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6655: PSbIsNextTBTTWakeUp Rename bWakeUp wake_up
-Date: Sun, 22 Nov 2015 09:07:21 +0000
-Message-Id: <1448183242-3397-7-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100843_528334_FC717751)
-In-Reply-To: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
-References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 3 Nov 2015 04:37:46 -0500
+Received: by wmec75 with SMTP id c75so81089879wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 01:37:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1446472988-2603-8-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+	<1446472988-2603-8-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 3 Nov 2015 10:37:45 +0100
+Message-ID: <CA+BoTQmqyTnGU9_cp_GKkXXm5FVbWLN1rAPZBioEk030UyL-tg@mail.gmail.com> (sfid-20151103_104116_036425_54AEF66A)
+Subject: Re: [PATCH 7/8] ath10k: replace vdev_id and tid in skb cb
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case.
+On 2 November 2015 at 15:03, Michal Kazior <michal.kazior@tieto.com> wrote:
+> This prepares the driver for future ieee80211_txq
+> and wake_tx_queue() support.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/power.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I think I've found a regression and bisect blames this patch. Do not
+apply this yet, please.
 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index ad44746..5e968c9 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -151,7 +151,7 @@ PSbIsNextTBTTWakeUp(
- {
- 	struct ieee80211_hw *hw = priv->hw;
- 	struct ieee80211_conf *conf = &hw->conf;
--	bool bWakeUp = false;
-+	bool wake_up = false;
- 
- 	if (conf->listen_interval > 1) {
- 		if (!priv->wake_up_count)
-@@ -163,9 +163,9 @@ PSbIsNextTBTTWakeUp(
- 			/* Turn on wake up to listen next beacon */
- 			MACvRegBitsOn(priv->PortOffset,
- 				      MAC_REG_PSCTL, PSCTL_LNBCN);
--			bWakeUp = true;
-+			wake_up = true;
- 		}
- 	}
- 
--	return bWakeUp;
-+	return wake_up;
- }
--- 
-2.6.2
 
+Michał
