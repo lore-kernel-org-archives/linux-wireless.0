@@ -1,93 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34927 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933289AbbKROqy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56834 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558AbbKCGW3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 22/27] rsi: add vendor Kconfig entry
-Date: Wed, 18 Nov 2015 16:46:01 +0200
-Message-Id: <1447857966-19560-23-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155104_938427_B2252B79)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	Tue, 3 Nov 2015 01:22:29 -0500
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH v2] ath10k: Add support for pktlog in QCA99X0
+Date: Tue, 3 Nov 2015 11:52:10 +0530
+Message-ID: <1446531730-3850-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20151103_072257_035395_08A1EF24)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
+This patch adds pktlog support for 10.4 fw versions.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 ---
- drivers/net/wireless/Kconfig     |    2 +-
- drivers/net/wireless/Makefile    |    3 +--
- drivers/net/wireless/rsi/Kconfig |   15 +++++++++++++++
- 3 files changed, 17 insertions(+), 3 deletions(-)
+v2: Move pktlog_completion_handler to htt_rx.c
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 28af8b10a66e..518608403bd3 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -25,6 +25,7 @@ source "drivers/net/wireless/intel/Kconfig"
- source "drivers/net/wireless/intersil/Kconfig"
- source "drivers/net/wireless/marvell/Kconfig"
- source "drivers/net/wireless/realtek/Kconfig"
-+source "drivers/net/wireless/rsi/Kconfig"
- source "drivers/net/wireless/st/Kconfig"
- source "drivers/net/wireless/zydas/Kconfig"
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 10 ++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c    | 11 +++++++++++
+ 4 files changed, 35 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 2bad50e..74ccfb29 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1598,5 +1598,7 @@ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb);
  
-@@ -99,6 +100,5 @@ source "drivers/net/wireless/ath/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
--source "drivers/net/wireless/rsi/Kconfig"
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6060dda..d1dc1ba 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2127,6 +2127,18 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
  
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 12f6c59668a5..d38b6cc338df 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -10,6 +10,7 @@ obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
- obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
- obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
- obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
-+obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
- obj-$(CONFIG_WLAN_VENDOR_ST) += st/
- obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb)
++{
++	struct ath10k_pktlog_10_4_hdr *hdr =
++		(struct ath10k_pktlog_10_4_hdr *)skb->data;
++
++	trace_ath10k_htt_pktlog(ar, hdr->payload,
++				sizeof(*hdr) + __le16_to_cpu(hdr->size));
++	dev_kfree_skb_any(skb);
++}
++EXPORT_SYMBOL(ath10k_htt_rx_pktlog_completion_handler);
++
+ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ {
+ 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737..2fd5dc1 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -261,6 +261,16 @@ struct ath10k_pktlog_hdr {
+ 	u8 payload[0];
+ } __packed;
  
-@@ -28,5 +29,3 @@ obj-$(CONFIG_ATH_CARDS)		+= ath/
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
++struct ath10k_pktlog_10_4_hdr {
++	__le16 flags;
++	__le16 missed_cnt;
++	__le16 log_type;
++	__le16 size;
++	__le32 timestamp;
++	__le32 type_specific_data;
++	u8 payload[0];
++} __packed;
++
+ enum ath10k_hw_rate_ofdm {
+ 	ATH10K_HW_RATE_OFDM_48M = 0,
+ 	ATH10K_HW_RATE_OFDM_24M,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c05b0c..5fed194 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -108,6 +108,7 @@ static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
  
- obj-$(CONFIG_WL_TI)	+= ti/
--
--obj-$(CONFIG_RSI_91X)	+= rsi/
-diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
-index 35245f994c10..7c5e4ca4e3d0 100644
---- a/drivers/net/wireless/rsi/Kconfig
-+++ b/drivers/net/wireless/rsi/Kconfig
-@@ -1,3 +1,16 @@
-+config WLAN_VENDOR_RSI
-+	bool "Redpine Signals Inc devices"
-+	default y
-+	---help---
-+	  If you have a wireless card belonging to this class, say Y.
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -186,6 +187,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 128,
++		.recv_cb = ath10k_pci_pktlog_rx_cb,
+ 	},
+ 
+ 	/* CE9 target autonomous qcache memcpy */
+@@ -1230,6 +1232,15 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
+ }
+ 
++/* Called by lower (CE) layer when data is received from the Target.
++ * Only 10.4 firmware uses separate CE to transfer pktlog data.
++ */
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_pci_process_rx_cb(ce_state,
++				 ath10k_htt_rx_pktlog_completion_handler);
++}
 +
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
-+
-+if WLAN_VENDOR_RSI
-+
- config RSI_91X
- 	tristate "Redpine Signals Inc 91x WLAN driver support"
- 	depends on MAC80211
-@@ -28,3 +41,5 @@ config RSI_USB
- 	---help---
- 	  This option enables the USB bus support in rsi drivers.
- 	  Select M (recommended), if you have a RSI 1x1 wireless module.
-+
-+endif # WLAN_VENDOR_RSI
+ /* Called by lower (CE) layer when a send to HTT Target completes. */
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
+ {
 -- 
-1.7.9.5
+1.9.1
 
