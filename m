@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:49805 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbbKZNWi (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59102 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbbKCI4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 08:22:38 -0500
-Date: Thu, 26 Nov 2015 13:22:28 +0000
-From: Mark Brown <broonie@kernel.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-build-reports@lists.linaro.org,
-	linaro-kernel@lists.linaro.org, linux-next@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Message-ID: <20151126132228.GG1929@sirena.org.uk> (sfid-20151126_142246_745034_B6D26A90)
-References: <E1a1sVV-00079q-My@optimist>
- <20151126121551.GE1929@sirena.org.uk>
- <87y4dllysz.fsf@kamboji.qca.qualcomm.com>
+	Tue, 3 Nov 2015 03:56:49 -0500
+Message-ID: <56387786.8070608@atmel.com> (sfid-20151103_095652_862350_AC6A31C0)
+Date: Tue, 3 Nov 2015 17:59:50 +0900
+From: glen lee <glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="ZOBTspFzEMOlPevk"
-In-Reply-To: <87y4dllysz.fsf@kamboji.qca.qualcomm.com>
-Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
+To: Shivani Bhardwaj <shivanib134@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: Re: About the patch "Staging: wilc1000: coreconfigurator: Drop unneeded
+ wrapper functions"
+References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com>	<1446174642-28570-17-git-send-email-glen.lee@atmel.com>	<5636BFA6.5070500@atmel.com> <CAKHNQQF+DEZmv83Lo=S4qAd85ffdPgftCuZ-nbGPCSKFAAXhBA@mail.gmail.com>
+In-Reply-To: <CAKHNQQF+DEZmv83Lo=S4qAd85ffdPgftCuZ-nbGPCSKFAAXhBA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Shivani,
 
---ZOBTspFzEMOlPevk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I will revert as you said, I always appreciate all the effort and your time to help.
 
-On Thu, Nov 26, 2015 at 02:39:40PM +0200, Kalle Valo wrote:
-> Mark Brown <broonie@kernel.org> writes:
+Regards,
+glen lee.
 
-> > It looks like this was somehow triggered as part of the reorganisation
-> > of the WiFi directory structure.
 
-> This is surprising and also worrying, any ideas why? It would be good to
-> understand the root cause in case there's a bug in wireless drivers
-> directory reorganisation.
+On 2015년 11월 03일 17:26, Shivani Bhardwaj wrote:
+> On Mon, Nov 2, 2015 at 7:13 AM, glen lee <glen.lee@atmel.com> wrote:
+>> Hi Shivani Bhardwaj,
+>>
+>> Thank you for the patches.
+>>
+>> I am writing this new mail thread since I didn't received about following
+>> patch which is applied recently.
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/patch/drivers/staging/wilc1000?id=d4622f68db8095dd54179e3134e97812727f6b89
+>>
+>> I have tested this on hardware but it did not working.
+>> As far as I know, ether_addr_copy function can be used when src and dst
+>> addresss are __aligned(2) and it has to be proved.
+>> Would you let us know the addresses are properly aligned? I cannot make sure
+>> the data is aligned(2).
+> Hi Glen,
+>
+> Thanks for pointing out. I checked it. The alignment is wrong. Please
+> drop this patch. I'm really sorry for the inconvenience caused. I'll
+> make sure to send a new patch with correct alignment.
+>
+> Thank you
+> Shivani
+>
+>> Regards,
+>> glen lee.
+>>
 
-No, I didn't make much effort to check though since the use of ifdef was
-clearly a bug waiting to happen anyway, I was more surprised it worked
-at all than anything.
-
---ZOBTspFzEMOlPevk
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJWVweTAAoJECTWi3JdVIfQ1KgH/RBdqvEUc+9LSwYI0LHtPzfW
-BxmFqs8xqr81JBpmBXi3u8Pqog+0xWrLZefsIssfDRfO3t1IcA0tkk9SuSDkjCsv
-sKe960Bxa/1yBPnP67/GuNWNc5iOkE1y5BVTa10PKxs9Be77oZAZEANCMwaxwWeo
-FpUaSbH8UcZ+lx5yT10mqAIEK1HWlXiRuZNrM/AxV9/0Y2lmjNBM8CEY9wMfBn+E
-vEszFh9SAAbUMczh6j3O0xM9OF+qnZVfTnrPEcE7a4l1Y2IzKBaU/sRJZ644fYnJ
-T469/8UtKr1/2kTGFil1s7j2kJ9rr0chMdipGP6bqiE8pUtFVAsGuj8mIX34090=
-=+mvw
------END PGP SIGNATURE-----
-
---ZOBTspFzEMOlPevk--
