@@ -1,98 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38725 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032185AbbKEImI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 03:42:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 2/4] ipv4: add option to drop gratuitous ARP packets
-Date: Thu,  5 Nov 2015 09:42:01 +0100
-Message-Id: <1446712923-9136-2-git-send-email-johannes@sipsolutions.net> (sfid-20151105_094218_644072_271E2D03)
-In-Reply-To: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
-References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21359 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558AbbKCGWh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 01:22:37 -0500
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH v2] ath10k: Add support for pktlog in QCA99X0
+Date: Tue, 3 Nov 2015 11:52:21 +0530
+Message-ID: <1446531741-3884-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20151103_072257_685281_D339167F)
+In-Reply-To: <n>
+References: <n>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch adds pktlog support for 10.4 fw versions.
 
-In certain 802.11 wireless deployments, there will be ARP proxies
-that use knowledge of the network to correctly answer requests.
-To prevent gratuitous ARP frames on the shared medium from being
-a problem, on such deployments wireless needs to drop them.
-
-Enable this by providing an option called "drop_gratuitous_arp".
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 ---
- Documentation/networking/ip-sysctl.txt | 6 ++++++
- include/uapi/linux/ip.h                | 1 +
- net/ipv4/arp.c                         | 8 ++++++++
- net/ipv4/devinet.c                     | 2 ++
- 4 files changed, 17 insertions(+)
+v2: Move pktlog_completion_handler to htt_rx.c
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 35c4c43dd8de..56bb6dd881bd 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1215,6 +1215,12 @@ drop_unicast_in_l2_multicast - BOOLEAN
- 	1122, but is disabled by default for compatibility reasons.
- 	Default: off (0)
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 10 ++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c    | 11 +++++++++++
+ 4 files changed, 35 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 2bad50e..74ccfb29 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1598,5 +1598,7 @@ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb);
  
-+drop_gratuitous_arp - BOOLEAN
-+	Drop all gratuitous ARP frames, for example if there's a known
-+	good ARP proxy on the network and such frames need not be used
-+	(or in the case of 802.11, must not be used to prevent attacks.)
-+	Default: off (0)
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6060dda..d1dc1ba 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2127,6 +2127,18 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
+ 
++void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
++					     struct sk_buff *skb)
++{
++	struct ath10k_pktlog_10_4_hdr *hdr =
++		(struct ath10k_pktlog_10_4_hdr *)skb->data;
 +
- 
- tag - INTEGER
- 	Allows you to write a number, which can be used as required.
-diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
-index 584834f7e95c..f291569768dd 100644
---- a/include/uapi/linux/ip.h
-+++ b/include/uapi/linux/ip.h
-@@ -166,6 +166,7 @@ enum
- 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
- 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
- 	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
-+	IPV4_DEVCONF_DROP_GRATUITOUS_ARP,
- 	__IPV4_DEVCONF_MAX
- };
- 
-diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
-index 59b3e0e8fd51..c102eb5ac55c 100644
---- a/net/ipv4/arp.c
-+++ b/net/ipv4/arp.c
-@@ -735,6 +735,14 @@ static int arp_process(struct net *net, struct sock *sk, struct sk_buff *skb)
- 	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
- 		goto out;
- 
-+ /*
-+  *	For some 802.11 wireless deployments (and possibly other networks),
-+  *	there will be an ARP proxy and gratuitous ARP frames are attacks
-+  *	and thus should not be accepted.
-+  */
-+	if (sip == tip && IN_DEV_ORCONF(in_dev, DROP_GRATUITOUS_ARP))
-+		goto out;
++	trace_ath10k_htt_pktlog(ar, hdr->payload,
++				sizeof(*hdr) + __le16_to_cpu(hdr->size));
++	dev_kfree_skb_any(skb);
++}
++EXPORT_SYMBOL(ath10k_htt_rx_pktlog_completion_handler);
 +
- /*
-  *     Special case: We must set Frame Relay source Q.922 address
-  */
-diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
-index dbbab28a52a4..3d835313575e 100644
---- a/net/ipv4/devinet.c
-+++ b/net/ipv4/devinet.c
-@@ -2185,6 +2185,8 @@ static struct devinet_sysctl_table {
- 					"igmpv3_unsolicited_report_interval"),
- 		DEVINET_SYSCTL_RW_ENTRY(IGNORE_ROUTES_WITH_LINKDOWN,
- 					"ignore_routes_with_linkdown"),
-+		DEVINET_SYSCTL_RW_ENTRY(DROP_GRATUITOUS_ARP,
-+					"drop_gratuitous_arp"),
+ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ {
+ 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 2d87737..2fd5dc1 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -261,6 +261,16 @@ struct ath10k_pktlog_hdr {
+ 	u8 payload[0];
+ } __packed;
  
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOXFRM, "disable_xfrm"),
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOPOLICY, "disable_policy"),
++struct ath10k_pktlog_10_4_hdr {
++	__le16 flags;
++	__le16 missed_cnt;
++	__le16 log_type;
++	__le16 size;
++	__le32 timestamp;
++	__le32 type_specific_data;
++	u8 payload[0];
++} __packed;
++
+ enum ath10k_hw_rate_ofdm {
+ 	ATH10K_HW_RATE_OFDM_48M = 0,
+ 	ATH10K_HW_RATE_OFDM_24M,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c05b0c..5fed194 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -108,6 +108,7 @@ static void ath10k_pci_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -186,6 +187,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 128,
++		.recv_cb = ath10k_pci_pktlog_rx_cb,
+ 	},
+ 
+ 	/* CE9 target autonomous qcache memcpy */
+@@ -1230,6 +1232,15 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
+ }
+ 
++/* Called by lower (CE) layer when data is received from the Target.
++ * Only 10.4 firmware uses separate CE to transfer pktlog data.
++ */
++static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_pci_process_rx_cb(ce_state,
++				 ath10k_htt_rx_pktlog_completion_handler);
++}
++
+ /* Called by lower (CE) layer when a send to HTT Target completes. */
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
+ {
 -- 
-2.6.2
+1.9.1
 
