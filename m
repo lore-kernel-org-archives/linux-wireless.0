@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:34216 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751834AbbKBS71 (ORCPT
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:35589 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbbKCQIk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 13:59:27 -0500
-Date: Mon, 2 Nov 2015 20:59:23 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Michal Sojka <sojkam1@fel.cvut.cz>
-Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
-	s.sander@nordsys.de, wireless-regdb@lists.infradead.org,
-	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
-	Jan =?utf-8?B?S2Fpc3Jsw61r?= <kaisrja1@fel.cvut.cz>
-Subject: Re: [PATCH v2] ath9k: Add support for ITS-G5 band (5.9 GHz)
-Message-ID: <20151102185923.GA3707@w1.fi> (sfid-20151102_195930_686913_3CFDDB0C)
-References: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz>
- <20151102165516.GA817@w1.fi>
- <87k2q0qpae.fsf@steelpick.2x.cz>
- <20151102174637.GA2350@w1.fi>
- <87h9l4qm9q.fsf@steelpick.2x.cz>
+	Tue, 3 Nov 2015 11:08:40 -0500
+Received: by ykek133 with SMTP id k133so23444623yke.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 08:08:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87h9l4qm9q.fsf@steelpick.2x.cz>
+In-Reply-To: <1446477028-23118-1-git-send-email-chaitanya.mgit@gmail.com>
+References: <1446477028-23118-1-git-send-email-chaitanya.mgit@gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 3 Nov 2015 21:38:20 +0530
+Message-ID: <CABPxzYJDfy7SFk9XhY64UXPt=9gkN0j7G0jh_rj7xsVUbJ2btg@mail.gmail.com> (sfid-20151103_170858_991732_00505D75)
+Subject: Re: [PATCHv2] offchannel: Cancel the pending_action TX wait, before
+ starting new one.
+To: hostap@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Cc: tkc <chaitanya.mgit@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2015 at 07:38:57PM +0100, Michal Sojka wrote:
-> We discussed that about a year ago [1]. The thing is that regulatory
-> documents do not talk about modes (at least in Europe). They only talk
-> about channel widths, EIRP etc. and say that the band is designated for
-> Intelligent Transportation System (ITS) applications. Only the ITS
-> standards (e.g. ETSI EN 302 663) talk about OCB mode. From the last
-> year's discussion I took away that we should not restrict these bands to
-> OCB only, because regulatory documents do not require it. But I might
-> get it wrong.
-> 
-> [1] http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg656581.html
+On Mon, Nov 2, 2015 at 8:40 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
+> From: tkc <chaitanya.mgit@gmail.com>
+>
+> Before the tx_status is received for the action frame, if we
+> get another request, we respond to that by freeing the memory
+> for pending_action_tx, but we don't cancel the TX wait, so
+> in the kernel the ROC will not be cancelled.
+>
+> Due to above issue, wpa_supplicant assumes that all pending
+> RoC's are cancelled and proceeds with interface creation and
+> connection, where as state in mac80211/driver will be roc_in_progress.
+>
+> This is leading to issues at driver level.
+>
+> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> ---
+> V2: Fix 2 from's.
+>     Remove the unnecessary braces.
+> ---
+>  wpa_supplicant/offchannel.c |   12 +++---------
+>  1 file changed, 3 insertions(+), 9 deletions(-)
+>
+> diff --git a/wpa_supplicant/offchannel.c b/wpa_supplicant/offchannel.c
+> index 6b3f83c..581c5f6 100644
+> --- a/wpa_supplicant/offchannel.c
+> +++ b/wpa_supplicant/offchannel.c
+> @@ -253,15 +253,9 @@ int offchannel_send_action(struct wpa_supplicant *wpa_s, unsigned int freq,
+>
+>         wpa_s->pending_action_tx_status_cb = tx_cb;
+>
+> -       if (wpa_s->pending_action_tx) {
+> -               wpa_printf(MSG_DEBUG, "Off-channel: Dropped pending Action "
+> -                          "frame TX to " MACSTR " (pending_action_tx=%p)",
+> -                          MAC2STR(wpa_s->pending_action_dst),
+> -                          wpa_s->pending_action_tx);
 
-In some sense, I agree with that, but taken into account that I'm much
-more concerned about accidentally using this band, I think there is
-justification for adding that extra constraint of allowing only the OCB
-mode to be used even if the regulatory requirements may not explicitly
-say so. Especially the behavior of including these channels with active
-scanning allowed in all full scans is something that really must not be
-enabled.
+I think we should retain this print to identify if its a proper complete
+or dropping pending. Anyways will wait for comments before sending V3.
 
-> Hmm, ath9k is the hardware that we can currently play with. Can you
-> suggest another hardware that supports 5.9 GHz and a driver that would
-> be more convenient to develop with?
-
-I don't think there is any hardware alternative that would be more
-convenient for this type of efforts than chips supported by ath9k. It is
-just that the needs of this project are somewhat in conflict with the
-needs of regulatory rule enforcement for most other use cases.. :)
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+.
