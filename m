@@ -1,80 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7459 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbbKBItq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:49:46 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/38] staging: wilc1000: rename pIP_Add_buff of function dev_state_ev_handler
-Date: Mon, 2 Nov 2015 17:50:58 +0900
-Message-ID: <1446454281-22484-15-git-send-email-glen.lee@atmel.com> (sfid-20151102_094949_028074_B511B982)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:55691 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbbKCK2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 05:28:48 -0500
+Message-ID: <1446546525.29010.14.camel@sipsolutions.net> (sfid-20151103_112851_544486_BF778657)
+Subject: Re: [PATCH] iw: Fix memory leak if nla_put fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Date: Tue, 03 Nov 2015 11:28:45 +0100
+In-Reply-To: <1445639592-5559-1-git-send-email-ola1olsson@gmail.com> (sfid-20151024_003338_280380_D4EE8ED5)
+References: <1445639592-5559-1-git-send-email-ola1olsson@gmail.com>
+	 (sfid-20151024_003338_280380_D4EE8ED5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Sat, 2015-10-24 at 00:33 +0200, Ola Olsson wrote:
+> The NLA_PUT macro will automatically goto nla_put_failure if
+> the underlying nla_put fails. This will in turn leak our malloced
+> memory in both the scan and wowlan commands.
+> Fix that by not using the macro in the cases where we have
+> allocated heap mem.
+> 
+Applied, thanks.
 
-This patch renames pIP_Add_buff of function dev_state_ev_handler to ip_addr_buf
-to avoid CamelCase naming convention.
+Luckily the tool just exits right away so we don't have to care all
+that much :)
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+But of course it's still good to fix it since people can (and do) copy
+it into other code.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 9811949..335aa2b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -124,7 +124,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 	struct wilc_priv *priv;
- 	struct host_if_drv *hif_drv;
- 	struct net_device *dev;
--	u8 *pIP_Add_buff;
-+	u8 *ip_addr_buf;
- 	perInterface_wlan_t *nic;
- 	u8 null_ip[4] = {0};
- 	char wlan_dev_name[5] = "wlan0";
-@@ -177,9 +177,11 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 
- 		PRINT_D(GENERIC_DBG, "[%s] Up IP\n", dev_iface->ifa_label);
- 
--		pIP_Add_buff = (char *) (&(dev_iface->ifa_address));
--		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n", pIP_Add_buff[0], pIP_Add_buff[1], pIP_Add_buff[2], pIP_Add_buff[3]);
--		host_int_setup_ipaddress(hif_drv, pIP_Add_buff, nic->u8IfIdx);
-+		ip_addr_buf = (char *)&dev_iface->ifa_address;
-+		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n",
-+			ip_addr_buf[0], ip_addr_buf[1],
-+			ip_addr_buf[2], ip_addr_buf[3]);
-+		host_int_setup_ipaddress(hif_drv, ip_addr_buf, nic->u8IfIdx);
- 
- 		break;
- 
-@@ -199,10 +201,12 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 
- 		PRINT_D(GENERIC_DBG, "[%s] Down IP\n", dev_iface->ifa_label);
- 
--		pIP_Add_buff = null_ip;
--		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n", pIP_Add_buff[0], pIP_Add_buff[1], pIP_Add_buff[2], pIP_Add_buff[3]);
-+		ip_addr_buf = null_ip;
-+		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n",
-+			ip_addr_buf[0], ip_addr_buf[1],
-+			ip_addr_buf[2], ip_addr_buf[3]);
- 
--		host_int_setup_ipaddress(hif_drv, pIP_Add_buff, nic->u8IfIdx);
-+		host_int_setup_ipaddress(hif_drv, ip_addr_buf, nic->u8IfIdx);
- 
- 		break;
- 
--- 
-1.9.1
-
+johannes
