@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:53742 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbbKYJcJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 04:32:09 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/4] staging: wilc1000: linux_sdio_probe: use return value
-Date: Wed, 25 Nov 2015 18:35:27 +0900
-Message-ID: <1448444129-11045-2-git-send-email-glen.lee@atmel.com> (sfid-20151125_103213_358935_26CD7F83)
-In-Reply-To: <1448444129-11045-1-git-send-email-glen.lee@atmel.com>
-References: <1448444129-11045-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:55660 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258AbbKCKWF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2015 05:22:05 -0500
+Message-ID: <1446546123.29010.13.camel@sipsolutions.net> (sfid-20151103_112210_319043_AF22A801)
+Subject: Re: [PATCH] cfg80211: Enable update of properties for unassociated
+ station.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Ayala Beker <ayala.beker@intel.com>
+Date: Tue, 03 Nov 2015 11:22:03 +0100
+In-Reply-To: <1445588406-13416-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1445588406-13416-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return ret from wilc_netdev_init instead of -1 for proper error handling.
+On Fri, 2015-10-23 at 11:20 +0300, Emmanuel Grumbach wrote:
+> From: Ayala Beker <ayala.beker@intel.com>
+> 
+> Currently, cfg80211 rejects updates of AID and listen interval 
+> parameters
+> for existing entries. This information is known only at association 
+> stage,
+> and as a result it's impossible to update entries that were added
+> unassociated.
+> Fix this by allowing updates of these properies for stations that the
+> driver (or mac80211) assigned unassociated state.
+> 
+Applied. Does the feature work completely with this patch?
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_sdio.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index e25811d..4b9cb55 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -91,7 +91,7 @@ static int linux_sdio_probe(struct sdio_func *func,
- 			    const struct sdio_device_id *id)
- {
- 	struct wilc *wilc;
--	int gpio;
-+	int gpio, ret;
- 
- 	gpio = -1;
- 	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
-@@ -101,10 +101,11 @@ static int linux_sdio_probe(struct sdio_func *func,
- 	}
- 
- 	dev_dbg(&func->dev, "Initializing netdev\n");
--	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
--			     &wilc_hif_sdio)) {
-+	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
-+			     &wilc_hif_sdio);
-+	if (ret) {
- 		dev_err(&func->dev, "Couldn't initialize netdev\n");
--		return -1;
-+		return ret;
- 	}
- 	sdio_set_drvdata(func, wilc);
- 	wilc->dev = &func->dev;
--- 
-1.9.1
-
+johannes
