@@ -1,150 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:36332 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbbKQFek (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45465 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751891AbbKDN0P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 00:34:40 -0500
-Received: by qgad10 with SMTP id d10so65982307qga.3
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 21:34:40 -0800 (PST)
-From: Steve deRosier <derosier@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for CHIP_PWD_L pin
-Date: Mon, 16 Nov 2015 21:32:52 -0800
-Message-Id: <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com> (sfid-20151117_063445_266727_04A0D144)
-In-Reply-To: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
-References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+	Wed, 4 Nov 2015 08:26:15 -0500
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] wil6210: hold wil->mutex while managing vrings
+Date: Wed,  4 Nov 2015 15:26:00 +0200
+Message-Id: <1446643560-31133-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20151104_142619_084710_802B574C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many ath6k chips have a reset pin, usually labeled CHIP_PWD_L. This pin can
-be pulled low by the host processor to hold the wifi chip in reset. By
-holding the chip in reset, the lowest power consumption available can be
-achieved.
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-This adds a module parameter so the ath6kl_sdio driver can control the
-CHIP_PWD_L pin if the implementer so desires. This code is only available
-if GPIOLIB is configured.
+To prevent race when connect flow may run in parallel with
+the disconnect event.
 
-Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+Scenario leading to the bug is: while running connect flow on the AP,
+STA sends disconnect. log follows.
+
+<7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Configure for connection CID 1
+<7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_init_tx() max_mpdu_size 2048
+<7>[  668.736301] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_alloc()
+<7>[  668.736363] wil6210 0000:01:00.0: wlan0: DBG[MISC]vring[1024] 0xffbe8000:d962ce08 0xdb244000
+<7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Head 0x00880300 -> 0x00880308
+<7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI command 0x0821 [28]
+<7>[  668.736426] DBG[ WMI]Cmd 00000000: 20 00 24 00 00 00 00 00 00 00 21 08 00 00 00 00   .$.......!.....
+<7>[  668.736426] DBG[ WMI]cmd 00000000: 00 00 00 00 00 00 5f 5c 00 00 00 00 00 04 00 08  ......_\........
+<7>[  668.736457] DBG[ WMI]cmd 00000010: 01 01 00 00 00 00 00 00 00 00 ff 0f              ............
+<7>[  668.736488] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Pseudo IRQ 0x00000004
+<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1824 (reply_id 0x1821)
+<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_mask_irq_pseudo()
+<7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]ISR MISC 0x20000000
+<7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1003 (reply_id 0x1821)
+<7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Disconnect 04:ce:14:00:07:70 reason [proto 3 wmi 4]
+<7>[  668.736582] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
+<7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread IRQ
+<7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread ISR MISC 0x20000000
+<7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]MBOX event
+<7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox head 00880330 tail 00880328
+<7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox evt 001a 0010 0000 00
+<7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI event 0x1821 MID 0 @3255145 msec
+<7>[  668.736707] DBG[ WMI]evt 00000000: 1a 00 10 00 00 00 00 10 00 00 21 18 69 ab 31 00  ..........!.i.1.
+<7>[  668.736707] DBG[ WMI]evt 00000010: 01 01 00 00 00 00 00 00                          ........
+<7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]queue_work -> 0
+<7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_recv_cmd -> 1 events queued
+<7>[  668.736769] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_unmask_irq_pseudo()
+<7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=1, reason=3
+<7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_disconnect_cid(CID 1, status 1)
+<7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_fini_tx() id=1
+<7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0xffbe8000:d962ce08 0xdb244000
+<7>[  668.736957] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1821 (reply_id 0x1821)
+<7>[  668.736988] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Complete WMI 0x1821
+<7>[  668.737019] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_call(0x0821->0x1821) completed in 0 msec
+<3>[  668.737019] wil6210 0000:01:00.0: wlan0: Tx config failed, status 0x01
+<7>[  668.739518] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_cfg80211_del_station(04:ce:14:00:07:70, reason=2)
+<7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
+<7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]_wil6210_disconnect(bssid=04:ce:14:00:07:70, reason=2, ev-)
+<7>[  668.739581] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=-2, reason=2
+<7>[  668.742705] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0x  (null):d962ce08 0x  (null)
+<3>[  668.742736] __dma_free_remap: trying to free invalid coherent area:   (null)
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/sdio.c | 80 +++++++++++++++++++++++++++++++++-
- 1 file changed, 79 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/main.c | 18 +++++++++++++-----
+ drivers/net/wireless/ath/wil6210/txrx.c |  3 +++
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index eab0ab9..7a732f3 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -67,8 +67,18 @@ struct ath6kl_sdio {
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bb69a59..48687f1 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -401,20 +401,26 @@ void wil_bcast_fini(struct wil6210_priv *wil)
  
- 	/* protects access to wr_asyncq */
- 	spinlock_t wr_async_lock;
-+
- };
- 
-+#ifdef CONFIG_GPIOLIB
-+#include <linux/gpio.h>
-+#define NO_GPIO    0xffffffff
-+
-+static unsigned int reset_pwd_gpio = NO_GPIO;
-+module_param(reset_pwd_gpio, uint, 0644);
-+MODULE_PARM_DESC(reset_pwd_gpio, "WIFI CHIP_PWD reset pin GPIO");
-+#endif
-+
- #define CMD53_ARG_READ          0
- #define CMD53_ARG_WRITE         1
- #define CMD53_ARG_BLOCK_BASIS   1
-@@ -1414,20 +1424,88 @@ static struct sdio_driver ath6kl_sdio_driver = {
- 	.drv.pm = ATH6KL_SDIO_PM_OPS,
- };
- 
-+static int __init ath6kl_sdio_init_gpio(void)
-+{
-+	int ret = 0;
-+
-+#ifdef CONFIG_GPIOLIB
-+	if (!gpio_is_valid(reset_pwd_gpio))
-+		return 0;
-+
-+	/* Request the reset GPIO, and assert it to make sure we get a 100%
-+	 * clean boot in-case we had a floating input or other issue.
-+	 */
-+	ret = gpio_request_one(reset_pwd_gpio,
-+			       GPIOF_OUT_INIT_LOW | GPIOF_EXPORT_DIR_FIXED,
-+			       "WIFI_RESET");
-+	if (ret) {
-+		ath6kl_err("Unable to get WIFI power gpio: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "Setup wifi gpio #%d\n", reset_pwd_gpio);
-+	usleep_range(20, 50); /* Pin must be asserted at least 5 usec */
-+	gpio_set_value(reset_pwd_gpio, 1); /* De-assert the pin for operation */
-+
-+	/* Delay to avoid the mmc driver calling the probe on the prior notice
-+	 * of the chip, which we just killed. If this is missing, it results in
-+	 * a spurious warning:
-+	 * "ath6kl_sdio: probe of mmc0:0001:1 failed with error -110"
-+	 */
-+	msleep(150); /* Time chosen experimentally, with padding */
-+#endif
-+
-+	return ret;
-+}
-+
-+static void __exit ath6kl_sdio_release_gpio(void)
-+{
-+#ifdef CONFIG_GPIOLIB
-+	if (gpio_is_valid(reset_pwd_gpio)) {
-+		/* Be sure we leave the chip in reset when we unload and also
-+		 * release the GPIO
-+		 */
-+		gpio_set_value(reset_pwd_gpio, 0);
-+		gpio_free(reset_pwd_gpio);
-+	}
-+#endif
-+}
-+
- static int __init ath6kl_sdio_init(void)
+ static void wil_connect_worker(struct work_struct *work)
  {
- 	int ret;
+-	int rc;
++	int rc, cid, ringid;
+ 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+ 						connect_worker);
+ 	struct net_device *ndev = wil_to_ndev(wil);
  
--	ret = sdio_register_driver(&ath6kl_sdio_driver);
-+	ret = ath6kl_sdio_init_gpio();
- 	if (ret)
-+		goto err_gpio;
-+
-+	ret = sdio_register_driver(&ath6kl_sdio_driver);
-+	if (ret) {
- 		ath6kl_err("sdio driver registration failed: %d\n", ret);
-+		goto err_register;
+-	int cid = wil->pending_connect_cid;
+-	int ringid = wil_find_free_vring(wil);
++	mutex_lock(&wil->mutex);
+ 
++	cid = wil->pending_connect_cid;
+ 	if (cid < 0) {
+ 		wil_err(wil, "No connection pending\n");
+-		return;
++		goto out;
 +	}
-+
-+	return ret;
-+
-+err_register:
-+	ath6kl_sdio_release_gpio();
++	ringid = wil_find_free_vring(wil);
++	if (ringid < 0) {
++		wil_err(wil, "No free vring found\n");
++		goto out;
+ 	}
  
-+err_gpio:
- 	return ret;
+-	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
++	wil_dbg_wmi(wil, "Configure for connection CID %d vring %d\n",
++		    cid, ringid);
+ 
+ 	rc = wil_vring_init_tx(wil, ringid, 1 << tx_ring_order, cid, 0);
+ 	wil->pending_connect_cid = -1;
+@@ -424,6 +430,8 @@ static void wil_connect_worker(struct work_struct *work)
+ 	} else {
+ 		wil_disconnect_cid(wil, cid, WLAN_REASON_UNSPECIFIED, true);
+ 	}
++out:
++	mutex_unlock(&wil->mutex);
  }
  
- static void __exit ath6kl_sdio_exit(void)
- {
- 	sdio_unregister_driver(&ath6kl_sdio_driver);
-+
-+#ifdef CONFIG_GPIOLIB
-+	/* Delay to avoid pulling the plug on the chip when an irq is pending
-+	 * and then getting a spurious message:
-+	 * "ath6kl: failed to get pending recv messages: -125"
-+	 */
-+	msleep(300);
-+	ath6kl_sdio_release_gpio();
-+#endif
- }
+ int wil_priv_init(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 3bc9bc0..edd3ed3 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -160,6 +160,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
+ 	struct device *dev = wil_to_dev(wil);
+ 	size_t sz = vring->size * sizeof(vring->va[0]);
  
- module_init(ath6kl_sdio_init);
++	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 	if (tx) {
+ 		int vring_index = vring - wil->vring_tx;
+ 
+@@ -749,6 +750,7 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
+ 
+ 	wil_dbg_misc(wil, "%s() max_mpdu_size %d\n", __func__,
+ 		     cmd.vring_cfg.tx_sw_ring.max_mpdu_size);
++	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 
+ 	if (vring->va) {
+ 		wil_err(wil, "Tx ring [%d] already allocated\n", id);
+@@ -821,6 +823,7 @@ int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size)
+ 
+ 	wil_dbg_misc(wil, "%s() max_mpdu_size %d\n", __func__,
+ 		     cmd.vring_cfg.tx_sw_ring.max_mpdu_size);
++	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 
+ 	if (vring->va) {
+ 		wil_err(wil, "Tx ring [%d] already allocated\n", id);
 -- 
-1.9.1
+1.8.5.2
 
