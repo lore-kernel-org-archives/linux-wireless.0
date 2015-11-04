@@ -1,43 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33394 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbbKKAhe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 19:37:34 -0500
-Received: by pabfh17 with SMTP id fh17so13101393pab.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 16:37:34 -0800 (PST)
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
- trigger_ba
-To: Bob Copeland <me@bobcopeland.com>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
- <20151109154040.GD5395@localhost> <56419805.4090902@linaro.org>
- <20151110141336.GF5395@localhost>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-From: "fengwei.yin" <fengwei.yin@linaro.org>
-Message-ID: <56428DC7.6050009@linaro.org> (sfid-20151111_013737_696953_C5435CB8)
-Date: Wed, 11 Nov 2015 08:37:27 +0800
-MIME-Version: 1.0
-In-Reply-To: <20151110141336.GF5395@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:35073 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965559AbbKDQWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 11:22:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 1/4] ipv4: add option to drop unicast encapsulated in L2 multicast
+Date: Wed,  4 Nov 2015 17:22:04 +0100
+Message-Id: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net> (sfid-20151104_172244_396542_5D1EC664)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On 2015/11/10 22:13, Bob Copeland wrote:
-> On Tue, Nov 10, 2015 at 03:08:53PM +0800, fengwei.yin wrote:
->> Even on 3620, not all cmds switch to wcn36xx_smd_rsp_status_check_v2.
->> And I don't think wcn36xx_smd_rsp_status_check_v2 should bind to 3620 (it
->> may be related with firmware).
->>
->> In patch v2, the wcn36xx_smd_rsp_status_check_v2 is not bind to 3620. If
->> you could test on none-3620 platform (I don't have none-3620 plafrom), that
->> will be great.
->
-> Sure, I'll take a look today or tomorrow on my hardware.
-Thanks a lot.
+In order to solve a problem with 802.11, the so-called hole-196 attack,
+add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+enabled, causes the stack to drop IPv4 unicast packets encapsulated in
+link-layer multi- or broadcast frames. Such frames can (as an attack)
+be created by any member of the same wireless network and transmitted
+as valid encrypted frames since the symmetric key for broadcast frames
+is shared between all stations.
 
->
+Additionally, enabling this option provides compliance with a SHOULD
+clause of RFC 1122.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/networking/ip-sysctl.txt |  7 +++++++
+ include/uapi/linux/ip.h                |  1 +
+ net/ipv4/devinet.c                     |  2 ++
+ net/ipv4/ip_input.c                    | 26 +++++++++++++++++++++++++-
+ 4 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 05915be86235..35c4c43dd8de 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1208,6 +1208,13 @@ promote_secondaries - BOOLEAN
+ 	promote a corresponding secondary IP address instead of
+ 	removing all the corresponding secondary IP addresses.
+ 
++drop_unicast_in_l2_multicast - BOOLEAN
++	Drop any unicast IP packets that are received in link-layer
++	multicast (or broadcast) frames.
++	This behavior (for multicast) is actually a SHOULD in RFC
++	1122, but is disabled by default for compatibility reasons.
++	Default: off (0)
++
+ 
+ tag - INTEGER
+ 	Allows you to write a number, which can be used as required.
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index 08f894d2ddbd..584834f7e95c 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -165,6 +165,7 @@ enum
+ 	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
++	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+ 	__IPV4_DEVCONF_MAX
+ };
+ 
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index cebd9d31e65a..dbbab28a52a4 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -2192,6 +2192,8 @@ static struct devinet_sysctl_table {
+ 					      "promote_secondaries"),
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
+ 					      "route_localnet"),
++		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
++					      "drop_unicast_in_l2_multicast"),
+ 	},
+ };
+ 
+diff --git a/net/ipv4/ip_input.c b/net/ipv4/ip_input.c
+index b1209b63381f..a442b6bd9441 100644
+--- a/net/ipv4/ip_input.c
++++ b/net/ipv4/ip_input.c
+@@ -359,8 +359,32 @@ static int ip_rcv_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+ 	rt = skb_rtable(skb);
+ 	if (rt->rt_type == RTN_MULTICAST) {
+ 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INMCAST, skb->len);
+-	} else if (rt->rt_type == RTN_BROADCAST)
++	} else if (rt->rt_type == RTN_BROADCAST) {
+ 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INBCAST, skb->len);
++	} else {
++		struct in_device *in_dev = __in_dev_get_rcu(skb->dev);
++
++		/* RFC 1122 3.3.6:
++		 *
++		 *   When a host sends a datagram to a link-layer broadcast
++		 *   address, the IP destination address MUST be a legal IP
++		 *   broadcast or IP multicast address.
++		 *
++		 *   A host SHOULD silently discard a datagram that is received
++		 *   via a link-layer broadcast (see Section 2.4) but does not
++		 *   specify an IP multicast or broadcast destination address.
++		 *
++		 * This doesn't explicitly say L2 *broadcast*, but broadcast is
++		 * in a way a form of multicast and the most common use case for
++		 * this is 802.11 protecting against cross-station spoofing (the
++		 * so-called "hole-196" attack) so do it for both.
++		 */
++		if (in_dev &&
++		    IN_DEV_ORCONF(in_dev, DROP_UNICAST_IN_L2_MULTICAST) &&
++		    (skb->pkt_type == PACKET_BROADCAST ||
++		     skb->pkt_type == PACKET_MULTICAST))
++			goto drop;
++	}
+ 
+ 	return dst_input(skb);
+ 
+-- 
+2.6.2
+
