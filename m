@@ -1,66 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:34180 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752466AbbKBQzU (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:34604 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbbKDLxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 11:55:20 -0500
-Date: Mon, 2 Nov 2015 18:55:16 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Michal Sojka <sojkam1@fel.cvut.cz>
-Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
-	s.sander@nordsys.de, wireless-regdb@lists.infradead.org,
-	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
-	Jan =?utf-8?B?S2Fpc3Jsw61r?= <kaisrja1@fel.cvut.cz>
-Subject: Re: [PATCH v2] ath9k: Add support for ITS-G5 band (5.9 GHz)
-Message-ID: <20151102165516.GA817@w1.fi> (sfid-20151102_175524_109579_2376D3B8)
-References: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz>
+	Wed, 4 Nov 2015 06:53:50 -0500
+Received: by wmff134 with SMTP id f134so108245414wmf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2015 03:53:49 -0800 (PST)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 2/4] ath10k: update missing hw_params of QCA9377 hw1.1
+Date: Wed,  4 Nov 2015 12:53:33 +0100
+Message-Id: <1446638015-23310-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20151104_125355_598565_A83E6AA1)
+In-Reply-To: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2015 at 11:22:57AM +0100, Michal Sojka wrote:
-> The patch adds support for Intelligent Transportation System (ITS-G5)
-> band to the ath9k driver.
+The uart_pin was incorrectly configured for QCA9377
+and the recently added hw_params were omitted.
 
-NAK. This would enable use of licensed 5.9 GHz band on large number of
-deployed "world roaming" cards. This would allow one to set up an AP on
-such a channel and would also make station mode scan those channels with
-active scan (i.e., sending Probe Request frames) on them by default for
-every single full scan. That's not appropriate regardless of whether
-CFG80211_CERTIFICATION_ONUS is set.
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This would be bad from both regulatory enforcement view point (5.9 GHz
-band is not allowed for this type of use) and normal use case
-performance (adding more channels for scanning makes scans take longer
-without there being any point in scanning a band that is not supposed to
-have APs for normal station mode connection).
-
-> in this second version of the patch we removed dependency on
-> CFG80211_CERTIFICATION_ONUS as suggested by Johannes. We are, however,
-> not sure whether this is the right thing to do.
-> 
-> The problem is that ath9k uses (REGULATORY_STRICT_REG |
-> REGULATORY_CUSTOM_REG), which means that in order to use the 5.9 GHz
-> band, ath9k's private regdomain has to be extended. This in turn means
-> that the 5.9 GHz band is enabled by default in many configurations. It
-> can be disabled if one sends a regulatory hint and has valid regdb in
-> user space, but this cannot be relied upon.
-
-This sounds like a special use case and I don't see why upstream Linux
-kernel should enable those channels regardless of kernel build
-configuration. Proper regulatory rule enforcement is needed to prevent
-the channels from being used in unlicensed use cases.
-
-> Especially the US regulatory suggests that using
-> CFG80211_CERTIFICATION_ONUS might have sense (see the previous version
-> http://www.mail-archive.com/linux-wireless@vger.kernel.org/msg15228.html).
-> What do you think?
-
-I don't think it is sufficient to enable these channels based on any
-kernel build configuration parameter. We must prevent accidental use of
-these channels regardless of what config options a user might pick.
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c8f6ca284b9d..a30d41559134 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -141,8 +141,10 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+ 		.name = "qca9377 hw1.1",
+ 		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
+-		.uart_pin = 7,
++		.uart_pin = 6,
+ 		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
+ 		.fw = {
+ 			.dir = QCA9377_HW_1_0_FW_DIR,
+ 			.fw = QCA9377_HW_1_0_FW_FILE,
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.1.2
+
