@@ -1,71 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26898 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030350AbbKEFfz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:35:55 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 25/38] staging: wilc1000: rename Bssid of function get_if_handler
-Date: Thu, 5 Nov 2015 14:36:26 +0900
-Message-ID: <1446701799-24870-25-git-send-email-glen.lee@atmel.com> (sfid-20151105_063801_309209_0C36A3A8)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+Received: from smtp2-g21.free.fr ([212.27.42.2]:51575 "EHLO smtp2-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965397AbbKDWEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 17:04:11 -0500
+From: Julien Cubizolles <j.cubizolles@free.fr>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nishant Sarmukadam" <nishants@marvell.com>
+Subject: Re: mwifiex problem: incompatible network settings
+References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
+	<87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
+	<87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
+	<87vb9qsmg1.fsf@free.fr>
+	<b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
+Date: Wed, 04 Nov 2015 23:04:06 +0100
+Message-ID: <87r3k5h161.fsf@free.fr> (sfid-20151104_230416_159987_8A11C7E0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed; boundary="=-=-="
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This patch renames Bssid of function get_if_handler to bssid
-to avoid CamelCase naming convention.
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> Thanks for the logs. I compared your network manager log with the one
+> on my setup. Both are same. Basically network manager log doesn't show
+> security info (WPA/WPA2, encryption mode etc). So we can't rely on
+> that.
+> I checked your kernel log shared in previous email. It's
+> incomplete. It didn't include information when connection was actually
+> attempted. Probably you can run "dmesg -c >> dmesg.log" in loop with
+> some delay to capture complete info. Otherwise sharing
+> "/var/log/messages" is also an option.
+> I have created a driver debug patch(attached). Could you please apply it =
+and share complete dmesg log?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 67e8928..64b7c4f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -333,25 +333,25 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
- 
- struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
- {
--	u8 *Bssid, *Bssid1;
-+	u8 *bssid, *Bssid1;
- 	int i = 0;
- 
--	Bssid = mac_header + 10;
-+	bssid = mac_header + 10;
- 	Bssid1 = mac_header + 4;
- 
- 	for (i = 0; i < wilc->vif_num; i++)
- 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
--		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
-+		    !memcmp(bssid, wilc->vif[i].bssid, ETH_ALEN))
- 			return wilc->vif[i].ndev;
- 
- 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
- 	for (i = 0; i < 25; i++)
- 		PRINT_D(INIT_DBG, "%02x ", mac_header[i]);
--	Bssid = mac_header + 18;
-+	bssid = mac_header + 18;
- 	Bssid1 = mac_header + 12;
- 	for (i = 0; i < wilc->vif_num; i++)
- 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
--		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
-+		    !memcmp(bssid, wilc->vif[i].bssid, ETH_ALEN))
- 			return wilc->vif[i].ndev;
- 
- 	PRINT_INFO(INIT_DBG, "\n");
--- 
-1.9.1
+I applied your patch. Here are the dmesg logs when logging to a WPA
+network with authentification (dmesg-WPA.log, ssid southcentral) and a
+network without authentification (dmesg-noWPA.log, ssid FreeWifi).
 
+Let me know if you need anything else.
+
+> Btw, do you see the problem if AP is configured in WPA2 security mode?
+
+Good catch, I changed my access point to WPA2 and now I can connect to
+it=C2=A0! I attached the corresponding dmesg logs (dmesg-WPA2.log, ssid sou=
+thcentral).
+
+> Regards,
+> Amitkumar
+
+--=-=-=
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=dmesg-WPA.log
+Content-Transfer-Encoding: base64
+
+WyAgNDA4LjY1ODIyMF0gSVB2NjogQUREUkNPTkYoTkVUREVWX1VQKTogd2x4NjA0NWJkZjY0NmI0
+OiBsaW5rIGlzIG5vdCByZWFkeQpbICA0MDguNzA2MTM3XSBJUHY2OiBBRERSQ09ORihORVRERVZf
+VVApOiB3bHg2MDQ1YmRmNjQ2YjQ6IGxpbmsgaXMgbm90IHJlYWR5ClsgIDQyMS43Mjg0MTVdIE1X
+SUZJRVg6IGF1dGhfdHlwZSA9IDAKWyAgNDIxLjcyODQyNF0gTVdJRklFWDogcGFpcndpc2UgZW5j
+X21vZGUgPSAxClsgIDQyMS43Mjg0MjhdIE1XSUZJRVg6IGdyb3Vwd2lzZSBlbmNfbW9kZSA9IGZh
+YzAyClsgIDQyMS43Mjg0MzZdIElFOjAwMDAwMDAwOiA3ZiAwNCAwMCAwMCAwYSAwMiBkZCAxNiAw
+MCA1MCBmMiAwMSAwMSAwMCAwMCA1MApbICA0MjEuNzI4NDQyXSBJRTowMDAwMDAxMDogZjIgMDIg
+MDEgMDAgMDAgNTAgZjIgMDQgMDEgMDAgMDAgNTAgZjIgMDIKWyAgNDIxLjcyODQ1Nl0gdXNiIDEt
+MzogaW5mbzogdHJ5aW5nIHRvIGFzc29jaWF0ZSB0byAnc291dGhjZW50cmFsJyBic3NpZCBmNDpj
+YTplNTplZjpiZToxOApbICA0MjEuNzI4NDc2XSB1c2IgMS0zOiBpbmZvOiBtd2lmaWV4X2lzX25l
+dHdvcmtfY29tcGF0aWJsZTogZmFpbGVkOiB3cGFfaWU9MHhkZCB3cGEyX2llPTB4MCBXRVA9ZAlX
+UEE9ZCBXUEEyPWQgRW5jTW9kZT0weGZhYzAyIHByaXZhY3k9MHgxClsgIDQyMS43Mjg0ODNdIHVz
+YiAxLTM6IEluY29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdzClsgIDQyMS43Mjg0OTBdIHVzYiAx
+LTM6IGluZm86IGFzc29jaWF0aW9uIHRvIGJzc2lkIGY0OmNhOmU1OmVmOmJlOjE4IGZhaWxlZApb
+ICA0MjUuNjc1NTgwXSBNV0lGSUVYOiBhdXRoX3R5cGUgPSAwClsgIDQyNS42NzU1OTBdIE1XSUZJ
+RVg6IHBhaXJ3aXNlIGVuY19tb2RlID0gMQpbICA0MjUuNjc1NTk1XSBNV0lGSUVYOiBncm91cHdp
+c2UgZW5jX21vZGUgPSBmYWMwMgpbICA0MjUuNjc1NjA0XSBJRTowMDAwMDAwMDogN2YgMDQgMDAg
+MDAgMGEgMDIgZGQgMTYgMDAgNTAgZjIgMDEgMDEgMDAgMDAgNTAKWyAgNDI1LjY3NTYxMF0gSUU6
+MDAwMDAwMTA6IGYyIDAyIDAxIDAwIDAwIDUwIGYyIDA0IDAxIDAwIDAwIDUwIGYyIDAyClsgIDQy
+NS42NzU2MjRdIHVzYiAxLTM6IGluZm86IHRyeWluZyB0byBhc3NvY2lhdGUgdG8gJ3NvdXRoY2Vu
+dHJhbCcgYnNzaWQgZjQ6Y2E6ZTU6ZWY6YmU6MTgKWyAgNDI1LjY3NTY0NV0gdXNiIDEtMzogaW5m
+bzogbXdpZmlleF9pc19uZXR3b3JrX2NvbXBhdGlibGU6IGZhaWxlZDogd3BhX2llPTB4ZGQgd3Bh
+Ml9pZT0weDAgV0VQPWQJV1BBPWQgV1BBMj1kIEVuY01vZGU9MHhmYWMwMiBwcml2YWN5PTB4MQpb
+ICA0MjUuNjc1NjUyXSB1c2IgMS0zOiBJbmNvbXBhdGlibGUgbmV0d29yayBzZXR0aW5ncwpbICA0
+MjUuNjc1NjYwXSB1c2IgMS0zOiBpbmZvOiBhc3NvY2lhdGlvbiB0byBic3NpZCBmNDpjYTplNTpl
+ZjpiZToxOCBmYWlsZWQKWyAgNDMwLjAyMzQ2MF0gTVdJRklFWDogYXV0aF90eXBlID0gMApbICA0
+MzAuMDIzNDY4XSBNV0lGSUVYOiBwYWlyd2lzZSBlbmNfbW9kZSA9IDEKWyAgNDMwLjAyMzQ3Ml0g
+TVdJRklFWDogZ3JvdXB3aXNlIGVuY19tb2RlID0gZmFjMDIKWyAgNDMwLjAyMzQ4MF0gSUU6MDAw
+MDAwMDA6IDdmIDA0IDAwIDAwIDBhIDAyIGRkIDE2IDAwIDUwIGYyIDAxIDAxIDAwIDAwIDUwClsg
+IDQzMC4wMjM0ODVdIElFOjAwMDAwMDEwOiBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwNCAwMSAwMCAw
+MCA1MCBmMiAwMgpbICA0MzAuMDIzNDk3XSB1c2IgMS0zOiBpbmZvOiB0cnlpbmcgdG8gYXNzb2Np
+YXRlIHRvICdzb3V0aGNlbnRyYWwnIGJzc2lkIGY0OmNhOmU1OmVmOmJlOjE4ClsgIDQzMC4wMjM1
+MTNdIHVzYiAxLTM6IGluZm86IG13aWZpZXhfaXNfbmV0d29ya19jb21wYXRpYmxlOiBmYWlsZWQ6
+IHdwYV9pZT0weGRkIHdwYTJfaWU9MHgwIFdFUD1kCVdQQT1kIFdQQTI9ZCBFbmNNb2RlPTB4ZmFj
+MDIgcHJpdmFjeT0weDEKWyAgNDMwLjAyMzUxN10gdXNiIDEtMzogSW5jb21wYXRpYmxlIG5ldHdv
+cmsgc2V0dGluZ3MKWyAgNDMwLjAyMzUyMV0gdXNiIDEtMzogaW5mbzogYXNzb2NpYXRpb24gdG8g
+YnNzaWQgZjQ6Y2E6ZTU6ZWY6YmU6MTggZmFpbGVkClsgIDQzNC44NzQzNDNdIE1XSUZJRVg6IGF1
+dGhfdHlwZSA9IDAKWyAgNDM0Ljg3NDM1MV0gTVdJRklFWDogcGFpcndpc2UgZW5jX21vZGUgPSAx
+ClsgIDQzNC44NzQzNTZdIE1XSUZJRVg6IGdyb3Vwd2lzZSBlbmNfbW9kZSA9IGZhYzAyClsgIDQz
+NC44NzQzNjVdIElFOjAwMDAwMDAwOiA3ZiAwNCAwMCAwMCAwYSAwMiBkZCAxNiAwMCA1MCBmMiAw
+MSAwMSAwMCAwMCA1MApbICA0MzQuODc0MzcwXSBJRTowMDAwMDAxMDogZjIgMDIgMDEgMDAgMDAg
+NTAgZjIgMDQgMDEgMDAgMDAgNTAgZjIgMDIKWyAgNDM0Ljg3NDM4NV0gdXNiIDEtMzogaW5mbzog
+dHJ5aW5nIHRvIGFzc29jaWF0ZSB0byAnc291dGhjZW50cmFsJyBic3NpZCBmNDpjYTplNTplZjpi
+ZToxOApbICA0MzQuODc0NDA0XSB1c2IgMS0zOiBpbmZvOiBtd2lmaWV4X2lzX25ldHdvcmtfY29t
+cGF0aWJsZTogZmFpbGVkOiB3cGFfaWU9MHhkZCB3cGEyX2llPTB4MCBXRVA9ZAlXUEE9ZCBXUEEy
+PWQgRW5jTW9kZT0weGZhYzAyIHByaXZhY3k9MHgxClsgIDQzNC44NzQ0MTFdIHVzYiAxLTM6IElu
+Y29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdzClsgIDQzNC44NzQ0MTldIHVzYiAxLTM6IGluZm86
+IGFzc29jaWF0aW9uIHRvIGJzc2lkIGY0OmNhOmU1OmVmOmJlOjE4IGZhaWxlZApbICA0NDMuMDk5
+OTgzXSBJUHY2OiBBRERSQ09ORihORVRERVZfVVApOiB3bHg2MDQ1YmRmNjQ2YjQ6IGxpbmsgaXMg
+bm90IHJlYWR5ClsgIDQ0My43MjU3MzldIE1XSUZJRVg6IGF1dGhfdHlwZSA9IDAKWyAgNDQzLjcy
+NTc1M10gSUU6MDAwMDAwMDA6IDdmIDA0IDAwIDAwIDBhIDAyClsgIDQ0My43MjU3NjhdIHVzYiAx
+LTM6IGluZm86IHRyeWluZyB0byBhc3NvY2lhdGUgdG8gJ0ZyZWVXaWZpJyBic3NpZCBmNDpjYTpl
+NTplZjpiZToxOQpbICA0NDMuNzQwODMwXSB1c2IgMS0zOiBpbmZvOiBhc3NvY2lhdGVkIHRvIGJz
+c2lkIGY0OmNhOmU1OmVmOmJlOjE5IHN1Y2Nlc3NmdWxseQpbICA0NDMuNzQwOTc4XSBJUHY2OiBB
+RERSQ09ORihORVRERVZfQ0hBTkdFKTogd2x4NjA0NWJkZjY0NmI0OiBsaW5rIGJlY29tZXMgcmVh
+ZHkK
+--=-=-=
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=dmesg-noWPA.log
+Content-Transfer-Encoding: base64
+
+WyAgNTcxLjk1OTYzNF0gTVdJRklFWDogYXV0aF90eXBlID0gMApbICA1NzEuOTU5NjQ3XSBJRTow
+MDAwMDAwMDogN2YgMDQgMDAgMDAgMGEgMDIKWyAgNTcxLjk1OTY2MV0gdXNiIDEtMzogaW5mbzog
+dHJ5aW5nIHRvIGFzc29jaWF0ZSB0byAnRnJlZVdpZmknIGJzc2lkIGY0OmNhOmU1OmVmOmJlOjE5
+ClsgIDU3MS45NzI5NDFdIHVzYiAxLTM6IGluZm86IGFzc29jaWF0ZWQgdG8gYnNzaWQgZjQ6Y2E6
+ZTU6ZWY6YmU6MTkgc3VjY2Vzc2Z1bGx5ClsgIDU3Ny4xNjEwNjRdIHVzYiAxLTM6IFJ4IG9mIG1n
+bXQgcGFja2V0IGZhaWxlZAo=
+--=-=-=
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=dmesg-WPA2.log
+Content-Transfer-Encoding: base64
+
+WyAgMjgyLjU0NTkwOV0gTVdJRklFWDogYXV0aF90eXBlID0gMApbICAyODIuNTQ1OTEyXSBNV0lG
+SUVYOiBwYWlyd2lzZSBlbmNfbW9kZSA9IDEKWyAgMjgyLjU0NTkxNF0gTVdJRklFWDogZ3JvdXB3
+aXNlIGVuY19tb2RlID0gZmFjMDIKWyAgMjgyLjU0NTkxNl0gTVdJRklFWDogd3BhID0gMCwgd3Bh
+MiA9IDEKWyAgMjgyLjU0NTkxOV0gSUU6MDAwMDAwMDA6IDMwIDE0IDAxIDAwIDAwIDBmIGFjIDAy
+IDAxIDAwIDAwIDBmIGFjIDA0IDAxIDAwClsgIDI4Mi41NDU5MjJdIElFOjAwMDAwMDEwOiAwMCAw
+ZiBhYyAwMiAwMCAwMCA3ZiAwNCAwMCAwMCAwYSAwMgpbICAyODIuNTQ1OTI3XSB1c2IgMS0zOiBp
+bmZvOiB0cnlpbmcgdG8gYXNzb2NpYXRlIHRvICdzb3V0aGNlbnRyYWwnIGJzc2lkIGY0OmNhOmU1
+OmVmOmJlOjE4ClsgIDI4Mi41NjAzMjVdIHVzYiAxLTM6IGluZm86IGFzc29jaWF0ZWQgdG8gYnNz
+aWQgZjQ6Y2E6ZTU6ZWY6YmU6MTggc3VjY2Vzc2Z1bGx5ClsgIDI4My4yNjgyMzFdIHVzYiAxLTM6
+IFJ4IG9mIG1nbXQgcGFja2V0IGZhaWxlZAo=
+--=-=-=--
