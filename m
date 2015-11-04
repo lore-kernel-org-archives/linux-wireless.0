@@ -1,83 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:35275 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752333AbbK2Axe (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:32978 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbbKDFET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2015 19:53:34 -0500
+	Wed, 4 Nov 2015 00:04:19 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAP+RiCA6wasaiMCYEJ-8gaiVMi5JP2JT6A1bGm9nHJ9CA+Ow5g@mail.gmail.com>
-References: <1444972259-24260-1-git-send-email-motobud@gmail.com>
-	<CAP+RiCA6wasaiMCYEJ-8gaiVMi5JP2JT6A1bGm9nHJ9CA+Ow5g@mail.gmail.com>
-Date: Sun, 29 Nov 2015 02:53:34 +0200
-Message-ID: <CAHp75VcVdMNrxvedCB_OmJw7upTPJq8T8tKxfBn_moYGj6S19g@mail.gmail.com> (sfid-20151129_015426_710436_B54DFE07)
-Subject: Re: [PATCH] ath6kl: Use vmalloc for loading firmware using api1 method
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Brent Taylor <motobud@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath6kl@lists.infradead.org
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Wed, 4 Nov 2015 00:03:59 -0500
+Message-ID: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com> (sfid-20151104_060423_372262_ACF24427)
+Subject: ath9k(?): AP stops sending traffic to iPhone 4S until another
+ 802.11n-capable STA joins
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@vger.kernel.org
+Cc: Tim Shepard <shep@alum.mit.edu>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 28, 2015 at 8:58 PM, Brent Taylor <motobud@gmail.com> wrote:
-> Sorry, the first e-mail was sent via gmail and I forgot about sending
-> it in plain text mode.
->
-> Whats the status on this patch?  I don't see it on patchwork anymore
-> nor is it in any of the git trees I checked.
->
+Hi all,
 
-You forget to use kvfree() instead of kfree() in core.c.
+I have a pretty weird problem I've been chasing for a few weeks and
+have narrowed it down, but not quite solved it.  It may be caused by
+bugs in aggregation-related code.
 
-> Thanks,
-> Brent
->
-> On Fri, Oct 16, 2015 at 12:10 AM, Brent Taylor <motobud@gmail.com> wrote:
->> Signed-off-by: Brent Taylor <motobud@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath6kl/init.c | 15 +++++++++++----
->>  1 file changed, 11 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
->> index 6e473fa..2155739 100644
->> --- a/drivers/net/wireless/ath/ath6kl/init.c
->> +++ b/drivers/net/wireless/ath/ath6kl/init.c
->> @@ -673,10 +673,17 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
->>                 return ret;
->>
->>         *fw_len = fw_entry->size;
->> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
->> -
->> -       if (*fw == NULL)
->> -               ret = -ENOMEM;
->> +       if (&ar->fw == fw) {
->> +               *fw = vmalloc(fw_entry->size);
->> +               if (*fw == NULL)
->> +                       ret = -ENOMEM;
->> +               else
->> +                       memcpy(*fw, fw_entry->data, fw_entry->size);
->> +       } else {
->> +               *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
->> +               if (*fw == NULL)
->> +                       ret = -ENOMEM;
->> +       }
->>
->>         release_firmware(fw_entry);
->>
->> --
->> 2.6.1
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Steps:
+- Set up an ath9k-based Linux AP on an ARM processor (currently using
+this version of backports, though I've tried older and newer versions
+with no change: "backported from Linux (next-20150525-0-gc201847)
+using backports backports-20150525-0-g49969bd")
+- Join my iPhone 4S (running iOS 7.1.2) to the network
+- Use it for a while
+- Eventually it will stay connected, but Internet access doesn't work
+- Wireless packet captures show that packets are received *from* the
+iPhone, and ACKs are returned for those packets from the ath9k, and
+those packets are correctly forwarded to the AP's br0 interface.  But
+outgoing packets show up on br0 and wlan0 with tcpdump, but never make
+it onto the air.
+- Putting the iPhone 4S into airplane mode and then letting it
+reconnecting will fix it for a few more seconds/minutes before it
+stops again.
 
+More details:
+- It only seems to happen to my iPhone 4S client (never seen it with a
+different client).
+- It only seems to happen with my ath9k AP.
+- It only seems to happen on my home network (another instance of the
+same AP hardware on another network doesn't trigger the problem).
+- It only seems to happen when no other 802.11n-capable devices are
+connected to the same AP.
+- The moment I join an 802.11n-capable device to the AP, traffic
+instantly unblocks (see packet capture below).
+- Joining an 802.11g-only device (no aggregation) does *not* unblock traffic.
+- Disabling encryption and turning wmm_enable on and off have no effect.
+- Disabling 802.11n support on the AP (so that everyone has to use
+802.11g) makes the problem go away.
+- 'ip -s link show dev wlan0' shows tx packet counters continuing to
+increase during the outage, even though packets aren't flowing.
+- I applied a patch from Tim Shepard to track the most recent tx
+attempt, acked tx, and rx packet times inside mac80211.  According to
+this data, mac80211 thinks rx happened at most a couple of seconds ago
+(as expected).  The most recent tx was acked, but it was back around
+the time the outage started.  Note that this disagrees with 'ip -s
+link' and tcpdump, which think they transmitted much more recently
+than that.  (The patch is here:
+https://gfiber-review.googlesource.com/#/c/1250/ )
 
+I captured a pcap of a new 802.11n-capable device joining the network
+and unblocking the transmit.  The action starts around frame 325:
+   http://apenwarr.ca/tmp/iPod4-fixing-iPhone4-trimmed.pcap.gz
 
--- 
-With Best Regards,
-Andy Shevchenko
+In this pcap, the main players are:
+   ath9k AP: 88:dc:96:08:60:50
+   iPhone 4S with the problem: e4:25:e7:73:e6:31
+   New client fixing the problem (iPod 4): 18:e7:f4:7e:c1:42
+
+Observations from the pcap:
+- Upstream packets (iPhone->ath9k) are received and acked (see eg. frame 154)
+- Beacons from the ath9k show an empty TIM bitmap until the iPod
+joins, then it's nonempty and things unblock.
+
+Does anyone have any thoughts about what to look for here?
+
+Have fun,
+
+Avery
