@@ -1,98 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20645 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbbKRGJJ (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:57741 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169AbbKDBsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:09 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/16] staging: wilc1000: wilc_spi_write: pass struct wilc
-Date: Wed, 18 Nov 2015 15:11:29 +0900
-Message-ID: <1447827097-9436-9-git-send-email-glen.lee@atmel.com> (sfid-20151118_070912_988536_B4D7704E)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+	Tue, 3 Nov 2015 20:48:04 -0500
+Date: Tue, 3 Nov 2015 20:48:02 -0500
+From: Kyle McMartin <kyle@infradead.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/2] brcm: new firmware files
+Message-ID: <20151104014802.GC12383@merlin.infradead.org> (sfid-20151104_024812_312822_022E2840)
+References: <1445592108-16502-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445592108-16502-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add new function parameter struct wilc and use it instead of
-wilc_dev, and pass wilc to the function as well.
+On Fri, Oct 23, 2015 at 11:21:46AM +0200, Arend van Spriel wrote:
+> One firmware file update and firmware for a new supported device.
+> 
+> The patches are for the master branch of the linux-firmware repository
+> and apply on top of commit 66d3d8d7607c ("Add FW binary used by mwlwifi
+> driver.").
+> 
+> Arend van Spriel (2):
+>   brcm: adding firmware for BCM4350 PCIe device
+>   brcm: update firmware for the BCM4356 PCIe device
+> 
+>  WHENCE                     |   1 +
+>  brcm/brcmfmac4350-pcie.bin | Bin 0 -> 626140 bytes
+>  brcm/brcmfmac4356-pcie.bin | Bin 593956 -> 623012 bytes
+>  3 files changed, 1 insertion(+)
+>  create mode 100755 brcm/brcmfmac4350-pcie.bin
+>  rewrite brcm/brcmfmac4356-pcie.bin (77%)
+> 
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_spi.c | 4 ++--
- drivers/staging/wilc1000/linux_wlan_spi.h | 3 ++-
- drivers/staging/wilc1000/wilc_spi.c       | 6 +++---
- 3 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index bfd3cc3..7be750b 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -66,9 +66,9 @@ int wilc_spi_init(void)
- 	return 1;
- }
- 
--int wilc_spi_write(u8 *b, u32 len)
-+int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
- {
--	struct spi_device *spi = to_spi_device(wilc_dev->dev);
-+	struct spi_device *spi = to_spi_device(wilc->dev);
- 	int ret;
- 	struct spi_message msg;
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index baa98cc..41d47dc 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -2,9 +2,10 @@
- #define LINUX_WLAN_SPI_H
- 
- #include <linux/spi/spi.h>
-+#include "wilc_wfi_netdevice.h"
- 
- int wilc_spi_init(void);
--int wilc_spi_write(u8 *b, u32 len);
-+int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len);
- int wilc_spi_read(u8 *rb, u32 rlen);
- int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 7a96004..0d89a282 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -482,7 +482,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 				order = 0x2;
- 		}
- 		cmd |= order;
--		if (!wilc_spi_write(&cmd, 1)) {
-+		if (!wilc_spi_write(wilc, &cmd, 1)) {
- 			PRINT_ER("[wilc spi]: Failed data block cmd write, bus error...\n");
- 			result = N_FAIL;
- 			break;
-@@ -491,7 +491,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 		/**
- 		 *      Write data
- 		 **/
--		if (!wilc_spi_write(&b[ix], nbytes)) {
-+		if (!wilc_spi_write(wilc, &b[ix], nbytes)) {
- 			PRINT_ER("[wilc spi]: Failed data block write, bus error...\n");
- 			result = N_FAIL;
- 			break;
-@@ -501,7 +501,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 		 *      Write Crc
- 		 **/
- 		if (!g_spi.crc_off) {
--			if (!wilc_spi_write(crc, 2)) {
-+			if (!wilc_spi_write(wilc, crc, 2)) {
- 				PRINT_ER("[wilc spi]: Failed data block crc write, bus error...\n");
- 				result = N_FAIL;
- 				break;
--- 
-1.9.1
-
+applied, thanks!
