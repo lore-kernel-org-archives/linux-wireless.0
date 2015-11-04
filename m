@@ -1,58 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7123 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829AbbKBIs2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:48:28 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/38] staging: wilc1000: rename firmwareIPAddress of fuction Handle_set_IPAddress
-Date: Mon, 2 Nov 2015 17:50:45 +0900
-Message-ID: <1446454281-22484-2-git-send-email-glen.lee@atmel.com> (sfid-20151102_094831_175524_41057C22)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:35076 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965567AbbKDQWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 11:22:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 2/4] ipv6: add option to drop unicast encapsulated in L2 multicast
+Date: Wed,  4 Nov 2015 17:22:05 +0100
+Message-Id: <1446654127-26826-2-git-send-email-johannes@sipsolutions.net> (sfid-20151104_172246_188427_036BF344)
+In-Reply-To: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+References: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames firmwareIPAddress of fuction Handle_set_IPAddress to
-firmware_ip_addr to avoid CamelCase naming convention.
+In order to solve a problem with 802.11, the so-called hole-196 attack,
+add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+enabled, causes the stack to drop IPv6 unicast packets encapsulated in
+link-layer multi- or broadcast frames. Such frames can (as an attack)
+be created by any member of the same wireless network and transmitted
+as valid encrypted frames since the symmetric key for broadcast frames
+is shared between all stations.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/networking/ip-sysctl.txt |  6 ++++++
+ include/linux/ipv6.h                   |  1 +
+ include/uapi/linux/ipv6.h              |  1 +
+ net/ipv6/addrconf.c                    |  8 ++++++++
+ net/ipv6/ip6_input.c                   | 10 ++++++++++
+ 5 files changed, 26 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4cb491f..d2628fd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -408,7 +408,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
- {
- 	s32 result = 0;
- 	struct wid wid;
--	char firmwareIPAddress[4] = {0};
-+	char firmware_ip_addr[4] = {0};
- 	struct net_device *dev;
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 35c4c43dd8de..a2169651254e 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1660,6 +1660,12 @@ stable_secret - IPv6 address
  
- 	dev = hif_drv->priv->dev;
-@@ -429,7 +429,7 @@ s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
- 	result = send_config_pkt(dev, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
+ 	By default the stable secret is unset.
  
--	host_int_get_ipaddress(hif_drv, firmwareIPAddress, idx);
-+	host_int_get_ipaddress(hif_drv, firmware_ip_addr, idx);
++drop_unicast_in_l2_multicast - BOOLEAN
++	Drop any unicast IPv6 packets that are received in link-layer
++	multicast (or broadcast) frames.
++
++	By default this is turned off.
++
+ icmp/*:
+ ratelimit - INTEGER
+ 	Limit the maximal rates for sending ICMPv6 packets.
+diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
+index 0ef2a97ccdb5..34317cb6a6fc 100644
+--- a/include/linux/ipv6.h
++++ b/include/linux/ipv6.h
+@@ -50,6 +50,7 @@ struct ipv6_devconf {
+ 	__s32		mc_forwarding;
+ #endif
+ 	__s32		disable_ipv6;
++	__s32		drop_unicast_in_l2_multicast;
+ 	__s32		accept_dad;
+ 	__s32		force_tllao;
+ 	__s32           ndisc_notify;
+diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
+index 38b4fef20219..4c413570efe8 100644
+--- a/include/uapi/linux/ipv6.h
++++ b/include/uapi/linux/ipv6.h
+@@ -174,6 +174,7 @@ enum {
+ 	DEVCONF_USE_OIF_ADDRS_ONLY,
+ 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
+ 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
++	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+ 	DEVCONF_MAX
+ };
  
- 	if (result) {
- 		PRINT_ER("Failed to set IP address\n");
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index d72fa90d6feb..35f880bcf626 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -4672,6 +4672,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
+ 	array[DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN] = cnf->ignore_routes_with_linkdown;
+ 	/* we omit DEVCONF_STABLE_SECRET for now */
+ 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
++	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
+ }
+ 
+ static inline size_t inet6_ifla6_size(void)
+@@ -5734,6 +5735,13 @@ static struct addrconf_sysctl_table
+ 			.proc_handler	= addrconf_sysctl_ignore_routes_with_linkdown,
+ 		},
+ 		{
++			.procname	= "drop_unicast_in_l2_multicast",
++			.data		= &ipv6_devconf.drop_unicast_in_l2_multicast,
++			.maxlen		= sizeof(int),
++			.mode		= 0644,
++			.proc_handler	= proc_dointvec,
++		},
++		{
+ 			/* sentinel */
+ 		}
+ 	},
+diff --git a/net/ipv6/ip6_input.c b/net/ipv6/ip6_input.c
+index 9075acf081dd..31ac3c56da4b 100644
+--- a/net/ipv6/ip6_input.c
++++ b/net/ipv6/ip6_input.c
+@@ -134,6 +134,16 @@ int ipv6_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt
+ 	    IPV6_ADDR_MC_SCOPE(&hdr->daddr) == 1)
+ 		goto err;
+ 
++	/* If enabled, drop unicast packets that were encapsulated in link-layer
++	 * multicast or broadcast to protected against the so-called "hole-196"
++	 * attack in 802.11 wireless.
++	 */
++	if (!ipv6_addr_is_multicast(&hdr->daddr) &&
++	    (skb->pkt_type == PACKET_BROADCAST ||
++	     skb->pkt_type == PACKET_MULTICAST) &&
++	    idev->cnf.drop_unicast_in_l2_multicast)
++		goto err;
++
+ 	/* RFC4291 2.7
+ 	 * Nodes must not originate a packet to a multicast address whose scope
+ 	 * field contains the reserved value 0; if such a packet is received, it
 -- 
-1.9.1
+2.6.2
 
