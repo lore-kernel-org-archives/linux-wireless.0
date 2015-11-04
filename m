@@ -1,147 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36351 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751916AbbKZK5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 05:57:54 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/8] mac80211: simplify ack_skb handling
-Date: Thu, 26 Nov 2015 11:57:46 +0100
-Message-Id: <1448535468-12237-6-git-send-email-johannes@sipsolutions.net> (sfid-20151126_115831_403225_6B92992A)
-In-Reply-To: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
-References: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
+Received: from ja.ssi.bg ([178.16.129.10]:39123 "EHLO ja.ssi.bg"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030264AbbKDVBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 16:01:21 -0500
+Date: Wed, 4 Nov 2015 22:59:32 +0200 (EET)
+From: Julian Anastasov <ja@ssi.bg>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH v2 1/4] ipv4: add option to drop unicast encapsulated in
+ L2 multicast
+In-Reply-To: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1511042215570.2194@ja.home.ssi.bg> (sfid-20151104_220129_039784_46B1269B)
+References: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Since the cookie is assigned inside ieee80211_make_ack_skb()
-now, we no longer need to return the ack_skb as the cookie
-and can simplify the function's return and the callers. Also
-rename it to ieee80211_attach_ack_skb() to more accurately
-reflect its purpose.
+	Hello,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 18 ++++++++----------
- net/mac80211/ieee80211_i.h |  5 ++---
- net/mac80211/offchannel.c  | 11 +++--------
- 3 files changed, 13 insertions(+), 21 deletions(-)
+On Wed, 4 Nov 2015, Johannes Berg wrote:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ae1b92a58e23..2274a163874f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2992,9 +2992,8 @@ u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local)
- 	return local->roc_cookie_counter;
- }
- 
--struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
--				       struct sk_buff *skb, u64 *cookie,
--				       gfp_t gfp)
-+int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
-+			     u64 *cookie, gfp_t gfp)
- {
- 	unsigned long spin_flags;
- 	struct sk_buff *ack_skb;
-@@ -3002,7 +3001,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
- 
- 	ack_skb = skb_copy(skb, gfp);
- 	if (!ack_skb)
--		return ERR_PTR(-ENOMEM);
-+		return -ENOMEM;
- 
- 	spin_lock_irqsave(&local->ack_status_lock, spin_flags);
- 	id = idr_alloc(&local->ack_status_frames, ack_skb,
-@@ -3011,7 +3010,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
- 
- 	if (id < 0) {
- 		kfree_skb(ack_skb);
--		return ERR_PTR(-ENOMEM);
-+		return -ENOMEM;
- 	}
- 
- 	IEEE80211_SKB_CB(skb)->ack_frame_id = id;
-@@ -3019,7 +3018,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
- 	*cookie = ieee80211_mgmt_tx_cookie(local);
- 	IEEE80211_SKB_CB(ack_skb)->ack.cookie = *cookie;
- 
--	return ack_skb;
-+	return 0;
- }
- 
- static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
-@@ -3097,7 +3096,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_qos_hdr *nullfunc;
--	struct sk_buff *skb, *ack_skb;
-+	struct sk_buff *skb;
- 	int size = sizeof(*nullfunc);
- 	__le16 fc;
- 	bool qos;
-@@ -3165,10 +3164,9 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 	if (qos)
- 		nullfunc->qos_ctrl = cpu_to_le16(7);
- 
--	ack_skb = ieee80211_make_ack_skb(local, skb, cookie, GFP_ATOMIC);
--	if (IS_ERR(ack_skb)) {
-+	ret = ieee80211_attach_ack_skb(local, skb, cookie, GFP_ATOMIC);
-+	if (ret) {
- 		kfree_skb(skb);
--		ret = PTR_ERR(ack_skb);
- 		goto unlock;
- 	}
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b03d5410a2e9..0c50031fadac 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1484,9 +1484,8 @@ void ieee80211_configure_filter(struct ieee80211_local *local);
- u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
- 
- u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local);
--struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
--				       struct sk_buff *skb, u64 *cookie,
--				       gfp_t gfp);
-+int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
-+			     u64 *cookie, gfp_t gfp);
- 
- /* STA code */
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index bf21301dfa4b..d616ce34fea7 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -733,7 +733,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *skb, *ack_skb;
-+	struct sk_buff *skb;
- 	struct sta_info *sta;
- 	const struct ieee80211_mgmt *mgmt = (void *)params->buf;
- 	bool need_offchan = false;
-@@ -876,16 +876,11 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		/* make a copy to preserve the frame contents
- 		 * in case of encryption.
- 		 */
--		ack_skb = ieee80211_make_ack_skb(local, skb, cookie,
--						 GFP_KERNEL);
--		if (IS_ERR(ack_skb)) {
--			ret = PTR_ERR(ack_skb);
-+		ret = ieee80211_attach_ack_skb(local, skb, cookie, GFP_KERNEL);
-+		if (ret) {
- 			kfree_skb(skb);
- 			goto out_unlock;
- 		}
--	} else {
--		/* for cookie below */
--		ack_skb = skb;
- 	}
- 
- 	if (!need_offchan) {
--- 
-2.6.2
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In order to solve a problem with 802.11, the so-called hole-196 attack,
+> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+> enabled, causes the stack to drop IPv4 unicast packets encapsulated in
+> link-layer multi- or broadcast frames. Such frames can (as an attack)
+> be created by any member of the same wireless network and transmitted
+> as valid encrypted frames since the symmetric key for broadcast frames
+> is shared between all stations.
+> 
+> Additionally, enabling this option provides compliance with a SHOULD
+> clause of RFC 1122.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
+	Patches 1 and 3 look correct to me,
+
+Reviewed-by: Julian Anastasov <ja@ssi.bg>
+
+	If the patches are lost in the merge window you
+can also consider one minor optimization, see below...
+
+> ---
+>  Documentation/networking/ip-sysctl.txt |  7 +++++++
+>  include/uapi/linux/ip.h                |  1 +
+>  net/ipv4/devinet.c                     |  2 ++
+>  net/ipv4/ip_input.c                    | 26 +++++++++++++++++++++++++-
+>  4 files changed, 35 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+> index 05915be86235..35c4c43dd8de 100644
+> --- a/Documentation/networking/ip-sysctl.txt
+> +++ b/Documentation/networking/ip-sysctl.txt
+> @@ -1208,6 +1208,13 @@ promote_secondaries - BOOLEAN
+>  	promote a corresponding secondary IP address instead of
+>  	removing all the corresponding secondary IP addresses.
+>  
+> +drop_unicast_in_l2_multicast - BOOLEAN
+> +	Drop any unicast IP packets that are received in link-layer
+> +	multicast (or broadcast) frames.
+> +	This behavior (for multicast) is actually a SHOULD in RFC
+> +	1122, but is disabled by default for compatibility reasons.
+> +	Default: off (0)
+> +
+>  
+>  tag - INTEGER
+>  	Allows you to write a number, which can be used as required.
+> diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+> index 08f894d2ddbd..584834f7e95c 100644
+> --- a/include/uapi/linux/ip.h
+> +++ b/include/uapi/linux/ip.h
+> @@ -165,6 +165,7 @@ enum
+>  	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+>  	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+>  	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+> +	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+>  	__IPV4_DEVCONF_MAX
+>  };
+>  
+> diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+> index cebd9d31e65a..dbbab28a52a4 100644
+> --- a/net/ipv4/devinet.c
+> +++ b/net/ipv4/devinet.c
+> @@ -2192,6 +2192,8 @@ static struct devinet_sysctl_table {
+>  					      "promote_secondaries"),
+>  		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
+>  					      "route_localnet"),
+> +		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
+> +					      "drop_unicast_in_l2_multicast"),
+>  	},
+>  };
+>  
+> diff --git a/net/ipv4/ip_input.c b/net/ipv4/ip_input.c
+> index b1209b63381f..a442b6bd9441 100644
+> --- a/net/ipv4/ip_input.c
+> +++ b/net/ipv4/ip_input.c
+> @@ -359,8 +359,32 @@ static int ip_rcv_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+>  	rt = skb_rtable(skb);
+>  	if (rt->rt_type == RTN_MULTICAST) {
+>  		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INMCAST, skb->len);
+> -	} else if (rt->rt_type == RTN_BROADCAST)
+> +	} else if (rt->rt_type == RTN_BROADCAST) {
+>  		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INBCAST, skb->len);
+> +	} else {
+
+	} else if (unlikely(skb->pkt_type != PACKET_HOST)) {
+
+	May be such check can save some cycles because
+it is more common to see PACKET_HOST packets...
+
+> +		struct in_device *in_dev = __in_dev_get_rcu(skb->dev);
+> +
+> +		/* RFC 1122 3.3.6:
+> +		 *
+> +		 *   When a host sends a datagram to a link-layer broadcast
+> +		 *   address, the IP destination address MUST be a legal IP
+> +		 *   broadcast or IP multicast address.
+> +		 *
+> +		 *   A host SHOULD silently discard a datagram that is received
+> +		 *   via a link-layer broadcast (see Section 2.4) but does not
+> +		 *   specify an IP multicast or broadcast destination address.
+> +		 *
+> +		 * This doesn't explicitly say L2 *broadcast*, but broadcast is
+> +		 * in a way a form of multicast and the most common use case for
+> +		 * this is 802.11 protecting against cross-station spoofing (the
+> +		 * so-called "hole-196" attack) so do it for both.
+> +		 */
+> +		if (in_dev &&
+> +		    IN_DEV_ORCONF(in_dev, DROP_UNICAST_IN_L2_MULTICAST) &&
+> +		    (skb->pkt_type == PACKET_BROADCAST ||
+> +		     skb->pkt_type == PACKET_MULTICAST))
+> +			goto drop;
+> +	}
+>  
+>  	return dst_input(skb);
+>  
+> -- 
+> 2.6.2
+
+Regards
+
+--
+Julian Anastasov <ja@ssi.bg>
