@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:13790 "EHLO mx4.wp.pl"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33036 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755400AbbKSWFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 17:05:25 -0500
-Date: Thu, 19 Nov 2015 22:05:22 +0000
-From: Jakub Kicinski <moorray3@wp.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 23/27] rt2x00: move under ralink vendor directory
-Message-ID: <20151119220522.24fa2733@laptop> (sfid-20151119_230528_969900_5A94FC16)
-In-Reply-To: <1447857966-19560-24-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-	<1447857966-19560-24-git-send-email-kvalo@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751064AbbKDHeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 02:34:04 -0500
+Message-ID: <1446622439.2478.5.camel@sipsolutions.net> (sfid-20151104_083433_915598_E7A26DAE)
+Subject: Re: Intel 7260 - limited in 5GHz spectrum
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Pushpal Sidhu <psidhu@gateworks.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 04 Nov 2015 08:33:59 +0100
+In-Reply-To: <CAJ+vNU1d8=Z=0j_1jaqh__830-K56MnnM=5w550+e15NveqeOg@mail.gmail.com> (sfid-20151103_184304_584889_0EBF3178)
+References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com>
+	 <CAJ+vNU3u_KCOjRi1HR_f9hCi-aYYMDciR7C0+nCwJh3N6GAETQ@mail.gmail.com>
+	 <1446568044.29010.25.camel@sipsolutions.net>
+	 <CAJ+vNU1d8=Z=0j_1jaqh__830-K56MnnM=5w550+e15NveqeOg@mail.gmail.com>
+	 (sfid-20151103_184304_584889_0EBF3178)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 18 Nov 2015 16:46:02 +0200, Kalle Valo wrote:
-> Part of reorganising wireless drivers directory and Kconfig.
+On Tue, 2015-11-03 at 09:43 -0800, Tim Harvey wrote:
+
+> No surprise that its sold outside the US, but why should that mean it
+> should exclude 5GHz support? They all have their regulatory domains
+> and my understanding is that the intersection of the reg domain rules
+> and card capabilities should dictate if they can operate as an AP per
+> 5GHz channel. So I'm trying to understand why this card is dropping
+> that capability.
 > 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-For Ralink you could probably drop the rt2x00 directory.  RaLink Tech.
-doesn't exist any more and rt2x00 contains drivers for all of their
-devices.
+It does have 5 GHz capability, but not for active operation, since
+that's not permitted everywhere in the world. The device doesn't want
+to rely on software regulatory enforcement, nor are there multiple
+versions of the device for different countries, so this is about the
+only option left.
 
-Obviously this is just a suggestion, not a show stopper.
+johannes
