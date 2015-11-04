@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33919 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752609AbbKIJBn (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48641 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964883AbbKDBQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:01:43 -0500
-Received: by padhx2 with SMTP id hx2so184713786pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 01:01:43 -0800 (PST)
-From: "Yin, Fengwei" <fengwei.yin@linaro.org>
-To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org
-Subject: [PATCH 4/5] wcn3620: use new response format for wcn3620 trigger_ba
-Date: Mon,  9 Nov 2015 05:02:41 -0500
-Message-Id: <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org> (sfid-20151109_100147_227559_31CF4D15)
-In-Reply-To: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+	Tue, 3 Nov 2015 20:16:00 -0500
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id A02BD40A79A
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2015 17:15:59 -0800 (PST)
+From: Ben Greear <greearb@candelatech.com>
+Subject: Question STBC and LDPC
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Message-ID: <56395C4F.1000203@candelatech.com> (sfid-20151104_021603_230638_85595840)
+Date: Tue, 3 Nov 2015 17:15:59 -0800
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy.green@linaro.org>
+I've been digging in the guts of ath10k rate-ctrl, and I notice that if
+I tell the chip to do NSS of 1 without STBC or LDPC, then it works as I expect
+(single stream, MCS-1 encoding).
 
-From: Andy Green <andy.green@linaro.org>
+But, if I do NSS of 1 and STBC and LDPC enabled (VHT-MCS-0, for instance), then
+wireshark shows the frame as being a 2-stream packet and double the bandwidth.
 
-On wcn3620, firmware response to trigger_ba uses the new, larger
-"v2" format
+Is this expected?
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index a84c2cc..f2443a0 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1968,7 +1968,8 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
- 		wcn36xx_err("Sending hal_trigger_ba failed\n");
- 		goto out;
- 	}
--	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
-+						wcn->hal_rsp_len);
- 	if (ret) {
- 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
- 		goto out;
 -- 
-2.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
