@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:33538 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755350AbbK0Vjk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 16:39:40 -0500
-Received: by igcmv3 with SMTP id mv3so37940949igc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 13:39:39 -0800 (PST)
-From: Peter Hurley <peter@hurleysoftware.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jiri Slaby <jslaby@suse.cz>, linux-kernel@vger.kernel.org,
-	Andi Kleen <andi@firstfloor.org>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 04/19] NFC: nci: Remove dead code
-Date: Fri, 27 Nov 2015 16:39:01 -0500
-Message-Id: <1448660356-6328-5-git-send-email-peter@hurleysoftware.com> (sfid-20151127_224238_151862_7019587C)
-In-Reply-To: <1448660356-6328-1-git-send-email-peter@hurleysoftware.com>
-References: <1448660356-6328-1-git-send-email-peter@hurleysoftware.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:32879 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754839AbbKDHPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 02:15:14 -0500
+Message-ID: <1446621310.2478.2.camel@sipsolutions.net> (sfid-20151104_081518_072348_775D22E0)
+Subject: Re: [PATCH 2/2] iw: Removed the libnl-tiny >= 1 requirement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dima Krasner <dima@dimakrasner.com>, linux-wireless@vger.kernel.org
+Date: Wed, 04 Nov 2015 08:15:10 +0100
+In-Reply-To: <150d1317b9d.cfdce22f1276537.435317345116585066@dimakrasner.com> (sfid-20151104_073201_819917_30C19821)
+References: <150d1317b9d.cfdce22f1276537.435317345116585066@dimakrasner.com>
+	 (sfid-20151104_073201_819917_30C19821)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The N_NCI ldisc does not define a flush_buffer() ldisc method, so
-the check when opening the ldisc is always false.
+On Wed, 2015-11-04 at 08:31 +0200, Dima Krasner wrote:
+> Hi,
+> 
+> Recent libnl-tiny revisions do not specify a version in the pkg
+> -config data. This patch corrects libnl-tiny support added in the 
+> previous patch in the series, so it works with the latest revision 
+> too.
 
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: <linux-wireless@vger.kernel.org>
-Signed-off-by: Peter Hurley <peter@hurleysoftware.com>
----
- net/nfc/nci/uart.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+You need to resend the patch (after reading iw's CONTRIBUTING file) -
+so please just make a single one.
 
-diff --git a/net/nfc/nci/uart.c b/net/nfc/nci/uart.c
-index 21d8875..c468eab 100644
---- a/net/nfc/nci/uart.c
-+++ b/net/nfc/nci/uart.c
-@@ -171,14 +171,7 @@ static int nci_uart_tty_open(struct tty_struct *tty)
- 	tty->disc_data = NULL;
- 	tty->receive_room = 65536;
- 
--	/* Flush any pending characters in the driver and line discipline. */
--
--	/* FIXME: why is this needed. Note don't use ldisc_ref here as the
--	 * open path is before the ldisc is referencable.
--	 */
--
--	if (tty->ldisc->ops->flush_buffer)
--		tty->ldisc->ops->flush_buffer(tty);
-+	/* Flush any pending characters in the driver */
- 	tty_driver_flush_buffer(tty);
- 
- 	return 0;
--- 
-2.6.3
-
+Thanks,
+johannes
