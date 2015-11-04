@@ -1,190 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54966 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786AbbKLWA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 17:00:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Marek <mmarek@suse.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v5 3/5] mac80211: generate hw flags from include file
-Date: Thu, 12 Nov 2015 23:00:50 +0100
-Message-Id: <1447365652-23716-4-git-send-email-johannes@sipsolutions.net> (sfid-20151112_230105_741442_80F81643)
-In-Reply-To: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
-References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45200 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965717AbbKDUlV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 15:41:21 -0500
+Date: Wed, 4 Nov 2015 12:41:20 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH RESEND 12/12] staging: wilc1000: add argument wilc and
+ use it instead of g_linux_wlan
+Message-ID: <20151104204120.GB15421@kroah.com> (sfid-20151104_214129_898915_8DEE0954)
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+ <1446088732-12301-12-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446088732-12301-12-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Oct 29, 2015 at 12:18:52PM +0900, Glen Lee wrote:
+> This patch adds new argument wilc to linux_sdio_cmd53 and linux_sdio_cmd52
+> , and use it instead of g_linux_wlan. Pass wilc to the functions as well.
+> The void type wilc will be changed with struct wilc when SDIO and SPI
+> modules are reworked.
+> 
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan_sdio.c |  8 ++--
+>  drivers/staging/wilc1000/linux_wlan_sdio.h |  4 +-
+>  drivers/staging/wilc1000/wilc_sdio.c       | 66 +++++++++++++++---------------
+>  drivers/staging/wilc1000/wilc_wlan_if.h    |  4 +-
+>  4 files changed, 41 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> index bf05e22..8150d6f 100644
+> --- a/drivers/staging/wilc1000/linux_wlan_sdio.c
+> +++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> @@ -53,9 +53,9 @@ static void wilc_sdio_interrupt(struct sdio_func *func)
+>  }
+>  
+>  
+> -int linux_sdio_cmd52(sdio_cmd52_t *cmd)
+> +int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd)
 
-Instead of having to list all the hw flags in many places, just
-list the macro to generate everything in a new include file and
-include it in the proper places.
+Again, why a void *?  Please use the correct type, you know what it is,
+that way you can get rid of horrid stuff like this:
 
-Unfortunately this breaks docbook processing since that doesn't
-pre-process the file. It also doesn't generate the necessary
-Kconfig items.
+>  {
+> -	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
+> +	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211-hwflags.h | 33 +++++++++++++++++++++++++++++
- include/net/mac80211.h         | 37 +++------------------------------
- net/mac80211/debugfs.c         | 47 ++++--------------------------------------
- 3 files changed, 40 insertions(+), 77 deletions(-)
- create mode 100644 include/net/mac80211-hwflags.h
+All of those casts should not be needed.
 
-diff --git a/include/net/mac80211-hwflags.h b/include/net/mac80211-hwflags.h
-new file mode 100644
-index 000000000000..c0450391088c
---- /dev/null
-+++ b/include/net/mac80211-hwflags.h
-@@ -0,0 +1,33 @@
-+/* this file intentionally has no include guard */
-+DEFINE_HWFLAG(HAS_RATE_CONTROL)
-+DEFINE_HWFLAG(RX_INCLUDES_FCS)
-+DEFINE_HWFLAG(HOST_BROADCAST_PS_BUFFERING)
-+DEFINE_HWFLAG(SIGNAL_UNSPEC)
-+DEFINE_HWFLAG(SIGNAL_DBM)
-+DEFINE_HWFLAG(NEED_DTIM_BEFORE_ASSOC)
-+DEFINE_HWFLAG(SPECTRUM_MGMT)
-+DEFINE_HWFLAG(AMPDU_AGGREGATION)
-+DEFINE_HWFLAG(SUPPORTS_PS)
-+DEFINE_HWFLAG(PS_NULLFUNC_STACK)
-+DEFINE_HWFLAG(SUPPORTS_DYNAMIC_PS)
-+DEFINE_HWFLAG(MFP_CAPABLE)
-+DEFINE_HWFLAG(WANT_MONITOR_VIF)
-+DEFINE_HWFLAG(NO_AUTO_VIF)
-+DEFINE_HWFLAG(SW_CRYPTO_CONTROL)
-+DEFINE_HWFLAG(SUPPORT_FAST_XMIT)
-+DEFINE_HWFLAG(REPORTS_TX_ACK_STATUS)
-+DEFINE_HWFLAG(CONNECTION_MONITOR)
-+DEFINE_HWFLAG(QUEUE_CONTROL)
-+DEFINE_HWFLAG(SUPPORTS_PER_STA_GTK)
-+DEFINE_HWFLAG(AP_LINK_PS)
-+DEFINE_HWFLAG(TX_AMPDU_SETUP_IN_HW)
-+DEFINE_HWFLAG(SUPPORTS_RC_TABLE)
-+DEFINE_HWFLAG(P2P_DEV_ADDR_FOR_INTF)
-+DEFINE_HWFLAG(TIMING_BEACON_ONLY)
-+DEFINE_HWFLAG(SUPPORTS_HT_CCK_RATES)
-+DEFINE_HWFLAG(CHANCTX_STA_CSA)
-+DEFINE_HWFLAG(SUPPORTS_CLONED_SKBS)
-+DEFINE_HWFLAG(SINGLE_SCAN_ON_ALL_BANDS)
-+DEFINE_HWFLAG(TDLS_WIDER_BW)
-+DEFINE_HWFLAG(SUPPORTS_AMSDU_IN_AMPDU)
-+DEFINE_HWFLAG(BEACON_TX_STATUS)
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 82045fca388b..2345d3d43300 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1904,40 +1904,9 @@ struct ieee80211_txq {
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
--	IEEE80211_HW_HAS_RATE_CONTROL,
--	IEEE80211_HW_RX_INCLUDES_FCS,
--	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING,
--	IEEE80211_HW_SIGNAL_UNSPEC,
--	IEEE80211_HW_SIGNAL_DBM,
--	IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC,
--	IEEE80211_HW_SPECTRUM_MGMT,
--	IEEE80211_HW_AMPDU_AGGREGATION,
--	IEEE80211_HW_SUPPORTS_PS,
--	IEEE80211_HW_PS_NULLFUNC_STACK,
--	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
--	IEEE80211_HW_MFP_CAPABLE,
--	IEEE80211_HW_WANT_MONITOR_VIF,
--	IEEE80211_HW_NO_AUTO_VIF,
--	IEEE80211_HW_SW_CRYPTO_CONTROL,
--	IEEE80211_HW_SUPPORT_FAST_XMIT,
--	IEEE80211_HW_REPORTS_TX_ACK_STATUS,
--	IEEE80211_HW_CONNECTION_MONITOR,
--	IEEE80211_HW_QUEUE_CONTROL,
--	IEEE80211_HW_SUPPORTS_PER_STA_GTK,
--	IEEE80211_HW_AP_LINK_PS,
--	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW,
--	IEEE80211_HW_SUPPORTS_RC_TABLE,
--	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF,
--	IEEE80211_HW_TIMING_BEACON_ONLY,
--	IEEE80211_HW_SUPPORTS_HT_CCK_RATES,
--	IEEE80211_HW_CHANCTX_STA_CSA,
--	IEEE80211_HW_SUPPORTS_CLONED_SKBS,
--	IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS,
--	IEEE80211_HW_TDLS_WIDER_BW,
--	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
--	IEEE80211_HW_BEACON_TX_STATUS,
--
--	/* keep last, obviously */
-+#define DEFINE_HWFLAG(_flg) IEEE80211_HW_##_flg,
-+#include <net/mac80211-hwflags.h>
-+#undef DEFINE_HWFLAG
- 	NUM_IEEE80211_HW_FLAGS
- };
- 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 4d2aaebd4f97..dc0eca604be1 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -91,44 +91,10 @@ static const struct file_operations reset_ops = {
- };
- #endif
- 
--static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
--#define FLAG(F)	[IEEE80211_HW_##F] = #F
--	FLAG(HAS_RATE_CONTROL),
--	FLAG(RX_INCLUDES_FCS),
--	FLAG(HOST_BROADCAST_PS_BUFFERING),
--	FLAG(SIGNAL_UNSPEC),
--	FLAG(SIGNAL_DBM),
--	FLAG(NEED_DTIM_BEFORE_ASSOC),
--	FLAG(SPECTRUM_MGMT),
--	FLAG(AMPDU_AGGREGATION),
--	FLAG(SUPPORTS_PS),
--	FLAG(PS_NULLFUNC_STACK),
--	FLAG(SUPPORTS_DYNAMIC_PS),
--	FLAG(MFP_CAPABLE),
--	FLAG(WANT_MONITOR_VIF),
--	FLAG(NO_AUTO_VIF),
--	FLAG(SW_CRYPTO_CONTROL),
--	FLAG(SUPPORT_FAST_XMIT),
--	FLAG(REPORTS_TX_ACK_STATUS),
--	FLAG(CONNECTION_MONITOR),
--	FLAG(QUEUE_CONTROL),
--	FLAG(SUPPORTS_PER_STA_GTK),
--	FLAG(AP_LINK_PS),
--	FLAG(TX_AMPDU_SETUP_IN_HW),
--	FLAG(SUPPORTS_RC_TABLE),
--	FLAG(P2P_DEV_ADDR_FOR_INTF),
--	FLAG(TIMING_BEACON_ONLY),
--	FLAG(SUPPORTS_HT_CCK_RATES),
--	FLAG(CHANCTX_STA_CSA),
--	FLAG(SUPPORTS_CLONED_SKBS),
--	FLAG(SINGLE_SCAN_ON_ALL_BANDS),
--	FLAG(TDLS_WIDER_BW),
--	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
--	FLAG(BEACON_TX_STATUS),
--
--	/* keep last for the build bug below */
--	(void *)0x1
--#undef FLAG
-+static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS] = {
-+#define DEFINE_HWFLAG(_flg)	[IEEE80211_HW_##_flg] = #_flg,
-+#include <net/mac80211-hwflags.h>
-+#undef DEFINE_HWFLAG
- };
- 
- static ssize_t hwflags_read(struct file *file, char __user *user_buf,
-@@ -144,11 +110,6 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	/* fail compilation if somebody adds or removes
--	 * a flag without updating the name array above
--	 */
--	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void *)0x1);
--
- 	for (i = 0; i < NUM_IEEE80211_HW_FLAGS; i++) {
- 		if (test_bit(i, local->hw.flags))
- 			pos += scnprintf(pos, end - pos, "%s\n",
--- 
-2.6.2
+thanks,
 
+greg k-h
