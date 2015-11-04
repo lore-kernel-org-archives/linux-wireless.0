@@ -1,88 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47620 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032934AbbKFJjd (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5425 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbbKDMGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:33 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 23/26] staging: wilc1000: linux_spi_init: remove parameter vp
-Date: Fri, 6 Nov 2015 18:40:20 +0900
-Message-ID: <1446802823-22598-24-git-send-email-glen.lee@atmel.com> (sfid-20151106_110754_653831_259D3419)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+	Wed, 4 Nov 2015 07:06:38 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 3/3] ath10k: Fix peerid configuration in htt tx desc for htt version < 3.4
+Date: Wed, 4 Nov 2015 17:35:37 +0530
+Message-ID: <1446638737-7953-4-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151104_130641_666696_180AA6B8)
+In-Reply-To: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes function parameter vp which is not used and modify it's
-related codes.
+Of a word in struct htt_data_tx_desc htt version >= 3.4 firmware uses
+LSB 16-bit for frequency configuration which is used for offchannel tx
+and MSB 16-bit is for peerid. But other firmwares using version 2.X
+(10.1, 10.2.2, 10.2.4 and 10.4) are using 32-bit for peerid in htt tx
+desc. So far no issue is found with the existing code setting peerid and
+freq for HTT version 2.X, this could be mainly because of 0 as frequecy
+(home channel) is being always passed with those firmwares. There may be
+issues when non-zero freq is passed with firmware using < 3.4 htt version.
+To be safe use target_version_major and target_version_minor along with
+htt-op-version before configuring peer id and freq in htt tx desc. This
+patch extends ath10k_mac_tx_frm_has_freq() to check for htt_op_version_tlv
+and uses the helper while setting peerid in htt_tx_desc.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c     | 2 +-
- drivers/staging/wilc1000/linux_wlan_spi.c | 2 +-
- drivers/staging/wilc1000/linux_wlan_spi.h | 2 +-
- drivers/staging/wilc1000/wilc_spi.c       | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    |  9 +++++++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 11 +++++++++--
+ drivers/net/wireless/ath/ath10k/mac.c    |  5 +++--
+ drivers/net/wireless/ath/ath10k/mac.h    |  1 +
+ 4 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 00bc890..fcc669c 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1566,7 +1566,7 @@ int wilc_netdev_init(struct wilc **wilc)
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 2bad50e..44fb4f2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -166,8 +166,13 @@ struct htt_data_tx_desc {
+ 	__le16 len;
+ 	__le16 id;
+ 	__le32 frags_paddr;
+-	__le16 peerid;
+-	__le16 freq;
++	union {
++		__le32 peerid;
++		struct {
++			__le16 peerid;
++			__le16 freq;
++		} __packed offchan_tx;
++	} __packed;
+ 	u8 prefetch[0]; /* start of frame, for FW classification engine */
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 1682397..2dcea48 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -681,8 +681,15 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	skb_cb->htt.txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
+ 	skb_cb->htt.txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
+ 	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+-	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le16(HTT_INVALID_PEERID);
+-	skb_cb->htt.txbuf->cmd_tx.freq = __cpu_to_le16(skb_cb->htt.freq);
++	if (ath10k_mac_tx_frm_has_freq(ar)) {
++		skb_cb->htt.txbuf->cmd_tx.offchan_tx.peerid =
++				__cpu_to_le16(HTT_INVALID_PEERID);
++		skb_cb->htt.txbuf->cmd_tx.offchan_tx.freq =
++				__cpu_to_le16(skb_cb->htt.freq);
++	} else {
++		skb_cb->htt.txbuf->cmd_tx.peerid =
++				__cpu_to_le32(HTT_INVALID_PEERID);
++	}
+ 
+ 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f121021..7fe51bf 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3280,7 +3280,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
  	}
+ }
  
- 	#ifndef WILC_SDIO
--	if (!linux_spi_init(&g_linux_wlan->wilc_spidev)) {
-+	if (!linux_spi_init()) {
- 		PRINT_ER("Can't initialize SPI\n");
- 		return -1;
- 	}
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 039d061..73c788f 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -93,7 +93,7 @@ void linux_spi_deinit(void *vp)
- 
- 
- 
--int linux_spi_init(void *vp)
-+int linux_spi_init(void)
+-static bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
++bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
  {
- 	int ret = 1;
- 	static int called;
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index 7356785..b956100 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -5,7 +5,7 @@
- extern struct spi_device *wilc_spi_dev;
- extern struct spi_driver wilc_bus;
+ 	/* FIXME: Not really sure since when the behaviour changed. At some
+ 	 * point new firmware stopped requiring creation of peer entries for
+@@ -3289,7 +3289,8 @@ static bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
+ 	 * because that's when the `freq` was introduced to TX_FRM HTT command.
+ 	 */
+ 	return (ar->htt.target_version_major >= 3 &&
+-		ar->htt.target_version_minor >= 4);
++		ar->htt.target_version_minor >= 4 &&
++		ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_TLV);
+ }
  
--int linux_spi_init(void *vp);
-+int linux_spi_init(void);
- void linux_spi_deinit(void *vp);
- int linux_spi_write(u8 *b, u32 len);
- int linux_spi_read(u8 *rb, u32 rlen);
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 30b1744..fe16d70 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -966,7 +966,7 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index e3cefe4..f504804 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -74,6 +74,7 @@ void ath10k_mac_tx_lock(struct ath10k *ar, int reason);
+ void ath10k_mac_tx_unlock(struct ath10k *ar, int reason);
+ void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason);
+ void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif, int reason);
++bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar);
  
- 	g_spi.dPrint = func;
- 	g_spi.os_context = inp->os_context.os_private;
--	if (!linux_spi_init(g_spi.os_context)) {
-+	if (!linux_spi_init()) {
- 		PRINT_ER("[wilc spi]: Failed io init bus...\n");
- 		return 0;
- 	} else {
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+ {
 -- 
 1.9.1
 
