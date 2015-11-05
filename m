@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59324 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756901AbbKSGzK (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:44387 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161598AbbKEQnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:55:10 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 21/26] staging: wilc1000: rename pUserVoid in add_network_to_shadow function
-Date: Thu, 19 Nov 2015 15:56:30 +0900
-Message-ID: <1447916195-24851-21-git-send-email-glen.lee@atmel.com> (sfid-20151119_082251_929290_2FBF1CAB)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+	Thu, 5 Nov 2015 11:43:00 -0500
+Subject: Re: Configurable scan dwell time?
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>
+References: <563A9B8C.3060503@candelatech.com>
+ <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com>
+ <1446710205.2540.1.camel@sipsolutions.net> <563B7D63.1010203@candelatech.com>
+ <1446739615.2540.6.camel@sipsolutions.net> <563B8206.1040807@candelatech.com>
+ <1446740733.2540.9.camel@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <563B8713.6000401@candelatech.com> (sfid-20151105_174304_430777_B5DB4972)
+Date: Thu, 5 Nov 2015 08:42:59 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1446740733.2540.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On 11/05/2015 08:25 AM, Johannes Berg wrote:
+>
+>>> The thing though is that there are now use cases in the standard(s)
+>>> that want/require doing this. So just adding it as a hint will run the
+>>> risk of userspace (like wpa_s) using this "hint" for implementing newer
+>>> spec functionality, testing on ath9k and hwsim and declaring that it
+>>> works :-) And then we're stuck with this feature being used/advertised
+>>> on older devices where it doesn't actually work.
+>>
+>> Scanning is already best effort.  Someone implementing this new hint
+>> can just be aware of the limitations.  If nothing else, start a scan on
+>> a known number of channels (or single channel), see how long it takes..then you know if the
+>> driver is ignoring your hint or not.
+>
+> But if you were asked to measure something on that channel, for a given
+> amount of time while scanning, you could reasonably implement it that
+> way. If you don't really know how long the device is *actually* going
+> to do this, then you can't rightfully say you implement that spec.
+>
+> You can't really start a scan and measure the time either since there's
+> no guarantee the scan will start right away.
 
-This patch renames pUserVoid to user_void that is
-second argument of add_network_to_shadow function to avoid camelcase.
+Grep for 'dwell_time' in ath10k driver dir...it is already using different
+values (active 50, passive 150) than what mac80211 does, so anyone assuming scan time is exactly some
+duration is already confused.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+>>> Now, having those standard use cases is actually a good argument *for*
+>>> adding them in the standard API, but I think we need to be more careful
+>>> around these issues - perhaps having drivers indicate that they support
+>>> it, maybe even with valid ranges, etc.
+>>
+>> I think that is vastly over-engineering the problem, but truth is, it
+>> can always be added later if there is an actual need for that knowledge.
+>>
+>
+> Well, not really. The only way for this to work would be to outright
+> reject requests that weren't within the advertised ranges; doing this
+> after already having the API would break existing clients thereof.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5a9d0e2..7905f37 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -354,9 +354,10 @@ static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
- 	return state;
- }
- 
--static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
-+static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
-+				  void *user_void, void *pJoinParams)
- {
--	int ap_found = is_network_in_shadow(pstrNetworkInfo, pUserVoid);
-+	int ap_found = is_network_in_shadow(pstrNetworkInfo, user_void);
- 	u32 ap_index = 0;
- 	u8 rssi_index = 0;
- 
+It wouldn't break clients if the value is known to just be a hint
+from the beginning..ie clients cannot ever expect that this value
+is guaranteed to be used.
+
+But, if it would help this feature get upstream, then I will work on
+adding a driver flag.  Would that make it acceptable for upstream?
+
+Thanks,
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
