@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16672 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754030AbbKDH5i (ORCPT
+Received: from nasmtp02.atmel.com ([204.2.163.16]:25454 "EHLO
+	SJOEDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1162057AbbKEHk2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 02:57:38 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Thu, 5 Nov 2015 02:40:28 -0500
+From: "Kim, Leo" <Leo.Kim@atmel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	"Lee, Glen" <Glen.Lee@atmel.com>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Shin, Austin" <Austin.Shin@atmel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: set peer MFP flag in peer assoc command
-References: <1444194961-12777-1-git-send-email-c_traja@qti.qualcomm.com>
-	<87pozvidiu.fsf@kamboji.qca.qualcomm.com>
-	<39ba89200efb4ef0a2f5ccd5aca878a6@aphydexm01b.ap.qualcomm.com>
-Date: Wed, 4 Nov 2015 09:57:20 +0200
-In-Reply-To: <39ba89200efb4ef0a2f5ccd5aca878a6@aphydexm01b.ap.qualcomm.com>
-	(Tamizh Chelvam Raja's message of "Wed, 4 Nov 2015 05:20:43 +0000")
-Message-ID: <87egg6dwnz.fsf@kamboji.qca.qualcomm.com> (sfid-20151104_085741_832741_CF5AC92D)
+	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>,
+	"Noureldin, Adel" <Adel.Noureldin@atmel.com>,
+	"Cho, Tony" <Tony.Cho@atmel.com>,
+	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>
+Subject: RE: [PATCH RESEND 01/38] staging: wilc1000: rename pu8IPAddr of
+ fuction Handle_set_IPAddress
+Date: Thu, 5 Nov 2015 07:40:24 +0000
+Message-ID: <74F3875218FC364C9618AB19CB60E9058001B0D4@penmbx02.corp.atmel.com> (sfid-20151105_084035_187778_8899A1E1)
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+ <20151105071652.GP18797@mwanda>
+In-Reply-To: <20151105071652.GP18797@mwanda>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com> writes:
+Dear Dan,
 
->>> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->>>
->>> Set peer's management frame protection flag in peer assoc command, 
->>> this setting will enable/disable encrytion of management frames in fw.
->>>
->>> Setting of this flag is based on whether MFP is enabled/disabled at 
->>> STA and a firmware feature flag ATH10K_FW_FEATURE_MFP_SUPPORT. This is 
->>> because only firmwares 10.1.561 and above have support for MFP.
->>>
->>> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
->>> Signed-off-by: Manikanta pubbisetty <c_mpubbi@qti.qualcomm.com>
->
->>There was a trivial conflict, please check my conflict resolution in the pending branch:
->
->>https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=c33d4ded1d2db2166c14afe602fe7ef645a5b16b
->
->
-> When I try to apply this patch. I got following conflict.
->
-> Checking patch drivers/net/wireless/ath/ath10k/core.c...
-> Checking patch drivers/net/wireless/ath/ath10k/core.h...
-> Hunk #1 succeeded at 512 (offset -1 lines).
-> Checking patch drivers/net/wireless/ath/ath10k/htt_tx.c...
-> Checking patch drivers/net/wireless/ath/ath10k/mac.c...
-> error: while searching for:
+ Because Greg say,
+ - 'This series doesn't apply probably because I didn't take your previous series.
+    Please resend after you refresh and resend that one."
+ So resend :)
 
-I don't know what you are trying to do, but I apply the patches from the
-pending branch to ath-next. You might get a conflict if you apply the
-patch to another branch.
+ Thanks, BR
+ Leo
 
--- 
-Kalle Valo
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
+Sent: Thursday, November 05, 2015 4:17 PM
+To: Lee, Glen
+Cc: gregkh@linuxfoundation.org; devel@driverdev.osuosl.org; Shin, Austin; linux-wireless@vger.kernel.org; Ferre, Nicolas; Noureldin, Adel; Cho, Tony; Kim, Leo; Abozaeid, Adham
+Subject: Re: [PATCH RESEND 01/38] staging: wilc1000: rename pu8IPAddr of fuction Handle_set_IPAddress
+
+Why are you resending these?
+
+regards,
+dan carpenter
+
