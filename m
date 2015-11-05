@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36967 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCNa (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48596 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031664AbbKEDEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:13:30 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 30/73] staging: wilc1000: rename Total_Length variable
-Date: Fri, 6 Nov 2015 11:12:51 +0900
-Message-ID: <1446776014-28094-30-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_637658_08865BAA)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+	Wed, 4 Nov 2015 22:04:35 -0500
+Date: Wed, 4 Nov 2015 19:04:32 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: glen lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH RESEND 12/12] staging: wilc1000: add argument wilc and
+ use it instead of g_linux_wlan
+Message-ID: <20151105030432.GA30860@kroah.com> (sfid-20151105_040453_652139_F4DAEC1E)
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
+ <1446088732-12301-12-git-send-email-glen.lee@atmel.com>
+ <20151104204120.GB15421@kroah.com>
+ <563ABD77.2050303@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <563ABD77.2050303@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, Nov 05, 2015 at 11:22:47AM +0900, glen lee wrote:
+> 
+> On 2015년 11월 05일 05:41, Greg KH wrote:
+> >On Thu, Oct 29, 2015 at 12:18:52PM +0900, Glen Lee wrote:
+> >>This patch adds new argument wilc to linux_sdio_cmd53 and linux_sdio_cmd52
+> >>, and use it instead of g_linux_wlan. Pass wilc to the functions as well.
+> >>The void type wilc will be changed with struct wilc when SDIO and SPI
+> >>modules are reworked.
+> >>
+> >>Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> >>---
+> >>  drivers/staging/wilc1000/linux_wlan_sdio.c |  8 ++--
+> >>  drivers/staging/wilc1000/linux_wlan_sdio.h |  4 +-
+> >>  drivers/staging/wilc1000/wilc_sdio.c       | 66 +++++++++++++++---------------
+> >>  drivers/staging/wilc1000/wilc_wlan_if.h    |  4 +-
+> >>  4 files changed, 41 insertions(+), 41 deletions(-)
+> >>
+> >>diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> >>index bf05e22..8150d6f 100644
+> >>--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
+> >>+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> >>@@ -53,9 +53,9 @@ static void wilc_sdio_interrupt(struct sdio_func *func)
+> >>  }
+> >>-int linux_sdio_cmd52(sdio_cmd52_t *cmd)
+> >>+int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd)
+> >Again, why a void *?  Please use the correct type, you know what it is,
+> >that way you can get rid of horrid stuff like this:
+> >
+> >>  {
+> >>-	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
+> >>+	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
+> >All of those casts should not be needed.
+> 
+> I was planning to change this void type with struct wilc as I commented in changelog.
 
-This patch rename the Total_Length variable to total_length
-to avoid CamelCase naming convention.
+Sorry, I missed that.  But you should still not do an intermediate step
+that you know is wrong :)
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> But as you pointed out, I will do this after fixing current SDIO modules.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index b07d229..34a8b47 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -298,13 +298,14 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 
- 		if (protocol == 0x06) {
- 			u8 *tcp_hdr_ptr;
--			u32 IHL, Total_Length, Data_offset;
-+			u32 IHL, total_length, Data_offset;
- 
- 			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
- 			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
--			Total_Length = (((u32)ip_hdr_ptr[2]) << 8) + ((u32)ip_hdr_ptr[3]);
-+			total_length = ((u32)ip_hdr_ptr[2] << 8) +
-+					(u32)ip_hdr_ptr[3];
- 			Data_offset = (((u32)tcp_hdr_ptr[12] & 0xf0) >> 2);
--			if (Total_Length == (IHL + Data_offset)) {
-+			if (total_length == (IHL + Data_offset)) {
- 				u32 seq_no, Ack_no;
- 
- 				seq_no	= (((u32)tcp_hdr_ptr[4]) << 24) + (((u32)tcp_hdr_ptr[5]) << 16) + (((u32)tcp_hdr_ptr[6]) << 8) + ((u32)tcp_hdr_ptr[7]);
--- 
-1.9.1
+That sounds reasonable, thanks.
 
+greg k-h
