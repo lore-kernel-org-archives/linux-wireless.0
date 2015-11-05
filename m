@@ -1,107 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:60088 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbbKPOLE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 09:11:04 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 07/19] staging/wilc1000: remove linux_wlan_{device_power,device_detection}
-Date: Mon, 16 Nov 2015 15:04:58 +0100
-Message-Id: <1447682710-2908925-8-git-send-email-arnd@arndb.de> (sfid-20151116_151117_254384_DBE8149D)
-In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
-References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39985 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161236AbbKEN4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 08:56:19 -0500
+Message-ID: <1446731776.2540.2.camel@sipsolutions.net> (sfid-20151105_145622_655985_56FBFBFF)
+Subject: Re: [PATCH] mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 05 Nov 2015 14:56:16 +0100
+In-Reply-To: <CALhHN=o9mO9q2T0hQ9Q6JjjiFvZLoOXs8YWOW5oT6wtjgs9Fpg@mail.gmail.com> (sfid-20151105_144824_055389_872E0378)
+References: <1445931520-14509-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <CALhHN=o9mO9q2T0hQ9Q6JjjiFvZLoOXs8YWOW5oT6wtjgs9Fpg@mail.gmail.com>
+	 (sfid-20151105_144824_055389_872E0378)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver provides an interface for custom power management
-and detection that is meant to be filled by people customizing
-the driver. The default implementation of this is empty, and
-we don't actually want people to have to modify the source code.
+On Thu, 2015-11-05 at 14:48 +0100, Janusz Dziedzic wrote:
+> Any comments? :)
+> 
 
-If anybody needs this, they need to describe the respective
-hardware specifics using device tree or platform data and make
-the driver handle this is a more general way.
+Looks OK - I'm not merging for -next right now since we're in the merge
+window.
 
-This removes the empty stubs.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/wilc1000/linux_wlan.c | 40 -----------------------------------
- 1 file changed, 40 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 040caa0d0d0b..6e1ef99fc856 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -31,40 +31,6 @@
- #include "linux_wlan_spi.h"
- #endif
- 
-- #define _linux_wlan_device_power_on()		{}
-- #define _linux_wlan_device_power_off()		{}
--
-- #define _linux_wlan_device_detection()		{}
-- #define _linux_wlan_device_removal()		{}
--
--static int linux_wlan_device_power(int on_off)
--{
--	PRINT_D(INIT_DBG, "linux_wlan_device_power.. (%d)\n", on_off);
--
--	if (on_off) {
--		_linux_wlan_device_power_on();
--	} else {
--		_linux_wlan_device_power_off();
--	}
--
--	return 0;
--}
--
--static int linux_wlan_device_detection(int on_off)
--{
--	PRINT_D(INIT_DBG, "linux_wlan_device_detection.. (%d)\n", on_off);
--
--#ifdef WILC_SDIO
--	if (on_off) {
--		_linux_wlan_device_detection();
--	} else {
--		_linux_wlan_device_removal();
--	}
--#endif
--
--	return 0;
--}
--
- static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
- 
- static struct notifier_block g_dev_notifier = {
-@@ -1476,8 +1442,6 @@ void wl_wlan_cleanup(struct wilc *wilc)
- #if defined(WILC_DEBUGFS)
- 	wilc_debugfs_remove();
- #endif
--	linux_wlan_device_detection(0);
--	linux_wlan_device_power(0);
- }
- 
- int wilc_netdev_init(struct wilc **wilc)
-@@ -1579,10 +1543,6 @@ static int __init init_wilc_driver(void)
- 	printk("IN INIT FUNCTION\n");
- 	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
- 
--	linux_wlan_device_power(1);
--	msleep(100);
--	linux_wlan_device_detection(1);
--
- #ifdef WILC_SDIO
- 	{
- 		int ret;
--- 
-2.1.0.rc2
-
+johannes
