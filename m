@@ -1,81 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:35260 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753348AbbKXVnE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27099 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031175AbbKEFgq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 16:43:04 -0500
-Received: by igl9 with SMTP id 9so82033390igl.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2015 13:43:03 -0800 (PST)
+	Thu, 5 Nov 2015 00:36:46 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 34/38] staging: wilc1000: rename Set_machw_change_vir_if function
+Date: Thu, 5 Nov 2015 14:36:35 +0900
+Message-ID: <1446701799-24870-34-git-send-email-glen.lee@atmel.com> (sfid-20151105_063650_590311_2F200BCA)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1448386927-25170-1-git-send-email-sven@open-mesh.com>
-References: <1448386927-25170-1-git-send-email-sven@open-mesh.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 25 Nov 2015 08:42:44 +1100
-Message-ID: <CAGRGNgUzFuK=r4HTtC0VkBc-5rLEHA99GB3VuyA6T7Ch6nr2kw@mail.gmail.com> (sfid-20151124_224309_591775_EC7871AE)
-Subject: Re: iw: add VHT80 support for 802.11s
-To: Sven Eckelmann <sven@open-mesh.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven,
+From: Leo Kim <leo.kim@atmel.com>
 
-On Wed, Nov 25, 2015 at 4:42 AM, Sven Eckelmann <sven@open-mesh.com> wrote:
-> iw mesh supports non-HT and HT channel widths like HT20 or NOHT. But the
-> Linux 802.11s implementation also supports VHT80 which can be specified
-> during the mesh join.
->
->     iw dev mesh0 mesh join "meshnet" freq 5180 80MHz
->
-> Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
-> ---
->  ibss.c | 33 ---------------------------------
->  iw.h   |  9 +++++++++
->  mesh.c | 16 ++++++++--------
->  util.c | 26 ++++++++++++++++++++++++++
->  4 files changed, 43 insertions(+), 41 deletions(-)
->
-> diff --git a/mesh.c b/mesh.c
-> index 0090530..930d58f 100644
-> --- a/mesh.c
-> +++ b/mesh.c
-> @@ -439,12 +439,8 @@ static int join_mesh(struct nl80211_state *state,
->         int bintval, dtim_period, i, n_rates = 0;
->         char *end, *value = NULL, *sptr = NULL;
->         unsigned long freq = 0;
-> -       static const struct {
-> -               const char *name;
-> -               unsigned int width;
-> -               int freq1_diff;
-> -               int chantype; /* for older kernel */
-> -       } *chanmode_selected = NULL, chanmode[] = {
-> +       const struct chanmode *chanmode_selected = NULL;
-> +       static const struct chanmode chanmode[] = {
+This patch rename Set_machw_change_vir_if function to set_machw_change_vir_if
+to avoid CamelCase naming convention.
 
-You might want to make this change in a separate patch.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c              | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
->                 { .name = "HT20",
->                   .width = NL80211_CHAN_WIDTH_20,
->                   .freq1_diff = 0,
-> @@ -599,7 +599,7 @@ static int join_mesh(struct nl80211_state *state,
->   nla_put_failure:
->         return -ENOBUFS;
->  }
-> -COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
-> +COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT|80MHz>]"
-
-Should NOHT remain last in the list?
-
->         " [basic-rates <rate in Mbps,rate2,...>]], [mcast-rate <rate in Mbps>]"
->         " [beacon-interval <time in TUs>] [dtim-period <value>]"
->         " [vendor_sync on|off] [<param>=<value>]*",
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6492103..79e755c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1107,7 +1107,7 @@ int mac_open(struct net_device *ndev)
+ 		return ret;
+ 	}
+ 
+-	Set_machw_change_vir_if(ndev, false);
++	set_machw_change_vir_if(ndev, false);
+ 
+ 	host_int_get_MacAddress(priv->hWILCWFIDrv, mac_add);
+ 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e8c8272..5291868 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1408,7 +1408,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ 		g_key_gtk_params.seq = NULL;
+ 
+ 		/*Reset WILC_CHANGING_VIR_IF register to allow adding futrue keys to CE H/W*/
+-		Set_machw_change_vir_if(netdev, false);
++		set_machw_change_vir_if(netdev, false);
+ 	}
+ 
+ 	if (key_index >= 0 && key_index <= 3) {
+@@ -2548,7 +2548,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(GENERIC_DBG, "Changing virtual interface, enable scan\n");
+ 	/*Set WILC_CHANGING_VIR_IF register to disallow adding futrue keys to CE H/W*/
+ 	if (g_ptk_keys_saved && g_gtk_keys_saved) {
+-		Set_machw_change_vir_if(dev, true);
++		set_machw_change_vir_if(dev, true);
+ 	}
+ 
+ 	switch (type) {
+@@ -2710,7 +2710,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 			/*Refresh scan, to refresh the scan results to the wpa_supplicant. Set MachHw to false to enable further key installments*/
+ 			refresh_scan(priv, 1, true);
+-			Set_machw_change_vir_if(dev, false);
++			set_machw_change_vir_if(dev, false);
+ 
+ 			if (wl->initialized)	{
+ 				for (i = 0; i < num_reg_frame; i++) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 9b11b71..6f9da09 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -217,7 +217,7 @@ void wl_wlan_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+-u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue);
++u16 set_machw_change_vir_if(struct net_device *dev, bool bValue);
+ int linux_wlan_get_firmware(struct net_device *dev);
+ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 16224ce..0e5535e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -2052,7 +2052,7 @@ _fail_:
+ 
+ }
+ 
+-u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue)
++u16 set_machw_change_vir_if(struct net_device *dev, bool bValue)
+ {
+ 	u16 ret;
+ 	u32 reg;
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
