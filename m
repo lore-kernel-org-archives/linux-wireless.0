@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34289 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751522AbbKDNJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 08:09:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE
-Date: Wed,  4 Nov 2015 14:09:02 +0100
-Message-Id: <1446642542-10436-1-git-send-email-johannes@sipsolutions.net> (sfid-20151104_140914_289694_71588875)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26584 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030348AbbKEFej (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 00:34:39 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 12/38] staging: wilc1000: rename pstrWFIDrv of function linux_wlan_init_test_config
+Date: Thu, 5 Nov 2015 14:36:13 +0900
+Message-ID: <1446701799-24870-12-git-send-email-glen.lee@atmel.com> (sfid-20151105_063442_120692_C1D45FC1)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-For now, this feature doesn't actually work. To avoid shipping a
-kernel that has it enabled but where it can't be used disable it
-for now - we can re-enable it when it's fixed.
+This patch renames pstrWFIDrv of function linux_wlan_init_test_config to hif_drv
+to avoid CamelCase naming convention.
 
-This partially reverts 44674d9c2267 ("mac80211: advertise support
-for full station state in AP mode").
-
-Cc: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- net/mac80211/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 858f6b1cb149..175ffcf7fb06 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -541,8 +541,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_VIF_TXPOWER |
- 			   NL80211_FEATURE_MAC_ON_CREATE |
--			   NL80211_FEATURE_USERSPACE_MPM |
--			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
-+			   NL80211_FEATURE_USERSPACE_MPM;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 88cf699..75edfa3 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -632,14 +632,14 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	unsigned char mac_add[] = {0x00, 0x80, 0xC2, 0x5E, 0xa2, 0xff};
  
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+ 	struct wilc_priv *priv;
+-	struct host_if_drv *pstrWFIDrv;
++	struct host_if_drv *hif_drv;
+ 
+ 	PRINT_D(TX_DBG, "Start configuring Firmware\n");
+ 	get_random_bytes(&mac_add[5], 1);
+ 	get_random_bytes(&mac_add[4], 1);
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
+-	PRINT_D(INIT_DBG, "Host = %p\n", pstrWFIDrv);
++	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	PRINT_D(INIT_DBG, "Host = %p\n", hif_drv);
+ 
+ 	PRINT_D(INIT_DBG, "MAC address is : %02x-%02x-%02x-%02x-%02x-%02x\n", mac_add[0], mac_add[1], mac_add[2], mac_add[3], mac_add[4], mac_add[5]);
+ 	wilc_get_chipid(0);
 -- 
-2.6.2
+1.9.1
 
