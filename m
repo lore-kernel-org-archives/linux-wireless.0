@@ -1,72 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:46943 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031997AbbKFJhQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:37:16 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 00/26] staging: wilc1000: tidy up sdio/spi
-Date: Fri, 6 Nov 2015 18:39:57 +0900
-Message-ID: <1446802823-22598-1-git-send-email-glen.lee@atmel.com> (sfid-20151106_103724_256660_8734FAC6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38731 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032213AbbKEImJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 03:42:09 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 4/4] ipv6: add option to drop unsolicited neighbor advertisements
+Date: Thu,  5 Nov 2015 09:42:03 +0100
+Message-Id: <1446712923-9136-4-git-send-email-johannes@sipsolutions.net> (sfid-20151105_094258_893860_690F6A0D)
+In-Reply-To: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc1000 sdio has two different files such as wilc_sdio and linux_wlan_sdio.
-linux_wlan_sdio is for linux and wilc_sdio is implemented os independently at
-the beginning. The drivers is now for LINUX so we will integrate them into one
-file like spi.c and sdio.c.
-This is first series to tidy up sdio/spi before integrate them.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Glen Lee (26):
-  staging: wilc1000: separate hif_sdio and hif_spi into different module
-  staging: wilc1000: remove function pointer sdio_cmd52
-  staging: wilc1000: remove sdio_cmd52 of wilc_wlan_io_func_t
-  staging: wilc1000: remove function pointer sdio_cmd53
-  staging: wilc1000: remove sdio_cmd53 of wilc_wlan_io_func_t
-  staging: wilc1000: remove function pointer sdio_set_max_speed
-  staging: wilc1000: remove sdio_set_max_speed
-  staging: wilc1000: remove function pointer sdio_set_default_speed
-  staging: wilc1000: remove varialbe sdio_set_default_speed
-  staging: wilc1000: call linux_sdio_init instead of io_init
-  staging: wilc1000: wilc_spi.c: add prefix wilc in all function name
-  staging: wilc1000: remove function pointer spi_tx of wilc_spi_t
-  staging: wilc1000: remove function pointer spi_tx of
-    wilc_wlan_io_function_t
-  staging: wilc1000: remove function pointer spi_rx of wilc_spi_t
-  staging: wilc1000: remove function pointer spi_rx of
-    wilc_wlan_io_func_t
-  staging: wilc1000: remove function pointer spi_trx
-  staging: wilc1000: remove spi_trx of wilc_wlan_io_func_t
-  staging: wilc1000: remove function pointer spi_max_speed
-  staging: wilc1000: remove spi_max_speed of wilc_wlan_io_func_t
-  staging: wilc1000: remove function pointer io_init
-  staging: wilc1000: remove unused function pointer io_deinit
-  staging: wilc1000: linux_sdio_init: remove parameter pv
-  staging: wilc1000: linux_spi_init: remove parameter vp
-  staging: wilc1000: remove os_context
-  staging: wilc1000: change parameter type of hif_init
-  staging: wilc1000: remove os_private
+In certain 802.11 wireless deployments, there will be NA proxies
+that use knowledge of the network to correctly answer requests.
+To prevent unsolicitd advertisements on the shared medium from
+being a problem, on such deployments wireless needs to drop them.
 
- drivers/staging/wilc1000/Makefile          |   6 +-
- drivers/staging/wilc1000/linux_wlan.c      |  16 +--
- drivers/staging/wilc1000/linux_wlan_sdio.c |   2 +-
- drivers/staging/wilc1000/linux_wlan_sdio.h |   2 +-
- drivers/staging/wilc1000/linux_wlan_spi.c  |   2 +-
- drivers/staging/wilc1000/linux_wlan_spi.h  |   2 +-
- drivers/staging/wilc1000/wilc_sdio.c       |  89 +++++++---------
- drivers/staging/wilc1000/wilc_spi.c        | 162 ++++++++++++++---------------
- drivers/staging/wilc1000/wilc_wlan.c       |  40 +++----
- drivers/staging/wilc1000/wilc_wlan.h       |   4 +-
- drivers/staging/wilc1000/wilc_wlan_if.h    |  21 ----
- 11 files changed, 146 insertions(+), 200 deletions(-)
+Enable this by providing an option called "drop_unsolicited_na".
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/networking/ip-sysctl.txt | 7 +++++++
+ include/linux/ipv6.h                   | 1 +
+ include/uapi/linux/ipv6.h              | 1 +
+ net/ipv6/addrconf.c                    | 8 ++++++++
+ net/ipv6/ndisc.c                       | 9 +++++++++
+ 5 files changed, 26 insertions(+)
+
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 428fb48a19fc..77992f1173c3 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1672,6 +1672,13 @@ drop_unicast_in_l2_multicast - BOOLEAN
+ 
+ 	By default this is turned off.
+ 
++drop_unsolicited_na - BOOLEAN
++	Drop all unsolicited neighbor advertisements, for example if there's
++	a known good NA proxy on the network and such frames need not be used
++	(or in the case of 802.11, must not be used to prevent attacks.)
++
++	By default this is turned off.
++
+ icmp/*:
+ ratelimit - INTEGER
+ 	Limit the maximal rates for sending ICMPv6 packets.
+diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
+index 34317cb6a6fc..9231bfdc7c92 100644
+--- a/include/linux/ipv6.h
++++ b/include/linux/ipv6.h
+@@ -56,6 +56,7 @@ struct ipv6_devconf {
+ 	__s32           ndisc_notify;
+ 	__s32		suppress_frag_ndisc;
+ 	__s32		accept_ra_mtu;
++	__s32		drop_unsolicited_na;
+ 	struct ipv6_stable_secret {
+ 		bool initialized;
+ 		struct in6_addr secret;
+diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
+index 4c413570efe8..ec117b65d5a5 100644
+--- a/include/uapi/linux/ipv6.h
++++ b/include/uapi/linux/ipv6.h
+@@ -175,6 +175,7 @@ enum {
+ 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
+ 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+ 	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
++	DEVCONF_DROP_UNSOLICITED_NA,
+ 	DEVCONF_MAX
+ };
+ 
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 35f880bcf626..e7dd0a0c5126 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -4673,6 +4673,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
+ 	/* we omit DEVCONF_STABLE_SECRET for now */
+ 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
+ 	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
++	array[DEVCONF_DROP_UNSOLICITED_NA] = cnf->drop_unsolicited_na;
+ }
+ 
+ static inline size_t inet6_ifla6_size(void)
+@@ -5742,6 +5743,13 @@ static struct addrconf_sysctl_table
+ 			.proc_handler	= proc_dointvec,
+ 		},
+ 		{
++			.procname	= "drop_unsolicited_na",
++			.data		= &ipv6_devconf.drop_unsolicited_na,
++			.maxlen		= sizeof(int),
++			.mode		= 0644,
++			.proc_handler	= proc_dointvec,
++		},
++		{
+ 			/* sentinel */
+ 		}
+ 	},
+diff --git a/net/ipv6/ndisc.c b/net/ipv6/ndisc.c
+index 3e0f855e1bea..12c84a53df4f 100644
+--- a/net/ipv6/ndisc.c
++++ b/net/ipv6/ndisc.c
+@@ -887,6 +887,7 @@ static void ndisc_recv_na(struct sk_buff *skb)
+ 				    offsetof(struct nd_msg, opt));
+ 	struct ndisc_options ndopts;
+ 	struct net_device *dev = skb->dev;
++	struct inet6_dev *idev = __in6_dev_get(dev);
+ 	struct inet6_ifaddr *ifp;
+ 	struct neighbour *neigh;
+ 
+@@ -906,6 +907,14 @@ static void ndisc_recv_na(struct sk_buff *skb)
+ 		return;
+ 	}
+ 
++	/* For some 802.11 wireless deployments (and possibly other networks),
++	 * there will be a NA proxy and unsolicitd packets are attacks
++	 * and thus should not be accepted.
++	 */
++	if (!msg->icmph.icmp6_solicited && idev &&
++	    idev->cnf.drop_unsolicited_na)
++		return;
++
+ 	if (!ndisc_parse_options(msg->opt, ndoptlen, &ndopts)) {
+ 		ND_PRINTK(2, warn, "NS: invalid ND option\n");
+ 		return;
 -- 
-1.9.1
+2.6.2
 
