@@ -1,40 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57173 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbbK3LCn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 06:02:43 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "fengwei.yin" <fengwei.yin@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Andy Green <andy.green@linaro.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: Re: [PATCH v2 0/5] wcn36xx: add some new firmware functionalities support
-References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
-	<564E8196.9050601@linaro.org>
-	<CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com>
-	<56564CA8.4070603@linaro.org>
-Date: Mon, 30 Nov 2015 13:02:38 +0200
-In-Reply-To: <56564CA8.4070603@linaro.org> (fengwei yin's message of "Thu, 26
-	Nov 2015 08:04:56 +0800")
-Message-ID: <87k2ozkawh.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_120246_704042_BFDB403A)
+Received: from ja.ssi.bg ([178.16.129.10]:39876 "EHLO ja.ssi.bg"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030521AbbKEJLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 04:11:21 -0500
+Date: Thu, 5 Nov 2015 11:09:28 +0200 (EET)
+From: Julian Anastasov <ja@ssi.bg>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH v3 1/4] ipv4: add option to drop unicast encapsulated in
+ L2 multicast
+In-Reply-To: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1511051107580.2652@ja.home.ssi.bg> (sfid-20151105_101137_989005_840B278C)
+References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"fengwei.yin" <fengwei.yin@linaro.org> writes:
 
-> On 2015/11/23 4:03, Eugene Krasnikov wrote:
->> All 5 patches looks good to me.
->
-> Is it OK to take these patches? Thanks.
+	Hello,
 
-They are on my queue and I'll get to them soon. But from a quick look
-they seem to be ok.
+On Thu, 5 Nov 2015, Johannes Berg wrote:
 
--- 
-Kalle Valo
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In order to solve a problem with 802.11, the so-called hole-196 attack,
+> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+> enabled, causes the stack to drop IPv4 unicast packets encapsulated in
+> link-layer multi- or broadcast frames. Such frames can (as an attack)
+> be created by any member of the same wireless network and transmitted
+> as valid encrypted frames since the symmetric key for broadcast frames
+> is shared between all stations.
+> 
+> Additionally, enabling this option provides compliance with a SHOULD
+> clause of RFC 1122.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+	Patches 1-2 look ok to me,
+
+Reviewed-by: Julian Anastasov <ja@ssi.bg>
+
+> ---
+>  Documentation/networking/ip-sysctl.txt |  7 +++++++
+>  include/uapi/linux/ip.h                |  1 +
+>  net/ipv4/devinet.c                     |  2 ++
+>  net/ipv4/ip_input.c                    | 25 ++++++++++++++++++++++++-
+>  4 files changed, 34 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+> index 05915be86235..35c4c43dd8de 100644
+> --- a/Documentation/networking/ip-sysctl.txt
+> +++ b/Documentation/networking/ip-sysctl.txt
+> @@ -1208,6 +1208,13 @@ promote_secondaries - BOOLEAN
+>  	promote a corresponding secondary IP address instead of
+>  	removing all the corresponding secondary IP addresses.
+>  
+> +drop_unicast_in_l2_multicast - BOOLEAN
+> +	Drop any unicast IP packets that are received in link-layer
+> +	multicast (or broadcast) frames.
+> +	This behavior (for multicast) is actually a SHOULD in RFC
+> +	1122, but is disabled by default for compatibility reasons.
+> +	Default: off (0)
+> +
+>  
+>  tag - INTEGER
+>  	Allows you to write a number, which can be used as required.
+> diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+> index 08f894d2ddbd..584834f7e95c 100644
+> --- a/include/uapi/linux/ip.h
+> +++ b/include/uapi/linux/ip.h
+> @@ -165,6 +165,7 @@ enum
+>  	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+>  	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+>  	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+> +	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+>  	__IPV4_DEVCONF_MAX
+>  };
+>  
+> diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+> index cebd9d31e65a..dbbab28a52a4 100644
+> --- a/net/ipv4/devinet.c
+> +++ b/net/ipv4/devinet.c
+> @@ -2192,6 +2192,8 @@ static struct devinet_sysctl_table {
+>  					      "promote_secondaries"),
+>  		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
+>  					      "route_localnet"),
+> +		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
+> +					      "drop_unicast_in_l2_multicast"),
+>  	},
+>  };
+>  
+> diff --git a/net/ipv4/ip_input.c b/net/ipv4/ip_input.c
+> index b1209b63381f..997ef64a1c0b 100644
+> --- a/net/ipv4/ip_input.c
+> +++ b/net/ipv4/ip_input.c
+> @@ -359,8 +359,31 @@ static int ip_rcv_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+>  	rt = skb_rtable(skb);
+>  	if (rt->rt_type == RTN_MULTICAST) {
+>  		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INMCAST, skb->len);
+> -	} else if (rt->rt_type == RTN_BROADCAST)
+> +	} else if (rt->rt_type == RTN_BROADCAST) {
+>  		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INBCAST, skb->len);
+> +	} else if (skb->pkt_type == PACKET_BROADCAST ||
+> +		   skb->pkt_type == PACKET_MULTICAST) {
+> +		struct in_device *in_dev = __in_dev_get_rcu(skb->dev);
+> +
+> +		/* RFC 1122 3.3.6:
+> +		 *
+> +		 *   When a host sends a datagram to a link-layer broadcast
+> +		 *   address, the IP destination address MUST be a legal IP
+> +		 *   broadcast or IP multicast address.
+> +		 *
+> +		 *   A host SHOULD silently discard a datagram that is received
+> +		 *   via a link-layer broadcast (see Section 2.4) but does not
+> +		 *   specify an IP multicast or broadcast destination address.
+> +		 *
+> +		 * This doesn't explicitly say L2 *broadcast*, but broadcast is
+> +		 * in a way a form of multicast and the most common use case for
+> +		 * this is 802.11 protecting against cross-station spoofing (the
+> +		 * so-called "hole-196" attack) so do it for both.
+> +		 */
+> +		if (in_dev &&
+> +		    IN_DEV_ORCONF(in_dev, DROP_UNICAST_IN_L2_MULTICAST))
+> +			goto drop;
+> +	}
+>  
+>  	return dst_input(skb);
+>  
+> -- 
+> 2.6.2
+
+Regards
+
+--
+Julian Anastasov <ja@ssi.bg>
