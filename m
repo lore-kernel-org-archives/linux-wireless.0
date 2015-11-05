@@ -1,254 +1,349 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48833 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629AbbKOTeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2015 14:34:12 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/4] iwlwifi: mvm: don't overwrite the key indices in D3 entry
-Date: Sun, 15 Nov 2015 21:34:04 +0200
-Message-Id: <1447616045-31484-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151115_203418_430640_EA1FB120)
-In-Reply-To: <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
- <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:6627 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932340AbbKEBg5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2015 20:36:57 -0500
+Message-ID: <563AB36F.3070900@atmel.com> (sfid-20151105_023701_053776_8AE061C9)
+Date: Thu, 5 Nov 2015 10:39:59 +0900
+From: glen lee <glen.lee@atmel.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+Subject: Re: [PATCH V2 04/17] staging: wilc1000: wilc_wlan_cfg_set: add argument
+ struct net_device
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com> <1446198443-6623-4-git-send-email-glen.lee@atmel.com> <20151104204624.GC23896@kroah.com>
+In-Reply-To: <20151104204624.GC23896@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
 
-When entering D3, we need to use hardcoded key indices because the
-firmware requires that.  To do so, we are overwriting the HW key index
-in the keyconf structure, which makes it impossible to reuse the
-indices that were used before entering D3.  Additionally, we overwrite
-all the non-PTK keys with index 1, because the firmware only allows
-one non-PTK key to be set.  This is bad, because when we resume, we
-may try to set more than one key with index 1, which will obviously
-fail.
 
-To fix this, allow the callers to set a pre-defined index to use in
-iwl_mvm_set_sta_key() instead of relying on the hw_key_idx value from
-the keyconf struct (which requires overwriting it).  In normal cases,
-the caller can pass STA_KEY_IDX_INVALID, which will cause a new key
-offset to be chosen.  During HW_RESTART, we pass the offset that is in
-use.  And during D3 entry, we pass the hardcoded indices we need to
-use.
+On 2015년 11월 05일 05:46, Greg KH wrote:
+> On Fri, Oct 30, 2015 at 06:47:10PM +0900, Glen Lee wrote:
+>> This patch adds new argument net_device and use netdev private data member
+>> wilc instead of g_linux_wlan, pass dev to the functions also.
+>>
+>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>> ---
+>>   drivers/staging/wilc1000/coreconfigurator.c |  3 +-
+>>   drivers/staging/wilc1000/linux_wlan.c       | 86 ++++++++++++++---------------
+>>   drivers/staging/wilc1000/wilc_wlan.c        |  9 ++-
+>>   drivers/staging/wilc1000/wilc_wlan.h        |  4 +-
+>>   4 files changed, 53 insertions(+), 49 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+>> index 530d64a..74fb556 100644
+>> --- a/drivers/staging/wilc1000/coreconfigurator.c
+>> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+>> @@ -616,7 +616,8 @@ s32 send_config_pkt(struct net_device *dev, u8 mode, struct wid *wids,
+>>   	} else if (mode == SET_CFG) {
+>>   		for (counter = 0; counter < count; counter++) {
+>>   			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].id);
+>> -			if (!wilc_wlan_cfg_set(!counter,
+>> +			if (!wilc_wlan_cfg_set(dev,
+>> +					       !counter,
+>>   					       wids[counter].id,
+>>   					       wids[counter].val,
+>>   					       wids[counter].size,
+>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+>> index 4ed324c..6ffa2a1 100644
+>> --- a/drivers/staging/wilc1000/linux_wlan.c
+>> +++ b/drivers/staging/wilc1000/linux_wlan.c
+>> @@ -662,53 +662,53 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   
+>>   	*(int *)c_val = 1;
+>>   
+>> -	if (!wilc_wlan_cfg_set(1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*to tell fw that we are going to use PC test - WILC specific*/
+>>   	c_val[0] = 0;
+>> -	if (!wilc_wlan_cfg_set(0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = INFRASTRUCTURE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_BSS_TYPE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/* c_val[0] = RATE_AUTO; */
+>>   	c_val[0] = RATE_AUTO;
+>> -	if (!wilc_wlan_cfg_set(0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = G_MIXED_11B_2_MODE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11G_OPERATING_MODE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11G_OPERATING_MODE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1;
+>> -	if (!wilc_wlan_cfg_set(0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = G_SHORT_PREAMBLE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_PREAMBLE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_PREAMBLE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = AUTO_PROT;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = ACTIVE_SCAN;
+>> -	if (!wilc_wlan_cfg_set(0, WID_SCAN_TYPE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_SCAN_TYPE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = SITE_SURVEY_OFF;
+>> -	if (!wilc_wlan_cfg_set(0, WID_SITE_SURVEY, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_SITE_SURVEY, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	*((int *)c_val) = 0xffff; /* Never use RTS-CTS */
+>> -	if (!wilc_wlan_cfg_set(0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	*((int *)c_val) = 2346;
+>> -	if (!wilc_wlan_cfg_set(0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  SSID                                                                 */
+>> @@ -719,23 +719,23 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*                      to enable Broadcast SSID suppport )              */
+>>   	/*  --------------------------------------------------------------       */
+>>   	c_val[0] = 0;
+>> -	if (!wilc_wlan_cfg_set(0, WID_BCAST_SSID, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_BCAST_SSID, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1;
+>> -	if (!wilc_wlan_cfg_set(0, WID_QOS_ENABLE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_QOS_ENABLE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = NO_POWERSAVE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = NO_ENCRYPT; /* NO_ENCRYPT, 0x79 */
+>> -	if (!wilc_wlan_cfg_set(0, WID_11I_MODE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11I_MODE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = OPEN_SYSTEM;
+>> -	if (!wilc_wlan_cfg_set(0, WID_AUTH_TYPE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_AUTH_TYPE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  WEP/802 11I Configuration                                            */
+>> @@ -747,7 +747,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*  ------------------------------------------------------------------   */
+>>   
+>>   	strcpy(c_val, "123456790abcdef1234567890");
+>> -	if (!wilc_wlan_cfg_set(0, WID_WEP_KEY_VALUE, c_val, (strlen(c_val) + 1), 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_WEP_KEY_VALUE, c_val, (strlen(c_val) + 1), 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  WEP/802 11I Configuration                                            */
+>> @@ -757,7 +757,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*                  and less than 64 bytes                               */
+>>   	/*  ------------------------------------------------------------------   */
+>>   	strcpy(c_val, "12345678");
+>> -	if (!wilc_wlan_cfg_set(0, WID_11I_PSK, c_val, (strlen(c_val)), 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11I_PSK, c_val, (strlen(c_val)), 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  IEEE802.1X Key Configuration                                         */
+>> @@ -767,7 +767,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*                  and less than 65 bytes                               */
+>>   	/*  ------------------------------------------------------------------   */
+>>   	strcpy(c_val, "password");
+>> -	if (!wilc_wlan_cfg_set(0, WID_1X_KEY, c_val, (strlen(c_val) + 1), 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_1X_KEY, c_val, (strlen(c_val) + 1), 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*   IEEE802.1X Server Address Configuration                             */
+>> @@ -779,31 +779,31 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	c_val[1] = 168;
+>>   	c_val[2] = 1;
+>>   	c_val[3] = 112;
+>> -	if (!wilc_wlan_cfg_set(0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 3;
+>> -	if (!wilc_wlan_cfg_set(0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 3;
+>> -	if (!wilc_wlan_cfg_set(0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = NORMAL_ACK;
+>> -	if (!wilc_wlan_cfg_set(0, WID_ACK_POLICY, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_ACK_POLICY, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 0;
+>> -	if (!wilc_wlan_cfg_set(0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 48;
+>> -	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 28;
+>> -	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  Beacon Interval                                                      */
+>> @@ -813,11 +813,11 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*  -------------------------------------------------------------------- */
+>>   
+>>   	*((int *)c_val) = 100;
+>> -	if (!wilc_wlan_cfg_set(0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = REKEY_DISABLE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_REKEY_POLICY, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_POLICY, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  Rekey Time (s) (Used only when the Rekey policy is 2 or 4)           */
+>> @@ -826,7 +826,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*  Values to set : 32-bit value                                         */
+>>   	/*  -------------------------------------------------------------------- */
+>>   	*((int *)c_val) = 84600;
+>> -	if (!wilc_wlan_cfg_set(0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/*  Rekey Packet Count (in 1000s; used when Rekey Policy is 3)           */
+>> @@ -835,59 +835,59 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+>>   	/*  Values to set : 32-bit Value                                         */
+>>   	/*  -------------------------------------------------------------------- */
+>>   	*((int *)c_val) = 500;
+>> -	if (!wilc_wlan_cfg_set(0, WID_REKEY_PACKET_COUNT, c_val, 4, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_REKEY_PACKET_COUNT, c_val, 4, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1;
+>> -	if (!wilc_wlan_cfg_set(0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = G_SELF_CTS_PROT;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1;  /* Enable N */
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_ENABLE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_ENABLE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = HT_MIXED_MODE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_OPERATING_MODE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_OPERATING_MODE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1;   /* TXOP Prot disable in N mode: No RTS-CTS on TX A-MPDUs to save air-time. */
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	memcpy(c_val, mac_add, 6);
+>>   
+>> -	if (!wilc_wlan_cfg_set(0, WID_MAC_ADDR, c_val, 6, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_MAC_ADDR, c_val, 6, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	/**
+>>   	 *      AP only
+>>   	 **/
+>>   	c_val[0] = DETECT_PROTECT_REPORT;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = RTS_CTS_NONHT_PROT;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 0;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = MIMO_MODE;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 7;
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0, 0))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0, 0))
+>>   		goto _fail_;
+>>   
+>>   	c_val[0] = 1; /* Enable N with immediate block ack. */
+>> -	if (!wilc_wlan_cfg_set(0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, 1))
+>> +	if (!wilc_wlan_cfg_set(dev, 0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, 1))
+>>   		goto _fail_;
+>>   
+>>   	return 0;
+>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+>> index 768fd30..a72fa8c 100644
+>> --- a/drivers/staging/wilc1000/wilc_wlan.c
+>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+>> @@ -1768,13 +1768,16 @@ static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
+>>   	return 0;
+>>   }
+>>   
+>> -int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+>> -		      int commit, u32 drvHandler)
+>> +int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
+>> +		      u32 buffer_size, int commit, u32 drvHandler)
+>>   {
+>>   	wilc_wlan_dev_t *p = &g_wlan;
+>>   	u32 offset;
+>>   	int ret_size;
+>> +	perInterface_wlan_t *nic = netdev_priv(dev);
+>> +	struct wilc *wilc;
+>>   
+>> +	wilc = nic->wilc;
+> Again here, pass in a struct wilc *.
 
-Additionally, don't clear the fw_key_table in D3 entry, so that the
-flags are still set with the pre-D3 values when exiting D3.
+Thank you for your advise,
+I can use local structure wilc as you said but there are print line inside the function.
+The custom print lines will be changed with netdev_xxx format later, so I need to pass dev if necessary.
+I used wilc if net_device is unnecessary or unavailable.
+For this reason, Is this OK to use net_device if it is necessary?
 
-fixes=I3165c22362483f0152d9ec1d2a987fb5529727c1
-
-Fixes: b546dcd6b742 ("iwlwifi: mvm: don't reset key index on HW restart")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c       |  8 ++----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 11 ++++++--
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 44 ++++++++++++++++++-----------
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  4 +--
- 4 files changed, 39 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 85ae902..29ae58e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -309,9 +309,9 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 	 * to transmit packets to the AP, i.e. the PTK.
- 	 */
- 	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
--		key->hw_key_idx = 0;
- 		mvm->ptk_ivlen = key->iv_len;
- 		mvm->ptk_icvlen = key->icv_len;
-+		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 0);
- 	} else {
- 		/*
- 		 * firmware only supports TSC/RSC for a single key,
-@@ -319,12 +319,11 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 		 * with new ones -- this relies on mac80211 doing
- 		 * list_add_tail().
- 		 */
--		key->hw_key_idx = 1;
- 		mvm->gtk_ivlen = key->iv_len;
- 		mvm->gtk_icvlen = key->icv_len;
-+		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 1);
- 	}
- 
--	ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, true);
- 	data->error = ret != 0;
- out_unlock:
- 	mutex_unlock(&mvm->mutex);
-@@ -772,9 +771,6 @@ static int iwl_mvm_switch_to_d3(struct iwl_mvm *mvm)
- 	 */
- 	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
- 
--	/* We reprogram keys and shouldn't allocate new key indices */
--	memset(mvm->fw_key_table, 0, sizeof(mvm->fw_key_table));
--
- 	mvm->ptk_ivlen = 0;
- 	mvm->ptk_icvlen = 0;
- 	mvm->ptk_ivlen = 0;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 1fb6846..e88afac 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2941,6 +2941,7 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	int ret;
-+	u8 key_offset;
- 
- 	if (iwlwifi_mod_params.sw_crypto) {
- 		IWL_DEBUG_MAC80211(mvm, "leave - hwcrypto disabled\n");
-@@ -3006,10 +3007,14 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			break;
- 		}
- 
-+		/* in HW restart reuse the index, otherwise request a new one */
-+		if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
-+			key_offset = key->hw_key_idx;
-+		else
-+			key_offset = STA_KEY_IDX_INVALID;
-+
- 		IWL_DEBUG_MAC80211(mvm, "set hwcrypto key\n");
--		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key,
--					  test_bit(IWL_MVM_STATUS_IN_HW_RESTART,
--						   &mvm->status));
-+		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, key_offset);
- 		if (ret) {
- 			IWL_WARN(mvm, "set key failed\n");
- 			/*
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 300a249..4e26008 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -1227,7 +1227,8 @@ static u8 iwl_mvm_get_key_sta_id(struct ieee80211_vif *vif,
- static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
- 				struct iwl_mvm_sta *mvm_sta,
- 				struct ieee80211_key_conf *keyconf, bool mcast,
--				u32 tkip_iv32, u16 *tkip_p1k, u32 cmd_flags)
-+				u32 tkip_iv32, u16 *tkip_p1k, u32 cmd_flags,
-+				u8 key_offset)
- {
- 	struct iwl_mvm_add_sta_key_cmd cmd = {};
- 	__le16 key_flags;
-@@ -1269,7 +1270,7 @@ static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
- 	if (mcast)
- 		key_flags |= cpu_to_le16(STA_KEY_MULTICAST);
- 
--	cmd.key_offset = keyconf->hw_key_idx;
-+	cmd.key_offset = key_offset;
- 	cmd.key_flags = key_flags;
- 	cmd.sta_id = sta_id;
- 
-@@ -1360,6 +1361,7 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta,
- 				 struct ieee80211_key_conf *keyconf,
-+				 u8 key_offset,
- 				 bool mcast)
- {
- 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
-@@ -1375,17 +1377,17 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
- 		ieee80211_get_tkip_rx_p1k(keyconf, addr, seq.tkip.iv32, p1k);
- 		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
--					   seq.tkip.iv32, p1k, 0);
-+					   seq.tkip.iv32, p1k, 0, key_offset);
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
--					   0, NULL, 0);
-+					   0, NULL, 0, key_offset);
- 		break;
- 	default:
- 		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
--					   0, NULL, 0);
-+					   0, NULL, 0, key_offset);
- 	}
- 
- 	return ret;
-@@ -1433,7 +1435,7 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 			struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta,
- 			struct ieee80211_key_conf *keyconf,
--			bool have_key_offset)
-+			u8 key_offset)
- {
- 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
- 	u8 sta_id;
-@@ -1470,18 +1472,25 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 	if (WARN_ON_ONCE(iwl_mvm_sta_from_mac80211(sta)->vif != vif))
- 		return -EINVAL;
- 
--	if (!have_key_offset) {
--		/*
--		 * The D3 firmware hardcodes the PTK offset to 0, so we have to
--		 * configure it there. As a result, this workaround exists to
--		 * let the caller set the key offset (hw_key_idx), see d3.c.
--		 */
--		keyconf->hw_key_idx = iwl_mvm_set_fw_key_idx(mvm);
--		if (keyconf->hw_key_idx == STA_KEY_IDX_INVALID)
-+	/* If the key_offset is not pre-assigned, we need to find a
-+	 * new offset to use.  In normal cases, the offset is not
-+	 * pre-assigned, but during HW_RESTART we want to reuse the
-+	 * same indices, so we pass them when this function is called.
-+	 *
-+	 * In D3 entry, we need to hardcoded the indices (because the
-+	 * firmware hardcodes the PTK offset to 0).  In this case, we
-+	 * need to make sure we don't overwrite the hw_key_idx in the
-+	 * keyconf structure, because otherwise we cannot configure
-+	 * the original ones back when resuming.
-+	 */
-+	if (key_offset == STA_KEY_IDX_INVALID) {
-+		key_offset  = iwl_mvm_set_fw_key_idx(mvm);
-+		if (key_offset == STA_KEY_IDX_INVALID)
- 			return -ENOSPC;
-+		keyconf->hw_key_idx = key_offset;
- 	}
- 
--	ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf, mcast);
-+	ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf, key_offset, mcast);
- 	if (ret) {
- 		__clear_bit(keyconf->hw_key_idx, mvm->fw_key_table);
- 		goto end;
-@@ -1495,7 +1504,8 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 	 */
- 	if (keyconf->cipher == WLAN_CIPHER_SUITE_WEP40 ||
- 	    keyconf->cipher == WLAN_CIPHER_SUITE_WEP104) {
--		ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf, !mcast);
-+		ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf,
-+					    key_offset, !mcast);
- 		if (ret) {
- 			__clear_bit(keyconf->hw_key_idx, mvm->fw_key_table);
- 			__iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
-@@ -1602,7 +1612,7 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- 
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
--			     iv32, phase1key, CMD_ASYNC);
-+			     iv32, phase1key, CMD_ASYNC, keyconf->hw_key_idx);
- 	rcu_read_unlock();
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
-index eedb215..0631cc0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
-@@ -365,8 +365,8 @@ int iwl_mvm_rm_sta_id(struct iwl_mvm *mvm,
- int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 			struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta,
--			struct ieee80211_key_conf *key,
--			bool have_key_offset);
-+			struct ieee80211_key_conf *keyconf,
-+			u8 key_offset);
- int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 			   struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta,
--- 
-2.5.0
+>
+> I've stopped reviewing the series now, odds are all of these need to be
+> changed in this manner, please do so.
+>
+> thanks,
+>
+> greg k-h
 
