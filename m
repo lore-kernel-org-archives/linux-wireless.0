@@ -1,503 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20757 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26504 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751585AbbKRGJd (ORCPT
+	with ESMTP id S932104AbbKEFeV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:33 -0500
+	Thu, 5 Nov 2015 00:34:21 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/16] staging: wilc1000: wilc_send_config_pkt: pass struct wilc
-Date: Wed, 18 Nov 2015 15:11:33 +0900
-Message-ID: <1447827097-9436-13-git-send-email-glen.lee@atmel.com> (sfid-20151118_071410_084857_1853FC95)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH RESEND 09/38] staging: wilc1000: replace explicit NULL comparisons with !
+Date: Thu, 5 Nov 2015 14:36:10 +0900
+Message-ID: <1446701799-24870-9-git-send-email-glen.lee@atmel.com> (sfid-20151105_063425_052360_67036349)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch passes struct wilc to wilc_send_config_pkt. The function
-wilc_wlan_cfg_set and wilc_wlan_cfg_get function will get wilc to replace
-wilc_dev with it.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch replace explicit NULL comparison with ! or unmark
+operator to simplify code.
+Reported by checkpatch.pl for comparison to NULL could be written "!XXX" or "XXX".
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c |   3 +-
- drivers/staging/wilc1000/coreconfigurator.h |   3 +-
- drivers/staging/wilc1000/host_interface.c   | 127 +++++++++++++++-------------
- 3 files changed, 74 insertions(+), 59 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 45 ++++++++++++++++++-----------------
+ 1 file changed, 23 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 47fa82f..dc290d1 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -588,7 +588,8 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
-  *  @date		1 Mar 2012
-  *  @version	1.0
-  */
--s32 wilc_send_config_pkt(u8 mode, struct wid *wids, u32 count, u32 drv)
-+s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
-+			 u32 count, u32 drv)
- {
- 	s32 counter = 0, ret = 0;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1e14e97..d50f0d6 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -136,7 +136,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 	u8 null_ip[4] = {0};
+ 	char wlan_dev_name[5] = "wlan0";
  
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 912d5c2..3f2a7d3 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -127,7 +127,8 @@ typedef struct {
- 	size_t ie_len;
- } tstrDisconnectNotifInfo;
- 
--s32 wilc_send_config_pkt(u8 mode, struct wid *wids, u32 count, u32 drv);
-+s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
-+			 u32 count, u32 drv);
- s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
- s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
- 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3609949..43b77b7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -329,7 +329,7 @@ static s32 handle_set_channel(struct host_if_drv *hif_drv,
- 
- 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -351,7 +351,8 @@ static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
- 	wid.val = (s8 *)&hif_drv_handler->handler;
- 	wid.size = sizeof(u32);
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1, hif_drv_handler->handler);
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
-+				      hif_drv_handler->handler);
- 
- 	if (!hif_drv)
- 		up(&hif_sema_driver);
-@@ -375,7 +376,7 @@ static s32 handle_set_operation_mode(struct host_if_drv *hif_drv,
- 	wid.val = (s8 *)&hif_op_mode->mode;
- 	wid.size = sizeof(u32);
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if ((hif_op_mode->mode) == IDLE_MODE)
-@@ -410,7 +411,7 @@ static s32 handle_set_ip_address(struct host_if_drv *hif_drv, u8 *ip_addr, u8 id
- 	wid.val = (u8 *)ip_addr;
- 	wid.size = IP_ALEN;
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	host_int_get_ipaddress(hif_drv, firmware_ip_addr, idx);
-@@ -435,7 +436,7 @@ static s32 handle_get_ip_address(struct host_if_drv *hif_drv, u8 idx)
- 	wid.val = kmalloc(IP_ALEN, GFP_KERNEL);
- 	wid.size = IP_ALEN;
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", wid.val);
-@@ -478,7 +479,7 @@ static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
- 	wid.size = ETH_ALEN;
- 	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", wid.val);
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result) {
- 		PRINT_ER("Failed to set mac address\n");
-@@ -500,7 +501,7 @@ static s32 handle_get_mac_address(struct host_if_drv *hif_drv,
- 	wid.val = get_mac_addr->mac_addr;
- 	wid.size = ETH_ALEN;
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -795,8 +796,8 @@ static s32 handle_cfg_param(struct host_if_drv *hif_drv,
- 		wid_cnt++;
+-	if (dev_iface == NULL || dev_iface->ifa_dev == NULL || dev_iface->ifa_dev->dev == NULL)	{
++	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev) {
+ 		PRINT_D(GENERIC_DBG, "dev_iface = NULL\n");
+ 		return NOTIFY_DONE;
+ 	}
+@@ -147,18 +147,18 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
  	}
  
--	result = wilc_send_config_pkt(SET_CFG, wid_list, wid_cnt,
--				 get_id_from_handler(hif_drv));
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, wid_list,
-+				      wid_cnt, get_id_from_handler(hif_drv));
+ 	dev  = (struct net_device *)dev_iface->ifa_dev->dev;
+-	if (dev->ieee80211_ptr == NULL || dev->ieee80211_ptr->wiphy == NULL) {
++	if (!dev->ieee80211_ptr || !dev->ieee80211_ptr->wiphy) {
+ 		PRINT_D(GENERIC_DBG, "No Wireless registerd\n");
+ 		return NOTIFY_DONE;
+ 	}
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	if (priv == NULL) {
++	if (!priv) {
+ 		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
+ 		return NOTIFY_DONE;
+ 	}
+ 	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
+ 	nic = netdev_priv(dev);
+-	if (nic == NULL || pstrWFIDrv == NULL) {
++	if (!nic || !pstrWFIDrv) {
+ 		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
+ 		return NOTIFY_DONE;
+ 	}
+@@ -339,7 +339,7 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout)
+ 	int error = -1;
  
- 	if (result)
- 		PRINT_ER("Error in setting CFG params\n");
-@@ -918,8 +919,9 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
- 	else if (hif_drv->hif_state == HOST_IF_IDLE)
- 		scan_while_connected = false;
- 
--	result = wilc_send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
--				 get_id_from_handler(hif_drv));
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, strWIDList,
-+				      u32WidsCount,
-+				      get_id_from_handler(hif_drv));
- 
- 	if (result)
- 		PRINT_ER("Failed to send scan paramters config packet\n");
-@@ -962,7 +964,7 @@ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
- 		wid.val = (s8 *)&u8abort_running_scan;
- 		wid.size = sizeof(char);
- 
--		result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+		result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 					 get_id_from_handler(hif_drv));
- 
- 		if (result) {
-@@ -1216,8 +1218,9 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
- 		PRINT_D(GENERIC_DBG, "save bssid = %pM\n", wilc_connected_SSID);
+ 	PRINT_D(LOCK_DBG, "Locking %p\n", vp);
+-	if (vp != NULL)
++	if (vp)
+ 		error = down_timeout((struct semaphore *)vp, msecs_to_jiffies(timeout));
+ 	else
+ 		PRINT_ER("Failed, mutex is NULL\n");
+@@ -538,12 +538,12 @@ int linux_wlan_get_firmware(struct net_device *dev)
+ 		firmware = P2P_CONCURRENCY_FIRMWARE;
  	}
  
--	result = wilc_send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
--				 get_id_from_handler(hif_drv));
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, strWIDList,
-+				      u32WidsCount,
-+				      get_id_from_handler(hif_drv));
- 	if (result) {
- 		PRINT_ER("failed to send config packet\n");
- 		result = -EFAULT;
-@@ -1313,8 +1316,9 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
- 
- 	u32WidsCount++;
- 
--	result = wilc_send_config_pkt(SET_CFG, strWIDList, u32WidsCount,
--				 get_id_from_handler(join_req_drv));
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, strWIDList,
-+				      u32WidsCount,
-+				      get_id_from_handler(join_req_drv));
- 	if (result) {
- 		PRINT_ER("failed to send config packet\n");
- 		result = -EINVAL;
-@@ -1374,7 +1378,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
- 
- 	PRINT_D(HOSTINF_DBG, "Sending disconnect request\n");
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send dissconect config packet\n");
-@@ -1757,8 +1761,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWIDList[3].size = pstrHostIFkeyAttr->attr.wep.key_len;
- 			strWIDList[3].val = (s8 *)pu8keybuf;
- 
--			result = wilc_send_config_pkt(SET_CFG, strWIDList, 4,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						strWIDList, 4,
-+						get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
- 		}
- 
-@@ -1780,8 +1785,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			wid.val = (s8 *)pu8keybuf;
- 			wid.size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
- 
--			result = wilc_send_config_pkt(SET_CFG, &wid, 1,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						&wid, 1,
-+						get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & REMOVEKEY) {
- 			PRINT_D(HOSTINF_DBG, "Removing key\n");
-@@ -1792,8 +1798,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			wid.val = s8idxarray;
- 			wid.size = 1;
- 
--			result = wilc_send_config_pkt(SET_CFG, &wid, 1,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						&wid, 1,
-+						get_id_from_handler(hif_drv));
- 		} else {
- 			wid.id = (u16)WID_KEY_ID;
- 			wid.type = WID_CHAR;
-@@ -1802,8 +1809,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 
- 			PRINT_D(HOSTINF_DBG, "Setting default key index\n");
- 
--			result = wilc_send_config_pkt(SET_CFG, &wid, 1,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						&wid, 1,
-+						get_id_from_handler(hif_drv));
- 		}
- 		up(&hif_drv->sem_test_key_block);
- 		break;
-@@ -1835,8 +1843,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			strWIDList[1].val = (s8 *)pu8keybuf;
- 			strWIDList[1].size = RX_MIC_KEY_MSG_LEN;
- 
--			result = wilc_send_config_pkt(SET_CFG, strWIDList, 2,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						strWIDList, 2,
-+						get_id_from_handler(hif_drv));
- 
- 			kfree(pu8keybuf);
- 			up(&hif_drv->sem_test_key_block);
-@@ -1868,8 +1877,9 @@ static int Handle_Key(struct host_if_drv *hif_drv,
- 			wid.val = (s8 *)pu8keybuf;
- 			wid.size = RX_MIC_KEY_MSG_LEN;
- 
--			result = wilc_send_config_pkt(SET_CFG, &wid, 1,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						&wid, 1,
-+						get_id_from_handler(hif_drv));
- 
- 			kfree(pu8keybuf);
- 			up(&hif_drv->sem_test_key_block);
-@@ -1907,8 +1917,9 @@ _WPARxGtk_end_case_:
- 			strWIDList[1].val = (s8 *)pu8keybuf;
- 			strWIDList[1].size = PTK_KEY_MSG_LEN + 1;
- 
--			result = wilc_send_config_pkt(SET_CFG, strWIDList, 2,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						strWIDList, 2,
-+						get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
- 			up(&hif_drv->sem_test_key_block);
- 		}
-@@ -1930,8 +1941,9 @@ _WPARxGtk_end_case_:
- 			wid.val = (s8 *)pu8keybuf;
- 			wid.size = PTK_KEY_MSG_LEN;
- 
--			result = wilc_send_config_pkt(SET_CFG, &wid, 1,
--						 get_id_from_handler(hif_drv));
-+			result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG,
-+						&wid, 1,
-+						get_id_from_handler(hif_drv));
- 			kfree(pu8keybuf);
- 			up(&hif_drv->sem_test_key_block);
- 		}
-@@ -1965,7 +1977,7 @@ _WPAPtk_end_case_:
- 		wid.val = (s8 *)pu8keybuf;
- 		wid.size = (pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
- 
--		result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+		result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 					 get_id_from_handler(hif_drv));
- 
- 		kfree(pu8keybuf);
-@@ -1997,7 +2009,7 @@ static void Handle_Disconnect(struct host_if_drv *hif_drv)
- 
- 	eth_zero_addr(wilc_connected_SSID);
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -2084,7 +2096,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
- 
- 	PRINT_D(HOSTINF_DBG, "Getting channel value\n");
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -2109,7 +2121,7 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
- 
- 	PRINT_D(HOSTINF_DBG, "Getting RSSI value\n");
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result) {
- 		PRINT_ER("Failed to get RSSI value\n");
-@@ -2133,7 +2145,7 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
- 
- 	PRINT_D(HOSTINF_DBG, "Getting LINKSPEED value\n");
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result) {
- 		PRINT_ER("Failed to get LINKSPEED value\n");
-@@ -2178,8 +2190,9 @@ static s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pst
- 	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
- 	u32WidsCount++;
- 
--	result = wilc_send_config_pkt(GET_CFG, strWIDList, u32WidsCount,
--				 get_id_from_handler(hif_drv));
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, strWIDList,
-+				u32WidsCount,
-+				get_id_from_handler(hif_drv));
- 
- 	if (result)
- 		PRINT_ER("Failed to send scan paramters config packet\n");
-@@ -2205,7 +2218,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
- 
- 	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -2218,7 +2231,7 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
- 	wid.val = (s8 *)&inactive_time;
- 	wid.size = sizeof(u32);
- 
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 
- 	if (result) {
-@@ -2277,7 +2290,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
- 	pu8CurrByte += pstrSetBeaconParam->tail_len;
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send add beacon config packet\n");
-@@ -2306,7 +2319,7 @@ static void Handle_DelBeacon(struct host_if_drv *hif_drv)
- 
- 	PRINT_D(HOSTINF_DBG, "Deleting BEACON\n");
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send delete beacon config packet\n");
-@@ -2379,7 +2392,7 @@ static void Handle_AddStation(struct host_if_drv *hif_drv,
- 	pu8CurrByte = wid.val;
- 	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
- 
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result != 0)
- 		PRINT_ER("Failed to send add station config packet\n");
-@@ -2421,7 +2434,7 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
- 		pu8CurrByte += ETH_ALEN;
+-	if (nic == NULL) {
++	if (!nic) {
+ 		PRINT_ER("NIC is NULL\n");
+ 		goto _fail_;
  	}
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send add station config packet\n");
-@@ -2453,7 +2466,7 @@ static void Handle_DelStation(struct host_if_drv *hif_drv,
+-	if (&nic->wilc_netdev->dev == NULL) {
++	if (!(&nic->wilc_netdev->dev)) {
+ 		PRINT_ER("&nic->wilc_netdev->dev  is NULL\n");
+ 		goto _fail_;
+ 	}
+@@ -925,7 +925,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		disable_sdio_interrupt();
+ 		mutex_unlock(&wl->hif_cs);
+ #endif
+-		if (&wl->txq_event != NULL)
++		if (&wl->txq_event)
+ 			up(&wl->txq_event);
  
- 	memcpy(pu8CurrByte, pstrDelStaParam->mac_addr, ETH_ALEN);
+ 		PRINT_D(INIT_DBG, "Deinitializing Threads\n");
+@@ -998,10 +998,10 @@ static int wlan_deinit_locks(struct net_device *dev)
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send add station config packet\n");
-@@ -2481,7 +2494,7 @@ static void Handle_EditStation(struct host_if_drv *hif_drv,
- 	pu8CurrByte = wid.val;
- 	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
+ 	PRINT_D(INIT_DBG, "De-Initializing Locks\n");
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send edit station config packet\n");
-@@ -2542,7 +2555,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
- 	wid.val[0] = u8remain_on_chan_flag;
- 	wid.val[1] = (s8)pstrHostIfRemainOnChan->ch;
+-	if (&wilc->hif_cs != NULL)
++	if (&wilc->hif_cs)
+ 		mutex_destroy(&wilc->hif_cs);
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result != 0)
- 		PRINT_ER("Failed to set remain on channel\n");
-@@ -2590,7 +2603,7 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+-	if (&wilc->rxq_cs != NULL)
++	if (&wilc->rxq_cs)
+ 		mutex_destroy(&wilc->rxq_cs);
  
- 	wid.size = sizeof(u16) + 2;
+ 	return 0;
+@@ -1074,10 +1074,10 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	wl->close = 1;
+ 	PRINT_D(INIT_DBG, "Deinitializing Threads\n");
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result) {
- 		PRINT_ER("Failed to frame register config packet\n");
-@@ -2622,7 +2635,7 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
- 		wid.val[0] = u8remain_on_chan_flag;
- 		wid.val[1] = FALSE_FRMWR_CHANNEL;
+-	if (&wl->txq_event != NULL)
++	if (&wl->txq_event)
+ 		up(&wl->txq_event);
  
--		result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+		result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 					 get_id_from_handler(hif_drv));
- 		if (result != 0) {
- 			PRINT_ER("Failed to set remain on channel\n");
-@@ -2680,7 +2693,7 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
+-	if (wl->txq_thread != NULL) {
++	if (wl->txq_thread) {
+ 		kthread_stop(wl->txq_thread);
+ 		wl->txq_thread = NULL;
+ 	}
+@@ -1396,7 +1396,7 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	}
  
- 	PRINT_D(HOSTINF_DBG, "Handling Power Management\n");
+ 	tx_data = kmalloc(sizeof(struct tx_complete_data), GFP_ATOMIC);
+-	if (tx_data == NULL) {
++	if (!tx_data) {
+ 		PRINT_ER("Failed to allocate memory for tx_data structure\n");
+ 		dev_kfree_skb(skb);
+ 		netif_wake_queue(ndev);
+@@ -1450,7 +1450,8 @@ int mac_close(struct net_device *ndev)
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send power management config packet\n");
-@@ -2717,7 +2730,7 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 		memcpy(pu8CurrByte, wilc_multicast_mac_addr_list,
- 		       ((strHostIfSetMulti->cnt) * ETH_ALEN));
+ 	nic = netdev_priv(ndev);
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_ER("Failed to send setup multicast config packet\n");
-@@ -2763,7 +2776,7 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
- 	*ptr++ = 8;
- 	*ptr++ = 0;
+-	if ((nic == NULL) || (nic->wilc_netdev == NULL) || (nic->wilc_netdev->ieee80211_ptr == NULL) || (nic->wilc_netdev->ieee80211_ptr->wiphy == NULL)) {
++	if (!nic || !nic->wilc_netdev || !nic->wilc_netdev->ieee80211_ptr ||
++	    !nic->wilc_netdev->ieee80211_ptr->wiphy) {
+ 		PRINT_ER("nic = NULL\n");
+ 		return 0;
+ 	}
+@@ -1458,7 +1459,7 @@ int mac_close(struct net_device *ndev)
+ 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+ 	wl = nic->wilc;
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_D(HOSTINF_DBG, "Couldn't open BA Session\n");
-@@ -2782,7 +2795,7 @@ static s32 Handle_AddBASession(struct host_if_drv *hif_drv,
- 	*ptr++ = (strHostIfBASessionInfo->buf_size & 0xFF);
- 	*ptr++ = ((strHostIfBASessionInfo->time_out >> 16) & 0xFF);
- 	*ptr++ = 3;
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
+-	if (priv == NULL) {
++	if (!priv) {
+ 		PRINT_ER("priv = NULL\n");
+ 		return 0;
+ 	}
+@@ -1472,7 +1473,7 @@ int mac_close(struct net_device *ndev)
+ 		return 0;
+ 	}
  
- 	kfree(wid.val);
-@@ -2817,7 +2830,7 @@ static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
- 	*ptr++ = 0;
- 	*ptr++ = 32;
+-	if (pstrWFIDrv == NULL)	{
++	if (!pstrWFIDrv) {
+ 		PRINT_ER("pstrWFIDrv = NULL\n");
+ 		return 0;
+ 	}
+@@ -1484,7 +1485,7 @@ int mac_close(struct net_device *ndev)
+ 		return 0;
+ 	}
  
--	result = wilc_send_config_pkt(SET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result)
- 		PRINT_D(HOSTINF_DBG, "Couldn't delete BA Session\n");
-@@ -3556,7 +3569,7 @@ static s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv,
- 	wid.val = pu8AssocRespInfo;
- 	wid.size = u32MaxAssocRespInfoLen;
+-	if (nic->wilc_netdev != NULL) {
++	if (nic->wilc_netdev) {
+ 		/* Stop the network interface queue */
+ 		netif_stop_queue(nic->wilc_netdev);
  
--	result = wilc_send_config_pkt(GET_CFG, &wid, 1,
-+	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
- 	if (result) {
- 		*pu32RcvdAssocRespInfoLen = 0;
+@@ -1585,7 +1586,7 @@ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ 	perInterface_wlan_t *nic;
+ 
+ 	wilc_netdev = GetIfHandler(wilc, buff);
+-	if (wilc_netdev == NULL)
++	if (!wilc_netdev)
+ 		return;
+ 
+ 	buff += pkt_offset;
+@@ -1598,16 +1599,16 @@ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ 
+ 		/* Need to send the packet up to the host, allocate a skb buffer */
+ 		skb = dev_alloc_skb(frame_len);
+-		if (skb == NULL) {
++		if (!skb) {
+ 			PRINT_ER("Low memory - packet droped\n");
+ 			return;
+ 		}
+ 
+-		if (wilc == NULL || wilc_netdev == NULL)
++		if (!wilc || !wilc_netdev)
+ 			PRINT_ER("wilc_netdev in wilc is NULL");
+ 		skb->dev = wilc_netdev;
+ 
+-		if (skb->dev == NULL)
++		if (!skb->dev)
+ 			PRINT_ER("skb->dev is NULL\n");
+ 
+ 		/*
+@@ -1754,7 +1755,7 @@ int wilc_netdev_init(struct wilc **wilc)
+ 			SET_NETDEV_DEV(ndev, &local_sdio_func->dev);
+ 			#endif
+ 
+-			if (wdev == NULL) {
++			if (!wdev) {
+ 				PRINT_ER("Can't register WILC Wiphy\n");
+ 				return -1;
+ 			}
 -- 
 1.9.1
 
