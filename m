@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45193 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965714AbbKDUko (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 15:40:44 -0500
-Date: Wed, 4 Nov 2015 12:40:43 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH RESEND 11/12] staging: wilc1000: rename os_context to wilc
-Message-ID: <20151104204043.GA15421@kroah.com> (sfid-20151104_214048_426106_1E66909A)
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
- <1446088732-12301-11-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446088732-12301-11-git-send-email-glen.lee@atmel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38368 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965410AbbKEH4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 02:56:50 -0500
+Message-ID: <1446710205.2540.1.camel@sipsolutions.net> (sfid-20151105_085653_526922_44270956)
+Subject: Re: Configurable scan dwell time?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Nov 2015 08:56:45 +0100
+In-Reply-To: <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com> (sfid-20151105_080710_589478_5E61DC5E)
+References: <563A9B8C.3060503@candelatech.com>
+	 <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com>
+	 (sfid-20151105_080710_589478_5E61DC5E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 12:18:51PM +0900, Glen Lee wrote:
-> This patch rename os_context to wilc because it is used as struct wilc and
-> move os_private from struct wilc_wlan_os_context_t to struct wilc_wlan_inp_t.
-> Finally, delete wilc_wlan_os_context_t.
+On Thu, 2015-11-05 at 07:41 +0100, Michal Kazior wrote:
+> On 5 November 2015 at 00:58, Ben Greear <greearb@candelatech.com>
+> wrote:
+> > It looks to me like the channel dwell time when scanning (SW
+> > scanning,
+> > mac80211)
+> > is fixed at 1/9 of a second.  I'd like to make this
+> > configurable...is that
+> > something
+> > that might be welcome upstream?
+> > 
+> > My plan is to add to the netlink API around starting a scan and
+> > allow
+> > user-space to
+> > configure a dwell time in milliseconds.
 > 
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c   | 2 +-
->  drivers/staging/wilc1000/wilc_sdio.c    | 6 +++---
->  drivers/staging/wilc1000/wilc_spi.c     | 6 +++---
->  drivers/staging/wilc1000/wilc_wlan_if.h | 6 +-----
->  4 files changed, 8 insertions(+), 12 deletions(-)
+> I've actually tried doing something like this some time ago:
 > 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 017799f..d0161cd 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -1012,7 +1012,7 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
->  
->  	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
->  
-> -	nwi->os_context.os_private = (void *)nic;
-> +	nwi->wilc = (void *)nic;
+>  - http://thread.gmane.org/gmane.linux.kernel.wireless.general/111255
+>  - http://thread.gmane.org/gmane.linux.kernel.wireless.general/111251
+> 
 
-Why do you need the cast to a void * here?
+And as I said back then, I'm rather opposed to this. We risk adding API
+that either nobody uses, or that ends up getting used in ways that
+weren't intended (say for certain measurements) and then will break
+things when scanning is changed in firmware, etc.
 
+Let the scanning be. It's intended to find networks, not really
+something else. Piggy-backing survey onto it was mostly a mistake. For
+other things, do some more reasonable measurement commands.
 
->  
->  #ifdef WILC_SDIO
->  	nwi->io_func.io_type = HIF_SDIO;
-> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-> index 300c571..82f68eb 100644
-> --- a/drivers/staging/wilc1000/wilc_sdio.c
-> +++ b/drivers/staging/wilc1000/wilc_sdio.c
-> @@ -14,7 +14,7 @@
->  #define WILC_SDIO_BLOCK_SIZE 512
->  
->  typedef struct {
-> -	void *os_context;
-> +	void *wilc;
-
-This should be a struct wilc *, right?  Don't add a void pointer for
-something that you know what it is.
-
-thanks,
-
-greg k-h
+johannes
