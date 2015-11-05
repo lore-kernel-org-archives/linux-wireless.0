@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60365 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbbKWSdc (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27072 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030350AbbKEFgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 13:33:32 -0500
-Subject: Re: [PATCH 1/4] staging: wilc1000: Fix typo in wilc_msgqueue.h
-To: Masanari Iida <standby24x7@gmail.com>, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	austin.shin@atmel.com, johnny.kim@atmel.com,
-	linux-wireless@vger.kernel.org
-References: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <56535BF7.1000808@infradead.org> (sfid-20151123_193335_568794_F9D79543)
-Date: Mon, 23 Nov 2015 10:33:27 -0800
+	Thu, 5 Nov 2015 00:36:40 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 33/38] staging: wilc1000: remove goto from mac_open
+Date: Thu, 5 Nov 2015 14:36:34 +0900
+Message-ID: <1446701799-24870-33-git-send-email-glen.lee@atmel.com> (sfid-20151105_063647_973810_6BF5E795)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/15 05:41, Masanari Iida wrote:
-> This patch fix some spelling typo in wilc_msgqueue.h
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
+This patch removes goto from mac_open function. If address is invalid, goto
+handles deinit process and return result.
+So, just call deinit process and return the error value directly instead of
+goto statement.
 
-Thanks.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-> ---
->  drivers/staging/wilc1000/wilc_msgqueue.h | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-> index d231c33..d7e0328 100644
-> --- a/drivers/staging/wilc1000/wilc_msgqueue.h
-> +++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3c8155e..6492103 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1124,8 +1124,9 @@ int mac_open(struct net_device *ndev)
+ 
+ 	if (!is_valid_ether_addr(ndev->dev_addr)) {
+ 		PRINT_ER("Error: Wrong MAC address\n");
+-		ret = -EINVAL;
+-		goto _err_;
++		wilc_deinit_host_int(ndev);
++		wilc1000_wlan_deinit(ndev);
++		return -EINVAL;
+ 	}
+ 
+ 	wilc_mgmt_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy,
+@@ -1140,11 +1141,6 @@ int mac_open(struct net_device *ndev)
+ 	wl->open_ifcs++;
+ 	nic->mac_opened = 1;
+ 	return 0;
+-
+-_err_:
+-	wilc_deinit_host_int(ndev);
+-	wilc1000_wlan_deinit(ndev);
+-	return ret;
+ }
+ 
+ struct net_device_stats *mac_stats(struct net_device *dev)
 -- 
-~Randy
+1.9.1
+
