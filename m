@@ -1,32 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36440 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbbKMODD (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27041 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031027AbbKEFge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 09:03:03 -0500
-Received: by wmww144 with SMTP id w144so29940610wmw.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 06:03:01 -0800 (PST)
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: DFS Master Region
-Message-ID: <5645ED92.3070105@gmail.com> (sfid-20151113_150306_918665_9A7C5B8D)
-Date: Fri, 13 Nov 2015 15:02:58 +0100
+	Thu, 5 Nov 2015 00:36:34 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 32/38] staging: wilc1000: remove goto from wlan_initialize_threads
+Date: Thu, 5 Nov 2015 14:36:33 +0900
+Message-ID: <1446701799-24870-32-git-send-email-glen.lee@atmel.com> (sfid-20151105_063754_279894_9F04A3D5)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
+From: Leo Kim <leo.kim@atmel.com>
 
-> I'm trying to understand a problem that some users are having with the 5G band 
-> when using rtl8821ae. One of them sees the following output from cfg80211:
-> [...]
-> One other possible difference. My openSUSE system uses CRDA 1.1.3. The other box 
-> runs Fedora 23 with an unknown version of CRDA.
+This patch remove goto feature from wlan_initialize_threads function.
+Goto feature is 'wilc->close=0' & return result.
+So, remove goto feature and it was replaced with the return value directly,
+as well as removed unused ret variable.
+Also, execute 'wilc->close=0' before return.
 
-Usually Fedora always brings latest software releases:
-kernel-4.2.6-300.fc23.x86_64
-crda-3.18_2015.10.22-1.fc23.x86_64 (crda-3.18 + wireless-regdb-2015.10.22)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-You can try reproduce it in openSUSE with those releases.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c529a15..3c8155e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -911,7 +911,6 @@ int wlan_initialize_threads(struct net_device *dev)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct wilc *wilc;
+-	int ret = 0;
+ 
+ 	nic = netdev_priv(dev);
+ 	wilc = nic->wilc;
+@@ -922,16 +921,12 @@ int wlan_initialize_threads(struct net_device *dev)
+ 				     "K_TXQ_TASK");
+ 	if (!wilc->txq_thread) {
+ 		PRINT_ER("couldn't create TXQ thread\n");
+-		ret = -ENOBUFS;
+-		goto _fail_2;
++		wilc->close = 0;
++		return -ENOBUFS;
+ 	}
+ 	down(&wilc->txq_thread_started);
+ 
+ 	return 0;
+-
+-_fail_2:
+-	wilc->close = 0;
+-	return ret;
+ }
+ 
+ static void wlan_deinitialize_threads(struct net_device *dev)
+-- 
+1.9.1
+
