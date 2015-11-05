@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:58850 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbbKJXm5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:3225 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031477AbbKECTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 18:42:57 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 01/20] staging/wilc1000: add struct net_device declaration
-Date: Wed, 11 Nov 2015 00:42:21 +0100
-Message-Id: <1447198960-2760143-2-git-send-email-arnd@arndb.de> (sfid-20151111_004913_181283_00F3EF95)
-In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+	Wed, 4 Nov 2015 21:19:44 -0500
+Message-ID: <563ABD77.2050303@atmel.com> (sfid-20151105_031947_444589_D3BD1097)
+Date: Thu, 5 Nov 2015 11:22:47 +0900
+From: glen lee <glen.lee@atmel.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
+	<adel.noureldin@atmel.com>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>, <adham.abozaeid@atmel.com>
+Subject: Re: [PATCH RESEND 12/12] staging: wilc1000: add argument wilc and
+ use it instead of g_linux_wlan
+References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com> <1446088732-12301-12-git-send-email-glen.lee@atmel.com> <20151104204120.GB15421@kroah.com>
+In-Reply-To: <20151104204120.GB15421@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent cleanup added a reference to struct net_device, but
-that structure is not always visible in the context of the
-declaration, so we may get a compile-time error:
 
-In file included from wilc1000/host_interface.c:5:0:
-wilc1000/host_interface.h:705:46: warning: 'struct net_device' declared inside parameter list
- s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
+On 2015년 11월 05일 05:41, Greg KH wrote:
+> On Thu, Oct 29, 2015 at 12:18:52PM +0900, Glen Lee wrote:
+>> This patch adds new argument wilc to linux_sdio_cmd53 and linux_sdio_cmd52
+>> , and use it instead of g_linux_wlan. Pass wilc to the functions as well.
+>> The void type wilc will be changed with struct wilc when SDIO and SPI
+>> modules are reworked.
+>>
+>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>> ---
+>>   drivers/staging/wilc1000/linux_wlan_sdio.c |  8 ++--
+>>   drivers/staging/wilc1000/linux_wlan_sdio.h |  4 +-
+>>   drivers/staging/wilc1000/wilc_sdio.c       | 66 +++++++++++++++---------------
+>>   drivers/staging/wilc1000/wilc_wlan_if.h    |  4 +-
+>>   4 files changed, 41 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+>> index bf05e22..8150d6f 100644
+>> --- a/drivers/staging/wilc1000/linux_wlan_sdio.c
+>> +++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+>> @@ -53,9 +53,9 @@ static void wilc_sdio_interrupt(struct sdio_func *func)
+>>   }
+>>   
+>>   
+>> -int linux_sdio_cmd52(sdio_cmd52_t *cmd)
+>> +int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd)
+> Again, why a void *?  Please use the correct type, you know what it is,
+> that way you can get rid of horrid stuff like this:
+>
+>>   {
+>> -	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
+>> +	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
+> All of those casts should not be needed.
 
-This adds a forward-declaration for the structure name to avoid
-that error.
+I was planning to change this void type with struct wilc as I commented in changelog.
+But as you pointed out, I will do this after fixing current SDIO modules.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: d5382219138d ("staging: wilc1000: host_int_init: add argument net_device")
----
- drivers/staging/wilc1000/host_interface.h | 1 +
- 1 file changed, 1 insertion(+)
+Regards,
+glen lee.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 57e1d424afdc..29a92d690384 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -369,6 +369,7 @@ s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
- s32 hif_set_cfg(struct host_if_drv *hWFIDrv,
- 		struct cfg_param_val *pstrCfgParamVal);
- s32 hif_get_cfg(struct host_if_drv *hWFIDrv, u16 u16WID, u16 *pu16WID_Value);
-+struct net_device;
- s32 host_int_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
- s32 host_int_deinit(struct host_if_drv *hWFIDrv);
- s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
--- 
-2.1.0.rc2
+>
+> thanks,
+>
+> greg k-h
 
