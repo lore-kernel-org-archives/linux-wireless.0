@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36367 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174AbbKEGEi (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26792 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756418AbbKEFfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 01:04:38 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V3 0/3] Fix few WMI/HTT interfaces
-Date: Thu, 5 Nov 2015 11:33:57 +0530
-Message-ID: <1446703440-13880-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151105_070443_409024_E83E19A0)
+	Thu, 5 Nov 2015 00:35:32 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 21/38] staging: wilc1000: fixes add spaces required around that '&&'
+Date: Thu, 5 Nov 2015 14:36:22 +0900
+Message-ID: <1446701799-24870-21-git-send-email-glen.lee@atmel.com> (sfid-20151105_063755_451394_FCBA97FF)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set fixes mismatch in peer_assoc complete wmi command for
-version 10.4 and peer_id configuration for HTT version < 3.4.
+From: Leo Kim <leo.kim@atmel.com>
 
-V2:
-	- Add cover letter
-	- Rename ath10k_mac_need_offchan_tx_work() to
-	  ath10k_mac_tx_frm_has_freq(). Add htt-op-version check
-	  to the helper and use it in ath10k_htt_tx() while configuring
-	  peerid.
+This patch fixes add to spaces around that '&&' or '||'.
+Reported by checkpatch.pl for spaces required around that '&&' or '||' (ctx:VxE).
 
-V3:
-	- Rebase on top of ath:master TOT
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Vasanthakumar Thiagarajan (3):
-  ath10k: Fix peer assoc complete WMI command for 10.4
-  ath10k: Rename the helper which is used for off-channel tx
-  ath10k: Fix peerid configuration in htt tx desc for htt version < 3.4
-
- drivers/net/wireless/ath/ath10k/htt.h    |  9 ++++++--
- drivers/net/wireless/ath/ath10k/htt_tx.c | 11 ++++++++--
- drivers/net/wireless/ath/ath10k/mac.c    |  9 ++++----
- drivers/net/wireless/ath/ath10k/mac.h    |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c    | 37 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h    |  5 +++++
- 6 files changed, 63 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4b2afa0..aecb89d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1093,7 +1093,7 @@ int mac_open(struct net_device *ndev)
+ 	wl = nic->wilc;
+ 
+ #ifdef WILC_SPI
+-	if (!wl|| !wl->wilc_spidev) {
++	if (!wl || !wl->wilc_spidev) {
+ 		netdev_err(ndev, "wilc1000: SPI device not ready\n");
+ 		return -ENODEV;
+ 	}
+@@ -1495,8 +1495,7 @@ void wl_wlan_cleanup(struct wilc *wilc)
+ 	if (wilc && wilc->firmware)
+ 		release_firmware(wilc->firmware);
+ 
+-	if (wilc&&
+-	   (wilc->vif[0].ndev || wilc->vif[1].ndev)) {
++	if (wilc && (wilc->vif[0].ndev || wilc->vif[1].ndev)) {
+ 		linux_wlan_lock_timeout(&close_exit_sync, 12 * 1000);
+ 
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
 -- 
 1.9.1
 
