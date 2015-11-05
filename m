@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47281 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbbKWEMv (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26878 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030350AbbKEFft (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 23:12:51 -0500
-Date: Sun, 22 Nov 2015 20:12:50 -0800
-From: Olav Haugan <ohaugan@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
-	kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 2/2] ath9k: implement set_coalesce callback
-Message-ID: <20151123041250.GA30745@codeaurora.org> (sfid-20151123_051319_271751_A4BC27C8)
-References: <1445712652-19327-1-git-send-email-ohaugan@codeaurora.org>
- <1445712652-19327-2-git-send-email-ohaugan@codeaurora.org>
- <1446199251.3261.22.camel@sipsolutions.net>
+	Thu, 5 Nov 2015 00:35:49 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 24/38] staging: wilc1000: rename pMacHeader of function get_if_handler
+Date: Thu, 5 Nov 2015 14:36:25 +0900
+Message-ID: <1446701799-24870-24-git-send-email-glen.lee@atmel.com> (sfid-20151105_063754_851287_49EAFE9E)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446199251.3261.22.camel@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-10-30 11:00:51, Johannes Berg wrote:
-> On Sat, 2015-10-24 at 11:50 -0700, Olav Haugan wrote:
-> > implement set_coalesce ieee80211_ops callback. Add default
-> > wiphy_coalesce_support rules for 9k. These rules are not being used 
-> > by 9k since 9k can just toggle coalesce as on/off.
-> > 
-> This seems extremely strange to me - like you're trying to abuse
-> set_coalesce, intended for coalescing certain classes of low-importance
-> packets, for a completely different purpose (interrupt coalescing)?
-> 
-Hmm, yes. We misunderstood how this API is used. Do you have any
-suggestion for how to accomplish what we are trying to do? We can't just
-add a new public user space API for this functionality.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch renames pMacHeader of function get_if_handler to mac_header
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3da80cd..67e8928 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -331,13 +331,13 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+ 	}
+ }
+ 
+-struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
++struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
+ {
+ 	u8 *Bssid, *Bssid1;
+ 	int i = 0;
+ 
+-	Bssid  = pMacHeader + 10;
+-	Bssid1 = pMacHeader + 4;
++	Bssid = mac_header + 10;
++	Bssid1 = mac_header + 4;
+ 
+ 	for (i = 0; i < wilc->vif_num; i++)
+ 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
+@@ -346,9 +346,9 @@ struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
+ 
+ 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
+ 	for (i = 0; i < 25; i++)
+-		PRINT_D(INIT_DBG, "%02x ", pMacHeader[i]);
+-	Bssid  = pMacHeader + 18;
+-	Bssid1 = pMacHeader + 12;
++		PRINT_D(INIT_DBG, "%02x ", mac_header[i]);
++	Bssid = mac_header + 18;
++	Bssid1 = mac_header + 12;
+ 	for (i = 0; i < wilc->vif_num; i++)
+ 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
+ 		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
 -- 
-.Olav
+1.9.1
 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
