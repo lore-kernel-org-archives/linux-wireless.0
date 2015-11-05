@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33134 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbbKBPFG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26650 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932081AbbKEFe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 10:05:06 -0500
-Received: by wijp11 with SMTP id p11so53499396wij.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 07:05:04 -0800 (PST)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: hostap@lists.infradead.org, linux-wireless@vger.kernel.org, j@w1.fi
-Cc: tkc <chaitanya.mgit@gmail.com>
-Subject: [PATCH] offchannel: Cancel the pending_action TX wait, before starting new one.
-Date: Mon,  2 Nov 2015 20:34:42 +0530
-Message-Id: <1446476682-23007-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20151102_160511_266002_74D59CF8)
+	Thu, 5 Nov 2015 00:34:56 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 15/38] staging: wilc1000: rename pIP_Add_buff of function dev_state_ev_handler
+Date: Thu, 5 Nov 2015 14:36:16 +0900
+Message-ID: <1446701799-24870-15-git-send-email-glen.lee@atmel.com> (sfid-20151105_063756_944122_A6952B83)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: tkc <chaitanya.mgit@gmail.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
+This patch renames pIP_Add_buff of function dev_state_ev_handler to ip_addr_buf
+to avoid CamelCase naming convention.
 
-Before the tx_status is received for the action frame, if we
-get another request, we respond to that by freeing the memory
-for pending_action_tx, but we don't cancel the TX wait, so
-in the kernel the ROC will not be cancelled.
-
-Due to above issue, wpa_supplicant assumes that all pending
-RoC's are cancelled and proceeds with interface creation and
-connection, where as state in mac80211/driver will be roc_in_progress.
-
-This is leading to issues at driver level.
-
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- wpa_supplicant/offchannel.c |    8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/wpa_supplicant/offchannel.c b/wpa_supplicant/offchannel.c
-index 6b3f83c..bd2f905 100644
---- a/wpa_supplicant/offchannel.c
-+++ b/wpa_supplicant/offchannel.c
-@@ -254,13 +254,7 @@ int offchannel_send_action(struct wpa_supplicant *wpa_s, unsigned int freq,
- 	wpa_s->pending_action_tx_status_cb = tx_cb;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a8d9bcd9..2900ea7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -124,7 +124,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 	struct wilc_priv *priv;
+ 	struct host_if_drv *hif_drv;
+ 	struct net_device *dev;
+-	u8 *pIP_Add_buff;
++	u8 *ip_addr_buf;
+ 	perInterface_wlan_t *nic;
+ 	u8 null_ip[4] = {0};
+ 	char wlan_dev_name[5] = "wlan0";
+@@ -177,9 +177,11 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
  
- 	if (wpa_s->pending_action_tx) {
--		wpa_printf(MSG_DEBUG, "Off-channel: Dropped pending Action "
--			   "frame TX to " MACSTR " (pending_action_tx=%p)",
--			   MAC2STR(wpa_s->pending_action_dst),
--			   wpa_s->pending_action_tx);
--		wpa_hexdump_buf(MSG_MSGDUMP, "Pending TX frame",
--				wpa_s->pending_action_tx);
--		wpabuf_free(wpa_s->pending_action_tx);
-+		offchannel_send_action_done(wpa_s);
- 	}
- 	wpa_s->pending_action_tx_done = 0;
- 	wpa_s->pending_action_tx = wpabuf_alloc(len);
+ 		PRINT_D(GENERIC_DBG, "[%s] Up IP\n", dev_iface->ifa_label);
+ 
+-		pIP_Add_buff = (char *) (&(dev_iface->ifa_address));
+-		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n", pIP_Add_buff[0], pIP_Add_buff[1], pIP_Add_buff[2], pIP_Add_buff[3]);
+-		host_int_setup_ipaddress(hif_drv, pIP_Add_buff, nic->u8IfIdx);
++		ip_addr_buf = (char *)&dev_iface->ifa_address;
++		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n",
++			ip_addr_buf[0], ip_addr_buf[1],
++			ip_addr_buf[2], ip_addr_buf[3]);
++		host_int_setup_ipaddress(hif_drv, ip_addr_buf, nic->u8IfIdx);
+ 
+ 		break;
+ 
+@@ -199,10 +201,12 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 
+ 		PRINT_D(GENERIC_DBG, "[%s] Down IP\n", dev_iface->ifa_label);
+ 
+-		pIP_Add_buff = null_ip;
+-		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n", pIP_Add_buff[0], pIP_Add_buff[1], pIP_Add_buff[2], pIP_Add_buff[3]);
++		ip_addr_buf = null_ip;
++		PRINT_D(GENERIC_DBG, "IP add=%d:%d:%d:%d\n",
++			ip_addr_buf[0], ip_addr_buf[1],
++			ip_addr_buf[2], ip_addr_buf[3]);
+ 
+-		host_int_setup_ipaddress(hif_drv, pIP_Add_buff, nic->u8IfIdx);
++		host_int_setup_ipaddress(hif_drv, ip_addr_buf, nic->u8IfIdx);
+ 
+ 		break;
+ 
 -- 
-1.7.9.5
+1.9.1
 
