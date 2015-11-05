@@ -1,56 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:5691 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbbKYKcw (ORCPT
+Received: from smtp.danego.net ([195.246.116.61]:50720 "EHLO smtp.danego.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031773AbbKEMx1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 05:32:52 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 02/11] brcmfmac: Return actual error by fwil.
-Date: Wed, 25 Nov 2015 11:32:38 +0100
-Message-ID: <1448447567-12189-3-git-send-email-arend@broadcom.com> (sfid-20151125_113316_294751_356DB724)
-In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
-References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+	Thu, 5 Nov 2015 07:53:27 -0500
+From: =?iso-8859-1?Q?Robert_Deli=EBn?= <robert@delien.nl>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "kvalo@qca.qualcomm.com" <kvalo@qca.qualcomm.com>
+Subject: RE: ath6kl: SDIO hif-scatter broken?
+Date: Thu, 5 Nov 2015 12:53:21 +0000
+Message-ID: <6EA3E0BCC03CC34B89B01BD57ECBC718B17AA955@POBOX.postoffice.danego.net> (sfid-20151105_135402_950679_C0E16A58)
+References: <6EA3E0BCC03CC34B89B01BD57ECBC718B17A9FA8@POBOX.postoffice.danego.net>
+In-Reply-To: <6EA3E0BCC03CC34B89B01BD57ECBC718B17A9FA8@POBOX.postoffice.danego.net>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+> I can connect to my target's AP and FTP server. Reading small files (~3kB)
+> over FTP works. However, reading a large file (1GB) stalls after 80kB...220kB.
+> At the moment of stall, the following errors are reported by the Kernel:
+> ath6kl: Scatter write request failed:-110
 
-FWIL is always mapping back errors to EBADE. This is not very
-conventient when trying to understand problems by reading logs.
-Some callers print the error code, but that is quite useless
-when the exact error code is not returned. It also makes it
-impossible to differentiate based on error code. This patch
-changes the return of EBADE into the actual error code.
+It needs to be said that this problem only occurs when the ath6kl is in access point mode. When it is in infra mode and connected to an existing network, the problem doesn't occur.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-index bbf7abb..f6a2df9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-@@ -126,7 +126,8 @@ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
- 
- 	brcmf_dbg(FIL, "Failed: %s (%d)\n",
- 		  brcmf_fil_get_errstr((u32)(-err)), err);
--	return -EBADE;
-+
-+	return err;
- }
- 
- s32
--- 
-1.9.1
-
+But then again: In infra mode, it doesn't seem to call ath6kl_sdio_scat_rw with real SDIO scattering. So the question if ath6kl SDIO hif-scatter is broken still stands.
