@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:34008 "EHLO
-	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbbK2FOE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57701 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965163AbbKEE6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2015 00:14:04 -0500
-From: Brent Taylor <motobud@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kenrel.org,
-	linux-kernel@vger.kernel.org, ath6kl@lists.infradead.org,
-	Brent Taylor <motobud@gmail.com>
-Subject: [PATCH v2] ath6kl: Use vmalloc for loading firmware using api1 method and use kvfree
-Date: Sat, 28 Nov 2015 23:13:58 -0600
-Message-Id: <1448774038-26984-1-git-send-email-motobud@gmail.com> (sfid-20151129_061645_574287_4533D3B3)
-In-Reply-To: <1444972259-24260-1-git-send-email-motobud@gmail.com>
-References: <1444972259-24260-1-git-send-email-motobud@gmail.com>
+	Wed, 4 Nov 2015 23:58:20 -0500
+Date: Thu, 5 Nov 2015 10:28:00 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 0/3] Fix few WMI/HTT interfaces
+Message-ID: <20151105045754.GA12919@qca.qualcomm.com> (sfid-20151105_055824_616658_CC004DCD)
+References: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <87h9l1bq7o.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87h9l1bq7o.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Brent Taylor <motobud@gmail.com>
+On Wed, Nov 04, 2015 at 07:59:39PM +0200, Kalle Valo wrote:
+> Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+> 
+> > This patch set fixes mismatch in peer_assoc complete wmi command for
+> > version 10.4 and peer_id configuration for HTT version < 3.4.
+> >
+> > V2:
+> > 	- Add cover letter
+> > 	- Rename ath10k_mac_need_offchan_tx_work() to
+> > 	  ath10k_mac_tx_frm_has_freq(). Add htt-op-version check
+> > 	  to the helper and use it in ath10k_htt_tx() while configuring
+> > 	  peerid.
+> >
+> > Vasanthakumar Thiagarajan (3):
+> >   ath10k: Fix peer assoc complete WMI command for 10.4
+> >   ath10k: Rename the helper which is used for off-channel tx
+> >   ath10k: Fix peerid configuration in htt tx desc for htt version < 3.4
+> 
+> These had a conflict but you didn't use ath.git as the baseline so I
+> can't easily fix them. Please try always to use clean ath.git master
+> branch as the baseline for your patches.
+> 
+> Applying: ath10k: Fix peer assoc complete WMI command for 10.4
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/wmi.h).
+> Repository lacks necessary blobs to fall back on 3-way merge.
+> Cannot fall back to three-way merge.
+> Patch failed at 0001 ath10k: Fix peer assoc complete WMI command for 10.4
 
-ath6kl: Use vmalloc for loading firmware using api1 method and free using kvfree
----
-Changes v1 -> v2:
-   - simplify memory allocation
-   - use kvfree
+Sorry for this. I prepared these patches on ath:master on top of my other pending
+patch set. Not sure what went wrong. Ill resend this. Thanks.
 
- drivers/net/wireless/ath/ath6kl/core.c | 2 +-
- drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 4ec02ce..052e58b 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -343,7 +343,7 @@ void ath6kl_core_cleanup(struct ath6kl *ar)
- 
- 	kfree(ar->fw_board);
- 	kfree(ar->fw_otp);
--	vfree(ar->fw);
-+	kvfree(ar->fw);
- 	kfree(ar->fw_patch);
- 	kfree(ar->fw_testscript);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 6e473fa..836afea2 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
- 		return ret;
- 
- 	*fw_len = fw_entry->size;
--	*fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	if (&ar->fw == fw)
-+		*fw = vmalloc(fw_entry->size);
-+	else
-+		*fw = kmalloc(fw_entry->size);
- 
- 	if (*fw == NULL)
- 		ret = -ENOMEM;
-+	else
-+		memcpy(*fw, fw_entry->data, fw_entry->size);
- 
- 	release_firmware(fw_entry);
- 
--- 
-2.6.3
-
+Vasanth
