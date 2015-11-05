@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25660 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbbK3IsU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 03:48:20 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brent Taylor <motobud@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kenrel.org>,
-	<linux-kernel@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH v2] ath6kl: Use vmalloc for loading firmware using api1 method and use kvfree
-References: <1444972259-24260-1-git-send-email-motobud@gmail.com>
-	<1448774038-26984-1-git-send-email-motobud@gmail.com>
-Date: Mon, 30 Nov 2015 10:48:03 +0200
-In-Reply-To: <1448774038-26984-1-git-send-email-motobud@gmail.com> (Brent
-	Taylor's message of "Sat, 28 Nov 2015 23:13:58 -0600")
-Message-ID: <87zixvlvp8.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_094837_354472_E30C4F31)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40586 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161598AbbKEQZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 11:25:37 -0500
+Message-ID: <1446740733.2540.9.camel@sipsolutions.net> (sfid-20151105_172540_256731_BEAB684E)
+Subject: Re: Configurable scan dwell time?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Nov 2015 17:25:33 +0100
+In-Reply-To: <563B8206.1040807@candelatech.com>
+References: <563A9B8C.3060503@candelatech.com>
+	 <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com>
+	 <1446710205.2540.1.camel@sipsolutions.net>
+	 <563B7D63.1010203@candelatech.com>
+	 <1446739615.2540.6.camel@sipsolutions.net>
+	 <563B8206.1040807@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brent Taylor <motobud@gmail.com> writes:
 
-> Signed-off-by: Brent Taylor <motobud@gmail.com>
->
-> ath6kl: Use vmalloc for loading firmware using api1 method and free using kvfree
-> ---
-> Changes v1 -> v2:
->    - simplify memory allocation
->    - use kvfree
+> > The thing though is that there are now use cases in the standard(s)
+> > that want/require doing this. So just adding it as a hint will run the
+> > risk of userspace (like wpa_s) using this "hint" for implementing newer
+> > spec functionality, testing on ath9k and hwsim and declaring that it
+> > works :-) And then we're stuck with this feature being used/advertised
+> > on older devices where it doesn't actually work.
+> 
+> Scanning is already best effort.  Someone implementing this new hint
+> can just be aware of the limitations.  If nothing else, start a scan on
+> a known number of channels (or single channel), see how long it takes..then you know if the
+> driver is ignoring your hint or not.
 
-Why? The commit log should _always_ answer that. Are you fixing a bug
-(what bug exactly?), is this just cleanup or what?
+But if you were asked to measure something on that channel, for a given
+amount of time while scanning, you could reasonably implement it that
+way. If you don't really know how long the device is *actually* going
+to do this, then you can't rightfully say you implement that spec.
 
-And the commit log is wrongly formatted anyway, the Signed-off-by line
-should be the last and there should be no "ath6kl:" string in the commit
-log (just in the title). Use 'git log' to find examples.
+You can't really start a scan and measure the time either since there's
+no guarantee the scan will start right away.
 
--- 
-Kalle Valo
+> > Now, having those standard use cases is actually a good argument *for*
+> > adding them in the standard API, but I think we need to be more careful
+> > around these issues - perhaps having drivers indicate that they support
+> > it, maybe even with valid ranges, etc.
+> 
+> I think that is vastly over-engineering the problem, but truth is, it
+> can always be added later if there is an actual need for that knowledge.
+> 
+
+Well, not really. The only way for this to work would be to outright
+reject requests that weren't within the advertised ranges; doing this
+after already having the API would break existing clients thereof.
+
+johannes
