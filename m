@@ -1,65 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:35184 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbbKHTTp (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:48105 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932889AbbKEJsR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 14:19:45 -0500
-Received: by wmdw130 with SMTP id w130so14049247wmd.0
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2015 11:19:44 -0800 (PST)
-From: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>,
-	johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: remove new line around else and braces
-Date: Sun,  8 Nov 2015 21:18:48 +0200
-Message-Id: <1447010328-5661-1-git-send-email-panayiotis.tembriotis@gmail.com> (sfid-20151108_201956_928527_7FA46490)
+	Thu, 5 Nov 2015 04:48:17 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V3] Revert "Staging: wilc1000: coreconfigurator: Drop unneeded wrapper functions"
+Date: Thu, 5 Nov 2015 18:51:23 +0900
+Message-ID: <1446717083-7786-1-git-send-email-glen.lee@atmel.com> (sfid-20151105_104824_044971_8C3F1326)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove excess new line characters as suggested by checkpatch.pl:
-ERROR: else should follow close brace '}'
-ERROR: that open brace { should be on the previous line
+The source and destination pointers are misplaced.
+This will be like,
+ether_addr_copy(data, bssid + ADDR2);
+-> ether_addr_copy(bssid, data + ADDR2);
+and also to use ether_addr_copy, it has to be proved that src/dst address are
+properly aligned(2).
 
-Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+I revert this as author agree to drop this patch.
+
+This reverts commit d4622f68db8095dd54179e3134e97812727f6b89.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Changes in v3: change comments.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c02665747705..9966ac8d7ceb 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1056,15 +1056,13 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- 				memcpy(&txb[offset], &header, 4);
- 				if (tqe->type == WILC_CFG_PKT) {
- 					buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
--				}
--				else if (tqe->type == WILC_NET_PKT) {
-+				} else if (tqe->type == WILC_NET_PKT) {
- 					char *pBSSID = ((struct tx_complete_data *)(tqe->priv))->pBssid;
+ drivers/staging/wilc1000/coreconfigurator.c | 48 +++++++++++++++--------------
+ 1 file changed, 25 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index fd7240c..56e0cf9 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -13,12 +13,8 @@
+ #include "wilc_wlan.h"
+ #include <linux/errno.h>
+ #include <linux/slab.h>
+-#include <linux/etherdevice.h>
+ #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
+ 							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+-#define ADDR1 4
+-#define ADDR2 10
+-#define ADDR3 16
  
- 					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
- 					/* copy the bssid at the sart of the buffer */
- 					memcpy(&txb[offset + 4], pBSSID, 6);
--				}
--				else {
-+				} else {
- 					buffer_offset = HOST_HDR_OFFSET;
- 				}
+ /* Basic Frame Type Codes (2-bit) */
+ enum basic_frame_type {
+@@ -175,32 +171,38 @@ static inline u8 get_from_ds(u8 *header)
+ 	return ((header[1] & 0x02) >> 1);
+ }
  
-@@ -1183,9 +1181,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 				pkt_offset &= ~(IS_MANAGMEMENT | IS_MANAGMEMENT_CALLBACK | IS_MGMT_STATUS_SUCCES);
++/* This function extracts the MAC Address in 'address1' field of the MAC     */
++/* header and updates the MAC Address in the allocated 'addr' variable.      */
++static inline void get_address1(u8 *pu8msa, u8 *addr)
++{
++	memcpy(addr, pu8msa + 4, 6);
++}
++
++/* This function extracts the MAC Address in 'address2' field of the MAC     */
++/* header and updates the MAC Address in the allocated 'addr' variable.      */
++static inline void get_address2(u8 *pu8msa, u8 *addr)
++{
++	memcpy(addr, pu8msa + 10, 6);
++}
++
++/* This function extracts the MAC Address in 'address3' field of the MAC     */
++/* header and updates the MAC Address in the allocated 'addr' variable.      */
++static inline void get_address3(u8 *pu8msa, u8 *addr)
++{
++	memcpy(addr, pu8msa + 16, 6);
++}
++
+ /* This function extracts the BSSID from the incoming WLAN packet based on   */
+-/* the 'from ds' bit, and updates the MAC Address in the allocated 'data'    */
++/* the 'from ds' bit, and updates the MAC Address in the allocated 'addr'    */
+ /* variable.                                                                 */
+ static inline void get_BSSID(u8 *data, u8 *bssid)
+ {
+ 	if (get_from_ds(data) == 1)
+-		/*
+-		 * Extract the MAC Address in 'address2' field of the MAC
+-		 * header and update the MAC Address in the allocated 'data'
+-		 *  variable.
+-		 */
+-		ether_addr_copy(data, bssid + ADDR2);
++		get_address2(data, bssid);
+ 	else if (get_to_ds(data) == 1)
+-		/*
+-		 * Extract the MAC Address in 'address1' field of the MAC
+-		 * header and update the MAC Address in the allocated 'data'
+-		 * variable.
+-		 */
+-		ether_addr_copy(data, bssid + ADDR1);
++		get_address1(data, bssid);
+ 	else
+-		/*
+-		 * Extract the MAC Address in 'address3' field of the MAC
+-		 * header and update the MAC Address in the allocated 'data'
+-		 * variable.
+-		 */
+-		ether_addr_copy(data, bssid + ADDR3);
++		get_address3(data, bssid);
+ }
  
- 				WILC_WFI_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
--			}
--			else
--			{
-+			} else {
- 
- 				if (!is_cfg_packet) {
- 					if (pkt_len > 0) {
+ /* This function extracts the SSID from a beacon/probe response frame        */
 -- 
-2.6.2
+1.9.1
 
