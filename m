@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:36135 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031997AbbKFLLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 06:11:01 -0500
-Subject: Re: [PATCH] mac80211: remove string from unaligned packet warning
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1446807595-12288-1-git-send-email-johannes@sipsolutions.net>
-Cc: Johannes Berg <johannes.berg@intel.com>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <563C8AC0.4070401@openwrt.org> (sfid-20151106_121106_851805_2F207D3B)
-Date: Fri, 6 Nov 2015 12:10:56 +0100
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9615 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1032624AbbKEJJc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 04:09:32 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>
+CC: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: RE: mwifiex problem: incompatible network settings
+Date: Thu, 5 Nov 2015 08:59:34 +0000
+Message-ID: <cffeead80528479fbe6883776d115208@SC-EXCH04.marvell.com> (sfid-20151105_100942_942101_FF8D6C04)
+References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
+	<87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
+	<87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
+	<87vb9qsmg1.fsf@free.fr>
+	<b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
+ <87r3k5h161.fsf@free.fr>
+In-Reply-To: <87r3k5h161.fsf@free.fr>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1446807595-12288-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-11-06 11:59, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This really should never happen except very early in the process
-> of bringing up a new driver, at which point you'll have to add
-> more debugging in the driver and this string isn't useful. Remove
-> it and save some size (when it's even compiled in.)
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/rx.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 8bae5de0dc44..78346e89e997 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -661,8 +661,7 @@ static void ieee80211_parse_qos(struct ieee80211_rx_data *rx)
->  static void ieee80211_verify_alignment(struct ieee80211_rx_data *rx)
->  {
->  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-> -	WARN_ONCE((unsigned long)rx->skb->data & 1,
-> -		  "unaligned packet at 0x%p\n", rx->skb->data);
-> +	WARN_ONCE((unsigned long)rx->skb->data & 1);
-Shouldn't this be WARN_ON_ONCE?
-
-- Felix
+SGkgSnVsaWVuLA0KDQo+IEZyb206IEp1bGllbiBDdWJpem9sbGVzIFttYWlsdG86ai5jdWJpem9s
+bGVzQGZyZWUuZnJdDQo+IFNlbnQ6IFRodXJzZGF5LCBOb3ZlbWJlciAwNSwgMjAxNSAzOjM0IEFN
+DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBEYW4gV2lsbGlhbXM7IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZzsgTmlzaGFudCBTYXJtdWthZGFtDQo+IFN1YmplY3Q6IFJlOiBt
+d2lmaWV4IHByb2JsZW06IGluY29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdzDQo+IA0KPiBBbWl0
+a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IFRoYW5r
+cyBmb3IgdGhlIGxvZ3MuIEkgY29tcGFyZWQgeW91ciBuZXR3b3JrIG1hbmFnZXIgbG9nIHdpdGgg
+dGhlIG9uZQ0KPiA+IG9uIG15IHNldHVwLiBCb3RoIGFyZSBzYW1lLiBCYXNpY2FsbHkgbmV0d29y
+ayBtYW5hZ2VyIGxvZyBkb2Vzbid0IHNob3cNCj4gPiBzZWN1cml0eSBpbmZvIChXUEEvV1BBMiwg
+ZW5jcnlwdGlvbiBtb2RlIGV0YykuIFNvIHdlIGNhbid0IHJlbHkgb24NCj4gPiB0aGF0Lg0KPiA+
+IEkgY2hlY2tlZCB5b3VyIGtlcm5lbCBsb2cgc2hhcmVkIGluIHByZXZpb3VzIGVtYWlsLiBJdCdz
+IGluY29tcGxldGUuDQo+ID4gSXQgZGlkbid0IGluY2x1ZGUgaW5mb3JtYXRpb24gd2hlbiBjb25u
+ZWN0aW9uIHdhcyBhY3R1YWxseSBhdHRlbXB0ZWQuDQo+ID4gUHJvYmFibHkgeW91IGNhbiBydW4g
+ImRtZXNnIC1jID4+IGRtZXNnLmxvZyIgaW4gbG9vcCB3aXRoIHNvbWUgZGVsYXkNCj4gPiB0byBj
+YXB0dXJlIGNvbXBsZXRlIGluZm8uIE90aGVyd2lzZSBzaGFyaW5nICIvdmFyL2xvZy9tZXNzYWdl
+cyIgaXMNCj4gPiBhbHNvIGFuIG9wdGlvbi4NCj4gPiBJIGhhdmUgY3JlYXRlZCBhIGRyaXZlciBk
+ZWJ1ZyBwYXRjaChhdHRhY2hlZCkuIENvdWxkIHlvdSBwbGVhc2UgYXBwbHkNCj4gaXQgYW5kIHNo
+YXJlIGNvbXBsZXRlIGRtZXNnIGxvZz8NCj4gDQo+IEkgYXBwbGllZCB5b3VyIHBhdGNoLiBIZXJl
+IGFyZSB0aGUgZG1lc2cgbG9ncyB3aGVuIGxvZ2dpbmcgdG8gYSBXUEENCj4gbmV0d29yayB3aXRo
+IGF1dGhlbnRpZmljYXRpb24gKGRtZXNnLVdQQS5sb2csIHNzaWQgc291dGhjZW50cmFsKSBhbmQg
+YQ0KPiBuZXR3b3JrIHdpdGhvdXQgYXV0aGVudGlmaWNhdGlvbiAoZG1lc2ctbm9XUEEubG9nLCBz
+c2lkIEZyZWVXaWZpKS4NCj4gDQo+IExldCBtZSBrbm93IGlmIHlvdSBuZWVkIGFueXRoaW5nIGVs
+c2UuDQo+IA0KPiA+IEJ0dywgZG8geW91IHNlZSB0aGUgcHJvYmxlbSBpZiBBUCBpcyBjb25maWd1
+cmVkIGluIFdQQTIgc2VjdXJpdHkgbW9kZT8NCj4gDQo+IEdvb2QgY2F0Y2gsIEkgY2hhbmdlZCBt
+eSBhY2Nlc3MgcG9pbnQgdG8gV1BBMiBhbmQgbm93IEkgY2FuIGNvbm5lY3QgdG8NCj4gaXTCoCEg
+SSBhdHRhY2hlZCB0aGUgY29ycmVzcG9uZGluZyBkbWVzZyBsb2dzIChkbWVzZy1XUEEyLmxvZywg
+c3NpZA0KPiBzb3V0aGNlbnRyYWwpLg0KDQpUaGFua3MgZm9yIHRoZSBsb2dzLiBXZSBmb3VuZCBv
+bmUgYnVnIGluIG91ciBjb2RlLiBXZSBleHBlY3QgdmVuZG9yIHNwZWNpZmljIElFIGF0IHRoZSBi
+ZWdpbm5pbmcgb2YgSUUgYnVmZmVyIG90aGVyd2lzZSBjb25uZWN0aW9uIGlzIHJlamVjdGVkLg0K
+V2Ugd2lsbCBwcmVwYXJlIGEgZml4IGFuZCBnZXQgYmFjay4NCg0KUmVnYXJkcywNCkFtaXRrdW1h
+cg0K
