@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:22566 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161286AbbKTLlA (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26998 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030300AbbKEFgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 06:41:00 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v5 3/3] DT: bindings: net: nfc: Add ST95HF binding doc
-Date: Fri, 20 Nov 2015 06:40:21 -0500
-Message-ID: <1448019621-14259-4-git-send-email-shikha.singh@st.com> (sfid-20151120_124104_333831_14A6EAF7)
-In-Reply-To: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
-References: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
+	Thu, 5 Nov 2015 00:36:23 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 30/38] staging: wilc1000: remove goto from linux_wlan_firmware_download
+Date: Thu, 5 Nov 2015 14:36:31 +0900
+Message-ID: <1446701799-24870-30-git-send-email-glen.lee@atmel.com> (sfid-20151105_063757_237173_58439D78)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch includes ST95HF binding doc that guides how to
-make node entry of ST95HF in DT file of any platform.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
+This patch remove goto feature from linux_wlan_firmware_download function.
+Goto feature is return result.
+So, remove goto functions and it was replaced with the return value directly.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- .../devicetree/bindings/net/nfc/st95hf.txt         | 50 ++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+ drivers/staging/wilc1000/linux_wlan.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/st95hf.txt b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
-new file mode 100644
-index 0000000..ea3178b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
-@@ -0,0 +1,50 @@
-+* STMicroelectronics : NFC Transceiver ST95HF
-+
-+ST NFC Transceiver is required to attach with SPI bus.
-+ST95HF node should be defined in DT as SPI slave device of SPI
-+master with which ST95HF transceiver is physically connected.
-+The properties defined below are required to be the part of DT
-+to include ST95HF transceiver into the platform.
-+
-+Required properties:
-+===================
-+- reg: Address of SPI slave "ST95HF transceiver" on SPI master bus.
-+
-+- compatible: should be "st,st95hf" for ST95HF NFC transceiver
-+
-+- spi-max-frequency: Max. operating SPI frequency for ST95HF
-+	transceiver.
-+
-+- enable-gpio: GPIO line to enable ST95HF transceiver.
-+
-+- interrupt-parent : Standard way to specify the controller to which
-+	ST95HF transceiver's interrupt is routed.
-+
-+- interrupts : Standard way to define ST95HF transceiver's out
-+	interrupt.
-+
-+Optional property:
-+=================
-+- st95hfvin-supply : This is an optional property. It contains a
-+	phandle to ST95HF transceiver's regulator supply node in DT.
-+
-+Example:
-+=======
-+spi@9840000 {
-+	reg = <0x9840000 0x110>;
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	cs-gpios = <&pio0 4>;
-+	status = "okay";
-+
-+	st95hf@0{
-+		reg = <0>;
-+		compatible = "st,st95hf";
-+		status = "okay";
-+		spi-max-frequency = <1000000>;
-+		enable-gpio = <&pio4 0>;
-+		interrupt-parent = <&pio0>;
-+		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
-+	};
-+
-+};
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index fcc8119..003165d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -553,14 +553,13 @@ static int linux_wlan_firmware_download(struct net_device *dev)
+ 
+ 	if (!wilc->firmware) {
+ 		PRINT_ER("Firmware buffer is NULL\n");
+-		ret = -ENOBUFS;
+-		goto _FAIL_;
++		return -ENOBUFS;
+ 	}
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+ 	ret = wilc_wlan_firmware_download(wilc->firmware->data,
+ 					  wilc->firmware->size);
+ 	if (ret < 0)
+-		goto _FAIL_;
++		return ret;
+ 
+ 	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+ 	PRINT_D(INIT_DBG, "Releasing firmware\n");
+@@ -568,8 +567,7 @@ static int linux_wlan_firmware_download(struct net_device *dev)
+ 
+ 	PRINT_D(INIT_DBG, "Download Succeeded\n");
+ 
+-_FAIL_:
+-	return ret;
++	return 0;
+ }
+ 
+ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_nic)
 -- 
-1.8.2.1
+1.9.1
 
