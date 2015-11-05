@@ -1,71 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37753 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751309AbbKZPhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 10:37:38 -0500
-Message-ID: <1448552255.2167.13.camel@sipsolutions.net> (sfid-20151126_163742_205282_5AB8EB2B)
-Subject: pull-request: mac80211 2015-11-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-netdev <linux-netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Nov 2015 16:37:35 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26446 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898AbbKEFeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 00:34:04 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 06/38] staging: wilc1000: rename strHostIFCfgParamAttr of fuction Handle_CfgParam
+Date: Thu, 5 Nov 2015 14:36:07 +0900
+Message-ID: <1446701799-24870-6-git-send-email-glen.lee@atmel.com> (sfid-20151105_063409_858601_B74D2FA1)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Leo Kim <leo.kim@atmel.com>
 
-Sorry for being so late. These have been pending for a while (and in
-fact in linux-next too, I asked to be added there recently :) ).
+This patch renames strHostIFCfgParamAttr of fuction Handle_CfgParam
+to cfg_param_attr to avoid CamelCase naming convention.
 
-Let me know if there's any problem.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 154 ++++++++++++++++--------------
+ 1 file changed, 83 insertions(+), 71 deletions(-)
 
-Thanks,
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 06994fb..9b986bb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -519,7 +519,7 @@ static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+ }
+ 
+ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+-			   struct cfg_param_attr *strHostIFCfgParamAttr)
++			   struct cfg_param_attr *cfg_param_attr)
+ {
+ 	s32 result = 0;
+ 	struct wid strWIDList[32];
+@@ -529,13 +529,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setting CFG params\n");
+ 
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & BSS_TYPE) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.bss_type < 6) {
++	if (cfg_param_attr->cfg_attr_info.flag & BSS_TYPE) {
++		if (cfg_param_attr->cfg_attr_info.bss_type < 6) {
+ 			strWIDList[u8WidCnt].id = WID_BSS_TYPE;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.bss_type;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.bss_type;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.bss_type = (u8)strHostIFCfgParamAttr->cfg_attr_info.bss_type;
++			hif_drv->cfg_values.bss_type = (u8)cfg_param_attr->cfg_attr_info.bss_type;
+ 		} else {
+ 			PRINT_ER("check value 6 over\n");
+ 			result = -EINVAL;
+@@ -543,13 +543,15 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & AUTH_TYPE) {
+-		if ((strHostIFCfgParamAttr->cfg_attr_info.auth_type) == 1 || (strHostIFCfgParamAttr->cfg_attr_info.auth_type) == 2 || (strHostIFCfgParamAttr->cfg_attr_info.auth_type) == 5) {
++	if (cfg_param_attr->cfg_attr_info.flag & AUTH_TYPE) {
++		if (cfg_param_attr->cfg_attr_info.auth_type == 1 ||
++		    cfg_param_attr->cfg_attr_info.auth_type == 2 ||
++		    cfg_param_attr->cfg_attr_info.auth_type == 5) {
+ 			strWIDList[u8WidCnt].id = WID_AUTH_TYPE;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.auth_type;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.auth_type;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.auth_type = (u8)strHostIFCfgParamAttr->cfg_attr_info.auth_type;
++			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->cfg_attr_info.auth_type;
+ 		} else {
+ 			PRINT_ER("Impossible value \n");
+ 			result = -EINVAL;
+@@ -557,13 +559,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & AUTHEN_TIMEOUT) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.auth_timeout > 0 && strHostIFCfgParamAttr->cfg_attr_info.auth_timeout < 65536) {
++	if (cfg_param_attr->cfg_attr_info.flag & AUTHEN_TIMEOUT) {
++		if (cfg_param_attr->cfg_attr_info.auth_timeout > 0 &&
++		    cfg_param_attr->cfg_attr_info.auth_timeout < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_AUTH_TIMEOUT;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.auth_timeout;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.auth_timeout;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.auth_timeout = strHostIFCfgParamAttr->cfg_attr_info.auth_timeout;
++			hif_drv->cfg_values.auth_timeout = cfg_param_attr->cfg_attr_info.auth_timeout;
+ 		} else {
+ 			PRINT_ER("Range(1 ~ 65535) over\n");
+ 			result = -EINVAL;
+@@ -571,13 +574,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & POWER_MANAGEMENT) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.power_mgmt_mode < 5) {
++	if (cfg_param_attr->cfg_attr_info.flag & POWER_MANAGEMENT) {
++		if (cfg_param_attr->cfg_attr_info.power_mgmt_mode < 5) {
+ 			strWIDList[u8WidCnt].id = WID_POWER_MANAGEMENT;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.power_mgmt_mode;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.power_mgmt_mode;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.power_mgmt_mode = (u8)strHostIFCfgParamAttr->cfg_attr_info.power_mgmt_mode;
++			hif_drv->cfg_values.power_mgmt_mode = (u8)cfg_param_attr->cfg_attr_info.power_mgmt_mode;
+ 		} else {
+ 			PRINT_ER("Invalide power mode\n");
+ 			result = -EINVAL;
+@@ -585,13 +588,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RETRY_SHORT) {
+-		if ((strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit > 0) && (strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit < 256))	{
++	if (cfg_param_attr->cfg_attr_info.flag & RETRY_SHORT) {
++		if (cfg_param_attr->cfg_attr_info.short_retry_limit > 0 &&
++		    cfg_param_attr->cfg_attr_info.short_retry_limit < 256) {
+ 			strWIDList[u8WidCnt].id = WID_SHORT_RETRY_LIMIT;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.short_retry_limit;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.short_retry_limit = strHostIFCfgParamAttr->cfg_attr_info.short_retry_limit;
++			hif_drv->cfg_values.short_retry_limit = cfg_param_attr->cfg_attr_info.short_retry_limit;
+ 		} else {
+ 			PRINT_ER("Range(1~256) over\n");
+ 			result = -EINVAL;
+@@ -599,14 +603,15 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RETRY_LONG) {
+-		if ((strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit > 0) && (strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit < 256)) {
++	if (cfg_param_attr->cfg_attr_info.flag & RETRY_LONG) {
++		if (cfg_param_attr->cfg_attr_info.long_retry_limit > 0 &&
++		    cfg_param_attr->cfg_attr_info.long_retry_limit < 256) {
+ 			strWIDList[u8WidCnt].id = WID_LONG_RETRY_LIMIT;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.long_retry_limit;
+ 
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.long_retry_limit = strHostIFCfgParamAttr->cfg_attr_info.long_retry_limit;
++			hif_drv->cfg_values.long_retry_limit = cfg_param_attr->cfg_attr_info.long_retry_limit;
+ 		} else {
+ 			PRINT_ER("Range(1~256) over\n");
+ 			result = -EINVAL;
+@@ -614,13 +619,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & FRAG_THRESHOLD) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.frag_threshold > 255 && strHostIFCfgParamAttr->cfg_attr_info.frag_threshold < 7937) {
++	if (cfg_param_attr->cfg_attr_info.flag & FRAG_THRESHOLD) {
++		if (cfg_param_attr->cfg_attr_info.frag_threshold > 255 &&
++		    cfg_param_attr->cfg_attr_info.frag_threshold < 7937) {
+ 			strWIDList[u8WidCnt].id = WID_FRAG_THRESHOLD;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.frag_threshold;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.frag_threshold;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.frag_threshold = strHostIFCfgParamAttr->cfg_attr_info.frag_threshold;
++			hif_drv->cfg_values.frag_threshold = cfg_param_attr->cfg_attr_info.frag_threshold;
+ 		} else {
+ 			PRINT_ER("Threshold Range fail\n");
+ 			result = -EINVAL;
+@@ -628,13 +634,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & RTS_THRESHOLD) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.rts_threshold > 255 && strHostIFCfgParamAttr->cfg_attr_info.rts_threshold < 65536)	{
++	if (cfg_param_attr->cfg_attr_info.flag & RTS_THRESHOLD) {
++		if (cfg_param_attr->cfg_attr_info.rts_threshold > 255 &&
++		    cfg_param_attr->cfg_attr_info.rts_threshold < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_RTS_THRESHOLD;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.rts_threshold;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.rts_threshold;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.rts_threshold = strHostIFCfgParamAttr->cfg_attr_info.rts_threshold;
++			hif_drv->cfg_values.rts_threshold = cfg_param_attr->cfg_attr_info.rts_threshold;
+ 		} else {
+ 			PRINT_ER("Threshold Range fail\n");
+ 			result = -EINVAL;
+@@ -642,13 +649,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & PREAMBLE) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.preamble_type < 3) {
++	if (cfg_param_attr->cfg_attr_info.flag & PREAMBLE) {
++		if (cfg_param_attr->cfg_attr_info.preamble_type < 3) {
+ 			strWIDList[u8WidCnt].id = WID_PREAMBLE;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.preamble_type;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.preamble_type;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.preamble_type = strHostIFCfgParamAttr->cfg_attr_info.preamble_type;
++			hif_drv->cfg_values.preamble_type = cfg_param_attr->cfg_attr_info.preamble_type;
+ 		} else {
+ 			PRINT_ER("Preamle Range(0~2) over\n");
+ 			result = -EINVAL;
+@@ -656,13 +663,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SHORT_SLOT_ALLOWED) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed < 2) {
++	if (cfg_param_attr->cfg_attr_info.flag & SHORT_SLOT_ALLOWED) {
++		if (cfg_param_attr->cfg_attr_info.short_slot_allowed < 2) {
+ 			strWIDList[u8WidCnt].id = WID_SHORT_SLOT_ALLOWED;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.short_slot_allowed;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.short_slot_allowed = (u8)strHostIFCfgParamAttr->cfg_attr_info.short_slot_allowed;
++			hif_drv->cfg_values.short_slot_allowed = (u8)cfg_param_attr->cfg_attr_info.short_slot_allowed;
+ 		} else {
+ 			PRINT_ER("Short slot(2) over\n");
+ 			result = -EINVAL;
+@@ -670,13 +677,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & TXOP_PROT_DISABLE) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.txop_prot_disabled < 2) {
++	if (cfg_param_attr->cfg_attr_info.flag & TXOP_PROT_DISABLE) {
++		if (cfg_param_attr->cfg_attr_info.txop_prot_disabled < 2) {
+ 			strWIDList[u8WidCnt].id = WID_11N_TXOP_PROT_DISABLE;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.txop_prot_disabled;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.txop_prot_disabled;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.txop_prot_disabled = (u8)strHostIFCfgParamAttr->cfg_attr_info.txop_prot_disabled;
++			hif_drv->cfg_values.txop_prot_disabled = (u8)cfg_param_attr->cfg_attr_info.txop_prot_disabled;
+ 		} else {
+ 			PRINT_ER("TXOP prot disable\n");
+ 			result = -EINVAL;
+@@ -684,13 +691,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & BEACON_INTERVAL) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.beacon_interval > 0 && strHostIFCfgParamAttr->cfg_attr_info.beacon_interval < 65536) {
++	if (cfg_param_attr->cfg_attr_info.flag & BEACON_INTERVAL) {
++		if (cfg_param_attr->cfg_attr_info.beacon_interval > 0 &&
++		    cfg_param_attr->cfg_attr_info.beacon_interval < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_BEACON_INTERVAL;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.beacon_interval;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.beacon_interval;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.beacon_interval = strHostIFCfgParamAttr->cfg_attr_info.beacon_interval;
++			hif_drv->cfg_values.beacon_interval = cfg_param_attr->cfg_attr_info.beacon_interval;
+ 		} else {
+ 			PRINT_ER("Beacon interval(1~65535) fail\n");
+ 			result = -EINVAL;
+@@ -698,13 +706,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & DTIM_PERIOD) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.dtim_period > 0 && strHostIFCfgParamAttr->cfg_attr_info.dtim_period < 256) {
++	if (cfg_param_attr->cfg_attr_info.flag & DTIM_PERIOD) {
++		if (cfg_param_attr->cfg_attr_info.dtim_period > 0 &&
++		    cfg_param_attr->cfg_attr_info.dtim_period < 256) {
+ 			strWIDList[u8WidCnt].id = WID_DTIM_PERIOD;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.dtim_period;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.dtim_period;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.dtim_period = strHostIFCfgParamAttr->cfg_attr_info.dtim_period;
++			hif_drv->cfg_values.dtim_period = cfg_param_attr->cfg_attr_info.dtim_period;
+ 		} else {
+ 			PRINT_ER("DTIM range(1~255) fail\n");
+ 			result = -EINVAL;
+@@ -712,13 +721,13 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SITE_SURVEY) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.site_survey_enabled < 3) {
++	if (cfg_param_attr->cfg_attr_info.flag & SITE_SURVEY) {
++		if (cfg_param_attr->cfg_attr_info.site_survey_enabled < 3) {
+ 			strWIDList[u8WidCnt].id = WID_SITE_SURVEY;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.site_survey_enabled;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.site_survey_enabled;
+ 			strWIDList[u8WidCnt].type = WID_CHAR;
+ 			strWIDList[u8WidCnt].size = sizeof(char);
+-			hif_drv->cfg_values.site_survey_enabled = (u8)strHostIFCfgParamAttr->cfg_attr_info.site_survey_enabled;
++			hif_drv->cfg_values.site_survey_enabled = (u8)cfg_param_attr->cfg_attr_info.site_survey_enabled;
+ 		} else {
+ 			PRINT_ER("Site survey disable\n");
+ 			result = -EINVAL;
+@@ -726,13 +735,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & SITE_SURVEY_SCAN_TIME) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time < 65536) {
++	if (cfg_param_attr->cfg_attr_info.flag & SITE_SURVEY_SCAN_TIME) {
++		if (cfg_param_attr->cfg_attr_info.site_survey_scan_time > 0 &&
++		    cfg_param_attr->cfg_attr_info.site_survey_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_SITE_SURVEY_SCAN_TIME;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.site_survey_scan_time;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.site_survey_scan_time = strHostIFCfgParamAttr->cfg_attr_info.site_survey_scan_time;
++			hif_drv->cfg_values.site_survey_scan_time = cfg_param_attr->cfg_attr_info.site_survey_scan_time;
+ 		} else {
+ 			PRINT_ER("Site survey scan time(1~65535) over\n");
+ 			result = -EINVAL;
+@@ -740,13 +750,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & ACTIVE_SCANTIME) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.active_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.active_scan_time < 65536) {
++	if (cfg_param_attr->cfg_attr_info.flag & ACTIVE_SCANTIME) {
++		if (cfg_param_attr->cfg_attr_info.active_scan_time > 0 &&
++		    cfg_param_attr->cfg_attr_info.active_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_ACTIVE_SCAN_TIME;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.active_scan_time;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.active_scan_time;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.active_scan_time = strHostIFCfgParamAttr->cfg_attr_info.active_scan_time;
++			hif_drv->cfg_values.active_scan_time = cfg_param_attr->cfg_attr_info.active_scan_time;
+ 		} else {
+ 			PRINT_ER("Active scan time(1~65535) over\n");
+ 			result = -EINVAL;
+@@ -754,13 +765,14 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & PASSIVE_SCANTIME) {
+-		if (strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time > 0 && strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time < 65536) {
++	if (cfg_param_attr->cfg_attr_info.flag & PASSIVE_SCANTIME) {
++		if (cfg_param_attr->cfg_attr_info.passive_scan_time > 0 &&
++		    cfg_param_attr->cfg_attr_info.passive_scan_time < 65536) {
+ 			strWIDList[u8WidCnt].id = WID_PASSIVE_SCAN_TIME;
+-			strWIDList[u8WidCnt].val = (s8 *)&strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time;
++			strWIDList[u8WidCnt].val = (s8 *)&cfg_param_attr->cfg_attr_info.passive_scan_time;
+ 			strWIDList[u8WidCnt].type = WID_SHORT;
+ 			strWIDList[u8WidCnt].size = sizeof(u16);
+-			hif_drv->cfg_values.passive_scan_time = strHostIFCfgParamAttr->cfg_attr_info.passive_scan_time;
++			hif_drv->cfg_values.passive_scan_time = cfg_param_attr->cfg_attr_info.passive_scan_time;
+ 		} else {
+ 			PRINT_ER("Passive scan time(1~65535) over\n");
+ 			result = -EINVAL;
+@@ -768,8 +780,8 @@ static s32 Handle_CfgParam(struct host_if_drv *hif_drv,
+ 		}
+ 		u8WidCnt++;
+ 	}
+-	if (strHostIFCfgParamAttr->cfg_attr_info.flag & CURRENT_TX_RATE) {
+-		enum CURRENT_TXRATE curr_tx_rate = strHostIFCfgParamAttr->cfg_attr_info.curr_tx_rate;
++	if (cfg_param_attr->cfg_attr_info.flag & CURRENT_TX_RATE) {
++		enum CURRENT_TXRATE curr_tx_rate = cfg_param_attr->cfg_attr_info.curr_tx_rate;
+ 
+ 		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1
+ 		    || curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5
+-- 
+1.9.1
 
-
-The following changes since commit 17c790a60dad11c0193127e83ac8e183b4fed1a2:
-
-  Merge branch 'mv88e6060-fixes' (2015-11-15 20:16:26 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-11-26
-
-for you to fetch changes up to 5ff3ca2888940533dcd50212cf0be7049fee979c:
-
-  mac80211: don't teardown sdata on sdata stop (2015-11-20 11:40:50 +0100)
-
-----------------------------------------------------------------
-A small set of fixes for 4.4:
- * remove NL80211_FEATURE_FULL_AP_CLIENT_STATE again, it
-   was broken and needs more work, we'll enable it for 4.5
- * fix call_rcu() induced use-after-reset/free in mesh
-   (that was suddenly causing issues in certain tests)
- * always request block-ack window size 64 as we found
-   some APs will otherwise crash (really ...)
- * fix P2P-Device teardown sequence to avoid restarting
-   with uninitialized data
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      mac80211: don't teardown sdata on sdata stop
-
-Emmanuel Grumbach (1):
-      mac80211: ensure we don't update tx power on a non-running sdata
-
-Gregory Greenman (1):
-      mac80211: always set the buf_size in AddBA req to 64
-
-Johannes Berg (2):
-      mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE
-      mac80211: mesh: fix call_rcu() usage
-
- include/net/mac80211.h      | 6 ++++--
- net/mac80211/agg-tx.c       | 3 ++-
- net/mac80211/iface.c        | 5 +++--
- net/mac80211/main.c         | 3 +--
- net/mac80211/mesh_pathtbl.c | 8 ++++----
- 5 files changed, 14 insertions(+), 11 deletions(-)
