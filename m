@@ -1,47 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:32980 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030329AbbKEIvd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 03:51:33 -0500
-Received: by lbbkw15 with SMTP id kw15so24547725lbb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2015 00:51:31 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 2/4] ath10k: update missing hw_params of QCA9377 hw1.1
-Date: Thu,  5 Nov 2015 09:50:41 +0100
-Message-Id: <1446713443-22542-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20151105_095138_459507_0A453340)
-In-Reply-To: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38725 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032185AbbKEImI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 03:42:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 2/4] ipv4: add option to drop gratuitous ARP packets
+Date: Thu,  5 Nov 2015 09:42:01 +0100
+Message-Id: <1446712923-9136-2-git-send-email-johannes@sipsolutions.net> (sfid-20151105_094218_644072_271E2D03)
+In-Reply-To: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The uart_pin was incorrectly configured for QCA9377
-and the recently added hw_params were omitted.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+In certain 802.11 wireless deployments, there will be ARP proxies
+that use knowledge of the network to correctly answer requests.
+To prevent gratuitous ARP frames on the shared medium from being
+a problem, on such deployments wireless needs to drop them.
+
+Enable this by providing an option called "drop_gratuitous_arp".
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ Documentation/networking/ip-sysctl.txt | 6 ++++++
+ include/uapi/linux/ip.h                | 1 +
+ net/ipv4/arp.c                         | 8 ++++++++
+ net/ipv4/devinet.c                     | 2 ++
+ 4 files changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 11e42720035b..345770f1625a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -141,8 +141,10 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
- 		.name = "qca9377 hw1.1",
- 		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
--		.uart_pin = 7,
-+		.uart_pin = 6,
- 		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
- 		.fw = {
- 			.dir = QCA9377_HW_1_0_FW_DIR,
- 			.fw = QCA9377_HW_1_0_FW_FILE,
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 35c4c43dd8de..56bb6dd881bd 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1215,6 +1215,12 @@ drop_unicast_in_l2_multicast - BOOLEAN
+ 	1122, but is disabled by default for compatibility reasons.
+ 	Default: off (0)
+ 
++drop_gratuitous_arp - BOOLEAN
++	Drop all gratuitous ARP frames, for example if there's a known
++	good ARP proxy on the network and such frames need not be used
++	(or in the case of 802.11, must not be used to prevent attacks.)
++	Default: off (0)
++
+ 
+ tag - INTEGER
+ 	Allows you to write a number, which can be used as required.
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index 584834f7e95c..f291569768dd 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -166,6 +166,7 @@ enum
+ 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+ 	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
++	IPV4_DEVCONF_DROP_GRATUITOUS_ARP,
+ 	__IPV4_DEVCONF_MAX
+ };
+ 
+diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
+index 59b3e0e8fd51..c102eb5ac55c 100644
+--- a/net/ipv4/arp.c
++++ b/net/ipv4/arp.c
+@@ -735,6 +735,14 @@ static int arp_process(struct net *net, struct sock *sk, struct sk_buff *skb)
+ 	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
+ 		goto out;
+ 
++ /*
++  *	For some 802.11 wireless deployments (and possibly other networks),
++  *	there will be an ARP proxy and gratuitous ARP frames are attacks
++  *	and thus should not be accepted.
++  */
++	if (sip == tip && IN_DEV_ORCONF(in_dev, DROP_GRATUITOUS_ARP))
++		goto out;
++
+ /*
+  *     Special case: We must set Frame Relay source Q.922 address
+  */
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index dbbab28a52a4..3d835313575e 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -2185,6 +2185,8 @@ static struct devinet_sysctl_table {
+ 					"igmpv3_unsolicited_report_interval"),
+ 		DEVINET_SYSCTL_RW_ENTRY(IGNORE_ROUTES_WITH_LINKDOWN,
+ 					"ignore_routes_with_linkdown"),
++		DEVINET_SYSCTL_RW_ENTRY(DROP_GRATUITOUS_ARP,
++					"drop_gratuitous_arp"),
+ 
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOXFRM, "disable_xfrm"),
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOPOLICY, "disable_policy"),
 -- 
-2.1.2
+2.6.2
 
