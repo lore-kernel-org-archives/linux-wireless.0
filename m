@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7263 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753121AbbKBIs7 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48007 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030665AbbKECJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:48:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/38] staging: wilc1000: remove return type of Handle_wait_msg_q_empty
-Date: Mon, 2 Nov 2015 17:50:50 +0900
-Message-ID: <1446454281-22484-7-git-send-email-glen.lee@atmel.com> (sfid-20151102_094904_030502_F90B3F84)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+	Wed, 4 Nov 2015 21:09:35 -0500
+Date: Wed, 4 Nov 2015 18:09:31 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: glen lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH V2 04/17] staging: wilc1000: wilc_wlan_cfg_set: add
+ argument struct net_device
+Message-ID: <20151105020931.GA29296@kroah.com> (sfid-20151105_030938_304937_4BEBC243)
+References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
+ <1446198443-6623-4-git-send-email-glen.lee@atmel.com>
+ <20151104204624.GC23896@kroah.com>
+ <563AB36F.3070900@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563AB36F.3070900@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, Nov 05, 2015 at 10:39:59AM +0900, glen lee wrote:
+> >>+int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
+> >>+		      u32 buffer_size, int commit, u32 drvHandler)
+> >>  {
+> >>  	wilc_wlan_dev_t *p = &g_wlan;
+> >>  	u32 offset;
+> >>  	int ret_size;
+> >>+	perInterface_wlan_t *nic = netdev_priv(dev);
+> >>+	struct wilc *wilc;
+> >>+	wilc = nic->wilc;
+> >Again here, pass in a struct wilc *.
+> 
+> Thank you for your advise,
+> I can use local structure wilc as you said but there are print line inside the function.
+> The custom print lines will be changed with netdev_xxx format later, so I need to pass dev if necessary.
+> I used wilc if net_device is unnecessary or unavailable.
+> For this reason, Is this OK to use net_device if it is necessary?
 
-This patch changes return type of Handle_wait_msg_q_empty from s32 with void
-because return value is not used.
+You have a pointer to net_device in struct wilc, right?  Use that
+pointer when you need it, wilc is your "primary" thing, not struct
+net_device, to pass around.  You should never have to cast back and
+forth when calling internal functions like this.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+thanks,
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6abba23..584f718 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -835,11 +835,10 @@ ERRORHANDLER:
- 	return result;
- }
- 
--static s32 Handle_wait_msg_q_empty(void)
-+static void Handle_wait_msg_q_empty(void)
- {
- 	g_wilc_initialized = 0;
- 	up(&hif_sema_wait_response);
--	return 0;
- }
- 
- static s32 Handle_Scan(struct host_if_drv *hif_drv,
--- 
-1.9.1
-
+greg k-h
