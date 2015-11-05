@@ -1,162 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:32952 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753173AbbKRF7i (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:34142 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032959AbbKEIve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 00:59:38 -0500
-Received: by lfaz4 with SMTP id z4so19646910lfa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:37 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Thu, 5 Nov 2015 03:51:34 -0500
+Received: by lbbwb3 with SMTP id wb3so30373431lbb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2015 00:51:32 -0800 (PST)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 6/9] ath10k: pack up flags in skb_cb
-Date: Wed, 18 Nov 2015 06:59:20 +0100
-Message-Id: <1447826363-16818-7-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065944_099345_D6CD9D3B)
-In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
- <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 3/4] ath10k: introduce dev_id to hw_params
+Date: Thu,  5 Nov 2015 09:50:42 +0100
+Message-Id: <1446713443-22542-4-git-send-email-bartosz.markowski@tieto.com> (sfid-20151105_095144_763643_FDD8BFAF)
+In-Reply-To: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to have all the flags as separate
-bools.
+A follow up patch introducing a QCA9377 hw1.0 support will need
+this device identification helper for an explicit distinction of
+HWs, as apparently both QCA6174 hw3.0 and QCA9377 share the same BMI
+target version (0x0502000x). For the QCA9377 hw1.1 previously
+added we were just lucky we did not overlap with the same chip_id_rev.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h   | 13 +++++++------
- drivers/net/wireless/ath/ath10k/htt_tx.c |  4 ++--
- drivers/net/wireless/ath/ath10k/mac.c    | 10 +++++++---
- drivers/net/wireless/ath/ath10k/wmi.c    | 12 ++++++++----
- 4 files changed, 24 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 27 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
+ drivers/net/wireless/ath/ath10k/pci.c  |  6 ------
+ 4 files changed, 33 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 804fd2e5bc38..6b9b37329621 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -81,22 +81,23 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 	return "unknown";
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 345770f1625a..9b32cb38eb45 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -51,6 +51,7 @@ MODULE_PARM_DESC(rawmode, "Use raw 802.11 frame datapath");
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+ 		.id = QCA988X_HW_2_0_VERSION,
++		.dev_id = QCA988X_2_0_DEVICE_ID,
+ 		.name = "qca988x hw2.0",
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
+@@ -69,6 +70,25 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
++		.dev_id = QCA6164_2_1_DEVICE_ID,
++		.name = "qca6164 hw2.1",
++		.patch_load_addr = QCA6174_HW_2_1_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.fw = {
++			.dir = QCA6174_HW_2_1_FW_DIR,
++			.fw = QCA6174_HW_2_1_FW_FILE,
++			.otp = QCA6174_HW_2_1_OTP_FILE,
++			.board = QCA6174_HW_2_1_BOARD_DATA_FILE,
++			.board_size = QCA6174_BOARD_DATA_SZ,
++			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
++		},
++	},
++	{
++		.id = QCA6174_HW_2_1_VERSION,
++		.dev_id = QCA6174_2_1_DEVICE_ID,
+ 		.name = "qca6174 hw2.1",
+ 		.patch_load_addr = QCA6174_HW_2_1_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
+@@ -86,6 +106,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
++		.dev_id = QCA6174_2_1_DEVICE_ID,
+ 		.name = "qca6174 hw3.0",
+ 		.patch_load_addr = QCA6174_HW_3_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
+@@ -103,6 +124,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
++		.dev_id = QCA6174_2_1_DEVICE_ID,
+ 		.name = "qca6174 hw3.2",
+ 		.patch_load_addr = QCA6174_HW_3_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
+@@ -121,6 +143,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
++		.dev_id = QCA99X0_2_0_DEVICE_ID,
+ 		.name = "qca99x0 hw2.0",
+ 		.patch_load_addr = QCA99X0_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
+@@ -139,6 +162,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
+ 		.name = "qca9377 hw1.1",
+ 		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
+@@ -1266,7 +1290,8 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+ 		hw_params = &ath10k_hw_params_list[i];
  
-+enum ath10k_skb_flags {
-+	ATH10K_SKB_F_NO_HWCRYPT = BIT(0),
-+	ATH10K_SKB_F_DTIM_ZERO = BIT(1),
-+	ATH10K_SKB_F_DELIVER_CAB = BIT(2),
-+};
-+
- struct ath10k_skb_cb {
- 	dma_addr_t paddr;
-+	u8 flags;
- 	u8 eid;
- 	u8 vdev_id;
- 
- 	struct {
- 		u8 tid;
--		bool nohwcrypt;
- 		struct ath10k_htt_txbuf *txbuf;
- 		u32 txbuf_paddr;
- 	} __packed htt;
--
--	struct {
--		bool dtim_zero;
--		bool deliver_cab;
--	} bcn;
- } __packed;
- 
- struct ath10k_skb_rxcb {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index a7d8798b2f37..c955c6b6ea9d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -586,7 +586,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	     ieee80211_is_disassoc(hdr->frame_control)) &&
- 	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
--	} else if (!skb_cb->htt.nohwcrypt &&
-+	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
- 		   txmode == ATH10K_HW_TXRX_RAW &&
- 		   ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-@@ -666,7 +666,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 			prefetch_len);
- 	skb_cb->htt.txbuf->htc_hdr.flags = 0;
- 
--	if (skb_cb->htt.nohwcrypt)
-+	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
- 
- 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0ca5d5bea509..38c241596965 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3672,6 +3672,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		      struct sk_buff *skb)
- {
- 	struct ath10k *ar = hw->priv;
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
-@@ -3684,9 +3685,12 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 
--	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
--	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
--	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
-+	skb_cb->flags = 0;
-+	if (!ath10k_tx_h_use_hwcrypto(vif, skb))
-+		skb_cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
-+
-+	skb_cb->htt.tid = ath10k_tx_h_get_tid(hdr);
-+	skb_cb->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
- 
- 	switch (txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 902107934edd..6028a598c199 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1715,6 +1715,8 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
- 	struct ath10k *ar = arvif->ar;
- 	struct ath10k_skb_cb *cb;
- 	struct sk_buff *bcn;
-+	bool dtim_zero;
-+	bool deliver_cab;
- 	int ret;
- 
- 	spin_lock_bh(&ar->data_lock);
-@@ -1734,12 +1736,14 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
- 		arvif->beacon_state = ATH10K_BEACON_SENDING;
- 		spin_unlock_bh(&ar->data_lock);
- 
-+		dtim_zero = !!(cb->flags & ATH10K_SKB_F_DTIM_ZERO);
-+		deliver_cab = !!(cb->flags & ATH10K_SKB_F_DELIVER_CAB);
- 		ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar,
- 							arvif->vdev_id,
- 							bcn->data, bcn->len,
- 							cb->paddr,
--							cb->bcn.dtim_zero,
--							cb->bcn.deliver_cab);
-+							dtim_zero,
-+							deliver_cab);
- 
- 		spin_lock_bh(&ar->data_lock);
- 
-@@ -3157,10 +3161,10 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
- 	memcpy(tim->virtual_map, arvif->u.ap.tim_bitmap, pvm_len);
- 
- 	if (tim->dtim_count == 0) {
--		ATH10K_SKB_CB(bcn)->bcn.dtim_zero = true;
-+		ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DTIM_ZERO;
- 
- 		if (__le32_to_cpu(tim_info->tim_mcast) == 1)
--			ATH10K_SKB_CB(bcn)->bcn.deliver_cab = true;
-+			ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DELIVER_CAB;
+-		if (hw_params->id == ar->target_version)
++		if (hw_params->id == ar->target_version &&
++		    hw_params->dev_id == ar->dev_id)
+ 			break;
  	}
  
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT, "dtim %d/%d mcast %d pvmlen %d\n",
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c16f3484dc8a..938431ffed4d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -643,6 +643,7 @@ struct ath10k {
+ 
+ 	struct ath10k_hw_params {
+ 		u32 id;
++		u16 dev_id;
+ 		const char *name;
+ 		u32 patch_load_addr;
+ 		int uart_pin;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 62d6dd569090..3a5c68ac5d34 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -22,6 +22,12 @@
+ 
+ #define ATH10K_FW_DIR			"ath10k"
+ 
++#define QCA988X_2_0_DEVICE_ID   (0x003c)
++#define QCA6164_2_1_DEVICE_ID   (0x0041)
++#define QCA6174_2_1_DEVICE_ID   (0x003e)
++#define QCA99X0_2_0_DEVICE_ID   (0x0040)
++#define QCA9377_1_0_DEVICE_ID   (0x0042)
++
+ /* QCA988X 1.0 definitions (unsupported) */
+ #define QCA988X_HW_1_0_CHIP_ID_REV	0x0
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index b3ab44c6fd18..0be43b80a9a4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -57,12 +57,6 @@ MODULE_PARM_DESC(reset_mode, "0: auto, 1: warm only (default: 0)");
+ #define ATH10K_PCI_TARGET_WAIT 3000
+ #define ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS 3
+ 
+-#define QCA988X_2_0_DEVICE_ID	(0x003c)
+-#define QCA6164_2_1_DEVICE_ID	(0x0041)
+-#define QCA6174_2_1_DEVICE_ID	(0x003e)
+-#define QCA99X0_2_0_DEVICE_ID	(0x0040)
+-#define QCA9377_1_0_DEVICE_ID	(0x0042)
+-
+ static const struct pci_device_id ath10k_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, QCA988X_2_0_DEVICE_ID) }, /* PCI-E QCA988X V2 */
+ 	{ PCI_VDEVICE(ATHEROS, QCA6164_2_1_DEVICE_ID) }, /* PCI-E QCA6164 V2.1 */
 -- 
-2.1.4
+2.1.2
 
