@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36225 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758321AbbKHHvJ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26979 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030300AbbKEFgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:51:09 -0500
-Received: by pacdm15 with SMTP id dm15so141920180pac.3
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:51:08 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 32/32] staging: wilc1000: remove host_int_get_rx_power_level
-Date: Sun,  8 Nov 2015 16:49:25 +0900
-Message-Id: <1446968965-8958-32-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085112_825432_0FEDF097)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 5 Nov 2015 00:36:18 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 29/38] staging: wilc1000: remove goto from linux_wlan_start_firmware
+Date: Thu, 5 Nov 2015 14:36:30 +0900
+Message-ID: <1446701799-24870-29-git-send-email-glen.lee@atmel.com> (sfid-20151105_063756_645905_F259D402)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes host_int_get_rx_power_level function definition and
-declaration that is defined at host_interface.c and host_interface.h.
-This function is defined but not used anywhere in this driver so just
-remove it.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch remove goto feature from linux_wlan_start_firmware function.
+Goto feature is return result.
+So, remove goto functions and it was replaced with the return value directly.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 14 --------------
- drivers/staging/wilc1000/host_interface.h |  3 ---
- 2 files changed, 17 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ff15179..5bf9a55 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3560,20 +3560,6 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv,
- 	return result;
- }
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 893c741..fcc8119 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -529,19 +529,18 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 	ret = wilc_wlan_start();
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to start Firmware\n");
+-		goto _fail_;
++		return ret;
+ 	}
  
--s32 host_int_get_rx_power_level(struct host_if_drv *hif_drv,
--				u8 *pu8RxPowerLevel,
--				u32 u32RxPowerLevelLen)
--{
--	struct wid wid;
--
--	wid.id = (u16)WID_RX_POWER_LEVEL;
--	wid.type = WID_STR;
--	wid.val = pu8RxPowerLevel;
--	wid.size = u32RxPowerLevelLen;
--
--	return 0;
--}
--
- int host_int_set_mac_chnl_num(struct host_if_drv *hif_drv, u8 channel)
+ 	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
+ 	ret = linux_wlan_lock_timeout(&wilc->sync_event, 5000);
+ 	if (ret) {
+ 		PRINT_D(INIT_DBG, "Firmware start timed out");
+-		goto _fail_;
++		return ret;
+ 	}
+ 	PRINT_D(INIT_DBG, "Firmware successfully started\n");
+ 
+-_fail_:
+-	return ret;
++	return 0;
+ }
+ static int linux_wlan_firmware_download(struct net_device *dev)
  {
- 	int result;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 8870458..c01f441 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -339,9 +339,6 @@ s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv,
- 				u8 *pu8AssocRespInfo,
- 				u32 u32MaxAssocRespInfoLen,
- 				u32 *pu32RcvdAssocRespInfoLen);
--s32 host_int_get_rx_power_level(struct host_if_drv *hWFIDrv,
--				u8 *pu8RxPowerLevel,
--				u32 u32RxPowerLevelLen);
- int host_int_set_mac_chnl_num(struct host_if_drv *wfi_drv, u8 channel);
- s32 host_int_get_host_chnl_num(struct host_if_drv *hWFIDrv, u8 *pu8ChNo);
- s32 host_int_get_rssi(struct host_if_drv *hWFIDrv, s8 *ps8Rssi);
 -- 
-2.6.3
+1.9.1
 
