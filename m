@@ -1,184 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:35154 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752615AbbKXRmZ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:26936 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030300AbbKEFgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:42:25 -0500
-Received: by wmuu63 with SMTP id u63so106798421wmu.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2015 09:42:24 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Sven Eckelmann <sven@open-mesh.com>
-Subject: iw: add VHT80 support for 802.11s
-Date: Tue, 24 Nov 2015 18:42:07 +0100
-Message-Id: <1448386927-25170-1-git-send-email-sven@open-mesh.com> (sfid-20151124_184229_184297_92E42E6D)
+	Thu, 5 Nov 2015 00:36:06 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 27/38] staging: wilc1000: rename pBSSID of function linux_wlan_set_bssid
+Date: Thu, 5 Nov 2015 14:36:28 +0900
+Message-ID: <1446701799-24870-27-git-send-email-glen.lee@atmel.com> (sfid-20151105_063800_709778_0F71DF0C)
+In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iw mesh supports non-HT and HT channel widths like HT20 or NOHT. But the
-Linux 802.11s implementation also supports VHT80 which can be specified
-during the mesh join.
+From: Leo Kim <leo.kim@atmel.com>
 
-    iw dev mesh0 mesh join "meshnet" freq 5180 80MHz
+This patch renames pBSSID of function linux_wlan_set_bssid to bssid
+to avoid CamelCase naming convention.
+Also, prototype linux_wlan_set_bssid in wilc_wfi_cfgoperations.c is moved to
+wilc_wfi_netdevice.h.
 
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- ibss.c | 33 ---------------------------------
- iw.h   |  9 +++++++++
- mesh.c | 16 ++++++++--------
- util.c | 26 ++++++++++++++++++++++++++
- 4 files changed, 43 insertions(+), 41 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             | 4 ++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 --
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 1 +
+ 3 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/ibss.c b/ibss.c
-index 23bda70..ac06fc5 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -16,39 +16,6 @@
- 
- SECTION(ibss);
- 
--struct chanmode {
--	const char *name;
--	unsigned int width;
--	int freq1_diff;
--	int chantype; /* for older kernel */
--};
--
--static int get_cf1(const struct chanmode *chanmode, unsigned long freq)
--{
--	int cf1 = freq, j;
--	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
--
--	switch (chanmode->width) {
--	case NL80211_CHAN_WIDTH_80:
--	        /* setup center_freq1 */
--		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
--			if (freq >= vht80[j] && freq < vht80[j] + 80)
--				break;
--		}
--
--		if (j == ARRAY_SIZE(vht80))
--			break;
--
--		cf1 = vht80[j] + 30;
--		break;
--	default:
--		cf1 = freq + chanmode->freq1_diff;
--		break;
--	}
--
--	return cf1;
--}
--
- static int join_ibss(struct nl80211_state *state,
- 		     struct nl_msg *msg,
- 		     int argc, char **argv,
-diff --git a/iw.h b/iw.h
-index cef9da8..8e1a37a 100644
---- a/iw.h
-+++ b/iw.h
-@@ -59,6 +59,13 @@ struct cmd {
- 	const struct cmd *parent;
- };
- 
-+struct chanmode {
-+	const char *name;
-+	unsigned int width;
-+	int freq1_diff;
-+	int chantype; /* for older kernel */
-+};
-+
- #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
- #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
- 
-@@ -174,6 +181,8 @@ void print_ies(unsigned char *ie, int ielen, bool unknown,
- void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
- void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
- 
-+int get_cf1(const struct chanmode *chanmode, unsigned long freq);
-+
- #define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs>] " \
- 	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] [randomise[=<addr>/<mask>]]"
- int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
-diff --git a/mesh.c b/mesh.c
-index 0090530..930d58f 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -439,12 +439,8 @@ static int join_mesh(struct nl80211_state *state,
- 	int bintval, dtim_period, i, n_rates = 0;
- 	char *end, *value = NULL, *sptr = NULL;
- 	unsigned long freq = 0;
--	static const struct {
--		const char *name;
--		unsigned int width;
--		int freq1_diff;
--		int chantype; /* for older kernel */
--	} *chanmode_selected = NULL, chanmode[] = {
-+	const struct chanmode *chanmode_selected = NULL;
-+	static const struct chanmode chanmode[] = {
- 		{ .name = "HT20",
- 		  .width = NL80211_CHAN_WIDTH_20,
- 		  .freq1_diff = 0,
-@@ -461,6 +457,10 @@ static int join_mesh(struct nl80211_state *state,
- 		  .width = NL80211_CHAN_WIDTH_20_NOHT,
- 		  .freq1_diff = 0,
- 		  .chantype = NL80211_CHAN_NO_HT },
-+		{ .name = "80MHz",
-+		  .width = NL80211_CHAN_WIDTH_80,
-+		  .freq1_diff = 0,
-+		  .chantype = -1 },
- 	};
- 
- 	if (argc < 1)
-@@ -497,7 +497,7 @@ static int join_mesh(struct nl80211_state *state,
- 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
- 				    chanmode_selected->width);
- 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
--				    freq + chanmode_selected->freq1_diff);
-+				    get_cf1(chanmode_selected, freq));
- 			if (chanmode_selected->chantype != -1)
- 				NLA_PUT_U32(msg,
- 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-@@ -599,7 +599,7 @@ static int join_mesh(struct nl80211_state *state,
-  nla_put_failure:
- 	return -ENOBUFS;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6758cbc..2fac99d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -358,7 +358,7 @@ struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
+ 	return NULL;
  }
--COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
-+COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT|80MHz>]"
- 	" [basic-rates <rate in Mbps,rate2,...>]], [mcast-rate <rate in Mbps>]"
- 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
- 	" [vendor_sync on|off] [<param>=<value>]*",
-diff --git a/util.c b/util.c
-index 4efc4c8..d75ffe0 100644
---- a/util.c
-+++ b/util.c
-@@ -728,3 +728,29 @@ void iw_hexdump(const char *prefix, const __u8 *buf, size_t size)
- 	}
- 	printf("\n\n");
+ 
+-int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
++int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid)
+ {
+ 	int i = 0;
+ 	int ret = -1;
+@@ -370,7 +370,7 @@ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID)
+ 
+ 	for (i = 0; i < wilc->vif_num; i++)
+ 		if (wilc->vif[i].ndev == wilc_netdev) {
+-			memcpy(wilc->vif[i].bssid, pBSSID, 6);
++			memcpy(wilc->vif[i].bssid, bssid, 6);
+ 			ret = 0;
+ 			break;
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 32b93d3..e8c8272 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -505,8 +505,6 @@ int WILC_WFI_Set_PMKSA(u8 *bssid, struct wilc_priv *priv)
+ 
+ 
  }
-+
-+int get_cf1(const struct chanmode *chanmode, unsigned long freq)
-+{
-+	int cf1 = freq, j;
-+	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
-+
-+	switch (chanmode->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+	        /* setup center_freq1 */
-+		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
-+			if (freq >= vht80[j] && freq < vht80[j] + 80)
-+				break;
-+		}
-+
-+		if (j == ARRAY_SIZE(vht80))
-+			break;
-+
-+		cf1 = vht80[j] + 30;
-+		break;
-+	default:
-+		cf1 = freq + chanmode->freq1_diff;
-+		break;
-+	}
-+
-+	return cf1;
-+}
+-int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID);
+-
+ 
+ /**
+  *  @brief      CfgConnectResult
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 07917ea..9b11b71 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -219,4 +219,5 @@ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ u16 Set_machw_change_vir_if(struct net_device *dev, bool bValue);
+ int linux_wlan_get_firmware(struct net_device *dev);
++int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
+ #endif
+-- 
+1.9.1
+
