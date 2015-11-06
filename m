@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:36320 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbbKJNND (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37726 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031547AbbKFCR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 08:13:03 -0500
-Received: by lbblt2 with SMTP id lt2so100751970lbb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:01 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/9] ath10k: clean up ath10k_skb_cb
-Date: Tue, 10 Nov 2015 14:10:46 +0100
-Message-Id: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141335_304469_36302D53)
-In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 5 Nov 2015 21:17:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 59/73] staging: wilc1000: fixes please don't use multiple blank lines
+Date: Fri, 6 Nov 2015 11:19:58 +0900
+Message-ID: <1446776412-30670-10-git-send-email-glen.lee@atmel.com> (sfid-20151106_031801_043661_0D749F2D)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath10k_skb_cb structure wasn't really space
-efficient. Some stuff is removed or replaced with
-more compact representation.
+From: Leo Kim <leo.kim@atmel.com>
 
-This cleanup is necessary for future features.
+This patch fixes the checks reported by checkpatch.pl
+for Please don't use multiple blank lines.
 
-The size of ath10k_skb_cb:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-          before   after
- x86-32   26       12
- x86-64   34       20
-
-
-v2:
- * fix a bug (patch 7/9 introduced)
-
-
-Michal Kazior (9):
-  ath10k: merge is_protected with nohwcrypt
-  ath10k: rename function to adhere to naming convention
-  ath10k: remove txmode from skb_cb
-  ath10k: remove is_offchan
-  ath10k: remove freq from skb_cb
-  ath10k: pack up flags in skb_cb
-  ath10k: fix tx header parsing
-  ath10k: replace vdev_id and tid in skb cb
-  ath10k: store msdu_id instead of txbuf pointers
-
- drivers/net/wireless/ath/ath10k/core.h   |  28 +++-----
- drivers/net/wireless/ath/ath10k/htt.h    |   4 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 112 ++++++++++++++++++-----------
- drivers/net/wireless/ath/ath10k/mac.c    | 119 ++++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/mac.h    |   1 +
- drivers/net/wireless/ath/ath10k/txrx.c   |  15 ++--
- drivers/net/wireless/ath/ath10k/wmi.c    |  22 ++++--
- 7 files changed, 173 insertions(+), 128 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 6ca2544..74f6210 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -1,11 +1,7 @@
+ #ifndef WILC_WLAN_H
+ #define WILC_WLAN_H
+ 
+-
+-
+ #define ISWILC1000(id)			((id & 0xfffff000) == 0x100000 ? 1 : 0)
+-
+-
+ /********************************************
+  *
+  *      Mac eth header length
+@@ -140,8 +136,6 @@
+ #else
+ #define WILC_PLL_TO		2
+ #endif
+-
+-
+ #define ABORT_INT		BIT(31)
+ 
+ /*******************************************/
+@@ -203,8 +197,6 @@
+ 
+ #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
+ #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
+-
+-
+ /*time for expiring the semaphores of cfg packets*/
+ #define CFG_PKTS_TIMEOUT	2000
+ /********************************************
 -- 
-2.1.4
+1.9.1
 
