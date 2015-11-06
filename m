@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48260 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbbK0JzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 04:55:06 -0500
-Message-ID: <1448617987.15393.102.camel@linux.intel.com> (sfid-20151127_105510_476989_AC32B4EE)
-Subject: Re: [PATCH 1/1] wireless: airo: re-use mac_pton()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 27 Nov 2015 11:53:07 +0200
-In-Reply-To: <87poywnawt.fsf@kamboji.qca.qualcomm.com>
-References: <1447856201-70408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <87poywnawt.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34019 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161036AbbKFKME (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2015 05:12:04 -0500
+Received: by padhx2 with SMTP id hx2so110751702pad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:03 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 08/12] staging: wilc1000: fix parameter name of host_int_add_station
+Date: Fri,  6 Nov 2015 19:11:17 +0900
+Message-Id: <1446804681-8873-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111209_268468_502901B3)
+In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-11-26 at 15:32 +0200, Kalle Valo wrote:
-> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
-> 
-> > mac_pton() converts 6-byte MAC / BSSID to binary format. Change an
-> > open coded
-> > variant by the generic one.
-> > 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> 
-> This breaks compilation:
-> 
->   CC [M]  drivers/net/wireless/cisco/airo.o
-> drivers/net/wireless/cisco/airo.c: In function
-> ‘proc_APList_on_close’:
-> drivers/net/wireless/cisco/airo.c:5141:49: error: request for member
-> ‘ap’ in something not a structure or union
+This patch changes struct host_if_drv of host_int_add_station function
+declaration from hWFIDrv to hif_drv.
+With this change, first parameter of this function declaration and
+definition has same name as hif_drv.
 
-Sorry for that, seems rebase issue since it was an old fix in my local
-tree.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: rebase latest staging-testing.
 
-Seems it should be
-  mac_pton(data->wbuffer + i * 6 * 3, APList_rid->ap[i]);
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I will send updated version later.
-
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0949950..9788e6d 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -378,7 +378,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
+ 			u32 u32TailLen,
+ 			u8 *pu8tail);
+ int host_int_del_beacon(struct host_if_drv *hif_drv);
+-int host_int_add_station(struct host_if_drv *hWFIDrv,
++int host_int_add_station(struct host_if_drv *hif_drv,
+ 			 struct add_sta_param *pstrStaParams);
+ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
+ 			    u8 pu8MacAddr[][ETH_ALEN]);
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.6.3
 
