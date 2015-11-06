@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13093 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162173AbbKTR7c convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36504 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031107AbbKFCLJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 12:59:32 -0500
-From: "Li, Yanbo" <yanbol@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>, "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr
- mode
-Date: Fri, 20 Nov 2015 17:59:27 +0000
-Message-ID: <3d283d4cea8a45fd8717ad5848626f3c@nasanexm02e.na.qualcomm.com> (sfid-20151120_185936_139610_75D86D9C)
-References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
- <877fme40ny.fsf@kamboji.qca.qualcomm.com>
- <2cd04da006cb4f2a8eea859b6aad3e10@nasanexm02e.na.qualcomm.com>
- <87si45zmpj.fsf@kamboji.qca.qualcomm.com>
- <20151120133214.GA15797@shafi-laptop>
-In-Reply-To: <20151120133214.GA15797@shafi-laptop>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 5 Nov 2015 21:11:09 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/73] staging: wilc1000: fixes add blank line after function declaration
+Date: Fri, 6 Nov 2015 11:12:28 +0900
+Message-ID: <1446776014-28094-7-git-send-email-glen.lee@atmel.com> (sfid-20151106_031113_351390_426A40B7)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch fixes the warnings reported by checkpatch.pl
+for please use a blank line after function/struct/union/enum declarations
 
-> -----Original Message-----
-> From: Shajakhan, Mohammed Shafi (Mohammed Shafi)
-> Sent: Friday, November 20, 2015 5:32 AM
-> To: Valo, Kalle
-> Cc: Li, Yanbo; linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
-> Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0
-> 4addr mode
-> 
-> Hi Kalle\Yanbo,
-> 
-> On Mon, Nov 16, 2015 at 10:57:44PM +0200, Kalle Valo wrote:
-> > "Li, Yanbo" <yanbol@qca.qualcomm.com> writes:
-> >
-> > >> > +		/* The padding bytes's location is different on various
-> chips */
-> > >> > +		enum ath10k_loc_4addr_pad loc_4addr_pad;
-> > >>
-> > >> I think that loc prefix is a bit misleading, it reminds me of
-> > >> locationing/positioning etc. What about ath10k_hw_4addr_pad?
-> > >>
-> > >
-> > >
-> > > There is already a FW feature defined as
-> > > "ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDIND" and the
-> relative
-> > > string is "no-4addr-pad", if we just remove the "loc" prefix, it may
-> > > be confuse with this FW feature.
-> > >
-> > > How about we change the loc to offset in this case or any better
-> suggestion?
-> >
-> > I did some naming changes in the pending branch:
-> >
-> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=p
-> > ending&id=42cd3832cd7c78bfeabb639a4086c7838fda5b57
-> >
-> > Please review and let me know what you think.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Looks good to me, thanks Kalle.
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 603541c..d3117f9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -68,6 +68,7 @@ static inline void acquire_bus(BUS_ACQUIRE_T acquire)
+ 			chip_wakeup();
+ 	}
+ }
++
+ static inline void release_bus(BUS_RELEASE_T release)
+ {
+ 	#ifdef WILC_OPTIMIZE_SLEEP_INT
+@@ -224,6 +225,7 @@ static inline int Init_TCP_tracking(void)
+ {
+ 	return 0;
+ }
++
+ static inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
+ {
+ 	Acks_keep_track_info[Opened_TCP_session].Ack_seq_num = seq;
+@@ -242,6 +244,7 @@ static inline int Update_TCP_track_session(u32 index, u32 Ack)
+ 		Acks_keep_track_info[index].Bigger_Ack_num = Ack;
+ 	return 0;
+ }
++
+ static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_entry_t  *txqe)
+ {
+ 	Statisitcs_totalAcks++;
+@@ -1045,6 +1048,7 @@ static void wilc_unknown_isr_ext(void)
+ {
+ 	g_wlan.hif_func.hif_clear_int_ext(0);
+ }
++
+ static void wilc_pllupdate_isr_ext(u32 int_stats)
+ {
+ 	int trials = 10;
+@@ -1507,6 +1511,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 
+ 	return ret_size;
+ }
++
+ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+@@ -1562,6 +1567,7 @@ void wilc_bus_set_default_speed(void)
+ {
+ 	g_wlan.hif_func.hif_set_default_bus_speed();
+ }
++
+ u32 init_chip(struct net_device *dev)
+ {
+ 	u32 chipid;
+-- 
+1.9.1
 
-BR /Yanbo
