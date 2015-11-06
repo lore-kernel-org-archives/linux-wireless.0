@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:32372 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965833AbbKFTee (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47347 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161044AbbKFJie (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 14:34:34 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v3 3/3] DT: bindings: net: nfc: Add ST95HF binding doc
-Date: Fri, 6 Nov 2015 14:34:02 -0500
-Message-ID: <1446838442-10964-4-git-send-email-shikha.singh@st.com> (sfid-20151106_203439_369452_46B5BDB6)
-In-Reply-To: <1446838442-10964-1-git-send-email-shikha.singh@st.com>
-References: <1446838442-10964-1-git-send-email-shikha.singh@st.com>
+	Fri, 6 Nov 2015 04:38:34 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/26] staging: wilc1000: remove function pointer spi_tx of wilc_wlan_io_function_t
+Date: Fri, 6 Nov 2015 18:40:10 +0900
+Message-ID: <1446802823-22598-14-git-send-email-glen.lee@atmel.com> (sfid-20151106_103841_325885_7234FAF9)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch includes ST95HF binding doc that guides how to
-make node entry of ST95HF in DT file of any platform.
+This patch removes function pointer spi_tx of wilc_wlan_io_func_t because
+it is not used anymore.
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- .../devicetree/bindings/net/nfc/st95hf.txt         | 50 ++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/st95hf.txt b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
-new file mode 100644
-index 0000000..ea3178b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
-@@ -0,0 +1,50 @@
-+* STMicroelectronics : NFC Transceiver ST95HF
-+
-+ST NFC Transceiver is required to attach with SPI bus.
-+ST95HF node should be defined in DT as SPI slave device of SPI
-+master with which ST95HF transceiver is physically connected.
-+The properties defined below are required to be the part of DT
-+to include ST95HF transceiver into the platform.
-+
-+Required properties:
-+===================
-+- reg: Address of SPI slave "ST95HF transceiver" on SPI master bus.
-+
-+- compatible: should be "st,st95hf" for ST95HF NFC transceiver
-+
-+- spi-max-frequency: Max. operating SPI frequency for ST95HF
-+	transceiver.
-+
-+- enable-gpio: GPIO line to enable ST95HF transceiver.
-+
-+- interrupt-parent : Standard way to specify the controller to which
-+	ST95HF transceiver's interrupt is routed.
-+
-+- interrupts : Standard way to define ST95HF transceiver's out
-+	interrupt.
-+
-+Optional property:
-+=================
-+- st95hfvin-supply : This is an optional property. It contains a
-+	phandle to ST95HF transceiver's regulator supply node in DT.
-+
-+Example:
-+=======
-+spi@9840000 {
-+	reg = <0x9840000 0x110>;
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	cs-gpios = <&pio0 4>;
-+	status = "okay";
-+
-+	st95hf@0{
-+		reg = <0>;
-+		compatible = "st,st95hf";
-+		status = "okay";
-+		spi-max-frequency = <1000000>;
-+		enable-gpio = <&pio4 0>;
-+		interrupt-parent = <&pio0>;
-+		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
-+	};
-+
-+};
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b37ef4d..fb2fea5 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -898,7 +898,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SPI;
+ 	nwi->io_func.io_init = linux_spi_init;
+ 	nwi->io_func.io_deinit = linux_spi_deinit;
+-	nwi->io_func.u.spi.spi_tx = linux_spi_write;
+ 	nwi->io_func.u.spi.spi_rx = linux_spi_read;
+ 	nwi->io_func.u.spi.spi_trx = linux_spi_write_read;
+ 	nwi->io_func.u.spi.spi_max_speed = linux_spi_set_max_speed;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 4568457..4c05a46a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -79,7 +79,6 @@ typedef struct {
+ 	union {
+ 		struct {
+ 			int (*spi_max_speed)(void);
+-			int (*spi_tx)(u8 *, u32);
+ 			int (*spi_rx)(u8 *, u32);
+ 			int (*spi_trx)(u8 *, u8 *, u32);
+ 		} spi;
 -- 
-1.8.2.1
+1.9.1
 
