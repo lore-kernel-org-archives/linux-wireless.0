@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5319 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbbKZSvE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47652 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032934AbbKFJji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 13:51:04 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211_hwsim: Update timestamp in Probe Response frames
-Date: Thu, 26 Nov 2015 20:50:12 +0200
-Message-ID: <1448563812-27385-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20151126_195117_576989_F45E8F88)
+	Fri, 6 Nov 2015 04:39:38 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/26] staging: wilc1000: remove os_context
+Date: Fri, 6 Nov 2015 18:40:21 +0900
+Message-ID: <1446802823-22598-25-git-send-email-glen.lee@atmel.com> (sfid-20151106_110755_836131_E27CDA05)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, this was done only for Beacon frames, but similar timestamp
-update is needed for Probe Response frames to make these more accurately
-match the real IEEE 802.11 behavior. Previously, all zeros timestamp was
-sent in Probe Response frames.
+This patch removes variable os_context of wilc_sdio_t and wilc_spi_t because
+os_context is not used, and delete it's related code.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/staging/wilc1000/wilc_sdio.c | 2 --
+ drivers/staging/wilc1000/wilc_spi.c  | 2 --
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e922a4d..551dfff 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1250,6 +1250,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *channel;
- 	bool ack;
-@@ -1295,6 +1296,22 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 				       ARRAY_SIZE(txi->control.rates));
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 01a8e5b..a5307a7 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -15,7 +15,6 @@
+ #define WILC_SDIO_BLOCK_SIZE 512
  
- 	txi->rate_driver_data[0] = channel;
-+
-+	if (skb->len >= 24 + 8 &&
-+	    ieee80211_is_probe_resp(hdr->frame_control)) {
-+		/* fake header transmission time */
-+		struct ieee80211_mgmt *mgmt;
-+		struct ieee80211_rate *txrate;
-+		u64 ts;
-+
-+		mgmt = (struct ieee80211_mgmt *)skb->data;
-+		txrate = ieee80211_get_tx_rate(hw, txi);
-+		ts = mac80211_hwsim_get_tsf_raw();
-+		mgmt->u.probe_resp.timestamp =
-+			cpu_to_le64(ts + data->tsf_offset +
-+				    24 * 8 * 10 / txrate->bitrate);
-+	}
-+
- 	mac80211_hwsim_monitor_rx(hw, skb, channel);
+ typedef struct {
+-	void *os_context;
+ 	u32 block_size;
+ 	wilc_debug_func dPrint;
+ 	int nint;
+@@ -560,7 +559,6 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
  
- 	/* wmediumd mode check */
+ 	g_sdio.dPrint = func;
+-	g_sdio.os_context = inp->os_context.os_private;
+ 
+ 	if (!linux_sdio_init()) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index fe16d70..5a6bbfd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -13,7 +13,6 @@
+ #include "linux_wlan_spi.h"
+ 
+ typedef struct {
+-	void *os_context;
+ 	wilc_debug_func dPrint;
+ 	int crc_off;
+ 	int nint;
+@@ -965,7 +964,6 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	memset(&g_spi, 0, sizeof(wilc_spi_t));
+ 
+ 	g_spi.dPrint = func;
+-	g_spi.os_context = inp->os_context.os_private;
+ 	if (!linux_spi_init()) {
+ 		PRINT_ER("[wilc spi]: Failed io init bus...\n");
+ 		return 0;
 -- 
 1.9.1
 
