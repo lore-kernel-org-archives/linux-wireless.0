@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:10156 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36768 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755298AbbKYC4o (ORCPT
+	with ESMTP id S1030909AbbKFCM1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 21:56:44 -0500
+	Thu, 5 Nov 2015 21:12:27 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/10] staging: wilc1000: replace explicit NULL comparisons with !
-Date: Wed, 25 Nov 2015 11:59:43 +0900
-Message-ID: <1448420389-4192-4-git-send-email-glen.lee@atmel.com> (sfid-20151125_035646_777972_027B7F2A)
-In-Reply-To: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
-References: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 20/73] staging: wilc1000: rename PendingAcks_arrBase variable
+Date: Fri, 6 Nov 2015 11:12:41 +0900
+Message-ID: <1446776014-28094-20-git-send-email-glen.lee@atmel.com> (sfid-20151106_033802_162756_2AA471B8)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,145 +22,66 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch replace explicit NULL comparison with ! operator to simplify code.
-Reported by checkpatch.pl for Comparison to NULL could be written !XXX" or "XXX".
+This patch rename the PendingAcks_arrBase variable to pending_base
+to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 31 ++++++++++++-----------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 71038b1..bdc4537 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -463,7 +463,7 @@ static void CfgScanResult(enum scan_event scan_event,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 7db42c0..a1b6067 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -218,7 +218,7 @@ struct ack_session_info *Alloc_head;
+ struct ack_session_info ack_session_info[2 * MAX_TCP_SESSION];
+ struct pending_acks_info pending_acks_info[MAX_PENDING_ACKS];
  
- 			down(&(priv->hSemScanReq));
+-u32 PendingAcks_arrBase;
++u32 pending_base;
+ u32 Opened_TCP_session;
+ u32 Pending_Acks;
  
--			if (priv->pstrScanReq != NULL) {
-+			if (priv->pstrScanReq) {
- 				cfg80211_scan_done(priv->pstrScanReq, false);
- 				priv->u32RcvdChCount = 0;
- 				priv->bCfgScanning = false;
-@@ -474,7 +474,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 			down(&(priv->hSemScanReq));
+@@ -250,10 +250,10 @@ static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_ent
+ {
+ 	total_acks++;
+ 	if (Pending_Acks < MAX_PENDING_ACKS) {
+-		pending_acks_info[PendingAcks_arrBase + Pending_Acks].ack_num = Ack;
+-		pending_acks_info[PendingAcks_arrBase + Pending_Acks].txqe = txqe;
+-		pending_acks_info[PendingAcks_arrBase + Pending_Acks].session_index = Session_index;
+-		txqe->tcp_PendingAck_index = PendingAcks_arrBase + Pending_Acks;
++		pending_acks_info[pending_base + Pending_Acks].ack_num = Ack;
++		pending_acks_info[pending_base + Pending_Acks].txqe = txqe;
++		pending_acks_info[pending_base + Pending_Acks].session_index = Session_index;
++		txqe->tcp_PendingAck_index = pending_base + Pending_Acks;
+ 		Pending_Acks++;
+ 	} else {
  
- 			PRINT_D(CFG80211_DBG, "Scan Aborted\n");
--			if (priv->pstrScanReq != NULL) {
-+			if (priv->pstrScanReq) {
- 				update_scan_time();
- 				refresh_scan(priv, 1, false);
+@@ -346,7 +346,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	wilc = nic->wilc;
  
-@@ -645,7 +645,8 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 	spin_lock_irqsave(&wilc->txq_spinlock, p->txq_spinlock_flags);
+-	for (i = PendingAcks_arrBase; i < (PendingAcks_arrBase + Pending_Acks); i++) {
++	for (i = pending_base; i < (pending_base + Pending_Acks); i++) {
+ 		if (pending_acks_info[i].ack_num < ack_session_info[pending_acks_info[i].session_index].bigger_ack_num) {
+ 			struct txq_entry_t *tqe;
  
+@@ -367,10 +367,10 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	Pending_Acks = 0;
+ 	Opened_TCP_session = 0;
  
- 			for (i = 0; i < request->n_ssids; i++) {
--				if (request->ssids[i].ssid != NULL && request->ssids[i].ssid_len != 0) {
-+				if (request->ssids[i].ssid &&
-+				    request->ssids[i].ssid_len != 0) {
- 					strHiddenNetwork.pstrHiddenNetworkInfo[i].pu8ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
- 					memcpy(strHiddenNetwork.pstrHiddenNetworkInfo[i].pu8ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
- 					strHiddenNetwork.pstrHiddenNetworkInfo[i].u8ssidlen = request->ssids[i].ssid_len;
-@@ -716,7 +717,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
- 			PRINT_INFO(CFG80211_DBG, "Network with required SSID is found %s\n", sme->ssid);
--			if (sme->bssid == NULL)	{
-+			if (!sme->bssid) {
- 				PRINT_INFO(CFG80211_DBG, "BSSID is not passed from the user\n");
- 				break;
- 			} else {
-@@ -1009,12 +1010,12 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_TKIP:
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP || priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
--			if (priv->wilc_gtk[key_index] == NULL) {
-+			if (!priv->wilc_gtk[key_index]) {
- 				priv->wilc_gtk[key_index] = kmalloc(sizeof(struct wilc_wfi_key), GFP_KERNEL);
- 				priv->wilc_gtk[key_index]->key = NULL;
- 				priv->wilc_gtk[key_index]->seq = NULL;
- 			}
--			if (priv->wilc_ptk[key_index] == NULL) {
-+			if (!priv->wilc_ptk[key_index]) {
- 				priv->wilc_ptk[key_index] = kmalloc(sizeof(struct wilc_wfi_key), GFP_KERNEL);
- 				priv->wilc_ptk[key_index]->key = NULL;
- 				priv->wilc_ptk[key_index]->seq = NULL;
-@@ -1828,12 +1829,12 @@ static int mgmt_tx(struct wiphy *wiphy,
+-	if (PendingAcks_arrBase == 0)
+-		PendingAcks_arrBase = MAX_TCP_SESSION;
++	if (pending_base == 0)
++		pending_base = MAX_TCP_SESSION;
+ 	else
+-		PendingAcks_arrBase = 0;
++		pending_base = 0;
  
- 	if (ieee80211_is_mgmt(mgmt->frame_control)) {
- 		mgmt_tx = kmalloc(sizeof(struct p2p_mgmt_data), GFP_KERNEL);
--		if (mgmt_tx == NULL) {
-+		if (!mgmt_tx) {
- 			PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
- 			return -EFAULT;
- 		}
- 		mgmt_tx->buff = kmalloc(buf_len, GFP_KERNEL);
--		if (mgmt_tx->buff == NULL) {
-+		if (!mgmt_tx->buff) {
- 			PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
- 			kfree(mgmt_tx);
- 			return -EFAULT;
-@@ -2037,11 +2038,11 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, p->txq_spinlock_flags);
  
- 	PRINT_D(CFG80211_DBG, " Power save Enabled= %d , TimeOut = %d\n", enabled, timeout);
- 
--	if (wiphy == NULL)
-+	if (!wiphy)
- 		return -ENOENT;
- 
- 	priv = wiphy_priv(wiphy);
--	if (priv->hWILCWFIDrv == NULL) {
-+	if (!priv->hWILCWFIDrv) {
- 		PRINT_ER("Driver is NULL\n");
- 		return -EIO;
- 	}
-@@ -2451,7 +2452,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n",
- 			strStaParams.rates_len);
- 
--		if (params->ht_capa == NULL) {
-+		if (!params->ht_capa) {
- 			strStaParams.ht_supported = false;
- 		} else {
- 			strStaParams.ht_supported = true;
-@@ -2511,7 +2512,7 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(HOSTAPD_DBG, "Deleting station\n");
- 
- 
--		if (mac == NULL) {
-+		if (!mac) {
- 			PRINT_D(HOSTAPD_DBG, "All associated stations\n");
- 			s32Error = wilc_del_allstation(priv->hWILCWFIDrv, priv->assoc_stainfo.au8Sta_AssociatedBss);
- 		} else {
-@@ -2557,7 +2558,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n",
- 			strStaParams.rates_len);
- 
--		if (params->ht_capa == NULL) {
-+		if (!params->ht_capa) {
- 			strStaParams.ht_supported = false;
- 		} else {
- 			strStaParams.ht_supported = true;
-@@ -2622,7 +2623,7 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
- 		PRINT_D(HOSTAPD_DBG, "Monitor interface mode: Initializing mon interface virtual device driver\n");
- 		PRINT_D(HOSTAPD_DBG, "Adding monitor interface[%p]\n", nic->wilc_netdev);
- 		new_ifc = WILC_WFI_init_mon_interface(name, nic->wilc_netdev);
--		if (new_ifc != NULL) {
-+		if (new_ifc) {
- 			PRINT_D(HOSTAPD_DBG, "Setting monitor flag in private structure\n");
- 			nic = netdev_priv(priv->wdev->netdev);
- 			nic->monitor_flag = 1;
-@@ -2748,7 +2749,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
- 	PRINT_D(CFG80211_DBG, "Registering wifi device\n");
- 
- 	wdev = WILC_WFI_CfgAlloc();
--	if (wdev == NULL) {
-+	if (!wdev) {
- 		PRINT_ER("CfgAlloc Failed\n");
- 		return NULL;
- 	}
 -- 
 1.9.1
 
