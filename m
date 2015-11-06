@@ -1,50 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33556 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbbKIJBv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58598 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030909AbbKFCo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:01:51 -0500
-Received: by pabfh17 with SMTP id fh17so193227803pab.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 01:01:51 -0800 (PST)
-From: "Yin, Fengwei" <fengwei.yin@linaro.org>
-To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org
-Subject: [PATCH 5/5] wcn3620: use new response format for wcn3620 remove_bsskey
-Date: Mon,  9 Nov 2015 05:02:42 -0500
-Message-Id: <1447063362-27322-6-git-send-email-fengwei.yin@linaro.org> (sfid-20151109_100154_103805_2CACB627)
-In-Reply-To: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+	Thu, 5 Nov 2015 21:44:29 -0500
+From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH v3] ath10k: Override CE5 configuration for QCA6147 device
+Date: Thu, 5 Nov 2015 18:44:27 -0800
+Message-ID: <1446777867-5452-1-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20151106_034434_693332_53E9FA19)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy.green@linaro.org>
+'Commit a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")'
+Introduces to use the unused CE5 for target to host message.
 
-From: Andy Green <andy.green@linaro.org>
+For the device like QCA6174, CE5 already assigned for other feature.
+So for QCA6174, override the CE5 configuration and use the CE1 instead.
 
-On wcn3620, firmware response to remove_bsskey uses the new, larger
-"v2" format
+This patch is based on Rajkumar's earlier patch.
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
+Fixes: a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index f2443a0..0e22bae 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1599,7 +1599,8 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 		wcn36xx_err("Sending hal_remove_bsskey failed\n");
- 		goto out;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c91a67..2a48376 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -113,7 +113,7 @@ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+-static const struct ce_attr host_ce_config_wlan[] = {
++static struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+ 	{
+ 		.flags = CE_ATTR_FLAGS,
+@@ -219,7 +219,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ };
+ 
+ /* Target firmware's Copy Engine configuration. */
+-static const struct ce_pipe_config target_ce_config_wlan[] = {
++static struct ce_pipe_config target_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+ 	{
+ 		.pipenum = __cpu_to_le32(0),
+@@ -332,7 +332,7 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+  * This table is derived from the CE_PCI TABLE, above.
+  * It is passed to the Target at startup for use by firmware.
+  */
+-static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
++static struct service_to_pipe target_service_to_ce_map_wlan[] = {
+ 	{
+ 		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
+ 		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
+@@ -2038,6 +2038,29 @@ static int ath10k_pci_init_config(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static void ath10k_pci_override_ce_config(struct ath10k *ar)
++{
++	struct ce_attr *attr;
++	struct ce_pipe_config *config;
++
++	/* For QCA6174 we're overriding the Copy Engine 5 configuration,
++	 * since it is currently used for other feature.
++	 */
++
++	/* Override Host's Copy Engine 5 configuration */
++	attr = &host_ce_config_wlan[5];
++	attr->src_sz_max = 0;
++	attr->dest_nentries = 0;
++
++	/* Override Target firmware's Copy Engine configuration */
++	config = &target_ce_config_wlan[5];
++	config->pipedir = __cpu_to_le32(PIPEDIR_OUT);
++	config->nbytes_max = __cpu_to_le32(2048);
++
++	/* Map from service/endpoint to Copy Engine */
++	target_service_to_ce_map_wlan[15].pipenum = __cpu_to_le32(1);
++}
++
+ static int ath10k_pci_alloc_pipes(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -3031,6 +3054,9 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_core_destroy;
  	}
--	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
-+					      wcn->hal_rsp_len);
+ 
++	if (QCA_REV_6174(ar))
++		ath10k_pci_override_ce_config(ar);
++
+ 	ret = ath10k_pci_alloc_pipes(ar);
  	if (ret) {
- 		wcn36xx_err("hal_remove_bsskey response failed err=%d\n", ret);
- 		goto out;
+ 		ath10k_err(ar, "failed to allocate copy engine pipes: %d\n",
 -- 
-2.1.4
+1.9.1
 
