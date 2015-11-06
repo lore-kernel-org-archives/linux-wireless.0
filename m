@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40407 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbbKCO3w (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47102 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031997AbbKFJhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 09:29:52 -0500
-Date: Tue, 3 Nov 2015 17:29:44 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: christophe.ricard@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: NFC: nci: Create pipe on specific gate in nci_hci_connect_gate
-Message-ID: <20151103142944.GE28591@mwanda> (sfid-20151103_152955_332727_2A057DC5)
+	Fri, 6 Nov 2015 04:37:46 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/26] staging: wilc1000: remove sdio_cmd53 of wilc_wlan_io_func_t
+Date: Fri, 6 Nov 2015 18:40:02 +0900
+Message-ID: <1446802823-22598-6-git-send-email-glen.lee@atmel.com> (sfid-20151106_103754_392970_D3493C79)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Christophe Ricard,
+This patch removes sdio_cmd53 of wilc_wlan_io_func_t which is not used.
 
-The patch a1b0b9415817: "NFC: nci: Create pipe on specific gate in
-nci_hci_connect_gate" from Oct 25, 2015, leads to the following
-static checker warning:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-	net/nfc/nci/hci.c:679 nci_hci_connect_gate()
-	warn: impossible condition '(pipe < 0) => (0-255 < 0)'
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ce5463e..7258313 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -894,7 +894,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SDIO;
+ 	nwi->io_func.io_init = linux_sdio_init;
+ 	nwi->io_func.io_deinit = linux_sdio_deinit;
+-	nwi->io_func.u.sdio.sdio_cmd53 = linux_sdio_cmd53;
+ 	nwi->io_func.u.sdio.sdio_set_max_speed = linux_sdio_set_max_speed;
+ 	nwi->io_func.u.sdio.sdio_set_default_speed = linux_sdio_set_default_speed;
+ #else
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index cd83098..92cee45 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -78,7 +78,6 @@ typedef struct {
+ 	void (*io_deinit)(void *);
+ 	union {
+ 		struct {
+-			int (*sdio_cmd53)(sdio_cmd53_t *);
+ 			int (*sdio_set_max_speed)(void);
+ 			int (*sdio_set_default_speed)(void);
+ 		} sdio;
+-- 
+1.9.1
 
-net/nfc/nci/hci.c
-   655  int nci_hci_connect_gate(struct nci_dev *ndev,
-   656                           u8 dest_host, u8 dest_gate, u8 pipe)
-   657  {
-   658          bool pipe_created = false;
-   659          int r;
-   660  
-   661          if (pipe == NCI_HCI_DO_NOT_OPEN_PIPE)
-   662                  return 0;
-   663  
-   664          if (ndev->hci_dev->gate2pipe[dest_gate] != NCI_HCI_INVALID_PIPE)
-   665                  return -EADDRINUSE;
-   666  
-   667          if (pipe != NCI_HCI_INVALID_PIPE)
-   668                  goto open_pipe;
-   669  
-   670          switch (dest_gate) {
-   671          case NCI_HCI_LINK_MGMT_GATE:
-   672                  pipe = NCI_HCI_LINK_MGMT_PIPE;
-   673          break;
-   674          case NCI_HCI_ADMIN_GATE:
-   675                  pipe = NCI_HCI_ADMIN_PIPE;
-   676          break;
-   677          default:
-   678                  pipe = nci_hci_create_pipe(ndev, dest_host, dest_gate, &r);
-   679                  if (pipe < 0)
-                            ^^^^^^^^
-Unsigned never less than zero.
-
-   680                          return r;
-   681                  pipe_created = true;
-   682                  break;
-   683          }
-   684  
-   685  open_pipe:
-   686          r = nci_hci_open_pipe(ndev, pipe);
-
-
-regards,
-dan carpenter
