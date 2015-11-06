@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36557 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbKGNyo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47390 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161088AbbKFJip (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2015 08:54:44 -0500
-Date: Sat, 7 Nov 2015 16:54:27 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Punit Vara <punitvara@gmail.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-Message-ID: <20151107135427.GH18797@mwanda> (sfid-20151107_145500_756024_4CB61629)
-References: <1446895909-30052-1-git-send-email-punitvara@gmail.com>
+	Fri, 6 Nov 2015 04:38:45 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 15/26] staging: wilc1000: remove function pointer spi_rx of wilc_wlan_io_func_t
+Date: Fri, 6 Nov 2015 18:40:12 +0900
+Message-ID: <1446802823-22598-16-git-send-email-glen.lee@atmel.com> (sfid-20151106_103851_713021_3451CA29)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446895909-30052-1-git-send-email-punitvara@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 07, 2015 at 05:01:49PM +0530, Punit Vara wrote:
->  int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
->  {
-> @@ -1791,6 +1794,7 @@ int wilc_netdev_init(struct wilc **wilc)
->  /*The 1st function called after module inserted*/
->  static int __init init_wilc_driver(void)
->  {
-> +	struct wilc *wilc;
->  #ifdef WILC_SPI
->  	struct wilc *wilc;
->  #endif
+This patch removes spi_rx of wilc_wlan_io_func_t and it's related codes since
+it is not used anymore.
 
-This patch still has the same problems as before.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-regards,
-dan carpenter
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index fb2fea5..7a20765 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -898,7 +898,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SPI;
+ 	nwi->io_func.io_init = linux_spi_init;
+ 	nwi->io_func.io_deinit = linux_spi_deinit;
+-	nwi->io_func.u.spi.spi_rx = linux_spi_read;
+ 	nwi->io_func.u.spi.spi_trx = linux_spi_write_read;
+ 	nwi->io_func.u.spi.spi_max_speed = linux_spi_set_max_speed;
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 4c05a46a..b820a11 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -79,7 +79,6 @@ typedef struct {
+ 	union {
+ 		struct {
+ 			int (*spi_max_speed)(void);
+-			int (*spi_rx)(u8 *, u32);
+ 			int (*spi_trx)(u8 *, u8 *, u32);
+ 		} spi;
+ 	} u;
+-- 
+1.9.1
 
