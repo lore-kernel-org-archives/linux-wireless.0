@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34505 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030793AbbKFEmH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36867 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030909AbbKFCNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 23:42:07 -0500
-Received: by padhx2 with SMTP id hx2so101560328pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2015 20:42:06 -0800 (PST)
-Received: from [100.70.124.15] ([106.67.31.164])
-        by smtp.gmail.com with ESMTPSA id tn2sm10927377pbc.9.2015.11.05.20.42.03
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1/SSLv3 cipher=OTHER);
-        Thu, 05 Nov 2015 20:42:05 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: Shankey <shankey.bisht123@gmail.com>
-Subject: Unable to Connect to WIFI USB ADAPTER(Realtek 8188eu)
-Message-ID: <563C2F96.5040004@gmail.com> (sfid-20151106_054212_537966_3979380B)
-Date: Fri, 6 Nov 2015 10:11:58 +0530
+	Thu, 5 Nov 2015 21:13:01 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/73] staging: wilc1000: rename Update_TCP_track_session function
+Date: Fri, 6 Nov 2015 11:12:46 +0900
+Message-ID: <1446776014-28094-25-git-send-email-glen.lee@atmel.com> (sfid-20151106_033800_677444_72F53011)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am having "Realtek rt8188eu" WIFI usb Adapter. Ubuntu detects my wifi
-connections but the problem is it fails to connect. It doesn’t connects at
-all..and also its signal strength is very weak...I Had tried every solution
-but no success please solve this issue. I had also tried the latest mainline
-kernel 4.3 but it doesn't solve my issue. It always shows connecting status
-in network manager but never connected at all. I am unable to use my 
-Internet connection and I had also tried the driver from github but same 
-problem. Please help.
+From: Leo Kim <leo.kim@atmel.com>
 
-Thank-You
+This patch rename the Update_TCP_track_session function to update_tcp_session
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 75b35b8..c4312bb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -239,7 +239,7 @@ static inline int add_tcp_session(u32 src_prt, u32 dst_prt, u32 seq)
+ 	return 0;
+ }
+ 
+-static inline int Update_TCP_track_session(u32 index, u32 Ack)
++static inline int update_tcp_session(u32 index, u32 Ack)
+ {
+ 	if (Ack > ack_session_info[index].bigger_ack_num)
+ 		ack_session_info[index].bigger_ack_num = Ack;
+@@ -314,7 +314,7 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 
+ 				for (i = 0; i < tcp_session; i++) {
+ 					if (ack_session_info[i].seq_num == seq_no) {
+-						Update_TCP_track_session(i, Ack_no);
++						update_tcp_session(i, Ack_no);
+ 						break;
+ 					}
+ 				}
+-- 
+1.9.1
+
