@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37174 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557AbbK3Mtt (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37895 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 07:49:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [01/11] brcmfmac: Cleanup ssid storage.
-References: <20151130124816.E0B9B14089C@smtp.codeaurora.org>
-Date: Mon, 30 Nov 2015 14:49:44 +0200
-In-Reply-To: <20151130124816.E0B9B14089C@smtp.codeaurora.org> (Kalle Valo's
-	message of "Mon, 30 Nov 2015 12:48:16 +0000 (UTC)")
-Message-ID: <877fkzk5xz.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_134952_787905_3B0FA9B0)
+	Thu, 5 Nov 2015 21:18:56 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 69/73] staging: wilc1000: rename Handle_SetMacAddress function
+Date: Fri, 6 Nov 2015 11:20:08 +0900
+Message-ID: <1446776412-30670-20-git-send-email-glen.lee@atmel.com> (sfid-20151106_031859_045292_238657E4)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
->> From: Hante Meuleman <meuleman@broadcom.com>
->> 
->> SSIDs used for connect and p2p got stored, but never used.
->> 
->> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->
-> Thanks, 10 patches applied to wireless-drivers-next.git:
->
-> e9a6ca825eb7 brcmfmac: Cleanup ssid storage.
-> 21000b3f3da4 brcmfmac: Return actual error by fwil.
-> 6a23863eaa51 brcmfmac: Change error print on wlan0 existence.
-> 64d66c30c37e brcmfmac: no retries on rxglom superframe errors
-> c495810624ef brcmfmac: Remove redundant parameter action from scan.
-> 1119e23edf25 brcmfmac: Cleanup roaming configuration.
-> 7bf65aa9ad3f brcmfmac: Add beamforming support.
-> b4fd63c608a2 brcmfmac: assure net_ratelimit() is declared before use
-> 46d703a77539 brcmfmac: Unify methods to define and map firmware files.
-> 5536f20a1c43 brcmfmac: Fix double free on exception at module load.
+This patch renames Handle_SetMacAddress function to handle_set_mac_address
+to avoid camelcase.
 
-Forgot to mention that I skipped patch 8 for now as it needs more
-discussion.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+ mode change 100755 => 100644 drivers/staging/wilc1000/host_interface.c
 
-https://patchwork.kernel.org/patch/7697091/
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+old mode 100755
+new mode 100644
+index 9c4c0b2..2388e2d
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -464,8 +464,8 @@ s32 handle_get_ip_address(struct host_if_drv *hif_drv, u8 idx)
+ 	return result;
+ }
+ 
+-static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
+-				struct set_mac_addr *set_mac_addr)
++static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
++				  struct set_mac_addr *set_mac_addr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2990,7 +2990,8 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MAC_ADDRESS:
+-			Handle_SetMacAddress(msg.drv, &msg.body.set_mac_info);
++			handle_set_mac_address(msg.drv,
++					       &msg.body.set_mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_MAC_ADDRESS:
 -- 
-Kalle Valo
+1.9.1
+
