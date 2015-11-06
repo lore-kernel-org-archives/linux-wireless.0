@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36030 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbbKYJXE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37827 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 04:23:04 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-testing repo
-References: <5652F62A.4000109@broadcom.com>
-	<1448278260.5792.1.camel@sipsolutions.net>
-	<5652FAB5.8030708@broadcom.com> <20151123160159.GA3755@tuxdriver.com>
-	<20151123164640.GA4037@localhost>
-Date: Wed, 25 Nov 2015 11:22:56 +0200
-In-Reply-To: <20151123164640.GA4037@localhost> (Bob Copeland's message of
-	"Mon, 23 Nov 2015 11:46:40 -0500")
-Message-ID: <87a8q2ph5b.fsf@kamboji.qca.qualcomm.com> (sfid-20151125_102311_892738_2EF4E852)
+	Thu, 5 Nov 2015 21:18:32 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 65/73] staging: wilc1000: rename Handle_SetWfiDrvHandler function
+Date: Fri, 6 Nov 2015 11:20:04 +0900
+Message-ID: <1446776412-30670-16-git-send-email-glen.lee@atmel.com> (sfid-20151106_031835_408816_86AC2333)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> On Mon, Nov 23, 2015 at 11:02:00AM -0500, John W. Linville wrote:
->> > We have some setups running on wl-testing kernel and some running distro
->> > kernel using backports.
->> 
->> I believe the Bob Copeland is considering taking on this mantle...
->
-> "a" Bob Copeland :)
->
-> Yeah, I would be game for maintaining this for a while -- I've scripted
-> a bit of it and have a practice tree over here, although of course it
-> should be on kernel.org when for reals:
->
->     https://github.com/bcopeland/wireless-testing-testing
->
-> But if maintenance becomes a burden there's no reason we couldn't spread
-> the load.
+This patch renames Handle_SetWfiDrvHandler function to handle_set_wfi_drv_handler
+to avoid camelcase.
 
-I think it would be a good idea to have a shared "wireless" directory
-for the wireless-testing, similarly like linux-firmware.git has. That
-way the location doesn't change if the maintainer changes or if we have
-more than one maintainer.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-And I can act as a backup for Bob whenever he is too busy or offline.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 16396e5..dcaf0eb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -347,8 +347,8 @@ static s32 handle_set_channel(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 Handle_SetWfiDrvHandler(struct host_if_drv *hif_drv,
+-				    struct drv_handler *hif_drv_handler)
++static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
++				      struct drv_handler *hif_drv_handler)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2970,8 +2970,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+-			Handle_SetWfiDrvHandler(msg.drv,
+-						&msg.body.drv);
++			handle_set_wfi_drv_handler(msg.drv, &msg.body.drv);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_OPERATION_MODE:
 -- 
-Kalle Valo
+1.9.1
+
