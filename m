@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:56651 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965258AbbKDMGn (ORCPT
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:32372 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965833AbbKFTee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 07:06:43 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 2/3] ath10k: Rename the helper which is used for off-channel tx
-Date: Wed, 4 Nov 2015 17:35:36 +0530
-Message-ID: <1446638737-7953-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151104_130646_836124_44A81247)
-In-Reply-To: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Fri, 6 Nov 2015 14:34:34 -0500
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc] PATCH v3 3/3] DT: bindings: net: nfc: Add ST95HF binding doc
+Date: Fri, 6 Nov 2015 14:34:02 -0500
+Message-ID: <1446838442-10964-4-git-send-email-shikha.singh@st.com> (sfid-20151106_203439_369452_46B5BDB6)
+In-Reply-To: <1446838442-10964-1-git-send-email-shikha.singh@st.com>
+References: <1446838442-10964-1-git-send-email-shikha.singh@st.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename ath10k_mac_need_offchan_tx_work() to ath10k_mac_tx_frm_has_freq()
-to make it more meaningful. This helper will be used in the future
-change. No functionality change.
+This patch includes ST95HF binding doc that guides how to
+make node entry of ST95HF in DT file of any platform.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Shikha Singh <shikha.singh@st.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/net/nfc/st95hf.txt         | 50 ++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a7411fe..f121021 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3280,7 +3280,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
- 	}
- }
- 
--static bool ath10k_mac_need_offchan_tx_work(struct ath10k *ar)
-+static bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
- {
- 	/* FIXME: Not really sure since when the behaviour changed. At some
- 	 * point new firmware stopped requiring creation of peer entries for
-@@ -3288,8 +3288,8 @@ static bool ath10k_mac_need_offchan_tx_work(struct ath10k *ar)
- 	 * tx credit replenishment and reliability). Assuming it's at least 3.4
- 	 * because that's when the `freq` was introduced to TX_FRM HTT command.
- 	 */
--	return !(ar->htt.target_version_major >= 3 &&
--		 ar->htt.target_version_minor >= 4);
-+	return (ar->htt.target_version_major >= 3 &&
-+		ar->htt.target_version_minor >= 4);
- }
- 
- static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
-@@ -3673,7 +3673,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
- 		spin_unlock_bh(&ar->data_lock);
- 
--		if (ath10k_mac_need_offchan_tx_work(ar)) {
-+		if (!ath10k_mac_tx_frm_has_freq(ar)) {
- 			ATH10K_SKB_CB(skb)->htt.freq = 0;
- 			ATH10K_SKB_CB(skb)->htt.is_offchan = true;
- 
+diff --git a/Documentation/devicetree/bindings/net/nfc/st95hf.txt b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
+new file mode 100644
+index 0000000..ea3178b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
+@@ -0,0 +1,50 @@
++* STMicroelectronics : NFC Transceiver ST95HF
++
++ST NFC Transceiver is required to attach with SPI bus.
++ST95HF node should be defined in DT as SPI slave device of SPI
++master with which ST95HF transceiver is physically connected.
++The properties defined below are required to be the part of DT
++to include ST95HF transceiver into the platform.
++
++Required properties:
++===================
++- reg: Address of SPI slave "ST95HF transceiver" on SPI master bus.
++
++- compatible: should be "st,st95hf" for ST95HF NFC transceiver
++
++- spi-max-frequency: Max. operating SPI frequency for ST95HF
++	transceiver.
++
++- enable-gpio: GPIO line to enable ST95HF transceiver.
++
++- interrupt-parent : Standard way to specify the controller to which
++	ST95HF transceiver's interrupt is routed.
++
++- interrupts : Standard way to define ST95HF transceiver's out
++	interrupt.
++
++Optional property:
++=================
++- st95hfvin-supply : This is an optional property. It contains a
++	phandle to ST95HF transceiver's regulator supply node in DT.
++
++Example:
++=======
++spi@9840000 {
++	reg = <0x9840000 0x110>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	cs-gpios = <&pio0 4>;
++	status = "okay";
++
++	st95hf@0{
++		reg = <0>;
++		compatible = "st,st95hf";
++		status = "okay";
++		spi-max-frequency = <1000000>;
++		enable-gpio = <&pio4 0>;
++		interrupt-parent = <&pio0>;
++		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
++	};
++
++};
 -- 
-1.9.1
+1.8.2.1
 
