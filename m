@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55442 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752531AbbKCJiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 04:38:25 -0500
-Message-ID: <1446543502.29010.7.camel@sipsolutions.net> (sfid-20151103_104116_640748_CF8468CB)
-Subject: Re: [PATCH 08/10] mac80211: Remove WARN_ON_ONCE in
- ieee80211_recalc_smps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Tue, 03 Nov 2015 10:38:22 +0100
-In-Reply-To: <1445763582-11421-8-git-send-email-emmanuel.grumbach@intel.com>
-References: <1445763582-11421-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1445763582-11421-8-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37197 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031371AbbKFCOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 21:14:46 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 43/73] staging: wilc1000: fixes a struct allocation to match coding standards
+Date: Fri, 6 Nov 2015 11:13:04 +0900
+Message-ID: <1446776014-28094-43-git-send-email-glen.lee@atmel.com> (sfid-20151106_033806_399243_58DFCDA0)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-10-25 at 10:59 +0200, Emmanuel Grumbach wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> 
-> The recalc_smps work can run after the station disassociates.
-> At this stage we already released the channel, but the work
-> will be cancelled only when the interface stops.
-> In this scenario we can hit the warning in ieee80211_recalc_smps, so
-> just remove it.
-> 
-Applied.
+From: Leo Kim <leo.kim@atmel.com>
 
-johannes
+This patch fixes the checks reported by checkpatch.pl
+for prefer kmalloc(sizeof(*rqe)...) over kmalloc(sizeof(struct rxq_entry_t)...)
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index f1bb8af..c4118fe 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1132,7 +1132,7 @@ _end_:
+ 			offset += size;
+ 			p->rx_buffer_offset = offset;
+ #endif
+-			rqe = kmalloc(sizeof(struct rxq_entry_t), GFP_KERNEL);
++			rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
+ 			if (rqe) {
+ 				rqe->buffer = buffer;
+ 				rqe->buffer_size = size;
+-- 
+1.9.1
+
