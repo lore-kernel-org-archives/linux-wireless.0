@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43612 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbbK0Nnn (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37763 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031120AbbKFCSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 08:43:43 -0500
-Date: Fri, 27 Nov 2015 16:43:27 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] brcm80211: fix error code in brcmf_pcie_exit_download_state()
-Message-ID: <20151127134327.GA16802@mwanda> (sfid-20151127_144348_480849_CB76EDC8)
+	Thu, 5 Nov 2015 21:18:09 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 61/73] staging: wilc1000: remove unused typedef wilc_wlan_cfg_func_t
+Date: Fri, 6 Nov 2015 11:20:00 +0900
+Message-ID: <1446776412-30670-12-git-send-email-glen.lee@atmel.com> (sfid-20151106_031813_169378_E593B825)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original code returns 1 on failure and 0 on success but the caller
-was expecting an error code on failure.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+This patch removes unused typedef wilc_wlan_cfg_func_t of wilc_wlan.h.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 83d8042..e149541 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -622,7 +622,9 @@ static int brcmf_pcie_exit_download_state(struct brcmf_pciedev_info *devinfo,
- 		brcmf_chip_resetcore(core, 0, 0, 0);
- 	}
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.h | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index d15c848..6c784fd 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -272,10 +272,6 @@ struct wilc_cfg_frame {
+ };
  
--	return !brcmf_chip_set_active(devinfo->ci, resetintr);
-+	if (!brcmf_chip_set_active(devinfo->ci, resetintr))
-+		return -EINVAL;
-+	return 0;
- }
- 
- 
+ typedef struct {
+-	int (*wlan_tx)(u8 *, u32, wilc_tx_complete_func_t);
+-} wilc_wlan_cfg_func_t;
+-
+-typedef struct {
+ 	int type;
+ 	u32 seq_no;
+ } wilc_cfg_rsp_t;
+-- 
+1.9.1
+
