@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46031 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbbKZNc5 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37096 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031099AbbKFCOL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 08:32:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] wireless: airo: re-use mac_pton()
-References: <1447856201-70408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Date: Thu, 26 Nov 2015 15:32:50 +0200
-In-Reply-To: <1447856201-70408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	(Andy Shevchenko's message of "Wed, 18 Nov 2015 16:16:41 +0200")
-Message-ID: <87poywnawt.fsf@kamboji.qca.qualcomm.com> (sfid-20151126_143306_107150_4EB0590C)
+	Thu, 5 Nov 2015 21:14:11 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 37/73] staging: wilc1000: rename is_TCP_ACK_Filter_Enabled function
+Date: Fri, 6 Nov 2015 11:12:58 +0900
+Message-ID: <1446776014-28094-37-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_058960_213A180B)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> mac_pton() converts 6-byte MAC / BSSID to binary format. Change an open coded
-> variant by the generic one.
->
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This patch rename the is_TCP_ACK_Filter_Enabled function to
+is_tcp_ack_filter_enabled to avoid CamelCase naming convention.
 
-This breaks compilation:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  CC [M]  drivers/net/wireless/cisco/airo.o
-drivers/net/wireless/cisco/airo.c: In function ‘proc_APList_on_close’:
-drivers/net/wireless/cisco/airo.c:5141:49: error: request for member ‘ap’ in something not a structure or union
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 53c5804..78a4359 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -396,7 +396,7 @@ void enable_tcp_ack_filter(bool value)
+ 	enabled = value;
+ }
+ 
+-bool is_TCP_ACK_Filter_Enabled(void)
++bool is_tcp_ack_filter_enabled(void)
+ {
+ 	return enabled;
+ }
+@@ -456,7 +456,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
+ #ifdef TCP_ACK_FILTER
+ 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
+-	if (is_TCP_ACK_Filter_Enabled())
++	if (is_tcp_ack_filter_enabled())
+ 		tcp_process(dev, tqe);
+ #endif
+ 	wilc_wlan_txq_add_to_tail(dev, tqe);
 -- 
-Kalle Valo
+1.9.1
+
