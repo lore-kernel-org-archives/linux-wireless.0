@@ -1,74 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47587 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37142 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032934AbbKFJj1 (ORCPT
+	with ESMTP id S1031099AbbKFCO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:27 -0500
+	Thu, 5 Nov 2015 21:14:29 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 22/26] staging: wilc1000: linux_sdio_init: remove parameter pv
-Date: Fri, 6 Nov 2015 18:40:19 +0900
-Message-ID: <1446802823-22598-23-git-send-email-glen.lee@atmel.com> (sfid-20151106_110754_201814_15A11D55)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 40/73] staging: wilc1000: rename pu32TxqCount in wilc_wlan_handle_txq function
+Date: Fri, 6 Nov 2015 11:13:01 +0900
+Message-ID: <1446776014-28094-40-git-send-email-glen.lee@atmel.com> (sfid-20151106_033803_115929_EB988324)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes function parameter pv which is not used and modify it's
-related codes.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch rename pu32TxqCount to txq_count that is second argument of
+wilc_wlan_handle_txq function to avoid camelcase.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan_sdio.c | 2 +-
- drivers/staging/wilc1000/linux_wlan_sdio.h | 2 +-
- drivers/staging/wilc1000/wilc_sdio.c       | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index bf05e22..e854d37 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -214,7 +214,7 @@ static int linux_sdio_get_speed(void)
- 	return local_sdio_func->card->host->ios.clock;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 66d5d42..cffd720 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -695,7 +695,7 @@ void chip_sleep_manually(void)
+ 	release_bus(RELEASE_ONLY);
  }
  
--int linux_sdio_init(void *pv)
-+int linux_sdio_init(void)
+-int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
++int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
  {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	int i, entries = 0;
+@@ -949,7 +949,7 @@ _end_:
  
- 	/**
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
-index 4b515f5..6f42bc7 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.h
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
-@@ -3,7 +3,7 @@ extern struct sdio_driver wilc_bus;
+ 	p->txq_exit = 1;
+ 	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
+-	*pu32TxqCount = p->txq_entries;
++	*txq_count = p->txq_entries;
+ 	return ret;
+ }
  
- #include <linux/mmc/sdio_func.h>
- 
--int linux_sdio_init(void *);
-+int linux_sdio_init(void);
- void linux_sdio_deinit(void *);
- int linux_sdio_cmd52(sdio_cmd52_t *cmd);
- int linux_sdio_cmd53(sdio_cmd53_t *cmd);
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 0d88b6e..01a8e5b 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -562,7 +562,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	g_sdio.dPrint = func;
- 	g_sdio.os_context = inp->os_context.os_private;
- 
--	if (!linux_sdio_init(g_sdio.os_context)) {
-+	if (!linux_sdio_init()) {
- 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
- 		return 0;
- 	} else {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index de2fb7c..1eaac9a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -300,7 +300,7 @@ int wilc_wlan_start(void);
+ int wilc_wlan_stop(void);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func);
+-int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
++int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count);
+ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
 -- 
 1.9.1
 
