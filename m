@@ -1,191 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:36295 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753130AbbKIKNj convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37057 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031099AbbKFCN7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 05:13:39 -0500
+	Thu, 5 Nov 2015 21:13:59 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 35/73] staging: wilc1000: rename EnableTCPAckFilter variable
+Date: Fri, 6 Nov 2015 11:12:56 +0900
+Message-ID: <1446776014-28094-35-git-send-email-glen.lee@atmel.com> (sfid-20151106_033800_975316_A6869E29)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <56406F0F.1050701@atmel.com>
-References: <1447018310-4524-1-git-send-email-punitvara@gmail.com>
-	<20151108215953.GO18797@mwanda>
-	<563FFEEB.1090307@atmel.com>
-	<56405328.4040004@atmel.com>
-	<20151109081842.GR18797@mwanda>
-	<56405F71.6090404@atmel.com>
-	<CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
-	<56406F0F.1050701@atmel.com>
-Date: Mon, 9 Nov 2015 15:43:38 +0530
-Message-ID: <CABXAfNKhtdRSm1BJK+pk9t4wwnFBXzAP_CKSVhS0p7m_FZG_8Q@mail.gmail.com> (sfid-20151109_111416_373585_A50FB222)
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-From: punit vara <punitvara@gmail.com>
-To: glen lee <glen.lee@atmel.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	linux-kernel@vger.kernel.org, tony.cho@atmel.com, leo.kim@atmel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2015 at 3:31 PM, glen lee <glen.lee@atmel.com> wrote:
->
->
-> On 2015년 11월 09일 18:05, punit vara wrote:
->>
->> On Mon, Nov 9, 2015 at 2:25 PM, glen lee <glen.lee@atmel.com> wrote:
->>>
->>> On 2015년 11월 09일 17:18, Dan Carpenter wrote:
->>>>
->>>> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
->>>>>
->>>>> Hi Punit Vara,
->>>>>
->>>>> I cannot find build errors on my build machines.
->>>>>
->>>>> According the log which you have posted before says *wilc is undeclared
->>>>> in the function init_wilc_driver,
->>>>> which means WILC_SPI is selected because one of SPI or SDIO should be
->>>>> chosen at the moment.
->>>>> Hence, struct wilc *wilc should be compiled together.
->>>>> It looks like wilc1000 is compiled without SPI or SDIO.
->>>>>
->>>>> Of course, there are many cases that I don't know, so you could let me
->>>>> know the wilc1000 build configuration?
->>>>>
->>>>> static int __init init_wilc_driver(void)
->>>>> {
->>>>> #ifdef WILC_SPI
->>>>
->>>> This should be #ifndef WILC_SDIO
->>>
->>>
->>> I will do this in the next patch series.
->>>
->>>>>          struct wilc *wilc;
->>>>> #endif
->>>>
->>>> But the large question remains of why do we have this variable here any
->>>> way?
->>>
->>>
->>> As you pointed out, the variable is do-nothing for spi driver for now.
->>> After reworking SPI driver, the wilc will be passed to SPI as spi drive
->>> data
->>> like we already did in SDIO.
->>>
->>> We have done this to remove extern variable g_linux_wlan which is primary
->>> structure of wilc1000.
->>> For now it is not used, but need it not to break the build.
->>>
->>> static int linux_sdio_probe(struct sdio_func *func, const struct
->>> sdio_device_id *id)
->>> {
->>>          struct wilc_sdio *wl_sdio;
->>>          struct wilc *wilc;
->>>
->>>          PRINT_D(INIT_DBG, "probe function\n");
->>>          wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
->>>          if (!wl_sdio)
->>>                  return -ENOMEM;
->>>
->>>          PRINT_D(INIT_DBG, "Initializing netdev\n");
->>>          local_sdio_func = func;
->>>          if (wilc_netdev_init(&wilc)) {
->>>                  PRINT_ER("Couldn't initialize netdev\n");
->>>                  kfree(wl_sdio);
->>>                  return -1;
->>>          }
->>>          wl_sdio->func = func;
->>>          wl_sdio->wilc = wilc;
->>>          sdio_set_drvdata(func, wl_sdio);
->>>
->>> regards,
->>> glen lee.
->>>
->>>> regards,
->>>> dan carpenter
->>>>
->> How about this patch @Dan and @glen ,For me it does not create any
->> build error. For #ifndef WILC_SDIO  that pointer *wilc is not
->> compiling so that creates the error.
->
->
-> As Dan said, I also think there are too many ifdefs now. We will remove the
-> defines after
-> reworking SPI/SDIO modules.
->
-> For now, I cannot test since build error does not happens in my side. :(
->
-> Just in case, will this works for you?
-> config WILC1000_DRIVER
->         bool "WILC1000 support (WiFi only)"
->         depends on CFG80211 && WEXT_CORE && INET
-> +       depends on MMC || SPI
->
-> I will look into more about this later.
->
-> regards,
-> glen lee.
->
->
->>
->> --- a/drivers/staging/wilc1000/linux_wlan.c
->> +++ b/drivers/staging/wilc1000/linux_wlan.c
->> @@ -224,7 +224,7 @@ static int dev_state_ev_handler(struct
->> notifier_block *this, unsigned long event
->>
->>   }
->>
->> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined
->> WIC_SDIO)
->>   static irqreturn_t isr_uh_routine(int irq, void *user_data)
->>   {
->>          perInterface_wlan_t *nic;
->> @@ -264,7 +264,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
->>          return IRQ_HANDLED;
->>   }
->>
->> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined
->> WILC_SDIO)
->>   static int init_irq(struct net_device *dev)
->>   {
->>          int ret = 0;
->> @@ -1083,6 +1083,10 @@ static void wlan_deinitialize_threads(struct
->> net_device *dev)
->>          }
->>   }
->>
->> +#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
->> +static int init_irq(struct net_device *dev);
->> +#endif
->> +
->>   int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t
->> *p_nic)
->>   {
->>          wilc_wlan_inp_t nwi;
->> @@ -1791,7 +1795,7 @@ int wilc_netdev_init(struct wilc **wilc)
->>   /*The 1st function called after module inserted*/
->>   static int __init init_wilc_driver(void)
->>   {
->> -#ifdef WILC_SPI
->> +#if (defined WILC_SPI) || (!defined WILC_SDIO)
->>          struct wilc *wilc;
->>   #endif
->
->
-If I don't do any changes as I did . and add line in Kconfig as you told me
+From: Leo Kim <leo.kim@atmel.com>
 
-make ./drivers/staging/wilc1000/    this working fine for me
+This patch rename the EnableTCPAckFilter variable to enabled
+to avoid CamelCase naming convention.
 
-but
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-make ./drivers/staging/wilc1000/linux_wlan.o is creates error. Yes
-there are two many ifdef I also agreed with Dan.
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 283ab52..0bfd1bd 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -389,16 +389,16 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ }
+ #endif
+ 
+-bool EnableTCPAckFilter = false;
++bool enabled = false;
+ 
+ void Enable_TCP_ACK_Filter(bool value)
+ {
+-	EnableTCPAckFilter = value;
++	enabled = value;
+ }
+ 
+ bool is_TCP_ACK_Filter_Enabled(void)
+ {
+-	return EnableTCPAckFilter;
++	return enabled;
+ }
+ 
+ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
+-- 
+1.9.1
 
-You can fetch latest changes from staging . you can create that build
-error . Untill then I will follow whatever Dan say :-)
