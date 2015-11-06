@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:35623 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbbKPBdd (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36402 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161036AbbKFKMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2015 20:33:33 -0500
-Message-ID: <5649332F.3020901@atmel.com> (sfid-20151116_023429_318651_693DAF33)
-Date: Mon, 16 Nov 2015 10:36:47 +0900
-From: glen lee <glen.lee@atmel.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 15/20] staging/wilc1000: pass hif operations through initialization
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <4207649.2OaxOXWCyM@wuerfel> <56459602.9060707@atmel.com> <4443486.3C2xMnGSPO@wuerfel>
-In-Reply-To: <4443486.3C2xMnGSPO@wuerfel>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Fri, 6 Nov 2015 05:12:17 -0500
+Received: by pacdm15 with SMTP id dm15so94626452pac.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:17 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 12/12] staging: wilc1000: remove rates variable in host_int_add_station
+Date: Fri,  6 Nov 2015 19:11:21 +0900
+Message-Id: <1446804681-8873-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_113753_918465_3D339B40)
+In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Instead of using rates variable, it is used as add_sta_info->rates
+directly.
 
-On 2015년 11월 13일 18:17, Arnd Bergmann wrote:
-> On Friday 13 November 2015 16:49:22 glen lee wrote:
->> Hi arnd,
->>
->> I found this. These should be like this. It works fine.
->> +       .hif_block_tx_ext = sdio_write,
->> +       .hif_block_rx_ext = sdio_read,
->>
->> also, wilc_hif_spi need to be fixed together like this.
->> +       .hif_block_tx_ext = _wilc_spi_write,
->> +       .hif_block_rx_ext = _wilc_spi_read,
->>
->> Thank you for all the patches.
->>
-> Glad you found it. How should we go on to get the right version merged?
-> Do you want to send the working version of my patches to Greg along with
-> whatever you have on your end, or do you prefer me to re-send it?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: rebase latest staging-testing.
 
-In my opinion, why don't you re-send the whole patches again since I'm still working on.
+ drivers/staging/wilc1000/host_interface.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-regards,
-glen lee.
-
-> 	Arnd
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 72d2814..58f7668 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4547,12 +4547,11 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ 
+ 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
+ 	if (add_sta_info->rates_len > 0) {
+-		u8 *rates = kmemdup(sta_param->rates,
+-				    add_sta_info->rates_len,
+-				    GFP_KERNEL);
+-		if (!rates)
++		add_sta_info->rates = kmemdup(sta_param->rates,
++				      add_sta_info->rates_len,
++				      GFP_KERNEL);
++		if (!add_sta_info->rates)
+ 			return -ENOMEM;
+-		add_sta_info->rates = rates;
+ 	}
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-- 
+2.6.3
 
