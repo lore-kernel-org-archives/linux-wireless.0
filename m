@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36744 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbbKHHuG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47156 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031997AbbKFJh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:50:06 -0500
-Received: by pacdm15 with SMTP id dm15so141906438pac.3
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:05 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/32] staging: wilc1000: use kmemdup in host_int_add_ptk
-Date: Sun,  8 Nov 2015 16:49:04 +0900
-Message-Id: <1446968965-8958-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085011_900777_2F513EBA)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 6 Nov 2015 04:37:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/26] staging: wilc1000: remove sdio_set_max_speed
+Date: Fri, 6 Nov 2015 18:40:04 +0900
+Message-ID: <1446802823-22598-8-git-send-email-glen.lee@atmel.com> (sfid-20151106_103801_797255_DCA030CF)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes kmalloc followed by memcpy to kmemdup
-The error checking is also added when kmemdup is failed.
+This patch removes sdio_set_max_speed of wilc_wlan_io_func_t which is not
+used any more.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dd7e8ed..18623c7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3239,8 +3239,9 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 	if (mode == STATION_MODE)
- 		msg.body.key_info.action = ADDKEY;
- 
--	msg.body.key_info.attr.wpa.key = kmalloc(ptk_key_len, GFP_KERNEL);
--	memcpy(msg.body.key_info.attr.wpa.key, ptk, ptk_key_len);
-+	msg.body.key_info.attr.wpa.key = kmemdup(ptk, ptk_key_len, GFP_KERNEL);
-+	if (!msg.body.key_info.attr.wpa.key)
-+		return -ENOMEM;
- 
- 	if (rx_mic) {
- 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 7258313..9ecf307 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -894,7 +894,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SDIO;
+ 	nwi->io_func.io_init = linux_sdio_init;
+ 	nwi->io_func.io_deinit = linux_sdio_deinit;
+-	nwi->io_func.u.sdio.sdio_set_max_speed = linux_sdio_set_max_speed;
+ 	nwi->io_func.u.sdio.sdio_set_default_speed = linux_sdio_set_default_speed;
+ #else
+ 	nwi->io_func.io_type = HIF_SPI;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 92cee45..2caad28 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -78,7 +78,6 @@ typedef struct {
+ 	void (*io_deinit)(void *);
+ 	union {
+ 		struct {
+-			int (*sdio_set_max_speed)(void);
+ 			int (*sdio_set_default_speed)(void);
+ 		} sdio;
+ 		struct {
 -- 
-2.6.3
+1.9.1
 
