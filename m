@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:34480 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbKVJIJ (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47502 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032984AbbKFJjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 04:08:09 -0500
-Received: by wmvv187 with SMTP id v187so123340172wmv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:08 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/8] staging: vt6655: set_channel replace void handler.
-Date: Sun, 22 Nov 2015 09:07:16 +0000
-Message-Id: <1448183242-3397-2-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100820_848349_652FC1E5)
-In-Reply-To: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
-References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 6 Nov 2015 04:39:10 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 19/26] staging: wilc1000: remove spi_max_speed of wilc_wlan_io_func_t
+Date: Fri, 6 Nov 2015 18:40:16 +0900
+Message-ID: <1446802823-22598-20-git-send-email-glen.lee@atmel.com> (sfid-20151106_110756_281815_FEEC1E13)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with struct vnt_private.
+This patch removes spi_max_speed of wilc_wlan_io_func_t which is not used
+anymore and removes union u and struct spi, which does not have members in it.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/vt6655/channel.c | 3 +--
- drivers/staging/vt6655/channel.h | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 5 -----
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 6edccb42..d1c9116 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -174,9 +174,8 @@ void vnt_init_bands(struct vnt_private *priv)
-  * Return Value: true if succeeded; false if failed.
-  *
-  */
--bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
-+bool set_channel(struct vnt_private *priv, struct ieee80211_channel *ch)
- {
--	struct vnt_private *priv = pDeviceHandler;
- 	bool bResult = true;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 935314c5..3aa636a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -898,7 +898,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SPI;
+ 	nwi->io_func.io_init = linux_spi_init;
+ 	nwi->io_func.io_deinit = linux_spi_deinit;
+-	nwi->io_func.u.spi.spi_max_speed = linux_spi_set_max_speed;
+ #endif
+ }
  
- 	if (priv->byCurrentCh == ch->hw_value)
-diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
-index e2be6fc..2d613e7 100644
---- a/drivers/staging/vt6655/channel.h
-+++ b/drivers/staging/vt6655/channel.h
-@@ -27,6 +27,6 @@
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index be73b02..0f15795 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -76,11 +76,6 @@ typedef struct {
+ 	int io_type;
+ 	int (*io_init)(void *);
+ 	void (*io_deinit)(void *);
+-	union {
+-		struct {
+-			int (*spi_max_speed)(void);
+-		} spi;
+-	} u;
+ } wilc_wlan_io_func_t;
  
- void vnt_init_bands(struct vnt_private *);
- 
--bool set_channel(void *pDeviceHandler, struct ieee80211_channel *);
-+bool set_channel(struct vnt_private *, struct ieee80211_channel *);
- 
- #endif /* _CHANNEL_H_ */
+ #define WILC_MAC_INDICATE_STATUS	0x1
 -- 
-2.6.2
+1.9.1
 
