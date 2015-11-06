@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52992 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670AbbKQIYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 03:24:52 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 6/8] mac80211: always set the buf_size in AddBA req to 64
-Date: Tue, 17 Nov 2015 10:24:38 +0200
-Message-Id: <1447748680-23075-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092509_817970_62315733)
-In-Reply-To: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36028 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161036AbbKFKLx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2015 05:11:53 -0500
+Received: by pacdm15 with SMTP id dm15so94616161pac.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:11:53 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 05/12] staging: wilc1000: rename pu8MacAddr in host_int_del_station
+Date: Fri,  6 Nov 2015 19:11:14 +0900
+Message-Id: <1446804681-8873-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111157_477837_3416E154)
+In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+This patch changes pu8MacAddr to mac_addr that is second argument of
+this function to avoid camelcase.
 
-Advertising reordering window in ADDBA less than 64 can crash some APs,
-an example is LinkSys WRT120N (with FW v1.0.07 build 002 Jun 18 2012).
-On the other hand, a driver may need to limit Tx A-MPDU size for its own
-reasons, like specific HW limitations.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/net/mac80211.h | 6 ++++--
- net/mac80211/agg-tx.c  | 3 ++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+V3: rebase latest staging-testing.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index bcb7022..a68051c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2009,8 +2009,10 @@ enum ieee80211_hw_flags {
-  *	it shouldn't be set.
-  *
-  * @max_tx_aggregation_subframes: maximum number of subframes in an
-- *	aggregate an HT driver will transmit, used by the peer as a
-- *	hint to size its reorder buffer.
-+ *	aggregate an HT driver will transmit. Though ADDBA will advertise
-+ *	a constant value of 64 as some older APs can crash if the window
-+ *	size is smaller (an example is LinkSys WRT120N with FW v1.0.07
-+ *	build 002 Jun 18 2012).
-  *
-  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
-  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index a758eb84..ff75718 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -500,7 +500,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 	/* send AddBA request */
- 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
- 				     tid_tx->dialog_token, start_seq_num,
--				     local->hw.max_tx_aggregation_subframes,
-+				     IEEE80211_MAX_AMPDU_BUF,
- 				     tid_tx->timeout);
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dd57454..8ec4972 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4563,7 +4563,7 @@ s32 host_int_add_station(struct host_if_drv *hif_drv,
+ 	return result;
  }
  
-@@ -926,6 +926,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
- 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
- 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
-+	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
+-int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4581,10 +4581,10 @@ int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr)
+ 	msg.id = HOST_IF_MSG_DEL_STATION;
+ 	msg.drv = hif_drv;
  
- 	mutex_lock(&sta->ampdu_mlme.mtx);
+-	if (!pu8MacAddr)
++	if (!mac_addr)
+ 		eth_broadcast_addr(pstrDelStationMsg->mac_addr);
+ 	else
+-		memcpy(pstrDelStationMsg->mac_addr, pu8MacAddr, ETH_ALEN);
++		memcpy(pstrDelStationMsg->mac_addr, mac_addr, ETH_ALEN);
  
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7ff52b4..11c4220 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -382,7 +382,7 @@ s32 host_int_add_station(struct host_if_drv *hWFIDrv,
+ 			 struct add_sta_param *pstrStaParams);
+ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
+ 			    u8 pu8MacAddr[][ETH_ALEN]);
+-int host_int_del_station(struct host_if_drv *hif_drv, const u8 *pu8MacAddr);
++int host_int_del_station(struct host_if_drv *hif_drv, const u8 *mac_addr);
+ s32 host_int_edit_station(struct host_if_drv *hWFIDrv,
+ 			  struct add_sta_param *pstrStaParams);
+ s32 host_int_set_power_mgmt(struct host_if_drv *hWFIDrv,
 -- 
-2.5.0
+2.6.3
 
