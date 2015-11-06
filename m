@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33368 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbbKJHZL (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:40032 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030298AbbKFWGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 02:25:11 -0500
-Received: by pabfh17 with SMTP id fh17so226307518pab.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 23:25:11 -0800 (PST)
-From: "Yin, Fengwei" <fengwei.yin@linaro.org>
-To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org
-Subject: [PATCH v2 4/5] wcn3620: use new response format for wcn3620 trigger_ba
-Date: Tue, 10 Nov 2015 03:25:54 -0500
-Message-Id: <1447143955-10304-5-git-send-email-fengwei.yin@linaro.org> (sfid-20151110_082516_302119_27198B80)
-In-Reply-To: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
-References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
+	Fri, 6 Nov 2015 17:06:19 -0500
+Date: Sat, 7 Nov 2015 01:06:03 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Punit Vara <punitvara@gmail.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: wilc1000: Declare *wilc in init_wilc_driver to
+ fix build error
+Message-ID: <20151106220603.GD18797@mwanda> (sfid-20151106_230634_527693_F63DE5A9)
+References: <1446847163-9643-1-git-send-email-punitvara@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1446847163-9643-1-git-send-email-punitvara@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy.green@linaro.org>
+On Sat, Nov 07, 2015 at 03:29:23AM +0530, Punit Vara wrote:
+> This patch is to the linux_wlan.c file that fixes declaration of *wilc
+> to remove following error while building it.
+> 
+> make drivers/staging/wilc1000/linux_wlan.o
+> drivers/staging/wilc1000/linux_wlan.c:1824:24: error: ‘wilc’ undeclared
+> 
 
-On wcn3620, firmware response to trigger_ba uses the new, larger
-"v2" format
+Which patch broke the build?  Use a Fixes tag.
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index 2a5b36f..0805050 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -1780,6 +1780,7 @@ int wilc_netdev_init(struct wilc **wilc)
+>  /*The 1st function called after module inserted*/
+>  static int __init init_wilc_driver(void)
+>  {
+> +	struct wilc *wilc;
+>  #ifdef WILC_SPI
+>  	struct wilc *wilc;
+>  #endif
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index b7e61a0..dae5e1a 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1967,7 +1967,8 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
- 		wcn36xx_err("Sending hal_trigger_ba failed\n");
- 		goto out;
- 	}
--	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
-+						wcn->hal_rsp_len);
- 	if (ret) {
- 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
- 		goto out;
--- 
-2.1.4
+No that doesn't work at all.  You should be testing these patches better
+so you don't introduce more build breakages when you fix a different
+build breakage.  Sending this patch is a sign that something is wrong in
+your test infrastructure.
+
+regards,
+dan carpenter
 
