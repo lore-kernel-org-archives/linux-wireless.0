@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8248 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720AbbK3JGG (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36130 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161036AbbKFKMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 04:06:06 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brent Taylor <motobud@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH v2] ath6kl: Use vmalloc for loading firmware using api1 method and use kvfree
-References: <1444972259-24260-1-git-send-email-motobud@gmail.com>
-	<1448774038-26984-1-git-send-email-motobud@gmail.com>
-	<87zixvlvp8.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 30 Nov 2015 11:05:52 +0200
-In-Reply-To: <87zixvlvp8.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 30 Nov 2015 10:48:03 +0200")
-Message-ID: <87mvtvluvj.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_100615_568465_12CFD8CA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 6 Nov 2015 05:12:00 -0500
+Received: by pacdm15 with SMTP id dm15so94619036pac.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:00 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 07/12] staging: wilc1000: fix return type of host_int_add_station
+Date: Fri,  6 Nov 2015 19:11:16 +0900
+Message-Id: <1446804681-8873-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111205_264550_03658536)
+In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+This patch changes return type of host_int_add_station from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-> Brent Taylor <motobud@gmail.com> writes:
->
->> Signed-off-by: Brent Taylor <motobud@gmail.com>
->>
->> ath6kl: Use vmalloc for loading firmware using api1 method and free using kvfree
->> ---
->> Changes v1 -> v2:
->>    - simplify memory allocation
->>    - use kvfree
->
-> Why? The commit log should _always_ answer that. Are you fixing a bug
-> (what bug exactly?), is this just cleanup or what?
->
-> And the commit log is wrongly formatted anyway, the Signed-off-by line
-> should be the last and there should be no "ath6kl:" string in the commit
-> log (just in the title). Use 'git log' to find examples.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: rebase latest staging-testing.
 
-Fixing netdev address (kenrel -> kernel)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2b6f620..dc5f45a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4526,10 +4526,10 @@ int host_int_del_beacon(struct host_if_drv *hif_drv)
+ 	return result;
+ }
+ 
+-s32 host_int_add_station(struct host_if_drv *hif_drv,
++int host_int_add_station(struct host_if_drv *hif_drv,
+ 			 struct add_sta_param *pstrStaParams)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 11c4220..0949950 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -378,7 +378,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
+ 			u32 u32TailLen,
+ 			u8 *pu8tail);
+ int host_int_del_beacon(struct host_if_drv *hif_drv);
+-s32 host_int_add_station(struct host_if_drv *hWFIDrv,
++int host_int_add_station(struct host_if_drv *hWFIDrv,
+ 			 struct add_sta_param *pstrStaParams);
+ s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
+ 			    u8 pu8MacAddr[][ETH_ALEN]);
 -- 
-Kalle Valo
+2.6.3
+
