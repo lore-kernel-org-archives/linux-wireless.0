@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27019 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030300AbbKEFg3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:29 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 31/38] staging: wilc1000: fixes missing a blank line after declarations
-Date: Thu, 5 Nov 2015 14:36:32 +0900
-Message-ID: <1446701799-24870-31-git-send-email-glen.lee@atmel.com> (sfid-20151105_063801_008156_DDFB48D5)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+Received: from mout.web.de ([212.227.17.11]:62921 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032528AbbKFH6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2015 02:58:44 -0500
+Subject: [PATCH] net: brcm80211: Delete an unnecessary check before the
+ function call "release_firmware"
+To: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <546E0DC8.3050906@users.sourceforge.net>
+ <546E2D2A.6090101@broadcom.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Message-ID: <563C5DA2.3000005@users.sourceforge.net> (sfid-20151106_085904_653696_86466DB2)
+Date: Fri, 6 Nov 2015 08:58:26 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <546E2D2A.6090101@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 6 Nov 2015 08:48:23 +0100
 
-This patch fixes the warnings reported by checkpatch.pl
-for Missing a blank line after declarations.
+The release_firmware() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This issue was detected by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 003165d..c529a15 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -542,6 +542,7 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 4248f3c..33afb9a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -449,8 +449,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
  
- 	return 0;
- }
-+
- static int linux_wlan_firmware_download(struct net_device *dev)
- {
- 	perInterface_wlan_t *nic;
-@@ -880,6 +881,7 @@ static int wlan_deinit_locks(struct net_device *dev)
+ 	if (raw_nvram)
+ 		bcm47xx_nvram_release_contents(data);
+-	if (fw)
+-		release_firmware(fw);
++	release_firmware(fw);
+ 	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+ 		goto fail;
  
- 	return 0;
- }
-+
- void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- {
- 	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
 -- 
-1.9.1
+2.6.2
 
