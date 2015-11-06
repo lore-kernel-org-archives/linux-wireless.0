@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37332 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36575 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031044AbbKFCPW (ORCPT
+	with ESMTP id S1030909AbbKFCLg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:15:22 -0500
+	Thu, 5 Nov 2015 21:11:36 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 49/73] staging: wilc1000: rename drvHandler in wilc_wlan_cfg_get function
-Date: Fri, 6 Nov 2015 11:13:10 +0900
-Message-ID: <1446776014-28094-49-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_323569_9CE775CB)
+Subject: [PATCH 11/73] staging: wilc1000: rename Statisitcs_totalAcks variable
+Date: Fri, 6 Nov 2015 11:12:32 +0900
+Message-ID: <1446776014-28094-11-git-send-email-glen.lee@atmel.com> (sfid-20151106_033805_229904_98DF4AF5)
 In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
@@ -22,51 +22,37 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch rename drvHandler to drv_handler that is fifth argument of
-wilc_wlan_cfg_get function to avoid camelcase.
+This patch rename Statisitcs_totalAcks variable to total_acks
+to avoid CamelCase naming convention.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
  drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f0a8131..09029b6 100644
+index 8ac0b1e..8d6215b 100644
 --- a/drivers/staging/wilc1000/wilc_wlan.c
 +++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1516,7 +1516,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 	return ret_size;
+@@ -190,7 +190,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+ 	return 0;
  }
  
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
-+int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler)
+-u32 Statisitcs_totalAcks = 0, Statisitcs_DroppedAcks = 0;
++u32 total_acks = 0, Statisitcs_DroppedAcks = 0;
+ 
+ #ifdef	TCP_ACK_FILTER
+ struct Ack_session_info;
+@@ -248,7 +248,7 @@ static inline int Update_TCP_track_session(u32 index, u32 Ack)
+ 
+ static inline int add_TCP_Pending_Ack(u32 Ack, u32 Session_index, struct txq_entry_t  *txqe)
  {
- 	wilc_wlan_dev_t *p = &g_wlan;
- 	u32 offset;
-@@ -1536,7 +1536,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- 	if (commit) {
- 		p->cfg_frame_in_use = 1;
- 
--		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
-+		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drv_handler))
- 			ret_size = 0;
- 
- 		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 03af19b..55e4f19 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -305,7 +305,7 @@ void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
- 		      int commit, u32 drv_handler);
--int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
-+int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler);
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			       u32 buffer_size, wilc_tx_complete_func_t func);
+-	Statisitcs_totalAcks++;
++	total_acks++;
+ 	if (Pending_Acks < MAX_PENDING_ACKS) {
+ 		Pending_Acks_info[PendingAcks_arrBase + Pending_Acks].ack_num = Ack;
+ 		Pending_Acks_info[PendingAcks_arrBase + Pending_Acks].txqe = txqe;
 -- 
 1.9.1
 
