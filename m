@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50490 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752713AbbKQN72 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36967 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031099AbbKFCNa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 08:59:28 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 5 Nov 2015 21:13:30 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 30/73] staging: wilc1000: rename Total_Length variable
+Date: Fri, 6 Nov 2015 11:12:51 +0900
+Message-ID: <1446776014-28094-30-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_637658_08865BAA)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: Fix lockups on boot
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1447173971-15311-1-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Message-Id: <20151117135927.6B71A141099@smtp.codeaurora.org> (sfid-20151117_145932_380732_79769B5D)
-Date: Tue, 17 Nov 2015 13:59:27 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
-> In commit 54328e64047a5 ("rtlwifi: rtl8821ae: Fix system lockups on boot"),
-> an attempt was made to fix a regression introduced in commit 1277fa2ab2f9
-> ("rtlwifi: Remove the clear interrupt routine from all drivers").
-> Unfortunately, there were logic errors in that patch that prevented
-> affected boxes from booting even after that patch was applied.
-> 
-> The actual cause of the original problem is unknown as none of the
-> developers have systems that are affected.
-> 
-> Fixes: 54328e64047a ("rtlwifi: rtl8821ae: Fix system lockups on boot")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [V4.1+]
+This patch rename the Total_Length variable to total_length
+to avoid CamelCase naming convention.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Kalle Valo
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index b07d229..34a8b47 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -298,13 +298,14 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 
+ 		if (protocol == 0x06) {
+ 			u8 *tcp_hdr_ptr;
+-			u32 IHL, Total_Length, Data_offset;
++			u32 IHL, total_length, Data_offset;
+ 
+ 			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
+ 			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
+-			Total_Length = (((u32)ip_hdr_ptr[2]) << 8) + ((u32)ip_hdr_ptr[3]);
++			total_length = ((u32)ip_hdr_ptr[2] << 8) +
++					(u32)ip_hdr_ptr[3];
+ 			Data_offset = (((u32)tcp_hdr_ptr[12] & 0xf0) >> 2);
+-			if (Total_Length == (IHL + Data_offset)) {
++			if (total_length == (IHL + Data_offset)) {
+ 				u32 seq_no, Ack_no;
+ 
+ 				seq_no	= (((u32)tcp_hdr_ptr[4]) << 24) + (((u32)tcp_hdr_ptr[5]) << 16) + (((u32)tcp_hdr_ptr[6]) << 8) + ((u32)tcp_hdr_ptr[7]);
+-- 
+1.9.1
+
