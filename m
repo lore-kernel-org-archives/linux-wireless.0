@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s1.neomailbox.net ([5.148.176.57]:19074 "EHLO s1.neomailbox.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751297AbbKUKMp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2015 05:12:45 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@meshcoding.com>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH v2] mac80211: do not actively scan DFS channels
-Date: Sat, 21 Nov 2015 18:11:46 +0800
-Message-Id: <1448100706-16671-1-git-send-email-antonio@meshcoding.com> (sfid-20151121_111248_113295_976094E2)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37216 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCOw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 21:14:52 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 44/73] staging: wilc1000: rename bValue in set_machw_change_vir_if function
+Date: Fri, 6 Nov 2015 11:13:05 +0900
+Message-ID: <1446776014-28094-44-git-send-email-glen.lee@atmel.com> (sfid-20151106_033757_890414_EB3E94CC)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DFS channels should not be actively scanned as we can't be sure
-if we are allowed or not.
+From: Leo Kim <leo.kim@atmel.com>
 
-If the current channel is in the DFS band, active scan might be
-performed after CSA, but we have no guarantee about other channels,
-therefore it is safer to prevent active scanning at all.
+This patch rename bValue to value that is second argument of
+set_machw_change_vir_if function to avoid camelcase.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c          | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-v2: remove unused scan_req argument in ieee80211_scan_get_channel_time()
-
- net/mac80211/scan.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 4aeca4b..ce01f74 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -599,7 +599,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 
- 		if ((req->channels[0]->flags &
- 		     IEEE80211_CHAN_NO_IR) ||
--		    !req->n_ssids) {
-+		    !req->n_ssids ||
-+		    (req->channels[0]->flags & IEEE80211_CHAN_RADAR)) {
- 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		} else {
- 			ieee80211_scan_state_send_probe(local, &next_delay);
-@@ -645,7 +646,8 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
- 	 * TODO: channel switching also consumes quite some time,
- 	 * add that delay as well to get a better estimation
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR)
-+	if ((chan->flags & IEEE80211_CHAN_NO_IR) ||
-+	    (chan->flags & IEEE80211_CHAN_RADAR))
- 		return IEEE80211_PASSIVE_CHANNEL_TIME;
- 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 6f9da09..54ed723 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -217,7 +217,7 @@ void wl_wlan_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+-u16 set_machw_change_vir_if(struct net_device *dev, bool bValue);
++u16 set_machw_change_vir_if(struct net_device *dev, bool value);
+ int linux_wlan_get_firmware(struct net_device *dev);
+ int linux_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c4118fe..458eef2b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1715,7 +1715,7 @@ _fail_:
+ 	return ret;
  }
-@@ -698,7 +700,8 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	 */
  
- 	bad_latency = time_after(jiffies +
--				 ieee80211_scan_get_channel_time(next_chan),
-+				 ieee80211_scan_get_channel_time(next_chan,
-+								 scan_req),
- 				 local->leave_oper_channel_time + HZ / 8);
+-u16 set_machw_change_vir_if(struct net_device *dev, bool bValue)
++u16 set_machw_change_vir_if(struct net_device *dev, bool value)
+ {
+ 	u16 ret;
+ 	u32 reg;
+@@ -1730,7 +1730,7 @@ u16 set_machw_change_vir_if(struct net_device *dev, bool bValue)
+ 	if (!ret)
+ 		PRINT_ER("Error while Reading reg WILC_CHANGING_VIR_IF\n");
  
- 	if (associated && !tx_empty) {
-@@ -777,7 +780,8 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	 *
- 	 * In any case, it is not necessary for a passive scan.
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids) {
-+	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids ||
-+	    (chan->flags & IEEE80211_CHAN_RADAR)) {
- 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		local->next_scan_state = SCAN_DECISION;
- 		return;
+-	if (bValue)
++	if (value)
+ 		reg |= BIT(31);
+ 	else
+ 		reg &= ~BIT(31);
 -- 
-2.6.3
+1.9.1
 
