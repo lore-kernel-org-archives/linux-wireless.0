@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36934 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757384AbbKSHtG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37284 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031044AbbKFCPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 02:49:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>
-	<564CCF2A.4030203@hauke-m.de>
-Date: Thu, 19 Nov 2015 09:48:59 +0200
-In-Reply-To: <564CCF2A.4030203@hauke-m.de> (Hauke Mehrtens's message of "Wed,
-	18 Nov 2015 20:19:06 +0100")
-Message-ID: <871tbmwhsk.fsf@kamboji.qca.qualcomm.com> (sfid-20151119_084929_763841_5883BAFB)
+	Thu, 5 Nov 2015 21:15:10 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 47/73] staging: wilc1000: rename drvHandler in wilc_wlan_cfg_commit function
+Date: Fri, 6 Nov 2015 11:13:08 +0900
+Message-ID: <1446776014-28094-47-git-send-email-glen.lee@atmel.com> (sfid-20151106_033757_186990_AEDAD15E)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke Mehrtens <hauke@hauke-m.de> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> On 11/18/2015 03:45 PM, Kalle Valo wrote:
->> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
->> edit Makefiles from subdirectories to use the new location.
->> 
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->> ---
->
-> I would prefer to remove the brcm80211 directory in this process and create:
-> drivers/net/wireless/broadcom/brcmfmac
-> drivers/net/wireless/broadcom/brcmsmac
-> drivers/net/wireless/broadcom/brcmutil
-> drivers/net/wireless/broadcom/include
->
-> This way we have one directory less.
+This patch rename drvHandler to drv_handler that is third argument of
+wilc_wlan_cfg_commit function to avoid camelcase.
 
-I think this could be done separately. This patchset is big enough
-already, I would not like to make it anymore complicated.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-And I actually like the brcm80211 directory, I would not mind keeping it
-still.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d7834c5..2e1d9b8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1449,13 +1449,13 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 	p->hif_func.hif_deinit(NULL);
+ }
+ 
+-static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
++static int wilc_wlan_cfg_commit(int type, u32 drv_handler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	wilc_cfg_frame_t *cfg = &p->cfg_frame;
+ 	int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
+ 	int seq_no = p->cfg_seq_no % 256;
+-	int driver_handler = (u32)drvHandler;
++	int driver_handler = (u32)drv_handler;
+ 
+ 	if (type == WILC_CFG_SET)
+ 		cfg->wid_header[0] = 'W';
 -- 
-Kalle Valo
+1.9.1
+
