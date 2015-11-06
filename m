@@ -1,93 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:51346 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbbKMO2g (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36943 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030909AbbKFCNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 09:28:36 -0500
-Subject: Re: [PATCH] nfc: s3fwrn5: constify s3fwrn5_phy_ops structures
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-References: <1447416281-3357-1-git-send-email-Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>, linux-nfc@lists.01.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Robert Baldyga <r.baldyga@samsung.com>
-Message-id: <5645F390.9040407@samsung.com> (sfid-20151113_152853_212685_DB5B90E9)
-Date: Fri, 13 Nov 2015 15:28:32 +0100
-MIME-version: 1.0
-In-reply-to: <1447416281-3357-1-git-send-email-Julia.Lawall@lip6.fr>
-Content-type: text/plain; charset=windows-1252
+	Thu, 5 Nov 2015 21:13:24 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 29/73] staging: wilc1000: remove do-nothing else condition case.
+Date: Fri, 6 Nov 2015 11:12:50 +0900
+Message-ID: <1446776014-28094-29-git-send-email-glen.lee@atmel.com> (sfid-20151106_033759_724610_A9AA4115)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2015 01:04 PM, Julia Lawall wrote:
-> The s3fwrn5_phy_ops structure is never modified, so declare it as const.
-> 
-> Done with the help of Coccinelle.
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Leo Kim <leo.kim@atmel.com>
 
-Acked-by: Robert Baldyga <r.baldyga@samsung.com>
+This patch removes do-nothing else condition case.
 
-Thanks!
-Robert Baldyga
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-> 
-> ---
->  drivers/nfc/s3fwrn5/core.c    |    2 +-
->  drivers/nfc/s3fwrn5/i2c.c     |    2 +-
->  drivers/nfc/s3fwrn5/s3fwrn5.h |    4 ++--
->  3 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/nfc/s3fwrn5/core.c b/drivers/nfc/s3fwrn5/core.c
-> index 0d866ca..9d9c8d5 100644
-> --- a/drivers/nfc/s3fwrn5/core.c
-> +++ b/drivers/nfc/s3fwrn5/core.c
-> @@ -147,7 +147,7 @@ static struct nci_ops s3fwrn5_nci_ops = {
->  };
->  
->  int s3fwrn5_probe(struct nci_dev **ndev, void *phy_id, struct device *pdev,
-> -	struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload)
-> +	const struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload)
->  {
->  	struct s3fwrn5_info *info;
->  	int ret;
-> diff --git a/drivers/nfc/s3fwrn5/i2c.c b/drivers/nfc/s3fwrn5/i2c.c
-> index c61d8a3..3ed0adf 100644
-> --- a/drivers/nfc/s3fwrn5/i2c.c
-> +++ b/drivers/nfc/s3fwrn5/i2c.c
-> @@ -125,7 +125,7 @@ static int s3fwrn5_i2c_write(void *phy_id, struct sk_buff *skb)
->  	return 0;
->  }
->  
-> -static struct s3fwrn5_phy_ops i2c_phy_ops = {
-> +static const struct s3fwrn5_phy_ops i2c_phy_ops = {
->  	.set_wake = s3fwrn5_i2c_set_wake,
->  	.set_mode = s3fwrn5_i2c_set_mode,
->  	.get_mode = s3fwrn5_i2c_get_mode,
-> diff --git a/drivers/nfc/s3fwrn5/s3fwrn5.h b/drivers/nfc/s3fwrn5/s3fwrn5.h
-> index 89210d4..7d5e516 100644
-> --- a/drivers/nfc/s3fwrn5/s3fwrn5.h
-> +++ b/drivers/nfc/s3fwrn5/s3fwrn5.h
-> @@ -44,7 +44,7 @@ struct s3fwrn5_info {
->  	void *phy_id;
->  	struct device *pdev;
->  
-> -	struct s3fwrn5_phy_ops *phy_ops;
-> +	const struct s3fwrn5_phy_ops *phy_ops;
->  	unsigned int max_payload;
->  
->  	struct s3fwrn5_fw_info fw_info;
-> @@ -90,7 +90,7 @@ static inline int s3fwrn5_write(struct s3fwrn5_info *info, struct sk_buff *skb)
->  }
->  
->  int s3fwrn5_probe(struct nci_dev **ndev, void *phy_id, struct device *pdev,
-> -	struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload);
-> +	const struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload);
->  void s3fwrn5_remove(struct nci_dev *ndev);
->  
->  int s3fwrn5_recv_frame(struct nci_dev *ndev, struct sk_buff *skb,
-> 
-> 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index ce9f45c..b07d229 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -256,8 +256,6 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
+ 		pending_acks_info[pending_base + pending_acks].session_index = session_index;
+ 		txqe->tcp_PendingAck_index = pending_base + pending_acks;
+ 		pending_acks++;
+-	} else {
+-
+ 	}
+ 	return 0;
+ }
+@@ -1630,7 +1628,6 @@ u32 wilc_get_chipid(u8 update)
+ 			} else {
+ 				tempchipid = 0x1002b2;
+ 			}
+-		} else {
+ 		}
+ 
+ 		chipid = tempchipid;
+-- 
+1.9.1
 
