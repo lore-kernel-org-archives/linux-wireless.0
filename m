@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:42230 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752056AbbKZQws convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37233 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 11:52:48 -0500
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kaufman\, Liad" <liad.kaufman@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: add hwmon device for the temperature sensor
-References: <541F23D2.90600@gmail.com>
-	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
-	<87ppeoc4s0.fsf@nemi.mork.no>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
-	<87d2amd24t.fsf@nemi.mork.no>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com>
-	<1411760678.18773.5.camel@dubbel>
-	<A66968BA-6B95-4437-8A95-5EBFD6BCF583@mork.no>
-	<877flbuke9.fsf_-_@nemi.mork.no>
-	<1448552793.2167.17.camel@sipsolutions.net>
-Date: Thu, 26 Nov 2015 17:52:38 +0100
-In-Reply-To: <1448552793.2167.17.camel@sipsolutions.net> (Johannes Berg's
-	message of "Thu, 26 Nov 2015 16:46:33 +0100")
-Message-ID: <874mg8vh2h.fsf@nemi.mork.no> (sfid-20151126_175251_329450_BC2194D8)
+	Thu, 5 Nov 2015 21:14:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 45/73] staging: wilc1000: fixes braces {} should be used on all arms of this statement
+Date: Fri, 6 Nov 2015 11:13:06 +0900
+Message-ID: <1446776014-28094-45-git-send-email-glen.lee@atmel.com> (sfid-20151106_033806_117357_0801D083)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> Hi Bjørn,
->
->> I got bored and made an attempt on this. Still just for fun.  I don't
->> have a real usecase.  What do you think?  Completely useless?
->
-> It's not so bad :)
->
-> However, it's (soon going to be) redundant, we're planning to implement
-> a thermal_zone_device in this code, and if you then set the Kconfig
-> option THERMAL_HWMON you'll get a hwmon to go along with it. So I'd
-> rather not take this patch since we'd otherwise end up with two ways to
-> do the same thing in the driver.
+This patch fixes the error reported by checkpatch.pl
+for braces {} should be used on all arms of this statement
 
-Ah, right.  I wondered a bit about that, but concluded that you probably
-didn't want it since you had all your own temp limit handling.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Sounds like a good plan to me
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 458eef2b..3b097c1 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1104,9 +1104,9 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ 		if (LINUX_RX_SIZE - offset < size)
+ 			offset = 0;
+ 
+-		if (p->rx_buffer)
++		if (p->rx_buffer) {
+ 			buffer = &p->rx_buffer[offset];
+-		else {
++		} else {
+ 			wilc_debug(N_ERR, "[wilc isr]: fail Rx Buffer is NULL...drop the packets (%d)\n", size);
+ 			goto _end_;
+ 		}
+-- 
+1.9.1
 
-
-Bjørn
