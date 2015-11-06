@@ -1,60 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:55021 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754047AbbKBVfI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37793 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031601AbbKFCSV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 16:35:08 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: glen lee <glen.lee@atmel.com>, linux-wireless@vger.kernel.org,
-	Rachel Kim <rachel.kim@atmel.com>, devel@driverdev.osuosl.org,
-	Chris Park <chris.park@atmel.com>, gregkh@linuxfoundation.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Leo Kim <leo.kim@atmel.com>
-Subject: Re: [PATCH 00/19] staging/wilc1000 cleanups
-Date: Mon, 02 Nov 2015 22:34:57 +0100
-Message-ID: <8161154.QXKLTXIdJW@wuerfel> (sfid-20151102_223533_412600_BBEAEFE3)
-In-Reply-To: <5629E6F1.502@atmel.com>
-References: <1445381258-1455986-1-git-send-email-arnd@arndb.de> <56298F43.7000909@atmel.com> <5629E6F1.502@atmel.com>
+	Thu, 5 Nov 2015 21:18:21 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 63/73] staging: wilc1000: remove typedef from wilc_hif_func_t
+Date: Fri, 6 Nov 2015 11:20:02 +0900
+Message-ID: <1446776412-30670-14-git-send-email-glen.lee@atmel.com> (sfid-20151106_031824_308338_14F7E668)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 October 2015 16:51:13 Tony Cho wrote:
-> Hi Arnd,
-> First of all, I would like to say "thank you" for your efforts and 
-> contributions.
-> We are updating the driver because new revision came up and making new 
-> patches
-> to make it stable and elegant as Linux driver. In these days, we are 
-> sending big changes
-> while testing such patches and also doing updates at once.
-> 
-> As you did, we are scheduled to provide the patches making device tree 
-> and delete all of platform
-> dependencies as you removed WILC_SDIO_IRQ_GPIO as well as other things. 
-> So, I would like to
-> discuss with you for your series of patch.
-> 
-> In this time, I think it's important to make the driver to be compiled 
-> even if the link problem
-> happens as you reported. So, how about deleting all of SPI related files 
-> from source tree and
-> even from Kconfig for the time being because new bus driver will come or 
-> revert
-> the Kconfig and then can we expect the best patch in the near feature?
-> 
-> I respect your efforts and patches, so your opinion is very important to me.
+From: Leo Kim <leo.kim@atmel.com>
 
-Hi Tony,
+This patch removes typedef from the struct wilc_hif_func_t and
+renames it to wilc_hif_func.
 
-I've seen you have merged the patches that you mentioned into Greg's
-tree. I have now rebased my patches on top, including the separate SPI
-driver. Once we merge those, it should work fine, and having multiple
-front-end drivers gives a nice template for adding future hardware
-specific variations like another bus, or a newer model on the same
-bus. I'll post my patches after some more testing.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c |  2 +-
+ drivers/staging/wilc1000/wilc_spi.c  |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_wlan.h |  4 ++--
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-	Arnd
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 300c571..cfa76b2 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -992,7 +992,7 @@ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
+  *
+  ********************************************/
+ 
+-wilc_hif_func_t hif_sdio = {
++struct wilc_hif_func hif_sdio = {
+ 	sdio_init,
+ 	sdio_deinit,
+ 	sdio_read_reg,
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 599508b..b09b3bd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -1256,7 +1256,7 @@ static int spi_sync_ext(int nint /*  how mant interrupts to enable. */)
+  *      Global spi HIF function table
+  *
+  ********************************************/
+-wilc_hif_func_t hif_spi = {
++struct wilc_hif_func hif_spi = {
+ 	spi_init,
+ 	spi_deinit,
+ 	spi_read_reg,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 7b8e70b..b6d784b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -2,14 +2,14 @@
+ #include "wilc_wfi_netdevice.h"
+ #include "wilc_wlan_cfg.h"
+ 
+-extern wilc_hif_func_t hif_sdio;
+-extern wilc_hif_func_t hif_spi;
++extern struct wilc_hif_func hif_sdio;
++extern struct wilc_hif_func hif_spi;
+ u32 wilc_get_chipid(u8 update);
+ 
+ typedef struct {
+ 	int quit;
+ 	wilc_wlan_io_func_t io_func;
+-	wilc_hif_func_t hif_func;
++	struct wilc_hif_func hif_func;
+ 	int cfg_frame_in_use;
+ 	struct wilc_cfg_frame cfg_frame;
+ 	u32 cfg_frame_offset;
+@@ -1665,7 +1665,7 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
+ 			goto _fail_;
+ 		}
+ 		memcpy((void *)&g_wlan.hif_func, &hif_sdio,
+-		       sizeof(wilc_hif_func_t));
++		       sizeof(struct wilc_hif_func));
+ 	} else {
+ 		if ((inp->io_func.io_type & 0x1) == HIF_SPI) {
+ 			if (!hif_spi.hif_init(inp, wilc_debug)) {
+@@ -1673,7 +1673,7 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
+ 				goto _fail_;
+ 			}
+ 			memcpy((void *)&g_wlan.hif_func, &hif_spi,
+-			       sizeof(wilc_hif_func_t));
++			       sizeof(struct wilc_hif_func));
+ 		} else {
+ 			ret = -EIO;
+ 			goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 368b7ff..ff4872f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -236,7 +236,7 @@ struct rxq_entry_t {
+  *
+  ********************************************/
+ 
+-typedef struct {
++struct wilc_hif_func {
+ 	int (*hif_init)(wilc_wlan_inp_t *, wilc_debug_func);
+ 	int (*hif_deinit)(void *);
+ 	int (*hif_read_reg)(u32, u32 *);
+@@ -253,7 +253,7 @@ typedef struct {
+ 	int (*hif_sync_ext)(int);
+ 	void (*hif_set_max_bus_speed)(void);
+ 	void (*hif_set_default_bus_speed)(void);
+-} wilc_hif_func_t;
++};
+ 
+ /********************************************
+  *
+-- 
+1.9.1
+
