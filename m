@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41339 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbbKPU5y (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47620 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032934AbbKFJjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 15:57:54 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "Li, Yanbo" <yanbol@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
-References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
-	<877fme40ny.fsf@kamboji.qca.qualcomm.com>
-	<2cd04da006cb4f2a8eea859b6aad3e10@nasanexm02e.na.qualcomm.com>
-Date: Mon, 16 Nov 2015 22:57:44 +0200
-In-Reply-To: <2cd04da006cb4f2a8eea859b6aad3e10@nasanexm02e.na.qualcomm.com>
-	(Yanbo Li's message of "Fri, 23 Oct 2015 06:10:17 +0000")
-Message-ID: <87si45zmpj.fsf@kamboji.qca.qualcomm.com> (sfid-20151116_215757_858570_2D223DED)
+	Fri, 6 Nov 2015 04:39:33 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 23/26] staging: wilc1000: linux_spi_init: remove parameter vp
+Date: Fri, 6 Nov 2015 18:40:20 +0900
+Message-ID: <1446802823-22598-24-git-send-email-glen.lee@atmel.com> (sfid-20151106_110754_653831_259D3419)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Li, Yanbo" <yanbol@qca.qualcomm.com> writes:
+This patch removes function parameter vp which is not used and modify it's
+related codes.
 
->> > +		/* The padding bytes's location is different on various chips */
->> > +		enum ath10k_loc_4addr_pad loc_4addr_pad;
->> 
->> I think that loc prefix is a bit misleading, it reminds me of
->> locationing/positioning etc. What about ath10k_hw_4addr_pad?
->> 
->
->
-> There is already a FW feature defined as
-> "ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDIND" and the relative
-> string is "no-4addr-pad", if we just remove the "loc" prefix, it may
-> be confuse with this FW feature.
->
-> How about we change the loc to offset in this case or any better suggestion?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c     | 2 +-
+ drivers/staging/wilc1000/linux_wlan_spi.c | 2 +-
+ drivers/staging/wilc1000/linux_wlan_spi.h | 2 +-
+ drivers/staging/wilc1000/wilc_spi.c       | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-I did some naming changes in the pending branch:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=42cd3832cd7c78bfeabb639a4086c7838fda5b57
-
-Please review and let me know what you think.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 00bc890..fcc669c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1566,7 +1566,7 @@ int wilc_netdev_init(struct wilc **wilc)
+ 	}
+ 
+ 	#ifndef WILC_SDIO
+-	if (!linux_spi_init(&g_linux_wlan->wilc_spidev)) {
++	if (!linux_spi_init()) {
+ 		PRINT_ER("Can't initialize SPI\n");
+ 		return -1;
+ 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 039d061..73c788f 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -93,7 +93,7 @@ void linux_spi_deinit(void *vp)
+ 
+ 
+ 
+-int linux_spi_init(void *vp)
++int linux_spi_init(void)
+ {
+ 	int ret = 1;
+ 	static int called;
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
+index 7356785..b956100 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.h
++++ b/drivers/staging/wilc1000/linux_wlan_spi.h
+@@ -5,7 +5,7 @@
+ extern struct spi_device *wilc_spi_dev;
+ extern struct spi_driver wilc_bus;
+ 
+-int linux_spi_init(void *vp);
++int linux_spi_init(void);
+ void linux_spi_deinit(void *vp);
+ int linux_spi_write(u8 *b, u32 len);
+ int linux_spi_read(u8 *rb, u32 rlen);
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 30b1744..fe16d70 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -966,7 +966,7 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 
+ 	g_spi.dPrint = func;
+ 	g_spi.os_context = inp->os_context.os_private;
+-	if (!linux_spi_init(g_spi.os_context)) {
++	if (!linux_spi_init()) {
+ 		PRINT_ER("[wilc spi]: Failed io init bus...\n");
+ 		return 0;
+ 	} else {
 -- 
-Kalle Valo
+1.9.1
+
