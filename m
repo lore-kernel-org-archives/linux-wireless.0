@@ -1,96 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34681 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbbKDLxw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:46990 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031997AbbKFJhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 06:53:52 -0500
-Received: by wikq8 with SMTP id q8so90576322wik.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2015 03:53:51 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 4/4] ath10k: add QCA9377 hw1.0 support
-Date: Wed,  4 Nov 2015 12:53:35 +0100
-Message-Id: <1446638015-23310-5-git-send-email-bartosz.markowski@tieto.com> (sfid-20151104_125358_202226_78CC61D9)
-In-Reply-To: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
+	Fri, 6 Nov 2015 04:37:22 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/26] staging: wilc1000: separate hif_sdio and hif_spi into different module
+Date: Fri, 6 Nov 2015 18:39:58 +0900
+Message-ID: <1446802823-22598-2-git-send-email-glen.lee@atmel.com> (sfid-20151106_103729_618084_02A8FDDA)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new BMI target version and chip id revision. Register it
-on supported chips list.
+hif_sdio and hif_spi objects are compiled all the time even though one of SPI
+or SDIO is selected. This patch separates hif_sdio and hif_spi into different
+modules using ifdef define.
+After rework SPI and SDIO modules with only one hif interface, the define
+WILC_SDIO will be removed. This is first path of this series.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
- drivers/net/wireless/ath/ath10k/pci.c  |  2 ++
- 3 files changed, 23 insertions(+)
+ drivers/staging/wilc1000/Makefile    |  6 +++---
+ drivers/staging/wilc1000/wilc_wlan.c | 36 +++++++++++++++++-------------------
+ 2 files changed, 20 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b80b8f372354..f41329617ae4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -160,6 +160,24 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
- 		},
- 	},
-+        {
-+                .id = QCA9377_HW_1_0_DEV_VERSION,
-+                .dev_id = QCA9377_1_0_DEVICE_ID,
-+                .name = "qca9377 hw1.0",
-+                .patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-+                .uart_pin = 6,
-+                .otp_exe_param = 0,
-+                .channel_counters_freq_hz = 88000,
-+                .max_probe_resp_desc_thres = 0,
-+                .fw = {
-+                        .dir = QCA9377_HW_1_0_FW_DIR,
-+                        .fw = QCA9377_HW_1_0_FW_FILE,
-+                        .otp = QCA9377_HW_1_0_OTP_FILE,
-+                        .board = QCA9377_HW_1_0_BOARD_DATA_FILE,
-+                        .board_size = QCA9377_BOARD_DATA_SZ,
-+                        .board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
-+                },
-+        },
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
- 		.dev_id = QCA9377_1_0_DEVICE_ID,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 13aacbdc98e6..713c2bcea178 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -48,6 +48,8 @@
- #define QCA6174_HW_3_0_VERSION		0x05020000
- #define QCA6174_HW_3_2_VERSION		0x05030000
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index 64c2f1b..650123d 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -21,8 +21,8 @@ ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			wilc_msgqueue.o \
+ 			coreconfigurator.o host_interface.o \
+-			wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o \
++			wilc_wlan_cfg.o wilc_debugfs.o \
+ 			wilc_wlan.o
  
-+/* QCA9377 target BMI version signatures */
-+#define QCA9377_HW_1_0_DEV_VERSION	0x05020000
- #define QCA9377_HW_1_1_DEV_VERSION	0x05020001
+-wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o
+-wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o
++wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o wilc_sdio.o
++wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o wilc_spi.o
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index b6d784b..2ce5870 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -2,8 +2,11 @@
+ #include "wilc_wfi_netdevice.h"
+ #include "wilc_wlan_cfg.h"
  
- enum qca6174_pci_rev {
-@@ -69,6 +71,7 @@ enum qca6174_chip_id_rev {
- };
++#ifdef WILC_SDIO
+ extern struct wilc_hif_func hif_sdio;
++#else
+ extern struct wilc_hif_func hif_spi;
++#endif
+ u32 wilc_get_chipid(u8 update);
  
- enum qca9377_chip_id_rev {
-+	QCA9377_HW_1_0_CHIP_ID_REV = 0x0,
- 	QCA9377_HW_1_1_CHIP_ID_REV = 0x1,
- };
+ typedef struct {
+@@ -1659,26 +1662,21 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
+ 	memcpy((void *)&g_wlan.io_func, (void *)&inp->io_func,
+ 	       sizeof(wilc_wlan_io_func_t));
  
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 14dce2a1b39f..679a3ebb34af 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -86,6 +86,8 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
- 	{ QCA6174_2_1_DEVICE_ID, QCA6174_HW_3_2_CHIP_ID_REV },
+-	if ((inp->io_func.io_type & 0x1) == HIF_SDIO) {
+-		if (!hif_sdio.hif_init(inp, wilc_debug)) {
+-			ret = -EIO;
+-			goto _fail_;
+-		}
+-		memcpy((void *)&g_wlan.hif_func, &hif_sdio,
+-		       sizeof(struct wilc_hif_func));
+-	} else {
+-		if ((inp->io_func.io_type & 0x1) == HIF_SPI) {
+-			if (!hif_spi.hif_init(inp, wilc_debug)) {
+-				ret = -EIO;
+-				goto _fail_;
+-			}
+-			memcpy((void *)&g_wlan.hif_func, &hif_spi,
+-			       sizeof(struct wilc_hif_func));
+-		} else {
+-			ret = -EIO;
+-			goto _fail_;
+-		}
++#ifdef WILC_SDIO
++	if (!hif_sdio.hif_init(inp, wilc_debug)) {
++		ret = -EIO;
++		goto _fail_;
+ 	}
++	memcpy((void *)&g_wlan.hif_func, &hif_sdio,
++	       sizeof(struct wilc_hif_func));
++#else
++	if (!hif_spi.hif_init(inp, wilc_debug)) {
++		ret = -EIO;
++		goto _fail_;
++	}
++	memcpy((void *)&g_wlan.hif_func, &hif_spi,
++	       sizeof(struct wilc_hif_func));
++#endif
  
- 	{ QCA99X0_2_0_DEVICE_ID, QCA99X0_HW_2_0_CHIP_ID_REV },
-+
-+	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_0_CHIP_ID_REV },
- 	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_1_CHIP_ID_REV },
- };
- 
+ 	if (!wilc_wlan_cfg_init(wilc_debug)) {
+ 		ret = -ENOBUFS;
 -- 
-2.1.2
+1.9.1
 
