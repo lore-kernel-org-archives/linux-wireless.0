@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:34266 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249AbbKWQqm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37914 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 11:46:42 -0500
-Received: by qgeb1 with SMTP id b1so117976523qge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2015 08:46:41 -0800 (PST)
-Date: Mon, 23 Nov 2015 11:46:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-testing repo
-Message-ID: <20151123164640.GA4037@localhost> (sfid-20151123_174648_296373_A39D6028)
-References: <5652F62A.4000109@broadcom.com>
- <1448278260.5792.1.camel@sipsolutions.net>
- <5652FAB5.8030708@broadcom.com>
- <20151123160159.GA3755@tuxdriver.com>
+	Thu, 5 Nov 2015 21:19:01 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 70/73] staging: wilc1000: rename Handle_GetMacAddress function
+Date: Fri, 6 Nov 2015 11:20:09 +0900
+Message-ID: <1446776412-30670-21-git-send-email-glen.lee@atmel.com> (sfid-20151106_031906_022718_722C0C6F)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151123160159.GA3755@tuxdriver.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 11:02:00AM -0500, John W. Linville wrote:
-> > We have some setups running on wl-testing kernel and some running distro
-> > kernel using backports.
-> 
-> I believe the Bob Copeland is considering taking on this mantle...
+From: Leo Kim <leo.kim@atmel.com>
 
-"a" Bob Copeland :)
+This patch renames Handle_GetMacAddress function to handle_get_mac_address
+to avoid camelcase.
 
-Yeah, I would be game for maintaining this for a while -- I've scripted
-a bit of it and have a practice tree over here, although of course it
-should be on kernel.org when for reals:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+ mode change 100644 => 100755 drivers/staging/wilc1000/host_interface.c
 
-    https://github.com/bcopeland/wireless-testing-testing
-
-But if maintenance becomes a burden there's no reason we couldn't spread
-the load.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+old mode 100644
+new mode 100755
+index 2388e2d..cbc53bc
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -494,8 +494,8 @@ static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
+-				struct get_mac_addr *get_mac_addr)
++static s32 handle_get_mac_address(struct host_if_drv *hif_drv,
++				  struct get_mac_addr *get_mac_addr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2995,7 +2995,8 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_MAC_ADDRESS:
+-			Handle_GetMacAddress(msg.drv, &msg.body.get_mac_info);
++			handle_get_mac_address(msg.drv,
++					       &msg.body.get_mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REMAIN_ON_CHAN:
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
+
