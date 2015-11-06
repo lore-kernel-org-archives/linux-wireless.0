@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38051 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501AbbKZQrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 11:47:00 -0500
-Message-ID: <1448556415.2167.22.camel@sipsolutions.net> (sfid-20151126_174704_152395_B60FBD49)
-Subject: Re: [PATCH v2 2/8] cfg80211: Remove unused
- cfg80211_can_use_iftype_chan()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
-Date: Thu, 26 Nov 2015 17:46:55 +0100
-In-Reply-To: <1448303241-27747-3-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192818_058797_3713F391)
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448303241-27747-3-git-send-email-sojkam1@fel.cvut.cz>
-	 (sfid-20151123_192818_058797_3713F391)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47225 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161044AbbKFJiK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2015 04:38:10 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/26] staging: wilc1000: remove varialbe sdio_set_default_speed
+Date: Fri, 6 Nov 2015 18:40:06 +0900
+Message-ID: <1446802823-22598-10-git-send-email-glen.lee@atmel.com> (sfid-20151106_103823_685266_961979E2)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
-> Last caller of this function was removed in 3.17 in commit
-> 97dc94f1d933c9df2c0b327066ea130c0e92083f.
-> 
-Heh.
+This patch removes sdio_set_default_speed of wilc_wlan_io_func_t which is
+not used anymore and also remove struct sdio since it is empty.
 
-I've applied the first two patches for now - will review the others in
-more detail later.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c   | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h | 3 ---
+ 2 files changed, 4 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 9ecf307..b37ef4d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -894,7 +894,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
+ 	nwi->io_func.io_type = HIF_SDIO;
+ 	nwi->io_func.io_init = linux_sdio_init;
+ 	nwi->io_func.io_deinit = linux_sdio_deinit;
+-	nwi->io_func.u.sdio.sdio_set_default_speed = linux_sdio_set_default_speed;
+ #else
+ 	nwi->io_func.io_type = HIF_SPI;
+ 	nwi->io_func.io_init = linux_spi_init;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 2caad28..4568457 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -78,9 +78,6 @@ typedef struct {
+ 	void (*io_deinit)(void *);
+ 	union {
+ 		struct {
+-			int (*sdio_set_default_speed)(void);
+-		} sdio;
+-		struct {
+ 			int (*spi_max_speed)(void);
+ 			int (*spi_tx)(u8 *, u32);
+ 			int (*spi_rx)(u8 *, u32);
+-- 
+1.9.1
+
