@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7976 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761013AbbKTVvd (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47132 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031997AbbKFJhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 16:51:33 -0500
-Message-ID: <564F95E1.7030508@broadcom.com> (sfid-20151120_225137_072741_88C4C51A)
-Date: Fri, 20 Nov 2015 22:51:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 6 Nov 2015 04:37:52 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/26] staging: wilc1000: remove function pointer sdio_set_max_speed
+Date: Fri, 6 Nov 2015 18:40:03 +0900
+Message-ID: <1446802823-22598-7-git-send-email-glen.lee@atmel.com> (sfid-20151106_103759_979034_994C0740)
+In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Florian Fainelli <f.fainelli@gmail.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>	<564CCF2A.4030203@hauke-m.de> <564CCFC3.3030909@gmail.com> <87wptev2zi.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87wptev2zi.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2015 08:54 AM, Kalle Valo wrote:
-> Florian Fainelli <f.fainelli@gmail.com> writes:
->
->> On 18/11/15 11:19, Hauke Mehrtens wrote:
->>> On 11/18/2015 03:45 PM, Kalle Valo wrote:
->>>> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
->>>> edit Makefiles from subdirectories to use the new location.
->>>>
->>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->>>> ---
->>>
->>> I would prefer to remove the brcm80211 directory in this process and create:
->>> drivers/net/wireless/broadcom/brcmfmac
->>> drivers/net/wireless/broadcom/brcmsmac
->>> drivers/net/wireless/broadcom/brcmutil
->>> drivers/net/wireless/broadcom/include
->>>
->>> This way we have one directory less.
->>
->> Would not that make keeping track of the previous and future history
->> harder for people contributing to these drivers? I could imagine that
->> for Arend and other Broadcom engineers, dealing with a simple level move
->> would be manageable, but having to account for a different directory
->> hierarchy could be a pain.
->>
->> What is the impact on compat-wireless after/before these changes by the way?
->
-> It's called backports nowadays :)
->
-> But I understood that as long as we have a separate kconfig option for
-> the vendor directories (CONFIG_WLAN_VENDOR_*) it should be ok. For 4.3
-> we didn't have that for realtek directory and that caused pain for
-> backports.
+This patch removes function pointer sdio_set_max_speed of wilc_sdio_t and
+call the function directly.
 
-That is my understanding as well.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 1176946..0ce2ecc 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -17,7 +17,6 @@
+ typedef struct {
+ 	void *os_context;
+ 	u32 block_size;
+-	int (*sdio_set_max_speed)(void);
+ 	int (*sdio_set_default_speed)(void);
+ 	wilc_debug_func dPrint;
+ 	int nint;
+@@ -573,7 +572,6 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 		return 0;
+ 	}
+ 
+-	g_sdio.sdio_set_max_speed	= inp->io_func.u.sdio.sdio_set_max_speed;
+ 	g_sdio.sdio_set_default_speed	= inp->io_func.u.sdio.sdio_set_default_speed;
+ 
+ 	/**
+@@ -678,7 +676,7 @@ _fail_:
+ 
+ static void sdio_set_max_speed(void)
+ {
+-	g_sdio.sdio_set_max_speed();
++	linux_sdio_set_max_speed();
+ }
+ 
+ static void sdio_set_default_speed(void)
+-- 
+1.9.1
 
