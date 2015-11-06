@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44834 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750970AbbKKHh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 02:37:57 -0500
-Message-ID: <1447227472.2276.7.camel@sipsolutions.net> (sfid-20151111_083800_895935_55C5543E)
-Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
-Cc: Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-Date: Wed, 11 Nov 2015 08:37:52 +0100
-In-Reply-To: <1447201345.2475.15.camel@coelho.fi>
-References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
-	 <1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
-	 <1447201345.2475.15.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37018 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031099AbbKFCNs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 21:13:48 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 33/73] staging: wilc1000: remove warnings line over 80 characters
+Date: Fri, 6 Nov 2015 11:12:54 +0900
+Message-ID: <1446776014-28094-33-git-send-email-glen.lee@atmel.com> (sfid-20151106_033753_891042_71772C33)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-11-11 at 02:22 +0200, Luca Coelho wrote:
-> 
-> Now that you have all these options in Kconfig, wouldn't it be
-> possible
-> to remove the calls to the "static" ieee80211_hw_set() in the drivers
-> and somehow set all the flags that are defined in Kconfig
-> automatically?
-> 
+From: Leo Kim <leo.kim@atmel.com>
 
-Since Kconfig flags are global (across multiple drivers) I don't really
-see a way to do that.
+This patch removes the warnings reported by checkpatch.pl
+for line over 80 characters.
 
-I'd *love*, however, to have an "increment" in Kconfig, then I could
-get rid of the _OFF ones:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-config MAC80211_NUM_DRIVERS
-	int
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 52351c6..66d7f1e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -308,7 +308,10 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 			if (total_length == (IHL + data_offset)) {
+ 				u32 seq_no, ack_no;
+ 
+-				seq_no	= (((u32)tcp_hdr_ptr[4]) << 24) + (((u32)tcp_hdr_ptr[5]) << 16) + (((u32)tcp_hdr_ptr[6]) << 8) + ((u32)tcp_hdr_ptr[7]);
++				seq_no = ((u32)tcp_hdr_ptr[4] << 24) +
++					 ((u32)tcp_hdr_ptr[5] << 16) +
++					 ((u32)tcp_hdr_ptr[6] << 8) +
++					 (u32)tcp_hdr_ptr[7];
+ 
+ 				ack_no = ((u32)tcp_hdr_ptr[8] << 24) +
+ 					 ((u32)tcp_hdr_ptr[9] << 16) +
+-- 
+1.9.1
 
-config MAC80211_HW_HAS_RATE_CONTROL
-	int
-
-config MY_DRIVER
-	depends on MAC80211
-	increment MAC80211_NUM_DRIVERS
-	increment MAC80211_HW_MYFLAG
-
-
-and then later
-
-if (CONFIG_MAC80211_HW_MYFLAG == 0)
-	/* optimise for flag OFF */
-else if (CONFIG_MAC80211_HW_MYFLAG > 0 &&
-         CONFIG_MAC80211_NUM_DRIVERS == CONFIG_MAC80211_HW_MYFLAG)
-	/* optimise for flag ON */
-else if (CONFIG_MAC80211_HW_MYFLAG > 0)
-	/* don't optimise */
-
-That's far more maintainable in the long term, since each driver only
-needs to list in its Kconfig the flags it *wants*, not *all*.
-
-Maybe I'll try to see if I can hack Kconfig to do that.
-
-johannes
