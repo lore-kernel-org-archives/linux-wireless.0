@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:53470 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36651 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934360AbbKTHxW (ORCPT
+	with ESMTP id S1030909AbbKFCLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 02:53:22 -0500
+	Thu, 5 Nov 2015 21:11:52 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/6] staging: wilc1000: return linux error value
-Date: Fri, 20 Nov 2015 16:56:32 +0900
-Message-ID: <1448006196-28555-2-git-send-email-glen.lee@atmel.com> (sfid-20151120_085325_394459_458675A3)
-In-Reply-To: <1448006196-28555-1-git-send-email-glen.lee@atmel.com>
-References: <1448006196-28555-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 14/73] staging: wilc1000: rename Ack_seq_num of struct ack_session_info
+Date: Fri, 6 Nov 2015 11:12:35 +0900
+Message-ID: <1446776014-28094-14-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_895407_64F23261)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return proper linux error value -ETIMEDOUT instead of -1.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch rename Ack_seq_num of struct ack_session_info to seq_num
+to avoid CamelCase naming convention.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 0cd2acc..329477a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -601,7 +601,7 @@ s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 					       wids[counter].id,
- 					       (counter == count - 1),
- 					       drv)) {
--				ret = -1;
-+				ret = -ETIMEDOUT;
- 				printk("[Sendconfigpkt]Get Timed out\n");
- 				break;
- 			}
-@@ -622,7 +622,7 @@ s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 					       wids[counter].size,
- 					       (counter == count - 1),
- 					       drv)) {
--				ret = -1;
-+				ret = -ETIMEDOUT;
- 				printk("[Sendconfigpkt]Set Timed out\n");
- 				break;
- 			}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index f3968fd..7162473 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -195,7 +195,7 @@ u32 total_acks = 0, dropped_acks = 0;
+ #ifdef	TCP_ACK_FILTER
+ struct ack_session_info;
+ struct ack_session_info {
+-	u32 Ack_seq_num;
++	u32 seq_num;
+ 	u32 Bigger_Ack_num;
+ 	u16 src_port;
+ 	u16 dst_port;
+@@ -229,7 +229,7 @@ static inline int Init_TCP_tracking(void)
+ 
+ static inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
+ {
+-	Acks_keep_track_info[Opened_TCP_session].Ack_seq_num = seq;
++	Acks_keep_track_info[Opened_TCP_session].seq_num = seq;
+ 	Acks_keep_track_info[Opened_TCP_session].Bigger_Ack_num = 0;
+ 	Acks_keep_track_info[Opened_TCP_session].src_port = src_prt;
+ 	Acks_keep_track_info[Opened_TCP_session].dst_port = dst_prt;
+@@ -313,7 +313,7 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 				Ack_no	= (((u32)tcp_hdr_ptr[8]) << 24) + (((u32)tcp_hdr_ptr[9]) << 16) + (((u32)tcp_hdr_ptr[10]) << 8) + ((u32)tcp_hdr_ptr[11]);
+ 
+ 				for (i = 0; i < Opened_TCP_session; i++) {
+-					if (Acks_keep_track_info[i].Ack_seq_num == seq_no) {
++					if (Acks_keep_track_info[i].seq_num == seq_no) {
+ 						Update_TCP_track_session(i, Ack_no);
+ 						break;
+ 					}
 -- 
 1.9.1
 
