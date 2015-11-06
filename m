@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:36041 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752813AbbKWARo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:36516 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031107AbbKFCLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 19:17:44 -0500
-Received: by qgcc31 with SMTP id c31so62993561qgc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 16:17:44 -0800 (PST)
-From: Steve deRosier <derosier@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: [PATCH v3 2/2] ath6kl_sdio: Add power gpio reset feature into sdio driver for suspend
-Date: Sun, 22 Nov 2015 16:15:47 -0800
-Message-Id: <1448237747-20037-3-git-send-email-steve.derosier@lairdtech.com> (sfid-20151123_011750_853586_C8BD0CC9)
-In-Reply-To: <1448237747-20037-1-git-send-email-steve.derosier@lairdtech.com>
-References: <1448237747-20037-1-git-send-email-steve.derosier@lairdtech.com>
+	Thu, 5 Nov 2015 21:11:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/73] staging: wilc1000: fixes missing a blank line after declarations
+Date: Fri, 6 Nov 2015 11:12:29 +0900
+Message-ID: <1446776014-28094-8-git-send-email-glen.lee@atmel.com> (sfid-20151106_031118_163309_9D7D172C)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change adds pm suspend callbacks in order to trigger a gpio line
-to push the CHIP_PWD_L reset/power line low on suspend. This puts the chip
-into the lowest power state on suspend. On resume, it releases the line,
-allowing the chip to boot. Slower, but provides a clean reset of the
-chip and recovery from standby.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+This patch fixes the warnings reported by checkpatch.pl
+for Missing a blank line after declarations.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/ath/ath6kl/sdio.c | 40 ++++++++++++++++++++++++++++++++--
- 1 file changed, 38 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index d06aa41..cef311d 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1295,8 +1295,44 @@ static int ath6kl_sdio_pm_resume(struct device *device)
- 	return 0;
- }
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d3117f9..7ebfcaf 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -81,6 +81,7 @@ static inline void release_bus(BUS_RELEASE_T release)
+ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
++
+ 	if (tqe == p->txq_head)	{
+ 		p->txq_head = tqe->next;
+ 		if (p->txq_head)
+@@ -500,6 +501,7 @@ static struct txq_entry_t *wilc_wlan_txq_get_next(struct wilc *wilc,
+ 						  struct txq_entry_t *tqe)
+ {
+ 	unsigned long flags;
++
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
  
--static SIMPLE_DEV_PM_OPS(ath6kl_sdio_pm_ops, ath6kl_sdio_pm_suspend,
--			 ath6kl_sdio_pm_resume);
-+/* Below handlers leverage the PM system to make sure we turn on and off
-+ * the power gpio at the right time. If we do it in the earlier power on
-+ * and off handlers for the sdio, we get errors from the mmc subsystem.
-+ */
-+static int ath6kl_sdio_pm_suspend_late(struct device *device)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sdio pm ath6kl_sdio_pm_suspend_late\n");
-+
-+	if (gpio_is_valid(reset_pwd_gpio))
-+		gpio_set_value(reset_pwd_gpio, 0);
-+
-+	return 0;
-+}
-+
-+static int ath6kl_sdio_pm_resume_early(struct device *device)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sdio pm ath6kl_sdio_pm_resume_early\n");
-+
-+	if (gpio_is_valid(reset_pwd_gpio)) {
-+		gpio_set_value(reset_pwd_gpio, 1);
-+		usleep_range(1000, 5000); /* wait for power up */
-+	}
-+	return 0;
-+}
-+
-+/* The GPIO version requires the more complex dev_pm_ops setup */
-+const struct dev_pm_ops ath6kl_sdio_pm_ops = {
-+	.suspend = ath6kl_sdio_pm_suspend,
-+	.suspend_late = ath6kl_sdio_pm_suspend_late,
-+	.resume_early = ath6kl_sdio_pm_resume_early,
-+	.resume = ath6kl_sdio_pm_resume,
-+	.freeze = ath6kl_sdio_pm_suspend,
-+	.thaw = ath6kl_sdio_pm_resume,
-+	.poweroff = ath6kl_sdio_pm_suspend,
-+	.poweroff_late = ath6kl_sdio_pm_suspend_late,
-+	.restore_early = ath6kl_sdio_pm_resume_early,
-+	.restore = ath6kl_sdio_pm_resume,
-+};
- 
- #define ATH6KL_SDIO_PM_OPS (&ath6kl_sdio_pm_ops)
- 
+ 	tqe = tqe->next;
 -- 
 1.9.1
 
