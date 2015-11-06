@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0136.hostedemail.com ([216.40.44.136]:58036 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932444AbbKMQuC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 11:50:02 -0500
-Date: Fri, 13 Nov 2015 11:49:59 -0500
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Michal Marek <mmarek@suse.com>
-Subject: Re: [RFC v4 8/8] mac80211: use Kconfig counters to determine
- feature optimisation
-Message-ID: <20151113114959.6ebf30d5@gandalf.local.home> (sfid-20151113_175007_116799_6621DFE0)
-In-Reply-To: <1447432539.3271.23.camel@sipsolutions.net>
-References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
-	<1447318073-22669-9-git-send-email-johannes@sipsolutions.net>
-	<20151113112922.3442aa1a@gandalf.local.home>
-	<1447432539.3271.23.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36291 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161036AbbKFKMK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2015 05:12:10 -0500
+Received: by pacdm15 with SMTP id dm15so94623479pac.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:12:10 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V3 10/12] staging: wilc1000: rename pstrAddStationMsg in host_int_add_station
+Date: Fri,  6 Nov 2015 19:11:19 +0900
+Message-Id: <1446804681-8873-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111216_550704_D04F51E3)
+In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 13 Nov 2015 17:35:39 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+This patch renames pstrAddStationMsg to add_sta_info to avoid camelcase.
 
-> On Fri, 2015-11-13 at 11:29 -0500, Steven Rostedt wrote:
-> 
-> > > -	select MAC80211_HW_HAS_RATE_CONTROL_OFF
-> > > -	select MAC80211_HW_RX_INCLUDES_FCS_OFF  
-> > 
-> > What happened to these two?  
-> 
-> I removed the _OFF ones entirely, and instead with this patch am now
-> relying on modified logic:
-> 
->  _on  = flags_counter > 0
->  _off = flags_counter < driver_counter
-> 
-> So the ones that are requested _OFF no longer need to be listed in
-> Kconfig - that was the entire point of doing the count (increment)
-> thing since we can then add new flags without touching all the drivers
-> to select them to _OFF.
-> 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V3: rebase latest staging-testing.
 
-Ah, I missed that they were "_OFF".
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
--- Steve
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dcf77ed..501b2e9a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4531,7 +4531,7 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
++	struct add_sta_param *add_sta_info = &msg.body.add_sta_info;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -4545,16 +4545,16 @@ int host_int_add_station(struct host_if_drv *hif_drv,
+ 	msg.id = HOST_IF_MSG_ADD_STATION;
+ 	msg.drv = hif_drv;
+ 
+-	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
+-	if (pstrAddStationMsg->rates_len > 0) {
+-		u8 *rates = kmalloc(pstrAddStationMsg->rates_len, GFP_KERNEL);
++	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
++	if (add_sta_info->rates_len > 0) {
++		u8 *rates = kmalloc(add_sta_info->rates_len, GFP_KERNEL);
+ 
+ 		if (!rates)
+ 			return -ENOMEM;
+ 
+ 		memcpy(rates, sta_param->rates,
+-		       pstrAddStationMsg->rates_len);
+-		pstrAddStationMsg->rates = rates;
++		       add_sta_info->rates_len);
++		add_sta_info->rates = rates;
+ 	}
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-- 
+2.6.3
+
