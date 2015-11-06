@@ -1,36 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45710 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754460AbbK0Jwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 04:52:51 -0500
-Message-ID: <1448617968.2531.33.camel@sipsolutions.net> (sfid-20151127_105255_569559_D1AF819B)
-Subject: Re: [PATCH v2 6/8] cfg80211: reg: Add NL80211_RRF_USER_REGD_NEEDED
- flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
-Date: Fri, 27 Nov 2015 10:52:48 +0100
-In-Reply-To: <87si3r22w0.fsf@steelpick.2x.cz>
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448303241-27747-7-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448613316.2531.13.camel@sipsolutions.net>
-	 <87si3r22w0.fsf@steelpick.2x.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37839 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031061AbbKFCSi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2015 21:18:38 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 66/73] staging: wilc1000: rename Handle_SetOperationMode function
+Date: Fri, 6 Nov 2015 11:20:05 +0900
+Message-ID: <1446776412-30670-17-git-send-email-glen.lee@atmel.com> (sfid-20151106_031850_777828_0E435113)
+In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-11-27 at 10:43 +0100, Michal Sojka wrote:
+From: Leo Kim <leo.kim@atmel.com>
 
-> What do you mean by "show"? nl80211_put_regdom() already sends regdom
-> flags to userspace. Or do you mean introducing a new channel
-> attribute and send it in nl80211_msg_put_channel()?
-> 
+This patch renames Handle_SetOperationMode function to handle_set_operation_mode
+to avoid camelcase.
 
-No, I meant keeping the flag - so that people can know with "iw list"
-or something that they need a special regdomain to enable the channels?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dcaf0eb..504763e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -371,8 +371,8 @@ static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
+-				    struct op_mode *hif_op_mode)
++static s32 handle_set_operation_mode(struct host_if_drv *hif_drv,
++				     struct op_mode *hif_op_mode)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2974,7 +2974,7 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_OPERATION_MODE:
+-			Handle_SetOperationMode(msg.drv, &msg.body.mode);
++			handle_set_operation_mode(msg.drv, &msg.body.mode);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_IPADDRESS:
+-- 
+1.9.1
+
