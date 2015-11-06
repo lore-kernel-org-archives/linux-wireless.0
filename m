@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:61142 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbbKPOFv convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:37332 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031044AbbKFCPW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 09:05:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: glen lee <glen.lee@atmel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 15/20] staging/wilc1000: pass hif operations through initialization
-Date: Mon, 16 Nov 2015 15:05:41 +0100
-Message-ID: <4322239.PAt56lqfM0@wuerfel> (sfid-20151116_150815_358649_0C09D143)
-In-Reply-To: <5649332F.3020901@atmel.com>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <4443486.3C2xMnGSPO@wuerfel> <5649332F.3020901@atmel.com>
+	Thu, 5 Nov 2015 21:15:22 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 49/73] staging: wilc1000: rename drvHandler in wilc_wlan_cfg_get function
+Date: Fri, 6 Nov 2015 11:13:10 +0900
+Message-ID: <1446776014-28094-49-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_323569_9CE775CB)
+In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 16 November 2015 10:36:47 glen lee wrote:
-> On 2015년 11월 13일 18:17, Arnd Bergmann wrote:
-> > On Friday 13 November 2015 16:49:22 glen lee wrote:
-> >> Hi arnd,
-> >>
-> >> I found this. These should be like this. It works fine.
-> >> +       .hif_block_tx_ext = sdio_write,
-> >> +       .hif_block_rx_ext = sdio_read,
-> >>
-> >> also, wilc_hif_spi need to be fixed together like this.
-> >> +       .hif_block_tx_ext = _wilc_spi_write,
-> >> +       .hif_block_rx_ext = _wilc_spi_read,
-> >>
-> >> Thank you for all the patches.
-> >>
-> > Glad you found it. How should we go on to get the right version merged?
-> > Do you want to send the working version of my patches to Greg along with
-> > whatever you have on your end, or do you prefer me to re-send it?
-> 
-> In my opinion, why don't you re-send the whole patches again since I'm still working on.
-> 
+From: Leo Kim <leo.kim@atmel.com>
 
-Ok, done.
+This patch rename drvHandler to drv_handler that is fifth argument of
+wilc_wlan_cfg_get function to avoid camelcase.
 
-	Arnd
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index f0a8131..09029b6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1516,7 +1516,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 	return ret_size;
+ }
+ 
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
++int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+@@ -1536,7 +1536,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
+ 	if (commit) {
+ 		p->cfg_frame_in_use = 1;
+ 
+-		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
++		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drv_handler))
+ 			ret_size = 0;
+ 
+ 		if (linux_wlan_lock_timeout(&g_linux_wlan->cfg_event,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 03af19b..55e4f19 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -305,7 +305,7 @@ void wilc_handle_isr(void *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drv_handler);
+-int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler);
++int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			       u32 buffer_size, wilc_tx_complete_func_t func);
+-- 
+1.9.1
+
