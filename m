@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26963 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030300AbbKEFgM (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:46366 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbbKGLnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:12 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 28/38] staging: wilc1000: fixes braces {} should be used on all arms of this statement
-Date: Thu, 5 Nov 2015 14:36:29 +0900
-Message-ID: <1446701799-24870-28-git-send-email-glen.lee@atmel.com> (sfid-20151105_063755_158342_AE21CC91)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 7 Nov 2015 06:43:08 -0500
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NXG02LP10JUVZ70@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Sat, 07 Nov 2015 20:43:06 +0900 (KST)
+Date: Sat, 07 Nov 2015 11:43:05 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH] iw: Fix memory leak if nla_put fails
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
+	k.ashutosh@samsung.com
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <920161889.199041446896585340.JavaMail.weblogic@ep2mlwas04c> (sfid-20151107_124313_057731_F74FAD88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+RnJvbSA4MGM5NTZmMTVlZGZlNGY1OWE2YzEzYWU4YWQwOGJlYTBiNzhhYWZjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQ0KRnJvbTogQW1pdCBLaGF0cmkgPGFtaXQua2hhdHJpQHNhbXN1bmcuY29t
+Pg0KRGF0ZTogU2F0LCA3IE5vdiAyMDE1IDE3OjAwOjQ3ICswNTMwDQpTdWJqZWN0OiBbUEFUQ0hd
+IEZpeCBtZW1vcnkgbGVhayBpZiBubGFfcHV0IGZhaWxzDQoNClNpZ25lZC1vZmYtYnk6IEFtaXQg
+S2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IFJhaHVsIEph
+aW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+DQpTaWduZWQtb2ZmLWJ5OiBBc2h1dG9zaCBLYXVz
+aGlrIDxrLmFzaHV0b3NoQHNhbXN1bmcuY29tPg0KDQphdm9pZCBtZW1vcnkgbGVhayBiZWNhdXNl
+IG9mIG5sYV9wdXRfZmFpbHVyZQ0KLS0tDQogY29hbGVzY2UuYyB8ICA3ICsrKysrKy0NCiB3b3ds
+YW4uYyAgIHwgMjggKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLQ0KIDIgZmlsZXMgY2hhbmdl
+ZCwgMjggaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2NvYWxl
+c2NlLmMgYi9jb2FsZXNjZS5jDQppbmRleCAzNmRjYWVmLi45YjEzYWIzIDEwMDY0NA0KLS0tIGEv
+Y29hbGVzY2UuYw0KKysrIGIvY29hbGVzY2UuYw0KQEAgLTEyNCw3ICsxMjQsOCBAQCBzdGF0aWMg
+aW50IGhhbmRsZV9jb2FsZXNjZV9lbmFibGUoc3RydWN0IG5sODAyMTFfc3RhdGUgKnN0YXRlLA0K
+IAkJCQkJbmxhX25lc3RfZW5kKG1zZywgbmxfcGF0KTsNCiAJCQkJCWZyZWUobWFzayk7DQogCQkJ
+CQlmcmVlKHBhdCk7DQotDQorCQkJCQlwYXQ9TlVMTDsNCisJCQkJCW1hc2s9TlVMTDsNCiAJCQkJ
+CWlmICghbmV4dF9wYXQpDQogCQkJCQkJYnJlYWs7DQogCQkJCQljdXJfcGF0ID0gbmV4dF9wYXQ7
+DQpAQCAtMTU1LDYgKzE1NiwxMCBAQCBzdGF0aWMgaW50IGhhbmRsZV9jb2FsZXNjZV9lbmFibGUo
+c3RydWN0IG5sODAyMTFfc3RhdGUgKnN0YXRlLA0KIAkJZXJyID0gMTsNCiAJZ290byBjbG9zZTsN
+CiBubGFfcHV0X2ZhaWx1cmU6DQorCWlmKHBhdCkNCisJCWZyZWUocGF0KTsNCisJaWYobWFzaykN
+CisJCWZyZWUobWFzayk7DQogCWVyciA9IC1FTk9CVUZTOw0KIGNsb3NlOg0KIAlmY2xvc2UoZik7
+DQpkaWZmIC0tZ2l0IGEvd293bGFuLmMgYi93b3dsYW4uYw0KaW5kZXggYzMwZWFiNy4uMmUxZDQz
+ZCAxMDA2NDQNCi0tLSBhL3dvd2xhbi5jDQorKysgYi93b3dsYW4uYw0KQEAgLTg5LDcgKzg5LDEw
+IEBAIHN0YXRpYyBpbnQgd293bGFuX3BhcnNlX3RjcF9maWxlKHN0cnVjdCBubF9tc2cgKm1zZywg
+Y29uc3QgY2hhciAqZm4pDQogDQogCQkJaWYgKCFwa3QpDQogCQkJCWdvdG8gY2xvc2U7DQotCQkJ
+TkxBX1BVVChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9EQVRBX1BBWUxPQUQsIGxlbiwgcGt0KTsN
+CisJCQlpZihubGFfcHV0KG1zZywgTkw4MDIxMV9XT1dMQU5fVENQX0RBVEFfUEFZTE9BRCwgbGVu
+LCBwa3QpIDwgMCl7DQorCQkJCWZyZWUocGt0KTsNCisJCQkJZ290byBubGFfcHV0X2ZhaWx1cmU7
+DQorCQkJfQ0KIAkJCWZyZWUocGt0KTsNCiAJCX0gZWxzZSBpZiAoc3RybmNtcChidWYsICJkYXRh
+LmludGVydmFsPSIsIDE0KSA9PSAwKSB7DQogCQkJTkxBX1BVVF9VMzIobXNnLCBOTDgwMjExX1dP
+V0xBTl9UQ1BfREFUQV9JTlRFUlZBTCwNCkBAIC05NywxMyArMTAwLDIwIEBAIHN0YXRpYyBpbnQg
+d293bGFuX3BhcnNlX3RjcF9maWxlKHN0cnVjdCBubF9tc2cgKm1zZywgY29uc3QgY2hhciAqZm4p
+DQogCQl9IGVsc2UgaWYgKHN0cm5jbXAoYnVmLCAid2FrZT0iLCA1KSA9PSAwKSB7DQogCQkJdW5z
+aWduZWQgY2hhciAqcGF0LCAqbWFzazsNCiAJCQlzaXplX3QgcGF0bGVuOw0KLQ0KIAkJCWlmIChw
+YXJzZV9oZXhfbWFzayhidWYgKyA1LCAmcGF0LCAmcGF0bGVuLCAmbWFzaykpDQogCQkJCWdvdG8g
+Y2xvc2U7DQotCQkJTkxBX1BVVChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9XQUtFX01BU0ssDQot
+CQkJCURJVl9ST1VORF9VUChwYXRsZW4sIDgpLCBtYXNrKTsNCi0JCQlOTEFfUFVUKG1zZywgTkw4
+MDIxMV9XT1dMQU5fVENQX1dBS0VfUEFZTE9BRCwNCi0JCQkJcGF0bGVuLCBwYXQpOw0KKwkJCWlm
+KG5sYV9wdXQobXNnLCBOTDgwMjExX1dPV0xBTl9UQ1BfV0FLRV9NQVNLLA0KKwkJCQlESVZfUk9V
+TkRfVVAocGF0bGVuLCA4KSwgbWFzaykgPCAwKXsNCisJCQkJZnJlZShtYXNrKTsNCisJCQkJZnJl
+ZShwYXQpOw0KKwkJCQlnb3RvIG5sYV9wdXRfZmFpbHVyZTsNCisJCQl9DQorCQkJaWYobmxhX3B1
+dChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9XQUtFX1BBWUxPQUQsDQorCQkJCXBhdGxlbiwgcGF0
+KSA8IDApew0KKwkJCQlmcmVlKHBhdCk7DQorCQkJCWZyZWUobWFzayk7DQorCQkJCWdvdG8gbmxh
+X3B1dF9mYWlsdXJlOw0KKwkJCX0NCiAJCQlmcmVlKG1hc2spOw0KIAkJCWZyZWUocGF0KTsNCiAJ
+CX0gZWxzZSBpZiAoc3RybmNtcChidWYsICJkYXRhLnNlcT0iLCA5KSA9PSAwKSB7DQpAQCAtMjk5
+LDYgKzMwOSw4IEBAIHN0YXRpYyBpbnQgaGFuZGxlX3dvd2xhbl9lbmFibGUoc3RydWN0IG5sODAy
+MTFfc3RhdGUgKnN0YXRlLA0KIAkJCW5sYV9uZXN0X2VuZChwYXR0ZXJucywgcGF0dGVybik7DQog
+CQkJZnJlZShtYXNrKTsNCiAJCQlmcmVlKHBhdCk7DQorCQkJcGF0PU5VTEw7DQorCQkJbWFzaz1O
+VUxMOw0KIAkJCWJyZWFrOw0KIAkJfQ0KIAkJYXJndisrOw0KQEAgLTMxMiw2ICszMjQsMTAgQEAg
+c3RhdGljIGludCBoYW5kbGVfd293bGFuX2VuYWJsZShzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3Rh
+dGUsDQogCW5sYV9uZXN0X2VuZChtc2csIHdvd2xhbik7DQogCWVyciA9IDA7DQogIG5sYV9wdXRf
+ZmFpbHVyZToNCisJaWYocGF0KQ0KKwkJZnJlZShwYXQpOw0KKwlpZihtYXNrKQ0KKwkJZnJlZSht
+YXNrKTsNCiAJbmxtc2dfZnJlZShwYXR0ZXJucyk7DQogCXJldHVybiBlcnI7DQogfQ0KLS0gDQox
+LjkuMQ0K
 
-This patch fixes the checks reported by checkpatch.pl
-for braces {} should be used on all arms of this statement.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 2fac99d..893c741 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -477,12 +477,11 @@ int linux_wlan_get_firmware(struct net_device *dev)
- 	nic = netdev_priv(dev);
- 	wilc = nic->wilc;
- 
--	if (nic->iftype == AP_MODE)
-+	if (nic->iftype == AP_MODE) {
- 		firmware = AP_FIRMWARE;
--	else if (nic->iftype == STATION_MODE)
-+	} else if (nic->iftype == STATION_MODE) {
- 		firmware = STA_FIRMWARE;
--
--	else {
-+	} else {
- 		PRINT_D(INIT_DBG, "Get P2P_CONCURRENCY_FIRMWARE\n");
- 		firmware = P2P_CONCURRENCY_FIRMWARE;
- 	}
--- 
-1.9.1
 
