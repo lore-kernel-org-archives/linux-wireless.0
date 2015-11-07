@@ -1,163 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:51910 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbbKYNrP (ORCPT
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:33906 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbbKGXjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 08:47:15 -0500
-Subject: [PATCH 4/6] ath10k: split driver info messages during device
- initialisation
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 25 Nov 2015 15:38:27 +0200
-Message-ID: <20151125133827.25507.71671.stgit@potku.adurom.net> (sfid-20151125_144725_623025_1C949B10)
-In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
-References: <20151125133654.25507.10863.stgit@potku.adurom.net>
+	Sat, 7 Nov 2015 18:39:23 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <3ec13417acdc48628adaedb68d259b9c@NASANEXM01E.na.qualcomm.com>
+References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
+	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
+	<55B60BC9.8040800@rempel-privat.de>
+	<3945775.m5HblJPgiO@tauon.atsec.com>
+	<8738043ith.fsf@kamboji.qca.qualcomm.com>
+	<3ec13417acdc48628adaedb68d259b9c@NASANEXM01E.na.qualcomm.com>
+Date: Sat, 7 Nov 2015 17:39:21 -0600
+Message-ID: <CAFtRNNyWzRKQbq1wa8=6V=tOQzB3g9jEBLhAO7iSchNAzf=fkQ@mail.gmail.com> (sfid-20151108_003944_308291_D3B9A0DE)
+Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Stephan Mueller <smueller@chronox.de>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"Jacobson, David" <djacobso@qti.qualcomm.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"nhorman@tuxdriver.com" <nhorman@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Earlier we printed all the info messages after a successful device
-initialisation and firmware boot, but that's problematic if something goes
-wrong and there's no easy way to know what firmware version was used and so on.
+Hello all,
 
-Split the info messages into smaller pieces and print them as soon as we have
-the info available.
+That was partially my intention too when I submitted
+2aa56cca3571fd08c0c38f3e2d4bb0bfb3def3c5 which mixes FFT measurements
+to the entropy pool without providing any estimation on entropy
+(entropy estimation is the wrong approach, read the papers on fortuna
+for more information on that). I believe that this approach is better
+than mine because FFT data is too much (high throughput) and may have
+a negative impact on the pool when mixed like this (even without the
+entropy count) so Kale please revert my patch also (I was about to
+submit a request for reverting it and writing something similar when
+this thread came up). I believe that exporting the card as a hw rng
+and letting a userspace helper do the whitening and the post
+processing is the proper approach.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c  |    6 ++++
- drivers/net/wireless/ath/ath10k/debug.c |   44 ++++++++++++++++++++-----------
- drivers/net/wireless/ath/ath10k/debug.h |    4 +++
- 3 files changed, 38 insertions(+), 16 deletions(-)
+The idea behind exposing a device as a hw random number generator is
+not that it's output is ready to be used. It's just an entropy source.
+Almost every entropy source has some bias and no it's not always
+expected from a hw rng to do whitening on it's own, it's actually more
+secure to get the raw data and perform the whitening yourself because
+if what you get from the hw rng is already being post-processed then
+there is no way to know if someone has hidden a backdoor there (that
+was the big discussion about Intel's RDRAND and the possibility of an
+NSA backdoor in there -it could just be AES on CTR mode with a known
+key/iv-, we get whitened data so we don't know if we can trust them).
+A userspace helper is needed for proper whitening and statistical
+analysis (and no fips is not enough, try dieharder and ent and then go
+for more custom stuff) because we should keep the kernel clean. That's
+what rngd was supposed to do (do the whitening on userspace and then
+submit it back to the kernel's pool).
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 78fe1863ad04..32917be5a6d9 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1751,6 +1751,8 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_power_down;
- 	}
- 
-+	ath10k_debug_print_hwfw_info(ar);
-+
- 	ret = ath10k_core_get_board_id_from_otp(ar);
- 	if (ret && ret != -EOPNOTSUPP) {
- 		ath10k_err(ar, "failed to get board id from otp: %d\n",
-@@ -1764,6 +1766,8 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_free_firmware_files;
- 	}
- 
-+	ath10k_debug_print_board_info(ar);
-+
- 	ret = ath10k_core_init_firmware_features(ar);
- 	if (ret) {
- 		ath10k_err(ar, "fatal problem with firmware features: %d\n",
-@@ -1786,7 +1790,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_unlock;
- 	}
- 
--	ath10k_print_driver_info(ar);
-+	ath10k_debug_print_boot_info(ar);
- 	ath10k_core_stop(ar);
- 
- 	mutex_unlock(&ar->conf_mutex);
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 2bc7ae21ade4..ebe3e52cdd1d 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -122,41 +122,48 @@ void ath10k_info(struct ath10k *ar, const char *fmt, ...)
- }
- EXPORT_SYMBOL(ath10k_info);
- 
--void ath10k_print_driver_info(struct ath10k *ar)
-+void ath10k_debug_print_hwfw_info(struct ath10k *ar)
- {
- 	char fw_features[128] = {};
--	char boardinfo[100];
- 
- 	ath10k_core_get_fw_features_str(ar, fw_features, sizeof(fw_features));
- 
--	if (ar->id.bmi_ids_valid)
--		scnprintf(boardinfo, sizeof(boardinfo), "%d:%d",
--			  ar->id.bmi_chip_id, ar->id.bmi_board_id);
--	else
--		scnprintf(boardinfo, sizeof(boardinfo), "N/A");
--
- 	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x sub %04x:%04x",
- 		    ar->hw_params.name,
- 		    ar->target_version,
- 		    ar->chip_id,
- 		    ar->id.subsystem_vendor, ar->id.subsystem_device);
- 
-+	ath10k_info(ar, "kconfig debug %d debugfs %d tracing %d dfs %d testmode %d\n",
-+		    config_enabled(CONFIG_ATH10K_DEBUG),
-+		    config_enabled(CONFIG_ATH10K_DEBUGFS),
-+		    config_enabled(CONFIG_ATH10K_TRACING),
-+		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED),
-+		    config_enabled(CONFIG_NL80211_TESTMODE));
-+
- 	ath10k_info(ar, "firmware ver %s api %d features %s\n",
- 		    ar->hw->wiphy->fw_version,
- 		    ar->fw_api,
- 		    fw_features);
-+}
-+
-+void ath10k_debug_print_board_info(struct ath10k *ar)
-+{
-+	char boardinfo[100];
-+
-+	if (ar->id.bmi_ids_valid)
-+		scnprintf(boardinfo, sizeof(boardinfo), "%d:%d",
-+			  ar->id.bmi_chip_id, ar->id.bmi_board_id);
-+	else
-+		scnprintf(boardinfo, sizeof(boardinfo), "N/A");
- 
- 	ath10k_info(ar, "board_file api %d bmi_id %s",
- 		    ar->bd_api,
- 		    boardinfo);
-+}
- 
--	ath10k_info(ar, "kconfig debug %d debugfs %d tracing %d dfs %d testmode %d\n",
--		    config_enabled(CONFIG_ATH10K_DEBUG),
--		    config_enabled(CONFIG_ATH10K_DEBUGFS),
--		    config_enabled(CONFIG_ATH10K_TRACING),
--		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED),
--		    config_enabled(CONFIG_NL80211_TESTMODE));
--
-+void ath10k_debug_print_boot_info(struct ath10k *ar)
-+{
- 	ath10k_info(ar, "htt-ver %d.%d wmi-op %d htt-op %d cal %s max-sta %d raw %d hwcrypto %d\n",
- 		    ar->htt.target_version_major,
- 		    ar->htt.target_version_minor,
-@@ -167,6 +174,13 @@ void ath10k_print_driver_info(struct ath10k *ar)
- 		    test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags),
- 		    !test_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags));
- }
-+
-+void ath10k_print_driver_info(struct ath10k *ar)
-+{
-+	ath10k_debug_print_hwfw_info(ar);
-+	ath10k_debug_print_board_info(ar);
-+	ath10k_debug_print_boot_info(ar);
-+}
- EXPORT_SYMBOL(ath10k_print_driver_info);
- 
- void ath10k_err(struct ath10k *ar, const char *fmt, ...)
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 7de780c4ec8d..814719cf4f22 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -63,6 +63,10 @@ extern unsigned int ath10k_debug_mask;
- __printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
- __printf(2, 3) void ath10k_err(struct ath10k *ar, const char *fmt, ...);
- __printf(2, 3) void ath10k_warn(struct ath10k *ar, const char *fmt, ...);
-+
-+void ath10k_debug_print_hwfw_info(struct ath10k *ar);
-+void ath10k_debug_print_board_info(struct ath10k *ar);
-+void ath10k_debug_print_boot_info(struct ath10k *ar);
- void ath10k_print_driver_info(struct ath10k *ar);
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
+What's wrong with exporting the atheros cards as a hw random number
+generator ? Is the recently added jitter RNG (currently exposed as an
+RNG through the CryptoAPI) any better ? Does it have stronger entropy
+claims ? It just passes the statistical tests, it doesn't mean it has
+good "randomness" (let me remind you hpa's comments on HAVEGEd on
+LinuxCon 2012), a CPU is a deterministic system, the fact that there
+are many parameters on this system -not on all CPUs by the way, not
+everything out there is a cisc with branch prediction etc- turns it to
+a very complex system to analyze (chaotic behavior) which is good
+enough for what we want but it doesn't compare to an actual physical
+phenomenon such as E/M noise (btw a type of "jitter" is already mixed
+on the /dev/random's entropy pool since 2013 when I submitted this
+http://lkml.iu.edu/hypermail/linux/kernel/1211.2/00863.html -again
+with no entropy estimation and only by using timers- but it's not
+random in any way, it's just "too complicated to analyze" -that's what
+hpa also told about HAVEGEd and I totally agree with him-).
 
+The truth is that it's very hard to get good quality entropy in a way
+that's guaranteed e.g. even in the atheros's case an attacker can bias
+the RNG by hitting the card with a sine wave signal on the IF, only
+quantum phenomena such as photon detection -e.g. through radioactive
+decay- or even better measurements of the void based on Heisenberg's
+uncertainty principle can be truly classified as random and not
+always, we still have Bell's correlations such as entanglement -so
+e.g. something that seems random to us locally might not be random to
+the attacker, our system might be entangled with the attacker's
+system-. Even the current hw rngs supported by the framework might
+provide non-random data in case of hw failure (think of an RNG based
+on avalanche effect with a broken diode), that's why we should always
+do extensive post-processing and kernel is not the place for that.
+
+Some more comments here: I see people trusting HAVEGEd and entropy
+from sound cards, video cards etc and even provide some "proof" about
+how good that is. It's all wrong ! First of all there is no definition
+of randomness, if we could define randomness it wouldn't be random any
+more (we 'd have some information about it), there is only the
+uncertainty principle. Second you can't have claims on entropy bounds
+because such systems behave differently under different circumstances
+or different configurations. HAVEGEd for example gathers entropy based
+on the assumption that we have context switching and a complex CPU so
+that it's too complicated to guess what's running on the system (again
+no strong claims on entropy bounds it's just "it's messy enough, it
+passes the tests, so it's ok"). Try running it on a real-time system
+with a single process and you can say goodbye to any entropy claims.
+Sound cards ? If you don't properly configure your sound card (even in
+the case of having nothing connected on the mic, just gathering
+thermal noise from the resistor) you 'll end up with no entropy at all
+! Most sound cards have a noise cancellation system or they have a
+volume threshold so they won't give anything below that (all zeroes,
+no entropy), others will "loop" the signal when you raise the volume
+enough and while you think that you get something random, you actually
+get the same signal "looped" multiple times due to interference
+between the input and output (so again no entropy claims can be made).
+Video cards or web cams ? It depends on what they see, put a strong
+light on them and again your entropy claims are invalid.
+
+Trying to estimate the entropy is also very hard because you can only
+measure the entropy from your point of view, not the attacker's. Take
+a simple AES on CTR mode with a known key/iv to the attacker. You can
+get its output, run your entropy estimator and find it full of entropy
+but what looks random to you it won't be random to the attacker and
+that's why we care about "high quality" randomness right ? It's for
+cryptographic / security purposes, otherwise /dev/urandom is more than
+enough (actually is good enough for crypto most of the times too).
+
+So please let's stop arguing about what is random, more random, higher
+quality random etc. We have an entropy source here, let's use it.
+We'll never be able to know how good it is anyway.
+
+
+2015-07-31 3:39 GMT-05:00 Pan, Miaoqing <miaoqing@qti.qualcomm.com>:
+> +Pouyan & David.
+>
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Friday, July 31, 2015 3:09 PM
+> To: Stephan Mueller
+> Cc: Oleksij Rempel; Pan, Miaoqing; linville@tuxdriver.com; linux-wireless@vger.kernel.org; Theodore Ts'o; linux-crypto@vger.kernel.org; nhorman@tuxdriver.com
+> Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
+>
+> Stephan Mueller <smueller@chronox.de> writes:
+>
+>>>-rw-rw-r-- 1 lex lex 2564096 Jul 27 11:36 hwrng.out
+>>>-rw-rw-r-- 1 lex lex 2468394 Jul 27 11:36 hwrng.out.bz2
+>>>
+>>>Do i understand it correctly, in case of hwrng bzip was able to find
+>>>enough pattern to compressed the data? Even with format overhead?
+>>>
+>>>I'm no an expert, help of an expert would be welcome, added some more
+>>>people to CC
+>>
+>> This one does not look good for a claim that the RNG produces white
+>> noise. An RNG that is wired up to /dev/hwrng should produce white
+>> noise. Either by having an appropriate noise source or by conditioning
+>> the output of the noise source.
+>>
+>> When conditioning the output, you have to be careful about the entropy claim.
+>> For example, you cannot state that the data stream from your noise
+>> source has close to one bit of entropy for each obtained bit. Thus,
+>> the conditioner must ensure that the data from the noise source is
+>> collected and its entropy is maintained and accumulated.
+>>
+>> However, the hwrandom framework does not provide any conditioning
+>> logic. And I would say that such conditioner logic should not reside
+>> in a driver either. I would say that the discussed RNG does not seem
+>> fit for hooking it up with the hwrandom framework.
+>
+> Based on the discussion I'm going to revert this patch, at least for now.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
