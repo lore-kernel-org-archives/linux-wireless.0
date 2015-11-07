@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37763 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031120AbbKFCSJ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60119 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753957AbbKGRZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:09 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 61/73] staging: wilc1000: remove unused typedef wilc_wlan_cfg_func_t
-Date: Fri, 6 Nov 2015 11:20:00 +0900
-Message-ID: <1446776412-30670-12-git-send-email-glen.lee@atmel.com> (sfid-20151106_031813_169378_E593B825)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+	Sat, 7 Nov 2015 12:25:33 -0500
+Date: Sat, 7 Nov 2015 09:25:32 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: patch "ath10k: drop probe responses when too many are queued"
+ added to staging-testing
+Message-ID: <20151107172532.GA26631@kroah.com> (sfid-20151107_182546_959827_BF807F76)
+References: <14468483293347@kroah.com>
+ <87mvuq9p2v.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mvuq9p2v.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Sat, Nov 07, 2015 at 10:43:52AM +0200, Kalle Valo wrote:
+> Hi Greg,
+> 
+> <gregkh@linuxfoundation.org> writes:
+> 
+> > This is a note to let you know that I've just added the patch titled
+> >
+> >     ath10k: drop probe responses when too many are queued
+> >
+> > to my staging git tree which can be found at
+> >     git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
+> > in the staging-testing branch.
+> >
+> > The patch will show up in the next release of the linux-next tree
+> > (usually sometime within the next 24 hours during the week.)
+> >
+> > The patch will be merged to the staging-next branch sometime soon,
+> > after it passes testing, and the merge window is open.
+> >
+> > If you have any questions about this process, please let me know.
+> 
+> Did you apply this and the few other ath10k patches to staging by
+> mistake? I had already applied them to my ath.git tree and linus already
+> has them:
+> 
+> 7b7da0a02192 ath10k: drop probe responses when too many are queued
 
-This patch removes unused typedef wilc_wlan_cfg_func_t of wilc_wlan.h.
+Yeah, sorry about that, my script went wrong when I merged in Linus's
+latest tree into my branch.  Sorry for the noise.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.h | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index d15c848..6c784fd 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -272,10 +272,6 @@ struct wilc_cfg_frame {
- };
- 
- typedef struct {
--	int (*wlan_tx)(u8 *, u32, wilc_tx_complete_func_t);
--} wilc_wlan_cfg_func_t;
--
--typedef struct {
- 	int type;
- 	u32 seq_no;
- } wilc_cfg_rsp_t;
--- 
-1.9.1
-
+greg k-h
