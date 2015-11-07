@@ -1,37 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38048 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751327AbbKZQpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 11:45:24 -0500
-Message-ID: <1448556321.2167.21.camel@sipsolutions.net> (sfid-20151126_174527_396636_4E13EB17)
-Subject: Re: [PATCH 0/8] various mac80211 patches
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Nov 2015 17:45:21 +0100
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8F6129@hasmsx107.ger.corp.intel.com>
-References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1448016142.3141.3.camel@sipsolutions.net>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8F6129@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout4.samsung.com ([203.254.224.34]:46771 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbbKGLgL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2015 06:36:11 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NXG01LU10889H80@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Sat, 07 Nov 2015 20:36:08 +0900 (KST)
+Date: Sat, 07 Nov 2015 11:36:08 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH] iw: Fix memory leak if nla_put fails
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <86705858.648631446896168202.JavaMail.weblogic@ep2mlwas02d> (sfid-20151107_123616_089897_83F977A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-11-20 at 11:02 +0000, Grumbach, Emmanuel wrote:
-> 
-> On 11/20/2015 12:42 PM, Johannes Berg wrote:
-> > I'm ignoring patches 1-3 since I already have them pending.
-> > 
-> > I've applied 6-8 to mac80211 now.
-> > 
-> > I'll leave 4 and 5 pending for now and apply them to mac80211-next,
-> > unless you speak up now and tell me you really want those driver
-> > fixes
-> > they prepare for. Doesn't really seem relevant though.
-> 
-> mac80211-next is good enough for 4 and 5.
+RnJvbSA4MGM5NTZmMTVlZGZlNGY1OWE2YzEzYWU4YWQwOGJlYTBiNzhhYWZjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQ0KRnJvbTogQW1pdCBLaGF0cmkgPGFtaXQua2hhdHJpQHNhbXN1bmcuY29t
+Pg0KRGF0ZTogU2F0LCA3IE5vdiAyMDE1IDE3OjAwOjQ3ICswNTMwDQpTdWJqZWN0OiBbUEFUQ0hd
+IEZpeCBtZW1vcnkgbGVhayBpZiBubGFfcHV0IGZhaWxzDQoNClNpZ25lZC1vZmYtYnk6IEFtaXQg
+S2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hh
+dHJpIDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KU2lnbmVkLW9mZi1ieTogQXNodXRvc2ggS2F1
+c2hpayA8ay5hc2h1dG9zaEBzYW1zdW5nLmNvbT4NCg0KYXZvaWQgbWVtb3J5IGxlYWsgYmVjYXVz
+ZSBvZiBubGFfcHV0X2ZhaWx1cmUNCi0tLQ0KIGNvYWxlc2NlLmMgfCAgNyArKysrKystDQogd293
+bGFuLmMgICB8IDI4ICsrKysrKysrKysrKysrKysrKysrKystLS0tLS0NCiAyIGZpbGVzIGNoYW5n
+ZWQsIDI4IGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9jb2Fs
+ZXNjZS5jIGIvY29hbGVzY2UuYw0KaW5kZXggMzZkY2FlZi4uOWIxM2FiMyAxMDA2NDQNCi0tLSBh
+L2NvYWxlc2NlLmMNCisrKyBiL2NvYWxlc2NlLmMNCkBAIC0xMjQsNyArMTI0LDggQEAgc3RhdGlj
+IGludCBoYW5kbGVfY29hbGVzY2VfZW5hYmxlKHN0cnVjdCBubDgwMjExX3N0YXRlICpzdGF0ZSwN
+CiAJCQkJCW5sYV9uZXN0X2VuZChtc2csIG5sX3BhdCk7DQogCQkJCQlmcmVlKG1hc2spOw0KIAkJ
+CQkJZnJlZShwYXQpOw0KLQ0KKwkJCQkJcGF0PU5VTEw7DQorCQkJCQltYXNrPU5VTEw7DQogCQkJ
+CQlpZiAoIW5leHRfcGF0KQ0KIAkJCQkJCWJyZWFrOw0KIAkJCQkJY3VyX3BhdCA9IG5leHRfcGF0
+Ow0KQEAgLTE1NSw2ICsxNTYsMTAgQEAgc3RhdGljIGludCBoYW5kbGVfY29hbGVzY2VfZW5hYmxl
+KHN0cnVjdCBubDgwMjExX3N0YXRlICpzdGF0ZSwNCiAJCWVyciA9IDE7DQogCWdvdG8gY2xvc2U7
+DQogbmxhX3B1dF9mYWlsdXJlOg0KKwlpZihwYXQpDQorCQlmcmVlKHBhdCk7DQorCWlmKG1hc2sp
+DQorCQlmcmVlKG1hc2spOw0KIAllcnIgPSAtRU5PQlVGUzsNCiBjbG9zZToNCiAJZmNsb3NlKGYp
+Ow0KZGlmZiAtLWdpdCBhL3dvd2xhbi5jIGIvd293bGFuLmMNCmluZGV4IGMzMGVhYjcuLjJlMWQ0
+M2QgMTAwNjQ0DQotLS0gYS93b3dsYW4uYw0KKysrIGIvd293bGFuLmMNCkBAIC04OSw3ICs4OSwx
+MCBAQCBzdGF0aWMgaW50IHdvd2xhbl9wYXJzZV90Y3BfZmlsZShzdHJ1Y3QgbmxfbXNnICptc2cs
+IGNvbnN0IGNoYXIgKmZuKQ0KIA0KIAkJCWlmICghcGt0KQ0KIAkJCQlnb3RvIGNsb3NlOw0KLQkJ
+CU5MQV9QVVQobXNnLCBOTDgwMjExX1dPV0xBTl9UQ1BfREFUQV9QQVlMT0FELCBsZW4sIHBrdCk7
+DQorCQkJaWYobmxhX3B1dChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9EQVRBX1BBWUxPQUQsIGxl
+biwgcGt0KSA8IDApew0KKwkJCQlmcmVlKHBrdCk7DQorCQkJCWdvdG8gbmxhX3B1dF9mYWlsdXJl
+Ow0KKwkJCX0NCiAJCQlmcmVlKHBrdCk7DQogCQl9IGVsc2UgaWYgKHN0cm5jbXAoYnVmLCAiZGF0
+YS5pbnRlcnZhbD0iLCAxNCkgPT0gMCkgew0KIAkJCU5MQV9QVVRfVTMyKG1zZywgTkw4MDIxMV9X
+T1dMQU5fVENQX0RBVEFfSU5URVJWQUwsDQpAQCAtOTcsMTMgKzEwMCwyMCBAQCBzdGF0aWMgaW50
+IHdvd2xhbl9wYXJzZV90Y3BfZmlsZShzdHJ1Y3QgbmxfbXNnICptc2csIGNvbnN0IGNoYXIgKmZu
+KQ0KIAkJfSBlbHNlIGlmIChzdHJuY21wKGJ1ZiwgIndha2U9IiwgNSkgPT0gMCkgew0KIAkJCXVu
+c2lnbmVkIGNoYXIgKnBhdCwgKm1hc2s7DQogCQkJc2l6ZV90IHBhdGxlbjsNCi0NCiAJCQlpZiAo
+cGFyc2VfaGV4X21hc2soYnVmICsgNSwgJnBhdCwgJnBhdGxlbiwgJm1hc2spKQ0KIAkJCQlnb3Rv
+IGNsb3NlOw0KLQkJCU5MQV9QVVQobXNnLCBOTDgwMjExX1dPV0xBTl9UQ1BfV0FLRV9NQVNLLA0K
+LQkJCQlESVZfUk9VTkRfVVAocGF0bGVuLCA4KSwgbWFzayk7DQotCQkJTkxBX1BVVChtc2csIE5M
+ODAyMTFfV09XTEFOX1RDUF9XQUtFX1BBWUxPQUQsDQotCQkJCXBhdGxlbiwgcGF0KTsNCisJCQlp
+ZihubGFfcHV0KG1zZywgTkw4MDIxMV9XT1dMQU5fVENQX1dBS0VfTUFTSywNCisJCQkJRElWX1JP
+VU5EX1VQKHBhdGxlbiwgOCksIG1hc2spIDwgMCl7DQorCQkJCWZyZWUobWFzayk7DQorCQkJCWZy
+ZWUocGF0KTsNCisJCQkJZ290byBubGFfcHV0X2ZhaWx1cmU7DQorCQkJfQ0KKwkJCWlmKG5sYV9w
+dXQobXNnLCBOTDgwMjExX1dPV0xBTl9UQ1BfV0FLRV9QQVlMT0FELA0KKwkJCQlwYXRsZW4sIHBh
+dCkgPCAwKXsNCisJCQkJZnJlZShwYXQpOw0KKwkJCQlmcmVlKG1hc2spOw0KKwkJCQlnb3RvIG5s
+YV9wdXRfZmFpbHVyZTsNCisJCQl9DQogCQkJZnJlZShtYXNrKTsNCiAJCQlmcmVlKHBhdCk7DQog
+CQl9IGVsc2UgaWYgKHN0cm5jbXAoYnVmLCAiZGF0YS5zZXE9IiwgOSkgPT0gMCkgew0KQEAgLTI5
+OSw2ICszMDksOCBAQCBzdGF0aWMgaW50IGhhbmRsZV93b3dsYW5fZW5hYmxlKHN0cnVjdCBubDgw
+MjExX3N0YXRlICpzdGF0ZSwNCiAJCQlubGFfbmVzdF9lbmQocGF0dGVybnMsIHBhdHRlcm4pOw0K
+IAkJCWZyZWUobWFzayk7DQogCQkJZnJlZShwYXQpOw0KKwkJCXBhdD1OVUxMOw0KKwkJCW1hc2s9
+TlVMTDsNCiAJCQlicmVhazsNCiAJCX0NCiAJCWFyZ3YrKzsNCkBAIC0zMTIsNiArMzI0LDEwIEBA
+IHN0YXRpYyBpbnQgaGFuZGxlX3dvd2xhbl9lbmFibGUoc3RydWN0IG5sODAyMTFfc3RhdGUgKnN0
+YXRlLA0KIAlubGFfbmVzdF9lbmQobXNnLCB3b3dsYW4pOw0KIAllcnIgPSAwOw0KICBubGFfcHV0
+X2ZhaWx1cmU6DQorCWlmKHBhdCkNCisJCWZyZWUocGF0KTsNCisJaWYobWFzaykNCisJCWZyZWUo
+bWFzayk7DQogCW5sbXNnX2ZyZWUocGF0dGVybnMpOw0KIAlyZXR1cm4gZXJyOw0KIH0NCi0tIA0K
+MS45LjENCg0K
 
-Ok, applied there.
 
-johannes
