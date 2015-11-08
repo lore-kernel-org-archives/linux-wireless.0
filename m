@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26924 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752739AbbKEFgB (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36744 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbbKHHuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:01 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 26/38] staging: wilc1000: rename Bssid1 of function get_if_handler
-Date: Thu, 5 Nov 2015 14:36:27 +0900
-Message-ID: <1446701799-24870-26-git-send-email-glen.lee@atmel.com> (sfid-20151105_063756_348441_434C9B66)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 8 Nov 2015 02:50:06 -0500
+Received: by pacdm15 with SMTP id dm15so141906438pac.3
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:05 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/32] staging: wilc1000: use kmemdup in host_int_add_ptk
+Date: Sun,  8 Nov 2015 16:49:04 +0900
+Message-Id: <1446968965-8958-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085011_900777_2F513EBA)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes kmalloc followed by memcpy to kmemdup
+The error checking is also added when kmemdup is failed.
 
-This patch renames Bssid1 of function get_if_handler to bssid1
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 64b7c4f..6758cbc 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -333,14 +333,14 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dd7e8ed..18623c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3239,8 +3239,9 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
  
- struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
- {
--	u8 *bssid, *Bssid1;
-+	u8 *bssid, *bssid1;
- 	int i = 0;
+-	msg.body.key_info.attr.wpa.key = kmalloc(ptk_key_len, GFP_KERNEL);
+-	memcpy(msg.body.key_info.attr.wpa.key, ptk, ptk_key_len);
++	msg.body.key_info.attr.wpa.key = kmemdup(ptk, ptk_key_len, GFP_KERNEL);
++	if (!msg.body.key_info.attr.wpa.key)
++		return -ENOMEM;
  
- 	bssid = mac_header + 10;
--	Bssid1 = mac_header + 4;
-+	bssid1 = mac_header + 4;
- 
- 	for (i = 0; i < wilc->vif_num; i++)
--		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
-+		if (!memcmp(bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
- 		    !memcmp(bssid, wilc->vif[i].bssid, ETH_ALEN))
- 			return wilc->vif[i].ndev;
- 
-@@ -348,9 +348,9 @@ struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
- 	for (i = 0; i < 25; i++)
- 		PRINT_D(INIT_DBG, "%02x ", mac_header[i]);
- 	bssid = mac_header + 18;
--	Bssid1 = mac_header + 12;
-+	bssid1 = mac_header + 12;
- 	for (i = 0; i < wilc->vif_num; i++)
--		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
-+		if (!memcmp(bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
- 		    !memcmp(bssid, wilc->vif[i].bssid, ETH_ALEN))
- 			return wilc->vif[i].ndev;
- 
+ 	if (rx_mic) {
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
 -- 
-1.9.1
+2.6.3
 
