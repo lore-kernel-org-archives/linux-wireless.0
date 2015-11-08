@@ -1,44 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31039 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009AbbKXRjP (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37264 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698AbbKHVcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:39:15 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath10k: introduce new subtypes for proxy STA and Mesh
-Date: Tue, 24 Nov 2015 09:37:34 -0800
-Message-ID: <1448386655-13936-3-git-send-email-poh@qca.qualcomm.com> (sfid-20151124_183922_217381_FE437CA3)
-In-Reply-To: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-References: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 8 Nov 2015 16:32:11 -0500
+From: Punit Vara <punitvara@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Punit Vara <punitvara@gmail.com>
+Subject: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared *wilc and implicit declaration of init_irq
+Date: Mon,  9 Nov 2015 03:01:50 +0530
+Message-Id: <1447018310-4524-1-git-send-email-punitvara@gmail.com> (sfid-20151108_223228_759819_B9F43ADF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QCA988X firmware starting from 10.2.4.70.12-2 supports new
-vdev subtypes for proxy STA and Mesh, hence add them to be used
-as needed.
+This patch is to the linux_wlan.c file that fixes up break found during
+make drivers/staging/wilc1000/linux_wlan.o
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Patch add following things to file :
+-init_irq declaration
+-At preprocessor (!defined WILC_SDIO) to defination of init_irq
+-At preprocessor (!defined WILC_SDIO) to defination isr_uh_routine
+-removes unnecessary lines to declare *wilc
+
+Patch fixes 702c0e50f and 2c1d05d10 tags.
+
+Signed-off-by: Punit Vara <punitvara@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h | 2 ++
- 1 file changed, 2 insertions(+)
+-Fixes tag added suggested by Dan carpenter.
+-Remove declaration of autovariable with same type and same name suggested by Joe Perches
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0747055..d85ad78 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4274,6 +4274,8 @@ enum wmi_vdev_subtype {
- 	WMI_VDEV_SUBTYPE_P2P_DEVICE = 1,
- 	WMI_VDEV_SUBTYPE_P2P_CLIENT = 2,
- 	WMI_VDEV_SUBTYPE_P2P_GO     = 3,
-+	WMI_VDEV_SUBTYPE_PROXY_STA	= 4,
-+	WMI_VDEV_SUBTYPE_MESH		= 5,
- };
+ drivers/staging/wilc1000/linux_wlan.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 086f1db..5bd14ed 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -208,7 +208,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 	return NOTIFY_DONE;
+ }
  
- /* values for vdev_subtype */
+-#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
++#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
+ static irqreturn_t isr_uh_routine(int irq, void *user_data)
+ {
+ 	perInterface_wlan_t *nic;
+@@ -246,7 +246,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
+ 	return IRQ_HANDLED;
+ }
+ 
+-#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
++#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
+ static int init_irq(struct net_device *dev)
+ {
+ 	int ret = 0;
+@@ -937,6 +937,10 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	}
+ }
+ 
++#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
++static int init_irq(struct net_device *dev);
++#endif
++
+ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ {
+ 	wilc_wlan_inp_t nwi;
+@@ -1578,9 +1582,7 @@ int wilc_netdev_init(struct wilc **wilc)
+ 
+ static int __init init_wilc_driver(void)
+ {
+-#ifdef WILC_SPI
+ 	struct wilc *wilc;
+-#endif
+ 
+ #if defined(WILC_DEBUGFS)
+ 	if (wilc_debugfs_init() < 0) {
 -- 
-1.9.1
+2.6.2
 
