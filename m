@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54970 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753992AbbKLWA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 17:00:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Marek <mmarek@suse.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v5 5/5] iwlwifi: mvm: add Kconfig settings for hw flags
-Date: Thu, 12 Nov 2015 23:00:52 +0100
-Message-Id: <1447365652-23716-6-git-send-email-johannes@sipsolutions.net> (sfid-20151112_230110_783130_8B335A38)
-In-Reply-To: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
-References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34139 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474AbbKHHug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2015 02:50:36 -0500
+Received: by padhx2 with SMTP id hx2so157837108pad.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:35 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 21/32] staging: wilc1000: rename u8Ciphermode in host_int_add_rx_gtk
+Date: Sun,  8 Nov 2015 16:49:14 +0900
+Message-Id: <1446968965-8958-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085042_618985_3DF53857)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch changes u8Ciphermode to cipher_mode to avoid camelcase.
 
-Copy the hardware flags settings into Kconfig for iwlwifi/mvm.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/Kconfig | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 3fbee1ec1d33..74416361b154 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -65,7 +65,23 @@ config IWLMVM
- 	tristate "Intel Wireless WiFi MVM Firmware support"
- 	select WANT_DEV_COREDUMP
- 	count MAC80211_NUM_DRIVERS
--	select MAC80211_DRIVER_NO_HWFLAGS
-+	count MAC80211_HW_SIGNAL_DBM
-+	count MAC80211_HW_SPECTRUM_MGMT
-+	count MAC80211_HW_REPORTS_TX_ACK_STATUS
-+	count MAC80211_HW_QUEUE_CONTROL
-+	count MAC80211_HW_WANT_MONITOR_VIF
-+	count MAC80211_HW_SUPPORTS_PS
-+	count MAC80211_HW_SUPPORTS_DYNAMIC_PS
-+	count MAC80211_HW_AMPDU_AGGREGATION
-+	count MAC80211_HW_TIMING_BEACON_ONLY
-+	count MAC80211_HW_CONNECTION_MONITOR
-+	count MAC80211_HW_CHANCTX_STA_CSA
-+	count MAC80211_HW_SUPPORT_FAST_XMIT
-+	count MAC80211_HW_SUPPORTS_CLONED_SKBS
-+	count MAC80211_HW_SINGLE_SCAN_ON_ALL_BANDS
-+	select MAC80211_HW_MFP_CAPABLE_DYN
-+	select MAC80211_HW_RX_INCLUDES_FCS_DYN
-+	select MAC80211_HW_TDLS_WIDER_BW_DYN
- 	help
- 	  This is the driver that supports the MVM firmware. The list
- 	  of the devices that use this firmware is available here:
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7ca924a..7b647ce 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3277,7 +3277,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 			u8 gtk_key_len,	u8 index,
+ 			u32 key_rsc_len, const u8 *key_rsc,
+ 			const u8 *rx_mic, const u8 *tx_mic,
+-			u8 mode, u8 u8Ciphermode)
++			u8 mode, u8 cipher_mode)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -3306,7 +3306,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 
+ 	if (mode == AP_MODE) {
+ 		msg.body.key_info.action = ADDKEY_AP;
+-		msg.body.key_info.attr.wpa.mode = u8Ciphermode;
++		msg.body.key_info.attr.wpa.mode = cipher_mode;
+ 	}
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index e25f838..da81b92 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -321,7 +321,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 			u8 gtk_key_len,	u8 index,
+ 			u32 key_rsc_len, const u8 *key_rsc,
+ 			const u8 *rx_mic, const u8 *tx_mic,
+-			u8 mode, u8 u8Ciphermode);
++			u8 mode, u8 cipher_mode);
+ s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen,
+ 			u8 *pu8TxGtk, u8 u8KeyIdx);
+ s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
 -- 
-2.6.2
+2.6.3
 
