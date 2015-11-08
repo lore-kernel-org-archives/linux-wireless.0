@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7553 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752894AbbKBIuF (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35631 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473AbbKHHuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:50:05 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 18/38] staging: wilc1000: linux_wlan: remove unused defines
-Date: Mon, 2 Nov 2015 17:51:01 +0900
-Message-ID: <1446454281-22484-18-git-send-email-glen.lee@atmel.com> (sfid-20151102_095011_444848_3C7B13E0)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 8 Nov 2015 02:50:21 -0500
+Received: by pasz6 with SMTP id z6so170549715pas.2
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:20 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 16/32] staging: wilc1000: rename u8KeyIdx in host_int_add_rx_gtk
+Date: Sun,  8 Nov 2015 16:49:09 +0900
+Message-Id: <1446968965-8958-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085028_822563_DB2C00F0)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch changes u8KeyIdx to index to avoid camelcase.
 
-This patch removes unused defines from linux_wlan.c file.
- - NM73131
- - PLAT_CLM9722
-Two defines are support custom feature that don't used anymore.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index e7e5229..82495ce 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1540,15 +1540,9 @@ int wilc_netdev_init(struct wilc **wilc)
- 		nic = netdev_priv(ndev);
- 		memset(nic, 0, sizeof(perInterface_wlan_t));
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5c40d40..22fdca5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3274,7 +3274,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
+ }
  
--		if (i == 0) {
--		#if defined(NM73131)
--			strcpy(ndev->name, "wilc_eth%d");
--		#elif defined(PLAT_CLM9722)
--			strcpy(ndev->name, "eth%d");
--		#else
-+		if (i == 0)
- 			strcpy(ndev->name, "wlan%d");
--		#endif
--		} else
-+		else
- 			strcpy(ndev->name, "p2p%d");
+ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+-			u8 gtk_key_len,	u8 u8KeyIdx,
++			u8 gtk_key_len,	u8 index,
+ 			u32 u32KeyRSClen, const u8 *KeyRSC,
+ 			const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 			u8 mode, u8 u8Ciphermode)
+@@ -3322,7 +3322,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 		memcpy(msg.body.key_info.attr.wpa.key + 24, pu8TxMic,
+ 		       TX_MIC_KEY_LEN);
  
- 		nic->u8IfIdx = wl->vif_num;
+-	msg.body.key_info.attr.wpa.index = u8KeyIdx;
++	msg.body.key_info.attr.wpa.index = index;
+ 	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
+ 	msg.body.key_info.attr.wpa.seq_len = u32KeyRSClen;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6b7b05e..41ca349 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -318,7 +318,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
+ s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac,
+ 			       u32 *pu32InactiveTime);
+ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+-			u8 gtk_key_len,	u8 u8KeyIdx,
++			u8 gtk_key_len,	u8 index,
+ 			u32 u32KeyRSClen, const u8 *KeyRSC,
+ 			const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 			u8 mode, u8 u8Ciphermode);
 -- 
-1.9.1
+2.6.3
 
