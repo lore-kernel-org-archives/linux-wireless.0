@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43880 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbbKZNBL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28008 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbbKHMDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 08:01:11 -0500
-Date: Thu, 26 Nov 2015 16:00:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: (bug report) b43: impossible conditions in debugfs
-Message-ID: <20151126130033.GG7289@mwanda> (sfid-20151126_140115_788902_996D534E)
-References: <20151126115924.GI10556@mwanda>
- <20151126133241.5bc5a793@wiggum>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20151126133241.5bc5a793@wiggum>
+	Sun, 8 Nov 2015 07:03:32 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] MAINTAINERS: wil6210: new maintainer - Maya Erez
+Date: Sun,  8 Nov 2015 14:03:17 +0200
+Message-Id: <1446984197-13997-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20151108_130336_233383_0895D7AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 26, 2015 at 01:32:41PM +0100, Michael Büsch wrote:
-> > See also:
-> > drivers/net/wireless/broadcom/b43/debugfs.c:346 mmio32write__write_file() warn: impossible condition '(mask > 4294967295) => (0-u32max > u32max)'
-> > drivers/net/wireless/broadcom/b43/debugfs.c:346 mmio32write__write_file() warn: impossible condition '(set > 4294967295) => (0-u32max > u32max)'
-> 
-> 
-> 
-> Sure. These are intentional.
-> The compiler will optimize this out.
+Maya Erez will maintain the wil6210 driver
 
-Hm...  We try to ignore when people do intentional comparisons with zero
-like this:
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	if (unsigned_var < 0 || unsigned_var >= 10)
-		return -EINVAL;
-
-Because they are obviously harmless and they don't hurt readability.
-Also Linus doesn't like removing these.
-
-But what's the point of this?  I have seen these before when I was
-checking ide_set_disk_chs() for underflows.  I also reported another one
-recently that was exactly the same as this and the guy changed it from
-if (x > UINT_MAX) to if (!(x < UINT_MAX))...  I don't get it.
-
-regards,
-dan carpenter
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 27b27c0..54f6e9c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1804,7 +1804,7 @@ S:	Supported
+ F:	drivers/net/wireless/ath/ath6kl/
+ 
+ WILOCITY WIL6210 WIRELESS DRIVER
+-M:	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
++M:	Maya Erez <qca_merez@qca.qualcomm.com>
+ L:	linux-wireless@vger.kernel.org
+ L:	wil6210@qca.qualcomm.com
+ S:	Supported
+-- 
+2.1.4
 
