@@ -1,249 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:64292 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182AbbKPOF1 (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36718 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbbKHHuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 09:05:27 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 14/19] staging/wilc1000: pass hif operations through initialization
-Date: Mon, 16 Nov 2015 15:05:05 +0100
-Message-Id: <1447682710-2908925-15-git-send-email-arnd@arndb.de> (sfid-20151116_150550_477007_AB4131B2)
-In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
-References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+	Sun, 8 Nov 2015 02:50:03 -0500
+Received: by pacdm15 with SMTP id dm15so141905650pac.3
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:02 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/32] staging: wilc1000: rename u8KeyLen in host_int_add_ptk
+Date: Sun,  8 Nov 2015 16:49:03 +0900
+Message-Id: <1446968965-8958-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085008_483384_C1481F31)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wilc_hif_spi and wilc_hif_sdio structures are part of
-the bus specific code, and the generic code should have no knowledge
-of their addresses.
+This patch changes u8KeyLen to key_len to avoid camelcase.
+It is used as local variable in order to save pkt_key_len that is
+argument of this function.
 
-This changes the code to reference them only from the bus
-specific initialization code, which we can then use to split
-up the driver into separate modules.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         |  4 ++-
- drivers/staging/wilc1000/linux_wlan_sdio.c    |  3 ++-
- drivers/staging/wilc1000/linux_wlan_spi.c     |  2 +-
- drivers/staging/wilc1000/wilc_sdio.c          | 35 +++++++++++++--------------
- drivers/staging/wilc1000/wilc_spi.c           | 34 +++++++++++++-------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  4 ++-
- drivers/staging/wilc1000/wilc_wlan.c          | 15 ++----------
- drivers/staging/wilc1000/wilc_wlan.h          |  4 +--
- 8 files changed, 47 insertions(+), 54 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index e81e90678d0f..2fb1d97bded1 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1408,7 +1408,8 @@ void wilc_netdev_cleanup(struct wilc *wilc)
- #endif
- }
- 
--int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type, int gpio)
-+int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
-+		     int gpio, const struct wilc_hif_func *ops)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a959f48..dd7e8ed 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3214,7 +3214,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
  {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	u8 u8KeyLen = ptk_key_len;
++	u8 key_len = ptk_key_len;
  	int i;
- 	perInterface_wlan_t *nic;
-@@ -1423,6 +1424,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type, int gp
- 	*wilc = wilc_dev;
- 	wilc_dev->io_type = io_type;
- 	wilc_dev->gpio = gpio;
-+	wilc_dev->ops = ops;
  
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 732b0d66366b..f4250fda6cf1 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -119,7 +119,8 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
- 
- 	PRINT_D(INIT_DBG, "Initializing netdev\n");
- 	wilc_sdio_func = func;
--	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio)) {
-+	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
-+			     &wilc_hif_sdio)) {
- 		PRINT_ER("Couldn't initialize netdev\n");
- 		return -1;
+ 	if (!hif_drv) {
+@@ -3223,10 +3223,10 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
  	}
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index f4dda4a6fa7b..a7a52593156a 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -404,7 +404,7 @@ static int __init init_wilc_spi_driver(void)
  
- 	wilc_debugfs_init();
+ 	if (rx_mic)
+-		u8KeyLen += RX_MIC_KEY_LEN;
++		key_len += RX_MIC_KEY_LEN;
  
--	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM);
-+	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
- 	if (ret) {
- 		wilc_debugfs_remove();
- 		return ret;
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 8441fcccccc4..006aae4679cb 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -912,23 +912,22 @@ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
-  *
-  ********************************************/
+ 	if (tx_mic)
+-		u8KeyLen += TX_MIC_KEY_LEN;
++		key_len += TX_MIC_KEY_LEN;
  
--struct wilc_hif_func wilc_hif_sdio = {
--	sdio_init,
--	sdio_deinit,
--	sdio_read_reg,
--	sdio_write_reg,
--	sdio_read,
--	sdio_write,
--	sdio_sync,
--	sdio_clear_int,
--	sdio_read_int,
--	sdio_clear_int_ext,
--	sdio_read_size,
--	sdio_write,
--	sdio_read,
--	sdio_sync_ext,
--
--	sdio_set_max_speed,
--	sdio_set_default_speed,
-+const struct wilc_hif_func wilc_hif_sdio = {
-+	.hif_init = sdio_init,
-+	.hif_deinit = sdio_deinit,
-+	.hif_read_reg = sdio_read_reg,
-+	.hif_write_reg = sdio_write_reg,
-+	.hif_block_rx = sdio_read,
-+	.hif_block_tx = sdio_write,
-+	.hif_sync = sdio_sync,
-+	.hif_clear_int = sdio_clear_int,
-+	.hif_read_int = sdio_read_int,
-+	.hif_clear_int_ext = sdio_clear_int_ext,
-+	.hif_read_size = sdio_read_size,
-+	.hif_block_tx_ext = sdio_write,
-+	.hif_block_rx_ext = sdio_read,
-+	.hif_sync_ext = sdio_sync_ext,
-+	.hif_set_max_bus_speed = sdio_set_max_speed,
-+	.hif_set_default_bus_speed = sdio_set_default_speed,
- };
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
  
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index dc9cdf5e4065..39dd75665ba7 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -1021,21 +1021,21 @@ static int wilc_spi_sync_ext(int nint /*  how mant interrupts to enable. */)
-  *      Global spi HIF function table
-  *
-  ********************************************/
--struct wilc_hif_func wilc_hif_spi = {
--	_wilc_spi_init,
--	_wilc_spi_deinit,
--	wilc_spi_read_reg,
--	wilc_spi_write_reg,
--	_wilc_spi_read,
--	_wilc_spi_write,
--	wilc_spi_sync,
--	wilc_spi_clear_int,
--	wilc_spi_read_int,
--	wilc_spi_clear_int_ext,
--	wilc_spi_read_size,
--	_wilc_spi_write,
--	_wilc_spi_read,
--	wilc_spi_sync_ext,
--	wilc_spi_max_bus_speed,
--	wilc_spi_default_bus_speed,
-+const struct wilc_hif_func wilc_hif_spi = {
-+	.hif_init = _wilc_spi_init,
-+	.hif_deinit = _wilc_spi_deinit,
-+	.hif_read_reg = wilc_spi_read_reg,
-+	.hif_write_reg = wilc_spi_write_reg,
-+	.hif_block_rx = _wilc_spi_read,
-+	.hif_block_tx = _wilc_spi_write,
-+	.hif_sync = wilc_spi_sync,
-+	.hif_clear_int = wilc_spi_clear_int,
-+	.hif_read_int = wilc_spi_read_int,
-+	.hif_clear_int_ext = wilc_spi_clear_int_ext,
-+	.hif_read_size = wilc_spi_read_size,
-+	.hif_block_tx_ext = _wilc_spi_write,
-+	.hif_block_rx_ext = _wilc_spi_read,
-+	.hif_sync_ext = wilc_spi_sync_ext,
-+	.hif_set_max_bus_speed = wilc_spi_max_bus_speed,
-+	.hif_set_default_bus_speed = wilc_spi_default_bus_speed,
- };
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 92f4cb71608d..761bc3f59138 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -156,6 +156,7 @@ struct wilc_vif {
- };
- 
- struct wilc {
-+	const struct wilc_hif_func *ops;
- 	int io_type;
- 	int mac_status;
- 	int gpio;
-@@ -212,7 +213,8 @@ void linux_wlan_rx_complete(void);
- void linux_wlan_dbg(u8 *buff);
- int linux_wlan_lock_timeout(void *vp, u32 timeout);
- void wilc_netdev_cleanup(struct wilc *wilc);
--int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio);
-+int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
-+		     const struct wilc_hif_func *ops);
- void wilc1000_wlan_deinit(struct net_device *dev);
- void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
- u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3d53550149fb..5e37ec65d3bb 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1657,22 +1657,11 @@ int wilc_wlan_init(struct net_device *dev)
- 
- 	memset((void *)&g_wlan, 0, sizeof(wilc_wlan_dev_t));
- 	g_wlan.io_type = wilc->io_type;
--
--#ifdef WILC_SDIO
--	if (!wilc_hif_sdio.hif_init(wilc, wilc_debug)) {
--		ret = -EIO;
--		goto _fail_;
--	}
--	memcpy((void *)&g_wlan.hif_func, &wilc_hif_sdio,
--	       sizeof(struct wilc_hif_func));
--#else
--	if (!wilc_hif_spi.hif_init(wilc, wilc_debug)) {
-+	g_wlan.hif_func = *wilc->ops;
-+	if (!g_wlan.hif_func.hif_init(wilc, wilc_debug)) {
- 		ret = -EIO;
- 		goto _fail_;
+@@ -3257,7 +3257,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
+ 		}
  	}
--	memcpy((void *)&g_wlan.hif_func, &wilc_hif_spi,
--	       sizeof(struct wilc_hif_func));
--#endif
  
- 	if (!wilc_wlan_cfg_init(wilc_debug)) {
- 		ret = -ENOBUFS;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 326d71bf91df..c0a5a955b1d4 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -258,8 +258,8 @@ struct wilc_hif_func {
- 	void (*hif_set_default_bus_speed)(void);
- };
- 
--extern struct wilc_hif_func wilc_hif_spi;
--extern struct wilc_hif_func wilc_hif_sdio;
-+extern const struct wilc_hif_func wilc_hif_spi;
-+extern const struct wilc_hif_func wilc_hif_sdio;
- 
- /********************************************
-  *
+-	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
++	msg.body.key_info.attr.wpa.key_len = key_len;
+ 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
+ 	msg.body.key_info.attr.wpa.mode = cipher_mode;
+ 	msg.drv = hif_drv;
 -- 
-2.1.0.rc2
+2.6.3
 
