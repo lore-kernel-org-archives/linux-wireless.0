@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7352 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbbKBItQ (ORCPT
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:33022 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbbKHXxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:49:16 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/38] staging: wilc1000: linux_wlan: remove unused define CUSTOMER_PLATFORM
-Date: Mon, 2 Nov 2015 17:50:53 +0900
-Message-ID: <1446454281-22484-10-git-send-email-glen.lee@atmel.com> (sfid-20151102_094919_436581_DCE87617)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+	Sun, 8 Nov 2015 18:53:35 -0500
+Received: by qgea14 with SMTP id a14so49627408qge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2015 15:53:35 -0800 (PST)
+Date: Sun, 8 Nov 2015 18:53:24 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: mesh: print MAC address instead of pointer
+Message-ID: <20151108235324.GB30106@localhost> (sfid-20151109_005350_069904_EEED65F8)
+References: <1446805846-5210-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446805846-5210-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, Nov 06, 2015 at 11:30:46AM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There's no point in printing the mpath pointer since it can't
+> be used for anything - print the MAC address instead (like in
+> the forwarding case.)
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-This patch remove unused define CUSTOMER_PLATFORM from linux_wlan.c.
+FWIW:
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a483f79..05f33ec 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -32,18 +32,11 @@
- #include "linux_wlan_spi.h"
- #endif
- 
--#if defined(CUSTOMER_PLATFORM)
--/*
-- TODO : Write power control functions as customer platform.
-- */
--#else
--
-  #define _linux_wlan_device_power_on()		{}
-  #define _linux_wlan_device_power_off()		{}
- 
-  #define _linux_wlan_device_detection()		{}
-  #define _linux_wlan_device_removal()		{}
--#endif
- 
- extern bool g_obtainingIP;
- extern void resolve_disconnect_aberration(void *drvHandler);
-@@ -278,15 +271,7 @@ static int init_irq(struct net_device *dev)
- 	/*GPIO request*/
- 	if ((gpio_request(GPIO_NUM, "WILC_INTR") == 0) &&
- 	    (gpio_direction_input(GPIO_NUM) == 0)) {
--#if defined(CUSTOMER_PLATFORM)
--/*
-- TODO : save the registerd irq number to the private wilc context in kernel.
-- *
-- * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
-- */
--#else
- 		wl->dev_irq_num = gpio_to_irq(GPIO_NUM);
--#endif
- 	} else {
- 		ret = -1;
- 		PRINT_ER("could not obtain gpio for WILC_INTR\n");
+>  			mpath_dbg(sdata,
+> -				  "Not forwarding %p (flags %#x)\n",
+> -				  gate->mpath, gate->mpath->flags);
+> +				  "Not forwarding to %pM (flags %#x)\n",
+> +				  gate->mpath->dst, gate->mpath->flags);
+
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
