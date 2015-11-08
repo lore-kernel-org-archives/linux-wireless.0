@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38310 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752056AbbKZRk2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:40:28 -0500
-Message-ID: <1448559624.2167.37.camel@sipsolutions.net> (sfid-20151126_184031_090732_F4744051)
-Subject: Re: [PATCH] Fix memory leak if nla_put fails
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rahul Jain <rahul.jain@samsung.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35216 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbbKHXtf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2015 18:49:35 -0500
+Received: by qgec40 with SMTP id c40so70537750qge.2
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2015 15:49:35 -0800 (PST)
+Date: Sun, 8 Nov 2015 18:49:23 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Amit Khatri <amit.khatri@samsung.com>
-Date: Thu, 26 Nov 2015 18:40:24 +0100
-In-Reply-To: <1448365527-14498-1-git-send-email-rahul.jain@samsung.com>
-References: <1448365527-14498-1-git-send-email-rahul.jain@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211_hwsim: stop using pointers as cookies
+Message-ID: <20151108234923.GA30106@localhost> (sfid-20151109_004939_228200_DACB61AA)
+References: <1446807443-12133-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446807443-12133-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-11-24 at 17:15 +0530, Rahul Jain wrote:
-> From: Amit Khatri <amit.khatri@samsung.com>
-> 
-> Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
-> Signed-off-by: Rahul Jain  <rahul.jain@samsung.com>
-> 
-> avoid memory leak because of nla_put_failure
-> 
-Please fix coding style, and put the message before signed-off-by :)
+On Fri, Nov 06, 2015 at 11:57:23AM +0100, Johannes Berg wrote:
+> Instead of using pointers, use sequentially assigned cookies.
+> This is easier to understand while debugging and also avoids
+> problems when the pointer is reused for the next allocation.
 
-johannes
+I tested this out in wmediumd and it didn't go so well...
+
+> +	info->rate_driver_data[0] = (void *)cookie;
+
+[...]
+
+> +		skb_cookie = (u64)(uintptr_t)txi->driver_data[0];
+
+rate_driver_data vs driver_data?
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
