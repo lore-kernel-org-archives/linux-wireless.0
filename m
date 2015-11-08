@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36660 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbbKSDUV (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36003 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474AbbKHHum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 22:20:21 -0500
-Received: by pacdm15 with SMTP id dm15so65642663pac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2015 19:20:21 -0800 (PST)
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
- trigger_ba
-To: Bob Copeland <me@bobcopeland.com>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
- <20151109154040.GD5395@localhost> <56419805.4090902@linaro.org>
- <20151110141336.GF5395@localhost>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-From: yfw <fengwei.yin@linaro.org>
-Message-ID: <564D3FEE.1000208@linaro.org> (sfid-20151119_042024_949078_5822D8FF)
-Date: Thu, 19 Nov 2015 11:20:14 +0800
-MIME-Version: 1.0
-In-Reply-To: <20151110141336.GF5395@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 8 Nov 2015 02:50:42 -0500
+Received: by pacdm15 with SMTP id dm15so141914376pac.3
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:41 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 23/32] staging: wilc1000: use kmemdup in host_int_add_rx_gtk
+Date: Sun,  8 Nov 2015 16:49:16 +0900
+Message-Id: <1446968965-8958-23-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_091409_394410_960631AC)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+This patch changes kmalloc followed by memcpy to kmemdup.
+The error checking is also added when kmemdup is failed.
 
-On 2015年11月10日 22:13, Bob Copeland wrote:
-> On Tue, Nov 10, 2015 at 03:08:53PM +0800, fengwei.yin wrote:
->> Even on 3620, not all cmds switch to wcn36xx_smd_rsp_status_check_v2.
->> And I don't think wcn36xx_smd_rsp_status_check_v2 should bind to 3620 (it
->> may be related with firmware).
->>
->> In patch v2, the wcn36xx_smd_rsp_status_check_v2 is not bind to 3620. If
->> you could test on none-3620 platform (I don't have none-3620 plafrom), that
->> will be great.
->
-> Sure, I'll take a look today or tomorrow on my hardware.
->
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Ping...
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0028bed..51b6ddb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3296,8 +3296,11 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 		key_len += TX_MIC_KEY_LEN;
+ 
+ 	if (key_rsc) {
+-		msg.body.key_info.attr.wpa.seq = kmalloc(key_rsc_len, GFP_KERNEL);
+-		memcpy(msg.body.key_info.attr.wpa.seq, key_rsc, key_rsc_len);
++		msg.body.key_info.attr.wpa.seq = kmemdup(key_rsc,
++							 key_rsc_len,
++							 GFP_KERNEL);
++		if (!msg.body.key_info.attr.wpa.seq)
++			return -ENOMEM;
+ 	}
+ 
+ 	msg.id = HOST_IF_MSG_KEY;
+@@ -3311,8 +3314,11 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 	if (mode == STATION_MODE)
+ 		msg.body.key_info.action = ADDKEY;
+ 
+-	msg.body.key_info.attr.wpa.key = kmalloc(key_len, GFP_KERNEL);
+-	memcpy(msg.body.key_info.attr.wpa.key, rx_gtk, gtk_key_len);
++	msg.body.key_info.attr.wpa.key = kmemdup(rx_gtk,
++						 key_len,
++						 GFP_KERNEL);
++	if (!msg.body.key_info.attr.wpa.key)
++		return -ENOMEM;
+ 
+ 	if (rx_mic)
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic,
+-- 
+2.6.3
 
-Regards
-Yin, Fengwei
