@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33068 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755195AbbKCQIe (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34705 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752454AbbKHHto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 11:08:34 -0500
-Received: by obbwb3 with SMTP id wb3so16248125obb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 08:08:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com>
-References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com>
-Date: Tue, 3 Nov 2015 08:08:33 -0800
-Message-ID: <CAJ+vNU3u_KCOjRi1HR_f9hCi-aYYMDciR7C0+nCwJh3N6GAETQ@mail.gmail.com> (sfid-20151103_170853_716024_FBDAA95D)
-Subject: Re: Intel 7260 - limited in 5GHz spectrum
-From: Tim Harvey <tharvey@gateworks.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Pushpal Sidhu <psidhu@gateworks.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 8 Nov 2015 02:49:44 -0500
+Received: by padhx2 with SMTP id hx2so157824068pad.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:49:35 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/32] staging: wilc1000: fix return type of host_int_add_ptk
+Date: Sun,  8 Nov 2015 16:48:54 +0900
+Message-Id: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_084948_409010_2335567F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 31, 2015 at 12:12 PM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
-> Hi,
->
-> On 10/30/2015 06:37 PM, Pushpal Sidhu wrote:
->> Hi,
->>
->> I've been working with the Intel 7260 card which advertises itself as
->> dual band wireless AC card. However, I cannot get it working in AP
->> mode in the 5GHz range. An $(iw list) shows that the entire 5GHz band
->> has 'no IR' next to it so as not to allow device radiation (please see
->> pastebin here: http://pastebin.com/T4BWnBmn).
->>
->> After searching around the internet a bit, it seems that the card
->> doesn't allow for this mode (And is thus not really dual band?). I'd
->> like to know if this is a firmware limitation and if there's a fix in
->> place, or if not, why is this card limited to the spectrum it can
->> radiate at?
->>
->
->
-> 7260 does not (and will not) support AP mode in 5GHz band. This is of
-> course not a hardware limitation since it can function as a station in
-> this band. The limitation is due to regulatory concerns. Later devices
-> (8260) have the ability to be an AP in 5GHz under certain circumstances.
+This patch changes return type of host_int_add_ptk from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-Emmanuel,
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Out of curiosity, can you explain what you mean about 'regulatory
-concerns'? There are channels in the 5GHz band that can be used in FCC
-with and without DFS. Is it that certification in the 5GHz band is
-optional and Intel didn't want to do the certification?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d5b7725..082450f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3207,12 +3207,12 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-s32 host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
++int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *pu8Ptk,
+ 		     u8 u8PtkKeylen, const u8 *mac_addr,
+ 		     const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 		     u8 mode, u8 u8Ciphermode, u8 u8Idx)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	u8 u8KeyLen = u8PtkKeylen;
+ 	u32 i;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 57e1d42..ee9c8fe 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -311,7 +311,7 @@ int host_int_add_wep_key_bss_sta(struct host_if_drv *hif_drv,
+ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ 				const u8 *key, u8 len, u8 index, u8 mode,
+ 				enum AUTHTYPE auth_type);
+-s32 host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk,
++int host_int_add_ptk(struct host_if_drv *hWFIDrv, const u8 *pu8Ptk,
+ 		     u8 u8PtkKeylen, const u8 *mac_addr,
+ 		     const u8 *pu8RxMic, const u8 *pu8TxMic,
+ 		     u8 mode, u8 u8Ciphermode, u8 u8Idx);
+-- 
+2.6.3
 
-Regards,
-
-Tim
