@@ -1,157 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.245]:15841 "EHLO
-	DVREDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751185AbbKIJ6l (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33602 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754919AbbKHHuv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:58:41 -0500
-Message-ID: <56406F0F.1050701@atmel.com> (sfid-20151109_105916_284188_178D3C39)
-Date: Mon, 9 Nov 2015 19:01:51 +0900
-From: glen lee <glen.lee@atmel.com>
-MIME-Version: 1.0
-To: punit vara <punitvara@gmail.com>
-CC: Dan Carpenter <dan.carpenter@oracle.com>,
-	<devel@driverdev.osuosl.org>, <chris.park@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
-	<linux-kernel@vger.kernel.org>, <tony.cho@atmel.com>,
-	<leo.kim@atmel.com>
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-References: <1447018310-4524-1-git-send-email-punitvara@gmail.com>	<20151108215953.GO18797@mwanda>	<563FFEEB.1090307@atmel.com>	<56405328.4040004@atmel.com>	<20151109081842.GR18797@mwanda>	<56405F71.6090404@atmel.com> <CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
-In-Reply-To: <CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Sun, 8 Nov 2015 02:50:51 -0500
+Received: by pabfh17 with SMTP id fh17so166207034pab.0
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:50 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 26/32] staging: wilc1000: remove host_int_set_RSNAConfigPSKPassPhrase
+Date: Sun,  8 Nov 2015 16:49:19 +0900
+Message-Id: <1446968965-8958-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_091410_864901_323137AD)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes host_int_set_RSNAConfigPSKPassPhrase function
+definition and declaration that is defined at host_interface.c and
+host_interface.h. This function is defined but not used anywhere in this
+driver so just remove it.
 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 16 ----------------
+ drivers/staging/wilc1000/host_interface.h |  3 ---
+ 2 files changed, 19 deletions(-)
 
-On 2015년 11월 09일 18:05, punit vara wrote:
-> On Mon, Nov 9, 2015 at 2:25 PM, glen lee <glen.lee@atmel.com> wrote:
->> On 2015년 11월 09일 17:18, Dan Carpenter wrote:
->>> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
->>>> Hi Punit Vara,
->>>>
->>>> I cannot find build errors on my build machines.
->>>>
->>>> According the log which you have posted before says *wilc is undeclared
->>>> in the function init_wilc_driver,
->>>> which means WILC_SPI is selected because one of SPI or SDIO should be
->>>> chosen at the moment.
->>>> Hence, struct wilc *wilc should be compiled together.
->>>> It looks like wilc1000 is compiled without SPI or SDIO.
->>>>
->>>> Of course, there are many cases that I don't know, so you could let me
->>>> know the wilc1000 build configuration?
->>>>
->>>> static int __init init_wilc_driver(void)
->>>> {
->>>> #ifdef WILC_SPI
->>> This should be #ifndef WILC_SDIO
->>
->> I will do this in the next patch series.
->>
->>>>          struct wilc *wilc;
->>>> #endif
->>> But the large question remains of why do we have this variable here any
->>> way?
->>
->> As you pointed out, the variable is do-nothing for spi driver for now.
->> After reworking SPI driver, the wilc will be passed to SPI as spi drive data
->> like we already did in SDIO.
->>
->> We have done this to remove extern variable g_linux_wlan which is primary
->> structure of wilc1000.
->> For now it is not used, but need it not to break the build.
->>
->> static int linux_sdio_probe(struct sdio_func *func, const struct
->> sdio_device_id *id)
->> {
->>          struct wilc_sdio *wl_sdio;
->>          struct wilc *wilc;
->>
->>          PRINT_D(INIT_DBG, "probe function\n");
->>          wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
->>          if (!wl_sdio)
->>                  return -ENOMEM;
->>
->>          PRINT_D(INIT_DBG, "Initializing netdev\n");
->>          local_sdio_func = func;
->>          if (wilc_netdev_init(&wilc)) {
->>                  PRINT_ER("Couldn't initialize netdev\n");
->>                  kfree(wl_sdio);
->>                  return -1;
->>          }
->>          wl_sdio->func = func;
->>          wl_sdio->wilc = wilc;
->>          sdio_set_drvdata(func, wl_sdio);
->>
->> regards,
->> glen lee.
->>
->>> regards,
->>> dan carpenter
->>>
-> How about this patch @Dan and @glen ,For me it does not create any
-> build error. For #ifndef WILC_SDIO  that pointer *wilc is not
-> compiling so that creates the error.
-
-As Dan said, I also think there are too many ifdefs now. We will remove the defines after
-reworking SPI/SDIO modules.
-
-For now, I cannot test since build error does not happens in my side. :(
-
-Just in case, will this works for you?
-config WILC1000_DRIVER
-	bool "WILC1000 support (WiFi only)"
-	depends on CFG80211 && WEXT_CORE && INET
-+	depends on MMC || SPI
-
-I will look into more about this later.
-
-regards,
-glen lee.
-
->
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -224,7 +224,7 @@ static int dev_state_ev_handler(struct
-> notifier_block *this, unsigned long event
->
->   }
->
-> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
-> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WIC_SDIO)
->   static irqreturn_t isr_uh_routine(int irq, void *user_data)
->   {
->          perInterface_wlan_t *nic;
-> @@ -264,7 +264,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
->          return IRQ_HANDLED;
->   }
->
-> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
-> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
->   static int init_irq(struct net_device *dev)
->   {
->          int ret = 0;
-> @@ -1083,6 +1083,10 @@ static void wlan_deinitialize_threads(struct
-> net_device *dev)
->          }
->   }
->
-> +#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
-> +static int init_irq(struct net_device *dev);
-> +#endif
-> +
->   int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
->   {
->          wilc_wlan_inp_t nwi;
-> @@ -1791,7 +1795,7 @@ int wilc_netdev_init(struct wilc **wilc)
->   /*The 1st function called after module inserted*/
->   static int __init init_wilc_driver(void)
->   {
-> -#ifdef WILC_SPI
-> +#if (defined WILC_SPI) || (!defined WILC_SDIO)
->          struct wilc *wilc;
->   #endif
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6015582..fb6f353 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3373,22 +3373,6 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
+ 	return result;
+ }
+ 
+-s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hif_drv,
+-					 u8 *pu8PassPhrase,
+-					 u8 u8Psklength)
+-{
+-	struct wid wid;
+-
+-	if ((u8Psklength > 7) && (u8Psklength < 65)) {
+-		wid.id = (u16)WID_11I_PSK;
+-		wid.type = WID_STR;
+-		wid.val = pu8PassPhrase;
+-		wid.size = u8Psklength;
+-	}
+-
+-	return 0;
+-}
+-
+ s32 hif_get_mac_address(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
+ {
+ 	s32 result = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index dd5a14a..8113d76 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -324,9 +324,6 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
+ 			u8 mode, u8 cipher_mode);
+ s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
+ 			    struct host_if_pmkid_attr *pu8PmkidInfoArray);
+-s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
+-					 u8 *pu8PassPhrase,
+-					 u8 u8Psklength);
+ s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
+ 					 u8 *pu8PassPhrase, u8 u8Psklength);
+ s32 hif_get_mac_address(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
+-- 
+2.6.3
 
