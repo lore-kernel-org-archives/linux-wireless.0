@@ -1,83 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:52789 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbbKPMSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 07:18:49 -0500
-Subject: [PATCH] rtlwifi: Delete unnecessary checks before the function call
- "kfree_skb"
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5649C99E.2070602@users.sourceforge.net> (sfid-20151116_131900_772121_7FA7BBFE)
-Date: Mon, 16 Nov 2015 13:18:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=iso-8859-15
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34982 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758313AbbKHHvG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2015 02:51:06 -0500
+Received: by pasz6 with SMTP id z6so170560078pas.2
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:51:05 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 31/32] staging: wilc1000: remove host_int_get_assoc_req_info
+Date: Sun,  8 Nov 2015 16:49:24 +0900
+Message-Id: <1446968965-8958-31-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085109_660034_6B9C0536)
+In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 16 Nov 2015 13:12:25 +0100
+This patch removes host_int_get_assoc_req_info function definition and
+declaration that is defined at host_interface.c and host_interface.h.
+This function is defined but not used anywhere in this driver so just
+remove it.
 
-The kfree_skb() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the calls is not needed.
-
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/core.c                 | 3 +--
- drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 4 +---
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 14 --------------
+ drivers/staging/wilc1000/host_interface.h |  3 ---
+ 2 files changed, 17 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index c925a4d..4ae421e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1833,8 +1833,7 @@ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 676b3c7..ff15179 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3529,20 +3529,6 @@ s32 host_int_disconnect(struct host_if_drv *hif_drv, u16 u16ReasonCode)
+ 	return result;
+ }
  
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 	pskb = __skb_dequeue(&ring->queue);
--	if (pskb)
--		kfree_skb(pskb);
-+	kfree_skb(pskb);
- 
- 	/*this is wrong, fill_tx_cmddesc needs update*/
- 	pdesc = &ring->desc[0];
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-index a2f5e89..6e51862 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-@@ -318,9 +318,7 @@ bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
- 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
- 
- 	pskb = __skb_dequeue(&ring->queue);
--	if (pskb)
--		kfree_skb(pskb);
+-s32 host_int_get_assoc_req_info(struct host_if_drv *hif_drv,
+-				u8 *pu8AssocReqInfo,
+-				u32 u32AssocReqInfoLen)
+-{
+-	struct wid wid;
 -
-+	kfree_skb(pskb);
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 
- 	pdesc = &ring->desc[0];
+-	wid.id = (u16)WID_ASSOC_REQ_INFO;
+-	wid.type = WID_STR;
+-	wid.val = pu8AssocReqInfo;
+-	wid.size = u32AssocReqInfoLen;
+-
+-	return 0;
+-}
+-
+ s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv,
+ 				u8 *pu8AssocRespInfo,
+ 				u32 u32MaxAssocRespInfoLen,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index e51a563..8870458 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -335,9 +335,6 @@ s32 host_int_set_join_req(struct host_if_drv *hWFIDrv, u8 *pu8bssid,
+ 			  u8 u8channel, void *pJoinParams);
+ s32 host_int_flush_join_req(struct host_if_drv *hWFIDrv);
+ s32 host_int_disconnect(struct host_if_drv *hWFIDrv, u16 u16ReasonCode);
+-s32 host_int_get_assoc_req_info(struct host_if_drv *hWFIDrv,
+-				u8 *pu8AssocReqInfo,
+-				u32 u32AssocReqInfoLen);
+ s32 host_int_get_assoc_res_info(struct host_if_drv *hWFIDrv,
+ 				u8 *pu8AssocRespInfo,
+ 				u32 u32MaxAssocRespInfoLen,
 -- 
-2.6.2
+2.6.3
 
