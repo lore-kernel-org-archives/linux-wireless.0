@@ -1,79 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:37557 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755208AbbKCRhp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 12:37:45 -0500
-Received: by wicfv8 with SMTP id fv8so16647870wic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 09:37:44 -0800 (PST)
-From: Borja Salazar <borja.salazar@fon.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36949 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757AbbKIWCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2015 17:02:46 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, Borja Salazar <borja.salazar@fon.com>
-Subject: [PATCH] ath9k: incorrect queue may be stopped/awaken
-Date: Tue,  3 Nov 2015 18:37:21 +0100
-Message-Id: <1446572241-2246-1-git-send-email-borja.salazar@fon.com> (sfid-20151103_183755_206666_F42CAFDF)
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 4/4] mac80211: test the static key code
+Date: Mon,  9 Nov 2015 23:02:37 +0100
+Message-Id: <1447106557-17684-5-git-send-email-johannes@sipsolutions.net> (sfid-20151109_230259_180028_B2CB360C)
+In-Reply-To: <1447106557-17684-1-git-send-email-johannes@sipsolutions.net>
+References: <1447106557-17684-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When channel context is enabled, we could be
-stopping/awakening an incorrect queue.
----
- drivers/net/wireless/ath/ath9k/xmit.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3e3dac3..9b17a59 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -147,7 +147,12 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ath_frame_info *fi = get_frame_info(skb);
--	int q = fi->txq;
-+	int q;
-+
-+	if (ath9k_is_chanctx_enabled())
-+		q = fi->txq;
-+	else
-+		q = info->hw_queue;
- 
- 	if (q < 0)
- 		return;
-@@ -158,10 +163,7 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	if (txq->stopped &&
- 	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
--		if (ath9k_is_chanctx_enabled())
--			ieee80211_wake_queue(sc->hw, info->hw_queue);
--		else
--			ieee80211_wake_queue(sc->hw, q);
-+		ieee80211_wake_queue(sc->hw, q);
- 		txq->stopped = false;
+Make hwsim select a few on/off symbols and check that the
+result is as expected:
+ * before 'registering' a device the branches are according
+   to the Kconfig default only
+ * 'registering' a device fixes that up to actually check
+   the hardware flags
+ * 'unregistering' again goes back to the default
+
+Test this with a fake flags field that contains the *inverse*
+of the Kconfig selections.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/Kconfig | 11 +++++++++++
+ net/mac80211/hwflags.c       | 36 ++++++++++++++++++++++++++++++++++++
+ net/mac80211/hwflags.h       |  2 ++
+ net/mac80211/main.c          |  2 ++
+ 4 files changed, 51 insertions(+)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f9f94229bf1b..f2a8fdca5ede 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -246,6 +246,17 @@ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+ config MAC80211_HWSIM
+ 	tristate "Simulated radio testing tool for mac80211"
+ 	depends on MAC80211
++	select MAC80211_HW_SUPPORT_FAST_XMIT_ON
++	select MAC80211_HW_CHANCTX_STA_CSA_ON
++	select MAC80211_HW_SUPPORTS_HT_CCK_RATES_ON
++	select MAC80211_HW_QUEUE_CONTROL_ON
++	select MAC80211_HW_WANT_MONITOR_VIF_ON
++	select MAC80211_HW_AMPDU_AGGREGATION_ON
++	select MAC80211_HW_MFP_CAPABLE_ON
++	select MAC80211_HW_SIGNAL_DBM_ON
++	select MAC80211_HW_TDLS_WIDER_BW_ON
++	select MAC80211_HW_HAS_RATE_CONTROL_OFF
++	select MAC80211_HW_RX_INCLUDES_FCS_OFF
+ 	---help---
+ 	  This driver is a developer testing tool that can be used to test
+ 	  IEEE 802.11 networking stack (mac80211) functionality. This is not
+diff --git a/net/mac80211/hwflags.c b/net/mac80211/hwflags.c
+index 00386ca27eaf..69032d863a51 100644
+--- a/net/mac80211/hwflags.c
++++ b/net/mac80211/hwflags.c
+@@ -126,3 +126,39 @@ void ieee80211_hwflags_sync_del(unsigned long *flags)
+ 			static_key_slow_dec(&hwflags_keys[flg]);
  	}
  }
-@@ -2299,17 +2301,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * info are no longer valid (overwritten by the ath_frame_info data.
- 	 */
++
++void ieee80211_test_hwflags(void)
++{
++	struct {
++		struct {
++			unsigned long flags[2];
++		} hw;
++	} _local;
++
++	__set_bit(IEEE80211_HW_HAS_RATE_CONTROL, _local.hw.flags);
++	__clear_bit(IEEE80211_HW_SUPPORT_FAST_XMIT, _local.hw.flags);
++
++	/* before the sync_add(), we expect only as per Kconfig */
++	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: HW rate control\n");
++	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
++
++	ieee80211_hwflags_sync_add(_local.hw.flags);
++	printk(KERN_DEBUG "added\n");
++
++	/* now it should be like as per flags */
++	if (!ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: !HW rate control\n");
++	if (ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: SUPPORT_FAST_XMIT\n");
++
++	ieee80211_hwflags_sync_del(_local.hw.flags);
++	printk(KERN_DEBUG "removed\n");
++
++	/* after remove it should be as before */
++	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: HW rate control\n");
++	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
++}
+diff --git a/net/mac80211/hwflags.h b/net/mac80211/hwflags.h
+index 1a690f72a43f..7714b4bd6a57 100644
+--- a/net/mac80211/hwflags.h
++++ b/net/mac80211/hwflags.h
+@@ -635,4 +635,6 @@ static inline void ieee80211_hwflags_sync_add(unsigned long *flags) {}
+ static inline void ieee80211_hwflags_sync_del(unsigned long *flags) {}
+ #endif /* CONFIG_JUMP_LABEL */
  
--	q = skb_get_queue_mapping(skb);
-+	if (ath9k_is_chanctx_enabled())
-+		q = skb_get_queue_mapping(skb);
-+	else
-+		q = info->hw_queue;
++void ieee80211_test_hwflags(void);
++
+ #endif /* __mac80211_hwflags_h */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 03ad36ba4945..d64aae164d7a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1228,6 +1228,8 @@ static int __init ieee80211_init(void)
+ 	if (ret)
+ 		goto err_netdev;
  
- 	ath_txq_lock(sc, txq);
- 	if (txq == sc->tx.txq_map[q]) {
- 		fi->txq = q;
- 		if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
- 		    !txq->stopped) {
--			if (ath9k_is_chanctx_enabled())
--				ieee80211_stop_queue(sc->hw, info->hw_queue);
--			else
--				ieee80211_stop_queue(sc->hw, q);
-+			ieee80211_stop_queue(sc->hw, q);
- 			txq->stopped = true;
- 		}
- 	}
++	ieee80211_test_hwflags();
++
+ 	return 0;
+  err_netdev:
+ 	rc80211_minstrel_ht_exit();
 -- 
-2.3.6
+2.6.2
 
