@@ -1,104 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37709 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367AbbKZP0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 10:26:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] cfg80211: handle add_station auth/assoc flag quirks
-Date: Thu, 26 Nov 2015 16:26:13 +0100
-Message-Id: <1448551574-3207-2-git-send-email-johannes@sipsolutions.net> (sfid-20151126_162635_799934_3507F209)
-In-Reply-To: <1448551574-3207-1-git-send-email-johannes@sipsolutions.net>
-References: <1448551574-3207-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35790 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbbKIJ3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2015 04:29:39 -0500
+Received: by pasz6 with SMTP id z6so199557746pas.2
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 01:29:38 -0800 (PST)
+Subject: Re: [PATCH 3/5] wcn36xx: handle new hal response format
+To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+ <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <5640677E.8050607@linaro.org> (sfid-20151109_102942_981305_7C093482)
+Date: Mon, 9 Nov 2015 17:29:34 +0800
+MIME-Version: 1.0
+In-Reply-To: <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-When a new station is added to AP/GO interfaces the default behaviour
-is for it to be added authenticated and associated, due to backwards
-compatibility. To prevent that, the driver must be able to do that
-(setting the NL80211_FEATURE_FULL_AP_CLIENT_STATE feature flag) and
-userspace must set the flag mask to auth|assoc and clear the set.
 
-Handle this quirk in the API entirely in nl80211, and always push the
-full flags to the drivers. NL80211_FEATURE_FULL_AP_CLIENT_STATE is
-still required for userspace to be allowed to set the mask including
-those bits, but after checking that add both flags to the mask and
-set in case userspace didn't set them otherwise.
+On 2015/11/9 18:02, Yin, Fengwei wrote:
+> From: Andy Green <andy.green@linaro.org>
+>
+> From: Andy Green <andy.green@linaro.org>
+>
+> wcn3620 has a new message structure for the reply to some hal
+> commands.  This patch adds the struct and helper routine that
+> uses it if the chip is wcn3620, or falls back to the old
+> helper routine.
+>
+> We don't know what to do with the candidate list he sends back,
+> but we can at least accept and ignore it nicely instead of dying.
+>
+> Signed-off-by: Andy Green <andy.green@linaro.org>
+> ---
+>   drivers/net/wireless/ath/wcn36xx/smd.c | 17 +++++++++++++++++
+>   drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
+>   2 files changed, 26 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index be317f4..a84c2cc 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -302,6 +302,23 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+>   	return 0;
+>   }
+>
+> +static int wcn36xx_smd_rsp_status_check_v2(struct wcn36xx *wcn, void *buf,
+> +					     size_t len)
+> +{
+> +	struct wcn36xx_fw_msg_status_rsp_v2 *rsp;
+> +
+> +	if (wcn->chip_version != WCN36XX_CHIP_3620 ||
+> +	    len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
+> +		return wcn36xx_smd_rsp_status_check(buf, len);
+> +
+> +	rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
+> +
+> +	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
+> +		return rsp->status;
+> +
+> +	return 0;
+> +}
+> +
+>   int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
+>   {
+>   	struct nv_data *nv_d;
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+> index 008d034..8361f9e 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.h
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+> @@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
+>   	u32	status;
+>   } __packed;
+>
+> +/* wcn3620 returns this for tigger_ba */
+> +
+> +struct wcn36xx_fw_msg_status_rsp_v2 {
+> +	u8	bss_id[6];
+> +	u32	status __packed;
+> +	u16	count_following_candidates __packed;
+> +	/* candidate list follows */
+> +};
+> +
+>   struct wcn36xx_hal_ind_msg {
+>   	struct list_head list;
+>   	u8 *msg;
+>
 
-This obsoletes the mac80211 code handling this difference, no other
-driver is currently using these flags.
+I got message from kbuild test robot that this patch has build error. Please
+go ahead to review the other patches. I will send out v2 which have missed
+patch included. Sorry for this.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c     | 10 ----------
- net/wireless/nl80211.c | 23 +++++++++++++++++++----
- 2 files changed, 19 insertions(+), 14 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c2bd1b6a6922..9ce0b2f60c72 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1216,16 +1216,6 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (!sta)
- 		return -ENOMEM;
- 
--	/*
--	 * defaults -- if userspace wants something else we'll
--	 * change it accordingly in sta_apply_parameters()
--	 */
--	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
--	    !(params->sta_flags_set & (BIT(NL80211_STA_FLAG_AUTHENTICATED) |
--					BIT(NL80211_STA_FLAG_ASSOCIATED)))) {
--		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
--		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
--	}
- 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
- 		sta->sta.tdls = true;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5536b69df2ee..5750d84aa466 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4359,6 +4359,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	struct station_parameters params;
- 	u8 *mac_addr = NULL;
-+	u32 auth_assoc = BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-+			 BIT(NL80211_STA_FLAG_ASSOCIATED);
- 
- 	memset(&params, 0, sizeof(params));
- 
-@@ -4470,10 +4472,23 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		/* allow authenticated/associated only if driver handles it */
- 		if (!(rdev->wiphy.features &
- 				NL80211_FEATURE_FULL_AP_CLIENT_STATE) &&
--		    params.sta_flags_mask &
--				(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
--				 BIT(NL80211_STA_FLAG_ASSOCIATED)))
--			return -EINVAL;
-+		    params.sta_flags_mask & auth_assoc)
-+			return -EINVAL;
-+
-+		/* Older userspace, or userspace wanting to be compatible with
-+		 * !NL80211_FEATURE_FULL_AP_CLIENT_STATE, will not set the auth
-+		 * and assoc flags in the mask, but assumes the station will be
-+		 * added as associated anyway since this was the required driver
-+		 * behaviour before NL80211_FEATURE_FULL_AP_CLIENT_STATE was
-+		 * introduced.
-+		 * In order to not bother drivers with this quirk in the API
-+		 * set the flags in both the mask and set for new stations in
-+		 * this case.
-+		 */
-+		if (!(params.sta_flags_mask & auth_assoc)) {
-+			params.sta_flags_mask |= auth_assoc;
-+			params.sta_flags_set |= auth_assoc;
-+		}
- 
- 		/* must be last in here for error handling */
- 		params.vlan = get_vlan(info, rdev);
--- 
-2.6.2
-
+Regards
+Yin, Fengwei
