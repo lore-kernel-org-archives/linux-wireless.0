@@ -1,42 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:33315 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbbKPQCm convert rfc822-to-8bit (ORCPT
+Received: from nasmtp01.atmel.com ([192.199.1.245]:15841 "EHLO
+	DVREDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751185AbbKIJ6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 11:02:42 -0500
-Received: by wmec201 with SMTP id c201so184075450wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 08:02:41 -0800 (PST)
-Message-ID: <5649FE1F.4060203@gmail.com> (sfid-20151116_170245_765425_2BFBFEA1)
-Date: Mon, 16 Nov 2015 17:02:39 +0100
-From: ferran <ranker72@gmail.com>
+	Mon, 9 Nov 2015 04:58:41 -0500
+Message-ID: <56406F0F.1050701@atmel.com> (sfid-20151109_105916_284188_178D3C39)
+Date: Mon, 9 Nov 2015 19:01:51 +0900
+From: glen lee <glen.lee@atmel.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [question] Rate control algorithm for mesh
-Content-Type: text/plain; charset=utf-8
+To: punit vara <punitvara@gmail.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	<devel@driverdev.osuosl.org>, <chris.park@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
+	<linux-kernel@vger.kernel.org>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>
+Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
+ *wilc and implicit declaration of init_irq
+References: <1447018310-4524-1-git-send-email-punitvara@gmail.com>	<20151108215953.GO18797@mwanda>	<563FFEEB.1090307@atmel.com>	<56405328.4040004@atmel.com>	<20151109081842.GR18797@mwanda>	<56405F71.6090404@atmel.com> <CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
+In-Reply-To: <CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everybody,
 
-I would like to know if there is a transmit rate control algorithm out
-there that takes into account the destination MAC address. My setting is
-like this:
 
-[node0]·  ·  ·  ·  ·[node1]············[node2]
+On 2015년 11월 09일 18:05, punit vara wrote:
+> On Mon, Nov 9, 2015 at 2:25 PM, glen lee <glen.lee@atmel.com> wrote:
+>> On 2015년 11월 09일 17:18, Dan Carpenter wrote:
+>>> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
+>>>> Hi Punit Vara,
+>>>>
+>>>> I cannot find build errors on my build machines.
+>>>>
+>>>> According the log which you have posted before says *wilc is undeclared
+>>>> in the function init_wilc_driver,
+>>>> which means WILC_SPI is selected because one of SPI or SDIO should be
+>>>> chosen at the moment.
+>>>> Hence, struct wilc *wilc should be compiled together.
+>>>> It looks like wilc1000 is compiled without SPI or SDIO.
+>>>>
+>>>> Of course, there are many cases that I don't know, so you could let me
+>>>> know the wilc1000 build configuration?
+>>>>
+>>>> static int __init init_wilc_driver(void)
+>>>> {
+>>>> #ifdef WILC_SPI
+>>> This should be #ifndef WILC_SDIO
+>>
+>> I will do this in the next patch series.
+>>
+>>>>          struct wilc *wilc;
+>>>> #endif
+>>> But the large question remains of why do we have this variable here any
+>>> way?
+>>
+>> As you pointed out, the variable is do-nothing for spi driver for now.
+>> After reworking SPI driver, the wilc will be passed to SPI as spi drive data
+>> like we already did in SDIO.
+>>
+>> We have done this to remove extern variable g_linux_wlan which is primary
+>> structure of wilc1000.
+>> For now it is not used, but need it not to break the build.
+>>
+>> static int linux_sdio_probe(struct sdio_func *func, const struct
+>> sdio_device_id *id)
+>> {
+>>          struct wilc_sdio *wl_sdio;
+>>          struct wilc *wilc;
+>>
+>>          PRINT_D(INIT_DBG, "probe function\n");
+>>          wl_sdio = kzalloc(sizeof(struct wilc_sdio), GFP_KERNEL);
+>>          if (!wl_sdio)
+>>                  return -ENOMEM;
+>>
+>>          PRINT_D(INIT_DBG, "Initializing netdev\n");
+>>          local_sdio_func = func;
+>>          if (wilc_netdev_init(&wilc)) {
+>>                  PRINT_ER("Couldn't initialize netdev\n");
+>>                  kfree(wl_sdio);
+>>                  return -1;
+>>          }
+>>          wl_sdio->func = func;
+>>          wl_sdio->wilc = wilc;
+>>          sdio_set_drvdata(func, wl_sdio);
+>>
+>> regards,
+>> glen lee.
+>>
+>>> regards,
+>>> dan carpenter
+>>>
+> How about this patch @Dan and @glen ,For me it does not create any
+> build error. For #ifndef WILC_SDIO  that pointer *wilc is not
+> compiling so that creates the error.
 
-Where the spaced pattern means a poor connection and the densely dotted
-pattern means a good connection.
+As Dan said, I also think there are too many ifdefs now. We will remove the defines after
+reworking SPI/SDIO modules.
 
-The problem here is that node1 oscillates between fast rates and slow
-rates, as when transmitting to node0 it must reduce the rate, and when
-transmitting to node2 it increases the rate since it must take profit of
-the channel. I am therefore getting many re-tx between n1 and n0, and
-n1-->n2 isn't as fast as it could.
+For now, I cannot test since build error does not happens in my side. :(
 
-Currently I am using the PID-based RC, but I'm afraid that this problem
-isn't adressed at Minstrel neither.
-Am I wrong?
+Just in case, will this works for you?
+config WILC1000_DRIVER
+	bool "WILC1000 support (WiFi only)"
+	depends on CFG80211 && WEXT_CORE && INET
++	depends on MMC || SPI
 
-Thank you for your excellent work!
-Ferran
+I will look into more about this later.
+
+regards,
+glen lee.
+
+>
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -224,7 +224,7 @@ static int dev_state_ev_handler(struct
+> notifier_block *this, unsigned long event
+>
+>   }
+>
+> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WIC_SDIO)
+>   static irqreturn_t isr_uh_routine(int irq, void *user_data)
+>   {
+>          perInterface_wlan_t *nic;
+> @@ -264,7 +264,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
+>          return IRQ_HANDLED;
+>   }
+>
+> -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
+> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
+>   static int init_irq(struct net_device *dev)
+>   {
+>          int ret = 0;
+> @@ -1083,6 +1083,10 @@ static void wlan_deinitialize_threads(struct
+> net_device *dev)
+>          }
+>   }
+>
+> +#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
+> +static int init_irq(struct net_device *dev);
+> +#endif
+> +
+>   int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+>   {
+>          wilc_wlan_inp_t nwi;
+> @@ -1791,7 +1795,7 @@ int wilc_netdev_init(struct wilc **wilc)
+>   /*The 1st function called after module inserted*/
+>   static int __init init_wilc_driver(void)
+>   {
+> -#ifdef WILC_SPI
+> +#if (defined WILC_SPI) || (!defined WILC_SDIO)
+>          struct wilc *wilc;
+>   #endif
 
