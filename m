@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14340 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788AbbKBBkE (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:33756 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbbKIPoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2015 20:40:04 -0500
-Message-ID: <5636BFA6.5070500@atmel.com> (sfid-20151102_024038_145027_E97E0112)
-Date: Mon, 2 Nov 2015 10:43:02 +0900
-From: glen lee <glen.lee@atmel.com>
+	Mon, 9 Nov 2015 10:44:06 -0500
+Received: by qgea14 with SMTP id a14so64464016qge.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 07:44:04 -0800 (PST)
+Date: Mon, 9 Nov 2015 10:43:52 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "Yin, Fengwei" <fengwei.yin@linaro.org>
+Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com
+Subject: Re: [PATCH 3/5] wcn36xx: handle new hal response format
+Message-ID: <20151109154352.GE5395@localhost> (sfid-20151109_164410_916938_409977F5)
+References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+ <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
 MIME-Version: 1.0
-To: <gregkh@linuxfoundation.org>, <shivanib134@gmail.com>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: About the patch "Staging: wilc1000: coreconfigurator: Drop unneeded
- wrapper functions"
-References: <1446174642-28570-1-git-send-email-glen.lee@atmel.com> <1446174642-28570-17-git-send-email-glen.lee@atmel.com>
-In-Reply-To: <1446174642-28570-17-git-send-email-glen.lee@atmel.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shivani Bhardwaj,
+On Mon, Nov 09, 2015 at 05:02:40AM -0500, Yin, Fengwei wrote:
+> 
+> From: Andy Green <andy.green@linaro.org>
+> 
+> wcn3620 has a new message structure for the reply to some hal
+> commands.  This patch adds the struct and helper routine that
+> uses it if the chip is wcn3620, or falls back to the old
+> helper routine.
 
-Thank you for the patches.
+> +	if (wcn->chip_version != WCN36XX_CHIP_3620 ||
+> +	    len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
+> +		return wcn36xx_smd_rsp_status_check(buf, len);
+> +
 
-I am writing this new mail thread since I didn't received about following patch which is applied recently.
+Ok, disregard my question on the other patch, for some reason I
+read them out of order.  It looks like this should work ok with
+non-3620 chips.
 
-https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/patch/drivers/staging/wilc1000?id=d4622f68db8095dd54179e3134e97812727f6b89
-
-I have tested this on hardware but it did not working.
-As far as I know, ether_addr_copy function can be used when src and dst addresss are __aligned(2) and it has to be proved.
-Would you let us know the addresses are properly aligned? I cannot make sure the data is aligned(2).
-
-Regards,
-glen lee.
-
+-- 
+Bob Copeland %% http://bobcopeland.com/
