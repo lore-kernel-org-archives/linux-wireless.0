@@ -1,96 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:35176 "EHLO
-	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032970AbbKEIvf (ORCPT
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:35433 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752323AbbKJONw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 03:51:35 -0500
-Received: by lfbn126 with SMTP id n126so54559279lfb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2015 00:51:33 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 4/4] ath10k: add QCA9377 hw1.0 support
-Date: Thu,  5 Nov 2015 09:50:43 +0100
-Message-Id: <1446713443-22542-5-git-send-email-bartosz.markowski@tieto.com> (sfid-20151105_095140_336116_74214E48)
-In-Reply-To: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com>
+	Tue, 10 Nov 2015 09:13:52 -0500
+Received: by qgec40 with SMTP id c40so111159112qge.2
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 06:13:51 -0800 (PST)
+Date: Tue, 10 Nov 2015 09:13:36 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "fengwei.yin" <fengwei.yin@linaro.org>
+Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com
+Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
+ trigger_ba
+Message-ID: <20151110141336.GF5395@localhost> (sfid-20151110_151356_149646_FE26A2A4)
+References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+ <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
+ <20151109154040.GD5395@localhost>
+ <56419805.4090902@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56419805.4090902@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new BMI target version and chip id revision. Register it
-on supported chips list.
+On Tue, Nov 10, 2015 at 03:08:53PM +0800, fengwei.yin wrote:
+> Even on 3620, not all cmds switch to wcn36xx_smd_rsp_status_check_v2.
+> And I don't think wcn36xx_smd_rsp_status_check_v2 should bind to 3620 (it
+> may be related with firmware).
+> 
+> In patch v2, the wcn36xx_smd_rsp_status_check_v2 is not bind to 3620. If
+> you could test on none-3620 platform (I don't have none-3620 plafrom), that
+> will be great.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
- drivers/net/wireless/ath/ath10k/pci.c  |  2 ++
- 3 files changed, 23 insertions(+)
+Sure, I'll take a look today or tomorrow on my hardware.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 9b32cb38eb45..c02e7038a1e6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -161,6 +161,24 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		},
- 	},
- 	{
-+		.id = QCA9377_HW_1_0_DEV_VERSION,
-+		.dev_id = QCA9377_1_0_DEVICE_ID,
-+		.name = "qca9377 hw1.0",
-+		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 6,
-+		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
-+		.fw = {
-+			.dir = QCA9377_HW_1_0_FW_DIR,
-+			.fw = QCA9377_HW_1_0_FW_FILE,
-+			.otp = QCA9377_HW_1_0_OTP_FILE,
-+			.board = QCA9377_HW_1_0_BOARD_DATA_FILE,
-+			.board_size = QCA9377_BOARD_DATA_SZ,
-+			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
-+		},
-+	},
-+	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
- 		.dev_id = QCA9377_1_0_DEVICE_ID,
- 		.name = "qca9377 hw1.1",
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 3a5c68ac5d34..8ef3c0e487b8 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -48,6 +48,8 @@
- #define QCA6174_HW_3_0_VERSION		0x05020000
- #define QCA6174_HW_3_2_VERSION		0x05030000
- 
-+/* QCA9377 target BMI version signatures */
-+#define QCA9377_HW_1_0_DEV_VERSION	0x05020000
- #define QCA9377_HW_1_1_DEV_VERSION	0x05020001
- 
- enum qca6174_pci_rev {
-@@ -69,6 +71,7 @@ enum qca6174_chip_id_rev {
- };
- 
- enum qca9377_chip_id_rev {
-+	QCA9377_HW_1_0_CHIP_ID_REV = 0x0,
- 	QCA9377_HW_1_1_CHIP_ID_REV = 0x1,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0be43b80a9a4..6c46814012ef 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -86,6 +86,8 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
- 	{ QCA6174_2_1_DEVICE_ID, QCA6174_HW_3_2_CHIP_ID_REV },
- 
- 	{ QCA99X0_2_0_DEVICE_ID, QCA99X0_HW_2_0_CHIP_ID_REV },
-+
-+	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_0_CHIP_ID_REV },
- 	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_1_CHIP_ID_REV },
- };
- 
 -- 
-2.1.2
-
+Bob Copeland %% http://bobcopeland.com/
