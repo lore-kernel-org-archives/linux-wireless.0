@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37197 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031371AbbKFCOq (ORCPT
+Received: from nasmtp01.atmel.com ([192.199.1.246]:35896 "EHLO
+	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751062AbbKJAld (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:14:46 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 43/73] staging: wilc1000: fixes a struct allocation to match coding standards
-Date: Fri, 6 Nov 2015 11:13:04 +0900
-Message-ID: <1446776014-28094-43-git-send-email-glen.lee@atmel.com> (sfid-20151106_033806_399243_58DFCDA0)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+	Mon, 9 Nov 2015 19:41:33 -0500
+From: "Shin, Austin" <Austin.Shin@atmel.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "Kim, Johnny" <johnny.kim@atmel.com>,
+	"Park, Chris" <Chris.Park@atmel.com>,
+	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
+	"Kim, Leo" <Leo.Kim@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH 32/32] staging: wilc1000: remove
+ host_int_get_rx_power_level
+Date: Tue, 10 Nov 2015 00:41:28 +0000
+Message-ID: <5247AA876FDD144FBABB0100CA55BC8574D727A2@penmbx02.corp.atmel.com> (sfid-20151110_014136_629957_26A4C475)
+References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+ <1446968965-8958-32-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <1446968965-8958-32-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset="ks_c_5601-1987"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch fixes the checks reported by checkpatch.pl
-for prefer kmalloc(sizeof(*rqe)...) over kmalloc(sizeof(struct rxq_entry_t)...)
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f1bb8af..c4118fe 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1132,7 +1132,7 @@ _end_:
- 			offset += size;
- 			p->rx_buffer_offset = offset;
- #endif
--			rqe = kmalloc(sizeof(struct rxq_entry_t), GFP_KERNEL);
-+			rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
- 			if (rqe) {
- 				rqe->buffer = buffer;
- 				rqe->buffer_size = size;
--- 
-1.9.1
-
+SEkgQWxsLAppZiB5b3Ugd2FudCwgSSB3b3VsZCBzaGlwIHRoZSBib2FyZCBmb3IgeW91IHRvIHZl
+cmlmeS4gQW55Ym9keSB3ZWxjb21lLgoKCk9uIDIwMTWz4iAxMb/5IDjAzyC/wMD8IDg6NTE6MTIg
+Q2hhZWh5dW4gTGltIDxjaGFlaHl1bi5saW1AZ21haWwuY29tPiB3cm90ZToKCj4gVGhpcyBwYXRj
+aCByZW1vdmVzIGhvc3RfaW50X2dldF9yeF9wb3dlcl9sZXZlbCBmdW5jdGlvbiBkZWZpbml0aW9u
+IGFuZAo+IGRlY2xhcmF0aW9uIHRoYXQgaXMgZGVmaW5lZCBhdCBob3N0X2ludGVyZmFjZS5jIGFu
+ZCBob3N0X2ludGVyZmFjZS5oLgo+IFRoaXMgZnVuY3Rpb24gaXMgZGVmaW5lZCBidXQgbm90IHVz
+ZWQgYW55d2hlcmUgaW4gdGhpcyBkcml2ZXIgc28ganVzdAo+IHJlbW92ZSBpdC4KPgo+IFNpZ25l
+ZC1vZmYtYnk6IENoYWVoeXVuIExpbSA8Y2hhZWh5dW4ubGltQGdtYWlsLmNvbT4KPiAtLS0KPiAg
+ZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMgfCAxNCAtLS0tLS0tLS0t
+LS0tLQo+ICBkcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaCB8ICAzIC0t
+LQo+ICAyIGZpbGVzIGNoYW5nZWQsIDE3IGRlbGV0aW9ucygtKQo+Cj4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvc3RhZ2luZy93aWxjMTAwMC9ob3N0X2ludGVyZmFjZS5jIGIvZHJpdmVycy9zdGFnaW5n
+L3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMKPiBpbmRleCBmZjE1MTc5Li41YmY5YTU1IDEwMDY0
+NAo+IC0tLSBhL2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9ob3N0X2ludGVyZmFjZS5jCj4gKysr
+IGIvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMKPiBAQCAtMzU2MCwy
+MCArMzU2MCw2IEBAIHMzMiBob3N0X2ludF9nZXRfYXNzb2NfcmVzX2luZm8oc3RydWN0IGhvc3Rf
+aWZfZHJ2ICpoaWZfZHJ2LAo+ICAJcmV0dXJuIHJlc3VsdDsKPiAgfQo+ICAKPiAtczMyIGhvc3Rf
+aW50X2dldF9yeF9wb3dlcl9sZXZlbChzdHJ1Y3QgaG9zdF9pZl9kcnYgKmhpZl9kcnYsCj4gLQkJ
+CQl1OCAqcHU4UnhQb3dlckxldmVsLAo+IC0JCQkJdTMyIHUzMlJ4UG93ZXJMZXZlbExlbikKPiAt
+ewo+IC0Jc3RydWN0IHdpZCB3aWQ7Cj4gLQo+IC0Jd2lkLmlkID0gKHUxNilXSURfUlhfUE9XRVJf
+TEVWRUw7Cj4gLQl3aWQudHlwZSA9IFdJRF9TVFI7Cj4gLQl3aWQudmFsID0gcHU4UnhQb3dlckxl
+dmVsOwo+IC0Jd2lkLnNpemUgPSB1MzJSeFBvd2VyTGV2ZWxMZW47Cj4gLQo+IC0JcmV0dXJuIDA7
+Cj4gLX0KPiAtCj4gIGludCBob3N0X2ludF9zZXRfbWFjX2NobmxfbnVtKHN0cnVjdCBob3N0X2lm
+X2RydiAqaGlmX2RydiwgdTggY2hhbm5lbCkKPiAgewo+ICAJaW50IHJlc3VsdDsKPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmggYi9kcml2ZXJz
+L3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaAo+IGluZGV4IDg4NzA0NTguLmMwMWY0
+NDEgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNl
+LmgKPiArKysgYi9kcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaAo+IEBA
+IC0zMzksOSArMzM5LDYgQEAgczMyIGhvc3RfaW50X2dldF9hc3NvY19yZXNfaW5mbyhzdHJ1Y3Qg
+aG9zdF9pZl9kcnYgKmhXRklEcnYsCj4gIAkJCQl1OCAqcHU4QXNzb2NSZXNwSW5mbywKPiAgCQkJ
+CXUzMiB1MzJNYXhBc3NvY1Jlc3BJbmZvTGVuLAo+ICAJCQkJdTMyICpwdTMyUmN2ZEFzc29jUmVz
+cEluZm9MZW4pOwo+IC1zMzIgaG9zdF9pbnRfZ2V0X3J4X3Bvd2VyX2xldmVsKHN0cnVjdCBob3N0
+X2lmX2RydiAqaFdGSURydiwKPiAtCQkJCXU4ICpwdThSeFBvd2VyTGV2ZWwsCj4gLQkJCQl1MzIg
+dTMyUnhQb3dlckxldmVsTGVuKTsKPiAgaW50IGhvc3RfaW50X3NldF9tYWNfY2hubF9udW0oc3Ry
+dWN0IGhvc3RfaWZfZHJ2ICp3ZmlfZHJ2LCB1OCBjaGFubmVsKTsKPiAgczMyIGhvc3RfaW50X2dl
+dF9ob3N0X2NobmxfbnVtKHN0cnVjdCBob3N0X2lmX2RydiAqaFdGSURydiwgdTggKnB1OENoTm8p
+Owo+ICBzMzIgaG9zdF9pbnRfZ2V0X3Jzc2koc3RydWN0IGhvc3RfaWZfZHJ2ICpoV0ZJRHJ2LCBz
+OCAqcHM4UnNzaSk7Cj4gLS0gCj4gMi42LjMK
