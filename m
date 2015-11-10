@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25518 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754341AbbK3PPy (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48080 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbbKJJw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 10:15:54 -0500
+	Tue, 10 Nov 2015 04:52:58 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/6] ath10k: print crc32 checksum
-References: <20151125133654.25507.10863.stgit@potku.adurom.net>
-Date: Mon, 30 Nov 2015 17:15:40 +0200
-In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 25 Nov 2015 15:37:56 +0200")
-Message-ID: <87h9k3ikmb.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_161559_600430_9ADE0BFF)
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix invalid NSS for 4x4 devices
+References: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 10 Nov 2015 11:52:43 +0200
+In-Reply-To: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Tue, 3 Nov 2015 11:51:33 +0530")
+Message-ID: <87twou89lg.fsf@kamboji.qca.qualcomm.com> (sfid-20151110_105304_455344_33BF1B1F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-> Print crc32 checksum for firmware and board files. Also some improvements how
-> we print info messages during boot.
+> The number of spatial streams that are derived from chain mask
+> for 4x4 devices is using wrong bitmask and conditional check.
+> This is affecting downlink throughput for QCA99x0 devices. Earlier
+> cfg_tx_chainmask is not filled by default until user configured it
+> and so get_nss_from_chainmask never be called. This issue is exposed
+> by recent commit 166de3f1895d ("ath10k: remove supported chain mask").
+> By default maximum supported chain mask is filled in cfg_tx_chainmask.
 >
-> ---
->
-> Kalle Valo (6):
->       ath10k: fix otp board id error message
->       ath10k: reorganise hardware and firmware info messages
->       ath10k: always show bmi chip ids and subdevice ids
->       ath10k: split driver info messages during device initialisation
->       ath10k: print crc32 checksums for firmware and board files
->       ath10k: implement fw_checksums debugfs file
+> Cc: stable@vger.kernel.org
+> Fixes: 5572a95b4b ("ath10k: apply chainmask settings to vdev on
+> creation")
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-All six applied.
+Applied to ath-current, thanks.
 
 -- 
 Kalle Valo
