@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:32784 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbbKVUDx (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35274 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125AbbKJHY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 15:03:53 -0500
-Received: by qgea14 with SMTP id a14so103687508qge.0
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 12:03:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <564E8196.9050601@linaro.org>
+	Tue, 10 Nov 2015 02:24:59 -0500
+Received: by pasz6 with SMTP id z6so233052573pas.2
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 23:24:58 -0800 (PST)
+From: "Yin, Fengwei" <fengwei.yin@linaro.org>
+To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org
+Subject: [PATCH v2 1/5] wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
+Date: Tue, 10 Nov 2015 03:25:51 -0500
+Message-Id: <1447143955-10304-2-git-send-email-fengwei.yin@linaro.org> (sfid-20151110_082503_329584_FA10F81F)
+In-Reply-To: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
 References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
-	<564E8196.9050601@linaro.org>
-Date: Sun, 22 Nov 2015 20:03:52 +0000
-Message-ID: <CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com> (sfid-20151122_210358_101462_7118BC1C)
-Subject: Re: [PATCH v2 0/5] wcn36xx: add some new firmware functionalities support
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: "fengwei.yin" <fengwei.yin@linaro.org>
-Cc: Andy Green <andy.green@linaro.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All 5 patches looks good to me.
+From: Andy Green <andy.green@linaro.org>
 
-2015-11-20 2:12 GMT+00:00 fengwei.yin <fengwei.yin@linaro.org>:
-> Hi Eugene,
->
-> On 2015/11/10 16:25, Yin, Fengwei wrote:
->>
->> Hi,
->> This patchset are from Andy Green. Which support some functionalities of
->> latest wcn36xx firmware.
->>
->> Changelog since v1
->>    - decouple the connection of wcn36xx_smd_rsp_status_check_v2 with 3620.
->>      This also fix the build error.
->>    - Remove additional "From" introduced in v1.
->>
->> Andy Green (5):
->>    wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
->>    wcn36xx: swallow two wcn3620 IND messages
->>    wcn36xx: handle new hal response format
->>    wcn3620: use new response format for wcn3620 trigger_ba
->>    wcn3620: use new response format for wcn3620 remove_bsskey
->>
->>   drivers/net/wireless/ath/wcn36xx/hal.h |  2 ++
->>   drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
->>   drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
->>   3 files changed, 36 insertions(+), 2 deletions(-)
->>
->
-> What do you think about these patches? If they are OK, can you ack them?
-> Thanks.
->
->
-> Regards
-> Yin, Fengwei
+WCN3620 firmware introduces a new async indication, we need to
+add it as a known message type so we can accept it
 
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index a1f1127..b947de0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -345,6 +345,8 @@ enum wcn36xx_hal_host_msg_type {
+ 	WCN36XX_HAL_DHCP_START_IND = 189,
+ 	WCN36XX_HAL_DHCP_STOP_IND = 190,
+ 
++	WCN36XX_HAL_AVOID_FREQ_RANGE_IND = 233,
++
+ 	WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
+ };
+ 
 -- 
-Best regards,
-Eugene
+2.1.4
+
