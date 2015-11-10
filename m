@@ -1,94 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36784 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030909AbbKFCMd (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34517 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbbKJNNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:12:33 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 21/73] staging: wilc1000: rename Opened_TCP_session variable
-Date: Fri, 6 Nov 2015 11:12:42 +0900
-Message-ID: <1446776014-28094-21-git-send-email-glen.lee@atmel.com> (sfid-20151106_033804_291505_19F59E2B)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 10 Nov 2015 08:13:06 -0500
+Received: by lbbcs9 with SMTP id cs9so14111851lbb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:05 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/9] ath10k: remove txmode from skb_cb
+Date: Tue, 10 Nov 2015 14:10:49 +0100
+Message-Id: <1447161055-2283-4-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141340_794589_919462F6)
+In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+ <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+It was wasteful to keep it in the struct because
+it can be passed as function argument down the tx
+path.
 
-This patch rename the Opened_TCP_session variable to tcp_session
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   |  1 -
+ drivers/net/wireless/ath/ath10k/htt.h    |  4 +++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  9 +++----
+ drivers/net/wireless/ath/ath10k/mac.c    | 40 ++++++++++++++++++++++++--------
+ 4 files changed, 38 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a1b6067..34e1097 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -219,7 +219,7 @@ struct ack_session_info ack_session_info[2 * MAX_TCP_SESSION];
- struct pending_acks_info pending_acks_info[MAX_PENDING_ACKS];
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 48db7dd36164..2f48772418ec 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -85,7 +85,6 @@ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	u8 eid;
+ 	u8 vdev_id;
+-	enum ath10k_hw_txrx_mode txmode;
  
- u32 pending_base;
--u32 Opened_TCP_session;
-+u32 tcp_session;
- u32 Pending_Acks;
+ 	struct {
+ 		u8 tid;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 74ccfb291fcc..f06370e66417 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1597,7 +1597,9 @@ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+-int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
++int ath10k_htt_tx(struct ath10k_htt *htt,
++		  enum ath10k_hw_txrx_mode txmode,
++		  struct sk_buff *msdu);
+ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
+ 					     struct sk_buff *skb);
  
- static inline int Init_TCP_tracking(void)
-@@ -229,13 +229,13 @@ static inline int Init_TCP_tracking(void)
- 
- static inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
- {
--	ack_session_info[Opened_TCP_session].seq_num = seq;
--	ack_session_info[Opened_TCP_session].bigger_ack_num = 0;
--	ack_session_info[Opened_TCP_session].src_port = src_prt;
--	ack_session_info[Opened_TCP_session].dst_port = dst_prt;
--	Opened_TCP_session++;
-+	ack_session_info[tcp_session].seq_num = seq;
-+	ack_session_info[tcp_session].bigger_ack_num = 0;
-+	ack_session_info[tcp_session].src_port = src_prt;
-+	ack_session_info[tcp_session].dst_port = dst_prt;
-+	tcp_session++;
- 
--	PRINT_D(TCP_ENH, "TCP Session %d to Ack %d\n", Opened_TCP_session, seq);
-+	PRINT_D(TCP_ENH, "TCP Session %d to Ack %d\n", tcp_session, seq);
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 31c172848d10..e9ab0c9075c2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -532,7 +532,8 @@ err:
+ 	return res;
  }
  
-@@ -312,13 +312,13 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+-int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
++int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
++		  struct sk_buff *msdu)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 	struct device *dev = ar->dev;
+@@ -584,7 +585,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	     ieee80211_has_protected(hdr->frame_control)) {
+ 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+ 	} else if (!skb_cb->htt.nohwcrypt &&
+-		   skb_cb->txmode == ATH10K_HW_TXRX_RAW &&
++		   txmode == ATH10K_HW_TXRX_RAW &&
+ 		   ieee80211_has_protected(hdr->frame_control)) {
+ 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+ 	}
+@@ -597,7 +598,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		goto err_free_msdu_id;
+ 	}
  
- 				Ack_no	= (((u32)tcp_hdr_ptr[8]) << 24) + (((u32)tcp_hdr_ptr[9]) << 16) + (((u32)tcp_hdr_ptr[10]) << 8) + ((u32)tcp_hdr_ptr[11]);
+-	switch (skb_cb->txmode) {
++	switch (txmode) {
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+@@ -626,7 +627,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
  
--				for (i = 0; i < Opened_TCP_session; i++) {
-+				for (i = 0; i < tcp_session; i++) {
- 					if (ack_session_info[i].seq_num == seq_no) {
- 						Update_TCP_track_session(i, Ack_no);
- 						break;
- 					}
- 				}
--				if (i == Opened_TCP_session)
-+				if (i == tcp_session)
- 					add_TCP_track_session(0, 0, seq_no);
+ 			frags_paddr = skb_cb->htt.txbuf_paddr;
+ 		}
+-		flags0 |= SM(skb_cb->txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ 		break;
+ 	case ATH10K_HW_TXRX_MGMT:
+ 		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 374187e25f2d..dd4770ec7ecc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3331,24 +3331,24 @@ unlock:
+ 	return ret;
+ }
  
- 				add_TCP_Pending_Ack(Ack_no, i, tqe);
-@@ -365,7 +365,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+-static void ath10k_mac_tx(struct ath10k *ar, struct sk_buff *skb)
++static void ath10k_mac_tx(struct ath10k *ar, enum ath10k_hw_txrx_mode txmode,
++			  struct sk_buff *skb)
+ {
+-	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	int ret = 0;
+ 
+-	switch (cb->txmode) {
++	switch (txmode) {
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 	case ATH10K_HW_TXRX_ETHERNET:
+-		ret = ath10k_htt_tx(htt, skb);
++		ret = ath10k_htt_tx(htt, txmode, skb);
+ 		break;
+ 	case ATH10K_HW_TXRX_MGMT:
+ 		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+ 			     ar->fw_features))
+ 			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
+ 		else if (ar->htt.target_version_major >= 3)
+-			ret = ath10k_htt_tx(htt, skb);
++			ret = ath10k_htt_tx(htt, txmode, skb);
+ 		else
+ 			ret = ath10k_htt_mgmt_tx(htt, skb);
+ 		break;
+@@ -3378,9 +3378,13 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, offchan_tx_work);
+ 	struct ath10k_peer *peer;
++	struct ath10k_vif *arvif;
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
+ 	struct sk_buff *skb;
+ 	const u8 *peer_addr;
++	enum ath10k_hw_txrx_mode txmode;
+ 	int vdev_id;
+ 	int ret;
+ 	unsigned long time_left;
+@@ -3430,7 +3434,22 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 		ar->offchan_tx_skb = skb;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+-		ath10k_mac_tx(ar, skb);
++		/* It's safe to access vif and sta - conf_mutex guarantees that
++		 * sta_state() and remove_interface() are locked exclusively
++		 * out wrt to this offchannel worker.
++		 */
++		arvif = ath10k_get_arvif(ar, vdev_id);
++		if (arvif) {
++			vif = arvif->vif;
++			sta = ieee80211_find_sta(vif, peer_addr);
++		} else {
++			vif = NULL;
++			sta = NULL;
++		}
++
++		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
++
++		ath10k_mac_tx(ar, txmode, skb);
+ 
+ 		time_left =
+ 		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
+@@ -3652,20 +3671,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	enum ath10k_hw_txrx_mode txmode;
+ 
+ 	/* We should disable CCK RATE due to P2P */
+ 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC, "IEEE80211_TX_CTL_NO_CCK_RATE\n");
+ 
++	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
++
+ 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
+ 	ATH10K_SKB_CB(skb)->htt.freq = 0;
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+-	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
+-								skb);
+ 
+-	switch (ATH10K_SKB_CB(skb)->txmode) {
++	switch (txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 		ath10k_tx_h_nwifi(hw, skb);
+@@ -3702,7 +3722,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
  		}
  	}
- 	Pending_Acks = 0;
--	Opened_TCP_session = 0;
-+	tcp_session = 0;
  
- 	if (pending_base == 0)
- 		pending_base = MAX_TCP_SESSION;
+-	ath10k_mac_tx(ar, skb);
++	ath10k_mac_tx(ar, txmode, skb);
+ }
+ 
+ /* Must not be called with conf_mutex held as workers can use that also. */
 -- 
-1.9.1
+2.1.4
 
