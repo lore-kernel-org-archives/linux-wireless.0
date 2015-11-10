@@ -1,64 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37895 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031061AbbKFCS4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:56 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 69/73] staging: wilc1000: rename Handle_SetMacAddress function
-Date: Fri, 6 Nov 2015 11:20:08 +0900
-Message-ID: <1446776412-30670-20-git-send-email-glen.lee@atmel.com> (sfid-20151106_031859_045292_238657E4)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38750 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751861AbbKJV5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2015 16:57:08 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jakub Sitnicki <jsitnicki@gmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: rtl8192eu: Map out EFUSE TX power area
+References: <wrfjh9ld34ng.fsf@redhat.com>
+	<1446452517-14920-1-git-send-email-jsitnicki@gmail.com>
+Date: Tue, 10 Nov 2015 16:57:04 -0500
+In-Reply-To: <1446452517-14920-1-git-send-email-jsitnicki@gmail.com> (Jakub
+	Sitnicki's message of "Mon, 2 Nov 2015 09:21:57 +0100")
+Message-ID: <wrfjwptpsekv.fsf@carbonite.lan.trained-monkey.org> (sfid-20151110_225712_343362_56B6215F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Jakub Sitnicki <jsitnicki@gmail.com> writes:
+> TX power values are laid out differently in EFUSE found in RTL8192EU &
+> RTL8188EU devices.  TX power indices and differences for each RF path
+> are not interleaved (A, B, A, B), as in other chips, but follow one
+> another (A, B, C, D).
+>
+> Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+> ---
+>
+> Jes,
+>
+> I reckon this is as "pretty" as it gets.  I even took the time to draw
+> it out:
+>
+>   https://github.com/jsitnicki/realtek-notes/blob/master/efuse-tx-power.pdf
+>
+> The whole TX power area is aligned to a multiple of 8, but subareas
+> for each RF path are not aligned (they are 18 bytes long each).
+>
+> Patch is for rtl8xxxu-nextgen, of course.  Anything you would rename?
+>
+> Cheers,
+> Jakub
 
-This patch renames Handle_SetMacAddress function to handle_set_mac_address
-to avoid camelcase.
+Jakub,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
- mode change 100755 => 100644 drivers/staging/wilc1000/host_interface.c
+Thanks for digging through this! Patch looks good to me, I'll try to
+see if it applies. I have been working on 8723bu support so things have
+changed a bit.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-old mode 100755
-new mode 100644
-index 9c4c0b2..2388e2d
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -464,8 +464,8 @@ s32 handle_get_ip_address(struct host_if_drv *hif_drv, u8 idx)
- 	return result;
- }
- 
--static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
--				struct set_mac_addr *set_mac_addr)
-+static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
-+				  struct set_mac_addr *set_mac_addr)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2990,7 +2990,8 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_SET_MAC_ADDRESS:
--			Handle_SetMacAddress(msg.drv, &msg.body.set_mac_info);
-+			handle_set_mac_address(msg.drv,
-+					       &msg.body.set_mac_info);
- 			break;
- 
- 		case HOST_IF_MSG_GET_MAC_ADDRESS:
--- 
-1.9.1
+Cheers,
+Jes
 
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |  4 ++--
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 22 +++++++++++++++++-----
+>  2 files changed, 19 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> index 8c7d2da..6a89710 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> @@ -2300,7 +2300,7 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+>  		return -EINVAL;
+>  
+>  	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
+> -
+> +#if 0
+>  	memcpy(priv->cck_tx_power_index_A, efuse->cck_tx_power_index_A,
+>  	       sizeof(priv->cck_tx_power_index_A));
+>  	memcpy(priv->cck_tx_power_index_B, efuse->cck_tx_power_index_B,
+> @@ -2310,7 +2310,7 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+>  	       sizeof(priv->ht40_1s_tx_power_index_A));
+>  	memcpy(priv->ht40_1s_tx_power_index_B, efuse->ht40_1s_tx_power_index_B,
+>  	       sizeof(priv->ht40_1s_tx_power_index_B));
+> -#if 0
+> +
+>  	memcpy(priv->ht40_2s_tx_power_index_diff,
+>  	       efuse->ht40_2s_tx_power_index_diff,
+>  	       sizeof(priv->ht40_2s_tx_power_index_diff));
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> index 4b8431d..b223831 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> @@ -543,14 +543,26 @@ struct rtl8723bu_efuse {
+>  	u8 res12[0x4];
+>  };
+>  
+> +struct rtl8192eu_efuse_tx_power {
+> +	u8 cck_base[6];
+> +	u8 ht40_base[5];
+> +	struct rtl8723au_idx ht20_ofdm_1s_diff;
+> +	struct rtl8723au_idx ht40_ht20_2s_diff;
+> +	struct rtl8723au_idx ofdm_cck_2s_diff; /* not used */
+> +	struct rtl8723au_idx ht40_ht20_3s_diff;
+> +	struct rtl8723au_idx ofdm_cck_3s_diff; /* not used */
+> +	struct rtl8723au_idx ht40_ht20_4s_diff;
+> +	struct rtl8723au_idx ofdm_cck_4s_diff; /* not used */
+> +};
+> +
+>  struct rtl8192eu_efuse {
+>  	__le16 rtl_id;
+>  	u8 res0[0x0e];
+> -	u8 cck_tx_power_index_A[3];	/* 0x10 */
+> -	u8 cck_tx_power_index_B[3];
+> -	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
+> -	u8 ht40_1s_tx_power_index_B[3];
+> -	u8 res1[0x9c];
+> +	struct rtl8192eu_efuse_tx_power tx_power_index_A;	/* 0x10 */
+> +	struct rtl8192eu_efuse_tx_power tx_power_index_B;	/* 0x22 */
+> +	struct rtl8192eu_efuse_tx_power tx_power_index_C;	/* 0x34 */
+> +	struct rtl8192eu_efuse_tx_power tx_power_index_D;	/* 0x46 */
+> +	u8 res1[0x60];
+>  	u8 channel_plan;		/* 0xb8 */
+>  	u8 xtal_k;
+>  	u8 thermal_meter;
