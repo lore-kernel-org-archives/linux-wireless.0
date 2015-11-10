@@ -1,127 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47677 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032934AbbKFJjo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:44 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 25/26] staging: wilc1000: change parameter type of hif_init
-Date: Fri, 6 Nov 2015 18:40:22 +0900
-Message-ID: <1446802823-22598-26-git-send-email-glen.lee@atmel.com> (sfid-20151106_110756_053921_B81B0DBA)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:39224 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751113AbbKJIwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2015 03:52:35 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>
+Subject: [RFC v2 0/4] mac80211: jump labels for hw flags
+Date: Tue, 10 Nov 2015 09:52:25 +0100
+Message-Id: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net> (sfid-20151110_095238_991216_DC5415F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes parameter type wilc_wlan_inp_t with struct wilc and
-modify it's related code. Pass wilc to the functions as well.
-wilc will be used in later patch.
+Changes since v1:
+ * use struct static_key_false
+ * get rid of all those generated macros and use the optimiser
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 3 ++-
- drivers/staging/wilc1000/wilc_spi.c  | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++--
- drivers/staging/wilc1000/wilc_wlan.h | 4 ++--
- 4 files changed, 12 insertions(+), 6 deletions(-)
+-----
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index a5307a7..8aacf55 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -11,6 +11,7 @@
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- #include "linux_wlan_sdio.h"
-+#include "wilc_wfi_netdevice.h"
- 
- #define WILC_SDIO_BLOCK_SIZE 512
- 
-@@ -550,7 +551,7 @@ static int sdio_sync(void)
- 	return 1;
- }
- 
--static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
-+static int sdio_init(struct wilc *wilc, wilc_debug_func func)
- {
- 	sdio_cmd52_t cmd;
- 	int loop;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 5a6bbfd..3741836 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -11,6 +11,7 @@
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- #include "linux_wlan_spi.h"
-+#include "wilc_wfi_netdevice.h"
- 
- typedef struct {
- 	wilc_debug_func dPrint;
-@@ -945,7 +946,7 @@ static int wilc_spi_sync(void)
- 	return 1;
- }
- 
--static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
-+static int wilc_spi_init(struct wilc *wilc, wilc_debug_func func)
- {
- 	u32 reg;
- 	u32 chipid;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 2ce5870..9d257b0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1655,6 +1655,10 @@ _fail_:
- int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- {
- 	int ret = 0;
-+	perInterface_wlan_t *nic = netdev_priv(dev);
-+	struct wilc *wilc;
-+
-+	wilc = nic->wilc;
- 
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
-@@ -1663,14 +1667,14 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 	       sizeof(wilc_wlan_io_func_t));
- 
- #ifdef WILC_SDIO
--	if (!hif_sdio.hif_init(inp, wilc_debug)) {
-+	if (!hif_sdio.hif_init(wilc, wilc_debug)) {
- 		ret = -EIO;
- 		goto _fail_;
- 	}
- 	memcpy((void *)&g_wlan.hif_func, &hif_sdio,
- 	       sizeof(struct wilc_hif_func));
- #else
--	if (!hif_spi.hif_init(inp, wilc_debug)) {
-+	if (!hif_spi.hif_init(wilc, wilc_debug)) {
- 		ret = -EIO;
- 		goto _fail_;
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index ff4872f..64fd019 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -235,9 +235,9 @@ struct rxq_entry_t {
-  *      Host IF Structure
-  *
-  ********************************************/
--
-+struct wilc;
- struct wilc_hif_func {
--	int (*hif_init)(wilc_wlan_inp_t *, wilc_debug_func);
-+	int (*hif_init)(struct wilc *, wilc_debug_func);
- 	int (*hif_deinit)(void *);
- 	int (*hif_read_reg)(u32, u32 *);
- 	int (*hif_write_reg)(u32, u32);
--- 
-1.9.1
+This was an experiment I thought of on Sunday ...
+
+As also explained in the log for patch 3, we have a lot of behaviour
+differences in mac80211 based on which driver we're working against.
+In many cases (say OpenWRT router, or a phone/tablet, ChromeBook, etc.)
+we only have a single driver built into the system though. In that
+case we could - theoretically - elide all the code that isn't required
+by that driver, but that seems too dangerous.
+
+Instead, use static keys to set a default for each of the flags. If
+the flag is selected as _OFF in Kconfig, then any code that needs it
+to be on will be placed out of line and the jump NOPed out; if then
+a driver registers that actually needs the code the jump will be put
+back and the first thing in the out-of-line section will be to check
+the real hw flags.
+
+This pretty much results in the same thing as removing the code/if,
+but with more safety.
+
+I haven't done any measurements whatsoever, but I think it might be
+something to test on a little MIPS router box.
+
+
+As far as the code is concerned, there are two really ugly things:
+ 1) I still use struct static_key - couldn't quite figure it out
+    with static_key_false. I think I can replace it easily though.
+ 2) There are a lot of boilerplate ifdefs/macros.
+
+I can't see a way to avoid more of (2), although I think that we
+can probably remove it for a lot of flags and just not have this
+ability for those that aren't used in RX/TX/status paths. That'd
+probably reduce the code quite a bit.
+
+If anyone has an easy setup to test it on a low-power platform that
+would be great.
+
+johannes
 
