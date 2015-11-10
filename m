@@ -1,64 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:38136 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753143AbbKBPKs (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:49366 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbbKJXnC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 10:10:48 -0500
-Received: by wmeg8 with SMTP id g8so63307128wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 07:10:47 -0800 (PST)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: hostap@lists.infradead.org, linux-wireless@vger.kernel.org, j@w1.fi
-Cc: tkc <chaitanya.mgit@gmail.com>
-Subject: [PATCHv2] offchannel: Cancel the pending_action TX wait, before starting new one.
-Date: Mon,  2 Nov 2015 20:40:28 +0530
-Message-Id: <1446477028-23118-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20151102_161051_720537_E18AD778)
+	Tue, 10 Nov 2015 18:43:02 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 16/20] staging/wilc1000: turn enable_irq/disable_irq into callbacks
+Date: Wed, 11 Nov 2015 00:42:36 +0100
+Message-Id: <1447198960-2760143-17-git-send-email-arnd@arndb.de> (sfid-20151111_004606_450463_105D0747)
+In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: tkc <chaitanya.mgit@gmail.com>
+As a preparation for turning the SDIO side of wilc1000 into a separate
+module, this removes the last direct caller from the core module into
+the sdio specific portion. All calls to wilc_sdio_enable_interrupt()
+and wilc_sdio_disable_interrupt() now go through a function pointer
+in wilc_hif_func. We also change arguments slightly to pass the device,
+as we are already touching those lines and the change will be needed
+later to remove the global variables.
 
-Before the tx_status is received for the action frame, if we
-get another request, we respond to that by freeing the memory
-for pending_action_tx, but we don't cancel the TX wait, so
-in the kernel the ROC will not be cancelled.
-
-Due to above issue, wpa_supplicant assumes that all pending
-RoC's are cancelled and proceeds with interface creation and
-connection, where as state in mac80211/driver will be roc_in_progress.
-
-This is leading to issues at driver level.
-
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-V2: Fix 2 from's.
-    Remove the unnecessary braces.
----
- wpa_supplicant/offchannel.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c      | 22 +++++++++++++---------
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 21 +++++++++++----------
+ drivers/staging/wilc1000/linux_wlan_sdio.h |  4 ++--
+ drivers/staging/wilc1000/wilc_sdio.c       |  2 ++
+ drivers/staging/wilc1000/wilc_wlan.h       |  2 ++
+ 5 files changed, 30 insertions(+), 21 deletions(-)
 
-diff --git a/wpa_supplicant/offchannel.c b/wpa_supplicant/offchannel.c
-index 6b3f83c..581c5f6 100644
---- a/wpa_supplicant/offchannel.c
-+++ b/wpa_supplicant/offchannel.c
-@@ -253,15 +253,9 @@ int offchannel_send_action(struct wpa_supplicant *wpa_s, unsigned int freq,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2fb1d97bded1..1b6e1eec2446 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -25,8 +25,6 @@
  
- 	wpa_s->pending_action_tx_status_cb = tx_cb;
+ #include <linux/semaphore.h>
  
--	if (wpa_s->pending_action_tx) {
--		wpa_printf(MSG_DEBUG, "Off-channel: Dropped pending Action "
--			   "frame TX to " MACSTR " (pending_action_tx=%p)",
--			   MAC2STR(wpa_s->pending_action_dst),
--			   wpa_s->pending_action_tx);
--		wpa_hexdump_buf(MSG_MSGDUMP, "Pending TX frame",
--				wpa_s->pending_action_tx);
--		wpabuf_free(wpa_s->pending_action_tx);
--	}
-+	if (wpa_s->pending_action_tx)
-+		offchannel_send_action_done(wpa_s);
+-#include "linux_wlan_sdio.h"
+-
+ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
+ 
+ static struct notifier_block g_dev_notifier = {
+@@ -739,9 +737,10 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ #endif
+ 
+ 		PRINT_D(INIT_DBG, "Disabling IRQ\n");
+-		if (!wl->dev_irq_num) {
++		if (!wl->dev_irq_num &&
++		    wl->ops->disable_interrupt) {
+ 			mutex_lock(&wl->hif_cs);
+-			wilc_sdio_disable_interrupt();
++			wl->ops->disable_interrupt(wl);
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ 		if (&wl->txq_event)
+@@ -758,11 +757,13 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+ 		wilc_wlan_cleanup(dev);
+ #if defined(PLAT_ALLWINNER_A20) || defined(PLAT_ALLWINNER_A23) || defined(PLAT_ALLWINNER_A31)
+-		if (!wl->dev_irq_num) {
++		if (!wl->dev_irq_num &&
++		    wl->ops->disable_interrupt) {
 +
- 	wpa_s->pending_action_tx_done = 0;
- 	wpa_s->pending_action_tx = wpabuf_alloc(len);
- 	if (wpa_s->pending_action_tx == NULL) {
+ 			PRINT_D(INIT_DBG, "Disabling IRQ 2\n");
+ 
+ 			mutex_lock(&wl->hif_cs);
+-			wilc_sdio_disable_interrupt();
++			wl->ops->disable_interrupt(wl);
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ #endif
+@@ -897,7 +898,9 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 			goto _fail_wilc_wlan_;
+ 		}
+ 
+-		if (!wl->dev_irq_num && wilc_sdio_enable_interrupt()) {
++		if (!wl->dev_irq_num &&
++		    wl->ops->enable_interrupt &&
++		    wl->ops->enable_interrupt(wl)) {
+ 			PRINT_ER("couldn't initialize IRQ\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_init_;
+@@ -950,8 +953,9 @@ _fail_fw_start_:
+ 		wilc_wlan_stop();
+ 
+ _fail_irq_enable_:
+-		if (!wl->dev_irq_num)
+-			wilc_sdio_disable_interrupt();
++		if (!wl->dev_irq_num &&
++		    wl->ops->disable_interrupt)
++			wl->ops->disable_interrupt(wl);
+ _fail_irq_init_:
+ 		if (wl->dev_irq_num)
+ 			deinit_irq(dev);
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index f4250fda6cf1..9072de43bcd9 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -1,5 +1,4 @@
+ #include "wilc_wfi_netdevice.h"
+-#include "linux_wlan_sdio.h"
+ 
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/card.h>
+@@ -8,7 +7,7 @@
+ #include <linux/mmc/host.h>
+ #include <linux/of_gpio.h>
+ 
+-
++#include "linux_wlan_sdio.h"
+ 
+ #define SDIO_MODALIAS "wilc1000_sdio"
+ 
+@@ -143,13 +142,14 @@ static struct sdio_driver wilc_bus = {
+ 	.remove		= linux_sdio_remove,
+ };
+ 
+-int wilc_sdio_enable_interrupt(void)
++int wilc_sdio_enable_interrupt(struct wilc *dev)
+ {
++	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
+ 	int ret = 0;
+ 
+-	sdio_claim_host(wilc_sdio_func);
+-	ret = sdio_claim_irq(wilc_sdio_func, wilc_sdio_interrupt);
+-	sdio_release_host(wilc_sdio_func);
++	sdio_claim_host(func);
++	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
++	sdio_release_host(func);
+ 
+ 	if (ret < 0) {
+ 		PRINT_ER("can't claim sdio_irq, err(%d)\n", ret);
+@@ -158,18 +158,19 @@ int wilc_sdio_enable_interrupt(void)
+ 	return ret;
+ }
+ 
+-void wilc_sdio_disable_interrupt(void)
++void wilc_sdio_disable_interrupt(struct wilc *dev)
+ {
++	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
+ 	int ret;
+ 
+ 	PRINT_D(INIT_DBG, "wilc_sdio_disable_interrupt IN\n");
+ 
+-	sdio_claim_host(wilc_sdio_func);
+-	ret = sdio_release_irq(wilc_sdio_func);
++	sdio_claim_host(func);
++	ret = sdio_release_irq(func);
+ 	if (ret < 0) {
+ 		PRINT_ER("can't release sdio_irq, err(%d)\n", ret);
+ 	}
+-	sdio_release_host(wilc_sdio_func);
++	sdio_release_host(func);
+ 
+ 	PRINT_D(INIT_DBG, "wilc_sdio_disable_interrupt OUT\n");
+ }
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
+index df733c25e770..d7b213a7b18d 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.h
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
+@@ -4,8 +4,8 @@ int wilc_sdio_init(void);
+ int wilc_sdio_cmd52(sdio_cmd52_t *cmd);
+ int wilc_sdio_cmd53(sdio_cmd53_t *cmd);
+ 
+-int wilc_sdio_enable_interrupt(void);
+-void wilc_sdio_disable_interrupt(void);
++int wilc_sdio_enable_interrupt(struct wilc *);
++void wilc_sdio_disable_interrupt(struct wilc *);
+ int wilc_sdio_set_max_speed(void);
+ int wilc_sdio_set_default_speed(void);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 0a9b5a71772e..87a58f239a43 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -929,5 +929,7 @@ const struct wilc_hif_func wilc_hif_sdio = {
+ 	.hif_sync_ext = sdio_sync_ext,
+ 	.hif_set_max_bus_speed = sdio_set_max_speed,
+ 	.hif_set_default_bus_speed = sdio_set_default_speed,
++	.enable_interrupt = wilc_sdio_enable_interrupt,
++	.disable_interrupt = wilc_sdio_disable_interrupt,
+ };
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index c0a5a955b1d4..44a590f80def 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -256,6 +256,8 @@ struct wilc_hif_func {
+ 	int (*hif_sync_ext)(int);
+ 	void (*hif_set_max_bus_speed)(void);
+ 	void (*hif_set_default_bus_speed)(void);
++	int (*enable_interrupt)(struct wilc *nic);
++	void (*disable_interrupt)(struct wilc *nic);
+ };
+ 
+ extern const struct wilc_hif_func wilc_hif_spi;
 -- 
-1.7.9.5
+2.1.0.rc2
 
