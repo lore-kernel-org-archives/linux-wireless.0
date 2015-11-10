@@ -1,125 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36532 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031107AbbKFCLV (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:34498 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbbKJNND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:11:21 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/73] staging: wilc1000: rename genuChipPSstate variable
-Date: Fri, 6 Nov 2015 11:12:30 +0900
-Message-ID: <1446776014-28094-9-git-send-email-glen.lee@atmel.com> (sfid-20151106_031123_966608_7BA1D41E)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 10 Nov 2015 08:13:03 -0500
+Received: by lbbcs9 with SMTP id cs9so14111227lbb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:02 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/9] ath10k: merge is_protected with nohwcrypt
+Date: Tue, 10 Nov 2015 14:10:47 +0100
+Message-Id: <1447161055-2283-2-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141336_997673_1BE78FD3)
+In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+ <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+It was wasteful to have two flags describing
+the same thing.
 
-This patch rename genuChipPSstate variable to chip_ps_state
-to avoid CamelCase naming convention.
+While at it fix code style of
+ath10k_tx_h_use_hwcrypto().
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   |  1 -
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ---
+ drivers/net/wireless/ath/ath10k/mac.c    | 14 ++++++++++----
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 7ebfcaf..c393e52 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -55,13 +55,13 @@ static void wilc_debug(u32 flag, char *fmt, ...)
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c16f3484dc8a..48db7dd36164 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -86,7 +86,6 @@ struct ath10k_skb_cb {
+ 	u8 eid;
+ 	u8 vdev_id;
+ 	enum ath10k_hw_txrx_mode txmode;
+-	bool is_protected;
+ 
+ 	struct {
+ 		u8 tid;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index bd8f264ed8cd..31c172848d10 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -663,9 +663,6 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	if (skb_cb->htt.nohwcrypt)
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+ 
+-	if (!skb_cb->is_protected)
+-		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+-
+ 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+ 	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
+ 	if (msdu->ip_summed == CHECKSUM_PARTIAL &&
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a53e213387a2..2eb647913a9f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3197,14 +3197,22 @@ ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
  }
  
--static CHIP_PS_STATE_T genuChipPSstate = CHIP_WAKEDUP;
-+static CHIP_PS_STATE_T chip_ps_state = CHIP_WAKEDUP;
- 
- static inline void acquire_bus(BUS_ACQUIRE_T acquire)
- {
- 	mutex_lock(&g_linux_wlan->hif_cs);
- 	#ifndef WILC_OPTIMIZE_SLEEP_INT
--	if (genuChipPSstate != CHIP_WAKEDUP)
-+	if (chip_ps_state != CHIP_WAKEDUP)
- 	#endif
- 	{
- 		if (acquire == ACQUIRE_AND_WAKEUP)
-@@ -606,7 +606,7 @@ static inline void chip_wakeup(void)
- 		} while ((clk_status_reg & 0x1) == 0);
- 	}
- 
--	if (genuChipPSstate == CHIP_SLEEPING_MANUAL) {
-+	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
- 		g_wlan.hif_func.hif_read_reg(0x1C0C, &reg);
- 		reg &= ~BIT(0);
- 		g_wlan.hif_func.hif_write_reg(0x1C0C, reg);
-@@ -623,7 +623,7 @@ static inline void chip_wakeup(void)
- 			g_wlan.hif_func.hif_write_reg(0x1e9c, val32);
- 		}
- 	}
--	genuChipPSstate = CHIP_WAKEDUP;
-+	chip_ps_state = CHIP_WAKEDUP;
- }
- #else
- static inline void chip_wakeup(void)
-@@ -653,7 +653,7 @@ static inline void chip_wakeup(void)
- 
- 	} while (wilc_get_chipid(true) == 0);
- 
--	if (genuChipPSstate == CHIP_SLEEPING_MANUAL) {
-+	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
- 		g_wlan.hif_func.hif_read_reg(0x1C0C, &reg);
- 		reg &= ~BIT(0);
- 		g_wlan.hif_func.hif_write_reg(0x1C0C, reg);
-@@ -670,12 +670,12 @@ static inline void chip_wakeup(void)
- 			g_wlan.hif_func.hif_write_reg(0x1e9c, val32);
- 		}
- 	}
--	genuChipPSstate = CHIP_WAKEDUP;
-+	chip_ps_state = CHIP_WAKEDUP;
- }
- #endif
- void chip_sleep_manually(u32 u32SleepTime)
- {
--	if (genuChipPSstate != CHIP_WAKEDUP)
-+	if (chip_ps_state != CHIP_WAKEDUP)
- 		return;
- 	acquire_bus(ACQUIRE_ONLY);
- 
-@@ -684,7 +684,7 @@ void chip_sleep_manually(u32 u32SleepTime)
- #endif
- 	g_wlan.hif_func.hif_write_reg(0x10a8, 1);
- 
--	genuChipPSstate = CHIP_SLEEPING_MANUAL;
-+	chip_ps_state = CHIP_SLEEPING_MANUAL;
- 	release_bus(RELEASE_ONLY);
+ static bool ath10k_tx_h_use_hwcrypto(struct ieee80211_vif *vif,
+-				     struct sk_buff *skb) {
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++				     struct sk_buff *skb)
++{
++	const struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	const struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	const u32 mask = IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 			 IEEE80211_TX_CTL_INJECTED;
++
++	if (!ieee80211_has_protected(hdr->frame_control))
++		return false;
++
+ 	if ((info->flags & mask) == mask)
+ 		return false;
++
+ 	if (vif)
+ 		return !ath10k_vif_to_arvif(vif)->nohwcrypt;
++
+ 	return true;
  }
  
-@@ -1069,7 +1069,7 @@ static void wilc_sleeptimer_isr_ext(u32 int_stats1)
- {
- 	g_wlan.hif_func.hif_clear_int_ext(SLEEP_INT_CLR);
- #ifndef WILC_OPTIMIZE_SLEEP_INT
--	genuChipPSstate = CHIP_SLEEPING_AUTO;
-+	chip_ps_state = CHIP_SLEEPING_AUTO;
- #endif
- }
+@@ -3642,7 +3650,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	__le16 fc = hdr->frame_control;
  
-@@ -1158,7 +1158,7 @@ void wilc_handle_isr(void *wilc)
- 	if (int_status & DATA_INT_EXT) {
- 		wilc_wlan_handle_isr_ext(wilc, int_status);
- 	#ifndef WILC_OPTIMIZE_SLEEP_INT
--		genuChipPSstate = CHIP_WAKEDUP;
-+		chip_ps_state = CHIP_WAKEDUP;
- 	#endif
- 	}
- 	if (int_status & SLEEP_INT_EXT)
+ 	/* We should disable CCK RATE due to P2P */
+ 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+@@ -3654,7 +3661,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+ 	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
+-	ATH10K_SKB_CB(skb)->is_protected = ieee80211_has_protected(fc);
+ 
+ 	switch (ATH10K_SKB_CB(skb)->txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
 -- 
-1.9.1
+2.1.4
 
