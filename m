@@ -1,47 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:35821 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474AbbKHHup (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:35641 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbbKJNNM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:50:45 -0500
-Received: by pasz6 with SMTP id z6so170555075pas.2
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:44 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 24/32] staging: wilc1000: remove host_int_add_tx_gtk declaration
-Date: Sun,  8 Nov 2015 16:49:17 +0900
-Message-Id: <1446968965-8958-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_091409_888181_6BC2A206)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 10 Nov 2015 08:13:12 -0500
+Received: by lfdo63 with SMTP id o63so24426271lfd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:11 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 7/9] ath10k: fix tx header parsing
+Date: Tue, 10 Nov 2015 14:10:53 +0100
+Message-Id: <1447161055-2283-8-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141343_732710_F2C3CB67)
+In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+ <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes host_int_add_tx_gtk declaration that is defined in
-host_interface.h file. It can not find any host_int_add_tx_gtk
-function definition in this driver so just remove it.
+Frames are not guaranteed to be 802.11 frames in
+ath10k_htt_tx() and the tx completion handler.
+In some cases, like TDLS, they can be Ethernet.
+Hence checking, e.g. frame_control could yield
+bogus results and behavior.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fortunately this wasn't a real problem so far
+because there's no FW/HW combination to encounter
+this problem.
+
+However it is good to fix this in advance.
+
+Fixes: 75d85fd9993c ("ath10k: introduce basic tdls functionality")
+Fixes: eebc67fef3ee ("ath10k: fix pmf for wmi-tlv on qca6174")
+Fixes: 7b7da0a02192 ("ath10k: drop probe responses when too many are queued")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 --
- 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index da81b92..91fbfa6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -322,8 +322,6 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
- 			u32 key_rsc_len, const u8 *key_rsc,
- 			const u8 *rx_mic, const u8 *tx_mic,
- 			u8 mode, u8 cipher_mode);
--s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen,
--			u8 *pu8TxGtk, u8 u8KeyIdx);
- s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
- 			    struct host_if_pmkid_attr *pu8PmkidInfoArray);
- s32 host_int_get_pmkid_info(struct host_if_drv *hWFIDrv, u8 *pu8PmkidInfoArray,
+Notes:
+    v2:
+     * introduced
+
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c | 8 ++------
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1e8b5adeac37..b9137b1f76d1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -85,6 +85,7 @@ enum ath10k_skb_flags {
+ 	ATH10K_SKB_F_NO_HWCRYPT = BIT(0),
+ 	ATH10K_SKB_F_DTIM_ZERO = BIT(1),
+ 	ATH10K_SKB_F_DELIVER_CAB = BIT(2),
++	ATH10K_SKB_F_MGMT = BIT(3),
+ };
+ 
+ struct ath10k_skb_cb {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 07b67c9132f6..2f99552acad4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3685,6 +3685,9 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	if (!ath10k_tx_h_use_hwcrypto(vif, skb))
+ 		skb_cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
+ 
++	if (ieee80211_is_mgmt(hdr->frame_control))
++		skb_cb->flags |= ATH10K_SKB_F_MGMT;
++
+ 	skb_cb->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	skb_cb->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 655947bef6cc..f3bbe41f3ff7 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -57,8 +57,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ieee80211_tx_info *info;
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct sk_buff *msdu;
+-	struct ieee80211_hdr *hdr;
+-	__le16 fc;
+ 	bool limit_mgmt_desc = false;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+@@ -81,10 +79,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		return;
+ 	}
+ 
+-	hdr = (struct ieee80211_hdr *)msdu->data;
+-	fc = hdr->frame_control;
++	skb_cb = ATH10K_SKB_CB(msdu);
+ 
+-	if (unlikely(ieee80211_is_mgmt(fc)) &&
++	if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
+ 	    ar->hw_params.max_probe_resp_desc_thres)
+ 		limit_mgmt_desc = true;
+ 
+@@ -94,7 +91,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+-	skb_cb = ATH10K_SKB_CB(msdu);
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
 -- 
-2.6.3
+2.1.4
 
