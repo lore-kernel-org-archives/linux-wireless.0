@@ -1,58 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:34781 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216AbbKBOEF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 09:04:05 -0500
-Received: by lbbwb3 with SMTP id wb3so88525787lbb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:03 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/8] ath10k: rename function to adhere to naming convention
-Date: Mon,  2 Nov 2015 15:03:02 +0100
-Message-Id: <1446472988-2603-3-git-send-email-michal.kazior@tieto.com> (sfid-20151102_150412_725943_92386A3D)
-In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39232 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751080AbbKJIwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2015 03:52:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 4/4] mac80211: test the static key code
+Date: Tue, 10 Nov 2015 09:52:29 +0100
+Message-Id: <1447145549-27376-5-git-send-email-johannes@sipsolutions.net> (sfid-20151110_095321_472241_168A7918)
+In-Reply-To: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
+References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All functions should have ath10k_{filename}_
-prefixes.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Make hwsim select a few on/off symbols and check that the
+result is as expected:
+ * before 'registering' a device the branches are according
+   to the Kconfig default only
+ * 'registering' a device fixes that up to actually check
+   the hardware flags
+ * 'unregistering' again goes back to the default
+
+Test this with a fake flags field that contains the *inverse*
+of the Kconfig selections.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/Kconfig | 11 +++++++++++
+ net/mac80211/hwflags.c       | 36 ++++++++++++++++++++++++++++++++++++
+ net/mac80211/hwflags.h       |  2 ++
+ net/mac80211/main.c          |  2 ++
+ 4 files changed, 51 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58230cd04174..14a705ca87b2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3139,8 +3139,10 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f9f94229bf1b..f2a8fdca5ede 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -246,6 +246,17 @@ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+ config MAC80211_HWSIM
+ 	tristate "Simulated radio testing tool for mac80211"
+ 	depends on MAC80211
++	select MAC80211_HW_SUPPORT_FAST_XMIT_ON
++	select MAC80211_HW_CHANCTX_STA_CSA_ON
++	select MAC80211_HW_SUPPORTS_HT_CCK_RATES_ON
++	select MAC80211_HW_QUEUE_CONTROL_ON
++	select MAC80211_HW_WANT_MONITOR_VIF_ON
++	select MAC80211_HW_AMPDU_AGGREGATION_ON
++	select MAC80211_HW_MFP_CAPABLE_ON
++	select MAC80211_HW_SIGNAL_DBM_ON
++	select MAC80211_HW_TDLS_WIDER_BW_ON
++	select MAC80211_HW_HAS_RATE_CONTROL_OFF
++	select MAC80211_HW_RX_INCLUDES_FCS_OFF
+ 	---help---
+ 	  This driver is a developer testing tool that can be used to test
+ 	  IEEE 802.11 networking stack (mac80211) functionality. This is not
+diff --git a/net/mac80211/hwflags.c b/net/mac80211/hwflags.c
+index 3beeee512f91..eca0e3ee6818 100644
+--- a/net/mac80211/hwflags.c
++++ b/net/mac80211/hwflags.c
+@@ -127,3 +127,39 @@ void ieee80211_hwflags_sync_del(unsigned long *flags)
+ 			static_branch_dec(&hwflags_keys[flg]);
+ 	}
  }
++
++void ieee80211_test_hwflags(void)
++{
++	struct {
++		struct {
++			unsigned long flags[2];
++		} hw;
++	} _local = {};
++
++	__set_bit(IEEE80211_HW_HAS_RATE_CONTROL, _local.hw.flags);
++	__clear_bit(IEEE80211_HW_SUPPORT_FAST_XMIT, _local.hw.flags);
++
++	/* before the sync_add(), we expect only as per Kconfig */
++	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: HW rate control\n");
++	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
++
++	ieee80211_hwflags_sync_add(_local.hw.flags);
++	printk(KERN_DEBUG "added\n");
++
++	/* now it should be like as per flags */
++	if (!ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: !HW rate control\n");
++	if (ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: SUPPORT_FAST_XMIT\n");
++
++	ieee80211_hwflags_sync_del(_local.hw.flags);
++	printk(KERN_DEBUG "removed\n");
++
++	/* after remove it should be as before */
++	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
++		printk(KERN_DEBUG "BAD: HW rate control\n");
++	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
++		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
++}
+diff --git a/net/mac80211/hwflags.h b/net/mac80211/hwflags.h
+index 49b38050c446..86a3deeaaf47 100644
+--- a/net/mac80211/hwflags.h
++++ b/net/mac80211/hwflags.h
+@@ -146,4 +146,6 @@ static inline void ieee80211_hwflags_sync_add(unsigned long *flags) {}
+ static inline void ieee80211_hwflags_sync_del(unsigned long *flags) {}
+ #endif /* CONFIG_JUMP_LABEL */
  
- static enum ath10k_hw_txrx_mode
--ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
--		       struct ieee80211_sta *sta, struct sk_buff *skb)
-+ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
-+			   struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta,
-+			   struct sk_buff *skb)
- {
- 	const struct ieee80211_hdr *hdr = (void *)skb->data;
- 	__le16 fc = hdr->frame_control;
-@@ -3653,7 +3655,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
--	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
-+	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
-+								skb);
++void ieee80211_test_hwflags(void);
++
+ #endif /* __mac80211_hwflags_h */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 03ad36ba4945..d64aae164d7a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1228,6 +1228,8 @@ static int __init ieee80211_init(void)
+ 	if (ret)
+ 		goto err_netdev;
  
- 	switch (ATH10K_SKB_CB(skb)->txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
++	ieee80211_test_hwflags();
++
+ 	return 0;
+  err_netdev:
+ 	rc80211_minstrel_ht_exit();
 -- 
-2.1.4
+2.6.2
 
