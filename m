@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:36207 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbbKLNQO (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36521 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125AbbKJHZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 08:16:14 -0500
-Received: by lfs39 with SMTP id 39so33703263lfs.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:12 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 02/12] ath9k: print real timer value
-Date: Thu, 12 Nov 2015 14:15:39 +0100
-Message-Id: <1447334149-15507-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141620_319102_7085BA0D)
-In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+	Tue, 10 Nov 2015 02:25:02 -0500
+Received: by pacdm15 with SMTP id dm15so201932403pac.3
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 23:25:02 -0800 (PST)
+From: "Yin, Fengwei" <fengwei.yin@linaro.org>
+To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org
+Subject: [PATCH v2 2/5] wcn36xx: swallow two wcn3620 IND messages
+Date: Tue, 10 Nov 2015 03:25:52 -0500
+Message-Id: <1447143955-10304-3-git-send-email-fengwei.yin@linaro.org> (sfid-20151110_082506_603007_887CFD93)
+In-Reply-To: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
+References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of low HZ before this patch we saw wrong
-values in debug message. Print real timeout value.
+From: Andy Green <andy.green@linaro.org>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+WCN3620 can asynchronously send two new kinds of indication message,
+since we can't handle them just accept them quietly.
+
+Signed-off-by: Andy Green <andy.green@linaro.org>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 35802c9..dddaaea 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -356,14 +356,16 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_hw *ah = sc->sc_ah;
-+	unsigned long timeout;
+ v2: used one break for both in the second stanza
+
+ drivers/net/wireless/ath/wcn36xx/smd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index c9263e1..be317f4 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2128,6 +2128,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 		complete(&wcn->hal_rsp_compl);
+ 		break;
  
- 	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, tsf_time, 1000000);
- 	tsf_time -= ath9k_hw_gettsf32(ah);
--	tsf_time = msecs_to_jiffies(tsf_time / 1000) + 1;
--	mod_timer(&sc->sched.timer, jiffies + tsf_time);
-+	timeout = msecs_to_jiffies(tsf_time / 1000) + 1;
-+	mod_timer(&sc->sched.timer, jiffies + timeout);
++	case WCN36XX_HAL_COEX_IND:
++	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 	case WCN36XX_HAL_MISSED_BEACON_IND:
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+@@ -2174,6 +2176,9 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
  
- 	ath_dbg(common, CHAN_CTX,
--		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
-+		"Setup chanctx timer with timeout: %d (%d) ms\n",
-+		tsf_time / 1000, jiffies_to_msecs(timeout));
- }
- 
- static void ath_chanctx_handle_bmiss(struct ath_softc *sc,
+ 	switch (msg_header->msg_type) {
++	case WCN36XX_HAL_COEX_IND:
++	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
++		break;
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 		wcn36xx_smd_tx_compl_ind(wcn,
+ 					 hal_ind_msg->msg,
 -- 
-1.9.1
+2.1.4
 
