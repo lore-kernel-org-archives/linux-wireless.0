@@ -1,127 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38727 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032209AbbKEImI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 03:42:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 3/4] ipv6: add option to drop unicast encapsulated in L2 multicast
-Date: Thu,  5 Nov 2015 09:42:02 +0100
-Message-Id: <1446712923-9136-3-git-send-email-johannes@sipsolutions.net> (sfid-20151105_094315_234492_1F2BE2B8)
-In-Reply-To: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
-References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+Received: from mout.kundenserver.de ([212.227.17.24]:64605 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbbKJXnA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2015 18:43:00 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 12/20] staging/wilc1000: pass io_type to wilc_netdev_init
+Date: Wed, 11 Nov 2015 00:42:32 +0100
+Message-Id: <1447198960-2760143-13-git-send-email-arnd@arndb.de> (sfid-20151111_004744_931315_F02BD8DA)
+In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In order to avoid some of the #ifdefs, this passes the io_type
+and device pointer as an argument to wilc_netdev_init.
 
-In order to solve a problem with 802.11, the so-called hole-196 attack,
-add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-enabled, causes the stack to drop IPv6 unicast packets encapsulated in
-link-layer multi- or broadcast frames. Such frames can (as an attack)
-be created by any member of the same wireless network and transmitted
-as valid encrypted frames since the symmetric key for broadcast frames
-is shared between all stations.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- Documentation/networking/ip-sysctl.txt |  6 ++++++
- include/linux/ipv6.h                   |  1 +
- include/uapi/linux/ipv6.h              |  1 +
- net/ipv6/addrconf.c                    |  8 ++++++++
- net/ipv6/ip6_input.c                   | 10 ++++++++++
- 5 files changed, 26 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c         | 18 ++++--------------
+ drivers/staging/wilc1000/linux_wlan_sdio.c    |  4 ++--
+ drivers/staging/wilc1000/linux_wlan_spi.c     |  4 ++--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ 4 files changed, 9 insertions(+), 19 deletions(-)
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 56bb6dd881bd..428fb48a19fc 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1666,6 +1666,12 @@ stable_secret - IPv6 address
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index faad01f6f2d1..b1707147aa7d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -25,11 +25,7 @@
  
- 	By default the stable secret is unset.
+ #include <linux/semaphore.h>
  
-+drop_unicast_in_l2_multicast - BOOLEAN
-+	Drop any unicast IPv6 packets that are received in link-layer
-+	multicast (or broadcast) frames.
-+
-+	By default this is turned off.
-+
- icmp/*:
- ratelimit - INTEGER
- 	Limit the maximal rates for sending ICMPv6 packets.
-diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
-index 0ef2a97ccdb5..34317cb6a6fc 100644
---- a/include/linux/ipv6.h
-+++ b/include/linux/ipv6.h
-@@ -50,6 +50,7 @@ struct ipv6_devconf {
- 	__s32		mc_forwarding;
+-#ifdef WILC_SDIO
+ #include "linux_wlan_sdio.h"
+-#else
+-#include "linux_wlan_spi.h"
+-#endif
+ 
+ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
+ 
+@@ -884,11 +880,6 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 
+ 		wlan_init_locks(dev);
+ 
+-#ifdef WILC_SDIO
+-		wl->io_type = HIF_SDIO;
+-#else
+-		wl->io_type = HIF_SPI;
+-#endif
+ 		ret = wilc_wlan_init(dev);
+ 		if (ret < 0) {
+ 			PRINT_ER("Initializing WILC_Wlan FAILED\n");
+@@ -1426,7 +1417,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
  #endif
- 	__s32		disable_ipv6;
-+	__s32		drop_unicast_in_l2_multicast;
- 	__s32		accept_dad;
- 	__s32		force_tllao;
- 	__s32           ndisc_notify;
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index 38b4fef20219..4c413570efe8 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -174,6 +174,7 @@ enum {
- 	DEVCONF_USE_OIF_ADDRS_ONLY,
- 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
- 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
-+	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
- 	DEVCONF_MAX
- };
- 
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index d72fa90d6feb..35f880bcf626 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -4672,6 +4672,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
- 	array[DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN] = cnf->ignore_routes_with_linkdown;
- 	/* we omit DEVCONF_STABLE_SECRET for now */
- 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
-+	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
  }
  
- static inline size_t inet6_ifla6_size(void)
-@@ -5734,6 +5735,13 @@ static struct addrconf_sysctl_table
- 			.proc_handler	= addrconf_sysctl_ignore_routes_with_linkdown,
- 		},
- 		{
-+			.procname	= "drop_unicast_in_l2_multicast",
-+			.data		= &ipv6_devconf.drop_unicast_in_l2_multicast,
-+			.maxlen		= sizeof(int),
-+			.mode		= 0644,
-+			.proc_handler	= proc_dointvec,
-+		},
-+		{
- 			/* sentinel */
- 		}
- 	},
-diff --git a/net/ipv6/ip6_input.c b/net/ipv6/ip6_input.c
-index 9075acf081dd..31ac3c56da4b 100644
---- a/net/ipv6/ip6_input.c
-+++ b/net/ipv6/ip6_input.c
-@@ -134,6 +134,16 @@ int ipv6_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt
- 	    IPV6_ADDR_MC_SCOPE(&hdr->daddr) == 1)
- 		goto err;
+-int wilc_netdev_init(struct wilc **wilc)
++int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type)
+ {
+ 	int i;
+ 	perInterface_wlan_t *nic;
+@@ -1439,7 +1430,7 @@ int wilc_netdev_init(struct wilc **wilc)
+ 		return -ENOMEM;
  
-+	/* If enabled, drop unicast packets that were encapsulated in link-layer
-+	 * multicast or broadcast to protected against the so-called "hole-196"
-+	 * attack in 802.11 wireless.
-+	 */
-+	if (!ipv6_addr_is_multicast(&hdr->daddr) &&
-+	    (skb->pkt_type == PACKET_BROADCAST ||
-+	     skb->pkt_type == PACKET_MULTICAST) &&
-+	    idev->cnf.drop_unicast_in_l2_multicast)
-+		goto err;
-+
- 	/* RFC4291 2.7
- 	 * Nodes must not originate a packet to a multicast address whose scope
- 	 * field contains the reserved value 0; if such a packet is received, it
+ 	*wilc = wilc_dev;
+-
++	wilc_dev->io_type = io_type;
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+ 	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
+@@ -1468,9 +1459,8 @@ int wilc_netdev_init(struct wilc **wilc)
+ 			struct wireless_dev *wdev;
+ 			wdev = wilc_create_wiphy(ndev);
+ 
+-			#ifdef WILC_SDIO
+-			SET_NETDEV_DEV(ndev, &wilc_sdio_func->dev);
+-			#endif
++			if (dev)
++				SET_NETDEV_DEV(ndev, dev);
+ 
+ 			if (!wdev) {
+ 				PRINT_ER("Can't register WILC Wiphy\n");
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 8df69b2aff2d..d2843b949a1b 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -1,4 +1,5 @@
+ #include "wilc_wfi_netdevice.h"
++#include "linux_wlan_sdio.h"
+ 
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/card.h>
+@@ -113,7 +114,7 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
+ 
+ 	PRINT_D(INIT_DBG, "Initializing netdev\n");
+ 	wilc_sdio_func = func;
+-	if (wilc_netdev_init(&wilc)) {
++	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO)) {
+ 		PRINT_ER("Couldn't initialize netdev\n");
+ 		return -1;
+ 	}
+@@ -215,7 +216,6 @@ int wilc_sdio_set_default_speed(void)
+ 	return linux_sdio_set_speed(sdio_default_speed);
+ }
+ 
+-
+ static int __init init_wilc_sdio_driver(void)
+ {
+ 	return sdio_register_driver(&wilc_bus);
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 29dd9d4e5ff0..a459c502a8a8 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -9,9 +9,9 @@
+ #include <linux/device.h>
+ #include <linux/spi/spi.h>
+ 
++#include "linux_wlan_spi.h"
+ #include "wilc_wfi_netdevice.h"
+ #include "linux_wlan_common.h"
+-#include "linux_wlan_spi.h"
+ #include "wilc_wlan_if.h"
+ 
+ #define USE_SPI_DMA     0       /* johnny add */
+@@ -404,7 +404,7 @@ static int __init init_wilc_spi_driver(void)
+ 
+ 	wilc_debugfs_init();
+ 
+-	ret = wilc_netdev_init(&wilc);
++	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI);
+ 	if (ret) {
+ 		wilc_debugfs_remove();
+ 		return ret;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index a099f2877b6e..eae9ce175351 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -213,7 +213,7 @@ void linux_wlan_rx_complete(void);
+ void linux_wlan_dbg(u8 *buff);
+ int linux_wlan_lock_timeout(void *vp, u32 timeout);
+ void wilc_netdev_cleanup(struct wilc *wilc);
+-int wilc_netdev_init(struct wilc **wilc);
++int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value);
 -- 
-2.6.2
+2.1.0.rc2
 
