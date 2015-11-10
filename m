@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26427 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbbKEFd6 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:58850 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbbKJXm5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:33:58 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 05/38] staging: wilc1000: rename pstrHostIfGetMacAddress of fuction Handle_GetMacAddress
-Date: Thu, 5 Nov 2015 14:36:06 +0900
-Message-ID: <1446701799-24870-5-git-send-email-glen.lee@atmel.com> (sfid-20151105_063402_740930_A45A018C)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 10 Nov 2015 18:42:57 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 01/20] staging/wilc1000: add struct net_device declaration
+Date: Wed, 11 Nov 2015 00:42:21 +0100
+Message-Id: <1447198960-2760143-2-git-send-email-arnd@arndb.de> (sfid-20151111_004913_181283_00F3EF95)
+In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+A recent cleanup added a reference to struct net_device, but
+that structure is not always visible in the context of the
+declaration, so we may get a compile-time error:
 
-This patch renames pstrHostIfGetMacAddress of fuction Handle_GetMacAddress
-to get_mac_addr to avoid CamelCase naming convention.
+In file included from wilc1000/host_interface.c:5:0:
+wilc1000/host_interface.h:705:46: warning: 'struct net_device' declared inside parameter list
+ s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This adds a forward-declaration for the structure name to avoid
+that error.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: d5382219138d ("staging: wilc1000: host_int_init: add argument net_device")
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 35e9460..06994fb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -496,14 +496,14 @@ static s32 Handle_SetMacAddress(struct host_if_drv *hif_drv,
- }
- 
- static s32 Handle_GetMacAddress(struct host_if_drv *hif_drv,
--				struct get_mac_addr *pstrHostIfGetMacAddress)
-+				struct get_mac_addr *get_mac_addr)
- {
- 	s32 result = 0;
- 	struct wid wid;
- 
- 	wid.id = (u16)WID_MAC_ADDR;
- 	wid.type = WID_STR;
--	wid.val = pstrHostIfGetMacAddress->mac_addr;
-+	wid.val = get_mac_addr->mac_addr;
- 	wid.size = ETH_ALEN;
- 
- 	result = send_config_pkt(GET_CFG, &wid, 1,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 57e1d424afdc..29a92d690384 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -369,6 +369,7 @@ s32 host_int_scan(struct host_if_drv *hWFIDrv, u8 u8ScanSource,
+ s32 hif_set_cfg(struct host_if_drv *hWFIDrv,
+ 		struct cfg_param_val *pstrCfgParamVal);
+ s32 hif_get_cfg(struct host_if_drv *hWFIDrv, u16 u16WID, u16 *pu16WID_Value);
++struct net_device;
+ s32 host_int_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
+ s32 host_int_deinit(struct host_if_drv *hWFIDrv);
+ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
 -- 
-1.9.1
+2.1.0.rc2
 
