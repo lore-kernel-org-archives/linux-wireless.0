@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57697 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbbK3LRX (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:36336 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbbKJNNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 06:17:23 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [1/9] brcmfmac: Add support for the BCM4359 11ac RSDB PCIE device.
-References: <20151126115754.97089141133@smtp.codeaurora.org>
-	<56581B68.90501@broadcom.com>
-Date: Mon, 30 Nov 2015 13:17:18 +0200
-In-Reply-To: <56581B68.90501@broadcom.com> (Arend van Spriel's message of
-	"Fri, 27 Nov 2015 09:59:20 +0100")
-Message-ID: <87fuznka81.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_121727_566852_340D1FDD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 10 Nov 2015 08:13:05 -0500
+Received: by lbblt2 with SMTP id lt2so100752574lbb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:03 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/9] ath10k: rename function to adhere to naming convention
+Date: Tue, 10 Nov 2015 14:10:48 +0100
+Message-Id: <1447161055-2283-3-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141337_833875_ADCE16CA)
+In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+ <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+All functions should have ath10k_{filename}_
+prefixes.
 
-> Actually, the patch above should have been submitted to
-> wireless-drivers as it solves a suspend/hibernate issue with 4350
-> device which we added in 4.4. 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Just to avoid any confusion you are meaning this commit:
-
-c2a43a6ba5e5 brcmfmac: Use new methods for pcie Power Management.
-
-> How should I handle that? This is what I was thinking:
->
-> 1. submit revert for wireless-drivers-next.
-> 2. submit patch of c2a43a6ba5e5 for wireless-drivers.
-
-That's just messy and would prefer to avoid that. I think the best would
-be that you send the patch to 4.4-stable queue once the commit goes to
-Linus' tree during the next merge window. That way you get the fix to
-first 4.4.x stable releases. But not sure if it's eligible for a stable
-fix.
-
-BTW, I recommend sending patches to -rc release separately from the rest
-and marking them with intended the release number like "[PATCH 4.4]".
-That way it's clear for me to which tree you would like me to apply the
-patch.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2eb647913a9f..374187e25f2d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3146,8 +3146,10 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+ }
+ 
+ static enum ath10k_hw_txrx_mode
+-ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta, struct sk_buff *skb)
++ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct sk_buff *skb)
+ {
+ 	const struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+@@ -3660,7 +3662,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+-	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
++	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
++								skb);
+ 
+ 	switch (ATH10K_SKB_CB(skb)->txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
 -- 
-Kalle Valo
+2.1.4
+
