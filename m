@@ -1,568 +1,852 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43557 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752645AbbKXSCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 13:02:41 -0500
-Date: Wed, 25 Nov 2015 02:00:53 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath10k: apply Mesh subtype when Mesh interface
- created.
-Message-ID: <201511250120.YaFuLRGU%fengguang.wu@intel.com> (sfid-20151124_190245_356827_50C53711)
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="Q68bSM7Ycu6FN28Q"
-In-Reply-To: <1448386655-13936-4-git-send-email-poh@qca.qualcomm.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:51239 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbbKJXnE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2015 18:43:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 20/20] staging/wilc1000: pass struct wilc to most linux_wlan.c functions
+Date: Wed, 11 Nov 2015 00:42:40 +0100
+Message-Id: <1447198960-2760143-21-git-send-email-arnd@arndb.de> (sfid-20151111_004339_642450_A9BB2FD2)
+In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We want to get rid of all global variables in this driver, and
+instead pass device structures from one function to another.
+This changes the linux_wlan.c and wilc_wlan.c to do this
+for the most part. There are a few exceptions where these
+functions are themselves called from another part of the driver
+that does not have an instance pointer at hand. Changing those
+would be a follow-up step.
 
---Q68bSM7Ycu6FN28Q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+There are a few other globals that will have to get moved
+into struct wilc at a later point.
 
-Hi Peter,
-
-[auto build test ERROR on net-next/master]
-[also build test ERROR on v4.4-rc2 next-20151124]
-
-url:    https://github.com/0day-ci/linux/commits/Peter-Oh/ath10k-introduce-Mesh-support-in-native-WiFi-mode-for-QCA988X/20151125-014059
-config: x86_64-randconfig-x006-11230704 (attached as .config)
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=x86_64 
-
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/net/wireless/ath/ath10k/core.h:32:0,
-                    from drivers/net/wireless/ath/ath10k/mac.h:22,
-                    from drivers/net/wireless/ath/ath10k/mac.c:18:
-   drivers/net/wireless/ath/ath10k/wmi.h: In function 'wmi_10x_svc_map':
-   drivers/net/wireless/ath/ath10k/wmi.h:457:9: error: 'WMI_SERVICE_MESH' undeclared (first use in this function)
-            WMI_SERVICE_MESH, len);
-            ^
-   drivers/net/wireless/ath/ath10k/wmi.h:398:14: note: in definition of macro 'SVCMAP'
-       __set_bit(y, out); \
-                 ^
-   drivers/net/wireless/ath/ath10k/wmi.h:457:9: note: each undeclared identifier is reported only once for each function it appears in
-            WMI_SERVICE_MESH, len);
-            ^
-   drivers/net/wireless/ath/ath10k/wmi.h:398:14: note: in definition of macro 'SVCMAP'
-       __set_bit(y, out); \
-                 ^
-   drivers/net/wireless/ath/ath10k/wmi.h:459:9: error: 'WMI_SERVICE_EXT_RES_CFG_SUPPORT' undeclared (first use in this function)
-            WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
-            ^
-   drivers/net/wireless/ath/ath10k/wmi.h:398:14: note: in definition of macro 'SVCMAP'
-       __set_bit(y, out); \
-                 ^
-   In file included from include/linux/bitops.h:36:0,
-                    from include/linux/kernel.h:10,
-                    from include/asm-generic/bug.h:13,
-                    from arch/x86/include/asm/bug.h:35,
-                    from include/linux/bug.h:4,
-                    from include/net/mac80211.h:18,
-                    from drivers/net/wireless/ath/ath10k/mac.h:21,
-                    from drivers/net/wireless/ath/ath10k/mac.c:18:
-   drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_add_interface':
->> drivers/net/wireless/ath/ath10k/mac.c:4353:16: error: 'WMI_SERVICE_MESH' undeclared (first use in this function)
-      if (test_bit(WMI_SERVICE_MESH, ar->wmi.svc_map)) {
-                   ^
-   arch/x86/include/asm/bitops.h:336:25: note: in definition of macro 'test_bit'
-     (__builtin_constant_p((nr))  \
-                            ^
-
-vim +/WMI_SERVICE_MESH +4353 drivers/net/wireless/ath/ath10k/mac.c
-
-  4347				arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_CLIENT;
-  4348			break;
-  4349		case NL80211_IFTYPE_ADHOC:
-  4350			arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
-  4351			break;
-  4352		case NL80211_IFTYPE_MESH_POINT:
-> 4353			if (test_bit(WMI_SERVICE_MESH, ar->wmi.svc_map)) {
-  4354				arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH;
-  4355			} else if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-  4356				ret = -EINVAL;
-
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/staging/wilc1000/host_interface.c     |   2 +-
+ drivers/staging/wilc1000/linux_wlan.c         |  55 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  12 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 145 ++++++++++++++------------
+ drivers/staging/wilc1000/wilc_wlan.h          |  10 +-
+ 5 files changed, 119 insertions(+), 105 deletions(-)
 
---Q68bSM7Ycu6FN28Q
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d968483c6f00..640cb6bdf523 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2905,7 +2905,7 @@ static int hostIFthread(void *pvArg)
+ 			del_timer(&hif_drv->scan_timer);
+ 			PRINT_D(HOSTINF_DBG, "scan completed successfully\n");
+ 
+-			if (!wilc_wlan_get_num_conn_ifcs())
++			if (!wilc_wlan_get_num_conn_ifcs(wilc_dev))
+ 				wilc_chip_sleep_manually();
+ 
+ 			Handle_ScanDone(msg.drv, SCAN_EVENT_DONE);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c3b521e085f2..89b5aca2115c 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -245,13 +245,14 @@ static void deinit_irq(struct net_device *dev)
+ 	}
+ }
+ 
+-void linux_wlan_dbg(u8 *buff)
++void wilc_dbg(struct wilc *wilc, u8 *buff)
+ {
+ 	PRINT_D(INIT_DBG, "%d\n", *buff);
+ }
+ 
+-int linux_wlan_lock_timeout(void *vp, u32 timeout)
++int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+ {
++	/* FIXME: replace with mutex_lock or wait_for_completion */
+ 	int error = -1;
+ 
+ 	PRINT_D(LOCK_DBG, "Locking %p\n", vp);
+@@ -263,7 +264,7 @@ int linux_wlan_lock_timeout(void *vp, u32 timeout)
+ 	return error;
+ }
+ 
+-void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
++void wilc_mac_indicate(struct wilc *wilc, int flag)
+ {
+ 	int status;
+ 
+@@ -328,14 +329,14 @@ int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid)
+ 	return ret;
+ }
+ 
+-int wilc_wlan_get_num_conn_ifcs(void)
++int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+ {
+ 	u8 i = 0;
+ 	u8 null_bssid[6] = {0};
+ 	u8 ret_val = 0;
+ 
+-	for (i = 0; i < wilc_dev->vif_num; i++)
+-		if (memcmp(wilc_dev->vif[i].bssid, null_bssid, 6))
++	for (i = 0; i < wilc->vif_num; i++)
++		if (memcmp(wilc->vif[i].bssid, null_bssid, 6))
+ 			ret_val++;
+ 
+ 	return ret_val;
+@@ -411,7 +412,7 @@ static int linux_wlan_txq_task(void *vp)
+ 	return 0;
+ }
+ 
+-void linux_wlan_rx_complete(void)
++void wilc_rx_complete(struct wilc *nic)
+ {
+ 	PRINT_D(RX_DBG, "RX completed\n");
+ }
+@@ -468,14 +469,14 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 	wilc = nic->wilc;
+ 
+ 	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
+-	ret = wilc_wlan_start();
++	ret = wilc_wlan_start(wilc);
+ 	if (ret < 0) {
+ 		PRINT_ER("Failed to start Firmware\n");
+ 		return ret;
+ 	}
+ 
+ 	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
+-	ret = linux_wlan_lock_timeout(&wilc->sync_event, 5000);
++	ret = wilc_lock_timeout(wilc, &wilc->sync_event, 5000);
+ 	if (ret) {
+ 		PRINT_D(INIT_DBG, "Firmware start timed out");
+ 		return ret;
+@@ -485,7 +486,7 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 	return 0;
+ }
+ 
+-static int linux_wlan_firmware_download(struct net_device *dev)
++static int wilc1000_firmware_download(struct net_device *dev)
+ {
+ 	perInterface_wlan_t *nic;
+ 	struct wilc *wilc;
+@@ -499,7 +500,7 @@ static int linux_wlan_firmware_download(struct net_device *dev)
+ 		return -ENOBUFS;
+ 	}
+ 	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
+-	ret = wilc_wlan_firmware_download(wilc->firmware->data,
++	ret = wilc_wlan_firmware_download(wilc, wilc->firmware->data,
+ 					  wilc->firmware->size);
+ 	if (ret < 0)
+ 		return ret;
+@@ -754,7 +755,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+ 		deinit_irq(dev);
+ 
+-		wilc_wlan_stop();
++		wilc_wlan_stop(wl);
+ 
+ 		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+ 		wilc_wlan_cleanup(dev);
+@@ -914,7 +915,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 			goto _fail_irq_enable_;
+ 		}
+ 
+-		ret = linux_wlan_firmware_download(dev);
++		ret = wilc1000_firmware_download(dev);
+ 		if (ret < 0) {
+ 			PRINT_ER("Failed to download firmware\n");
+ 			ret = -EIO;
+@@ -952,7 +953,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 		return 0;
+ 
+ _fail_fw_start_:
+-		wilc_wlan_stop();
++		wilc_wlan_stop(wl);
+ 
+ _fail_irq_enable_:
+ 		if (!wl->dev_irq_num &&
+@@ -985,6 +986,7 @@ static int mac_init_fn(struct net_device *ndev)
+ int wilc_mac_open(struct net_device *ndev)
+ {
+ 	perInterface_wlan_t *nic;
++	struct wilc *wilc;
+ 
+ 	unsigned char mac_add[ETH_ALEN] = {0};
+ 	int ret = 0;
+@@ -1001,6 +1003,7 @@ int wilc_mac_open(struct net_device *ndev)
+ 	}
+ 
+ 	nic = netdev_priv(ndev);
++	wilc = nic->wilc;
+ 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
+ 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
+ 
+@@ -1314,7 +1317,7 @@ done:
+ 	return ret;
+ }
+ 
+-void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
++void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ {
+ 	unsigned int frame_len = 0;
+ 	int stats;
+@@ -1393,7 +1396,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 		release_firmware(wilc->firmware);
+ 
+ 	if (wilc && (wilc->vif[0].ndev || wilc->vif[1].ndev)) {
+-		linux_wlan_lock_timeout(&close_exit_sync, 12 * 1000);
++		wilc_lock_timeout(wilc, &close_exit_sync, 12 * 1000);
+ 
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+ 			if (wilc->vif[i].ndev)
+@@ -1417,17 +1420,18 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	int i;
+ 	perInterface_wlan_t *nic;
+ 	struct net_device *ndev;
++	struct wilc *wl;
+ 
+ 	sema_init(&close_exit_sync, 0);
+ 
+-	wilc_dev = kzalloc(sizeof(*wilc_dev), GFP_KERNEL);
+-	if (!wilc_dev)
++	wl = kzalloc(sizeof(*wilc_dev), GFP_KERNEL);
++	if (!wl)
+ 		return -ENOMEM;
+ 
+-	*wilc = wilc_dev;
+-	wilc_dev->io_type = io_type;
+-	wilc_dev->gpio = gpio;
+-	wilc_dev->ops = ops;
++	*wilc = wl;
++	wl->io_type = io_type;
++	wl->gpio = gpio;
++	wl->ops = ops;
+ 
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+@@ -1446,11 +1450,11 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		else
+ 			strcpy(ndev->name, "p2p%d");
+ 
+-		nic->u8IfIdx = wilc_dev->vif_num;
++		nic->u8IfIdx = wl->vif_num;
+ 		nic->wilc_netdev = ndev;
+ 		nic->wilc = *wilc;
+-		wilc_dev->vif[wilc_dev->vif_num].ndev = ndev;
+-		wilc_dev->vif_num++;
++		wl->vif[wl->vif_num].ndev = ndev;
++		wl->vif_num++;
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		{
+@@ -1483,6 +1487,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		nic->iftype = STATION_MODE;
+ 		nic->mac_opened = 0;
+ 	}
++	wilc_dev = *wilc = wl;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 761bc3f59138..6ec6d6a2868c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -207,11 +207,12 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
+ 
+ extern struct wilc *wilc_dev;
+ extern struct net_device *WILC_WFI_devs[];
+-void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+-void linux_wlan_mac_indicate(struct wilc *wilc, int flag);
+-void linux_wlan_rx_complete(void);
+-void linux_wlan_dbg(u8 *buff);
+-int linux_wlan_lock_timeout(void *vp, u32 timeout);
++void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
++void wilc_mac_indicate(struct wilc *wilc, int flag);
++void wilc_rx_complete(struct wilc *wilc);
++void wilc_dbg(struct wilc *, u8 *buff);
++
++int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
+ void wilc_netdev_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
+ 		     const struct wilc_hif_func *ops);
+@@ -220,4 +221,5 @@ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+ u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value);
+ int wilc_wlan_get_firmware(struct net_device *dev);
+ int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
++
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a71901c22653..df8503f83a12 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -40,6 +40,7 @@ static inline void chip_allow_sleep(void);
+ static inline void chip_wakeup(void);
+ static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
+ 
++/* FIXME: replace with dev_debug() */
+ static void wilc_debug(u32 flag, char *fmt, ...)
+ {
+ 	char buf[256];
+@@ -50,15 +51,15 @@ static void wilc_debug(u32 flag, char *fmt, ...)
+ 		vsprintf(buf, fmt, args);
+ 		va_end(args);
+ 
+-		linux_wlan_dbg(buf);
++		wilc_dbg(wilc_dev, buf);
+ 	}
+ }
+ 
+ static CHIP_PS_STATE_T chip_ps_state = CHIP_WAKEDUP;
+ 
+-static inline void acquire_bus(BUS_ACQUIRE_T acquire)
++static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
+ {
+-	mutex_lock(&wilc_dev->hif_cs);
++	mutex_lock(&wilc->hif_cs);
+ 	#ifndef WILC_OPTIMIZE_SLEEP_INT
+ 	if (chip_ps_state != CHIP_WAKEDUP)
+ 	#endif
+@@ -68,13 +69,13 @@ static inline void acquire_bus(BUS_ACQUIRE_T acquire)
+ 	}
+ }
+ 
+-static inline void release_bus(BUS_RELEASE_T release)
++static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
+ {
+ 	#ifdef WILC_OPTIMIZE_SLEEP_INT
+ 	if (release == RELEASE_ALLOW_SLEEP)
+ 		chip_allow_sleep();
+ 	#endif
+-	mutex_unlock(&wilc_dev->hif_cs);
++	mutex_unlock(&wilc->hif_cs);
+ }
+ 
+ #ifdef TCP_ACK_FILTER
+@@ -159,15 +160,15 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+ 	up(&wilc->txq_event);
+ }
+ 
+-static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
++static int wilc_wlan_txq_add_to_head(struct wilc *wilc, struct txq_entry_t *tqe)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	unsigned long flags;
+-	if (linux_wlan_lock_timeout(&wilc_dev->txq_add_to_head_cs,
++	if (wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+ 				    CFG_PKTS_TIMEOUT))
+ 		return -1;
+ 
+-	spin_lock_irqsave(&wilc_dev->txq_spinlock, flags);
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+ 	if (!p->txq_head) {
+ 		tqe->next = NULL;
+@@ -183,9 +184,9 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+ 	p->txq_entries += 1;
+ 	PRINT_D(TX_DBG, "Number of entries in TxQ = %d\n", p->txq_entries);
+ 
+-	spin_unlock_irqrestore(&wilc_dev->txq_spinlock, flags);
+-	up(&wilc_dev->txq_add_to_head_cs);
+-	up(&wilc_dev->txq_event);
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	up(&wilc->txq_add_to_head_cs);
++	up(&wilc->txq_event);
+ 	PRINT_D(TX_DBG, "Wake up the txq_handler\n");
+ 
+ 	return 0;
+@@ -255,14 +256,14 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
+ 	}
+ 	return 0;
+ }
+-static inline int remove_TCP_related(void)
++static inline int remove_TCP_related(struct wilc *wilc)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(&wilc_dev->txq_spinlock, flags);
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+-	spin_unlock_irqrestore(&wilc_dev->txq_spinlock, flags);
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 	return 0;
+ }
+ 
+@@ -281,7 +282,6 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	nic = netdev_priv(dev);
+ 	wilc = nic->wilc;
+ 
+-	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+ 	eth_hdr_ptr = &buffer[0];
+ 	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
+@@ -377,7 +377,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, p->txq_spinlock_flags);
+ 
+ 	while (dropped > 0) {
+-		linux_wlan_lock_timeout(&wilc->txq_event, 1);
++		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
+ 		dropped--;
+ 	}
+ 
+@@ -399,7 +399,7 @@ static bool is_tcp_ack_filter_enabled(void)
+ }
+ #endif
+ 
+-static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
++static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_size)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	struct txq_entry_t *tqe;
+@@ -407,7 +407,7 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
+ 	PRINT_D(TX_DBG, "Adding config packet ...\n");
+ 	if (p->quit) {
+ 		PRINT_D(TX_DBG, "Return due to clear function\n");
+-		up(&wilc_dev->cfg_event);
++		up(&wilc->cfg_event);
+ 		return 0;
+ 	}
+ 
+@@ -427,7 +427,7 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
+ #endif
+ 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
+ 
+-	if (wilc_wlan_txq_add_to_head(tqe))
++	if (wilc_wlan_txq_add_to_head(wilc, tqe))
+ 		return 0;
+ 	return 1;
+ }
+@@ -682,7 +682,7 @@ void wilc_chip_sleep_manually(void)
+ {
+ 	if (chip_ps_state != CHIP_WAKEDUP)
+ 		return;
+-	acquire_bus(ACQUIRE_ONLY);
++	acquire_bus(wilc_dev, ACQUIRE_ONLY);
+ 
+ #ifdef WILC_OPTIMIZE_SLEEP_INT
+ 	chip_allow_sleep();
+@@ -690,7 +690,7 @@ void wilc_chip_sleep_manually(void)
+ 	g_wlan.hif_func.hif_write_reg(0x10a8, 1);
+ 
+ 	chip_ps_state = CHIP_SLEEPING_MANUAL;
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc_dev, RELEASE_ONLY);
+ }
+ 
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+@@ -718,7 +718,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 		if (p->quit)
+ 			break;
+ 
+-		linux_wlan_lock_timeout(&wilc->txq_add_to_head_cs,
++		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+ 					CFG_PKTS_TIMEOUT);
+ #ifdef	TCP_ACK_FILTER
+ 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
+@@ -775,7 +775,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 			PRINT_D(TX_DBG, "Mark the last entry in VMM table - number of previous entries = %d\n", i);
+ 			vmm_table[i] = 0x0;
+ 		}
+-		acquire_bus(ACQUIRE_AND_WAKEUP);
++		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 		counter = 0;
+ 		do {
+ 			ret = p->hif_func.hif_read_reg(WILC_HOST_TX_CTRL, &reg);
+@@ -796,9 +796,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 					break;
+ 				}
+ 				PRINT_WRN(GENERIC_DBG, "[wilc txq]: warn, vmm table not clear yet, wait...\n");
+-				release_bus(RELEASE_ALLOW_SLEEP);
++				release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 				usleep_range(3000, 3000);
+-				acquire_bus(ACQUIRE_AND_WAKEUP);
++				acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 			}
+ 		} while (!p->quit);
+ 
+@@ -829,9 +829,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 					entries = ((reg >> 3) & 0x3f);
+ 					break;
+ 				} else {
+-					release_bus(RELEASE_ALLOW_SLEEP);
++					release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 					usleep_range(3000, 3000);
+-					acquire_bus(ACQUIRE_AND_WAKEUP);
++					acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 					PRINT_WRN(GENERIC_DBG, "Can't get VMM entery - reg = %2x\n", reg);
+ 				}
+ 			} while (--timeout);
+@@ -871,7 +871,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 			goto _end_;
+ 		}
+ 
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 
+ 		offset = 0;
+ 		i = 0;
+@@ -926,7 +926,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 			}
+ 		} while (--entries);
+ 
+-		acquire_bus(ACQUIRE_AND_WAKEUP);
++		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 
+ 		ret = p->hif_func.hif_clear_int_ext(ENABLE_TX_VMM);
+ 		if (!ret) {
+@@ -942,7 +942,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 
+ _end_:
+ 
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		if (ret != 1)
+ 			break;
+ 	} while (0);
+@@ -1016,7 +1016,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 			} else {
+ 				if (!is_cfg_packet) {
+ 					if (pkt_len > 0) {
+-						frmw_to_linux(wilc,
++						wilc_frmw_to_linux(wilc,
+ 							      &buffer[offset],
+ 							      pkt_len,
+ 							      pkt_offset);
+@@ -1031,10 +1031,10 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 						if (p->cfg_seq_no == rsp.seq_no)
+ 							up(&wilc->cfg_event);
+ 					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
+-						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
++						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
+ 
+ 					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
+-						linux_wlan_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
++						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
+ 					}
+ 				}
+ 			}
+@@ -1048,7 +1048,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 		kfree(rqe);
+ 
+ 		if (has_packet)
+-			linux_wlan_rx_complete();
++			wilc_rx_complete(wilc);
+ 
+ 	} while (1);
+ 
+@@ -1157,11 +1157,11 @@ _end_:
+ 	wilc_wlan_handle_rxq(wilc);
+ }
+ 
+-void wilc_handle_isr(void *wilc)
++void wilc_handle_isr(struct wilc *wilc)
+ {
+ 	u32 int_status;
+ 
+-	acquire_bus(ACQUIRE_AND_WAKEUP);
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 	g_wlan.hif_func.hif_read_int(&int_status);
+ 
+ 	if (int_status & PLL_INT_EXT)
+@@ -1179,11 +1179,11 @@ void wilc_handle_isr(void *wilc)
+ 	if (!(int_status & (ALL_INT_EXT))) {
+ 		wilc_unknown_isr_ext();
+ 	}
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ }
+ EXPORT_SYMBOL_GPL(wilc_handle_isr);
+ 
+-int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
++int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 offset;
+@@ -1210,7 +1210,7 @@ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
+ 		addr = BYTE_SWAP(addr);
+ 		size = BYTE_SWAP(size);
+ #endif
+-		acquire_bus(ACQUIRE_ONLY);
++		acquire_bus(wilc, ACQUIRE_ONLY);
+ 		offset += 8;
+ 		while (((int)size) && (offset < buffer_size)) {
+ 			if (size <= blksz)
+@@ -1227,7 +1227,7 @@ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
+ 			offset += size2;
+ 			size -= size2;
+ 		}
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 
+ 		if (!ret) {
+ 			ret = -EIO;
+@@ -1246,7 +1246,7 @@ _fail_1:
+ 	return (ret < 0) ? ret : 0;
+ }
+ 
+-int wilc_wlan_start(void)
++int wilc_wlan_start(struct wilc *wilc)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+@@ -1259,16 +1259,16 @@ int wilc_wlan_start(void)
+ 	} else if (p->io_type == HIF_SPI) {
+ 		reg = 1;
+ 	}
+-	acquire_bus(ACQUIRE_ONLY);
++	acquire_bus(wilc, ACQUIRE_ONLY);
+ 	ret = p->hif_func.hif_write_reg(WILC_VMM_CORE_CFG, reg);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail write reg vmm_core_cfg...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		ret = -EIO;
+ 		return ret;
+ 	}
+ 	reg = 0;
+-	if (p->io_type == HIF_SDIO && wilc_dev->dev_irq_num)
++	if (p->io_type == HIF_SDIO && wilc->dev_irq_num)
+ 		reg |= WILC_HAVE_SDIO_IRQ_GPIO;
+ 
+ #ifdef WILC_DISABLE_PMU
+@@ -1297,7 +1297,7 @@ int wilc_wlan_start(void)
+ 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_1, reg);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail write WILC_GP_REG_1 ...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		ret = -EIO;
+ 		return ret;
+ 	}
+@@ -1307,7 +1307,7 @@ int wilc_wlan_start(void)
+ 	ret = p->hif_func.hif_read_reg(0x1000, &chipid);
+ 	if (!ret) {
+ 		wilc_debug(N_ERR, "[wilc start]: fail read reg 0x1000 ...\n");
+-		release_bus(RELEASE_ONLY);
++		release_bus(wilc, RELEASE_ONLY);
+ 		ret = -EIO;
+ 		return ret;
+ 	}
+@@ -1322,32 +1322,32 @@ int wilc_wlan_start(void)
+ 	reg |= BIT(10);
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 	p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ 
+ 	return (ret < 0) ? ret : 0;
+ }
+ 
+-void wilc_wlan_global_reset(void)
++void wilc_wlan_global_reset(struct wilc *wilc)
+ {
+ 
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 
+-	acquire_bus(ACQUIRE_AND_WAKEUP);
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 	p->hif_func.hif_write_reg(WILC_GLB_RESET_0, 0x0);
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ }
+-int wilc_wlan_stop(void)
++int wilc_wlan_stop(struct wilc *wilc)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+ 	int ret;
+ 	u8 timeout = 10;
+-	acquire_bus(ACQUIRE_AND_WAKEUP);
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 
+ 	ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while reading reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		return ret;
+ 	}
+ 
+@@ -1355,7 +1355,7 @@ int wilc_wlan_stop(void)
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while writing reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 		return ret;
+ 	}
+ 
+@@ -1363,7 +1363,7 @@ int wilc_wlan_stop(void)
+ 		ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 		if (!ret) {
+ 			PRINT_ER("Error while reading reg\n");
+-			release_bus(RELEASE_ALLOW_SLEEP);
++			release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 			return ret;
+ 		}
+ 		PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n",
+@@ -1381,7 +1381,7 @@ int wilc_wlan_stop(void)
+ 			ret = p->hif_func.hif_read_reg(WILC_GLB_RESET_0, &reg);
+ 			if (!ret) {
+ 				PRINT_ER("Error while reading reg\n");
+-				release_bus(RELEASE_ALLOW_SLEEP);
++				release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 				return ret;
+ 			}
+ 			PRINT_D(GENERIC_DBG, "Read RESET Reg %x : Retry%d\n",
+@@ -1398,7 +1398,7 @@ int wilc_wlan_stop(void)
+ 
+ 	ret = p->hif_func.hif_write_reg(WILC_GLB_RESET_0, reg);
+ 
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 
+ 	return ret;
+ }
+@@ -1442,24 +1442,24 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 	#endif
+ 	kfree(p->tx_buffer);
+ 
+-	acquire_bus(ACQUIRE_AND_WAKEUP);
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 
+ 	ret = p->hif_func.hif_read_reg(WILC_GP_REG_0, &reg);
+ 	if (!ret) {
+ 		PRINT_ER("Error while reading reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	}
+ 	PRINT_ER("Writing ABORT reg\n");
+ 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_0, (reg | ABORT_INT));
+ 	if (!ret) {
+ 		PRINT_ER("Error while writing reg\n");
+-		release_bus(RELEASE_ALLOW_SLEEP);
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	}
+-	release_bus(RELEASE_ALLOW_SLEEP);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 	p->hif_func.hif_deinit(NULL);
+ }
+ 
+-static int wilc_wlan_cfg_commit(int type, u32 drv_handler)
++static int wilc_wlan_cfg_commit(struct wilc *wilc, int type, u32 drv_handler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+ 	struct wilc_cfg_frame *cfg = &p->cfg_frame;
+@@ -1480,7 +1480,7 @@ static int wilc_wlan_cfg_commit(int type, u32 drv_handler)
+ 	cfg->wid_header[7] = (u8)(driver_handler >> 24);
+ 	p->cfg_seq_no = seq_no;
+ 
+-	if (!wilc_wlan_txq_add_cfg_pkt(&cfg->wid_header[0], total_len))
++	if (!wilc_wlan_txq_add_cfg_pkt(wilc, &cfg->wid_header[0], total_len))
+ 		return -1;
+ 
+ 	return 0;
+@@ -1490,6 +1490,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drv_handler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
++	struct wilc *wilc = wilc_dev;
+ 	u32 offset;
+ 	int ret_size;
+ 
+@@ -1511,10 +1512,10 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		PRINT_D(RX_DBG, "Processing cfg_set()\n");
+ 		p->cfg_frame_in_use = 1;
+ 
+-		if (wilc_wlan_cfg_commit(WILC_CFG_SET, drv_handler))
++		if (wilc_wlan_cfg_commit(wilc, WILC_CFG_SET, drv_handler))
+ 			ret_size = 0;
+ 
+-		if (linux_wlan_lock_timeout(&wilc_dev->cfg_event,
++		if (wilc_lock_timeout(wilc, &wilc->cfg_event,
+ 					    CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Set Timed Out\n");
+ 			ret_size = 0;
+@@ -1530,6 +1531,7 @@ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
++	struct wilc *wilc = wilc_dev;
+ 	u32 offset;
+ 	int ret_size;
+ 
+@@ -1547,10 +1549,10 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler)
+ 	if (commit) {
+ 		p->cfg_frame_in_use = 1;
+ 
+-		if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drv_handler))
++		if (wilc_wlan_cfg_commit(wilc, WILC_CFG_QUERY, drv_handler))
+ 			ret_size = 0;
+ 
+-		if (linux_wlan_lock_timeout(&wilc_dev->cfg_event,
++		if (wilc_lock_timeout(wilc, &wilc->cfg_event,
+ 					    CFG_PKTS_TIMEOUT)) {
+ 			PRINT_D(TX_DBG, "Get Timed Out\n");
+ 			ret_size = 0;
+@@ -1587,8 +1589,13 @@ static u32 init_chip(struct net_device *dev)
+ {
+ 	u32 chipid;
+ 	u32 reg, ret = 0;
++	perInterface_wlan_t *nic;
++	struct wilc *wilc;
++
++	nic = netdev_priv(dev);
++	wilc = nic->wilc;
+ 
+-	acquire_bus(ACQUIRE_ONLY);
++	acquire_bus(wilc, ACQUIRE_ONLY);
+ 
+ 	chipid = wilc_get_chipid(true);
+ 
+@@ -1611,7 +1618,7 @@ static u32 init_chip(struct net_device *dev)
+ 		}
+ 	}
+ 
+-	release_bus(RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 90ef650e722d..20bca44bc8ba 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -283,13 +283,13 @@ struct wilc_cfg_rsp {
+ 
+ struct wilc;
+ 
+-int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
+-int wilc_wlan_start(void);
+-int wilc_wlan_stop(void);
++int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size);
++int wilc_wlan_start(struct wilc *);
++int wilc_wlan_stop(struct wilc *);
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func);
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count);
+-void wilc_handle_isr(void *wilc);
++void wilc_handle_isr(struct wilc *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+ 		      int commit, u32 drv_handler);
+@@ -300,7 +300,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ void wilc_chip_sleep_manually(void);
+ 
+ void wilc_enable_tcp_ack_filter(bool value);
+-int wilc_wlan_get_num_conn_ifcs(void);
++int wilc_wlan_get_num_conn_ifcs(struct wilc *);
+ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ 
+ int wilc_mac_open(struct net_device *ndev);
+-- 
+2.1.0.rc2
 
-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
-RNzFAXKttZcw0H9PkiPDtH4BAA==
-
---Q68bSM7Ycu6FN28Q--
