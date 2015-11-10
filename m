@@ -1,68 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26324 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710AbbKEFde (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:61254 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972AbbKJXm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:33:34 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 01/38] staging: wilc1000: rename pu8IPAddr of fuction Handle_set_IPAddress
-Date: Thu, 5 Nov 2015 14:36:02 +0900
-Message-ID: <1446701799-24870-1-git-send-email-glen.lee@atmel.com> (sfid-20151105_063337_812870_44E3AB40)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 10 Nov 2015 18:42:59 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 08/20] staging/wilc1000: remove linux_wlan_{device_power,device_detection}
+Date: Wed, 11 Nov 2015 00:42:28 +0100
+Message-Id: <1447198960-2760143-9-git-send-email-arnd@arndb.de> (sfid-20151111_004900_682370_4B187CE3)
+In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The driver provides an interface for custom power management
+and detection that is meant to be filled by people customizing
+the driver. The default implementation of this is empty, and
+we don't actually want people to have to modify the source code.
 
-This patch renames pu8IPAddr of fuction Handle_set_IPAddress to ip_addr
-to avoid CamelCase naming convention.
+If anybody needs this, they need to describe the respective
+hardware specifics using device tree or platform data and make
+the driver handle this is a more general way.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This removes the empty stubs.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 40 -----------------------------------
+ 1 file changed, 40 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 17826f3..b1d8b17 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -397,22 +397,23 @@ static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
- 	return result;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 040caa0d0d0b..6e1ef99fc856 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -31,40 +31,6 @@
+ #include "linux_wlan_spi.h"
+ #endif
+ 
+- #define _linux_wlan_device_power_on()		{}
+- #define _linux_wlan_device_power_off()		{}
+-
+- #define _linux_wlan_device_detection()		{}
+- #define _linux_wlan_device_removal()		{}
+-
+-static int linux_wlan_device_power(int on_off)
+-{
+-	PRINT_D(INIT_DBG, "linux_wlan_device_power.. (%d)\n", on_off);
+-
+-	if (on_off) {
+-		_linux_wlan_device_power_on();
+-	} else {
+-		_linux_wlan_device_power_off();
+-	}
+-
+-	return 0;
+-}
+-
+-static int linux_wlan_device_detection(int on_off)
+-{
+-	PRINT_D(INIT_DBG, "linux_wlan_device_detection.. (%d)\n", on_off);
+-
+-#ifdef WILC_SDIO
+-	if (on_off) {
+-		_linux_wlan_device_detection();
+-	} else {
+-		_linux_wlan_device_removal();
+-	}
+-#endif
+-
+-	return 0;
+-}
+-
+ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
+ 
+ static struct notifier_block g_dev_notifier = {
+@@ -1476,8 +1442,6 @@ void wl_wlan_cleanup(struct wilc *wilc)
+ #if defined(WILC_DEBUGFS)
+ 	wilc_debugfs_remove();
+ #endif
+-	linux_wlan_device_detection(0);
+-	linux_wlan_device_power(0);
  }
  
--s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *pu8IPAddr, u8 idx)
-+s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
- {
- 	s32 result = 0;
- 	struct wid wid;
- 	char firmwareIPAddress[4] = {0};
+ int wilc_netdev_init(struct wilc **wilc)
+@@ -1579,10 +1543,6 @@ static int __init init_wilc_driver(void)
+ 	printk("IN INIT FUNCTION\n");
+ 	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
  
--	if (pu8IPAddr[0] < 192)
--		pu8IPAddr[0] = 0;
-+	if (ip_addr[0] < 192)
-+		ip_addr[0] = 0;
- 
--	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
-+	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n",
-+		   idx, ip_addr);
- 
--	memcpy(set_ip[idx], pu8IPAddr, IP_ALEN);
-+	memcpy(set_ip[idx], ip_addr, IP_ALEN);
- 
- 	wid.id = (u16)WID_IP_ADDRESS;
- 	wid.type = WID_STR;
--	wid.val = (u8 *)pu8IPAddr;
-+	wid.val = (u8 *)ip_addr;
- 	wid.size = IP_ALEN;
- 
- 	result = send_config_pkt(SET_CFG, &wid, 1,
+-	linux_wlan_device_power(1);
+-	msleep(100);
+-	linux_wlan_device_detection(1);
+-
+ #ifdef WILC_SDIO
+ 	{
+ 		int ret;
 -- 
-1.9.1
+2.1.0.rc2
 
