@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36930 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbbKYNrP (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34657 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125AbbKJHZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 08:47:15 -0500
-Subject: [PATCH 1/6] ath10k: fix otp board id error message
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 25 Nov 2015 15:38:05 +0200
-Message-ID: <20151125133804.25507.64575.stgit@potku.adurom.net> (sfid-20151125_144718_823627_90B36BFB)
-In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
-References: <20151125133654.25507.10863.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 10 Nov 2015 02:25:17 -0500
+Received: by padhx2 with SMTP id hx2so217696184pad.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 23:25:17 -0800 (PST)
+From: "Yin, Fengwei" <fengwei.yin@linaro.org>
+To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org
+Subject: [PATCH v2 5/5] wcn3620: use new response format for wcn3620 remove_bsskey
+Date: Tue, 10 Nov 2015 03:25:55 -0500
+Message-Id: <1447143955-10304-6-git-send-email-fengwei.yin@linaro.org> (sfid-20151110_082522_416875_D00E0ECA)
+In-Reply-To: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
+References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We check board id from all board types, not just qca99x0, so the error message
-was misleading.
+From: Andy Green <andy.green@linaro.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On wcn3620, firmware response to remove_bsskey uses the new, larger
+"v2" format
+
+Signed-off-by: Andy Green <andy.green@linaro.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f128adbae454..78fe1863ad04 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1753,7 +1753,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 
- 	ret = ath10k_core_get_board_id_from_otp(ar);
- 	if (ret && ret != -EOPNOTSUPP) {
--		ath10k_err(ar, "failed to get board id from otp for qca99x0: %d\n",
-+		ath10k_err(ar, "failed to get board id from otp: %d\n",
- 			   ret);
- 		return ret;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index dae5e1a..74f56a8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1598,7 +1598,8 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+ 		wcn36xx_err("Sending hal_remove_bsskey failed\n");
+ 		goto out;
  	}
+-	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
++	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
++					      wcn->hal_rsp_len);
+ 	if (ret) {
+ 		wcn36xx_err("hal_remove_bsskey response failed err=%d\n", ret);
+ 		goto out;
+-- 
+2.1.4
 
