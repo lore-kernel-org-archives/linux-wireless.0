@@ -1,77 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:38676 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727AbbKGLcN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2015 06:32:13 -0500
-From: Punit Vara <punitvara@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, johnny.kim@atmel.com,
-	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com,
-	Punit Vara <punitvara@gmail.com>
-Subject: [PATCH] Staging: wilc1000: Fix build break due to undeclared *wilc and implicit declaration of init_irq
-Date: Sat,  7 Nov 2015 17:01:49 +0530
-Message-Id: <1446895909-30052-1-git-send-email-punitvara@gmail.com> (sfid-20151107_123259_023126_7D54E4A7)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49102 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752531AbbKKWPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 17:15:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v3 1/8] mac80211: add ieee80211_hw_clear()
+Date: Wed, 11 Nov 2015 23:15:13 +0100
+Message-Id: <1447280120-16010-2-git-send-email-johannes@sipsolutions.net> (sfid-20151111_231530_664306_1ED0FBD5)
+In-Reply-To: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
+References: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to the linux_wlan.c file that fixes up break found during
-make drivers/staging/wilc1000/linux_wlan.o
+From: Johannes Berg <johannes.berg@intel.com>
 
-Patch add following things to file :
--struct wilc *wilc declaration
--init_irq declaration
--At preprocessor (!defined WILC_SDIO) to defination of init_irq
--At preprocessor (!defined WILC_SDIO) to defination isr_uh_routine
+There are a few hardware flags that *are* valid to change, at least
+under certain circumstances. Since drivers are doing that, add an
+inline to make it easier to do correctly. They still need to take
+care of locking themselves.
 
-Signed-off-by: Punit Vara <punitvara@gmail.com>
+While at it, remove the pointless return in ieee80211_hw_set().
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/adm8211.c              | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 2 +-
+ include/net/mac80211.h                      | 9 ++++++++-
+ 4 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 09ddba2..0a21e62 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -224,7 +224,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 15f057ed41ad..bdfd60f39078 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1375,7 +1375,7 @@ static void adm8211_configure_filter(struct ieee80211_hw *dev,
+ 	if (priv->nar & ADM8211_NAR_PR)
+ 		ieee80211_hw_set(dev, RX_INCLUDES_FCS);
+ 	else
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, dev->flags);
++		ieee80211_hw_clear(dev, RX_INCLUDES_FCS);
  
+ 	if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+ 		adm8211_set_bssid(dev, bcast);
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index b3ad34e8bf5a..d4918a5f7bd7 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1356,7 +1356,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (vif->type == NL80211_IFTYPE_MONITOR)
+ 		ieee80211_hw_set(priv->hw, RX_INCLUDES_FCS);
+ 	else
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, priv->hw->flags);
++		ieee80211_hw_clear(priv->hw, RX_INCLUDES_FCS);
+ 
+ 	err = iwl_setup_interface(priv, ctx);
+ 	if (!err || reset)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index ad7ad720d2e7..ca944d3f7401 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1289,7 +1289,7 @@ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	mvmvif->uploaded = false;
+ 
+ 	if (vif->type == NL80211_IFTYPE_MONITOR)
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, mvm->hw->flags);
++		ieee80211_hw_clear(mvm->hw, RX_INCLUDES_FCS);
+ 
+ 	return 0;
  }
- 
--#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
-+#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
- static irqreturn_t isr_uh_routine(int irq, void *user_data)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 82045fca388b..47274d829115 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2081,10 +2081,17 @@ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+ static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
+ 				     enum ieee80211_hw_flags flg)
  {
- 	perInterface_wlan_t *nic;
-@@ -264,7 +264,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
- 	return IRQ_HANDLED;
+-	return __set_bit(flg, hw->flags);
++	__set_bit(flg, hw->flags);
  }
+ #define ieee80211_hw_set(hw, flg)	_ieee80211_hw_set(hw, IEEE80211_HW_##flg)
  
--#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
-+#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined WILC_SDIO)
- static int init_irq(struct net_device *dev)
- {
- 	int ret = 0;
-@@ -1082,6 +1082,9 @@ static void wlan_deinitialize_threads(struct net_device *dev)
- 		wl->txq_thread = NULL;
- 	}
- }
++static inline void _ieee80211_hw_clear(struct ieee80211_hw *hw,
++				       enum ieee80211_hw_flags flg)
++{
++	__clear_bit(flg, hw->flags);
++}
++#define ieee80211_hw_clear(hw, flg)	_ieee80211_hw_clear(hw, IEEE80211_HW_##flg)
 +
-+#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
-+static int init_irq(struct net_device *dev);
-+#endif
- 
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- {
-@@ -1791,6 +1794,7 @@ int wilc_netdev_init(struct wilc **wilc)
- /*The 1st function called after module inserted*/
- static int __init init_wilc_driver(void)
- {
-+	struct wilc *wilc;
- #ifdef WILC_SPI
- 	struct wilc *wilc;
- #endif
+ /**
+  * struct ieee80211_scan_request - hw scan request
+  *
 -- 
 2.6.2
 
