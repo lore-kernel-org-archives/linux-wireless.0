@@ -1,225 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from correo.avancemgrup.es ([95.39.26.195]:10031 "EHLO
-	correo.avancemgrup.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932128AbbKCPbh (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17168 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbbKKJS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 10:31:37 -0500
-Message-ID: <1446564281.4123.17.camel@s-altop> (sfid-20151103_163233_403888_4CDFB7AE)
-Subject: Encryption problems with libertas drivers, kernel 3.18 and
- wpa_supplicant using wext
-From: simo <sazzalin@settopsurvey.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Tue, 3 Nov 2015 16:24:41 +0100
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 11 Nov 2015 04:18:27 -0500
+Message-ID: <564307DF.5050308@broadcom.com> (sfid-20151111_101857_242391_E90BB654)
+Date: Wed, 11 Nov 2015 10:18:23 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] net: brcm80211: Delete an unnecessary check before the
+ function call "release_firmware"
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <546E0DC8.3050906@users.sourceforge.net> <546E2D2A.6090101@broadcom.com> <563C5DA2.3000005@users.sourceforge.net>
+In-Reply-To: <563C5DA2.3000005@users.sourceforge.net>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 11/06/2015 08:58 AM, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 6 Nov 2015 08:48:23 +0100
+>
+> The release_firmware() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+>
+> This issue was detected by using the Coccinelle software.
 
-I hope this is the right place to ask for help.
-
-I am experiencing problems when I try to create a IBSS netwoork with
-wpa_supplicant.
-
-The drivers used for the wifi hardware are the "libertas" and the
-wireles adapter is a Marvell WLAN 802.11.
-
-What happens is that when I create the network, it appears always as
-unencrypted. I cannot set any encryption key (WEP, WPA etc.)
-
-I can only connect to the IBSS network if this has been set without key.
-
-When I execute wpa_supplicant the output is:
-
-wpa_supplicant -D wext -i wlan0
--c/etc/wpa_supplicant/wpa_supplicant.conf -dd
-wpa_supplicant v2.3
-random: Trying to read entropy from /dev/random
-Successfully initialized wpa_supplicant
-Initializing interface 'wlan0' conf
-'/etc/wpa_supplicant/wpa_supplicant.conf' driver 'wext' ctrl_interface
-'N/A' bridge 'N/A'
-Configuration file '/etc/wpa_supplicant/wpa_supplicant.conf' ->
-'/etc/wpa_supplicant/wpa_supplicant.conf'
-Reading configuration file '/etc/wpa_supplicant/wpa_supplicant.conf'
-ap_scan=1
-ctrl_interface='/var/run/wpa_supplicant'
-Line: 3 - start of a new network block
-ssid - hexdump_ascii(len=8):
-     73 69 6d 6f 5f 6e 65 74                           simo_net        
-mode=1 (0x1)
-frequency=2412 (0x96c)
-priority=10 (0xa)
-key_mgmt: 0x4
-wep_key0 - hexdump(len=5): [REMOVED]
-Priority group 10
-   id=0 ssid='simo_net'
-WEXT: cfg80211-based driver detected
-wext: interface wlan0 phy: phy2
-rfkill: initial event: idx=1 type=2 op=0 soft=0 hard=0
-rfkill: initial event: idx=3 type=1 op=0 soft=0 hard=0
-SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-  capabilities: key_mgmt 0xf enc 0x1f flags 0x0
-netlink: Operstate: ifindex=5 linkmode=1 (userspace-control),
-operstate=5 (IF_OPER_DORMANT)
-Add interface wlan0 to a new radio phy2
-wlan0: Own MAC address: xx:xx:xx:xx:xx:xx
-wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
-wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
-wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
-wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
-wpa_driver_wext_set_countermeasures
-wlan0: RSN: flushing PMKID list in the driver
-wlan0: Setting scan request: 0.100000 sec
-wlan0: WPS: UUID based on MAC address:
-39cee858-d55e-5e3d-b589-30e2c9d32960
-EAPOL: SUPP_PAE entering state DISCONNECTED
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: KEY_RX entering state NO_KEY_RECEIVE
-EAPOL: SUPP_BE entering state INITIALIZE
-EAP: EAP entering state DISABLED
-wlan0: Added interface wlan0
-wlan0: State: DISCONNECTED -> DISCONNECTED
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: ifindex=5 linkmode=-1 (no change), operstate=5
-(IF_OPER_DORMANT)
-random: Got 20/20 bytes from /dev/random
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b06 len=8
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b1a len=8
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-wlan0: State: DISCONNECTED -> SCANNING
-wlan0: Starting AP scan for wildcard SSID
-wlan0: Add radio work 'scan'@0xfa450
-wlan0: First radio work item in the queue - schedule start immediately
-wlan0: Starting radio work 'scan'@0xfa450 after 0.000122 second wait
-Scan requested (ret=0) - scan timeout 10 seconds
-EAPOL: disable timer tick
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b19 len=8
-wlan0: Event SCAN_RESULTS (3) received
-Received 0 bytes of scan results (0 BSSes)
-wlan0: BSS: Start scan result update 1
-BSS: last_scan_res_used=0/0
-wlan0: New scan results available (own=0 ext=0)
-wlan0: Radio work 'scan'@0xfa450 done in 1.086812 seconds
-wlan0: No suitable network found
-wlan0: Setup a new network
-wlan0: Add radio work 'connect'@0xfa450
-wlan0: First radio work item in the queue - schedule start immediately
-wlan0: Starting radio work 'connect'@0xfa450 after 0.000153 second wait
-wlan0: Trying to associate with SSID 'simo_net'
-wlan0: Cancelling scan request
-wlan0: WPA: clearing own WPA/RSN IE
-wlan0: Automatic auth_alg selection: 0x1
-wlan0: WPA: clearing AP WPA IE
-wlan0: WPA: clearing AP RSN IE
-wlan0: WPA: clearing own WPA/RSN IE
-wpa_driver_wext_set_key: alg=1 key_idx=0 set_tx=1 seq_len=0 key_len=5
-wlan0: State: SCANNING -> ASSOCIATING
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: ifindex=5 linkmode=-1 (no change), operstate=5
-(IF_OPER_DORMANT)
-wpa_driver_wext_associate
-wpa_driver_wext_set_drop_unencrypted
-ioctl[SIOCSIWGENIE]: Operation not supported
-wpa_driver_wext_set_psk
-wlan0: Association request to the driver failed
-wlan0: Setting authentication timeout: 10 sec 0 usec
-EAPOL: External notification - EAP success=0
-EAPOL: External notification - EAP fail=0
-EAPOL: External notification - portControl=ForceAuthorized
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b1a len=8
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b06 len=8
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b04 len=12
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b1a len=16
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-Wireless event: cmd=0x8b15 len=20
-Wireless event: new AP: xx:xx:xx:xx:xx:xx
-wlan0: Event ASSOC (0) received
-wlan0: State: ASSOCIATING -> ASSOCIATED
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: ifindex=5 linkmode=-1 (no change), operstate=5
-(IF_OPER_DORMANT)
-wlan0: Associated to a new BSS: BSSID=xx:xx:xx:xx:xx:xx
-Received 287 bytes of scan results (1 BSSes)
-wlan0: BSS: Start scan result update 2
-wlan0: BSS: Add new id 0 BSSID xx:xx:xx:xx:xx:xx SSID 'simo_net'
-wlan0: Associated with xx:xx:xx:xx:xx:xx
-wlan0: WPA: Association event - clear replay counter
-wlan0: WPA: Clear old PTK
-EAPOL: External notification - portEnabled=0
-EAPOL: External notification - portValid=0
-EAPOL: External notification - portEnabled=1
-EAPOL: SUPP_PAE entering state S_FORCE_AUTH
-EAPOL: Supplicant port status: Authorized
-EAPOL: SUPP_BE entering state IDLE
-wlan0: Cancelling authentication timeout
-wlan0: State: ASSOCIATED -> COMPLETED
-wlan0: Radio work 'connect'@0xfa450 done in 0.092043 seconds
-wlan0: CTRL-EVENT-CONNECTED - Connection to xx:xx:xx:xx:xx:xx completed
-[id=0 id_str=]
-wpa_driver_wext_set_operstate: operstate 0->1 (UP)
-netlink: Operstate: ifindex=5 linkmode=-1 (no change), operstate=6
-(IF_OPER_UP)
-wlan0: Cancelling scan request
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-WEXT: if_removed already cleared - ignore event
-
-For information, the wpa_supplicant conf file is:
-
-ap_scan=1
-ctrl_interface=/var/run/wpa_supplicant
-network={
-   ssid="simo_net"
-   mode=1
-   frequency=2412
-   priority=10
-   key_mgmt=NONE
-   wep_key0="hello"
-}
-
-Problems persist also recompiling wpa_supplicant 2.5.
-
->From a research of similar issues through Google, I realized it could be
-an issue related to the libertas driver.
-
-At the moment I don't know how to solve. Someone has experienced the
-same problems ?
-
-Any suggestion ?
-
-Thank you in advance.
-Simon
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> index 4248f3c..33afb9a 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> @@ -449,8 +449,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>
+>   	if (raw_nvram)
+>   		bcm47xx_nvram_release_contents(data);
+> -	if (fw)
+> -		release_firmware(fw);
+> +	release_firmware(fw);
+>   	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+>   		goto fail;
+>
+>
 
