@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37079 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCOF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:14:05 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 36/73] staging: wilc1000: rename Enable_TCP_ACK_Filter function
-Date: Fri, 6 Nov 2015 11:12:57 +0900
-Message-ID: <1446776014-28094-36-git-send-email-glen.lee@atmel.com> (sfid-20151106_033755_417402_EC90A9D1)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:49104 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751522AbbKKWPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 17:15:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>
+Subject: [RFC v3 0/8] mac80211: jump labels for HW flags
+Date: Wed, 11 Nov 2015 23:15:12 +0100
+Message-Id: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net> (sfid-20151111_231529_664064_3A7C3039)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Changes since v2:
+ * introduce Kconfig count and use it instead of _ON/_OFF in
+   the first few patches and described below
+   (I'll squash that later if I don't abandon the whole thing)
 
-This patch rename the Enable_TCP_ACK_Filter function to enable_tcp_ack_filter
-to avoid CamelCase naming convention.
+Changes since v1:
+ * use struct static_key_false
+ * get rid of all those generated macros and use the optimiser
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c              | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+-----
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5291868..6f40522 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1570,9 +1570,9 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 		if ((strStatistics.link_speed > TCP_ACK_FILTER_LINK_SPEED_THRESH) &&
- 		    (strStatistics.link_speed != DEFAULT_LINK_SPEED))
--			Enable_TCP_ACK_Filter(true);
-+			enable_tcp_ack_filter(true);
- 		else if (strStatistics.link_speed != DEFAULT_LINK_SPEED)
--			Enable_TCP_ACK_Filter(false);
-+			enable_tcp_ack_filter(false);
- 
- 		PRINT_D(CORECONFIG_DBG, "*** stats[%d][%d][%d][%d][%d]\n", sinfo->signal, sinfo->rx_packets, sinfo->tx_packets,
- 			sinfo->tx_failed, sinfo->txrate.legacy);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 39cd8e1..d7bdca1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -104,6 +104,6 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
- #define DEFAULT_LINK_SPEED			72
--void Enable_TCP_ACK_Filter(bool value);
-+void enable_tcp_ack_filter(bool value);
- 
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 0bfd1bd..53c5804 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -391,7 +391,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 
- bool enabled = false;
- 
--void Enable_TCP_ACK_Filter(bool value)
-+void enable_tcp_ack_filter(bool value)
- {
- 	enabled = value;
- }
--- 
-1.9.1
+This was an experiment I thought of on Sunday ...
+
+As also explained in the log for patch 3, we have a lot of behaviour
+differences in mac80211 based on which driver we're working against.
+In many cases (say OpenWRT router, or a phone/tablet, ChromeBook, etc.)
+we only have a single driver built into the system though. In that
+case we could - theoretically - elide all the code that isn't required
+by that driver, but that seems too dangerous.
+
+Instead, use static keys to set a default for each of the flags. If
+the flag is selected as _OFF in Kconfig, then any code that needs it
+to be on will be placed out of line and the jump NOPed out; if then
+a driver registers that actually needs the code the jump will be put
+back and the first thing in the out-of-line section will be to check
+the real hw flags.
+
+This pretty much results in the same thing as removing the code/if,
+but with more safety.
+
+I haven't done any measurements whatsoever, but I think it might be
+something to test on a little MIPS router box.
+
+
+As far as the code is concerned, there are two really ugly things:
+ 1) I still use struct static_key - couldn't quite figure it out
+    with static_key_false. I think I can replace it easily though.
+ 2) There are a lot of boilerplate ifdefs/macros.
+
+I can't see a way to avoid more of (2), although I think that we
+can probably remove it for a lot of flags and just not have this
+ability for those that aren't used in RX/TX/status paths. That'd
+probably reduce the code quite a bit.
+
+If anyone has an easy setup to test it on a low-power platform that
+would be great.
+
+johannes
+
 
