@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21909 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752787AbbKUSYz convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59981 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbbKKMBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2015 13:24:55 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>,
-	"Eyal Shapira" <eyal@wizery.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Kaufman, Liad" <liad.kaufman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [patch] iwlwifi: mvm: rs: fix a warning message
-Date: Sat, 21 Nov 2015 18:24:49 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F6961@hasmsx107.ger.corp.intel.com> (sfid-20151121_192500_796007_4B6B8698)
-References: <20151121103338.GE7002@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 11 Nov 2015 07:01:48 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: poll HTT send completion when CE 5 is unused
+Date: Wed, 11 Nov 2015 17:31:26 +0530
+Message-ID: <1447243286-22116-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151111_130159_708538_32C5D581)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+commit a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
+moved send completion polling under HTT Rx (CE 5) service routine. For
+QCA6174 based devices copy engine 1 (CE 1) is used for HTT Rx instead
+of CE 5. So send completion never be called. This is causing "failed to
+transmit packet, dropping: -105" errors. Fix this by processing send
+completion from CE 1 service routine instead of CE 5.
 
+Tested-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-On 11/21/2015 12:33 PM, Dan Carpenter wrote:
-> WARN_ON_ONCE() doesn't take a message, it only takes a condition.  I
-> have changed this to WARN(1, ...).
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-> index d1ad103..58d7bee 100644
-> --- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-> +++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-> @@ -1827,7 +1827,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
->  		rate->type = lq_sta->is_vht ? LQ_VHT_MIMO2 : LQ_HT_MIMO2;
->  		rate_mask = lq_sta->active_mimo2_rate;
->  	} else {
-> -		WARN_ON_ONCE("Bad column mode");
-> +		WARN_ONCE(1, "Bad column mode");
->  	}
->  
->  	if (column->mode != RS_LEGACY) {
->
-Ouch - thanks. Clearly, this one doesn't trigger very often :)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 5c91a67..698e669 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -112,6 +112,7 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_pci_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -129,7 +130,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = ath10k_pci_htc_rx_cb,
++		.recv_cb = ath10k_pci_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE2: target->host WMI */
+@@ -1210,6 +1211,16 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
+ }
+ 
++static void ath10k_pci_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	/* CE4 polling needs to be done whenever CE pipe which transports
++	 * HTT Rx (target->host) is processed.
++	 */
++	ath10k_ce_per_engine_service(ce_state->ar, 4);
++
++	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
+ /* Called by lower (CE) layer when data is received from the Target.
+  * Only 10.4 firmware uses separate CE to transfer pktlog data.
+  */
+-- 
+2.6.2
+
