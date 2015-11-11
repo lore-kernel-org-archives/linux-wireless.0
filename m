@@ -1,1590 +1,1088 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58244 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1162271AbbKTJvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 04:51:10 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v4 2/3] driver: nfc: Add ST95HF NFC Transceiver support
-Date: Fri, 20 Nov 2015 04:49:56 -0500
-Message-ID: <1448012997-6000-3-git-send-email-shikha.singh@st.com> (sfid-20151120_105329_263391_3E8CD18F)
-In-Reply-To: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
-References: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49112 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793AbbKKWP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 17:15:27 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v3 2/8] mac80211: introduce ieee80211_local_check()
+Date: Wed, 11 Nov 2015 23:15:14 +0100
+Message-Id: <1447280120-16010-3-git-send-email-johannes@sipsolutions.net> (sfid-20151111_231538_428941_A039468D)
+In-Reply-To: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
+References: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Release of linux driver for STMicroelectronics NFC Transceiver
-"ST95HF". This release of driver supports ST95HF in initiator
-role to read/write ISO14443 Type 4A and ISO14443 Type 4B tags.
-The web link of ST95HF datasheet is:
-http://www.st.com/web/en/resource/technical/document/datasheet/DM00102056.pdf
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
+This will later allow introducing different behaviour between
+driver and hw checks. Make mac80211 use the new check function
+almost everywhere - one place cannot (rate control) and two of
+them shouldn't get the behaviour I want to introduce (in hw
+registration.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/nfc/Kconfig         |    1 +
- drivers/nfc/Makefile        |    1 +
- drivers/nfc/st95hf/Kconfig  |   10 +
- drivers/nfc/st95hf/Makefile |    6 +
- drivers/nfc/st95hf/core.c   | 1246 +++++++++++++++++++++++++++++++++++++++++++
- drivers/nfc/st95hf/spi.c    |  167 ++++++
- drivers/nfc/st95hf/spi.h    |   64 +++
- 7 files changed, 1495 insertions(+)
- create mode 100644 drivers/nfc/st95hf/Kconfig
- create mode 100644 drivers/nfc/st95hf/Makefile
- create mode 100644 drivers/nfc/st95hf/core.c
- create mode 100644 drivers/nfc/st95hf/spi.c
- create mode 100644 drivers/nfc/st95hf/spi.h
+ net/mac80211/agg-rx.c         |  2 +-
+ net/mac80211/agg-tx.c         |  4 +--
+ net/mac80211/cfg.c            | 12 ++++-----
+ net/mac80211/debugfs_netdev.c |  2 +-
+ net/mac80211/driver-ops.c     |  2 +-
+ net/mac80211/ieee80211_i.h    |  9 +++++++
+ net/mac80211/iface.c          | 10 ++++----
+ net/mac80211/key.c            |  4 +--
+ net/mac80211/main.c           | 10 ++++----
+ net/mac80211/mlme.c           | 58 +++++++++++++++++++++----------------------
+ net/mac80211/offchannel.c     |  2 +-
+ net/mac80211/pm.c             |  4 +--
+ net/mac80211/rate.c           |  6 ++---
+ net/mac80211/rx.c             | 26 +++++++++----------
+ net/mac80211/scan.c           | 10 ++++----
+ net/mac80211/sta_info.c       | 14 +++++------
+ net/mac80211/status.c         | 12 ++++-----
+ net/mac80211/tdls.c           |  4 +--
+ net/mac80211/tx.c             | 36 +++++++++++++--------------
+ net/mac80211/util.c           |  6 ++---
+ 20 files changed, 121 insertions(+), 112 deletions(-)
 
-diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
-index 0d6003d..7437c9d 100644
---- a/drivers/nfc/Kconfig
-+++ b/drivers/nfc/Kconfig
-@@ -76,4 +76,5 @@ source "drivers/nfc/st21nfca/Kconfig"
- source "drivers/nfc/st-nci/Kconfig"
- source "drivers/nfc/nxp-nci/Kconfig"
- source "drivers/nfc/s3fwrn5/Kconfig"
-+source "drivers/nfc/st95hf/Kconfig"
- endmenu
-diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
-index e362141..0a99e67 100644
---- a/drivers/nfc/Makefile
-+++ b/drivers/nfc/Makefile
-@@ -16,3 +16,4 @@ obj-$(CONFIG_NFC_ST21NFCA)  	+= st21nfca/
- obj-$(CONFIG_NFC_ST_NCI)	+= st-nci/
- obj-$(CONFIG_NFC_NXP_NCI)	+= nxp-nci/
- obj-$(CONFIG_NFC_S3FWRN5)	+= s3fwrn5/
-+obj-$(CONFIG_NFC_ST95HF)	+= st95hf/
-diff --git a/drivers/nfc/st95hf/Kconfig b/drivers/nfc/st95hf/Kconfig
-new file mode 100644
-index 0000000..224f266
---- /dev/null
-+++ b/drivers/nfc/st95hf/Kconfig
-@@ -0,0 +1,10 @@
-+config NFC_ST95HF
-+	tristate "ST95HF NFC Transceiver driver"
-+	depends on SPI && NFC_DIGITAL
-+	help
-+	This enables the ST NFC driver for ST95HF NFC transceiver.
-+	This makes use of SPI framework to communicate with transceiver
-+	and registered with NFC digital core to support Linux NFC framework.
-+
-+	Say Y here to compile support for ST NFC transceiver ST95HF
-+	linux driver into the kernel or say M to compile it as module.
-diff --git a/drivers/nfc/st95hf/Makefile b/drivers/nfc/st95hf/Makefile
-new file mode 100644
-index 0000000..00760b3
---- /dev/null
-+++ b/drivers/nfc/st95hf/Makefile
-@@ -0,0 +1,6 @@
-+#
-+# Makefile for STMicroelectronics NFC transceiver ST95HF
-+#
-+
-+obj-$(CONFIG_NFC_ST95HF)	+= st95hf.o
-+st95hf-objs			:= spi.o core.o
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-new file mode 100644
-index 0000000..6059684
---- /dev/null
-+++ b/drivers/nfc/st95hf/core.c
-@@ -0,0 +1,1246 @@
-+/*
-+ * --------------------------------------------------------------------
-+ * Driver for ST NFC Transceiver ST95HF
-+ * --------------------------------------------------------------------
-+ * Copyright (C) 2015 STMicroelectronics Pvt. Ltd. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/err.h>
-+#include <linux/gpio.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/module.h>
-+#include <linux/netdevice.h>
-+#include <linux/nfc.h>
-+#include <linux/of_gpio.h>
-+#include <linux/of.h>
-+#include <linux/of_irq.h>
-+#include <linux/property.h>
-+#include <linux/regulator/consumer.h>
-+#include <linux/wait.h>
-+#include <net/nfc/digital.h>
-+#include <net/nfc/nfc.h>
-+
-+#include "spi.h"
-+
-+/* supported protocols */
-+#define ST95HF_SUPPORTED_PROT		(NFC_PROTO_ISO14443_MASK | \
-+					NFC_PROTO_ISO14443_B_MASK)
-+/* driver capabilities */
-+#define ST95HF_CAPABILITIES		NFC_DIGITAL_DRV_CAPS_IN_CRC
-+
-+/* Command Send Interface */
-+/* ST95HF_COMMAND_SEND CMD Ids */
-+#define ECHO_CMD			0x55
-+#define WRITE_REGISTER_CMD		0x9
-+#define PROTOCOL_SELECT_CMD		0x2
-+#define SEND_RECEIVE_CMD		0x4
-+
-+/* Select protocol codes */
-+#define ISO14443A_PROTOCOL_CODE		0x2
-+#define ISO14443B_PROTOCOL_CODE		0x3
-+
-+/*
-+ * head room len is 3
-+ * 1 byte for control byte
-+ * 1 byte for cmd
-+ * 1 byte for size
-+ */
-+#define ST95HF_HEADROOM_LEN		3
-+
-+/*
-+ * tailroom is 1 for ISO14443A
-+ * and 0 for ISO14443B, hence the
-+ * max value 1 should be taken
-+ */
-+#define ST95HF_TAILROOM_LEN		1
-+
-+/* Command Response interface */
-+#define MAX_RESPONSE_BUFFER_SIZE	280
-+#define ECHORESPONSE			0x55
-+#define ST95HF_ERR_MASK			0xF
-+#define ST95HF_TIMEOUT_ERROR		0x87
-+#define ST95HF_NFCA_CRC_ERR_MASK	0x20
-+#define ST95HF_NFCB_CRC_ERR_MASK	0x01
-+
-+/* ST95HF transmission flag values */
-+#define TRFLAG_NFCA_SHORT_FRAME		0x07
-+#define TRFLAG_NFCA_STD_FRAME		0x08
-+#define TRFLAG_NFCA_STD_FRAME_CRC	0x28
-+
-+/* Misc defs */
-+#define HIGH				1
-+#define LOW				0
-+#define ISO14443A_RATS_REQ		0xE0
-+#define RATS_TB1_PRESENT_MASK		0x20
-+#define RATS_TA1_PRESENT_MASK		0x10
-+#define TB1_FWI_MASK			0xF0
-+#define WTX_REQ_FROM_TAG		0xF2
-+
-+#define MAX_CMD_LEN			0x7
-+
-+#define MAX_CMD_PARAMS			4
-+struct cmd {
-+	int cmd_len;
-+	unsigned char cmd_id;
-+	unsigned char no_cmd_params;
-+	unsigned char cmd_params[MAX_CMD_PARAMS];
-+	enum req_type req;
-+};
-+
-+struct param_list {
-+	int param_offset;
-+	int new_param_val;
-+};
-+
-+/*
-+ * List of top-level cmds to be used internally by the driver.
-+ * All these commands are build on top of ST95HF basic commands
-+ * such as SEND_RECEIVE_CMD, PROTOCOL_SELECT_CMD, etc.
-+ * These top level cmds are used internally while implementing various ops of
-+ * digital layer/driver probe or extending the digital framework layer for
-+ * features that are not yet implemented there, for example, WTX cmd handling.
-+ */
-+enum st95hf_cmd_list {
-+	CMD_ECHO,
-+	CMD_ISO14443A_CONFIG,
-+	CMD_ISO14443A_DEMOGAIN,
-+	CMD_ISO14443B_DEMOGAIN,
-+	CMD_ISO14443A_PROTOCOL_SELECT,
-+	CMD_ISO14443B_PROTOCOL_SELECT,
-+	CMD_WTX_RESPONSE,
-+	CMD_FIELD_OFF,
-+};
-+
-+static const struct cmd cmd_array[] = {
-+	[CMD_ECHO] = {
-+		.cmd_len = 0x2,
-+		.cmd_id = ECHO_CMD,
-+		.no_cmd_params = 0,
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443A_CONFIG] = {
-+		.cmd_len = 0x7,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x3A, 0x00, 0x5A, 0x04},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443A_DEMOGAIN] = {
-+		.cmd_len = 0x7,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x68, 0x01, 0x01, 0xDF},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443B_DEMOGAIN] = {
-+		.cmd_len = 0x7,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x68, 0x01, 0x01, 0x51},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443A_PROTOCOL_SELECT] = {
-+		.cmd_len = 0x7,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {ISO14443A_PROTOCOL_CODE, 0x00, 0x01, 0xA0},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443B_PROTOCOL_SELECT] = {
-+		.cmd_len = 0x7,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {ISO14443B_PROTOCOL_CODE, 0x01, 0x03, 0xFF},
-+		.req = SYNC,
-+	},
-+	[CMD_WTX_RESPONSE] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = SEND_RECEIVE_CMD,
-+		.no_cmd_params = 0x3,
-+		.cmd_params = {0xF2, 0x00, TRFLAG_NFCA_STD_FRAME_CRC},
-+		.req = ASYNC,
-+	},
-+	[CMD_FIELD_OFF] = {
-+		.cmd_len = 0x5,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x2,
-+		.cmd_params = {0x0, 0x0},
-+		.req = SYNC,
-+	},
-+};
-+
-+/* st95_digital_cmd_complete_arg stores client context */
-+struct st95_digital_cmd_complete_arg {
-+	struct sk_buff *skb_resp;
-+	nfc_digital_cmd_complete_t complete_cb;
-+	void *cb_usrarg;
-+	bool rats;
-+};
-+
-+/*
-+ * structure containing ST95HF driver specific data.
-+ * @spicontext: structure containing information required
-+ *	for spi communication between st95hf and host.
-+ * @ddev: nfc digital device object.
-+ * @nfcdev: nfc device object.
-+ * @enable_gpio: gpio used to enable st95hf transceiver.
-+ * @complete_cb_arg: structure to store various context information
-+ *	that is passed from nfc requesting thread to the threaded ISR.
-+ * @st95hf_supply: regulator "consumer" for NFC device.
-+ * @sendrcv_trflag: last byte of frame send by sendrecv command
-+ *	of st95hf. This byte contains transmission flag info.
-+ * @exchange_lock: semaphore used for signaling the st95hf_remove
-+ *	function that the last outstanding async nfc request is finished.
-+ * @rm_lock: mutex for ensuring safe access of nfc digital object
-+ *	from threaded ISR. Usage of this mutex avoids any race between
-+ *	deletion of the object from st95hf_remove() and its access from
-+ *	the threaded ISR.
-+ * @nfcdev_free: flag to have the state of nfc device object.
-+ *	[alive | died]
-+ * @current_protocol: current nfc protocol.
-+ * @current_rf_tech: current rf technology.
-+ * @fwi: frame waiting index, received in reply of RATS according to
-+ *	digital protocol.
-+ */
-+struct st95hf_context {
-+	struct st95hf_spi_context spicontext;
-+	struct nfc_digital_dev *ddev;
-+	struct nfc_dev *nfcdev;
-+	unsigned int enable_gpio;
-+	struct st95_digital_cmd_complete_arg complete_cb_arg;
-+	struct regulator *st95hf_supply;
-+	unsigned char sendrcv_trflag;
-+	struct semaphore exchange_lock;
-+	struct mutex rm_lock;
-+	bool nfcdev_free;
-+	u8 current_protocol;
-+	u8 current_rf_tech;
-+	int fwi;
-+};
-+
-+/*
-+ * st95hf_send_recv_cmd() is for sending commands to ST95HF
-+ * that are described in the cmd_array[]. It can optionally
-+ * receive the response if the cmd request is of type
-+ * SYNC. For that to happen caller must pass true to recv_res.
-+ * For ASYNC request, recv_res is ignored and the
-+ * function will never try to receive the response on behalf
-+ * of the caller.
-+ */
-+static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
-+				enum st95hf_cmd_list cmd,
-+				int no_modif,
-+				struct param_list *list_array,
-+				bool recv_res)
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 10ad4ac1fa0b..d9bf3701e4f9 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -189,7 +189,7 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	bool amsdu = ieee80211_hw_check(&local->hw, SUPPORTS_AMSDU_IN_AMPDU);
++	bool amsdu = ieee80211_local_check(local, SUPPORTS_AMSDU_IN_AMPDU);
+ 	u16 capab;
+ 
+ 	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index a758eb84e8f0..18b8809521ff 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -565,8 +565,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 		return -EINVAL;
+ 
+ 	if ((tid >= IEEE80211_NUM_TIDS) ||
+-	    !ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION) ||
+-	    ieee80211_hw_check(&local->hw, TX_AMPDU_SETUP_IN_HW))
++	    !ieee80211_local_check(local, AMPDU_AGGREGATION) ||
++	    ieee80211_local_check(local, TX_AMPDU_SETUP_IN_HW))
+ 		return -EINVAL;
+ 
+ 	ht_dbg(sdata, "Open BA session requested for %pM tid %u\n",
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c2bd1b6a6922..cf285033741c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1121,7 +1121,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
+ 	    !sdata->u.mgd.tdls_wider_bw_prohibited &&
+-	    ieee80211_hw_check(&local->hw, TDLS_WIDER_BW) &&
++	    ieee80211_local_check(local, TDLS_WIDER_BW) &&
+ 	    params->ext_capab_len >= 8 &&
+ 	    params->ext_capab[7] & WLAN_EXT_CAPA8_TDLS_WIDE_BW_ENABLED)
+ 		set_sta_flag(sta, WLAN_STA_TDLS_WIDER_BW);
+@@ -1746,7 +1746,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		/* our RSSI threshold implementation is supported only for
+ 		 * devices that report signal in dBm.
+ 		 */
+-		if (!ieee80211_hw_check(&sdata->local->hw, SIGNAL_DBM))
++		if (!ieee80211_local_check(sdata->local, SIGNAL_DBM))
+ 			return -ENOTSUPP;
+ 		conf->rssi_threshold = nconf->rssi_threshold;
+ 	}
+@@ -2405,7 +2405,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 		return -EOPNOTSUPP;
+ 
+-	if (!ieee80211_hw_check(&local->hw, SUPPORTS_PS))
++	if (!ieee80211_local_check(local, SUPPORTS_PS))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (enabled == sdata->u.mgd.powersave &&
+@@ -2420,7 +2420,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	__ieee80211_request_smps_mgd(sdata, sdata->u.mgd.req_smps);
+ 	sdata_unlock(sdata);
+ 
+-	if (ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS))
++	if (ieee80211_local_check(local, SUPPORTS_DYNAMIC_PS))
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 
+ 	ieee80211_recalc_ps(local);
+@@ -2469,7 +2469,7 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
+ 
+-	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++	if (ieee80211_local_check(local, HAS_RATE_CONTROL)) {
+ 		ret = drv_set_bitrate_mask(local, sdata, mask);
+ 		if (ret)
+ 			return ret;
+@@ -3466,7 +3466,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN |
+ 					IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
+-	if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL))
++	if (ieee80211_local_check(local, QUEUE_CONTROL))
+ 		IEEE80211_SKB_CB(skb)->hw_queue =
+ 			local->hw.offchannel_tx_hw_queue;
+ 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 37ea30e0754c..e18e49b2faec 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -451,7 +451,7 @@ static ssize_t ieee80211_if_fmt_tdls_wider_bw(
+ 	const struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	bool tdls_wider_bw;
+ 
+-	tdls_wider_bw = ieee80211_hw_check(&sdata->local->hw, TDLS_WIDER_BW) &&
++	tdls_wider_bw = ieee80211_local_check(sdata->local, TDLS_WIDER_BW) &&
+ 			!ifmgd->tdls_wider_bw_prohibited;
+ 
+ 	return snprintf(buf, buflen, "%d\n", tdls_wider_bw);
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index ca1fe5576103..d84029d892a5 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -61,7 +61,7 @@ int drv_add_interface(struct ieee80211_local *local,
+ 
+ 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+-		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
++		     !ieee80211_local_check(local, WANT_MONITOR_VIF) &&
+ 		     !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
+ 		return -EINVAL;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d832bd59236b..46bd8965d164 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1357,6 +1357,15 @@ struct ieee80211_local {
+ 	struct sk_buff_head skb_queue_tdls_chsw;
+ };
+ 
++static inline bool _ieee80211_local_check(struct ieee80211_local *local,
++					  enum ieee80211_hw_flags flg)
 +{
-+	unsigned char spi_cmd_buffer[MAX_CMD_LEN];
-+	int i, ret;
-+	struct device *dev = &st95context->spicontext.spidev->dev;
-+
-+	if (cmd_array[cmd].cmd_len > MAX_CMD_LEN)
-+		return -EINVAL;
-+	if (cmd_array[cmd].no_cmd_params < no_modif)
-+		return -EINVAL;
-+	if (no_modif && !list_array)
-+		return -EINVAL;
-+
-+	spi_cmd_buffer[0] = ST95HF_COMMAND_SEND;
-+	spi_cmd_buffer[1] = cmd_array[cmd].cmd_id;
-+	spi_cmd_buffer[2] = cmd_array[cmd].no_cmd_params;
-+
-+	memcpy(&spi_cmd_buffer[3], cmd_array[cmd].cmd_params,
-+	       spi_cmd_buffer[2]);
-+
-+	for (i = 0; i < no_modif; i++) {
-+		if (list_array[i].param_offset >= cmd_array[cmd].no_cmd_params)
-+			return -EINVAL;
-+		spi_cmd_buffer[3 + list_array[i].param_offset] =
-+						list_array[i].new_param_val;
-+	}
-+
-+	ret = st95hf_spi_send(&st95context->spicontext,
-+			      spi_cmd_buffer,
-+			      cmd_array[cmd].cmd_len,
-+			      cmd_array[cmd].req);
-+	if (ret) {
-+		dev_err(dev, "st95hf_spi_send failed with error %d\n", ret);
-+		return ret;
-+	}
-+
-+	if (cmd_array[cmd].req == SYNC && recv_res) {
-+		unsigned char st95hf_response_arr[2];
-+
-+		ret = st95hf_spi_recv_response(&st95context->spicontext,
-+					       st95hf_response_arr);
-+		if (ret < 0) {
-+			dev_err(dev, "spi error from st95hf_spi_recv_response(), err = 0x%x\n",
-+				ret);
-+			return ret;
-+		}
-+
-+		if (st95hf_response_arr[0]) {
-+			dev_err(dev, "st95hf error from st95hf_spi_recv_response(), err = 0x%x\n",
-+				st95hf_response_arr[0]);
-+			return -EIO;
-+		}
-+	}
-+
-+	return 0;
++	return test_bit(flg, local->hw.flags);
 +}
 +
-+static int st95hf_echo_command(struct st95hf_context *st95context)
-+{
-+	int result = 0;
-+	unsigned char echo_response;
-+
-+	result = st95hf_send_recv_cmd(st95context, CMD_ECHO, 0, NULL, false);
-+	if (result)
-+		return result;
-+
-+	/* If control reached here, response can be taken */
-+	result = st95hf_spi_recv_echo_res(&st95context->spicontext,
-+					  &echo_response);
-+	if (result) {
-+		dev_err(&st95context->spicontext.spidev->dev,
-+			"err: echo response receieve error = 0x%x\n", result);
-+		return result;
-+	}
-+
-+	if (echo_response == ECHORESPONSE)
-+		return 0;
-+
-+	dev_err(&st95context->spicontext.spidev->dev, "err: echo res is 0x%x\n",
-+		echo_response);
-+
-+	return -EIO;
-+}
-+
-+static int secondary_configuration_type4a(struct st95hf_context *stcontext)
-+{
-+	int result = 0;
-+	struct device *dev = &stcontext->nfcdev->dev;
-+
-+	/* 14443A config setting after select protocol */
-+	result = st95hf_send_recv_cmd(stcontext,
-+				      CMD_ISO14443A_CONFIG,
-+				      0,
-+				      NULL,
-+				      true);
-+	if (result) {
-+		dev_err(dev, "type a config cmd, err = 0x%x\n", result);
-+		return result;
-+	}
-+
-+	/* 14443A demo gain setting */
-+	result = st95hf_send_recv_cmd(stcontext,
-+				      CMD_ISO14443A_DEMOGAIN,
-+				      0,
-+				      NULL,
-+				      true);
-+	if (result)
-+		dev_err(dev, "type a demogain cmd, err = 0x%x\n", result);
-+
-+	return result;
-+}
-+
-+static int secondary_configuration_type4b(struct st95hf_context *stcontext)
-+{
-+	int result = 0;
-+	struct device *dev = &stcontext->nfcdev->dev;
-+
-+	result = st95hf_send_recv_cmd(stcontext,
-+				      CMD_ISO14443B_DEMOGAIN,
-+				      0,
-+				      NULL,
-+				      true);
-+	if (result)
-+		dev_err(dev, "type b demogain cmd, err = 0x%x\n", result);
-+
-+	return result;
-+}
-+
-+static int st95hf_select_protocol(struct st95hf_context *stcontext, int type)
-+{
-+	int result = 0;
-+	struct device *dev;
-+
-+	dev = &stcontext->nfcdev->dev;
-+
-+	switch (type) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		stcontext->current_rf_tech = NFC_DIGITAL_RF_TECH_106A;
-+		result = st95hf_send_recv_cmd(stcontext,
-+					      CMD_ISO14443A_PROTOCOL_SELECT,
-+					      0,
-+					      NULL,
-+					      true);
-+		if (result) {
-+			dev_err(dev, "protocol sel, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4A after protocol select */
-+		result = secondary_configuration_type4a(stcontext);
-+		if (result) {
-+			dev_err(dev, "type a secondary config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+		stcontext->current_rf_tech = NFC_DIGITAL_RF_TECH_106B;
-+		result = st95hf_send_recv_cmd(stcontext,
-+					      CMD_ISO14443B_PROTOCOL_SELECT,
-+					      0,
-+					      NULL,
-+					      true);
-+		if (result) {
-+			dev_err(dev, "protocol sel send, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/*
-+		 * delay of 5-6 ms is required after select protocol
-+		 * command in case of ISO14443 Type B
-+		 */
-+		usleep_range(50000, 60000);
-+
-+		/* secondary config. for 14443Type 4B after protocol select */
-+		result = secondary_configuration_type4b(stcontext);
-+		if (result) {
-+			dev_err(dev, "type b secondary config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	default:
-+		/* This release supports only 14443 TypeA and TypeB */
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static void st95hf_send_st95enable_negativepulse(struct st95hf_context *st95con)
-+{
-+	/* First make irq_in pin high */
-+	gpio_set_value(st95con->enable_gpio, HIGH);
-+
-+	/* wait for 1 milisecond */
-+	usleep_range(1000, 2000);
-+
-+	/* Make irq_in pin low */
-+	gpio_set_value(st95con->enable_gpio, LOW);
-+
-+	/* wait for minimum interrupt pulse to make st95 active */
-+	usleep_range(1000, 2000);
-+
-+	/* At end make it high */
-+	gpio_set_value(st95con->enable_gpio, HIGH);
-+}
-+
-+/*
-+ * Send a reset sequence over SPI bus (Reset command + wait 3ms +
-+ * negative pulse on st95hf enable gpio
-+ */
-+static int st95hf_send_spi_reset_sequence(struct st95hf_context *st95context)
-+{
-+	int result = 0;
-+	unsigned char reset_cmd = ST95HF_COMMAND_RESET;
-+
-+	result = st95hf_spi_send(&st95context->spicontext,
-+				 &reset_cmd,
-+				 ST95HF_RESET_CMD_LEN,
-+				 ASYNC);
-+	if (result) {
-+		dev_err(&st95context->spicontext.spidev->dev,
-+			"spi reset sequence cmd error = %d", result);
-+		return result;
-+	}
-+
-+	/* wait for 3 milisecond to complete the controller reset process */
-+	usleep_range(3000, 4000);
-+
-+	/* send negative pulse to make st95hf active */
-+	st95hf_send_st95enable_negativepulse(st95context);
-+
-+	/* wait for 10 milisecond : HFO setup time */
-+	usleep_range(10000, 20000);
-+
-+	return result;
-+}
-+
-+static int st95hf_por_sequence(struct st95hf_context *st95context)
-+{
-+	int nth_attempt = 1;
-+	int result;
-+
-+	st95hf_send_st95enable_negativepulse(st95context);
-+
-+	usleep_range(5000, 6000);
-+	do {
-+		/* send an ECHO command and checks ST95HF response */
-+		result = st95hf_echo_command(st95context);
-+
-+		dev_dbg(&st95context->spicontext.spidev->dev,
-+			"response from echo function = 0x%x, attempt = %d\n",
-+			result, nth_attempt);
-+
-+		if (!result)
-+			return 0;
-+
-+		/* send an pulse on IRQ in case of the chip is on sleep state */
-+		if (nth_attempt == 2)
-+			st95hf_send_st95enable_negativepulse(st95context);
-+		else
-+			st95hf_send_spi_reset_sequence(st95context);
-+
-+		/* delay of 50 milisecond */
-+		usleep_range(50000, 51000);
-+	} while (nth_attempt++ < 3);
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int iso14443_config_fdt(struct st95hf_context *st95context, int wtxm)
-+{
-+	int result = 0;
-+	struct device *dev = &st95context->spicontext.spidev->dev;
-+	struct nfc_digital_dev *nfcddev = st95context->ddev;
-+	unsigned char pp_typeb;
-+	struct param_list new_params[2];
-+
-+	pp_typeb = cmd_array[CMD_ISO14443B_PROTOCOL_SELECT].cmd_params[2];
-+
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443 &&
-+	    st95context->fwi < 4)
-+		st95context->fwi = 4;
-+
-+	new_params[0].param_offset = 2;
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443)
-+		new_params[0].new_param_val = st95context->fwi;
-+	else if (nfcddev->curr_protocol == NFC_PROTO_ISO14443_B)
-+		new_params[0].new_param_val = pp_typeb;
-+
-+	new_params[1].param_offset = 3;
-+	new_params[1].new_param_val = wtxm;
-+
-+	switch (nfcddev->curr_protocol) {
-+	case NFC_PROTO_ISO14443:
-+		result = st95hf_send_recv_cmd(st95context,
-+					      CMD_ISO14443A_PROTOCOL_SELECT,
-+					      2,
-+					      new_params,
-+					      true);
-+		if (result) {
-+			dev_err(dev, "WTX type a sel proto, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4A after protocol select */
-+		result = secondary_configuration_type4a(st95context);
-+		if (result) {
-+			dev_err(dev, "WTX type a second. config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	case NFC_PROTO_ISO14443_B:
-+		result = st95hf_send_recv_cmd(st95context,
-+					      CMD_ISO14443B_PROTOCOL_SELECT,
-+					      2,
-+					      new_params,
-+					      true);
-+		if (result) {
-+			dev_err(dev, "WTX type b sel proto, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4B after protocol select */
-+		result = secondary_configuration_type4b(st95context);
-+		if (result) {
-+			dev_err(dev, "WTX type b second. config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	default:
-+		/* This release supports only 14443 TypeA and TypeB */
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int st95hf_handle_wtx(struct st95hf_context *stcontext,
-+			     bool new_wtx,
-+			     int wtx_val)
-+{
-+	int result = 0;
-+	unsigned char val_mm = 0;
-+	struct param_list new_params[1];
-+	struct nfc_digital_dev *nfcddev = stcontext->ddev;
-+	struct device *dev = &stcontext->nfcdev->dev;
-+
-+	if (new_wtx) {
-+		result = iso14443_config_fdt(stcontext, wtx_val & 0x3f);
-+		if (result) {
-+			dev_err(dev, "Config. setting error on WTX req, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* Send response of wtx with ASYNC as no response expected */
-+		new_params[0].param_offset = 1;
-+		new_params[0].new_param_val = wtx_val;
-+
-+		result = st95hf_send_recv_cmd(stcontext,
-+					      CMD_WTX_RESPONSE,
-+					      1,
-+					      new_params,
-+					      false);
-+		if (result)
-+			dev_err(dev, "WTX response send, err = 0x%x\n", result);
-+		return result;
-+	}
-+
-+	/* if no new wtx, cofigure with default values */
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443)
-+		val_mm = cmd_array[CMD_ISO14443A_PROTOCOL_SELECT].cmd_params[3];
-+	else if (nfcddev->curr_protocol == NFC_PROTO_ISO14443_B)
-+		val_mm = cmd_array[CMD_ISO14443B_PROTOCOL_SELECT].cmd_params[3];
-+
-+	result = iso14443_config_fdt(stcontext, val_mm);
-+	if (result)
-+		dev_err(dev, "Default config. setting error after WTX processing, err = 0x%x\n",
-+			result);
-+
-+	return result;
-+}
-+
-+static int st95hf_error_handling(struct st95hf_context *stcontext,
-+				 struct sk_buff *skb_resp,
-+				 int res_len)
-+{
-+	int result = 0;
-+	unsigned char error_byte;
-+	struct device *dev = &stcontext->nfcdev->dev;
-+
-+	/* First check ST95HF specific error */
-+	if (skb_resp->data[0] & ST95HF_ERR_MASK) {
-+		if (skb_resp->data[0] == ST95HF_TIMEOUT_ERROR)
-+			result = -ETIMEDOUT;
-+		else
-+			result = -EIO;
-+	return  result;
-+	}
-+
-+	/* Check for CRC err only if CRC is present in the tag response */
-+	switch (stcontext->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		if (stcontext->sendrcv_trflag == TRFLAG_NFCA_STD_FRAME_CRC) {
-+			error_byte = skb_resp->data[res_len - 3];
-+			if (error_byte & ST95HF_NFCA_CRC_ERR_MASK) {
-+				/* CRC error occurred */
-+				dev_err(dev, "CRC error, byte received = 0x%x\n",
-+					error_byte);
-+				result = -EIO;
-+			}
-+		}
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+		error_byte = skb_resp->data[res_len - 1];
-+		if (error_byte & ST95HF_NFCB_CRC_ERR_MASK) {
-+			/* CRC error occurred */
-+			dev_err(dev, "CRC error, byte received = 0x%x\n",
-+				error_byte);
-+			result = -EIO;
-+		}
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+static int st95hf_response_handler(struct st95hf_context *stcontext,
-+				   struct sk_buff *skb_resp,
-+				   int res_len)
-+{
-+	int result = 0;
-+	int skb_len;
-+	unsigned char val_mm;
-+	struct nfc_digital_dev *nfcddev = stcontext->ddev;
-+	struct device *dev = &stcontext->nfcdev->dev;
-+	struct st95_digital_cmd_complete_arg *cb_arg;
-+
-+	cb_arg = &stcontext->complete_cb_arg;
-+
-+	/* Process the response */
-+	skb_put(skb_resp, res_len);
-+
-+	/* Remove st95 header */
-+	skb_pull(skb_resp, 2);
-+
-+	skb_len = skb_resp->len;
-+
-+	/* check if it is case of RATS request reply & FWI is present */
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443 && cb_arg->rats &&
-+	    (skb_resp->data[1] & RATS_TB1_PRESENT_MASK)) {
-+		if (skb_resp->data[1] & RATS_TA1_PRESENT_MASK)
-+			stcontext->fwi =
-+				(skb_resp->data[3] & TB1_FWI_MASK) >> 4;
-+		else
-+			stcontext->fwi =
-+				(skb_resp->data[2] & TB1_FWI_MASK) >> 4;
-+
-+		val_mm = cmd_array[CMD_ISO14443A_PROTOCOL_SELECT].cmd_params[3];
-+
-+		result = iso14443_config_fdt(stcontext, val_mm);
-+		if (result) {
-+			dev_err(dev, "error in config_fdt to handle fwi of ATS, error=%d\n",
-+				result);
-+			return result;
-+		}
-+	}
-+	cb_arg->rats = false;
-+
-+	/* Remove CRC bytes only if received frames data has an eod (CRC) */
-+	switch (stcontext->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		if (stcontext->sendrcv_trflag == TRFLAG_NFCA_STD_FRAME_CRC)
-+			skb_trim(skb_resp, (skb_len - 5));
-+		else
-+			skb_trim(skb_resp, (skb_len - 3));
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+		skb_trim(skb_resp, (skb_len - 3));
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+static irqreturn_t irq_handler(int irq, void  *st95hfcontext)
-+{
-+	struct st95hf_context *stcontext  =
-+		(struct st95hf_context *)st95hfcontext;
-+
-+	if (stcontext->spicontext.req_issync) {
-+		complete(&stcontext->spicontext.done);
-+		stcontext->spicontext.req_issync = false;
-+		return IRQ_HANDLED;
-+	}
-+
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+static irqreturn_t irq_thread_handler(int irq, void  *st95hfcontext)
-+{
-+	int result = 0;
-+	int res_len;
-+	static bool wtx;
-+	struct device *dev;
-+	struct device *spidevice;
-+	struct nfc_digital_dev *nfcddev;
-+	struct sk_buff *skb_resp;
-+	struct st95hf_context *stcontext  =
-+		(struct st95hf_context *)st95hfcontext;
-+	struct st95_digital_cmd_complete_arg *cb_arg;
-+
-+	spidevice = &stcontext->spicontext.spidev->dev;
-+
-+	/*
-+	 * check semaphore, if not down() already, then we don't
-+	 * know in which context the ISR is called and surely it
-+	 * will be a bug. Note that down() of the semaphore is done
-+	 * in the corresponding st95hf_in_send_cmd() and then
-+	 * only this ISR should be called. ISR will up() the
-+	 * semaphore before leaving. Hence when the ISR is called
-+	 * the correct behaviour is down_trylock() should always
-+	 * return 1 (indicating semaphore cant be taken and hence no
-+	 * change in semaphore count).
-+	 * If not, then we up() the semaphore and crash on
-+	 * a BUG() !
-+	 */
-+	if (!down_trylock(&stcontext->exchange_lock)) {
-+		dev_err(spidevice, "unknown context in ST95HF ISR\n");
-+		up(&stcontext->exchange_lock);
-+		BUG();
-+	}
-+
-+	cb_arg = &stcontext->complete_cb_arg;
-+	skb_resp = cb_arg->skb_resp;
-+
-+	mutex_lock(&stcontext->rm_lock);
-+	res_len = st95hf_spi_recv_response(&stcontext->spicontext,
-+					   skb_resp->data);
-+	if (res_len < 0) {
-+		dev_err(spidevice, "TISR spi response err = 0x%x\n", res_len);
-+		result = res_len;
-+		goto end;
-+	}
-+
-+	/* if stcontext->nfcdev_free is true, it means remove already ran */
-+	if (stcontext->nfcdev_free) {
-+		result = -ENODEV;
-+		goto end;
-+	}
-+
-+	dev = &stcontext->nfcdev->dev;
-+	nfcddev = stcontext->ddev;
-+	if (skb_resp->data[2] == WTX_REQ_FROM_TAG) {
-+		/* Request for new FWT from tag */
-+		result = st95hf_handle_wtx(stcontext, true, skb_resp->data[3]);
-+		if (result)
-+			goto end;
-+
-+		wtx = true;
-+		mutex_unlock(&stcontext->rm_lock);
-+		return IRQ_HANDLED;
-+	}
-+
-+	result = st95hf_error_handling(stcontext, skb_resp, res_len);
-+	if (result)
-+		goto end;
-+
-+	result = st95hf_response_handler(stcontext, skb_resp, res_len);
-+	if (result)
-+		goto end;
-+
-+	/*
-+	 * If select protocol is done on wtx req. do select protocol
-+	 * again with default values
-+	 */
-+	if (wtx) {
-+		wtx = false;
-+		result = st95hf_handle_wtx(stcontext, false, 0);
-+		if (result)
-+			goto end;
-+	}
-+
-+	/* call digital layer callback */
-+	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
-+
-+	/* up the semaphore before returning */
-+	up(&stcontext->exchange_lock);
-+	mutex_unlock(&stcontext->rm_lock);
-+
-+	return IRQ_HANDLED;
-+
-+end:
-+	kfree_skb(skb_resp);
-+	wtx = false;
-+	cb_arg->rats = false;
-+	skb_resp = ERR_PTR(result);
-+	/* call of callback with error */
-+	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
-+	/* up the semaphore before returning */
-+	up(&stcontext->exchange_lock);
-+	mutex_unlock(&stcontext->rm_lock);
-+	return IRQ_HANDLED;
-+}
-+
-+/* NFC ops functions definition */
-+static int st95hf_in_configure_hw(struct nfc_digital_dev *ddev,
-+				  int type,
-+				  int param)
-+{
-+	struct st95hf_context *stcontext = nfc_digital_get_drvdata(ddev);
-+
-+	if (type == NFC_DIGITAL_CONFIG_RF_TECH)
-+		return st95hf_select_protocol(stcontext, param);
-+
-+	if (type == NFC_DIGITAL_CONFIG_FRAMING) {
-+		switch (param) {
-+		case NFC_DIGITAL_FRAMING_NFCA_SHORT:
-+			stcontext->sendrcv_trflag = TRFLAG_NFCA_SHORT_FRAME;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCA_STANDARD:
-+			stcontext->sendrcv_trflag = TRFLAG_NFCA_STD_FRAME;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCA_T4T:
-+		case NFC_DIGITAL_FRAMING_NFCA_NFC_DEP:
-+		case NFC_DIGITAL_FRAMING_NFCA_STANDARD_WITH_CRC_A:
-+			stcontext->sendrcv_trflag = TRFLAG_NFCA_STD_FRAME_CRC;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCB:
-+			break;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int rf_off(struct st95hf_context *stcontext)
-+{
-+	int rc;
-+	struct device *dev;
-+
-+	dev = &stcontext->nfcdev->dev;
-+
-+	rc = st95hf_send_recv_cmd(stcontext, CMD_FIELD_OFF, 0, NULL, true);
-+	if (rc)
-+		dev_err(dev, "protocol sel send field off, err = 0x%x\n", rc);
-+
-+	return rc;
-+}
-+
-+static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
-+			      struct sk_buff *skb,
-+			      u16 timeout,
-+			      nfc_digital_cmd_complete_t cb,
-+			      void *arg)
-+{
-+	struct st95hf_context *stcontext = nfc_digital_get_drvdata(ddev);
-+	int rc;
-+	struct sk_buff *skb_resp;
-+	int len_data_to_tag = 0;
-+
-+	skb_resp = nfc_alloc_recv_skb(MAX_RESPONSE_BUFFER_SIZE, GFP_KERNEL);
-+	if (!skb_resp) {
-+		rc = -ENOMEM;
-+		goto error;
-+	}
-+
-+	switch (stcontext->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		len_data_to_tag = skb->len + 1;
-+		*skb_put(skb, 1) = stcontext->sendrcv_trflag;
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+		len_data_to_tag = skb->len;
-+		break;
-+	default:
-+		rc = -EINVAL;
-+		goto free_skb_resp;
-+	}
-+
-+	skb_push(skb, 3);
-+	skb->data[0] = ST95HF_COMMAND_SEND;
-+	skb->data[1] = SEND_RECEIVE_CMD;
-+	skb->data[2] = len_data_to_tag;
-+
-+	stcontext->complete_cb_arg.skb_resp = skb_resp;
-+	stcontext->complete_cb_arg.cb_usrarg = arg;
-+	stcontext->complete_cb_arg.complete_cb = cb;
-+
-+	if ((skb->data[3] == ISO14443A_RATS_REQ) &&
-+	    ddev->curr_protocol == NFC_PROTO_ISO14443)
-+		stcontext->complete_cb_arg.rats = true;
-+
-+	/*
-+	 * down the semaphore to indicate to remove func that an
-+	 * ISR is pending, note that it will not block here in any case.
-+	 * If found blocked, it is a BUG!
-+	 */
-+	rc = down_killable(&stcontext->exchange_lock);
-+	if (rc) {
-+		dev_err(&stcontext->nfcdev->dev, "Semaphore is not found up in st95hf_in_send_cmd\n");
-+		BUG();
-+	}
-+
-+	rc = st95hf_spi_send(&stcontext->spicontext, skb->data,
-+			     skb->len,
-+			     ASYNC);
-+	if (rc) {
-+		dev_err(&stcontext->nfcdev->dev,
-+			"Error %d trying to perform data_exchange", rc);
-+		/* up the semaphore since ISR will never come in this case */
-+		up(&stcontext->exchange_lock);
-+		goto free_skb_resp;
-+	}
-+
-+	kfree_skb(skb);
-+
-+	return rc;
-+
-+free_skb_resp:
-+	kfree_skb(skb_resp);
-+error:
-+	return rc;
-+}
-+
-+/* p2p will be supported in a later release ! */
-+static int st95hf_tg_configure_hw(struct nfc_digital_dev *ddev,
-+				  int type,
-+				  int param)
-+{
-+	return 0;
-+}
-+
-+static int st95hf_tg_send_cmd(struct nfc_digital_dev *ddev,
-+			      struct sk_buff *skb,
-+			      u16 timeout,
-+			      nfc_digital_cmd_complete_t cb,
-+			      void *arg)
-+{
-+	return 0;
-+}
-+
-+static int st95hf_tg_listen(struct nfc_digital_dev *ddev,
-+			    u16 timeout,
-+			    nfc_digital_cmd_complete_t cb,
-+			    void *arg)
-+{
-+	return 0;
-+}
-+
-+static int st95hf_tg_get_rf_tech(struct nfc_digital_dev *ddev, u8 *rf_tech)
-+{
-+	return 0;
-+}
-+
-+static int st95hf_switch_rf(struct nfc_digital_dev *ddev, bool on)
-+{
-+	u8 rf_tech;
-+	struct st95hf_context *stcontext = nfc_digital_get_drvdata(ddev);
-+
-+	rf_tech = ddev->curr_rf_tech;
-+
-+	if (on)
-+		/* switch on RF field */
-+		return st95hf_select_protocol(stcontext, rf_tech);
-+
-+	/* switch OFF RF field */
-+	return rf_off(stcontext);
-+}
-+
-+/* TODO st95hf_abort_cmd */
-+static void st95hf_abort_cmd(struct nfc_digital_dev *ddev)
-+{
-+}
-+
-+static struct nfc_digital_ops st95hf_nfc_digital_ops = {
-+	.in_configure_hw = st95hf_in_configure_hw,
-+	.in_send_cmd = st95hf_in_send_cmd,
-+
-+	.tg_listen = st95hf_tg_listen,
-+	.tg_configure_hw = st95hf_tg_configure_hw,
-+	.tg_send_cmd = st95hf_tg_send_cmd,
-+	.tg_get_rf_tech = st95hf_tg_get_rf_tech,
-+
-+	.switch_rf = st95hf_switch_rf,
-+	.abort_cmd = st95hf_abort_cmd,
-+};
-+
-+static const struct spi_device_id st95hf_id[] = {
-+	{ "st95hf", 0 },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(spi, st95hf_id);
-+
-+static int st95hf_probe(struct spi_device *nfc_spi_dev)
-+{
-+	int ret;
-+
-+	struct st95hf_context *st95context;
-+	struct st95hf_spi_context *spicontext;
-+
-+	nfc_info(&nfc_spi_dev->dev, "ST95HF driver probe called.\n");
-+
-+	st95context = devm_kzalloc(&nfc_spi_dev->dev,
-+				   sizeof(struct st95hf_context),
-+				   GFP_KERNEL);
-+	if (!st95context)
-+		return -ENOMEM;
-+
-+	spicontext = &st95context->spicontext;
-+
-+	spicontext->spidev = nfc_spi_dev;
-+
-+	st95context->fwi =
-+		cmd_array[CMD_ISO14443A_PROTOCOL_SELECT].cmd_params[2];
-+
-+	if (device_property_present(&nfc_spi_dev->dev, "st95hfvin")) {
-+		st95context->st95hf_supply =
-+			devm_regulator_get(&nfc_spi_dev->dev,
-+					   "st95hfvin");
-+		if (IS_ERR(st95context->st95hf_supply)) {
-+			dev_err(&nfc_spi_dev->dev, "failed to acquire regulator\n");
-+			return PTR_ERR(st95context->st95hf_supply);
-+		}
-+
-+		ret = regulator_enable(st95context->st95hf_supply);
-+		if (ret) {
-+			dev_err(&nfc_spi_dev->dev, "failed to enable regulator\n");
-+			return ret;
-+		}
-+	}
-+
-+	init_completion(&spicontext->done);
-+	mutex_init(&spicontext->spi_lock);
-+
-+	/*
-+	 * Store spicontext in spi device object for using it in
-+	 * remove function
-+	 */
-+	dev_set_drvdata(&nfc_spi_dev->dev, spicontext);
-+
-+	st95context->enable_gpio =
-+		of_get_named_gpio(nfc_spi_dev->dev.of_node,
-+				  "enable-gpio",
-+				  0);
-+	if (!gpio_is_valid(st95context->enable_gpio)) {
-+		dev_err(&nfc_spi_dev->dev, "No valid enable gpio\n");
-+		ret = st95context->enable_gpio;
-+		goto err_disable_regulator;
-+	}
-+
-+	ret = devm_gpio_request_one(&nfc_spi_dev->dev, st95context->enable_gpio,
-+				    GPIOF_DIR_OUT | GPIOF_INIT_HIGH,
-+				    "enable_gpio");
-+	if (ret)
-+		goto err_disable_regulator;
-+
-+	if (nfc_spi_dev->irq > 0) {
-+		if (devm_request_threaded_irq(&nfc_spi_dev->dev,
-+					      nfc_spi_dev->irq,
-+					      irq_handler,
-+					      irq_thread_handler,
-+					      IRQF_TRIGGER_FALLING,
-+					      "st95hf",
-+					      (void *)st95context) < 0) {
-+			dev_err(&nfc_spi_dev->dev, "err: irq request for st95hf is failed\n");
-+			ret =  -EINVAL;
-+			goto err_disable_regulator;
-+		}
-+	} else {
-+		dev_err(&nfc_spi_dev->dev, "not a valid IRQ associated with ST95HF\n");
-+		ret = -EINVAL;
-+		goto err_disable_regulator;
-+	}
-+
-+	/*
-+	 * First reset SPI to handle warm reset of the system.
-+	 * It will put the ST95HF device in Power ON state
-+	 * which make the state of device identical to state
-+	 * at the time of cold reset of the system.
-+	 */
-+	ret = st95hf_send_spi_reset_sequence(st95context);
-+	if (ret) {
-+		dev_err(&nfc_spi_dev->dev, "err: spi_reset_sequence failed\n");
-+		goto err_disable_regulator;
-+	}
-+
-+	/* call PowerOnReset sequence of ST95hf to activate it */
-+	ret = st95hf_por_sequence(st95context);
-+	if (ret) {
-+		dev_err(&nfc_spi_dev->dev, "err: por seq failed for st95hf\n");
-+		goto err_disable_regulator;
-+	}
-+
-+	/* create NFC dev object and register with NFC Subsystem */
-+	st95context->ddev = nfc_digital_allocate_device(&st95hf_nfc_digital_ops,
-+							ST95HF_SUPPORTED_PROT,
-+							ST95HF_CAPABILITIES,
-+							ST95HF_HEADROOM_LEN,
-+							ST95HF_TAILROOM_LEN);
-+	if (!st95context->ddev) {
-+		ret = -ENOMEM;
-+		goto err_disable_regulator;
-+	}
-+
-+	st95context->nfcdev = st95context->ddev->nfc_dev;
-+	nfc_digital_set_parent_dev(st95context->ddev, &nfc_spi_dev->dev);
-+
-+	ret =  nfc_digital_register_device(st95context->ddev);
-+	if (ret) {
-+		dev_err(&st95context->nfcdev->dev, "st95hf registration failed\n");
-+		goto err_free_digital_device;
-+	}
-+
-+	/* store st95context in nfc device object */
-+	nfc_digital_set_drvdata(st95context->ddev, st95context);
-+
-+	sema_init(&st95context->exchange_lock, 1);
-+	mutex_init(&st95context->rm_lock);
-+
-+	return ret;
-+
-+err_free_digital_device:
-+	nfc_digital_free_device(st95context->ddev);
-+err_disable_regulator:
-+	if (st95context->st95hf_supply)
-+		regulator_disable(st95context->st95hf_supply);
-+
-+	return ret;
-+}
-+
-+static int st95hf_remove(struct spi_device *nfc_spi_dev)
-+{
-+	int result = 0;
-+	unsigned char reset_cmd = ST95HF_COMMAND_RESET;
-+	struct st95hf_spi_context *spictx = dev_get_drvdata(&nfc_spi_dev->dev);
-+
-+	struct st95hf_context *stcontext = container_of(spictx,
-+							struct st95hf_context,
-+							spicontext);
-+
-+	mutex_lock(&stcontext->rm_lock);
-+
-+	nfc_digital_unregister_device(stcontext->ddev);
-+	nfc_digital_free_device(stcontext->ddev);
-+	stcontext->nfcdev_free = true;
-+
-+	mutex_unlock(&stcontext->rm_lock);
-+
-+	/* if last in_send_cmd's ISR is pending, wait for it to finish */
-+	result = down_killable(&stcontext->exchange_lock);
-+	if (result == -EINTR)
-+		dev_err(&spictx->spidev->dev, "sleep for semaphore interrupted by signal\n");
-+
-+	/* next reset the ST95HF controller */
-+	result = st95hf_spi_send(&stcontext->spicontext,
-+				 &reset_cmd,
-+				 ST95HF_RESET_CMD_LEN,
-+				 ASYNC);
-+	if (result) {
-+		dev_err(&spictx->spidev->dev,
-+			"ST95HF reset failed in remove() err = %d\n", result);
-+		return result;
-+	}
-+
-+	/* wait for 3 ms to complete the controller reset process */
-+	usleep_range(3000, 4000);
-+
-+	/* disable regulator */
-+	if (stcontext->st95hf_supply)
-+		regulator_disable(stcontext->st95hf_supply);
-+
-+	return result;
-+}
-+
-+/* Register as SPI protocol driver */
-+static struct spi_driver st95hf_driver = {
-+	.driver = {
-+		.name = "st95hf",
-+		.owner = THIS_MODULE,
-+	},
-+	.id_table = st95hf_id,
-+	.probe = st95hf_probe,
-+	.remove = st95hf_remove,
-+};
-+
-+module_spi_driver(st95hf_driver);
-+
-+MODULE_AUTHOR("Shikha Singh <shikha.singh@st.com>");
-+MODULE_DESCRIPTION("ST NFC Transceiver ST95HF driver");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
-new file mode 100644
-index 0000000..e2d3bbc
---- /dev/null
-+++ b/drivers/nfc/st95hf/spi.c
-@@ -0,0 +1,167 @@
-+/*
-+ * ----------------------------------------------------------------------------
-+ * drivers/nfc/st95hf/spi.c function definitions for SPI communication
-+ * ----------------------------------------------------------------------------
-+ * Copyright (C) 2015 STMicroelectronics Pvt. Ltd. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include "spi.h"
-+
-+/* Function to send user provided buffer to ST95HF through SPI */
-+int st95hf_spi_send(struct st95hf_spi_context *spicontext,
-+		    unsigned char *buffertx,
-+		    int datalen,
-+		    enum req_type reqtype)
-+{
-+	struct spi_message m;
-+	int result = 0;
-+	struct spi_device *spidev = spicontext->spidev;
-+	struct spi_transfer tx_transfer = {
-+		.tx_buf = buffertx,
-+		.len = datalen,
-+	};
-+
-+	mutex_lock(&spicontext->spi_lock);
-+
-+	if (reqtype == SYNC) {
-+		spicontext->req_issync = true;
-+		reinit_completion(&spicontext->done);
-+	} else {
-+		spicontext->req_issync = false;
-+	}
-+
-+	spi_message_init(&m);
-+	spi_message_add_tail(&tx_transfer, &m);
-+
-+	result = spi_sync(spidev, &m);
-+	if (result) {
-+		dev_err(&spidev->dev, "error: sending cmd to st95hf using SPI = %d\n",
-+			result);
-+		mutex_unlock(&spicontext->spi_lock);
-+		return result;
-+	}
-+
-+	/* return for asynchronous or no-wait case */
-+	if (reqtype == ASYNC) {
-+		mutex_unlock(&spicontext->spi_lock);
-+		return 0;
-+	}
-+
-+	result = wait_for_completion_timeout(&spicontext->done,
-+					     msecs_to_jiffies(1000));
-+	/* check for timeout or success */
-+	if (!result) {
-+		dev_err(&spidev->dev, "error: response not ready timeout\n");
-+		result = -ETIMEDOUT;
-+	} else {
-+		result = 0;
-+	}
-+
-+	mutex_unlock(&spicontext->spi_lock);
-+
-+	return result;
-+}
-+EXPORT_SYMBOL_GPL(st95hf_spi_send);
-+
-+/* Function to Receive command Response */
-+int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
-+			     unsigned char *receivebuff)
-+{
-+	int len = 0;
-+	struct spi_transfer tx_takedata;
-+	struct spi_message m;
-+	struct spi_device *spidev = spicontext->spidev;
-+	unsigned char readdata_cmd = ST95HF_COMMAND_RECEIVE;
-+	struct spi_transfer t[2] = {
-+		{.tx_buf = &readdata_cmd, .len = 1,},
-+		{.rx_buf = receivebuff, .len = 2, .cs_change = 1,},
-+	};
-+
-+	int ret = 0;
-+
-+	memset(&tx_takedata, 0x0, sizeof(struct spi_transfer));
-+
-+	mutex_lock(&spicontext->spi_lock);
-+
-+	/* First spi transfer to know the length of valid data */
-+	spi_message_init(&m);
-+	spi_message_add_tail(&t[0], &m);
-+	spi_message_add_tail(&t[1], &m);
-+
-+	ret = spi_sync(spidev, &m);
-+	if (ret) {
-+		dev_err(&spidev->dev, "spi_recv_resp, data length error = %d\n",
-+			ret);
-+		mutex_unlock(&spicontext->spi_lock);
-+		return ret;
-+	}
-+
-+	/* As 2 bytes are already read */
-+	len = 2;
-+
-+	/* Support of long frame */
-+	if (receivebuff[0] & 0x60)
-+		len += (((receivebuff[0] & 0x60) >> 5) << 8) | receivebuff[1];
-+	else
-+		len += receivebuff[1];
-+
-+	/* Now make a transfer to read only relevant bytes */
-+	tx_takedata.rx_buf = &receivebuff[2];
-+	tx_takedata.len = len - 2;
-+
-+	spi_message_init(&m);
-+	spi_message_add_tail(&tx_takedata, &m);
-+
-+	ret = spi_sync(spidev, &m);
-+
-+	mutex_unlock(&spicontext->spi_lock);
-+	if (ret) {
-+		dev_err(&spidev->dev, "spi_recv_resp, data read error = %d\n",
-+			ret);
-+		return ret;
-+	}
-+
-+	return len;
-+}
-+EXPORT_SYMBOL_GPL(st95hf_spi_recv_response);
-+
-+int st95hf_spi_recv_echo_res(struct st95hf_spi_context *spicontext,
-+			     unsigned char *receivebuff)
-+{
-+	unsigned char readdata_cmd = ST95HF_COMMAND_RECEIVE;
-+	struct spi_transfer t[2] = {
-+		{.tx_buf = &readdata_cmd, .len = 1,},
-+		{.rx_buf = receivebuff, .len = 1,},
-+	};
-+	struct spi_message m;
-+	struct spi_device *spidev = spicontext->spidev;
-+	int ret = 0;
-+
-+	mutex_lock(&spicontext->spi_lock);
-+
-+	spi_message_init(&m);
-+	spi_message_add_tail(&t[0], &m);
-+	spi_message_add_tail(&t[1], &m);
-+	ret = spi_sync(spidev, &m);
-+
-+	mutex_unlock(&spicontext->spi_lock);
-+
-+	if (ret)
-+		dev_err(&spidev->dev, "recv_echo_res, data read error = %d\n",
-+			ret);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(st95hf_spi_recv_echo_res);
-diff --git a/drivers/nfc/st95hf/spi.h b/drivers/nfc/st95hf/spi.h
-new file mode 100644
-index 0000000..552d220
---- /dev/null
-+++ b/drivers/nfc/st95hf/spi.h
-@@ -0,0 +1,64 @@
-+/*
-+ * ---------------------------------------------------------------------------
-+ * drivers/nfc/st95hf/spi.h functions declarations for SPI communication
-+ * ---------------------------------------------------------------------------
-+ * Copyright (C) 2015 STMicroelectronics – All Rights Reserved
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#ifndef __LINUX_ST95HF_SPI_H
-+#define __LINUX_ST95HF_SPI_H
-+
-+#include <linux/spi/spi.h>
-+
-+/* Basic ST95HF SPI CMDs */
-+#define ST95HF_COMMAND_SEND	0x0
-+#define ST95HF_COMMAND_RESET	0x1
-+#define ST95HF_COMMAND_RECEIVE	0x2
-+
-+#define ST95HF_RESET_CMD_LEN	0x1
-+
-+/*
-+ * structure to contain st95hf spi communication specific information.
-+ * @req_issync: true for synchronous calls.
-+ * @spidev: st95hf spi device object.
-+ * @done: completion structure to wait for st95hf response
-+ *	for synchronous calls.
-+ * @spi_lock: mutex to allow only one spi transfer at a time.
-+ */
-+struct st95hf_spi_context {
-+	bool req_issync;
-+	struct spi_device *spidev;
-+	struct completion done;
-+	struct mutex spi_lock;
-+};
-+
-+/* flag to differentiate synchronous & asynchronous spi request */
-+enum req_type {
-+	SYNC,
-+	ASYNC,
-+};
-+
-+int st95hf_spi_send(struct st95hf_spi_context *spicontext,
-+		    unsigned char *buffertx,
-+		    int datalen,
-+		    enum req_type reqtype);
-+
-+int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
-+			     unsigned char *receivebuff);
-+
-+int st95hf_spi_recv_echo_res(struct st95hf_spi_context *spicontext,
-+			     unsigned char *receivebuff);
-+
-+#endif
++#define ieee80211_local_check(local, flg)	\
++	_ieee80211_local_check(local, IEEE80211_HW_##flg)
++
+ static inline struct ieee80211_sub_if_data *
+ IEEE80211_DEV_TO_SUB_IF(struct net_device *dev)
+ {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d0dc1bfaeec2..43c675ec3c14 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -338,7 +338,7 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+ 	if ((iftype != NL80211_IFTYPE_AP &&
+ 	     iftype != NL80211_IFTYPE_P2P_GO &&
+ 	     iftype != NL80211_IFTYPE_MESH_POINT) ||
+-	    !ieee80211_hw_check(&sdata->local->hw, QUEUE_CONTROL)) {
++	    !ieee80211_local_check(sdata->local, QUEUE_CONTROL)) {
+ 		sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+ 		return 0;
+ 	}
+@@ -378,7 +378,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	int i;
+ 
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-		if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL))
++		if (ieee80211_local_check(local, QUEUE_CONTROL))
+ 			sdata->vif.hw_queue[i] = IEEE80211_INVAL_HW_QUEUE;
+ 		else if (local->hw.queues >= IEEE80211_NUM_ACS)
+ 			sdata->vif.hw_queue[i] = i;
+@@ -393,7 +393,7 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+ 
+-	if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
++	if (!ieee80211_local_check(local, WANT_MONITOR_VIF))
+ 		return 0;
+ 
+ 	ASSERT_RTNL();
+@@ -454,7 +454,7 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
++	if (!ieee80211_local_check(local, WANT_MONITOR_VIF))
+ 		return;
+ 
+ 	ASSERT_RTNL();
+@@ -1586,7 +1586,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		if (ieee80211_hw_check(&local->hw, P2P_DEV_ADDR_FOR_INTF)) {
++		if (ieee80211_local_check(local, P2P_DEV_ADDR_FOR_INTF)) {
+ 			list_for_each_entry(sdata, &local->interfaces, list) {
+ 				if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
+ 					continue;
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 44388d6a1d8e..d9f0f0fbc70b 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -154,7 +154,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	 * is supported; if not, return.
+ 	 */
+ 	if (sta && !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE) &&
+-	    !ieee80211_hw_check(&key->local->hw, SUPPORTS_PER_STA_GTK))
++	    !ieee80211_local_check(key->local, SUPPORTS_PER_STA_GTK))
+ 		goto out_unsupported;
+ 
+ 	if (sta && !sta->uploaded)
+@@ -208,7 +208,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		/* all of these we can do in software - if driver can */
+ 		if (ret == 1)
+ 			return 0;
+-		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL))
++		if (ieee80211_local_check(key->local, SW_CRYPTO_CONTROL))
+ 			return -EINVAL;
+ 		return 0;
+ 	default:
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 858f6b1cb149..84d7480fe7c8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -663,7 +663,7 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ {
+ 	bool have_wep = !(IS_ERR(local->wep_tx_tfm) ||
+ 			  IS_ERR(local->wep_rx_tfm));
+-	bool have_mfp = ieee80211_hw_check(&local->hw, MFP_CAPABLE);
++	bool have_mfp = ieee80211_local_check(local, MFP_CAPABLE);
+ 	int n_suites = 0, r = 0, w = 0;
+ 	u32 *suites;
+ 	static const u32 cipher_suites[] = {
+@@ -683,7 +683,7 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 		WLAN_CIPHER_SUITE_BIP_GMAC_256,
+ 	};
+ 
+-	if (ieee80211_hw_check(&local->hw, SW_CRYPTO_CONTROL) ||
++	if (ieee80211_local_check(local, SW_CRYPTO_CONTROL) ||
+ 	    local->hw.wiphy->cipher_suites) {
+ 		/* If the driver advertises, or doesn't support SW crypto,
+ 		 * we only need to remove WEP if necessary.
+@@ -947,9 +947,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	/* mac80211 supports control port protocol changing */
+ 	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
+ 
+-	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM)) {
++	if (ieee80211_local_check(local, SIGNAL_DBM)) {
+ 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+-	} else if (ieee80211_hw_check(&local->hw, SIGNAL_UNSPEC)) {
++	} else if (ieee80211_local_check(local, SIGNAL_UNSPEC)) {
+ 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
+ 		if (hw->max_signal <= 0) {
+ 			result = -EINVAL;
+@@ -1003,7 +1003,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
+ 	/* mac80211 supports eCSA, if the driver supports STA CSA at all */
+-	if (ieee80211_hw_check(&local->hw, CHANCTX_STA_CSA))
++	if (ieee80211_local_check(local, CHANCTX_STA_CSA))
+ 		local->ext_capa[0] |= WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING;
+ 
+ 	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b140cc6651f4..53b5b524702b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -111,7 +111,7 @@ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
+ 	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
+ 		return;
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, CONNECTION_MONITOR))
++	if (ieee80211_local_check(sdata->local, CONNECTION_MONITOR))
+ 		return;
+ 
+ 	mod_timer(&sdata->u.mgd.bcn_mon_timer,
+@@ -127,7 +127,7 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifmgd->probe_send_count = 0;
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, CONNECTION_MONITOR))
++	if (ieee80211_local_check(sdata->local, CONNECTION_MONITOR))
+ 		return;
+ 
+ 	mod_timer(&sdata->u.mgd.conn_mon_timer,
+@@ -702,7 +702,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		capab |= WLAN_CAPABILITY_PRIVACY;
+ 
+ 	if ((assoc_data->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
+-	    ieee80211_hw_check(&local->hw, SPECTRUM_MGMT))
++	    ieee80211_local_check(local, SPECTRUM_MGMT))
+ 		capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
+ 
+ 	if (ifmgd->flags & IEEE80211_STA_ENABLE_RRM)
+@@ -910,7 +910,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 	drv_mgd_prepare_tx(local, sdata);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 						IEEE80211_TX_INTFL_MLME_CONN_TX;
+ 	ieee80211_tx_skb(sdata, skb);
+@@ -952,7 +952,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 					IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
+ 
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+ 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
+@@ -1205,7 +1205,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
+ 	if (local->use_chanctx &&
+-	    !ieee80211_hw_check(&local->hw, CHANCTX_STA_CSA)) {
++	    !ieee80211_local_check(local, CHANCTX_STA_CSA)) {
+ 		sdata_info(sdata,
+ 			   "driver doesn't support chan-switch with channel contexts\n");
+ 		goto drop_connection;
+@@ -1414,15 +1414,15 @@ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 		return;
+ 
+ 	if (conf->dynamic_ps_timeout > 0 &&
+-	    !ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS)) {
++	    !ieee80211_local_check(local, SUPPORTS_DYNAMIC_PS)) {
+ 		mod_timer(&local->dynamic_ps_timer, jiffies +
+ 			  msecs_to_jiffies(conf->dynamic_ps_timeout));
+ 	} else {
+-		if (ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK))
++		if (ieee80211_local_check(local, PS_NULLFUNC_STACK))
+ 			ieee80211_send_nullfunc(local, sdata, true);
+ 
+-		if (ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK) &&
+-		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++		if (ieee80211_local_check(local, PS_NULLFUNC_STACK) &&
++		    ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 			return;
+ 
+ 		conf->flags |= IEEE80211_CONF_PS;
+@@ -1481,7 +1481,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local)
+ 	int count = 0;
+ 	int timeout;
+ 
+-	if (!ieee80211_hw_check(&local->hw, SUPPORTS_PS)) {
++	if (!ieee80211_local_check(local, SUPPORTS_PS)) {
+ 		local->ps_sdata = NULL;
+ 		return;
+ 	}
+@@ -1602,7 +1602,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 	}
+ 
+-	if (ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK) &&
++	if (ieee80211_local_check(local, PS_NULLFUNC_STACK) &&
+ 	    !(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+ 		if (drv_tx_frames_pending(local)) {
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+@@ -1615,8 +1615,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		}
+ 	}
+ 
+-	if (!(ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
+-	      ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK)) ||
++	if (!(ieee80211_local_check(local, REPORTS_TX_ACK_STATUS) &&
++	      ieee80211_local_check(local, PS_NULLFUNC_STACK)) ||
+ 	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+ 		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+ 		local->hw.conf.flags |= IEEE80211_CONF_PS;
+@@ -2157,7 +2157,7 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_recalc_ps(local);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, CONNECTION_MONITOR))
++	if (ieee80211_local_check(sdata->local, CONNECTION_MONITOR))
+ 		goto out;
+ 
+ 	/*
+@@ -2255,7 +2255,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	 */
+ 	ifmgd->probe_send_count++;
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, REPORTS_TX_ACK_STATUS)) {
++	if (ieee80211_local_check(sdata->local, REPORTS_TX_ACK_STATUS)) {
+ 		ifmgd->nullfunc_failed = false;
+ 		ieee80211_send_nullfunc(sdata->local, sdata, false);
+ 	} else {
+@@ -2555,7 +2555,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	auth_data->expected_transaction = 4;
+ 	drv_mgd_prepare_tx(sdata->local, sdata);
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 			   IEEE80211_TX_INTFL_MLME_CONN_TX;
+ 	ieee80211_send_auth(sdata, 3, auth_data->algorithm, 0,
+@@ -3330,7 +3330,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 		ifmgd->have_beacon = true;
+ 		ifmgd->assoc_data->need_beacon = false;
+-		if (ieee80211_hw_check(&local->hw, TIMING_BEACON_ONLY)) {
++		if (ieee80211_local_check(local, TIMING_BEACON_ONLY)) {
+ 			sdata->vif.bss_conf.sync_tsf =
+ 				le64_to_cpu(mgmt->u.beacon.timestamp);
+ 			sdata->vif.bss_conf.sync_device_ts =
+@@ -3434,7 +3434,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 					  len - baselen, false, &elems,
+ 					  care_about_ies, ncrc);
+ 
+-	if (ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK) &&
++	if (ieee80211_local_check(local, PS_NULLFUNC_STACK) &&
+ 	    ieee80211_check_tim(elems.tim, elems.tim_len, ifmgd->aid)) {
+ 		if (local->hw.conf.dynamic_ps_timeout > 0) {
+ 			if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+@@ -3498,7 +3498,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	 * the driver will use them. The synchronized view is currently
+ 	 * guaranteed only in certain callbacks.
+ 	 */
+-	if (ieee80211_hw_check(&local->hw, TIMING_BEACON_ONLY)) {
++	if (ieee80211_local_check(local, TIMING_BEACON_ONLY)) {
+ 		sdata->vif.bss_conf.sync_tsf =
+ 			le64_to_cpu(mgmt->u.beacon.timestamp);
+ 		sdata->vif.bss_conf.sync_device_ts =
+@@ -3734,7 +3734,7 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
+ 		auth_data->expected_transaction = trans;
+ 	}
+ 
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 			   IEEE80211_TX_INTFL_MLME_CONN_TX;
+ 
+@@ -3784,7 +3784,7 @@ static int ieee80211_do_assoc(struct ieee80211_sub_if_data *sdata)
+ 		   IEEE80211_ASSOC_MAX_TRIES);
+ 	ieee80211_send_assoc(sdata);
+ 
+-	if (!ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++	if (!ieee80211_local_check(local, REPORTS_TX_ACK_STATUS)) {
+ 		assoc_data->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
+ 		assoc_data->timeout_started = true;
+ 		run_again(sdata, assoc_data->timeout);
+@@ -3897,7 +3897,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 
+ 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+ 
+-		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++		if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 			max_tries = max_nullfunc_tries;
+ 		else
+ 			max_tries = max_probe_tries;
+@@ -3922,7 +3922,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			}
+ 		} else if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(sdata, ifmgd->probe_timeout);
+-		else if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++		else if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS)) {
+ 			mlme_dbg(sdata,
+ 				 "Failed to send nullfunc to AP %pM after %dms, disconnecting\n",
+ 				 bssid, probe_wait_ms);
+@@ -3995,7 +3995,7 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ 		__ieee80211_stop_poll(sdata);
+ 
+ 		/* let's probe the connection once */
+-		if (!ieee80211_hw_check(&sdata->local->hw, CONNECTION_MONITOR))
++		if (!ieee80211_local_check(sdata->local, CONNECTION_MONITOR))
+ 			ieee80211_queue_work(&sdata->local->hw,
+ 					     &sdata->u.mgd.monitor_work);
+ 		/* and do all the other regular work too */
+@@ -4409,7 +4409,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 				sdata->vif.bss_conf.sync_dtim_count = tim_ie[2];
+ 			else
+ 				sdata->vif.bss_conf.sync_dtim_count = 0;
+-		} else if (!ieee80211_hw_check(&sdata->local->hw,
++		} else if (!ieee80211_local_check(sdata->local,
+ 					       TIMING_BEACON_ONLY)) {
+ 			ies = rcu_dereference(cbss->proberesp_ies);
+ 			/* must be non-NULL since beacon IEs were NULL */
+@@ -4717,7 +4717,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ 
+ 	if (WARN((sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_UAPSD) &&
+-		 ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK),
++		 ieee80211_local_check(local, PS_NULLFUNC_STACK),
+ 	     "U-APSD not supported with HW_PS_NULLFUNC_STACK\n"))
+ 		sdata->vif.driver_flags &= ~IEEE80211_VIF_SUPPORTS_UAPSD;
+ 
+@@ -4798,7 +4798,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_lock();
+ 	beacon_ies = rcu_dereference(req->bss->beacon_ies);
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, NEED_DTIM_BEFORE_ASSOC) &&
++	if (ieee80211_local_check(sdata->local, NEED_DTIM_BEFORE_ASSOC) &&
+ 	    !beacon_ies) {
+ 		/*
+ 		 * Wait up to one beacon interval ...
+@@ -4825,7 +4825,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		assoc_data->timeout = jiffies;
+ 		assoc_data->timeout_started = true;
+ 
+-		if (ieee80211_hw_check(&local->hw, TIMING_BEACON_ONLY)) {
++		if (ieee80211_local_check(local, TIMING_BEACON_ONLY)) {
+ 			sdata->vif.bss_conf.sync_tsf = beacon_ies->tsf;
+ 			sdata->vif.bss_conf.sync_device_ts =
+ 				bss->device_ts_beacon;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 04401037140e..bf0ecc8e0954 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -46,7 +46,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 
+ 	if (!local->offchannel_ps_enabled ||
+-	    !ieee80211_hw_check(&local->hw, PS_NULLFUNC_STACK))
++	    !ieee80211_local_check(local, PS_NULLFUNC_STACK))
+ 		/*
+ 		 * If power save was enabled, no need to send a nullfunc
+ 		 * frame because AP knows that we are sleeping. But if the
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 00a43a70e1fc..877ecf747cd2 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -30,7 +30,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	ieee80211_del_virtual_monitor(local);
+ 
+-	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION) &&
++	if (ieee80211_local_check(local, AMPDU_AGGREGATION) &&
+ 	    !(wowlan && wowlan->any)) {
+ 		mutex_lock(&local->sta_mtx);
+ 		list_for_each_entry(sta, &local->sta_list, list) {
+@@ -110,7 +110,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 		if (err < 0) {
+ 			local->quiescing = false;
+ 			local->wowlan = false;
+-			if (ieee80211_hw_check(hw, AMPDU_AGGREGATION)) {
++			if (ieee80211_local_check(local, AMPDU_AGGREGATION)) {
+ 				mutex_lock(&local->sta_mtx);
+ 				list_for_each_entry(sta,
+ 						    &local->sta_list, list) {
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index a4e2f4e67f94..106360ebea97 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -848,7 +848,7 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		info->control.rates[i].count = 0;
+ 	}
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, HAS_RATE_CONTROL))
++	if (ieee80211_local_check(sdata->local, HAS_RATE_CONTROL))
+ 		return;
+ 
+ 	if (ista) {
+@@ -859,7 +859,7 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		ref->ops->get_rate(ref->priv, NULL, NULL, txrc);
+ 	}
+ 
+-	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_RC_TABLE))
++	if (ieee80211_local_check(sdata->local, SUPPORTS_RC_TABLE))
+ 		return;
+ 
+ 	ieee80211_get_tx_rates(&sdata->vif, ista, txrc->skb,
+@@ -904,7 +904,7 @@ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 	if (local->open_count)
+ 		return -EBUSY;
+ 
+-	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++	if (ieee80211_local_check(local, HAS_RATE_CONTROL)) {
+ 		if (WARN_ON(!local->ops->set_rts_threshold))
+ 			return -EINVAL;
+ 		return 0;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8bae5de0dc44..311d87a22303 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -97,7 +97,7 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ 					   struct sk_buff *skb,
+ 					   unsigned int rtap_vendor_space)
+ {
+-	if (ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS)) {
++	if (ieee80211_local_check(local, RX_INCLUDES_FCS)) {
+ 		if (likely(skb->len > FCS_LEN))
+ 			__pskb_trim(skb, skb->len - FCS_LEN);
+ 		else {
+@@ -154,7 +154,7 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 		len = ALIGN(len, 8);
+ 		len += 8;
+ 	}
+-	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM))
++	if (ieee80211_local_check(local, SIGNAL_DBM))
+ 		len += 1;
+ 
+ 	/* antenna field, if we don't have per-chain info */
+@@ -229,7 +229,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	}
+ 
+ 	mpdulen = skb->len;
+-	if (!(has_fcs && ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS)))
++	if (!(has_fcs && ieee80211_local_check(local, RX_INCLUDES_FCS)))
+ 		mpdulen += FCS_LEN;
+ 
+ 	rthdr = (struct ieee80211_radiotap_header *)skb_push(skb, rtap_len);
+@@ -283,7 +283,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	}
+ 
+ 	/* IEEE80211_RADIOTAP_FLAGS */
+-	if (has_fcs && ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS))
++	if (has_fcs && ieee80211_local_check(local, RX_INCLUDES_FCS))
+ 		*pos |= IEEE80211_RADIOTAP_F_FCS;
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
+ 		*pos |= IEEE80211_RADIOTAP_F_BADFCS;
+@@ -333,7 +333,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	pos += 2;
+ 
+ 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
+-	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM) &&
++	if (ieee80211_local_check(local, SIGNAL_DBM) &&
+ 	    !(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		*pos = status->signal;
+ 		rthdr->it_present |=
+@@ -498,7 +498,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	 * the SKB because it has a bad FCS/PLCP checksum.
+ 	 */
+ 
+-	if (ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS))
++	if (ieee80211_local_check(local, RX_INCLUDES_FCS))
+ 		present_fcs_len = FCS_LEN;
+ 
+ 	/* ensure hdr->frame_control and vendor radiotap data are in skb head */
+@@ -1232,7 +1232,7 @@ static void sta_ps_start(struct sta_info *sta)
+ 
+ 	atomic_inc(&ps->num_sta_ps);
+ 	set_sta_flag(sta, WLAN_STA_PS_STA);
+-	if (!ieee80211_hw_check(&local->hw, AP_LINK_PS))
++	if (!ieee80211_local_check(local, AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_SLEEP, &sta->sta);
+ 	ps_dbg(sdata, "STA %pM aid %d enters power save mode\n",
+ 	       sta->sta.addr, sta->sta.aid);
+@@ -1280,7 +1280,7 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *pubsta, bool start)
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	bool in_ps;
+ 
+-	WARN_ON(!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS));
++	WARN_ON(!ieee80211_local_check(sta->local, AP_LINK_PS));
+ 
+ 	/* Don't let the same PS state be set twice */
+ 	in_ps = test_sta_flag(sta, WLAN_STA_PS_STA);
+@@ -1316,7 +1316,7 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ 	 * uAPSD and PS-Poll frames (the latter shouldn't even come up from
+ 	 * it to mac80211 since they're handled.)
+ 	 */
+-	if (ieee80211_hw_check(&sdata->local->hw, AP_LINK_PS))
++	if (ieee80211_local_check(sdata->local, AP_LINK_PS))
+ 		return RX_CONTINUE;
+ 
+ 	/*
+@@ -1453,7 +1453,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	 * Change STA power saving mode only at the end of a frame
+ 	 * exchange sequence.
+ 	 */
+-	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
++	if (!ieee80211_local_check(sta->local, AP_LINK_PS) &&
+ 	    !ieee80211_has_morefrags(hdr->frame_control) &&
+ 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
+ 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
+@@ -2579,7 +2579,7 @@ ieee80211_rx_h_mgmt_check(struct ieee80211_rx_data *rx)
+ 	    !(rx->flags & IEEE80211_RX_BEACON_REPORTED)) {
+ 		int sig = 0;
+ 
+-		if (ieee80211_hw_check(&rx->local->hw, SIGNAL_DBM))
++		if (ieee80211_local_check(rx->local, SIGNAL_DBM))
+ 			sig = status->signal;
+ 
+ 		cfg80211_report_obss_beacon(rx->local->hw.wiphy,
+@@ -2910,7 +2910,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ 	 * it transmitted were processed or returned.
+ 	 */
+ 
+-	if (ieee80211_hw_check(&rx->local->hw, SIGNAL_DBM))
++	if (ieee80211_local_check(rx->local, SIGNAL_DBM))
+ 		sig = status->signal;
+ 
+ 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
+@@ -2975,7 +2975,7 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
+ 			info->flags = IEEE80211_TX_CTL_TX_OFFCHAN |
+ 				      IEEE80211_TX_INTFL_OFFCHAN_TX_OK |
+ 				      IEEE80211_TX_CTL_NO_CCK_RATE;
+-			if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL))
++			if (ieee80211_local_check(local, QUEUE_CONTROL))
+ 				info->hw_queue =
+ 					local->hw.offchannel_tx_hw_queue;
+ 		}
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 4aeca4b0c3cb..bea544d8e106 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -69,9 +69,9 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	struct cfg80211_inform_bss bss_meta = {};
+ 	bool signal_valid;
+ 
+-	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM))
++	if (ieee80211_local_check(local, SIGNAL_DBM))
+ 		bss_meta.signal = rx_status->signal * 100;
+-	else if (ieee80211_hw_check(&local->hw, SIGNAL_UNSPEC))
++	else if (ieee80211_local_check(local, SIGNAL_UNSPEC))
+ 		bss_meta.signal = (rx_status->signal * 100) / local->hw.max_signal;
+ 
+ 	bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_20;
+@@ -261,7 +261,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
+ 	if (test_bit(SCAN_HW_CANCELLED, &local->scanning))
+ 		return false;
+ 
+-	if (ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS)) {
++	if (ieee80211_local_check(local, SINGLE_SCAN_ON_ALL_BANDS)) {
+ 		for (i = 0; i < req->n_channels; i++) {
+ 			local->hw_scan_req->req.channels[i] = req->channels[i];
+ 			bands_used |= BIT(req->channels[i]->band);
+@@ -330,7 +330,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 		return;
+ 
+ 	if (hw_scan && !aborted &&
+-	    !ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS) &&
++	    !ieee80211_local_check(local, SINGLE_SCAN_ON_ALL_BANDS) &&
+ 	    ieee80211_prep_hw_scan(local)) {
+ 		int rc;
+ 
+@@ -524,7 +524,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->hw_scan_ies_bufsize = local->scan_ies_len + req->ie_len;
+ 
+-		if (ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS)) {
++		if (ieee80211_local_check(local, SINGLE_SCAN_ON_ALL_BANDS)) {
+ 			int i, n_bands = 0;
+ 			u8 bands_counted = 0;
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f91d1873218c..49cebf0a748c 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -285,7 +285,7 @@ static void sta_deliver_ps_frames(struct work_struct *wk)
+ static int sta_prepare_rate_control(struct ieee80211_local *local,
+ 				    struct sta_info *sta, gfp_t gfp)
+ {
+-	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL))
++	if (ieee80211_local_check(local, HAS_RATE_CONTROL))
+ 		return 0;
+ 
+ 	sta->rate_ctrl = local->rate_ctrl;
+@@ -650,7 +650,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
+ 	}
+ 
+ 	/* No need to do anything if the driver does all */
+-	if (ieee80211_hw_check(&local->hw, AP_LINK_PS))
++	if (ieee80211_local_check(local, AP_LINK_PS))
+ 		return;
+ 
+ 	if (sta->dead)
+@@ -1155,7 +1155,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	sta->driver_buffered_tids = 0;
+ 	sta->txq_buffered_tids = 0;
+ 
+-	if (!ieee80211_hw_check(&local->hw, AP_LINK_PS))
++	if (!ieee80211_local_check(local, AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
+ 	if (sta->sta.txq[0]) {
+@@ -1927,8 +1927,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->rx_beacon_signal_avg = ieee80211_ave_rssi(&sdata->vif);
+ 	}
+ 
+-	if (ieee80211_hw_check(&sta->local->hw, SIGNAL_DBM) ||
+-	    ieee80211_hw_check(&sta->local->hw, SIGNAL_UNSPEC)) {
++	if (ieee80211_local_check(sta->local, SIGNAL_DBM) ||
++	    ieee80211_local_check(sta->local, SIGNAL_UNSPEC)) {
+ 		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL))) {
+ 			sinfo->signal = (s8)sta->rx_stats.last_signal;
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+@@ -1983,7 +1983,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 
+ 		if (!(tidstats->filled &
+ 				BIT(NL80211_TID_STATS_TX_MSDU_RETRIES)) &&
+-		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++		    ieee80211_local_check(local, REPORTS_TX_ACK_STATUS)) {
+ 			tidstats->filled |=
+ 				BIT(NL80211_TID_STATS_TX_MSDU_RETRIES);
+ 			tidstats->tx_msdu_retries =
+@@ -1992,7 +1992,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 
+ 		if (!(tidstats->filled &
+ 				BIT(NL80211_TID_STATS_TX_MSDU_FAILED)) &&
+-		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++		    ieee80211_local_check(local, REPORTS_TX_ACK_STATUS)) {
+ 			tidstats->filled |=
+ 				BIT(NL80211_TID_STATS_TX_MSDU_FAILED);
+ 			tidstats->tx_msdu_failed =
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 5bad05e9af90..f07104ec5c99 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -182,7 +182,7 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 		sta->rx_stats.last_rx = jiffies;
+ 
+ 	if (ieee80211_is_data_qos(mgmt->frame_control)) {
+@@ -415,7 +415,7 @@ static void ieee80211_tdls_td_tx_handle(struct ieee80211_local *local,
+ 
+ 	if (is_teardown) {
+ 		/* This mechanism relies on being able to get ACKs */
+-		WARN_ON(!ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS));
++		WARN_ON(!ieee80211_local_check(local, REPORTS_TX_ACK_STATUS));
+ 
+ 		/* Check if peer has ACKed */
+ 		if (flags & IEEE80211_TX_STAT_ACK) {
+@@ -783,7 +783,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 					ieee80211_get_qos_ctl(hdr),
+ 					sta, true, acked);
+ 
+-		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
++		if (ieee80211_local_check(local, HAS_RATE_CONTROL) &&
+ 		    (ieee80211_is_data(hdr->frame_control)) &&
+ 		    (rates_idx != -1))
+ 			sta->tx_stats.last_rate =
+@@ -853,11 +853,11 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			ieee80211_frame_acked(sta, skb);
+ 
+ 		if ((sta->sdata->vif.type == NL80211_IFTYPE_STATION) &&
+-		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++		    ieee80211_local_check(local, REPORTS_TX_ACK_STATUS))
+ 			ieee80211_sta_tx_notify(sta->sdata, (void *) skb->data,
+ 						acked, info->status.tx_time);
+ 
+-		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++		if (ieee80211_local_check(local, REPORTS_TX_ACK_STATUS)) {
+ 			if (info->flags & IEEE80211_TX_STAT_ACK) {
+ 				if (sta->status_stats.lost_packets)
+ 					sta->status_stats.lost_packets = 0;
+@@ -906,7 +906,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ 
+ 	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
+-	    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
++	    ieee80211_local_check(local, REPORTS_TX_ACK_STATUS) &&
+ 	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    local->ps_sdata && !(local->scanning)) {
+ 		if (info->flags & IEEE80211_TX_STAT_ACK) {
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index c9eeb3f12808..6aca8572b8de 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -44,7 +44,7 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	bool chan_switch = local->hw.wiphy->features &
+ 			   NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
+-	bool wider_band = ieee80211_hw_check(&local->hw, TDLS_WIDER_BW) &&
++	bool wider_band = ieee80211_local_check(local, TDLS_WIDER_BW) &&
+ 			  !ifmgd->tdls_wider_bw_prohibited;
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+ 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+@@ -1022,7 +1022,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	 * packet through the AP.
+ 	 */
+ 	if ((action_code == WLAN_TDLS_TEARDOWN) &&
+-	    ieee80211_hw_check(&sdata->local->hw, REPORTS_TX_ACK_STATUS)) {
++	    ieee80211_local_check(sdata->local, REPORTS_TX_ACK_STATUS)) {
+ 		bool try_resend; /* Should we keep skb for possible resend */
+ 
+ 		/* If not sending directly to peer - no point in keeping skb */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index bdc224d5053a..6356a95788cc 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -211,11 +211,11 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_if_managed *ifmgd;
+ 
+ 	/* driver doesn't support power save */
+-	if (!ieee80211_hw_check(&local->hw, SUPPORTS_PS))
++	if (!ieee80211_local_check(local, SUPPORTS_PS))
+ 		return TX_CONTINUE;
+ 
+ 	/* hardware does dynamic power save */
+-	if (ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS))
++	if (ieee80211_local_check(local, SUPPORTS_DYNAMIC_PS))
+ 		return TX_CONTINUE;
+ 
+ 	/* dynamic power save disabled */
+@@ -428,7 +428,7 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	if (ieee80211_is_probe_req(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+-	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
++	if (ieee80211_local_check(tx->local, QUEUE_CONTROL))
+ 		info->hw_queue = tx->sdata->vif.cab_queue;
+ 
+ 	/* no stations in PS mode */
+@@ -438,7 +438,7 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
+ 
+ 	/* device releases frame after DTIM beacon */
+-	if (!ieee80211_hw_check(&tx->local->hw, HOST_BROADCAST_PS_BUFFERING))
++	if (!ieee80211_local_check(tx->local, HOST_BROADCAST_PS_BUFFERING))
+ 		return TX_CONTINUE;
+ 
+ 	/* buffered in mac80211 */
+@@ -1184,8 +1184,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+ 	    !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
+-	    ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION) &&
+-	    !ieee80211_hw_check(&local->hw, TX_AMPDU_SETUP_IN_HW)) {
++	    ieee80211_local_check(local, AMPDU_AGGREGATION) &&
++	    !ieee80211_local_check(local, TX_AMPDU_SETUP_IN_HW)) {
+ 		struct tid_ampdu_tx *tid_tx;
+ 
+ 		qc = ieee80211_get_qos_ctl(hdr);
+@@ -1430,7 +1430,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 			vif = &sdata->vif;
+ 			info->hw_queue =
+ 				vif->hw_queue[skb_get_queue_mapping(skb)];
+-		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
++		} else if (ieee80211_local_check(local, QUEUE_CONTROL)) {
+ 			dev_kfree_skb(skb);
+ 			return true;
+ 		} else
+@@ -1476,7 +1476,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+ 	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
+ 	CALL_TXH(ieee80211_tx_h_select_key);
+-	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
++	if (!ieee80211_local_check(tx->local, HAS_RATE_CONTROL))
+ 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+ 
+ 	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
+@@ -1491,7 +1491,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
+ 	CALL_TXH(ieee80211_tx_h_stats);
+ 	CALL_TXH(ieee80211_tx_h_encrypt);
+-	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
++	if (!ieee80211_local_check(tx->local, HAS_RATE_CONTROL))
+ 		CALL_TXH(ieee80211_tx_h_calculate_duration);
+ #undef CALL_TXH
+ 
+@@ -1581,7 +1581,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* set up hw_queue value early */
+ 	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
+-	    !ieee80211_hw_check(&local->hw, QUEUE_CONTROL))
++	    !ieee80211_local_check(local, QUEUE_CONTROL))
+ 		info->hw_queue =
+ 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+ 
+@@ -1608,7 +1608,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (skb_cloned(skb) &&
+-	    (!ieee80211_hw_check(&local->hw, SUPPORTS_CLONED_SKBS) ||
++	    (!ieee80211_local_check(local, SUPPORTS_CLONED_SKBS) ||
+ 	     !skb_clone_writable(skb, ETH_HLEN) ||
+ 	     (may_encrypt && sdata->crypto_tx_tailroom_needed_cnt)))
+ 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+@@ -2427,7 +2427,7 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	__le16 fc;
+ 
+-	if (!ieee80211_hw_check(&local->hw, SUPPORT_FAST_XMIT))
++	if (!ieee80211_local_check(local, SUPPORT_FAST_XMIT))
+ 		return;
+ 
+ 	/* Locking here protects both the pointer itself, and against concurrent
+@@ -2443,8 +2443,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 	 * cleared/changed already.
+ 	 */
+ 	spin_lock_bh(&sta->lock);
+-	if (ieee80211_hw_check(&local->hw, SUPPORTS_PS) &&
+-	    !ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS) &&
++	if (ieee80211_local_check(local, SUPPORTS_PS) &&
++	    !ieee80211_local_check(local, SUPPORTS_DYNAMIC_PS) &&
+ 	    sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		goto out;
+ 
+@@ -2797,7 +2797,7 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	if (fast_tx->key)
+ 		info->control.hw_key = &fast_tx->key->conf;
+ 
+-	if (!ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++	if (!ieee80211_local_check(local, HAS_RATE_CONTROL)) {
+ 		tx.skb = skb;
+ 		r = ieee80211_tx_h_rate_ctrl(&tx);
+ 		skb = tx.skb;
+@@ -3529,7 +3529,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	if (tim_length)
+ 		*tim_length = offs.tim_length;
+ 
+-	if (ieee80211_hw_check(hw, BEACON_TX_STATUS) ||
++	if (ieee80211_local_check(hw_to_local(hw), BEACON_TX_STATUS) ||
+ 	    !hw_to_local(hw)->monitors)
+ 		return bcn;
+ 
+@@ -3839,7 +3839,7 @@ int ieee80211_reserve_tid(struct ieee80211_sta *pubsta, u8 tid)
+ 	synchronize_net();
+ 
+ 	/* Tear down BA sessions so we stop aggregating on this TID */
+-	if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
++	if (ieee80211_local_check(local, AMPDU_AGGREGATION)) {
+ 		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 		__ieee80211_stop_tx_ba_session(sta, tid,
+ 					       AGG_STOP_LOCAL_REQUEST);
+@@ -3853,7 +3853,7 @@ int ieee80211_reserve_tid(struct ieee80211_sta *pubsta, u8 tid)
+ 	ieee80211_wake_vif_queues(local, sdata,
+ 				  IEEE80211_QUEUE_STOP_REASON_RESERVE_TID);
+ 
+-	if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION))
++	if (ieee80211_local_check(local, AMPDU_AGGREGATION))
+ 		clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 
+ 	ret = 0;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 74058020b7d6..6cffa4a6face 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -516,7 +516,7 @@ ieee80211_get_vif_queues(struct ieee80211_local *local,
+ {
+ 	unsigned int queues;
+ 
+-	if (sdata && ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
++	if (sdata && ieee80211_local_check(local, QUEUE_CONTROL)) {
+ 		int ac;
+ 
+ 		queues = 0;
+@@ -544,7 +544,7 @@ void __ieee80211_flush_queues(struct ieee80211_local *local,
+ 	 * If no queue was set, or if the HW doesn't support
+ 	 * IEEE80211_HW_QUEUE_CONTROL - flush all queues
+ 	 */
+-	if (!queues || !ieee80211_hw_check(&local->hw, QUEUE_CONTROL))
++	if (!queues || !ieee80211_local_check(local, QUEUE_CONTROL))
+ 		queues = ieee80211_get_vif_queues(local, sdata);
+ 
+ 	ieee80211_stop_queues_by_reason(&local->hw, queues,
+@@ -2041,7 +2041,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	 * about the sessions, but we and the AP still think they
+ 	 * are active. This is really a workaround though.
+ 	 */
+-	if (ieee80211_hw_check(hw, AMPDU_AGGREGATION)) {
++	if (ieee80211_local_check(local, AMPDU_AGGREGATION)) {
+ 		mutex_lock(&local->sta_mtx);
+ 
+ 		list_for_each_entry(sta, &local->sta_list, list) {
 -- 
-1.8.2.1
+2.6.2
 
