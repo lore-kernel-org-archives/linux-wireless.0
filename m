@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33602 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754919AbbKHHuv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:50:51 -0500
-Received: by pabfh17 with SMTP id fh17so166207034pab.0
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:50 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 26/32] staging: wilc1000: remove host_int_set_RSNAConfigPSKPassPhrase
-Date: Sun,  8 Nov 2015 16:49:19 +0900
-Message-Id: <1446968965-8958-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_091410_864901_323137AD)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46982 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818AbbKKO3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 09:29:07 -0500
+Message-ID: <1447252142.2276.19.camel@sipsolutions.net> (sfid-20151111_152911_490442_B38C978E)
+Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+	Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Date: Wed, 11 Nov 2015 15:29:02 +0100
+In-Reply-To: <20151111091859.55f6a4fd@gandalf.local.home>
+References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
+	 <1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
+	 <1447201345.2475.15.camel@coelho.fi>
+	 <1447227472.2276.7.camel@sipsolutions.net>
+	 <20151111083430.1e77c329@gandalf.local.home>
+	 <1447249156.2276.17.camel@sipsolutions.net>
+	 <20151111091859.55f6a4fd@gandalf.local.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes host_int_set_RSNAConfigPSKPassPhrase function
-definition and declaration that is defined at host_interface.c and
-host_interface.h. This function is defined but not used anywhere in this
-driver so just remove it.
+OnOn Wed, 11 Nov 2015 14:39:16 +0100
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > On Wed, 2015-11-11 at 08:34 -0500, Steven Rostedt wrote:
+> > 
+> > > > config MY_DRIVER
+> > > > 	depends on MAC80211
+> > > > 	increment MAC80211_NUM_DRIVERS
+> > > > 	increment MAC80211_HW_MYFLAG  
+> > > 
+> > > If you don't need to check more that >0 why not just use
+> > > SELECT?  
+> > 
+> > > > if (CONFIG_MAC80211_HW_MYFLAG == 0)
+> > > > 	/* optimise for flag OFF */
+> > > > else if (CONFIG_MAC80211_HW_MYFLAG > 0 &&
+> > > >          CONFIG_MAC80211_NUM_DRIVERS ==
+> > > > CONFIG_MAC80211_HW_MYFLAG)
+> > > > 	/* optimise for flag ON */
+> > > > else if (CONFIG_MAC80211_HW_MYFLAG > 0)
+> > > > 	/* don't optimise */  
+> > 
+> > I'm comparing those numbers to see if there's a driver that's
+> > incrementing NUM_DRIVERS but not HW_MYFLAG.
+> > 
+ Wed, 2015-11-11 at 09:18 -0500, Steven Rostedt wrote:
+> 
+> OK, I'm still a bit confused. What happens if another driver
+> increments
+> NUM_DRIVERS? Then the above wont be equal right? That's what you
+> want?
+> 
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 16 ----------------
- drivers/staging/wilc1000/host_interface.h |  3 ---
- 2 files changed, 19 deletions(-)
+Right. Basically it'd be one of three options:
+ * all compiled drivers want the flag set:
+   use a static key to make the fast case "flag set"
+ * no compiled driver wants the flag set:
+   use a static key to make the fast case "flag unset"
+ * different drivers are compiled:
+   don't use a static key since we don't know which one will get used
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6015582..fb6f353 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3373,22 +3373,6 @@ s32 host_int_set_pmkid_info(struct host_if_drv *hif_drv, struct host_if_pmkid_at
- 	return result;
- }
- 
--s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hif_drv,
--					 u8 *pu8PassPhrase,
--					 u8 u8Psklength)
--{
--	struct wid wid;
--
--	if ((u8Psklength > 7) && (u8Psklength < 65)) {
--		wid.id = (u16)WID_11I_PSK;
--		wid.type = WID_STR;
--		wid.val = pu8PassPhrase;
--		wid.size = u8Psklength;
--	}
--
--	return 0;
--}
--
- s32 hif_get_mac_address(struct host_if_drv *hif_drv, u8 *pu8MacAddress)
- {
- 	s32 result = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index dd5a14a..8113d76 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -324,9 +324,6 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
- 			u8 mode, u8 cipher_mode);
- s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
- 			    struct host_if_pmkid_attr *pu8PmkidInfoArray);
--s32 host_int_set_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
--					 u8 *pu8PassPhrase,
--					 u8 u8Psklength);
- s32 host_int_get_RSNAConfigPSKPassPhrase(struct host_if_drv *hWFIDrv,
- 					 u8 *pu8PassPhrase, u8 u8Psklength);
- s32 hif_get_mac_address(struct host_if_drv *hWFIDrv, u8 *pu8MacAddress);
--- 
-2.6.3
+johannes
 
