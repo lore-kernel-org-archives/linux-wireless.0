@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26854 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756483AbbKEFfn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:35:43 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 23/38] staging: wilc1000: rename function GetIfHandler
-Date: Thu, 5 Nov 2015 14:36:24 +0900
-Message-ID: <1446701799-24870-23-git-send-email-glen.lee@atmel.com> (sfid-20151105_063756_062689_D2B08BFF)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+Received: from smtprelay0200.hostedemail.com ([216.40.44.200]:39541 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750862AbbKKOTD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 09:19:03 -0500
+Date: Wed, 11 Nov 2015 09:18:59 -0500
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+	Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
+Message-ID: <20151111091859.55f6a4fd@gandalf.local.home> (sfid-20151111_151907_161149_A0BBC9CE)
+In-Reply-To: <1447249156.2276.17.camel@sipsolutions.net>
+References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
+	<1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
+	<1447201345.2475.15.camel@coelho.fi>
+	<1447227472.2276.7.camel@sipsolutions.net>
+	<20151111083430.1e77c329@gandalf.local.home>
+	<1447249156.2276.17.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Wed, 11 Nov 2015 14:39:16 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-This patch renames GetIfHandler function name to get_if_handler
-to avoid CamelCase naming convention.
+> On Wed, 2015-11-11 at 08:34 -0500, Steven Rostedt wrote:
+> 
+> > > config MY_DRIVER
+> > > 	depends on MAC80211
+> > > 	increment MAC80211_NUM_DRIVERS
+> > > 	increment MAC80211_HW_MYFLAG  
+> > 
+> > If you don't need to check more that >0 why not just use SELECT?  
+> 
+> > > if (CONFIG_MAC80211_HW_MYFLAG == 0)
+> > > 	/* optimise for flag OFF */
+> > > else if (CONFIG_MAC80211_HW_MYFLAG > 0 &&
+> > >          CONFIG_MAC80211_NUM_DRIVERS == CONFIG_MAC80211_HW_MYFLAG)
+> > > 	/* optimise for flag ON */
+> > > else if (CONFIG_MAC80211_HW_MYFLAG > 0)
+> > > 	/* don't optimise */  
+> 
+> I'm comparing those numbers to see if there's a driver that's
+> incrementing NUM_DRIVERS but not HW_MYFLAG.
+> 
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+OK, I'm still a bit confused. What happens if another driver increments
+NUM_DRIVERS? Then the above wont be equal right? That's what you want?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 94efb4a..3da80cd 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -331,7 +331,7 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
- 	}
- }
- 
--struct net_device *GetIfHandler(struct wilc *wilc, u8 *pMacHeader)
-+struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
- {
- 	u8 *Bssid, *Bssid1;
- 	int i = 0;
-@@ -1422,7 +1422,7 @@ void frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
- 	struct net_device *wilc_netdev;
- 	perInterface_wlan_t *nic;
- 
--	wilc_netdev = GetIfHandler(wilc, buff);
-+	wilc_netdev = get_if_handler(wilc, buff);
- 	if (!wilc_netdev)
- 		return;
- 
--- 
-1.9.1
-
+-- Steve
