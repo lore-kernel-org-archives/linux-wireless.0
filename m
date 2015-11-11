@@ -1,96 +1,333 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37586 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753851AbbKDLxt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 06:53:49 -0500
-Received: by wmff134 with SMTP id f134so39394528wmf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2015 03:53:48 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 1/4] ath10k: fix the currently supported QCA9377 target version name
-Date: Wed,  4 Nov 2015 12:53:32 +0100
-Message-Id: <1446638015-23310-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20151104_125354_295906_BD0403D6)
-In-Reply-To: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49110 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752663AbbKKWP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 17:15:26 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v3 5/8] mac80211: generate hw flags from include file
+Date: Wed, 11 Nov 2015 23:15:17 +0100
+Message-Id: <1447280120-16010-6-git-send-email-johannes@sipsolutions.net> (sfid-20151111_231534_083836_6A6999EA)
+In-Reply-To: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
+References: <1447280120-16010-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When introducing the original QCA9377 support, the chip target
-version was wrongly picked. The chip advertising itself with
-bmi target value equal to 0x05020001 is in fact a 1.1 revision.
-I realized this once I got a real 1.1 hw to play with.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Instead of having to list all the hw flags in many places, just
+list the macro to generate everything in a new include file and
+include it in the proper places.
+
+Unfortunately this breaks docbook processing since that doesn't
+pre-process the file. It also doesn't generate the necessary
+Kconfig items.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 4 ++--
- drivers/net/wireless/ath/ath10k/hw.h   | 8 ++++++--
- drivers/net/wireless/ath/ath10k/pci.c  | 2 +-
- 3 files changed, 9 insertions(+), 5 deletions(-)
+ include/net/mac80211-hwflags.h | 33 ++++++++++++++++++++
+ include/net/mac80211.h         | 37 ++---------------------
+ net/mac80211/debugfs.c         | 47 +++--------------------------
+ net/mac80211/hwflags.c         | 68 +++---------------------------------------
+ net/mac80211/hwflags.h         | 47 +++++------------------------
+ 5 files changed, 52 insertions(+), 180 deletions(-)
+ create mode 100644 include/net/mac80211-hwflags.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index aa9bd92ac4ed..c8f6ca284b9d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -138,8 +138,8 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		},
- 	},
- 	{
--		.id = QCA9377_HW_1_0_DEV_VERSION,
--		.name = "qca9377 hw1.0",
-+		.id = QCA9377_HW_1_1_DEV_VERSION,
-+		.name = "qca9377 hw1.1",
- 		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
- 		.uart_pin = 7,
- 		.otp_exe_param = 0,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 39966a05c1cc..01bf2244f54c 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -42,6 +42,8 @@
- #define QCA6174_HW_3_0_VERSION		0x05020000
- #define QCA6174_HW_3_2_VERSION		0x05030000
- 
-+#define QCA9377_HW_1_1_DEV_VERSION	0x05020001
-+
- enum qca6174_pci_rev {
- 	QCA6174_PCI_REV_1_1 = 0x11,
- 	QCA6174_PCI_REV_1_3 = 0x13,
-@@ -60,6 +62,10 @@ enum qca6174_chip_id_rev {
- 	QCA6174_HW_3_2_CHIP_ID_REV = 10,
+diff --git a/include/net/mac80211-hwflags.h b/include/net/mac80211-hwflags.h
+new file mode 100644
+index 000000000000..c0450391088c
+--- /dev/null
++++ b/include/net/mac80211-hwflags.h
+@@ -0,0 +1,33 @@
++/* this file intentionally has no include guard */
++DEFINE_HWFLAG(HAS_RATE_CONTROL)
++DEFINE_HWFLAG(RX_INCLUDES_FCS)
++DEFINE_HWFLAG(HOST_BROADCAST_PS_BUFFERING)
++DEFINE_HWFLAG(SIGNAL_UNSPEC)
++DEFINE_HWFLAG(SIGNAL_DBM)
++DEFINE_HWFLAG(NEED_DTIM_BEFORE_ASSOC)
++DEFINE_HWFLAG(SPECTRUM_MGMT)
++DEFINE_HWFLAG(AMPDU_AGGREGATION)
++DEFINE_HWFLAG(SUPPORTS_PS)
++DEFINE_HWFLAG(PS_NULLFUNC_STACK)
++DEFINE_HWFLAG(SUPPORTS_DYNAMIC_PS)
++DEFINE_HWFLAG(MFP_CAPABLE)
++DEFINE_HWFLAG(WANT_MONITOR_VIF)
++DEFINE_HWFLAG(NO_AUTO_VIF)
++DEFINE_HWFLAG(SW_CRYPTO_CONTROL)
++DEFINE_HWFLAG(SUPPORT_FAST_XMIT)
++DEFINE_HWFLAG(REPORTS_TX_ACK_STATUS)
++DEFINE_HWFLAG(CONNECTION_MONITOR)
++DEFINE_HWFLAG(QUEUE_CONTROL)
++DEFINE_HWFLAG(SUPPORTS_PER_STA_GTK)
++DEFINE_HWFLAG(AP_LINK_PS)
++DEFINE_HWFLAG(TX_AMPDU_SETUP_IN_HW)
++DEFINE_HWFLAG(SUPPORTS_RC_TABLE)
++DEFINE_HWFLAG(P2P_DEV_ADDR_FOR_INTF)
++DEFINE_HWFLAG(TIMING_BEACON_ONLY)
++DEFINE_HWFLAG(SUPPORTS_HT_CCK_RATES)
++DEFINE_HWFLAG(CHANCTX_STA_CSA)
++DEFINE_HWFLAG(SUPPORTS_CLONED_SKBS)
++DEFINE_HWFLAG(SINGLE_SCAN_ON_ALL_BANDS)
++DEFINE_HWFLAG(TDLS_WIDER_BW)
++DEFINE_HWFLAG(SUPPORTS_AMSDU_IN_AMPDU)
++DEFINE_HWFLAG(BEACON_TX_STATUS)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index db98eb5673c2..a08d66b39bcf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1904,40 +1904,9 @@ struct ieee80211_txq {
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+-	IEEE80211_HW_HAS_RATE_CONTROL,
+-	IEEE80211_HW_RX_INCLUDES_FCS,
+-	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING,
+-	IEEE80211_HW_SIGNAL_UNSPEC,
+-	IEEE80211_HW_SIGNAL_DBM,
+-	IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC,
+-	IEEE80211_HW_SPECTRUM_MGMT,
+-	IEEE80211_HW_AMPDU_AGGREGATION,
+-	IEEE80211_HW_SUPPORTS_PS,
+-	IEEE80211_HW_PS_NULLFUNC_STACK,
+-	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
+-	IEEE80211_HW_MFP_CAPABLE,
+-	IEEE80211_HW_WANT_MONITOR_VIF,
+-	IEEE80211_HW_NO_AUTO_VIF,
+-	IEEE80211_HW_SW_CRYPTO_CONTROL,
+-	IEEE80211_HW_SUPPORT_FAST_XMIT,
+-	IEEE80211_HW_REPORTS_TX_ACK_STATUS,
+-	IEEE80211_HW_CONNECTION_MONITOR,
+-	IEEE80211_HW_QUEUE_CONTROL,
+-	IEEE80211_HW_SUPPORTS_PER_STA_GTK,
+-	IEEE80211_HW_AP_LINK_PS,
+-	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW,
+-	IEEE80211_HW_SUPPORTS_RC_TABLE,
+-	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF,
+-	IEEE80211_HW_TIMING_BEACON_ONLY,
+-	IEEE80211_HW_SUPPORTS_HT_CCK_RATES,
+-	IEEE80211_HW_CHANCTX_STA_CSA,
+-	IEEE80211_HW_SUPPORTS_CLONED_SKBS,
+-	IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS,
+-	IEEE80211_HW_TDLS_WIDER_BW,
+-	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+-	IEEE80211_HW_BEACON_TX_STATUS,
+-
+-	/* keep last, obviously */
++#define DEFINE_HWFLAG(_flg) IEEE80211_HW_##_flg,
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
+ 	NUM_IEEE80211_HW_FLAGS
  };
  
-+enum qca9377_chip_id_rev {
-+	QCA9377_HW_1_1_CHIP_ID_REV = 0x1,
-+};
-+
- #define QCA6174_HW_2_1_FW_DIR		"ath10k/QCA6174/hw2.1"
- #define QCA6174_HW_2_1_FW_FILE		"firmware.bin"
- #define QCA6174_HW_2_1_OTP_FILE		"otp.bin"
-@@ -85,8 +91,6 @@ enum qca6174_chip_id_rev {
- #define QCA99X0_HW_2_0_PATCH_LOAD_ADDR	0x1234
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 4d2aaebd4f97..dc0eca604be1 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -91,44 +91,10 @@ static const struct file_operations reset_ops = {
+ };
+ #endif
  
- /* QCA9377 1.0 definitions */
--#define QCA9377_HW_1_0_DEV_VERSION     0x05020001
--#define QCA9377_HW_1_0_CHIP_ID_REV     0x1
- #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
- #define QCA9377_HW_1_0_FW_FILE         "firmware.bin"
- #define QCA9377_HW_1_0_OTP_FILE        "otp.bin"
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 3fca200b986c..c444b43f183d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -92,7 +92,7 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
- 	{ QCA6174_2_1_DEVICE_ID, QCA6174_HW_3_2_CHIP_ID_REV },
- 
- 	{ QCA99X0_2_0_DEVICE_ID, QCA99X0_HW_2_0_CHIP_ID_REV },
--	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_0_CHIP_ID_REV },
-+	{ QCA9377_1_0_DEVICE_ID, QCA9377_HW_1_1_CHIP_ID_REV },
+-static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+-#define FLAG(F)	[IEEE80211_HW_##F] = #F
+-	FLAG(HAS_RATE_CONTROL),
+-	FLAG(RX_INCLUDES_FCS),
+-	FLAG(HOST_BROADCAST_PS_BUFFERING),
+-	FLAG(SIGNAL_UNSPEC),
+-	FLAG(SIGNAL_DBM),
+-	FLAG(NEED_DTIM_BEFORE_ASSOC),
+-	FLAG(SPECTRUM_MGMT),
+-	FLAG(AMPDU_AGGREGATION),
+-	FLAG(SUPPORTS_PS),
+-	FLAG(PS_NULLFUNC_STACK),
+-	FLAG(SUPPORTS_DYNAMIC_PS),
+-	FLAG(MFP_CAPABLE),
+-	FLAG(WANT_MONITOR_VIF),
+-	FLAG(NO_AUTO_VIF),
+-	FLAG(SW_CRYPTO_CONTROL),
+-	FLAG(SUPPORT_FAST_XMIT),
+-	FLAG(REPORTS_TX_ACK_STATUS),
+-	FLAG(CONNECTION_MONITOR),
+-	FLAG(QUEUE_CONTROL),
+-	FLAG(SUPPORTS_PER_STA_GTK),
+-	FLAG(AP_LINK_PS),
+-	FLAG(TX_AMPDU_SETUP_IN_HW),
+-	FLAG(SUPPORTS_RC_TABLE),
+-	FLAG(P2P_DEV_ADDR_FOR_INTF),
+-	FLAG(TIMING_BEACON_ONLY),
+-	FLAG(SUPPORTS_HT_CCK_RATES),
+-	FLAG(CHANCTX_STA_CSA),
+-	FLAG(SUPPORTS_CLONED_SKBS),
+-	FLAG(SINGLE_SCAN_ON_ALL_BANDS),
+-	FLAG(TDLS_WIDER_BW),
+-	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
+-	FLAG(BEACON_TX_STATUS),
+-
+-	/* keep last for the build bug below */
+-	(void *)0x1
+-#undef FLAG
++static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS] = {
++#define DEFINE_HWFLAG(_flg)	[IEEE80211_HW_##_flg] = #_flg,
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
  };
  
- static void ath10k_pci_buffer_cleanup(struct ath10k *ar);
+ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+@@ -144,11 +110,6 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	/* fail compilation if somebody adds or removes
+-	 * a flag without updating the name array above
+-	 */
+-	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void *)0x1);
+-
+ 	for (i = 0; i < NUM_IEEE80211_HW_FLAGS; i++) {
+ 		if (test_bit(i, local->hw.flags))
+ 			pos += scnprintf(pos, end - pos, "%s\n",
+diff --git a/net/mac80211/hwflags.c b/net/mac80211/hwflags.c
+index eca0e3ee6818..ef4fc0d0f517 100644
+--- a/net/mac80211/hwflags.c
++++ b/net/mac80211/hwflags.c
+@@ -14,70 +14,10 @@ struct static_key_false hwflags_keys[NUM_IEEE80211_HW_FLAGS] = {
+ };
+ 
+ static s8 hwflags_defstate[] = {
+-	[IEEE80211_HW_HAS_RATE_CONTROL] =
+-		HWFLAGS_DEFSTATE_HAS_RATE_CONTROL,
+-	[IEEE80211_HW_RX_INCLUDES_FCS] =
+-		HWFLAGS_DEFSTATE_RX_INCLUDES_FCS,
+-	[IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING] =
+-		HWFLAGS_DEFSTATE_HOST_BROADCAST_PS_BUFFERING,
+-	[IEEE80211_HW_SIGNAL_UNSPEC] =
+-		HWFLAGS_DEFSTATE_SIGNAL_UNSPEC,
+-	[IEEE80211_HW_SIGNAL_DBM] =
+-		HWFLAGS_DEFSTATE_SIGNAL_DBM,
+-	[IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC] =
+-		HWFLAGS_DEFSTATE_NEED_DTIM_BEFORE_ASSOC,
+-	[IEEE80211_HW_SPECTRUM_MGMT] =
+-		HWFLAGS_DEFSTATE_SPECTRUM_MGMT,
+-	[IEEE80211_HW_AMPDU_AGGREGATION] =
+-		HWFLAGS_DEFSTATE_AMPDU_AGGREGATION,
+-	[IEEE80211_HW_SUPPORTS_PS] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_PS,
+-	[IEEE80211_HW_PS_NULLFUNC_STACK] =
+-		HWFLAGS_DEFSTATE_PS_NULLFUNC_STACK,
+-	[IEEE80211_HW_SUPPORTS_DYNAMIC_PS] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_DYNAMIC_PS,
+-	[IEEE80211_HW_MFP_CAPABLE] =
+-		HWFLAGS_DEFSTATE_MFP_CAPABLE,
+-	[IEEE80211_HW_WANT_MONITOR_VIF] =
+-		HWFLAGS_DEFSTATE_WANT_MONITOR_VIF,
+-	[IEEE80211_HW_NO_AUTO_VIF] =
+-		HWFLAGS_DEFSTATE_NO_AUTO_VIF,
+-	[IEEE80211_HW_SW_CRYPTO_CONTROL] =
+-		HWFLAGS_DEFSTATE_SW_CRYPTO_CONTROL,
+-	[IEEE80211_HW_SUPPORT_FAST_XMIT] =
+-		HWFLAGS_DEFSTATE_SUPPORT_FAST_XMIT,
+-	[IEEE80211_HW_REPORTS_TX_ACK_STATUS] =
+-		HWFLAGS_DEFSTATE_REPORTS_TX_ACK_STATUS,
+-	[IEEE80211_HW_CONNECTION_MONITOR] =
+-		HWFLAGS_DEFSTATE_CONNECTION_MONITOR,
+-	[IEEE80211_HW_QUEUE_CONTROL] =
+-		HWFLAGS_DEFSTATE_QUEUE_CONTROL,
+-	[IEEE80211_HW_SUPPORTS_PER_STA_GTK] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_PER_STA_GTK,
+-	[IEEE80211_HW_AP_LINK_PS] =
+-		HWFLAGS_DEFSTATE_AP_LINK_PS,
+-	[IEEE80211_HW_TX_AMPDU_SETUP_IN_HW] =
+-		HWFLAGS_DEFSTATE_TX_AMPDU_SETUP_IN_HW,
+-	[IEEE80211_HW_SUPPORTS_RC_TABLE] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_RC_TABLE,
+-	[IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF] =
+-		HWFLAGS_DEFSTATE_P2P_DEV_ADDR_FOR_INTF,
+-	[IEEE80211_HW_TIMING_BEACON_ONLY] =
+-		HWFLAGS_DEFSTATE_TIMING_BEACON_ONLY,
+-	[IEEE80211_HW_SUPPORTS_HT_CCK_RATES] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_HT_CCK_RATES,
+-	[IEEE80211_HW_CHANCTX_STA_CSA] =
+-		HWFLAGS_DEFSTATE_CHANCTX_STA_CSA,
+-	[IEEE80211_HW_SUPPORTS_CLONED_SKBS] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_CLONED_SKBS,
+-	[IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS] =
+-		HWFLAGS_DEFSTATE_SINGLE_SCAN_ON_ALL_BANDS,
+-	[IEEE80211_HW_TDLS_WIDER_BW] =
+-		HWFLAGS_DEFSTATE_TDLS_WIDER_BW,
+-	[IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU] =
+-		HWFLAGS_DEFSTATE_SUPPORTS_AMSDU_IN_AMPDU,
+-	[IEEE80211_HW_BEACON_TX_STATUS] =
+-		HWFLAGS_DEFSTATE_BEACON_TX_STATUS,
++#define DEFINE_HWFLAG(_flg)	\
++	[IEEE80211_HW_##_flg] = HWFLAGS_DEFSTATE_##_flg,
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
+ };
+ 
+ void ieee80211_hw_mod_flag(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/hwflags.h b/net/mac80211/hwflags.h
+index 06f0a9f64fe6..82bf89658cb7 100644
+--- a/net/mac80211/hwflags.h
++++ b/net/mac80211/hwflags.h
+@@ -13,46 +13,15 @@
+ extern struct static_key_false hwflags_keys[NUM_IEEE80211_HW_FLAGS];
+ 
+ #ifdef CONFIG_JUMP_LABEL
+-#define _HWFLAGS_DEFSTATE(_name, _on, _off)				\
+-	HWFLAGS_DEFSTATE_##_name = -1 + ((_on) ^ (_off)) * (1 + _on)
+-#define HWFLAGS_DEFSTATE(_name)						\
+-	_HWFLAGS_DEFSTATE(_name,					\
+-			  IS_ENABLED(CONFIG_MAC80211_HW_##_name##_ON),	\
+-			  IS_ENABLED(CONFIG_MAC80211_HW_##_name##_OFF))
+-
+ enum hwflags_defstates {
+-HWFLAGS_DEFSTATE(HAS_RATE_CONTROL),
+-HWFLAGS_DEFSTATE(RX_INCLUDES_FCS),
+-HWFLAGS_DEFSTATE(HOST_BROADCAST_PS_BUFFERING),
+-HWFLAGS_DEFSTATE(SIGNAL_UNSPEC),
+-HWFLAGS_DEFSTATE(SIGNAL_DBM),
+-HWFLAGS_DEFSTATE(NEED_DTIM_BEFORE_ASSOC),
+-HWFLAGS_DEFSTATE(SPECTRUM_MGMT),
+-HWFLAGS_DEFSTATE(AMPDU_AGGREGATION),
+-HWFLAGS_DEFSTATE(SUPPORTS_PS),
+-HWFLAGS_DEFSTATE(PS_NULLFUNC_STACK),
+-HWFLAGS_DEFSTATE(SUPPORTS_DYNAMIC_PS),
+-HWFLAGS_DEFSTATE(MFP_CAPABLE),
+-HWFLAGS_DEFSTATE(WANT_MONITOR_VIF),
+-HWFLAGS_DEFSTATE(NO_AUTO_VIF),
+-HWFLAGS_DEFSTATE(SW_CRYPTO_CONTROL),
+-HWFLAGS_DEFSTATE(SUPPORT_FAST_XMIT),
+-HWFLAGS_DEFSTATE(REPORTS_TX_ACK_STATUS),
+-HWFLAGS_DEFSTATE(CONNECTION_MONITOR),
+-HWFLAGS_DEFSTATE(QUEUE_CONTROL),
+-HWFLAGS_DEFSTATE(SUPPORTS_PER_STA_GTK),
+-HWFLAGS_DEFSTATE(AP_LINK_PS),
+-HWFLAGS_DEFSTATE(TX_AMPDU_SETUP_IN_HW),
+-HWFLAGS_DEFSTATE(SUPPORTS_RC_TABLE),
+-HWFLAGS_DEFSTATE(P2P_DEV_ADDR_FOR_INTF),
+-HWFLAGS_DEFSTATE(TIMING_BEACON_ONLY),
+-HWFLAGS_DEFSTATE(SUPPORTS_HT_CCK_RATES),
+-HWFLAGS_DEFSTATE(CHANCTX_STA_CSA),
+-HWFLAGS_DEFSTATE(SUPPORTS_CLONED_SKBS),
+-HWFLAGS_DEFSTATE(SINGLE_SCAN_ON_ALL_BANDS),
+-HWFLAGS_DEFSTATE(TDLS_WIDER_BW),
+-HWFLAGS_DEFSTATE(SUPPORTS_AMSDU_IN_AMPDU),
+-HWFLAGS_DEFSTATE(BEACON_TX_STATUS),
++#define __DEFINE_HWFLAG(_flg, _on, _off)				\
++	HWFLAGS_DEFSTATE_##_flg = -1 + ((_on) ^ (_off)) * (1 + _on),
++#define DEFINE_HWFLAG(_flg)						\
++	__DEFINE_HWFLAG(_flg,						\
++			IS_ENABLED(CONFIG_MAC80211_HW_##_flg##_ON),	\
++			IS_ENABLED(CONFIG_MAC80211_HW_##_flg##_OFF))
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
+ };
+ 
+ bool _____optimisation_missing(void);
 -- 
-2.1.2
+2.6.2
 
