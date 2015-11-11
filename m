@@ -1,133 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35082 "EHLO sipsolutions.net"
+Received: from mail.us.es ([193.147.175.20]:51462 "EHLO mail.us.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965605AbbKDQWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 11:22:14 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 4/4] ipv6: add option to drop unsolicited neighbor advertisements
-Date: Wed,  4 Nov 2015 17:22:07 +0100
-Message-Id: <1446654127-26826-4-git-send-email-johannes@sipsolutions.net> (sfid-20151104_172314_633380_6B8C335E)
-In-Reply-To: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
-References: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+	id S1751522AbbKKUvI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2015 15:51:08 -0500
+Received: from antivirus1-rhel7.int (antivirus1.int [192.168.2.11])
+	by mail.us.es (Postfix) with ESMTP id E8C0B1373AF
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2015 21:51:05 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id D937CADCC
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2015 21:51:05 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id A906CCE158
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2015 21:51:03 +0100 (CET)
+Date: Wed, 11 Nov 2015 21:51:01 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: lwn@lwn.net, info@netdevconf.org
+Subject: [ANNOUNCE] NetDev 1.1 Registration open
+Message-ID: <20151111205055.GA1466@salvia> (sfid-20151111_215117_855044_8492CEE9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi!
 
-In certain 802.11 wireless deployments, there will be NA proxies
-that use knowledge of the network to correctly answer requests.
-To prevent unsolicitd advertisements on the shared medium from
-being a problem, on such deployments wireless needs to drop them.
+We are pleased to announce that registration is now open for netdev 1.1,
+the community-driven Linux networking conference held back-to-back with
+netconf in Sevilla, Spain, February 10-12, 2016.
 
-Enable this by providing an option called "drop_unsolicited_na".
+Registration is now open at: https://www.netdevconf.org/1.1/registration.html
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/networking/ip-sysctl.txt | 7 +++++++
- include/linux/ipv6.h                   | 1 +
- include/uapi/linux/ipv6.h              | 1 +
- net/ipv6/addrconf.c                    | 8 ++++++++
- net/ipv6/ndisc.c                       | 9 +++++++++
- 5 files changed, 26 insertions(+)
+= Fees =
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 428fb48a19fc..77992f1173c3 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1672,6 +1672,13 @@ drop_unicast_in_l2_multicast - BOOLEAN
- 
- 	By default this is turned off.
- 
-+drop_unsolicited_na - BOOLEAN
-+	Drop all unsolicited neighbor advertisements, for example if there's
-+	a known good NA proxy on the network and such frames need not be used
-+	(or in the case of 802.11, must not be used to prevent attacks.)
-+
-+	By default this is turned off.
-+
- icmp/*:
- ratelimit - INTEGER
- 	Limit the maximal rates for sending ICMPv6 packets.
-diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
-index 34317cb6a6fc..9231bfdc7c92 100644
---- a/include/linux/ipv6.h
-+++ b/include/linux/ipv6.h
-@@ -56,6 +56,7 @@ struct ipv6_devconf {
- 	__s32           ndisc_notify;
- 	__s32		suppress_frag_ndisc;
- 	__s32		accept_ra_mtu;
-+	__s32		drop_unsolicited_na;
- 	struct ipv6_stable_secret {
- 		bool initialized;
- 		struct in6_addr secret;
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index 4c413570efe8..ec117b65d5a5 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -175,6 +175,7 @@ enum {
- 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
- 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
- 	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
-+	DEVCONF_DROP_UNSOLICITED_NA,
- 	DEVCONF_MAX
- };
- 
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index 35f880bcf626..e7dd0a0c5126 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -4673,6 +4673,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
- 	/* we omit DEVCONF_STABLE_SECRET for now */
- 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
- 	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
-+	array[DEVCONF_DROP_UNSOLICITED_NA] = cnf->drop_unsolicited_na;
- }
- 
- static inline size_t inet6_ifla6_size(void)
-@@ -5742,6 +5743,13 @@ static struct addrconf_sysctl_table
- 			.proc_handler	= proc_dointvec,
- 		},
- 		{
-+			.procname	= "drop_unsolicited_na",
-+			.data		= &ipv6_devconf.drop_unsolicited_na,
-+			.maxlen		= sizeof(int),
-+			.mode		= 0644,
-+			.proc_handler	= proc_dointvec,
-+		},
-+		{
- 			/* sentinel */
- 		}
- 	},
-diff --git a/net/ipv6/ndisc.c b/net/ipv6/ndisc.c
-index 3e0f855e1bea..0737bc23ea39 100644
---- a/net/ipv6/ndisc.c
-+++ b/net/ipv6/ndisc.c
-@@ -887,6 +887,7 @@ static void ndisc_recv_na(struct sk_buff *skb)
- 				    offsetof(struct nd_msg, opt));
- 	struct ndisc_options ndopts;
- 	struct net_device *dev = skb->dev;
-+	struct inet6_dev *idev = __in6_dev_get(dev);
- 	struct inet6_ifaddr *ifp;
- 	struct neighbour *neigh;
- 
-@@ -906,6 +907,14 @@ static void ndisc_recv_na(struct sk_buff *skb)
- 		return;
- 	}
- 
-+	/* For some 802.11 wireless deployments (and possibly other networks),
-+	 * there will be a NA proxy and unsolicitd packets are attacks
-+	 * and thus should not be accepted.
-+	 */
-+	if (idev && idev->cnf.drop_unsolicited_na &&
-+	    !msg->icmph.icmp6_solicited)
-+		return;
-+
- 	if (!ndisc_parse_options(msg->opt, ndoptlen, &ndopts)) {
- 		ND_PRINTK(2, warn, "NS: invalid ND option\n");
- 		return;
--- 
-2.6.2
+* Regular registration (EUR300) for 3 days, this year we're including
+  three coffee-snack breaks, three lunches at restaurants and one special
+  evening closing event on friday.
 
+* Reduced price for students (EUR50), we have limited tickets for this.
+  To apply for this discount, you have to credit previous work on FOSS,
+  we will specifically value previous participation in GSoC, Outreachy
+  and similar programs that promote FOSS development.
+
+= Travel and Hotel =
+
+* Hotel: We got an agreement with a hotel that is located close to the
+  venue.
+
+  Single room: 65€ (breakfast included).
+  Double room: 75€ (breakfast included).
+
+  Until December 31th, please follow the link below for more info.
+
+* Flights: Local airport is SVQ, although main international airports
+  in Spain are MAD, XRY, BCN and AGP.
+
+* Train: If you get to Spain via MAD, XRY or AGP, you may consider
+  changing train to get here. Specifically AVE and ALVIA (high speed)
+  are usually confortable ones. And we got a fair good discount from
+  the Spanish rail company.
+
+For more info: http://www.netdevconf.org/1.1/travel-hotel.html
+
+= Why you should register =
+
+If you yearn for the old community tech driven conferences where you
+mingle with fellow geeks (only these would be Linux networking geeks)
+then this would be it. There will be no marketing flashy openings.
+There will just be a pure feed of Linux networking.
+
+For more info, visit:
+* netdev 1.1: https://www.netdevconf.org/1.1/
+* netconf 2016: http://vger.kernel.org/netconf2016.html
+
+See you at netdev 1.1 in Sevilla, Spain!
