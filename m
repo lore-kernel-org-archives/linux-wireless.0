@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10241 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbbK0GrJ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37832 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbbKKAdd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 01:47:09 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 0/3] clean up interface information structure
-Date: Fri, 27 Nov 2015 15:50:30 +0900
-Message-ID: <1448607033-25354-1-git-send-email-glen.lee@atmel.com> (sfid-20151127_074713_527325_17491A67)
+	Tue, 10 Nov 2015 19:33:33 -0500
+Date: Tue, 10 Nov 2015 16:33:32 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 01/20] staging/wilc1000: add struct net_device declaration
+Message-ID: <20151111003332.GA5422@kroah.com> (sfid-20151111_013350_160708_1DAD01AB)
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+ <1447198960-2760143-2-git-send-email-arnd@arndb.de>
+ <20151111000248.GA5062@kroah.com>
+ <4397901.37Xo7LRaFs@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4397901.37Xo7LRaFs@wuerfel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series combines perInterface_wlan_t and struct wilc_vif. vif of
-struct wilc can be the pointer of net device private data with
-perInterface_wlan_t. As a conseqeunce, there will be one interface information
-structure wilc_vif.
+On Wed, Nov 11, 2015 at 01:13:33AM +0100, Arnd Bergmann wrote:
+> On Tuesday 10 November 2015 16:02:48 Greg Kroah-Hartman wrote:
+> > On Wed, Nov 11, 2015 at 12:42:21AM +0100, Arnd Bergmann wrote:
+> > I think this is already fixed in my staging-testing branch, right?
+> 
+> Ah right. I only got it with some rare randconfig builds, and assumed
+> the problem was still there because I did not see a patch that fixed
+> it. However, the config that originally failed is now fine, so it's
+> probably fixed.
+> 
+> The other patches won't apply cleanly without this one unfortunately.
+> Let me know if I should re-send them without this patch, as I don't
+> want to spam everyone unnecessarily.
 
-Glen Lee (3):
-  staging: wilc1000: move perInterface_wlan_t to wilc_vif
-  staging: wilc1000: change vif to pointer to refence real private data
-  staging: wilc1000: remove duplicate netdev
 
- drivers/staging/wilc1000/host_interface.c         |   6 +-
- drivers/staging/wilc1000/linux_wlan.c             | 307 +++++++++++-----------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 220 ++++++++--------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  22 +-
- drivers/staging/wilc1000/wilc_wlan.c              |  60 ++---
- 5 files changed, 305 insertions(+), 310 deletions(-)
+Let me see how well they apply if I skip this, I can always hand-edit
+patches (do it all the time...)
 
--- 
-1.9.1
+But give me a week or so to catch up on things, these are in my queue,
+not lost.
 
+thanks,
+
+greg k-h
