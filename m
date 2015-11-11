@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40291 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070AbbKLT3U (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:57976 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbbKKIvv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 14:29:20 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] ath10k: clean up ath10k_skb_cb
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-	<1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 12 Nov 2015 21:29:04 +0200
-In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 10 Nov 2015 14:10:46 +0100")
-Message-ID: <87mvuj585b.fsf@kamboji.qca.qualcomm.com> (sfid-20151112_202923_992918_0F81A6C8)
+	Wed, 11 Nov 2015 03:51:51 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	devel@driverdev.osuosl.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 19/20] staging/wilc1000: use more regular probing
+Date: Wed, 11 Nov 2015 09:51:38 +0100
+Message-ID: <3835296.cXNgyFJAb6@wuerfel> (sfid-20151111_095210_613409_7809A10E)
+In-Reply-To: <CAHp75VfpbEC0T54quQb0NV25=oCpH_1yDZnvSFdrQAe0VrnQ9g@mail.gmail.com>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <1447198960-2760143-20-git-send-email-arnd@arndb.de> <CAHp75VfpbEC0T54quQb0NV25=oCpH_1yDZnvSFdrQAe0VrnQ9g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Wednesday 11 November 2015 09:54:57 Andy Shevchenko wrote:
+> > diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+> > index f2ea8280b8f8..72b524a98cba 100644
+> > --- a/drivers/staging/wilc1000/linux_wlan_common.h
+> > +++ b/drivers/staging/wilc1000/linux_wlan_common.h
+> > @@ -38,9 +38,6 @@ enum debug_region {
+> >  #define FIRM_DBG                (1 << Firmware_debug)
+> >
+> >  #if defined (WILC_DEBUGFS)
+> 
+> if this is still in use?
+> Is it about DEBUG or DEBUGFS?
 
-> The ath10k_skb_cb structure wasn't really space
-> efficient. Some stuff is removed or replaced with
-> more compact representation.
->
-> This cleanup is necessary for future features.
->
-> The size of ath10k_skb_cb:
->
->           before   after
->  x86-32   26       12
->  x86-64   34       20
->
->
-> v2:
->  * fix a bug (patch 7/9 introduced)
->
->
-> Michal Kazior (9):
->   ath10k: merge is_protected with nohwcrypt
->   ath10k: rename function to adhere to naming convention
->   ath10k: remove txmode from skb_cb
->   ath10k: remove is_offchan
->   ath10k: remove freq from skb_cb
->   ath10k: pack up flags in skb_cb
->   ath10k: fix tx header parsing
->   ath10k: replace vdev_id and tid in skb cb
->   ath10k: store msdu_id instead of txbuf pointers
+It's DEBUGFS, and it's currently set unconditionally by the Makefile.
 
-I have a conflict which I can't fix myself:
-
-Applying: ath10k: merge is_protected with nohwcrypt
-Applying: ath10k: rename function to adhere to naming convention
-Applying: ath10k: remove txmode from skb_cb
-Applying: ath10k: remove is_offchan
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0004 ath10k: remove is_offchan
-
--- 
-Kalle Valo
+	Arnd
