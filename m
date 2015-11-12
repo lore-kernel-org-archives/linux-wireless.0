@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.246]:35896 "EHLO
-	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751062AbbKJAld (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:34393 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752927AbbKLNQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 19:41:33 -0500
-From: "Shin, Austin" <Austin.Shin@atmel.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "Kim, Johnny" <johnny.kim@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
-	"Kim, Leo" <Leo.Kim@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH 32/32] staging: wilc1000: remove
- host_int_get_rx_power_level
-Date: Tue, 10 Nov 2015 00:41:28 +0000
-Message-ID: <5247AA876FDD144FBABB0100CA55BC8574D727A2@penmbx02.corp.atmel.com> (sfid-20151110_014136_629957_26A4C475)
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
- <1446968965-8958-32-git-send-email-chaehyun.lim@gmail.com>
-In-Reply-To: <1446968965-8958-32-git-send-email-chaehyun.lim@gmail.com>
-Content-Type: text/plain; charset="ks_c_5601-1987"
-MIME-Version: 1.0
+	Thu, 12 Nov 2015 08:16:16 -0500
+Received: by lbbcs9 with SMTP id cs9so34648999lbb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:14 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 04/12] ath9k: P2P_CLIENT, send frames after 1ms AP/GO will aprear
+Date: Thu, 12 Nov 2015 14:15:41 +0100
+Message-Id: <1447334149-15507-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141632_147508_1DB4BDD6)
+In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SEkgQWxsLAppZiB5b3Ugd2FudCwgSSB3b3VsZCBzaGlwIHRoZSBib2FyZCBmb3IgeW91IHRvIHZl
-cmlmeS4gQW55Ym9keSB3ZWxjb21lLgoKCk9uIDIwMTWz4iAxMb/5IDjAzyC/wMD8IDg6NTE6MTIg
-Q2hhZWh5dW4gTGltIDxjaGFlaHl1bi5saW1AZ21haWwuY29tPiB3cm90ZToKCj4gVGhpcyBwYXRj
-aCByZW1vdmVzIGhvc3RfaW50X2dldF9yeF9wb3dlcl9sZXZlbCBmdW5jdGlvbiBkZWZpbml0aW9u
-IGFuZAo+IGRlY2xhcmF0aW9uIHRoYXQgaXMgZGVmaW5lZCBhdCBob3N0X2ludGVyZmFjZS5jIGFu
-ZCBob3N0X2ludGVyZmFjZS5oLgo+IFRoaXMgZnVuY3Rpb24gaXMgZGVmaW5lZCBidXQgbm90IHVz
-ZWQgYW55d2hlcmUgaW4gdGhpcyBkcml2ZXIgc28ganVzdAo+IHJlbW92ZSBpdC4KPgo+IFNpZ25l
-ZC1vZmYtYnk6IENoYWVoeXVuIExpbSA8Y2hhZWh5dW4ubGltQGdtYWlsLmNvbT4KPiAtLS0KPiAg
-ZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMgfCAxNCAtLS0tLS0tLS0t
-LS0tLQo+ICBkcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaCB8ICAzIC0t
-LQo+ICAyIGZpbGVzIGNoYW5nZWQsIDE3IGRlbGV0aW9ucygtKQo+Cj4gZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvc3RhZ2luZy93aWxjMTAwMC9ob3N0X2ludGVyZmFjZS5jIGIvZHJpdmVycy9zdGFnaW5n
-L3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMKPiBpbmRleCBmZjE1MTc5Li41YmY5YTU1IDEwMDY0
-NAo+IC0tLSBhL2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9ob3N0X2ludGVyZmFjZS5jCj4gKysr
-IGIvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmMKPiBAQCAtMzU2MCwy
-MCArMzU2MCw2IEBAIHMzMiBob3N0X2ludF9nZXRfYXNzb2NfcmVzX2luZm8oc3RydWN0IGhvc3Rf
-aWZfZHJ2ICpoaWZfZHJ2LAo+ICAJcmV0dXJuIHJlc3VsdDsKPiAgfQo+ICAKPiAtczMyIGhvc3Rf
-aW50X2dldF9yeF9wb3dlcl9sZXZlbChzdHJ1Y3QgaG9zdF9pZl9kcnYgKmhpZl9kcnYsCj4gLQkJ
-CQl1OCAqcHU4UnhQb3dlckxldmVsLAo+IC0JCQkJdTMyIHUzMlJ4UG93ZXJMZXZlbExlbikKPiAt
-ewo+IC0Jc3RydWN0IHdpZCB3aWQ7Cj4gLQo+IC0Jd2lkLmlkID0gKHUxNilXSURfUlhfUE9XRVJf
-TEVWRUw7Cj4gLQl3aWQudHlwZSA9IFdJRF9TVFI7Cj4gLQl3aWQudmFsID0gcHU4UnhQb3dlckxl
-dmVsOwo+IC0Jd2lkLnNpemUgPSB1MzJSeFBvd2VyTGV2ZWxMZW47Cj4gLQo+IC0JcmV0dXJuIDA7
-Cj4gLX0KPiAtCj4gIGludCBob3N0X2ludF9zZXRfbWFjX2NobmxfbnVtKHN0cnVjdCBob3N0X2lm
-X2RydiAqaGlmX2RydiwgdTggY2hhbm5lbCkKPiAgewo+ICAJaW50IHJlc3VsdDsKPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNlLmggYi9kcml2ZXJz
-L3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaAo+IGluZGV4IDg4NzA0NTguLmMwMWY0
-NDEgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2hvc3RfaW50ZXJmYWNl
-LmgKPiArKysgYi9kcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuaAo+IEBA
-IC0zMzksOSArMzM5LDYgQEAgczMyIGhvc3RfaW50X2dldF9hc3NvY19yZXNfaW5mbyhzdHJ1Y3Qg
-aG9zdF9pZl9kcnYgKmhXRklEcnYsCj4gIAkJCQl1OCAqcHU4QXNzb2NSZXNwSW5mbywKPiAgCQkJ
-CXUzMiB1MzJNYXhBc3NvY1Jlc3BJbmZvTGVuLAo+ICAJCQkJdTMyICpwdTMyUmN2ZEFzc29jUmVz
-cEluZm9MZW4pOwo+IC1zMzIgaG9zdF9pbnRfZ2V0X3J4X3Bvd2VyX2xldmVsKHN0cnVjdCBob3N0
-X2lmX2RydiAqaFdGSURydiwKPiAtCQkJCXU4ICpwdThSeFBvd2VyTGV2ZWwsCj4gLQkJCQl1MzIg
-dTMyUnhQb3dlckxldmVsTGVuKTsKPiAgaW50IGhvc3RfaW50X3NldF9tYWNfY2hubF9udW0oc3Ry
-dWN0IGhvc3RfaWZfZHJ2ICp3ZmlfZHJ2LCB1OCBjaGFubmVsKTsKPiAgczMyIGhvc3RfaW50X2dl
-dF9ob3N0X2NobmxfbnVtKHN0cnVjdCBob3N0X2lmX2RydiAqaFdGSURydiwgdTggKnB1OENoTm8p
-Owo+ICBzMzIgaG9zdF9pbnRfZ2V0X3Jzc2koc3RydWN0IGhvc3RfaWZfZHJ2ICpoV0ZJRHJ2LCBz
-OCAqcHM4UnNzaSk7Cj4gLS0gCj4gMi42LjMK
+AP/GO will aprear after NOA, wait 1ms to be sure AP
+could receive/answer this frames.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index dddaaea..5640e88 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1417,6 +1417,8 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
+ 	target_tsf = avp->noa.next_tsf;
+ 	if (!avp->noa.absent)
+ 		target_tsf -= ATH_P2P_PS_STOP_TIME;
++	else
++		target_tsf += ATH_P2P_PS_STOP_TIME;
+ 
+ 	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
+ 		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
+@@ -1543,6 +1545,8 @@ void ath9k_p2p_ps_timer(void *priv)
+ 	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+ 	if (!avp->noa.absent)
+ 		tsf += ATH_P2P_PS_STOP_TIME;
++	else
++		tsf -= ATH_P2P_PS_STOP_TIME;
+ 
+ 	if (!avp->noa.has_next_tsf ||
+ 	    avp->noa.next_tsf - tsf > BIT(31))
+-- 
+1.9.1
+
