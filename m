@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:38802 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161067AbbKFL0c (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:43162 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbbKLCcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 06:26:32 -0500
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] NFC: nci: Fix error check of nci_hci_create_pipe() result
-Date: Fri,  6 Nov 2015 12:26:34 +0100
-Message-Id: <1446809194-25993-1-git-send-email-geert@linux-m68k.org> (sfid-20151106_122639_438803_B2D283EF)
+	Wed, 11 Nov 2015 21:32:13 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: fix bug in sdio/spi
+Date: Thu, 12 Nov 2015 11:35:26 +0900
+Message-ID: <1447295726-24486-1-git-send-email-glen.lee@atmel.com> (sfid-20151112_033241_510920_1902E830)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/nfc/nci/hci.c: In function ‘nci_hci_connect_gate’:
-net/nfc/nci/hci.c:679: warning: comparison is always false due to limited range of data type
+sdio_init and wilc_spi_init always return error, so it fails everytime.
+Fix this by removing else statement.
 
-In case of error, nci_hci_create_pipe() returns NCI_HCI_INVALID_PIPE,
-and not a negative error code.
+This fixes c1af9db78950a778ec18343c5c5a6d4cfbf58a61,
+bacd388547f55eb415ce266c8723cc6f1281a25d
 
-Correct the check to fix this.
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- net/nfc/nci/hci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_sdio.c | 2 --
+ drivers/staging/wilc1000/wilc_spi.c  | 2 --
+ 2 files changed, 4 deletions(-)
 
-diff --git a/net/nfc/nci/hci.c b/net/nfc/nci/hci.c
-index 2aedac15cb592353..a0ab26d535dca749 100644
---- a/net/nfc/nci/hci.c
-+++ b/net/nfc/nci/hci.c
-@@ -676,7 +676,7 @@ int nci_hci_connect_gate(struct nci_dev *ndev,
- 	break;
- 	default:
- 		pipe = nci_hci_create_pipe(ndev, dest_host, dest_gate, &r);
--		if (pipe < 0)
-+		if (pipe == NCI_HCI_INVALID_PIPE)
- 			return r;
- 		pipe_created = true;
- 		break;
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 8aacf55..1addc56 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -564,8 +564,6 @@ static int sdio_init(struct wilc *wilc, wilc_debug_func func)
+ 	if (!linux_sdio_init()) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
+ 		return 0;
+-	} else {
+-		return 0;
+ 	}
+ 
+ 	/**
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 3741836..cff61fd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -968,8 +968,6 @@ static int wilc_spi_init(struct wilc *wilc, wilc_debug_func func)
+ 	if (!linux_spi_init()) {
+ 		PRINT_ER("[wilc spi]: Failed io init bus...\n");
+ 		return 0;
+-	} else {
+-		return 0;
+ 	}
+ 
+ 	/**
 -- 
 1.9.1
 
