@@ -1,41 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38146 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54966 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbbKZRIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:08:48 -0500
-Message-ID: <1448557724.2167.28.camel@sipsolutions.net> (sfid-20151126_180852_421423_742DE952)
-Subject: Re: [PATCH] mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
+	id S1753786AbbKLWA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2015 17:00:57 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Date: Thu, 26 Nov 2015 18:08:44 +0100
-In-Reply-To: <1445931520-14509-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151027_083846_037088_3C5DC175)
-References: <1445931520-14509-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20151027_083846_037088_3C5DC175)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v5 3/5] mac80211: generate hw flags from include file
+Date: Thu, 12 Nov 2015 23:00:50 +0100
+Message-Id: <1447365652-23716-4-git-send-email-johannes@sipsolutions.net> (sfid-20151112_230105_741442_80F81643)
+In-Reply-To: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-10-27 at 08:38 +0100, Janusz Dziedzic wrote:
-> Add new VIF flag, that will allow get NOA update
-> notification when driver will request this, even
-> this is not pure P2P vif (eg. STA vif).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+Instead of having to list all the hw flags in many places, just
+list the macro to generate everything in a new include file and
+include it in the proper places.
 
-I'll note that people here seem to want to do a similar thing, so
-thanks :)
+Unfortunately this breaks docbook processing since that doesn't
+pre-process the file. It also doesn't generate the necessary
+Kconfig items.
 
-Also, perhaps we should have a common way to advertise this kind of
-capability in the association request of this station, so that the
-(mobile?) APs implementing it can know? I think we'd discussed using an
-Intel-specific vendor IE for this, but making the specification thereof
-public so others could do it as well, but I'm sure we're open for other
-suggestions. Any interest?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211-hwflags.h | 33 +++++++++++++++++++++++++++++
+ include/net/mac80211.h         | 37 +++------------------------------
+ net/mac80211/debugfs.c         | 47 ++++--------------------------------------
+ 3 files changed, 40 insertions(+), 77 deletions(-)
+ create mode 100644 include/net/mac80211-hwflags.h
 
-We're also going to be working on nl80211 extensions to actually let
-the driver know if the client is P2P (or NoA capable) or not.
+diff --git a/include/net/mac80211-hwflags.h b/include/net/mac80211-hwflags.h
+new file mode 100644
+index 000000000000..c0450391088c
+--- /dev/null
++++ b/include/net/mac80211-hwflags.h
+@@ -0,0 +1,33 @@
++/* this file intentionally has no include guard */
++DEFINE_HWFLAG(HAS_RATE_CONTROL)
++DEFINE_HWFLAG(RX_INCLUDES_FCS)
++DEFINE_HWFLAG(HOST_BROADCAST_PS_BUFFERING)
++DEFINE_HWFLAG(SIGNAL_UNSPEC)
++DEFINE_HWFLAG(SIGNAL_DBM)
++DEFINE_HWFLAG(NEED_DTIM_BEFORE_ASSOC)
++DEFINE_HWFLAG(SPECTRUM_MGMT)
++DEFINE_HWFLAG(AMPDU_AGGREGATION)
++DEFINE_HWFLAG(SUPPORTS_PS)
++DEFINE_HWFLAG(PS_NULLFUNC_STACK)
++DEFINE_HWFLAG(SUPPORTS_DYNAMIC_PS)
++DEFINE_HWFLAG(MFP_CAPABLE)
++DEFINE_HWFLAG(WANT_MONITOR_VIF)
++DEFINE_HWFLAG(NO_AUTO_VIF)
++DEFINE_HWFLAG(SW_CRYPTO_CONTROL)
++DEFINE_HWFLAG(SUPPORT_FAST_XMIT)
++DEFINE_HWFLAG(REPORTS_TX_ACK_STATUS)
++DEFINE_HWFLAG(CONNECTION_MONITOR)
++DEFINE_HWFLAG(QUEUE_CONTROL)
++DEFINE_HWFLAG(SUPPORTS_PER_STA_GTK)
++DEFINE_HWFLAG(AP_LINK_PS)
++DEFINE_HWFLAG(TX_AMPDU_SETUP_IN_HW)
++DEFINE_HWFLAG(SUPPORTS_RC_TABLE)
++DEFINE_HWFLAG(P2P_DEV_ADDR_FOR_INTF)
++DEFINE_HWFLAG(TIMING_BEACON_ONLY)
++DEFINE_HWFLAG(SUPPORTS_HT_CCK_RATES)
++DEFINE_HWFLAG(CHANCTX_STA_CSA)
++DEFINE_HWFLAG(SUPPORTS_CLONED_SKBS)
++DEFINE_HWFLAG(SINGLE_SCAN_ON_ALL_BANDS)
++DEFINE_HWFLAG(TDLS_WIDER_BW)
++DEFINE_HWFLAG(SUPPORTS_AMSDU_IN_AMPDU)
++DEFINE_HWFLAG(BEACON_TX_STATUS)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 82045fca388b..2345d3d43300 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1904,40 +1904,9 @@ struct ieee80211_txq {
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+-	IEEE80211_HW_HAS_RATE_CONTROL,
+-	IEEE80211_HW_RX_INCLUDES_FCS,
+-	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING,
+-	IEEE80211_HW_SIGNAL_UNSPEC,
+-	IEEE80211_HW_SIGNAL_DBM,
+-	IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC,
+-	IEEE80211_HW_SPECTRUM_MGMT,
+-	IEEE80211_HW_AMPDU_AGGREGATION,
+-	IEEE80211_HW_SUPPORTS_PS,
+-	IEEE80211_HW_PS_NULLFUNC_STACK,
+-	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
+-	IEEE80211_HW_MFP_CAPABLE,
+-	IEEE80211_HW_WANT_MONITOR_VIF,
+-	IEEE80211_HW_NO_AUTO_VIF,
+-	IEEE80211_HW_SW_CRYPTO_CONTROL,
+-	IEEE80211_HW_SUPPORT_FAST_XMIT,
+-	IEEE80211_HW_REPORTS_TX_ACK_STATUS,
+-	IEEE80211_HW_CONNECTION_MONITOR,
+-	IEEE80211_HW_QUEUE_CONTROL,
+-	IEEE80211_HW_SUPPORTS_PER_STA_GTK,
+-	IEEE80211_HW_AP_LINK_PS,
+-	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW,
+-	IEEE80211_HW_SUPPORTS_RC_TABLE,
+-	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF,
+-	IEEE80211_HW_TIMING_BEACON_ONLY,
+-	IEEE80211_HW_SUPPORTS_HT_CCK_RATES,
+-	IEEE80211_HW_CHANCTX_STA_CSA,
+-	IEEE80211_HW_SUPPORTS_CLONED_SKBS,
+-	IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS,
+-	IEEE80211_HW_TDLS_WIDER_BW,
+-	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+-	IEEE80211_HW_BEACON_TX_STATUS,
+-
+-	/* keep last, obviously */
++#define DEFINE_HWFLAG(_flg) IEEE80211_HW_##_flg,
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
+ 	NUM_IEEE80211_HW_FLAGS
+ };
+ 
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 4d2aaebd4f97..dc0eca604be1 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -91,44 +91,10 @@ static const struct file_operations reset_ops = {
+ };
+ #endif
+ 
+-static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+-#define FLAG(F)	[IEEE80211_HW_##F] = #F
+-	FLAG(HAS_RATE_CONTROL),
+-	FLAG(RX_INCLUDES_FCS),
+-	FLAG(HOST_BROADCAST_PS_BUFFERING),
+-	FLAG(SIGNAL_UNSPEC),
+-	FLAG(SIGNAL_DBM),
+-	FLAG(NEED_DTIM_BEFORE_ASSOC),
+-	FLAG(SPECTRUM_MGMT),
+-	FLAG(AMPDU_AGGREGATION),
+-	FLAG(SUPPORTS_PS),
+-	FLAG(PS_NULLFUNC_STACK),
+-	FLAG(SUPPORTS_DYNAMIC_PS),
+-	FLAG(MFP_CAPABLE),
+-	FLAG(WANT_MONITOR_VIF),
+-	FLAG(NO_AUTO_VIF),
+-	FLAG(SW_CRYPTO_CONTROL),
+-	FLAG(SUPPORT_FAST_XMIT),
+-	FLAG(REPORTS_TX_ACK_STATUS),
+-	FLAG(CONNECTION_MONITOR),
+-	FLAG(QUEUE_CONTROL),
+-	FLAG(SUPPORTS_PER_STA_GTK),
+-	FLAG(AP_LINK_PS),
+-	FLAG(TX_AMPDU_SETUP_IN_HW),
+-	FLAG(SUPPORTS_RC_TABLE),
+-	FLAG(P2P_DEV_ADDR_FOR_INTF),
+-	FLAG(TIMING_BEACON_ONLY),
+-	FLAG(SUPPORTS_HT_CCK_RATES),
+-	FLAG(CHANCTX_STA_CSA),
+-	FLAG(SUPPORTS_CLONED_SKBS),
+-	FLAG(SINGLE_SCAN_ON_ALL_BANDS),
+-	FLAG(TDLS_WIDER_BW),
+-	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
+-	FLAG(BEACON_TX_STATUS),
+-
+-	/* keep last for the build bug below */
+-	(void *)0x1
+-#undef FLAG
++static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS] = {
++#define DEFINE_HWFLAG(_flg)	[IEEE80211_HW_##_flg] = #_flg,
++#include <net/mac80211-hwflags.h>
++#undef DEFINE_HWFLAG
+ };
+ 
+ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+@@ -144,11 +110,6 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	/* fail compilation if somebody adds or removes
+-	 * a flag without updating the name array above
+-	 */
+-	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void *)0x1);
+-
+ 	for (i = 0; i < NUM_IEEE80211_HW_FLAGS; i++) {
+ 		if (test_bit(i, local->hw.flags))
+ 			pos += scnprintf(pos, end - pos, "%s\n",
+-- 
+2.6.2
 
-johannes
