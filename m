@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:14039 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698AbbKZFBC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35251 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbbKLR7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 00:01:02 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 5/5] staging: wilc1000: remove unneeded extern variable
-Date: Thu, 26 Nov 2015 14:04:03 +0900
-Message-ID: <1448514243-14181-5-git-send-email-glen.lee@atmel.com> (sfid-20151126_060106_415887_D2916583)
-In-Reply-To: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
-References: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
+	Thu, 12 Nov 2015 12:59:45 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] cfg80211: add VHT support for Mesh
+Date: Thu, 12 Nov 2015 09:59:12 -0800
+Message-ID: <ab294ba62856f00c06dde10b1bf57f5f341a7198.1447351137.git.poh@qca.qualcomm.com> (sfid-20151112_185948_640566_FA55802F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnedded extern variable WILC_WFI_devs[] which is not used.
+Add NL80211_EXT_FEATURE_VHT_MESH flag to allow drivers
+to indicate support for VHT in Mesh mode.
+This flag will be used by wireless drivers to indicate
+the capability of VHT Mesh support and wpa_supplicant to inspect
+wireless drivers' capability of VHT Mesh.
+In addition to this patch, separate patches to ath10k driver and
+wpa_supplicant are also sent out.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+
 ---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- 1 file changed, 1 deletion(-)
+v2:
+	- updated commit message for details
+---
+ include/uapi/linux/nl80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 68a159f..b9961f0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -227,7 +227,6 @@ struct WILC_WFI_mon_priv {
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1f0b4cf..4a16ed5 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4389,12 +4389,14 @@ enum nl80211_feature_flags {
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
+  * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
++ * @NL80211_EXT_FEATURE_VHT_MESH: This driver supports Mesh with VHT datarates.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_VHT_IBSS,
++	NL80211_EXT_FEATURE_VHT_MESH,
  
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
- 
--extern struct net_device *WILC_WFI_devs[];
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
- void wilc_rx_complete(struct wilc *wilc);
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 -- 
 1.9.1
 
