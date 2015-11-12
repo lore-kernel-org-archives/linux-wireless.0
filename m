@@ -1,97 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:13972 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698AbbKZFAn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43741 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152AbbKLTyf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 00:00:43 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/5] staging: wilc1000: remove unneeded function
-Date: Thu, 26 Nov 2015 14:04:00 +0900
-Message-ID: <1448514243-14181-2-git-send-email-glen.lee@atmel.com> (sfid-20151126_060058_072662_F62491CD)
-In-Reply-To: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
-References: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
+	Thu, 12 Nov 2015 14:54:35 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] realtek: rtlwifi: rtl8821ae: Fix lockups on boot
+References: <1447173971-15311-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Thu, 12 Nov 2015 21:54:28 +0200
+In-Reply-To: <1447173971-15311-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Tue, 10 Nov 2015 10:46:11 -0600")
+Message-ID: <87a8qj56yz.fsf@kamboji.qca.qualcomm.com> (sfid-20151112_205438_835662_A55C689B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_spi_init in linux_wlan_spi.c is unneeded. It just return true. Rename
-_wilc_spi_init in wlan_spi.c to wilc_spi_init.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_spi.c | 5 -----
- drivers/staging/wilc1000/linux_wlan_spi.h | 1 -
- drivers/staging/wilc1000/wilc_spi.c       | 9 ++-------
- 3 files changed, 2 insertions(+), 13 deletions(-)
+> In commit 54328e64047a5 ("rtlwifi: rtl8821ae: Fix system lockups on boot"),
+> an attempt was made to fix a regression introduced in commit 1277fa2ab2f9
+> ("rtlwifi: Remove the clear interrupt routine from all drivers").
+> Unfortunately, there were logic errors in that patch that prevented
+> affected boxes from booting even after that patch was applied.
+>
+> The actual cause of the original problem is unknown as none of the
+> developers have systems that are affected.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [V4.1+]
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index e9ad33f..06935cf 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -61,11 +61,6 @@ struct spi_driver wilc1000_spi_driver = {
- module_spi_driver(wilc1000_spi_driver);
- MODULE_LICENSE("GPL");
- 
--int wilc_spi_init(void)
--{
--	return 1;
--}
--
- int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index 5ff070b..d41c16a 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -4,7 +4,6 @@
- #include <linux/spi/spi.h>
- #include "wilc_wfi_netdevice.h"
- 
--int wilc_spi_init(void);
- int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
- int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
- int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index ef1ad3b..0f730cd 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -676,7 +676,7 @@ static int _wilc_spi_deinit(struct wilc *wilc)
- 	return 1;
- }
- 
--static int _wilc_spi_init(struct wilc *wilc)
-+static int wilc_spi_init(struct wilc *wilc)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
- 	u32 reg;
-@@ -695,11 +695,6 @@ static int _wilc_spi_init(struct wilc *wilc)
- 
- 	memset(&g_spi, 0, sizeof(wilc_spi_t));
- 
--	if (!wilc_spi_init()) {
--		dev_err(&spi->dev, "Failed io init bus...\n");
--		return 0;
--	}
--
- 	/**
- 	 *      configure protocol
- 	 **/
-@@ -992,7 +987,7 @@ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
-  *
-  ********************************************/
- const struct wilc_hif_func wilc_hif_spi = {
--	.hif_init = _wilc_spi_init,
-+	.hif_init = wilc_spi_init,
- 	.hif_deinit = _wilc_spi_deinit,
- 	.hif_read_reg = wilc_spi_read_reg,
- 	.hif_write_reg = wilc_spi_write_reg,
+I think the "realtek:" prefix is superfluous, "rtlwifi:" should be
+enough. I'll also add a fixes line before I commit this:
+
+Fixes: 54328e64047a ("rtlwifi: rtl8821ae: Fix system lockups on boot")
+
 -- 
-1.9.1
-
+Kalle Valo
