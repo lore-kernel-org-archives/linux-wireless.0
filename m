@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48596 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031664AbbKEDEf (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:33433 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbbKLEuK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 22:04:35 -0500
-Date: Wed, 4 Nov 2015 19:04:32 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: glen lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH RESEND 12/12] staging: wilc1000: add argument wilc and
- use it instead of g_linux_wlan
-Message-ID: <20151105030432.GA30860@kroah.com> (sfid-20151105_040453_652139_F4DAEC1E)
-References: <1446088732-12301-1-git-send-email-glen.lee@atmel.com>
- <1446088732-12301-12-git-send-email-glen.lee@atmel.com>
- <20151104204120.GB15421@kroah.com>
- <563ABD77.2050303@atmel.com>
+	Wed, 11 Nov 2015 23:50:10 -0500
+Received: by lbbkw15 with SMTP id kw15so28526504lbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2015 20:50:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <563ABD77.2050303@atmel.com>
+In-Reply-To: <20151109154040.GD5395@localhost>
+References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+	<1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
+	<20151109154040.GD5395@localhost>
+Date: Wed, 11 Nov 2015 20:50:08 -0800
+Message-ID: <CAJAp7OhJyj4qEU+quqs3RLr10FB1D+XUCsSsH04DaQ8bVWsd_A@mail.gmail.com> (sfid-20151112_055015_603381_D6B2F9B2)
+Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620 trigger_ba
+From: Bjorn Andersson <bjorn@kryo.se>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Yin, Fengwei" <fengwei.yin@linaro.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	Andy Green <andy.green@linaro.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 05, 2015 at 11:22:47AM +0900, glen lee wrote:
-> 
-> On 2015년 11월 05일 05:41, Greg KH wrote:
-> >On Thu, Oct 29, 2015 at 12:18:52PM +0900, Glen Lee wrote:
-> >>This patch adds new argument wilc to linux_sdio_cmd53 and linux_sdio_cmd52
-> >>, and use it instead of g_linux_wlan. Pass wilc to the functions as well.
-> >>The void type wilc will be changed with struct wilc when SDIO and SPI
-> >>modules are reworked.
-> >>
-> >>Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> >>---
-> >>  drivers/staging/wilc1000/linux_wlan_sdio.c |  8 ++--
-> >>  drivers/staging/wilc1000/linux_wlan_sdio.h |  4 +-
-> >>  drivers/staging/wilc1000/wilc_sdio.c       | 66 +++++++++++++++---------------
-> >>  drivers/staging/wilc1000/wilc_wlan_if.h    |  4 +-
-> >>  4 files changed, 41 insertions(+), 41 deletions(-)
-> >>
-> >>diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-> >>index bf05e22..8150d6f 100644
-> >>--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-> >>+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-> >>@@ -53,9 +53,9 @@ static void wilc_sdio_interrupt(struct sdio_func *func)
-> >>  }
-> >>-int linux_sdio_cmd52(sdio_cmd52_t *cmd)
-> >>+int linux_sdio_cmd52(void *wilc, sdio_cmd52_t *cmd)
-> >Again, why a void *?  Please use the correct type, you know what it is,
-> >that way you can get rid of horrid stuff like this:
-> >
-> >>  {
-> >>-	struct sdio_func *func = g_linux_wlan->wilc_sdio_func;
-> >>+	struct sdio_func *func = ((struct wilc*)wilc)->wilc_sdio_func;
-> >All of those casts should not be needed.
-> 
-> I was planning to change this void type with struct wilc as I commented in changelog.
+On Mon, Nov 9, 2015 at 7:40 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Mon, Nov 09, 2015 at 05:02:41AM -0500, Yin, Fengwei wrote:
+>> From: Andy Green <andy.green@linaro.org>
+>>
+>> From: Andy Green <andy.green@linaro.org>
+>>
+>> On wcn3620, firmware response to trigger_ba uses the new, larger
+>> "v2" format
+>
+>> -     ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
+>> +     ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
+>> +                                             wcn->hal_rsp_len);
+>
+> It's unclear from the changelog -- is it safe to call
+> wcn36xx_smd_rsp_status_check_v2 on the 3660/3680 as well?
+>
+> Is wcn36xx_smd_rsp_status_check() still needed?
+>
 
-Sorry, I missed that.  But you should still not do an intermediate step
-that you know is wrong :)
+I had to introduce this on one of my 3680 devices recently to silence
+the error described originally by Andy. So it not only seems safe but
+seems required. But still, based on how the code was written this
+doesn't seem to be the case on all versions of the firmware or all
+chips(?)
 
-> But as you pointed out, I will do this after fixing current SDIO modules.
-
-That sounds reasonable, thanks.
-
-greg k-h
+Regards,
+Bjorn
