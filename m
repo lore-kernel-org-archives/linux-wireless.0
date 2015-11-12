@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56047 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760AbbKKANn (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:34008 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753006AbbKLNQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 19:13:43 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/20] staging/wilc1000: add struct net_device declaration
-Date: Wed, 11 Nov 2015 01:13:33 +0100
-Message-ID: <4397901.37Xo7LRaFs@wuerfel> (sfid-20151111_011402_491497_E6484583)
-In-Reply-To: <20151111000248.GA5062@kroah.com>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <1447198960-2760143-2-git-send-email-arnd@arndb.de> <20151111000248.GA5062@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 12 Nov 2015 08:16:23 -0500
+Received: by lffu14 with SMTP id u14so33763538lff.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:21 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 10/12] ath9k: MCC, add NOA also in case of an AP
+Date: Thu, 12 Nov 2015 14:15:47 +0100
+Message-Id: <1447334149-15507-10-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141633_694206_5C09C402)
+In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 November 2015 16:02:48 Greg Kroah-Hartman wrote:
-> On Wed, Nov 11, 2015 at 12:42:21AM +0100, Arnd Bergmann wrote:
-> I think this is already fixed in my staging-testing branch, right?
+In case of MCC and AP interface, add also NOA attr
+that will inform stations about absence of an AP.
+There is a chance that some stations will handle
+this NOA attr correctly and will know exactly when
+AP is present/absent.
 
-Ah right. I only got it with some rare randconfig builds, and assumed
-the problem was still there because I did not see a patch that fixed
-it. However, the config that originally failed is now fine, so it's
-probably fixed.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The other patches won't apply cleanly without this one unfortunately.
-Let me know if I should re-send them without this patch, as I don't
-want to spam everyone unnecessarily.
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index f50a6bc..5cf0cd7 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -148,7 +148,8 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
+ 
+ 	ath_assign_seq(common, skb);
+ 
+-	if (vif->p2p)
++	/* Always assign NOA attr when MCC enabled */
++	if (ath9k_is_chanctx_enabled())
+ 		ath9k_beacon_add_noa(sc, avp, skb);
+ 
+ 	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+-- 
+1.9.1
 
-You can also find my patches (now rebased with patch 1 dropped) in
-
-git://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git wilc1000
-
-if that helps.
-
-	Arnd
