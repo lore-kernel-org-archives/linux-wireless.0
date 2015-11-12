@@ -1,132 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36949 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757AbbKIWCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 17:02:46 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 4/4] mac80211: test the static key code
-Date: Mon,  9 Nov 2015 23:02:37 +0100
-Message-Id: <1447106557-17684-5-git-send-email-johannes@sipsolutions.net> (sfid-20151109_230259_180028_B2CB360C)
-In-Reply-To: <1447106557-17684-1-git-send-email-johannes@sipsolutions.net>
-References: <1447106557-17684-1-git-send-email-johannes@sipsolutions.net>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14718 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbbKLTHv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2015 14:07:51 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: Override CE5 configuration for QCA6147 device
+References: <1446777867-5452-1-git-send-email-ryanhsu@qca.qualcomm.com>
+Date: Thu, 12 Nov 2015 21:07:10 +0200
+In-Reply-To: <1446777867-5452-1-git-send-email-ryanhsu@qca.qualcomm.com> (Ryan
+	Hsu's message of "Thu, 5 Nov 2015 18:44:27 -0800")
+Message-ID: <87ziyj595t.fsf@kamboji.qca.qualcomm.com> (sfid-20151112_200754_939769_660A83D4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ryan Hsu <ryanhsu@qca.qualcomm.com> writes:
 
-Make hwsim select a few on/off symbols and check that the
-result is as expected:
- * before 'registering' a device the branches are according
-   to the Kconfig default only
- * 'registering' a device fixes that up to actually check
-   the hardware flags
- * 'unregistering' again goes back to the default
+> 'Commit a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")'
+> Introduces to use the unused CE5 for target to host message.
+>
+> For the device like QCA6174, CE5 already assigned for other feature.
+> So for QCA6174, override the CE5 configuration and use the CE1 instead.
+>
+> This patch is based on Rajkumar's earlier patch.
+>
+> Fixes: a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
-Test this with a fake flags field that contains the *inverse*
-of the Kconfig selections.
+Applied to ath-current, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/Kconfig | 11 +++++++++++
- net/mac80211/hwflags.c       | 36 ++++++++++++++++++++++++++++++++++++
- net/mac80211/hwflags.h       |  2 ++
- net/mac80211/main.c          |  2 ++
- 4 files changed, 51 insertions(+)
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f9f94229bf1b..f2a8fdca5ede 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -246,6 +246,17 @@ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
- config MAC80211_HWSIM
- 	tristate "Simulated radio testing tool for mac80211"
- 	depends on MAC80211
-+	select MAC80211_HW_SUPPORT_FAST_XMIT_ON
-+	select MAC80211_HW_CHANCTX_STA_CSA_ON
-+	select MAC80211_HW_SUPPORTS_HT_CCK_RATES_ON
-+	select MAC80211_HW_QUEUE_CONTROL_ON
-+	select MAC80211_HW_WANT_MONITOR_VIF_ON
-+	select MAC80211_HW_AMPDU_AGGREGATION_ON
-+	select MAC80211_HW_MFP_CAPABLE_ON
-+	select MAC80211_HW_SIGNAL_DBM_ON
-+	select MAC80211_HW_TDLS_WIDER_BW_ON
-+	select MAC80211_HW_HAS_RATE_CONTROL_OFF
-+	select MAC80211_HW_RX_INCLUDES_FCS_OFF
- 	---help---
- 	  This driver is a developer testing tool that can be used to test
- 	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-diff --git a/net/mac80211/hwflags.c b/net/mac80211/hwflags.c
-index 00386ca27eaf..69032d863a51 100644
---- a/net/mac80211/hwflags.c
-+++ b/net/mac80211/hwflags.c
-@@ -126,3 +126,39 @@ void ieee80211_hwflags_sync_del(unsigned long *flags)
- 			static_key_slow_dec(&hwflags_keys[flg]);
- 	}
- }
-+
-+void ieee80211_test_hwflags(void)
-+{
-+	struct {
-+		struct {
-+			unsigned long flags[2];
-+		} hw;
-+	} _local;
-+
-+	__set_bit(IEEE80211_HW_HAS_RATE_CONTROL, _local.hw.flags);
-+	__clear_bit(IEEE80211_HW_SUPPORT_FAST_XMIT, _local.hw.flags);
-+
-+	/* before the sync_add(), we expect only as per Kconfig */
-+	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
-+		printk(KERN_DEBUG "BAD: HW rate control\n");
-+	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
-+		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
-+
-+	ieee80211_hwflags_sync_add(_local.hw.flags);
-+	printk(KERN_DEBUG "added\n");
-+
-+	/* now it should be like as per flags */
-+	if (!ieee80211_local_check(&_local, HAS_RATE_CONTROL))
-+		printk(KERN_DEBUG "BAD: !HW rate control\n");
-+	if (ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
-+		printk(KERN_DEBUG "BAD: SUPPORT_FAST_XMIT\n");
-+
-+	ieee80211_hwflags_sync_del(_local.hw.flags);
-+	printk(KERN_DEBUG "removed\n");
-+
-+	/* after remove it should be as before */
-+	if (ieee80211_local_check(&_local, HAS_RATE_CONTROL))
-+		printk(KERN_DEBUG "BAD: HW rate control\n");
-+	if (!ieee80211_local_check(&_local, SUPPORT_FAST_XMIT))
-+		printk(KERN_DEBUG "BAD: !SUPPORT_FAST_XMIT\n");
-+}
-diff --git a/net/mac80211/hwflags.h b/net/mac80211/hwflags.h
-index 1a690f72a43f..7714b4bd6a57 100644
---- a/net/mac80211/hwflags.h
-+++ b/net/mac80211/hwflags.h
-@@ -635,4 +635,6 @@ static inline void ieee80211_hwflags_sync_add(unsigned long *flags) {}
- static inline void ieee80211_hwflags_sync_del(unsigned long *flags) {}
- #endif /* CONFIG_JUMP_LABEL */
- 
-+void ieee80211_test_hwflags(void);
-+
- #endif /* __mac80211_hwflags_h */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 03ad36ba4945..d64aae164d7a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1228,6 +1228,8 @@ static int __init ieee80211_init(void)
- 	if (ret)
- 		goto err_netdev;
- 
-+	ieee80211_test_hwflags();
-+
- 	return 0;
-  err_netdev:
- 	rc80211_minstrel_ht_exit();
 -- 
-2.6.2
-
+Kalle Valo
