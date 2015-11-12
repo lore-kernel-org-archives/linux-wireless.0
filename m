@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38005 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088AbbKMA70 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6046 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753118AbbKLRsR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 19:59:26 -0500
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id C6D2840A5CB
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 16:59:25 -0800 (PST)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Does mac80211 guarantee no data frames are sent to driver until
- encryption is setup?
-Message-ID: <564535ED.6080703@candelatech.com> (sfid-20151113_015949_741022_F03FFCE6)
-Date: Thu, 12 Nov 2015 16:59:25 -0800
+	Thu, 12 Nov 2015 12:48:17 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: Enable VHT for Mesh
+Date: Thu, 12 Nov 2015 09:47:44 -0800
+Message-ID: <1447350464-3993-1-git-send-email-poh@qca.qualcomm.com> (sfid-20151112_184820_858399_E3A37238)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A certain firmware tries to do EAPOL inspection and only allow data pkts
-to be sent after the 4-way M4 has been sent, for instance.
+Mesh until now has no framework for VHT support which
+requires NL80211 and wpa_supplicant updates communicating
+with wireless drivers for capabilities.
+I've sent patches of NL80211 and wpa_supplicant separately
+that can be used for Mesh VHT support.
+Also enable ath10k Mesh VHT support in this patch.
 
-This was breaking .11r because in that case you don't do the 4-way after
-roaming, so the firmware was waiting forever for an M4 to be sent and
-thus all tx data was hung.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I managed to get this working by just removing all of the EAPOL inspection from the firmware,
-but I am thinking that if the stack will send data packets to the driver
-before 4-way auth is completed and keys are set, then maybe I would
-be opening up a race where un-encrypted frames could hit the air.
-
-Any idea what protections, if any, the mac80211 stack provides
-for this case?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a53e213..d38e4d8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7266,6 +7266,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	}
+ 
+ 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
++	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_MESH);
+ 
+ 	/*
+ 	 * on LL hardware queues are managed entirely by the FW
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
