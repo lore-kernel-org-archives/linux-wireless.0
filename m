@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38513 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788AbbKWPVA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51194 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753103AbbKLXFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 10:21:00 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Yanbo Li <yanbol@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
-References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
-Date: Mon, 23 Nov 2015 17:20:44 +0200
-In-Reply-To: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
-	Li's message of "Thu, 22 Oct 2015 21:50:16 -0700")
-Message-ID: <87d1v0spwz.fsf@kamboji.qca.qualcomm.com> (sfid-20151123_162107_233245_88764461)
+	Thu, 12 Nov 2015 18:05:53 -0500
+Message-ID: <56451B2F.3060704@codeaurora.org> (sfid-20151113_000622_203551_4C69AABE)
+Date: Thu, 12 Nov 2015 15:05:19 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] cfg80211: add VHT support for Mesh
+References: <ab294ba62856f00c06dde10b1bf57f5f341a7198.1447351137.git.poh@qca.qualcomm.com>	 <1447358605.2131.3.camel@sipsolutions.net>	 <564505A6.9030001@codeaurora.org>	 <1447364413.2131.5.camel@sipsolutions.net>	 <56451294.9060205@codeaurora.org> <1447367523.2131.6.camel@sipsolutions.net>
+In-Reply-To: <1447367523.2131.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-> The QCA99X0 4 addresses RX packets pad 2 bytes at the beginning of
-> MSDU instead the end of ieee80211 header to keep align. The currently
-> RX data path can't parse the header correctly in this case. This
-> patch fixes it for QCA99X0
->
-> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
-
-Applied, thanks.
-
--- 
-Kalle Valo
+On 11/12/2015 02:32 PM, Johannes Berg wrote:
+> On Thu, 2015-11-12 at 14:28 -0800, Peter Oh wrote:
+>>   
+>> Exactly the same communication mechanism and purpose are used with
+>> NL80211_EXT_FEATURE_VHT_IBSS which is already a part of NL80211
+>> feature
+>> flag.
+>> The new feature flag, NL80211_EXT_FEATURE_VHT_MESH, follows the same
+>> purpose and usage.
+> No, it doesn't. Check how the _IBSS one is used in the code to actually
+> *do* something.
+that's right. so take a look reset of explanation for this patch.
+> johannes
+Thanks,
+Peter
