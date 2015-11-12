@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33795 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446AbbKIJBh (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:33994 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbbKLNQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:01:37 -0500
-Received: by padhx2 with SMTP id hx2so184710487pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 01:01:36 -0800 (PST)
-From: "Yin, Fengwei" <fengwei.yin@linaro.org>
-To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org
-Subject: [PATCH 3/5] wcn36xx: handle new hal response format
-Date: Mon,  9 Nov 2015 05:02:40 -0500
-Message-Id: <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org> (sfid-20151109_100139_971744_7578E028)
-In-Reply-To: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+	Thu, 12 Nov 2015 08:16:21 -0500
+Received: by lffu14 with SMTP id u14so33762952lff.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:19 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 08/12] ath9k: P2P_CLIENT, get/set NOA correctly
+Date: Thu, 12 Nov 2015 14:15:45 +0100
+Message-Id: <1447334149-15507-8-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_144409_217809_3E0BE16E)
+In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy.green@linaro.org>
+In case we get BSS_CHANGED_P2P_PS early, from
+mac80211, we didn't set NOA timer correctly,
+while p2p_ps_vif was NULL.
 
-From: Andy Green <andy.green@linaro.org>
-
-wcn3620 has a new message structure for the reply to some hal
-commands.  This patch adds the struct and helper routine that
-uses it if the chip is wcn3620, or falls back to the old
-helper routine.
-
-We don't know what to do with the candidate list he sends back,
-but we can at least accept and ignore it nicely instead of dying.
-
-Signed-off-by: Andy Green <andy.green@linaro.org>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 17 +++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
- 2 files changed, 26 insertions(+)
+ drivers/net/wireless/ath/ath9k/channel.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index be317f4..a84c2cc 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -302,6 +302,23 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2615392..db49bc5 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1443,6 +1443,10 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		return;
+ 
+ 	sc->p2p_ps_vif = avp;
++
++	if (sc->ps_flags & PS_BEACON_SYNC)
++		return;
++
+ 	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+ 	ieee80211_parse_p2p_noa(&vif->bss_conf.p2p_noa_attr, &avp->noa, tsf);
+ 	ath9k_update_p2p_ps_timer(sc, avp);
+@@ -1585,8 +1589,7 @@ void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
+ 
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+-	if (!(sc->ps_flags & PS_BEACON_SYNC))
+-		ath9k_update_p2p_ps(sc, vif);
++	ath9k_update_p2p_ps(sc, vif);
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
  }
- 
-+static int wcn36xx_smd_rsp_status_check_v2(struct wcn36xx *wcn, void *buf,
-+					     size_t len)
-+{
-+	struct wcn36xx_fw_msg_status_rsp_v2 *rsp;
-+
-+	if (wcn->chip_version != WCN36XX_CHIP_3620 ||
-+	    len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
-+		return wcn36xx_smd_rsp_status_check(buf, len);
-+
-+	rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
-+
-+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
-+		return rsp->status;
-+
-+	return 0;
-+}
-+
- int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
- {
- 	struct nv_data *nv_d;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 008d034..8361f9e 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
- 	u32	status;
- } __packed;
- 
-+/* wcn3620 returns this for tigger_ba */
-+
-+struct wcn36xx_fw_msg_status_rsp_v2 {
-+	u8	bss_id[6];
-+	u32	status __packed;
-+	u16	count_following_candidates __packed;
-+	/* candidate list follows */
-+};
-+
- struct wcn36xx_hal_ind_msg {
- 	struct list_head list;
- 	u8 *msg;
 -- 
-2.1.4
+1.9.1
 
