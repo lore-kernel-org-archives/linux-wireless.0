@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:52101 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbbKWKgD (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:12136 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754460AbbKLOyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 05:36:03 -0500
-Message-ID: <5652EC10.9010708@broadcom.com> (sfid-20151123_113658_246618_E7F18CD7)
-Date: Mon, 23 Nov 2015 11:36:00 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 12 Nov 2015 09:54:15 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Ryan Hsu <ryanhsu@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH v3] ath10k: Override CE5 configuration for QCA6147 device
+References: <1447266082-10933-1-git-send-email-ryanhsu@qca.qualcomm.com>
+	<CAGRGNgXOPDF1fK6X2b-qiTBOLqh+fcScEDDZAoEWTJLDrXPFuA@mail.gmail.com>
+Date: Thu, 12 Nov 2015 16:53:58 +0200
+In-Reply-To: <CAGRGNgXOPDF1fK6X2b-qiTBOLqh+fcScEDDZAoEWTJLDrXPFuA@mail.gmail.com>
+	(Julian Calaby's message of "Thu, 12 Nov 2015 21:47:28 +1100")
+Message-ID: <87d1vf6zg9.fsf@kamboji.qca.qualcomm.com> (sfid-20151112_155418_764550_A8B199C7)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>	<564CCF2A.4030203@hauke-m.de>	<871tbmwhsk.fsf@kamboji.qca.qualcomm.com>	<564F966A.7080300@broadcom.com> <87lh9qrlra.fsf@kamboji.qca.qualcomm.com> <5652EA61.1080103@broadcom.com>
-In-Reply-To: <5652EA61.1080103@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/2015 11:28 AM, Arend van Spriel wrote:
-> On 11/22/2015 06:23 PM, Kalle Valo wrote:
->> Arend van Spriel <arend@broadcom.com> writes:
->>
->>> On 11/19/2015 08:48 AM, Kalle Valo wrote:
->>>> Hauke Mehrtens <hauke@hauke-m.de> writes:
->>>>
->>>>> On 11/18/2015 03:45 PM, Kalle Valo wrote:
->>>>>> Part of reorganising wireless drivers directory and Kconfig. Note
->>>>>> that I had to
->>>>>> edit Makefiles from subdirectories to use the new location.
->>>>>>
->>>>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->>>>>> ---
->>>>>
->>>>> I would prefer to remove the brcm80211 directory in this process
->>>>> and create:
->>>>> drivers/net/wireless/broadcom/brcmfmac
->>>>> drivers/net/wireless/broadcom/brcmsmac
->>>>> drivers/net/wireless/broadcom/brcmutil
->>>>> drivers/net/wireless/broadcom/include
->>>>>
->>>>> This way we have one directory less.
->>>>
->>>> I think this could be done separately. This patchset is big enough
->>>> already, I would not like to make it anymore complicated.
->>>>
->>>> And I actually like the brcm80211 directory, I would not mind
->>>> keeping it
->>>> still.
->>>
->>> I prefer to keep it as brcmsmac and brcmfmac rely on brcmutil module
->>> so I want to keep them together under brcm80211.
->>>
->>> So does this patch go in before or after the patches I submitted
->>> before the merge window. I hope after :-p
->>
->> Sorry, the vendor patches go in first :) It's much safer that way.
->>
->> But I think that git should be smart enough and your patchset from
->> before the merge window should still apply without issues.
+Julian Calaby <julian.calaby@gmail.com> writes:
+
+>> +static void ath10k_pci_override_ce_config(struct ath10k *ar)
+>> +{
+>> +       struct ce_attr *attr;
+>> +       struct ce_pipe_config *config;
+>> +
+>> +       /* For QCA6174 we're overriding the Copy Engine 5 configuration,
+>> +        * since it is currently used for other feature.
+>> +        */
+>> +
+>> +       /* Override Host's Copy Engine 5 configuration */
+>> +       attr = &host_ce_config_wlan[5];
+>> +       attr->src_sz_max = 0;
+>> +       attr->dest_nentries = 0;
+>> +
+>> +       /* Override Target firmware's Copy Engine configuration */
+>> +       config = &target_ce_config_wlan[5];
+>> +       config->pipedir = __cpu_to_le32(PIPEDIR_OUT);
+>> +       config->nbytes_max = __cpu_to_le32(2048);
+>> +
+>> +       /* Map from service/endpoint to Copy Engine */
+>> +       target_service_to_ce_map_wlan[15].pipenum = __cpu_to_le32(1);
+>> +}
+>> +
 >
-> Will see if that is true when I merge it in our internal repo. :-p
+> Stupid question: Why not have two different versions of each struct?
+> One for QCA6174 and one for everyone else, and choose the appropriate
+> one when they're uploaded to the firmware / used?
 
-Just applied the pending patches using 'git am -3' and that works fine. 
-So when told to be smart, git is indeed smart ;-)
+That's duplicate work when you change something in common CEs and
+chances of missing something increases.
 
-Regards,
-Arend
-
+-- 
+Kalle Valo
