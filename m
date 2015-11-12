@@ -1,83 +1,612 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:46366 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbbKGLnI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2015 06:43:08 -0500
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NXG02LP10JUVZ70@mailout3.samsung.com> for
- linux-wireless@vger.kernel.org; Sat, 07 Nov 2015 20:43:06 +0900 (KST)
-Date: Sat, 07 Nov 2015 11:43:05 +0000 (GMT)
-From: Amit Khatri <amit.khatri@samsung.com>
-Subject: [PATCH] iw: Fix memory leak if nla_put fails
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Rahul Jain <rahul.jain@samsung.com>,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
-	k.ashutosh@samsung.com
-Reply-to: amit.khatri@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <920161889.199041446896585340.JavaMail.weblogic@ep2mlwas04c> (sfid-20151107_124313_057731_F74FAD88)
+Received: from s3.sipsolutions.net ([5.9.151.49]:51202 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753552AbbKLIsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2015 03:48:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v4 3/8] mac80211: use static keys for hw flags
+Date: Thu, 12 Nov 2015 09:47:48 +0100
+Message-Id: <1447318073-22669-4-git-send-email-johannes@sipsolutions.net> (sfid-20151112_094810_895172_EEB1BD32)
+In-Reply-To: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbSA4MGM5NTZmMTVlZGZlNGY1OWE2YzEzYWU4YWQwOGJlYTBiNzhhYWZjIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQ0KRnJvbTogQW1pdCBLaGF0cmkgPGFtaXQua2hhdHJpQHNhbXN1bmcuY29t
-Pg0KRGF0ZTogU2F0LCA3IE5vdiAyMDE1IDE3OjAwOjQ3ICswNTMwDQpTdWJqZWN0OiBbUEFUQ0hd
-IEZpeCBtZW1vcnkgbGVhayBpZiBubGFfcHV0IGZhaWxzDQoNClNpZ25lZC1vZmYtYnk6IEFtaXQg
-S2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IFJhaHVsIEph
-aW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+DQpTaWduZWQtb2ZmLWJ5OiBBc2h1dG9zaCBLYXVz
-aGlrIDxrLmFzaHV0b3NoQHNhbXN1bmcuY29tPg0KDQphdm9pZCBtZW1vcnkgbGVhayBiZWNhdXNl
-IG9mIG5sYV9wdXRfZmFpbHVyZQ0KLS0tDQogY29hbGVzY2UuYyB8ICA3ICsrKysrKy0NCiB3b3ds
-YW4uYyAgIHwgMjggKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLQ0KIDIgZmlsZXMgY2hhbmdl
-ZCwgMjggaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2NvYWxl
-c2NlLmMgYi9jb2FsZXNjZS5jDQppbmRleCAzNmRjYWVmLi45YjEzYWIzIDEwMDY0NA0KLS0tIGEv
-Y29hbGVzY2UuYw0KKysrIGIvY29hbGVzY2UuYw0KQEAgLTEyNCw3ICsxMjQsOCBAQCBzdGF0aWMg
-aW50IGhhbmRsZV9jb2FsZXNjZV9lbmFibGUoc3RydWN0IG5sODAyMTFfc3RhdGUgKnN0YXRlLA0K
-IAkJCQkJbmxhX25lc3RfZW5kKG1zZywgbmxfcGF0KTsNCiAJCQkJCWZyZWUobWFzayk7DQogCQkJ
-CQlmcmVlKHBhdCk7DQotDQorCQkJCQlwYXQ9TlVMTDsNCisJCQkJCW1hc2s9TlVMTDsNCiAJCQkJ
-CWlmICghbmV4dF9wYXQpDQogCQkJCQkJYnJlYWs7DQogCQkJCQljdXJfcGF0ID0gbmV4dF9wYXQ7
-DQpAQCAtMTU1LDYgKzE1NiwxMCBAQCBzdGF0aWMgaW50IGhhbmRsZV9jb2FsZXNjZV9lbmFibGUo
-c3RydWN0IG5sODAyMTFfc3RhdGUgKnN0YXRlLA0KIAkJZXJyID0gMTsNCiAJZ290byBjbG9zZTsN
-CiBubGFfcHV0X2ZhaWx1cmU6DQorCWlmKHBhdCkNCisJCWZyZWUocGF0KTsNCisJaWYobWFzaykN
-CisJCWZyZWUobWFzayk7DQogCWVyciA9IC1FTk9CVUZTOw0KIGNsb3NlOg0KIAlmY2xvc2UoZik7
-DQpkaWZmIC0tZ2l0IGEvd293bGFuLmMgYi93b3dsYW4uYw0KaW5kZXggYzMwZWFiNy4uMmUxZDQz
-ZCAxMDA2NDQNCi0tLSBhL3dvd2xhbi5jDQorKysgYi93b3dsYW4uYw0KQEAgLTg5LDcgKzg5LDEw
-IEBAIHN0YXRpYyBpbnQgd293bGFuX3BhcnNlX3RjcF9maWxlKHN0cnVjdCBubF9tc2cgKm1zZywg
-Y29uc3QgY2hhciAqZm4pDQogDQogCQkJaWYgKCFwa3QpDQogCQkJCWdvdG8gY2xvc2U7DQotCQkJ
-TkxBX1BVVChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9EQVRBX1BBWUxPQUQsIGxlbiwgcGt0KTsN
-CisJCQlpZihubGFfcHV0KG1zZywgTkw4MDIxMV9XT1dMQU5fVENQX0RBVEFfUEFZTE9BRCwgbGVu
-LCBwa3QpIDwgMCl7DQorCQkJCWZyZWUocGt0KTsNCisJCQkJZ290byBubGFfcHV0X2ZhaWx1cmU7
-DQorCQkJfQ0KIAkJCWZyZWUocGt0KTsNCiAJCX0gZWxzZSBpZiAoc3RybmNtcChidWYsICJkYXRh
-LmludGVydmFsPSIsIDE0KSA9PSAwKSB7DQogCQkJTkxBX1BVVF9VMzIobXNnLCBOTDgwMjExX1dP
-V0xBTl9UQ1BfREFUQV9JTlRFUlZBTCwNCkBAIC05NywxMyArMTAwLDIwIEBAIHN0YXRpYyBpbnQg
-d293bGFuX3BhcnNlX3RjcF9maWxlKHN0cnVjdCBubF9tc2cgKm1zZywgY29uc3QgY2hhciAqZm4p
-DQogCQl9IGVsc2UgaWYgKHN0cm5jbXAoYnVmLCAid2FrZT0iLCA1KSA9PSAwKSB7DQogCQkJdW5z
-aWduZWQgY2hhciAqcGF0LCAqbWFzazsNCiAJCQlzaXplX3QgcGF0bGVuOw0KLQ0KIAkJCWlmIChw
-YXJzZV9oZXhfbWFzayhidWYgKyA1LCAmcGF0LCAmcGF0bGVuLCAmbWFzaykpDQogCQkJCWdvdG8g
-Y2xvc2U7DQotCQkJTkxBX1BVVChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9XQUtFX01BU0ssDQot
-CQkJCURJVl9ST1VORF9VUChwYXRsZW4sIDgpLCBtYXNrKTsNCi0JCQlOTEFfUFVUKG1zZywgTkw4
-MDIxMV9XT1dMQU5fVENQX1dBS0VfUEFZTE9BRCwNCi0JCQkJcGF0bGVuLCBwYXQpOw0KKwkJCWlm
-KG5sYV9wdXQobXNnLCBOTDgwMjExX1dPV0xBTl9UQ1BfV0FLRV9NQVNLLA0KKwkJCQlESVZfUk9V
-TkRfVVAocGF0bGVuLCA4KSwgbWFzaykgPCAwKXsNCisJCQkJZnJlZShtYXNrKTsNCisJCQkJZnJl
-ZShwYXQpOw0KKwkJCQlnb3RvIG5sYV9wdXRfZmFpbHVyZTsNCisJCQl9DQorCQkJaWYobmxhX3B1
-dChtc2csIE5MODAyMTFfV09XTEFOX1RDUF9XQUtFX1BBWUxPQUQsDQorCQkJCXBhdGxlbiwgcGF0
-KSA8IDApew0KKwkJCQlmcmVlKHBhdCk7DQorCQkJCWZyZWUobWFzayk7DQorCQkJCWdvdG8gbmxh
-X3B1dF9mYWlsdXJlOw0KKwkJCX0NCiAJCQlmcmVlKG1hc2spOw0KIAkJCWZyZWUocGF0KTsNCiAJ
-CX0gZWxzZSBpZiAoc3RybmNtcChidWYsICJkYXRhLnNlcT0iLCA5KSA9PSAwKSB7DQpAQCAtMjk5
-LDYgKzMwOSw4IEBAIHN0YXRpYyBpbnQgaGFuZGxlX3dvd2xhbl9lbmFibGUoc3RydWN0IG5sODAy
-MTFfc3RhdGUgKnN0YXRlLA0KIAkJCW5sYV9uZXN0X2VuZChwYXR0ZXJucywgcGF0dGVybik7DQog
-CQkJZnJlZShtYXNrKTsNCiAJCQlmcmVlKHBhdCk7DQorCQkJcGF0PU5VTEw7DQorCQkJbWFzaz1O
-VUxMOw0KIAkJCWJyZWFrOw0KIAkJfQ0KIAkJYXJndisrOw0KQEAgLTMxMiw2ICszMjQsMTAgQEAg
-c3RhdGljIGludCBoYW5kbGVfd293bGFuX2VuYWJsZShzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3Rh
-dGUsDQogCW5sYV9uZXN0X2VuZChtc2csIHdvd2xhbik7DQogCWVyciA9IDA7DQogIG5sYV9wdXRf
-ZmFpbHVyZToNCisJaWYocGF0KQ0KKwkJZnJlZShwYXQpOw0KKwlpZihtYXNrKQ0KKwkJZnJlZSht
-YXNrKTsNCiAJbmxtc2dfZnJlZShwYXR0ZXJucyk7DQogCXJldHVybiBlcnI7DQogfQ0KLS0gDQox
-LjkuMQ0K
+From: Johannes Berg <johannes.berg@intel.com>
 
+There are many drivers with different behaviour, but in a lot of
+systems only a single driver will ever be built. In that case we
+could practically get rid of the code for the paths that this
+driver/device doesn't need. Doing that, however, would be rather
+dangerous.
+
+As a decent alternative, use static keys to simply get into the
+required code path for the single built driver.
+
+To achieve this associate with each flag an _ON and _OFF Kconfig
+symbol. Selecting this symbol in a driver will cause the system
+to take this as the default state (if both are selected, there's
+no optimisation at all.)
+
+If, for example, the Kconfig selection said that a given flag is
+expected to always be turned off, then the code depending on it
+would be placed out-of-line and the jump to it NOPed out. If a
+different driver that actually requires the code contrary to the
+Kconfig selection is loaded, the jump will be patched in and the
+first thing in the out-of-line section will be to check the real
+hardware flag (since multiple drivers can be loaded.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h       |  25 +++---
+ net/mac80211/Kconfig         |   2 +
+ net/mac80211/Kconfig.hwflags | 192 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/Makefile        |   1 +
+ net/mac80211/hwflags.c       | 129 +++++++++++++++++++++++++++++
+ net/mac80211/hwflags.h       |  89 ++++++++++++++++++++
+ net/mac80211/ieee80211_i.h   |  12 +--
+ net/mac80211/main.c          |   6 ++
+ 8 files changed, 437 insertions(+), 19 deletions(-)
+ create mode 100644 net/mac80211/Kconfig.hwflags
+ create mode 100644 net/mac80211/hwflags.c
+ create mode 100644 net/mac80211/hwflags.h
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 47274d829115..586aa89ad8bd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2078,19 +2078,24 @@ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+ }
+ #define ieee80211_hw_check(hw, flg)	_ieee80211_hw_check(hw, IEEE80211_HW_##flg)
+ 
+-static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
+-				     enum ieee80211_hw_flags flg)
++#ifdef CONFIG_JUMP_LABEL
++void ieee80211_hw_mod_flag(struct ieee80211_hw *hw,
++			   enum ieee80211_hw_flags flg, bool set);
++#else
++static inline void ieee80211_hw_mod_flag(struct ieee80211_hw *hw,
++					 enum ieee80211_hw_flags flg, bool set)
+ {
+-	__set_bit(flg, hw->flags);
++	if (set)
++		__set_bit(flg, hw->flags);
++	else
++		__clear_bit(flg, hw->flags);
+ }
+-#define ieee80211_hw_set(hw, flg)	_ieee80211_hw_set(hw, IEEE80211_HW_##flg)
++#endif /* CONFIG_JUMP_LABEL */
+ 
+-static inline void _ieee80211_hw_clear(struct ieee80211_hw *hw,
+-				       enum ieee80211_hw_flags flg)
+-{
+-	__clear_bit(flg, hw->flags);
+-}
+-#define ieee80211_hw_clear(hw, flg)	_ieee80211_hw_clear(hw, IEEE80211_HW_##flg)
++#define ieee80211_hw_set(hw, flg)	\
++	ieee80211_hw_mod_flag(hw, IEEE80211_HW_##flg, true)
++#define ieee80211_hw_clear(hw, flg)	\
++	ieee80211_hw_mod_flag(hw, IEEE80211_HW_##flg, false)
+ 
+ /**
+  * struct ieee80211_scan_request - hw scan request
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 3891cbd2adea..206b11598dd1 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -318,3 +318,5 @@ config MAC80211_STA_HASH_MAX_SIZE
+ 	  connect more stations than the number selected here.)
+ 
+ 	  If unsure, leave the default of 0.
++
++source "net/mac80211/Kconfig.hwflags"
+diff --git a/net/mac80211/Kconfig.hwflags b/net/mac80211/Kconfig.hwflags
+new file mode 100644
+index 000000000000..06f6ba12c86e
+--- /dev/null
++++ b/net/mac80211/Kconfig.hwflags
+@@ -0,0 +1,192 @@
++config MAC80211_HW_HAS_RATE_CONTROL_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_HAS_RATE_CONTROL_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_RX_INCLUDES_FCS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_RX_INCLUDES_FCS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_HOST_BROADCAST_PS_BUFFERING_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_HOST_BROADCAST_PS_BUFFERING_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SIGNAL_UNSPEC_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SIGNAL_UNSPEC_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SIGNAL_DBM_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SIGNAL_DBM_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_NEED_DTIM_BEFORE_ASSOC_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_NEED_DTIM_BEFORE_ASSOC_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SPECTRUM_MGMT_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SPECTRUM_MGMT_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_AMPDU_AGGREGATION_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_AMPDU_AGGREGATION_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_PS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_PS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_PS_NULLFUNC_STACK_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_PS_NULLFUNC_STACK_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_DYNAMIC_PS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_DYNAMIC_PS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_MFP_CAPABLE_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_MFP_CAPABLE_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_WANT_MONITOR_VIF_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_WANT_MONITOR_VIF_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_NO_AUTO_VIF_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_NO_AUTO_VIF_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SW_CRYPTO_CONTROL_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SW_CRYPTO_CONTROL_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORT_FAST_XMIT_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORT_FAST_XMIT_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_REPORTS_TX_ACK_STATUS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_REPORTS_TX_ACK_STATUS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_CONNECTION_MONITOR_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_CONNECTION_MONITOR_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_QUEUE_CONTROL_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_QUEUE_CONTROL_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_PER_STA_GTK_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_PER_STA_GTK_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_AP_LINK_PS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_AP_LINK_PS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_TX_AMPDU_SETUP_IN_HW_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_TX_AMPDU_SETUP_IN_HW_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_RC_TABLE_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_RC_TABLE_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_P2P_DEV_ADDR_FOR_INTF_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_P2P_DEV_ADDR_FOR_INTF_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_TIMING_BEACON_ONLY_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_TIMING_BEACON_ONLY_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_HT_CCK_RATES_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_HT_CCK_RATES_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_CHANCTX_STA_CSA_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_CHANCTX_STA_CSA_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_CLONED_SKBS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_CLONED_SKBS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SINGLE_SCAN_ON_ALL_BANDS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SINGLE_SCAN_ON_ALL_BANDS_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_TDLS_WIDER_BW_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_TDLS_WIDER_BW_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_AMSDU_IN_AMPDU_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_SUPPORTS_AMSDU_IN_AMPDU_OFF
++	bool
++	depends on MAC80211
++config MAC80211_HW_BEACON_TX_STATUS_ON
++	bool
++	depends on MAC80211
++config MAC80211_HW_BEACON_TX_STATUS_OFF
++	bool
++	depends on MAC80211
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index f9137a8341f4..ba1e407ccfc5 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -48,6 +48,7 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh_ps.o
+ 
+ mac80211-$(CONFIG_PM) += pm.o
++mac80211-$(CONFIG_JUMP_LABEL) += hwflags.o
+ 
+ CFLAGS_trace.o := -I$(src)
+ 
+diff --git a/net/mac80211/hwflags.c b/net/mac80211/hwflags.c
+new file mode 100644
+index 000000000000..3beeee512f91
+--- /dev/null
++++ b/net/mac80211/hwflags.c
+@@ -0,0 +1,129 @@
++/*
++ * Copyright 2015	Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/jump_label.h>
++#include <net/mac80211.h>
++#include "ieee80211_i.h"
++
++struct static_key_false hwflags_keys[NUM_IEEE80211_HW_FLAGS] = {
++	[0 ... NUM_IEEE80211_HW_FLAGS - 1] = STATIC_KEY_FALSE_INIT,
++};
++
++static s8 hwflags_defstate[] = {
++	[IEEE80211_HW_HAS_RATE_CONTROL] =
++		HWFLAGS_DEFSTATE_HAS_RATE_CONTROL,
++	[IEEE80211_HW_RX_INCLUDES_FCS] =
++		HWFLAGS_DEFSTATE_RX_INCLUDES_FCS,
++	[IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING] =
++		HWFLAGS_DEFSTATE_HOST_BROADCAST_PS_BUFFERING,
++	[IEEE80211_HW_SIGNAL_UNSPEC] =
++		HWFLAGS_DEFSTATE_SIGNAL_UNSPEC,
++	[IEEE80211_HW_SIGNAL_DBM] =
++		HWFLAGS_DEFSTATE_SIGNAL_DBM,
++	[IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC] =
++		HWFLAGS_DEFSTATE_NEED_DTIM_BEFORE_ASSOC,
++	[IEEE80211_HW_SPECTRUM_MGMT] =
++		HWFLAGS_DEFSTATE_SPECTRUM_MGMT,
++	[IEEE80211_HW_AMPDU_AGGREGATION] =
++		HWFLAGS_DEFSTATE_AMPDU_AGGREGATION,
++	[IEEE80211_HW_SUPPORTS_PS] =
++		HWFLAGS_DEFSTATE_SUPPORTS_PS,
++	[IEEE80211_HW_PS_NULLFUNC_STACK] =
++		HWFLAGS_DEFSTATE_PS_NULLFUNC_STACK,
++	[IEEE80211_HW_SUPPORTS_DYNAMIC_PS] =
++		HWFLAGS_DEFSTATE_SUPPORTS_DYNAMIC_PS,
++	[IEEE80211_HW_MFP_CAPABLE] =
++		HWFLAGS_DEFSTATE_MFP_CAPABLE,
++	[IEEE80211_HW_WANT_MONITOR_VIF] =
++		HWFLAGS_DEFSTATE_WANT_MONITOR_VIF,
++	[IEEE80211_HW_NO_AUTO_VIF] =
++		HWFLAGS_DEFSTATE_NO_AUTO_VIF,
++	[IEEE80211_HW_SW_CRYPTO_CONTROL] =
++		HWFLAGS_DEFSTATE_SW_CRYPTO_CONTROL,
++	[IEEE80211_HW_SUPPORT_FAST_XMIT] =
++		HWFLAGS_DEFSTATE_SUPPORT_FAST_XMIT,
++	[IEEE80211_HW_REPORTS_TX_ACK_STATUS] =
++		HWFLAGS_DEFSTATE_REPORTS_TX_ACK_STATUS,
++	[IEEE80211_HW_CONNECTION_MONITOR] =
++		HWFLAGS_DEFSTATE_CONNECTION_MONITOR,
++	[IEEE80211_HW_QUEUE_CONTROL] =
++		HWFLAGS_DEFSTATE_QUEUE_CONTROL,
++	[IEEE80211_HW_SUPPORTS_PER_STA_GTK] =
++		HWFLAGS_DEFSTATE_SUPPORTS_PER_STA_GTK,
++	[IEEE80211_HW_AP_LINK_PS] =
++		HWFLAGS_DEFSTATE_AP_LINK_PS,
++	[IEEE80211_HW_TX_AMPDU_SETUP_IN_HW] =
++		HWFLAGS_DEFSTATE_TX_AMPDU_SETUP_IN_HW,
++	[IEEE80211_HW_SUPPORTS_RC_TABLE] =
++		HWFLAGS_DEFSTATE_SUPPORTS_RC_TABLE,
++	[IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF] =
++		HWFLAGS_DEFSTATE_P2P_DEV_ADDR_FOR_INTF,
++	[IEEE80211_HW_TIMING_BEACON_ONLY] =
++		HWFLAGS_DEFSTATE_TIMING_BEACON_ONLY,
++	[IEEE80211_HW_SUPPORTS_HT_CCK_RATES] =
++		HWFLAGS_DEFSTATE_SUPPORTS_HT_CCK_RATES,
++	[IEEE80211_HW_CHANCTX_STA_CSA] =
++		HWFLAGS_DEFSTATE_CHANCTX_STA_CSA,
++	[IEEE80211_HW_SUPPORTS_CLONED_SKBS] =
++		HWFLAGS_DEFSTATE_SUPPORTS_CLONED_SKBS,
++	[IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS] =
++		HWFLAGS_DEFSTATE_SINGLE_SCAN_ON_ALL_BANDS,
++	[IEEE80211_HW_TDLS_WIDER_BW] =
++		HWFLAGS_DEFSTATE_TDLS_WIDER_BW,
++	[IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU] =
++		HWFLAGS_DEFSTATE_SUPPORTS_AMSDU_IN_AMPDU,
++	[IEEE80211_HW_BEACON_TX_STATUS] =
++		HWFLAGS_DEFSTATE_BEACON_TX_STATUS,
++};
++
++void ieee80211_hw_mod_flag(struct ieee80211_hw *hw,
++			   enum ieee80211_hw_flags flg, bool set)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	if (set) {
++		if (test_bit(flg, hw->flags))
++			return;
++		__set_bit(flg, hw->flags);
++	} else {
++		if (!test_bit(flg, hw->flags))
++			return;
++		__clear_bit(flg, hw->flags);
++	}
++
++	if (!local->registered)
++		return;
++
++	if (hwflags_defstate[flg] < 0)
++		return;
++
++	if (hwflags_defstate[flg] == !!test_bit(flg, hw->flags))
++		static_branch_dec(&hwflags_keys[flg]);
++	else
++		static_branch_inc(&hwflags_keys[flg]);
++}
++EXPORT_SYMBOL_GPL(ieee80211_hw_mod_flag);
++
++void ieee80211_hwflags_sync_add(unsigned long *flags)
++{
++	unsigned int flg;
++
++	for (flg = 0; flg < NUM_IEEE80211_HW_FLAGS; flg++) {
++		if (hwflags_defstate[flg] != !!test_bit(flg, flags))
++			static_branch_inc(&hwflags_keys[flg]);
++	}
++}
++
++void ieee80211_hwflags_sync_del(unsigned long *flags)
++{
++	unsigned int flg;
++
++	for (flg = 0; flg < NUM_IEEE80211_HW_FLAGS; flg++) {
++		if (hwflags_defstate[flg] != !!test_bit(flg, flags))
++			static_branch_dec(&hwflags_keys[flg]);
++	}
++}
+diff --git a/net/mac80211/hwflags.h b/net/mac80211/hwflags.h
+new file mode 100644
+index 000000000000..e220c5e04406
+--- /dev/null
++++ b/net/mac80211/hwflags.h
+@@ -0,0 +1,89 @@
++/*
++ * Copyright 2015	Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef __mac80211_hwflags_h
++#define __mac80211_hwflags_h
++#include <linux/jump_label.h>
++#include <net/mac80211.h>
++
++extern struct static_key_false hwflags_keys[NUM_IEEE80211_HW_FLAGS];
++
++#ifdef CONFIG_JUMP_LABEL
++#define _HWFLAGS_DEFSTATE(_name, _on, _off)				\
++	HWFLAGS_DEFSTATE_##_name = -1 + ((_on) ^ (_off)) * (1 + _on)
++#define HWFLAGS_DEFSTATE(_name)						\
++	_HWFLAGS_DEFSTATE(_name,					\
++			  IS_ENABLED(CONFIG_MAC80211_HW_##_name##_ON),	\
++			  IS_ENABLED(CONFIG_MAC80211_HW_##_name##_OFF))
++
++enum hwflags_defstates {
++HWFLAGS_DEFSTATE(HAS_RATE_CONTROL),
++HWFLAGS_DEFSTATE(RX_INCLUDES_FCS),
++HWFLAGS_DEFSTATE(HOST_BROADCAST_PS_BUFFERING),
++HWFLAGS_DEFSTATE(SIGNAL_UNSPEC),
++HWFLAGS_DEFSTATE(SIGNAL_DBM),
++HWFLAGS_DEFSTATE(NEED_DTIM_BEFORE_ASSOC),
++HWFLAGS_DEFSTATE(SPECTRUM_MGMT),
++HWFLAGS_DEFSTATE(AMPDU_AGGREGATION),
++HWFLAGS_DEFSTATE(SUPPORTS_PS),
++HWFLAGS_DEFSTATE(PS_NULLFUNC_STACK),
++HWFLAGS_DEFSTATE(SUPPORTS_DYNAMIC_PS),
++HWFLAGS_DEFSTATE(MFP_CAPABLE),
++HWFLAGS_DEFSTATE(WANT_MONITOR_VIF),
++HWFLAGS_DEFSTATE(NO_AUTO_VIF),
++HWFLAGS_DEFSTATE(SW_CRYPTO_CONTROL),
++HWFLAGS_DEFSTATE(SUPPORT_FAST_XMIT),
++HWFLAGS_DEFSTATE(REPORTS_TX_ACK_STATUS),
++HWFLAGS_DEFSTATE(CONNECTION_MONITOR),
++HWFLAGS_DEFSTATE(QUEUE_CONTROL),
++HWFLAGS_DEFSTATE(SUPPORTS_PER_STA_GTK),
++HWFLAGS_DEFSTATE(AP_LINK_PS),
++HWFLAGS_DEFSTATE(TX_AMPDU_SETUP_IN_HW),
++HWFLAGS_DEFSTATE(SUPPORTS_RC_TABLE),
++HWFLAGS_DEFSTATE(P2P_DEV_ADDR_FOR_INTF),
++HWFLAGS_DEFSTATE(TIMING_BEACON_ONLY),
++HWFLAGS_DEFSTATE(SUPPORTS_HT_CCK_RATES),
++HWFLAGS_DEFSTATE(CHANCTX_STA_CSA),
++HWFLAGS_DEFSTATE(SUPPORTS_CLONED_SKBS),
++HWFLAGS_DEFSTATE(SINGLE_SCAN_ON_ALL_BANDS),
++HWFLAGS_DEFSTATE(TDLS_WIDER_BW),
++HWFLAGS_DEFSTATE(SUPPORTS_AMSDU_IN_AMPDU),
++HWFLAGS_DEFSTATE(BEACON_TX_STATUS),
++};
++
++bool _____optimisation_missing(void);
++
++#define ieee80211_local_check(local, flg)				\
++({									\
++	enum ieee80211_hw_flags flag = IEEE80211_HW_##flg;		\
++	bool result;							\
++									\
++	if (HWFLAGS_DEFSTATE_##flg == -1)				\
++		result = test_bit(flag, (local)->hw.flags);		\
++	else if (HWFLAGS_DEFSTATE_##flg == 1)				\
++		result = (!static_branch_unlikely(&hwflags_keys[flag]) ||\
++			  test_bit(flag, (local)->hw.flags));		\
++	else if (HWFLAGS_DEFSTATE_##flg == 0)				\
++		result = (static_branch_unlikely(&hwflags_keys[flag]) &&\
++			  test_bit(flag, (local)->hw.flags));		\
++	else								\
++		result = _____optimisation_missing();			\
++									\
++	result;								\
++})
++
++void ieee80211_hwflags_sync_add(unsigned long *flags);
++void ieee80211_hwflags_sync_del(unsigned long *flags);
++#else /* CONFIG_JUMP_LABEL */
++#define ieee80211_local_check(local, flg)	\
++	test_bit(IEEE80211_HW_##flg, local->hw.flags)
++
++static inline void ieee80211_hwflags_sync_add(unsigned long *flags) {}
++static inline void ieee80211_hwflags_sync_del(unsigned long *flags) {}
++#endif /* CONFIG_JUMP_LABEL */
++
++#endif /* __mac80211_hwflags_h */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 46bd8965d164..0663eda5b478 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -33,6 +33,7 @@
+ #include "key.h"
+ #include "sta_info.h"
+ #include "debug.h"
++#include "hwflags.h"
+ 
+ extern const struct cfg80211_ops mac80211_config_ops;
+ 
+@@ -1121,6 +1122,8 @@ struct ieee80211_local {
+ 
+ 	bool wiphy_ciphers_allocated;
+ 
++	bool registered;
++
+ 	bool use_chanctx;
+ 
+ 	/* protects the aggregated multicast list and filter calls */
+@@ -1357,15 +1360,6 @@ struct ieee80211_local {
+ 	struct sk_buff_head skb_queue_tdls_chsw;
+ };
+ 
+-static inline bool _ieee80211_local_check(struct ieee80211_local *local,
+-					  enum ieee80211_hw_flags flg)
+-{
+-	return test_bit(flg, local->hw.flags);
+-}
+-
+-#define ieee80211_local_check(local, flg)	\
+-	_ieee80211_local_check(local, IEEE80211_HW_##flg)
+-
+ static inline struct ieee80211_sub_if_data *
+ IEEE80211_DEV_TO_SUB_IF(struct net_device *dev)
+ {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 84d7480fe7c8..03ad36ba4945 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1095,6 +1095,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_ifa6;
+ #endif
+ 
++	ieee80211_hwflags_sync_add(local->hw.flags);
++	local->registered = true;
++
+ 	return 0;
+ 
+ #if IS_ENABLED(CONFIG_IPV6)
+@@ -1169,6 +1172,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	ieee80211_wep_free(local);
+ 	ieee80211_led_exit(local);
+ 	kfree(local->int_scan_req);
++
++	local->registered = false;
++	ieee80211_hwflags_sync_del(local->hw.flags);
+ }
+ EXPORT_SYMBOL(ieee80211_unregister_hw);
+ 
+-- 
+2.6.2
 
