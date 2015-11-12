@@ -1,58 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58811 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915AbbKWPVm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 10:21:42 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/9] ath10k: clean up ath10k_skb_cb
-References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
-	<1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 23 Nov 2015 17:21:26 +0200
-In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 18 Nov 2015 06:59:14 +0100")
-Message-ID: <878u5ospvt.fsf@kamboji.qca.qualcomm.com> (sfid-20151123_162144_764395_9579E224)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51197 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753429AbbKLIr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2015 03:47:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v4 1/8] mac80211: add ieee80211_hw_clear()
+Date: Thu, 12 Nov 2015 09:47:46 +0100
+Message-Id: <1447318073-22669-2-git-send-email-johannes@sipsolutions.net> (sfid-20151112_094803_480586_5FA0BE60)
+In-Reply-To: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> The ath10k_skb_cb structure wasn't really space
-> efficient. Some stuff is removed or replaced with
-> more compact representation.
->
-> This cleanup is necessary for future features.
->
-> The size of ath10k_skb_cb:
->
->           before   after
->  x86-32   26       12
->  x86-64   34       20
->
->
-> v3:
->  * rebase
->
-> v2:
->  * fix a bug (patch 7/9 introduced)
->
->
-> Michal Kazior (9):
->   ath10k: merge is_protected with nohwcrypt
->   ath10k: rename function to adhere to naming convention
->   ath10k: remove txmode from skb_cb
->   ath10k: remove is_offchan
->   ath10k: remove freq from skb_cb
->   ath10k: pack up flags in skb_cb
->   ath10k: fix tx header parsing
->   ath10k: replace vdev_id and tid in skb cb
->   ath10k: store msdu_id instead of txbuf pointers
+There are a few hardware flags that *are* valid to change, at least
+under certain circumstances. Since drivers are doing that, add an
+inline to make it easier to do correctly. They still need to take
+care of locking themselves.
 
-Applied, thanks.
+While at it, remove the pointless return in ieee80211_hw_set().
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/adm8211.c              | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 2 +-
+ include/net/mac80211.h                      | 9 ++++++++-
+ 4 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 15f057ed41ad..bdfd60f39078 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1375,7 +1375,7 @@ static void adm8211_configure_filter(struct ieee80211_hw *dev,
+ 	if (priv->nar & ADM8211_NAR_PR)
+ 		ieee80211_hw_set(dev, RX_INCLUDES_FCS);
+ 	else
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, dev->flags);
++		ieee80211_hw_clear(dev, RX_INCLUDES_FCS);
+ 
+ 	if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+ 		adm8211_set_bssid(dev, bcast);
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index b3ad34e8bf5a..d4918a5f7bd7 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1356,7 +1356,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (vif->type == NL80211_IFTYPE_MONITOR)
+ 		ieee80211_hw_set(priv->hw, RX_INCLUDES_FCS);
+ 	else
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, priv->hw->flags);
++		ieee80211_hw_clear(priv->hw, RX_INCLUDES_FCS);
+ 
+ 	err = iwl_setup_interface(priv, ctx);
+ 	if (!err || reset)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index ad7ad720d2e7..ca944d3f7401 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1289,7 +1289,7 @@ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	mvmvif->uploaded = false;
+ 
+ 	if (vif->type == NL80211_IFTYPE_MONITOR)
+-		__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, mvm->hw->flags);
++		ieee80211_hw_clear(mvm->hw, RX_INCLUDES_FCS);
+ 
+ 	return 0;
+ }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 82045fca388b..47274d829115 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2081,10 +2081,17 @@ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+ static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
+ 				     enum ieee80211_hw_flags flg)
+ {
+-	return __set_bit(flg, hw->flags);
++	__set_bit(flg, hw->flags);
+ }
+ #define ieee80211_hw_set(hw, flg)	_ieee80211_hw_set(hw, IEEE80211_HW_##flg)
+ 
++static inline void _ieee80211_hw_clear(struct ieee80211_hw *hw,
++				       enum ieee80211_hw_flags flg)
++{
++	__clear_bit(flg, hw->flags);
++}
++#define ieee80211_hw_clear(hw, flg)	_ieee80211_hw_clear(hw, IEEE80211_HW_##flg)
++
+ /**
+  * struct ieee80211_scan_request - hw scan request
+  *
 -- 
-Kalle Valo
+2.6.2
+
