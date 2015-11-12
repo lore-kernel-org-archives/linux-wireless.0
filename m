@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:36291 "EHLO
-	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067AbbKLNQZ (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:34400 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752976AbbKLNQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 08:16:25 -0500
-Received: by lfs39 with SMTP id 39so33706318lfs.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:23 -0800 (PST)
+	Thu, 12 Nov 2015 08:16:17 -0500
+Received: by lbbcs9 with SMTP id cs9so34649343lbb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:15 -0800 (PST)
 From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
 Cc: ath9k-devel@lists.ath9k.org,
 	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 12/12] ath9k: MCC, print time elapsed between events
-Date: Thu, 12 Nov 2015 14:15:49 +0100
-Message-Id: <1447334149-15507-12-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141629_612420_23568429)
+Subject: [PATCH 05/12] ath9k: use u32 when calculate tsf
+Date: Thu, 12 Nov 2015 14:15:42 +0100
+Message-Id: <1447334149-15507-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_144408_993586_6FD55644)
 In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
 References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful for MCC debugging and bug fixing.
-
 Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 19 +++++++++++++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/channel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4616229..952a467 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -983,6 +983,7 @@ struct ath_softc {
- 	struct ath_offchannel offchannel;
- 	struct ath_chanctx *next_chan;
- 	struct completion go_beacon;
-+	struct timespec last_event_time;
- #endif
- 
- 	unsigned long driver_data;
 diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index b0d74f0..d6b1076 100644
+index 5640e88..d86566b 100644
 --- a/drivers/net/wireless/ath/ath9k/channel.c
 +++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -226,6 +226,20 @@ static const char *chanctx_state_string(enum ath_chanctx_state state)
- 	}
- }
- 
-+static const u32 chanctx_event_delta(struct ath_softc *sc)
-+{
-+	u64 ms;
-+	struct timespec ts, *old;
-+
-+	getrawmonotonic(&ts);
-+	old = &sc->last_event_time;
-+	ms = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-+	ms -= old->tv_sec * 1000 + old->tv_nsec / 1000000;
-+	sc->last_event_time = ts;
-+
-+	return (u32)ms;
-+}
-+
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+@@ -1405,7 +1405,7 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
  {
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -507,10 +521,11 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	struct ath_hw *ah = sc->sc_ah;
+-	s32 tsf, target_tsf;
++	u32 tsf, target_tsf;
  
- 	spin_lock_bh(&sc->chan_lock);
- 
--	ath_dbg(common, CHAN_CTX, "cur_chan: %d MHz, event: %s, state: %s\n",
-+	ath_dbg(common, CHAN_CTX, "cur_chan: %d MHz, event: %s, state: %s, delta: %u ms\n",
- 		sc->cur_chan->chandef.center_freq1,
- 		chanctx_event_string(ev),
--		chanctx_state_string(sc->sched.state));
-+		chanctx_state_string(sc->sched.state),
-+		chanctx_event_delta(sc));
- 
- 	switch (ev) {
- 	case ATH_CHANCTX_EVENT_BEACON_PREPARE:
+ 	if (!avp || !avp->noa.has_next_tsf)
+ 		return;
 -- 
 1.9.1
 
