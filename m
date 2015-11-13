@@ -1,202 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20506 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbbKRGIb (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34852 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbbKMX4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:08:31 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/16] staging: wilc1000: remove spi speed control codes
-Date: Wed, 18 Nov 2015 15:11:23 +0900
-Message-ID: <1447827097-9436-3-git-send-email-glen.lee@atmel.com> (sfid-20151118_070835_482018_C31DCD63)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+	Fri, 13 Nov 2015 18:56:16 -0500
+Received: by oige206 with SMTP id e206so58526468oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 15:56:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 13 Nov 2015 15:55:55 -0800
+Message-ID: <CALCETrWLyoQSo=oxSJjwf4POWZOCQbA+gV75drp4=ndKssp2sg@mail.gmail.com> (sfid-20151114_005620_231892_09F4F76E)
+Subject: BCM4350 doesn't resume correctly
+To: Linux Wireless List <linux-wireless@vger.kernel.org>
+Cc: brcm80211-dev-list@broadcom.com,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes spi speed control codes. We are not using define SPEED to
-specify speed of spi, it is not proper way of doing this. It will be
-provided by the device tree.
+I have a BCM4350: 3a:00.0 Network controller: Broadcom Corporation
+Device 43a3 (rev 08).  It's a Dell M.2 wireless card.  This card is
+supported in wireless-testing but not in 4.3.
 
-The following functions and variable are removed.
-MIN_SPEED, MAX_SPEED, SPEED
-wilc_spi_set_max_speed
-wilc_spi_max_bus_speed
-wilc_spi_default_bus_speed
-hif_set_max_bus_speed
-hif_set_default_bus_speed
+On resume, my wireless doesn't come up.  When I manually turn on the
+link (by telling NetworkManager to turn it on), it works.  After
+suspend/resume, the same thing happens: it's down on resume.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_spi.c | 42 -------------------------------
- drivers/staging/wilc1000/linux_wlan_spi.h |  2 --
- drivers/staging/wilc1000/wilc_spi.c       | 11 --------
- drivers/staging/wilc1000/wilc_wlan.h      |  2 --
- 4 files changed, 57 deletions(-)
+I'm running:
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 1d8922d..5e3bff0 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -17,33 +17,6 @@
- 
- #define USE_SPI_DMA     0       /* johnny add */
- 
--#ifdef WILC_ASIC_A0
-- #if defined(PLAT_PANDA_ES_OMAP4460)
--  #define MIN_SPEED 12000000
--  #define MAX_SPEED 24000000
-- #elif defined(PLAT_WMS8304)
--  #define MIN_SPEED 12000000
--  #define MAX_SPEED 24000000 /* 4000000 */
-- #elif defined(CUSTOMER_PLATFORM)
--/*
--  TODO : define Clock speed under 48M.
-- *
-- * ex)
-- * #define MIN_SPEED 24000000
-- * #define MAX_SPEED 48000000
-- */
-- #else
--  #define MIN_SPEED 24000000
--  #define MAX_SPEED 48000000
-- #endif
--#else /* WILC_ASIC_A0 */
--/* Limit clk to 6MHz on FPGA. */
-- #define MIN_SPEED 6000000
-- #define MAX_SPEED 6000000
--#endif /* WILC_ASIC_A0 */
--
--static u32 SPEED = MIN_SPEED;
--
- static const struct wilc1000_ops wilc1000_spi_ops;
- 
- static int wilc_bus_probe(struct spi_device *spi)
-@@ -119,7 +92,6 @@ int wilc_spi_write(u8 *b, u32 len)
- 				struct spi_transfer tr = {
- 					.tx_buf = b + (i * TXRX_PHASE_SIZE),
- 					.len = TXRX_PHASE_SIZE,
--					.speed_hz = SPEED,
- 					.bits_per_word = 8,
- 					.delay_usecs = 0,
- 				};
-@@ -145,7 +117,6 @@ int wilc_spi_write(u8 *b, u32 len)
- 			struct spi_transfer tr = {
- 				.tx_buf = b + (blk * TXRX_PHASE_SIZE),
- 				.len = remainder,
--				.speed_hz = SPEED,
- 				.bits_per_word = 8,
- 				.delay_usecs = 0,
- 			};
-@@ -187,7 +158,6 @@ int wilc_spi_write(u8 *b, u32 len)
- 		struct spi_transfer tr = {
- 			.tx_buf = b,
- 			.len = len,
--			.speed_hz = SPEED,
- 			.delay_usecs = 0,
- 		};
- 		char *r_buffer = kzalloc(len, GFP_KERNEL);
-@@ -249,7 +219,6 @@ int wilc_spi_read(u8 *rb, u32 rlen)
- 				struct spi_transfer tr = {
- 					.rx_buf = rb + (i * TXRX_PHASE_SIZE),
- 					.len = TXRX_PHASE_SIZE,
--					.speed_hz = SPEED,
- 					.bits_per_word = 8,
- 					.delay_usecs = 0,
- 				};
-@@ -273,7 +242,6 @@ int wilc_spi_read(u8 *rb, u32 rlen)
- 			struct spi_transfer tr = {
- 				.rx_buf = rb + (blk * TXRX_PHASE_SIZE),
- 				.len = remainder,
--				.speed_hz = SPEED,
- 				.bits_per_word = 8,
- 				.delay_usecs = 0,
- 			};
-@@ -313,7 +281,6 @@ int wilc_spi_read(u8 *rb, u32 rlen)
- 		struct spi_transfer tr = {
- 			.rx_buf = rb,
- 			.len = rlen,
--			.speed_hz = SPEED,
- 			.delay_usecs = 0,
- 
- 		};
-@@ -359,7 +326,6 @@ int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen)
- 			.rx_buf = rb,
- 			.tx_buf = wb,
- 			.len = rlen,
--			.speed_hz = SPEED,
- 			.bits_per_word = 8,
- 			.delay_usecs = 0,
- 
-@@ -384,11 +350,3 @@ int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen)
- 
- 	return ret;
- }
--
--int wilc_spi_set_max_speed(void)
--{
--	SPEED = MAX_SPEED;
--
--	PRINT_INFO(BUS_DBG, "@@@@@@@@@@@@ change SPI speed to %d @@@@@@@@@\n", SPEED);
--	return 1;
--}
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index f434f79..baa98cc 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -7,6 +7,4 @@ int wilc_spi_init(void);
- int wilc_spi_write(u8 *b, u32 len);
- int wilc_spi_read(u8 *rb, u32 rlen);
- int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen);
--int wilc_spi_set_max_speed(void);
--
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 803d0f4..bd150a5 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -791,15 +791,6 @@ static int _wilc_spi_init(struct wilc *wilc, wilc_debug_func func)
- 	return 1;
- }
- 
--static void wilc_spi_max_bus_speed(void)
--{
--	wilc_spi_set_max_speed();
--}
--
--static void wilc_spi_default_bus_speed(void)
--{
--}
--
- static int wilc_spi_read_size(u32 *size)
- {
- 	int ret;
-@@ -1034,6 +1025,4 @@ const struct wilc_hif_func wilc_hif_spi = {
- 	.hif_block_tx_ext = _wilc_spi_write,
- 	.hif_block_rx_ext = _wilc_spi_read,
- 	.hif_sync_ext = wilc_spi_sync_ext,
--	.hif_set_max_bus_speed = wilc_spi_max_bus_speed,
--	.hif_set_default_bus_speed = wilc_spi_default_bus_speed,
- };
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 20bca44..ee13771e 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -251,8 +251,6 @@ struct wilc_hif_func {
- 	int (*hif_block_tx_ext)(u32, u8 *, u32);
- 	int (*hif_block_rx_ext)(u32, u8 *, u32);
- 	int (*hif_sync_ext)(int);
--	void (*hif_set_max_bus_speed)(void);
--	void (*hif_set_default_bus_speed)(void);
- 	int (*enable_interrupt)(struct wilc *nic);
- 	void (*disable_interrupt)(struct wilc *nic);
- };
+commit b7da5ccdf418f418504e1c923e954ec8ff1a690c
+Merge: 588e8c7e5828 6a13feb9c828
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Sun Nov 1 22:54:21 2015 -0500
+
+    Merge branch 'master' of
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux
+
+On startup, I see:
+
+[   12.372523] brcmfmac 0000:3a:00.0: Direct firmware load for
+brcm/brcmfmac4350-pcie.txt failed with error -2
+[   12.773308] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+wl0: Oct 22 2015 06:16:26 version 7.35.180.119 (r594535)
+FWID 01-e791c176
+[   12.824257] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code
+[   12.841957] brcmfmac 0000:3a:00.0 wlp58s0: renamed from wlan0
+[   12.934565] cfg80211: Regulatory domain changed to country: US
+[   12.934574] cfg80211:  DFS Master region: FCC
+[   12.934578] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp), (dfs_cac_time)
+[   12.934584] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(N/A, 3000 mBm), (N/A)
+[   12.934589] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz,
+160000 KHz AUTO), (N/A, 2300 mBm), (N/A)
+[   12.934594] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz,
+160000 KHz AUTO), (N/A, 2300 mBm), (0 s)
+[   12.934598] cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz),
+(N/A, 2300 mBm), (0 s)
+[   12.934602] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
+(N/A, 3000 mBm), (N/A)
+[   12.934606] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
+KHz), (N/A, 4000 mBm), (N/A)
+
+On suspend, I see:
+
+[  287.918251] PM: Suspending system (mem)
+[  287.918289] Suspending console(s) (use no_console_suspend to debug)
+[  287.971508] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[  288.072876] Trying to free nonexistent resource
+<000000000000e000-000000000000e0ff>
+[  288.073213] PM: suspend of devices complete after 154.508 msecs
+[  288.090623] PM: late suspend of devices complete after 17.382 msecs
+
+On resume, I see:
+
+[  393.420929] Restarting tasks ... done.
+[  393.429976] brcmfmac 0000:3a:00.0: Direct firmware load for
+brcm/brcmfmac4350-pcie.txt failed with error -2
+[  393.437524] Bluetooth: hci0: BCM: chip id 110
+[  393.453610] Bluetooth: hci0: BCM4350C5
+[  393.454702] Bluetooth: hci0: BCM (003.006.007) build 0000
+[  393.454747] bluetooth hci0: Direct firmware load for
+brcm/BCM-0a5c-6412.hcd failed with error -2
+[  393.454749] Bluetooth: hci0: BCM: Patch brcm/BCM-0a5c-6412.hcd not found
+[  393.843353] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+wl0: Oct 22 2015 06:16:26 version 7.35.180.119 (r594535) FWID
+01-e791c176
+[  393.977421] brcmfmac 0000:3a:00.0 wlp58s0: renamed from wlan0
+[  393.992239] IPv6: ADDRCONF(NETDEV_UP): wlp58s0: link is not ready
+[  394.028531] [drm] RC6 on
+[  394.058332] psmouse serio1: synaptics: queried max coordinates: x
+[..5666], y [..4734]
+[  394.090839] psmouse serio1: synaptics: queried min coordinates: x
+[1276..], y [1118..]
+[  394.154720] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[  394.165695] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[  394.176704] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[  394.187710] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[  394.198716] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[  394.198768] [drm:intel_dp_aux_ch [i915]] *ERROR* dp_aux_ch not done
+status 0xad40001f
+[  394.232446] ACPI Error: Cannot release Mutex [PATM], not acquired
+(20150818/exmutex-376)
+[  394.232470] ACPI Error: Method parse/execution failed
+[\_SB.PCI0.LPCB.ECDV._Q66] (Node ffff8802b80e40c8),
+AE_AML_MUTEX_NOT_ACQUIRED (20150818/psparse-542)
+[  395.353559] [drm:intel_dp_start_link_train [i915]] *ERROR* failed
+to enable link training
+[  395.545714] [drm:intel_dp_complete_link_train [i915]] *ERROR*
+failed to start channel equalization
+[  402.469923] ACPI Error: Thread 3073727168 cannot release Mutex
+[PATM] acquired by thread 789184512 (20150818/exmutex-399)
+[  402.469947] ACPI Error: Method parse/execution failed
+[\_SB.PCI0.LPCB.ECDV._Q66] (Node ffff8802b80e40c8), AE_AML_NOT_OWNER
+(20150818/psparse-542)
+[  402.497264] ACPI Error: Thread 3063757952 cannot release Mutex
+[PATM] acquired by thread 789184512 (20150818/exmutex-399)
+[  402.497287] ACPI Error: Method parse/execution failed
+[\_SB.PCI0.LPCB.ECDV._Q66] (Node ffff8802b80e40c8), AE_AML_NOT_OWNER
+(20150818/psparse-542)
+[  404.415817] ACPI Error: Cannot release Mutex [PATM], not acquired
+(20150818/exmutex-376)
+[  404.415839] ACPI Error: Method parse/execution failed
+[\_SB.PCI0.LPCB.ECDV._Q66] (Node ffff8802b80e40c8),
+AE_AML_MUTEX_NOT_ACQUIRED (20150818/psparse-542)
+[  416.993953] brcmfmac: brcmf_add_if: ERROR: netdev:wlp58s0 already exists
+[  416.993970] brcmfmac: brcmf_add_if: ignore IF event
+[  417.000685] IPv6: ADDRCONF(NETDEV_UP): wlp58s0: link is not ready
+[  417.041802] brcmfmac: brcmf_add_if: ERROR: netdev:wlp58s0 already exists
+[  417.041807] brcmfmac: brcmf_add_if: ignore IF event
+[  417.062367] IPv6: ADDRCONF(NETDEV_UP): wlp58s0: link is not ready
+[  423.052617] IPv6: ADDRCONF(NETDEV_CHANGE): wlp58s0: link becomes ready
+[  428.864400] Adjusting tsc more than 11% (8039090 vs 7759456)
+[ 1198.826626] dell_wmi: Unknown key 152 pressed
+[ 1199.828947] dell_wmi: Unknown key 152 pressed
+[ 1200.642196] dell_wmi: Unknown key 152 pressed
+[ 1441.395793] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]
+has bogus alignment
+[ 1441.919989] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[ 1441.930976] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[ 1441.941990] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[ 1441.952995] [drm:intel_dp_aux_ch [i915]] *ERROR* dp aux hw did not
+signal timeout (has irq: 1)!
+[ 1441.958506] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code
+
+
+I assume that's what's causing the problem.
+
+Thanks,
+Andy
+
 -- 
-1.9.1
-
+Andy Lutomirski
+AMA Capital Management, LLC
