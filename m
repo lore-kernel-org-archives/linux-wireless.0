@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:33756 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbbKIPoG (ORCPT
+Received: from smtprelay0055.hostedemail.com ([216.40.44.55]:50127 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932281AbbKMQZP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 10:44:06 -0500
-Received: by qgea14 with SMTP id a14so64464016qge.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 07:44:04 -0800 (PST)
-Date: Mon, 9 Nov 2015 10:43:52 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "Yin, Fengwei" <fengwei.yin@linaro.org>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-Subject: Re: [PATCH 3/5] wcn36xx: handle new hal response format
-Message-ID: <20151109154352.GE5395@localhost> (sfid-20151109_164410_916938_409977F5)
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
+	Fri, 13 Nov 2015 11:25:15 -0500
+Date: Fri, 13 Nov 2015 11:25:11 -0500
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Michal Marek <mmarek@suse.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC v4 5/8] mac80211: generate hw flags from include file
+Message-ID: <20151113112511.7431eb34@gandalf.local.home> (sfid-20151113_172519_864104_D80A0ED8)
+In-Reply-To: <1447318073-22669-6-git-send-email-johannes@sipsolutions.net>
+References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+	<1447318073-22669-6-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447063362-27322-4-git-send-email-fengwei.yin@linaro.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2015 at 05:02:40AM -0500, Yin, Fengwei wrote:
-> 
-> From: Andy Green <andy.green@linaro.org>
-> 
-> wcn3620 has a new message structure for the reply to some hal
-> commands.  This patch adds the struct and helper routine that
-> uses it if the chip is wcn3620, or falls back to the old
-> helper routine.
+On Thu, 12 Nov 2015 09:47:50 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> +	if (wcn->chip_version != WCN36XX_CHIP_3620 ||
-> +	    len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
-> +		return wcn36xx_smd_rsp_status_check(buf, len);
-> +
 
-Ok, disregard my question on the other patch, for some reason I
-read them out of order.  It looks like this should work ok with
-non-3620 chips.
+> +#define __DEFINE_HWFLAG(_flg, _on, _off)				\
+> +	HWFLAGS_DEFSTATE_##_flg = -1 + ((_on) ^ (_off)) * (1 + _on),
+> +#define DEFINE_HWFLAG(_flg)						\
+> +	__DEFINE_HWFLAG(_flg,						\
+> +			IS_ENABLED(CONFIG_MAC80211_HW_##_flg##_ON),	\
+> +			IS_ENABLED(CONFIG_MAC80211_HW_##_flg##_OFF))
+> +#include <net/mac80211-hwflags.h>
+> +#undef DEFINE_HWFLAG
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+You learned to use the MACRO force well, young Skywalker.
+
+-- Steve
+
+>  };
+>  
+>  bool _____optimisation_missing(void);
+
