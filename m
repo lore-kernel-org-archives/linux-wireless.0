@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31083 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbbKZMgm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 07:36:42 -0500
-Date: Thu, 26 Nov 2015 15:36:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: walter harms <wharms@bfs.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] rt2x00: type bug in _rt2500usb_register_read()
-Message-ID: <20151126123618.GE7289@mwanda> (sfid-20151126_133646_960127_69E0DE55)
-References: <20151126115523.GD10556@mwanda>
- <5656F95C.60107@bfs.de>
+Received: from smtprelay0136.hostedemail.com ([216.40.44.136]:58036 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932444AbbKMQuC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2015 11:50:02 -0500
+Date: Fri, 13 Nov 2015 11:49:59 -0500
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Michal Marek <mmarek@suse.com>
+Subject: Re: [RFC v4 8/8] mac80211: use Kconfig counters to determine
+ feature optimisation
+Message-ID: <20151113114959.6ebf30d5@gandalf.local.home> (sfid-20151113_175007_116799_6621DFE0)
+In-Reply-To: <1447432539.3271.23.camel@sipsolutions.net>
+References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+	<1447318073-22669-9-git-send-email-johannes@sipsolutions.net>
+	<20151113112922.3442aa1a@gandalf.local.home>
+	<1447432539.3271.23.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5656F95C.60107@bfs.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 26, 2015 at 01:21:48PM +0100, walter harms wrote:
-> > If the low 16 bits were initialized to zero then this code would only be
-> > a problem on big endian systems.
+On Fri, 13 Nov 2015 17:35:39 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> perhaps, cleaning *value would be sufficient ? Avoiding the need for a tmp var.
+> On Fri, 2015-11-13 at 11:29 -0500, Steven Rostedt wrote:
 > 
-> *value = 0
-> rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
+> > > -	select MAC80211_HW_HAS_RATE_CONTROL_OFF
+> > > -	select MAC80211_HW_RX_INCLUDES_FCS_OFF  
+> > 
+> > What happened to these two?  
+> 
+> I removed the _OFF ones entirely, and instead with this patch am now
+> relying on modified logic:
+> 
+>  _on  = flags_counter > 0
+>  _off = flags_counter < driver_counter
+> 
+> So the ones that are requested _OFF no longer need to be listed in
+> Kconfig - that was the entire point of doing the count (increment)
+> thing since we can then add new flags without touching all the drivers
+> to select them to _OFF.
 > 
 
-Because if you initialize value then you still have a bug on big endian
-systems.
+Ah, I missed that they were "_OFF".
 
-regards,
-dan carpenter
-
+-- Steve
