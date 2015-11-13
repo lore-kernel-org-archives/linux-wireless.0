@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:34604 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbbKDLxu (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35827 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbbKMWAX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 06:53:50 -0500
-Received: by wmff134 with SMTP id f134so108245414wmf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2015 03:53:49 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/4] ath10k: update missing hw_params of QCA9377 hw1.1
-Date: Wed,  4 Nov 2015 12:53:33 +0100
-Message-Id: <1446638015-23310-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20151104_125355_598565_A83E6AA1)
-In-Reply-To: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1446638015-23310-1-git-send-email-bartosz.markowski@tieto.com>
+	Fri, 13 Nov 2015 17:00:23 -0500
+Received: by wmdw130 with SMTP id w130so46163873wmd.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 14:00:22 -0800 (PST)
+From: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+Subject: [PATCH] staging: wilc1000: remove new line around else and braces
+Date: Fri, 13 Nov 2015 23:59:47 +0200
+Message-Id: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com> (sfid-20151113_230031_823535_8D838E8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The uart_pin was incorrectly configured for QCA9377
-and the recently added hw_params were omitted.
+Remove excess new line characters as suggested by checkpatch.pl:
+ERROR: else should follow close brace '}'
+ERROR: that open brace { should be on the previous line
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c8f6ca284b9d..a30d41559134 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -141,8 +141,10 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
- 		.name = "qca9377 hw1.1",
- 		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
--		.uart_pin = 7,
-+		.uart_pin = 6,
- 		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
- 		.fw = {
- 			.dir = QCA9377_HW_1_0_FW_DIR,
- 			.fw = QCA9377_HW_1_0_FW_FILE,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c02665747705..9966ac8d7ceb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1056,15 +1056,13 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
+ 				memcpy(&txb[offset], &header, 4);
+ 				if (tqe->type == WILC_CFG_PKT) {
+ 					buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
+-				}
+-				else if (tqe->type == WILC_NET_PKT) {
++				} else if (tqe->type == WILC_NET_PKT) {
+ 					char *pBSSID = ((struct tx_complete_data *)(tqe->priv))->pBssid;
+ 
+ 					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
+ 					/* copy the bssid at the sart of the buffer */
+ 					memcpy(&txb[offset + 4], pBSSID, 6);
+-				}
+-				else {
++				} else {
+ 					buffer_offset = HOST_HDR_OFFSET;
+ 				}
+ 
+@@ -1183,9 +1181,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 				pkt_offset &= ~(IS_MANAGMEMENT | IS_MANAGMEMENT_CALLBACK | IS_MGMT_STATUS_SUCCES);
+ 
+ 				WILC_WFI_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
+-			}
+-			else
+-			{
++			} else {
+ 
+ 				if (!is_cfg_packet) {
+ 					if (pkt_len > 0) {
 -- 
-2.1.2
+2.6.2
 
