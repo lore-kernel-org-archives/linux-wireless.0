@@ -1,31 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:33573 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754191AbbKCGaM (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36245 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbbKMOTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 01:30:12 -0500
-Received: by wijp11 with SMTP id p11so65140321wij.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 22:30:11 -0800 (PST)
+	Fri, 13 Nov 2015 09:19:07 -0500
+Date: Fri, 13 Nov 2015 19:48:59 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: punit vara <punitvara@gmail.com>
+Cc: glen lee <glen.lee@atmel.com>, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, Austin Shin <austin.shin@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	linux-kernel@vger.kernel.org, tony.cho@atmel.com,
+	leo.kim@atmel.com, Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
+ *wilc and implicit declaration of init_irq
+Message-ID: <20151113141859.GE18741@sudip-pc> (sfid-20151113_151935_960832_CCF635F6)
+References: <20151108215953.GO18797@mwanda>
+ <563FFEEB.1090307@atmel.com>
+ <56405328.4040004@atmel.com>
+ <20151109081842.GR18797@mwanda>
+ <56405F71.6090404@atmel.com>
+ <CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
+ <56406F0F.1050701@atmel.com>
+ <CABXAfNKhtdRSm1BJK+pk9t4wwnFBXzAP_CKSVhS0p7m_FZG_8Q@mail.gmail.com>
+ <20151109102342.GA3868@sudip-pc>
+ <CABXAfNLdVvhJbb8NExA++dChws7e0T_BZaQsWgZXZWvQaoBveA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1446531596-3719-1-git-send-email-nataraja@qti.qualcomm.com>
-References: <1446531596-3719-1-git-send-email-nataraja@qti.qualcomm.com>
-Date: Tue, 3 Nov 2015 12:00:11 +0530
-Message-ID: <CAJqpcCSvh+xOK9Q=PT=n5Wv2GwcF-vcbC-MnxWJB62w5S_wg1g@mail.gmail.com> (sfid-20151103_073500_881103_6F4AC9DF)
-Subject: Re: [PATCH v2] ath10k: Add support for pktlog in QCA99X0
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Vivek Natarajan <nataraja@qti.qualcomm.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CABXAfNLdVvhJbb8NExA++dChws7e0T_BZaQsWgZXZWvQaoBveA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 3, 2015 at 11:49 AM, Vivek Natarajan
-<nataraja@qti.qualcomm.com> wrote:
-> This patch adds pktlog support for 10.4 fw versions.
+On Mon, Nov 09, 2015 at 08:09:36PM +0530, punit vara wrote:
+> On Mon, Nov 9, 2015 at 3:53 PM, Sudip Mukherjee
+> <sudipm.mukherjee@gmail.com> wrote:
+> > On Mon, Nov 09, 2015 at 03:43:38PM +0530, punit vara wrote:
+> >> On Mon, Nov 9, 2015 at 3:31 PM, glen lee <glen.lee@atmel.com> wrote:
+> >> >
+> >> >
+> >> > On 2015년 11월 09일 18:05, punit vara wrote:
+> >> >>
+> >> >> On Mon, Nov 9, 2015 at 2:25 PM, glen lee <glen.lee@atmel.com> wrote:
+> >> >>>
+> >> >>> On 2015년 11월 09일 17:18, Dan Carpenter wrote:
+> >> >>>>
+> >> >>>> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
+> >> >>>>>
+> >>
+> >> make ./drivers/staging/wilc1000/    this working fine for me
+> >>
+> >> but
+> >>
+> >> make ./drivers/staging/wilc1000/linux_wlan.o is creates error.
+> >
+> > I am also not getting build failure. Can you please post your .config file.
+> >
+> > regards
+> > sudip
+> Can you tell me Sudip where .config file is saved ? Sorry for asking
+> silly question :-(
 
-Some issues with the mail client. Please ignore.
+at the root of your linux tree. the kernel will be compiled based on the
+options in these file.
 
-Thanks
-Vivek.
+regards
+sudip
