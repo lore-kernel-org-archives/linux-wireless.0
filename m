@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:34393 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752927AbbKLNQQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 08:16:16 -0500
-Received: by lbbcs9 with SMTP id cs9so34648999lbb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:14 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 04/12] ath9k: P2P_CLIENT, send frames after 1ms AP/GO will aprear
-Date: Thu, 12 Nov 2015 14:15:41 +0100
-Message-Id: <1447334149-15507-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141632_147508_1DB4BDD6)
-In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s1.neomailbox.net ([5.148.176.57]:39549 "EHLO s1.neomailbox.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932744AbbKMSjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2015 13:39:23 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@meshcoding.com>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH 2/2] mac80211: passively scan DFS channels if requested
+Date: Sat, 14 Nov 2015 01:56:02 +0800
+Message-Id: <1447437362-32647-2-git-send-email-antonio@meshcoding.com> (sfid-20151113_193927_571963_24509380)
+In-Reply-To: <1447437362-32647-1-git-send-email-antonio@meshcoding.com>
+References: <1447437362-32647-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP/GO will aprear after NOA, wait 1ms to be sure AP
-could receive/answer this frames.
+if the NL80211_SCAN_FLAG_PASSIVE_RADAR flag was specified upon
+sw scan start, passively scan any channel marked as DFS.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/scan.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index dddaaea..5640e88 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1417,6 +1417,8 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
- 	target_tsf = avp->noa.next_tsf;
- 	if (!avp->noa.absent)
- 		target_tsf -= ATH_P2P_PS_STOP_TIME;
-+	else
-+		target_tsf += ATH_P2P_PS_STOP_TIME;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 4aeca4b..d8f7b4a 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -599,7 +599,9 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
  
- 	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
- 		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
-@@ -1543,6 +1545,8 @@ void ath9k_p2p_ps_timer(void *priv)
- 	tsf = ath9k_hw_gettsf32(sc->sc_ah);
- 	if (!avp->noa.absent)
- 		tsf += ATH_P2P_PS_STOP_TIME;
-+	else
-+		tsf -= ATH_P2P_PS_STOP_TIME;
- 
- 	if (!avp->noa.has_next_tsf ||
- 	    avp->noa.next_tsf - tsf > BIT(31))
+ 		if ((req->channels[0]->flags &
+ 		     IEEE80211_CHAN_NO_IR) ||
+-		    !req->n_ssids) {
++		    !req->n_ssids ||
++		    ((chan->flags & IEEE80211_CHAN_RADAR) &&
++		     (scan_req->flags & NL80211_SCAN_FLAG_PASSIVE_RADAR))) {
+ 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		} else {
+ 			ieee80211_scan_state_send_probe(local, &next_delay);
+@@ -645,7 +647,9 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR)
++	if ((chan->flags & IEEE80211_CHAN_NO_IR) ||
++	    ((chan->flags & IEEE80211_CHAN_RADAR) &&
++	     (scan_req->flags & NL80211_SCAN_FLAG_PASSIVE_RADAR)))
+ 		return IEEE80211_PASSIVE_CHANNEL_TIME;
+ 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+ }
+@@ -777,7 +781,9 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 *
+ 	 * In any case, it is not necessary for a passive scan.
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids) {
++	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids ||
++	    ((chan->flags & IEEE80211_CHAN_RADAR) &&
++	     (scan_req->flags & NL80211_SCAN_FLAG_PASSIVE_RADAR))) {
+ 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		local->next_scan_state = SCAN_DECISION;
+ 		return;
 -- 
-1.9.1
+2.6.3
 
