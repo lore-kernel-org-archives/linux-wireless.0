@@ -1,83 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34788 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515AbbKHHts (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36212 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbbKMLSe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:49:48 -0500
-Received: by padhx2 with SMTP id hx2so157826526pad.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:49:47 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/32] staging: wilc1000: rename pu8RxMic in host_int_add_ptk
-Date: Sun,  8 Nov 2015 16:48:58 +0900
-Message-Id: <1446968965-8958-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_084952_613444_C40B93B1)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 13 Nov 2015 06:18:34 -0500
+From: Saurabh Sengar <saurabh.truth@gmail.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Saurabh Sengar <saurabh.truth@gmail.com>
+Subject: [PATCH] NFC: added the sysfs entry for nfcsim workqueue delay
+Date: Fri, 13 Nov 2015 16:48:19 +0530
+Message-Id: <1447413499-25747-1-git-send-email-saurabh.truth@gmail.com> (sfid-20151113_121933_539801_234610A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes pu8RxMic to rx_mic to avoid camelcase.
+added the sysfs entry for nfcsim workqueue delay, as tx_delay
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+implementing the TODO task
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 96a0a58..9616a61 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3209,7 +3209,7 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
+ drivers/nfc/nfcsim.c | 38 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
+index 26ac9e5..e77be35 100644
+--- a/drivers/nfc/nfcsim.c
++++ b/drivers/nfc/nfcsim.c
+@@ -32,6 +32,8 @@
+ #define NFCSIM_POLL_TARGET	2
+ #define NFCSIM_POLL_DUAL	(NFCSIM_POLL_INITIATOR | NFCSIM_POLL_TARGET)
  
- int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 		     u8 ptk_key_len, const u8 *mac_addr,
--		     const u8 *pu8RxMic, const u8 *pu8TxMic,
-+		     const u8 *rx_mic, const u8 *pu8TxMic,
- 		     u8 mode, u8 u8Ciphermode, u8 u8Idx)
++#define TX_DEFAULT_DELAY	5
++
+ struct nfcsim {
+ 	struct nfc_dev *nfc_dev;
+ 
+@@ -62,12 +64,41 @@ static struct nfcsim *dev1;
+ 
+ static struct workqueue_struct *wq;
+ 
++
++static int tx_delay = TX_DEFAULT_DELAY;
++
++static ssize_t show_tx_delay(struct device *dev,
++					struct device_attribute *attr,
++					char *buf)
++{
++	int n;
++
++	n = scnprintf(buf, PAGE_SIZE, "%d\n", tx_delay);
++	return n;
++}
++
++static ssize_t store_tx_delay(struct device *dev,
++					struct device_attribute *attr,
++					const char *buf, size_t count)
++{
++	if (kstrtouint(buf, 0, &tx_delay) < 0)
++		return -EINVAL;
++
++	if (tx_delay < 0)
++		return -EINVAL;
++
++	return count;
++}
++
++static DEVICE_ATTR(tx_delay, 0644, show_tx_delay, store_tx_delay);
++
+ static void nfcsim_cleanup_dev(struct nfcsim *dev, u8 shutdown)
  {
- 	int result = 0;
-@@ -3222,7 +3222,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 		return -EFAULT;
- 	}
+ 	DEV_DBG(dev, "shutdown=%d\n", shutdown);
  
--	if (pu8RxMic)
-+	if (rx_mic)
- 		u8KeyLen += RX_MIC_KEY_LEN;
+ 	mutex_lock(&dev->lock);
  
- 	if (pu8TxMic)
-@@ -3242,11 +3242,11 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 	msg.body.key_info.attr.wpa.key = kmalloc(ptk_key_len, GFP_KERNEL);
- 	memcpy(msg.body.key_info.attr.wpa.key, ptk, ptk_key_len);
++	device_remove_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
+ 	dev->polling_mode = NFCSIM_POLL_NONE;
+ 	dev->shutting_down = shutdown;
+ 	dev->cb = NULL;
+@@ -320,10 +351,8 @@ static int nfcsim_tx(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 	 * If packet transmission occurs immediately between them, we have a
+ 	 * non-stop flow of several tens of thousands SYMM packets per second
+ 	 * and a burning cpu.
+-	 *
+-	 * TODO: Add support for a sysfs entry to control this delay.
+ 	 */
+-	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(5));
++	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(tx_delay));
  
--	if (pu8RxMic) {
--		memcpy(msg.body.key_info.attr.wpa.key + 16, pu8RxMic, RX_MIC_KEY_LEN);
-+	if (rx_mic) {
-+		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
- 		if (INFO) {
- 			for (i = 0; i < RX_MIC_KEY_LEN; i++)
--				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, pu8RxMic[i]);
-+				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, rx_mic[i]);
- 		}
- 	}
- 	if (pu8TxMic) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index ae0e260..2ee9304 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -313,7 +313,7 @@ int host_int_add_wep_key_bss_ap(struct host_if_drv *hif_drv,
- 				enum AUTHTYPE auth_type);
- int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 		     u8 ptk_key_len, const u8 *mac_addr,
--		     const u8 *pu8RxMic, const u8 *pu8TxMic,
-+		     const u8 *rx_mic, const u8 *pu8TxMic,
- 		     u8 mode, u8 u8Ciphermode, u8 u8Idx);
- s32 host_int_get_inactive_time(struct host_if_drv *hWFIDrv, const u8 *mac,
- 			       u32 *pu32InactiveTime);
+ 	mutex_unlock(&peer->lock);
+ 
+@@ -461,6 +490,9 @@ static struct nfcsim *nfcsim_init_dev(void)
+ 	if (rc)
+ 		goto free_nfc_dev;
+ 
++	rc = device_create_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
++	if (rc)
++		pr_err("error creating sysfs entry\n");
+ 	return dev;
+ 
+ free_nfc_dev:
 -- 
-2.6.3
-
+1.9.1
