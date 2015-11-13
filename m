@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17168 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbbKKJS1 (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36440 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751981AbbKMODD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 04:18:27 -0500
-Message-ID: <564307DF.5050308@broadcom.com> (sfid-20151111_101857_242391_E90BB654)
-Date: Wed, 11 Nov 2015 10:18:23 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 13 Nov 2015 09:03:03 -0500
+Received: by wmww144 with SMTP id w144so29940610wmw.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 06:03:01 -0800 (PST)
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: DFS Master Region
+Message-ID: <5645ED92.3070105@gmail.com> (sfid-20151113_150306_918665_9A7C5B8D)
+Date: Fri, 13 Nov 2015 15:02:58 +0100
 MIME-Version: 1.0
-To: SF Markus Elfring <elfring@users.sourceforge.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	<kernel-janitors@vger.kernel.org>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH] net: brcm80211: Delete an unnecessary check before the
- function call "release_firmware"
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <546E0DC8.3050906@users.sourceforge.net> <546E2D2A.6090101@broadcom.com> <563C5DA2.3000005@users.sourceforge.net>
-In-Reply-To: <563C5DA2.3000005@users.sourceforge.net>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/2015 08:58 AM, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Fri, 6 Nov 2015 08:48:23 +0100
->
-> The release_firmware() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
->
-> This issue was detected by using the Coccinelle software.
+Larry Finger wrote:
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> index 4248f3c..33afb9a 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> @@ -449,8 +449,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->
->   	if (raw_nvram)
->   		bcm47xx_nvram_release_contents(data);
-> -	if (fw)
-> -		release_firmware(fw);
-> +	release_firmware(fw);
->   	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->   		goto fail;
->
->
+> I'm trying to understand a problem that some users are having with the 5G band 
+> when using rtl8821ae. One of them sees the following output from cfg80211:
+> [...]
+> One other possible difference. My openSUSE system uses CRDA 1.1.3. The other box 
+> runs Fedora 23 with an unknown version of CRDA.
 
+Usually Fedora always brings latest software releases:
+kernel-4.2.6-300.fc23.x86_64
+crda-3.18_2015.10.22-1.fc23.x86_64 (crda-3.18 + wireless-regdb-2015.10.22)
+
+You can try reproduce it in openSUSE with those releases.
