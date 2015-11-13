@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36931 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030909AbbKFCNT (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38087 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932921AbbKMKd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:13:19 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 28/73] staging: wilc1000: rename Session_index member variable
-Date: Fri, 6 Nov 2015 11:12:49 +0900
-Message-ID: <1446776014-28094-28-git-send-email-glen.lee@atmel.com> (sfid-20151106_033803_390678_BECD65A4)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 13 Nov 2015 05:33:28 -0500
+Received: by wmec201 with SMTP id c201so24396811wme.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 02:33:27 -0800 (PST)
+From: Borja Salazar <borja.salazar@fon.com>
+To: linux-wireless@vger.kernel.org
+Cc: janusz.dziedzic@tieto.com, sujith@msujith.org,
+	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Borja Salazar <borja.salazar@fon.com>
+Subject: [PATCH v2] ath9k: incorrect queue may be stopped/awaken
+Date: Fri, 13 Nov 2015 11:33:06 +0100
+Message-Id: <1447410786-31874-1-git-send-email-borja.salazar@fon.com> (sfid-20151113_113339_840112_B9A69B46)
+In-Reply-To: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
+References: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+When channel context is enabled, we could be
+stopping/awakening an incorrect queue.
 
-This patch rename the Ack Session_index  variable to session_index
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Borja Salazar <borja.salazar@fon.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 58043dc..ce9f45c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -246,14 +246,14 @@ static inline int update_tcp_session(u32 index, u32 ack)
- 	return 0;
- }
- 
--static inline int add_tcp_pending_ack(u32 ack, u32 Session_index,
-+static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
- 				       struct txq_entry_t *txqe)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3e3dac3..9b17a59 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -147,7 +147,12 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
  {
- 	total_acks++;
- 	if (pending_acks < MAX_PENDING_ACKS) {
- 		pending_acks_info[pending_base + pending_acks].ack_num = ack;
- 		pending_acks_info[pending_base + pending_acks].txqe = txqe;
--		pending_acks_info[pending_base + pending_acks].session_index = Session_index;
-+		pending_acks_info[pending_base + pending_acks].session_index = session_index;
- 		txqe->tcp_PendingAck_index = pending_base + pending_acks;
- 		pending_acks++;
- 	} else {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+-	int q = fi->txq;
++	int q;
++
++	if (ath9k_is_chanctx_enabled())
++		q = fi->txq;
++	else
++		q = info->hw_queue;
+ 
+ 	if (q < 0)
+ 		return;
+@@ -158,10 +163,7 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	if (txq->stopped &&
+ 	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
+-		if (ath9k_is_chanctx_enabled())
+-			ieee80211_wake_queue(sc->hw, info->hw_queue);
+-		else
+-			ieee80211_wake_queue(sc->hw, q);
++		ieee80211_wake_queue(sc->hw, q);
+ 		txq->stopped = false;
+ 	}
+ }
+@@ -2299,17 +2301,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 * info are no longer valid (overwritten by the ath_frame_info data.
+ 	 */
+ 
+-	q = skb_get_queue_mapping(skb);
++	if (ath9k_is_chanctx_enabled())
++		q = skb_get_queue_mapping(skb);
++	else
++		q = info->hw_queue;
+ 
+ 	ath_txq_lock(sc, txq);
+ 	if (txq == sc->tx.txq_map[q]) {
+ 		fi->txq = q;
+ 		if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
+ 		    !txq->stopped) {
+-			if (ath9k_is_chanctx_enabled())
+-				ieee80211_stop_queue(sc->hw, info->hw_queue);
+-			else
+-				ieee80211_stop_queue(sc->hw, q);
++			ieee80211_stop_queue(sc->hw, q);
+ 			txq->stopped = true;
+ 		}
+ 	}
 -- 
-1.9.1
+2.3.6
 
