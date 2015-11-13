@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36832 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755019AbbK0Q3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 11:29:34 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 1/1] wireless: airo: re-use mac_pton()
-Date: Fri, 27 Nov 2015 18:29:31 +0200
-Message-Id: <1448641771-140820-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20151127_172940_488277_500FCA7E)
+Received: from mout.kundenserver.de ([212.227.126.131]:56719 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbbKMJSI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2015 04:18:08 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: glen lee <glen.lee@atmel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 15/20] staging/wilc1000: pass hif operations through initialization
+Date: Fri, 13 Nov 2015 10:17:58 +0100
+Message-ID: <4443486.3C2xMnGSPO@wuerfel> (sfid-20151113_101835_560095_F8C99AF1)
+In-Reply-To: <56459602.9060707@atmel.com>
+References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <4207649.2OaxOXWCyM@wuerfel> <56459602.9060707@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac_pton() converts 6-byte MAC / BSSID to binary format. Change an open coded
-variant by the generic one.
+On Friday 13 November 2015 16:49:22 glen lee wrote:
+> 
+> Hi arnd,
+> 
+> I found this. These should be like this. It works fine.
+> +       .hif_block_tx_ext = sdio_write,
+> +       .hif_block_rx_ext = sdio_read,
+> 
+> also, wilc_hif_spi need to be fixed together like this.
+> +       .hif_block_tx_ext = _wilc_spi_write,
+> +       .hif_block_rx_ext = _wilc_spi_read,
+> 
+> Thank you for all the patches.
+> 
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/cisco/airo.c | 18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
+Glad you found it. How should we go on to get the right version merged?
+Do you want to send the working version of my patches to Greg along with
+whatever you have on your end, or do you prefer me to re-send it?
 
-diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
-index 17c40f0..d2353f6 100644
---- a/drivers/net/wireless/cisco/airo.c
-+++ b/drivers/net/wireless/cisco/airo.c
-@@ -5137,21 +5137,9 @@ static void proc_APList_on_close( struct inode *inode, struct file *file ) {
- 	memset(APList_rid, 0, sizeof(*APList_rid));
- 	APList_rid->len = cpu_to_le16(sizeof(*APList_rid));
- 
--	for( i = 0; i < 4 && data->writelen >= (i+1)*6*3; i++ ) {
--		int j;
--		for( j = 0; j < 6*3 && data->wbuffer[j+i*6*3]; j++ ) {
--			switch(j%3) {
--			case 0:
--				APList_rid->ap[i][j/3]=
--					hex_to_bin(data->wbuffer[j+i*6*3])<<4;
--				break;
--			case 1:
--				APList_rid->ap[i][j/3]|=
--					hex_to_bin(data->wbuffer[j+i*6*3]);
--				break;
--			}
--		}
--	}
-+	for (i = 0; i < 4 && data->writelen >= (i + 1) * 6 * 3; i++)
-+		mac_pton(data->wbuffer + i * 6 * 3, APList_rid->ap[i]);
-+
- 	disable_MAC(ai, 1);
- 	writeAPListRid(ai, APList_rid, 1);
- 	enable_MAC(ai, 1);
--- 
-2.6.2
-
+	Arnd
