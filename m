@@ -1,78 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44387 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161598AbbKEQnA (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:37173 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932678AbbKMKtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 11:43:00 -0500
-Subject: Re: Configurable scan dwell time?
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Michal Kazior <michal.kazior@tieto.com>
-References: <563A9B8C.3060503@candelatech.com>
- <CA+BoTQnYrFSLkdBgcMgnuJPvPeSjuu9oB68KkU7jRMEH5iFE2A@mail.gmail.com>
- <1446710205.2540.1.camel@sipsolutions.net> <563B7D63.1010203@candelatech.com>
- <1446739615.2540.6.camel@sipsolutions.net> <563B8206.1040807@candelatech.com>
- <1446740733.2540.9.camel@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <563B8713.6000401@candelatech.com> (sfid-20151105_174304_430777_B5DB4972)
-Date: Thu, 5 Nov 2015 08:42:59 -0800
+	Fri, 13 Nov 2015 05:49:14 -0500
+Received: by igbhv6 with SMTP id hv6so12003235igb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 02:49:13 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1446740733.2540.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1447410786-31874-1-git-send-email-borja.salazar@fon.com>
+References: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
+	<1447410786-31874-1-git-send-email-borja.salazar@fon.com>
+Date: Fri, 13 Nov 2015 11:49:13 +0100
+Message-ID: <CADqurOFRewt0OTU_HSCozBfmQBy53Q2DBs2vKkfw29O+pZeR7w@mail.gmail.com> (sfid-20151113_114924_387505_B4B5FD80)
+Subject: Re: [PATCH v2] ath9k: incorrect queue may be stopped/awaken
+From: Borja Salazar <borja.salazar@fon.com>
+To: linux-wireless@vger.kernel.org
+Cc: janusz.dziedzic@tieto.com, sujith@msujith.org,
+	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Borja Salazar <borja.salazar@fon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2015 08:25 AM, Johannes Berg wrote:
+Hi,
+
+Let me explain the patch more thoroughly. We are testing MCC and we've
+found some issues with the queues handlers, the main problem is that
+when we transmit a multicast/broadcast frame, where hw_queue is 8
+(CAB), we check queue status, which is 2(q), and if it is full and we
+have to stop it, we end stopping the wrong queue, 8, which is not
+full. From this point onwards stations are unable to connect to the
+AP.
+
+Let me know if something is not clear.
+
+Regards,
+
+
+On Fri, Nov 13, 2015 at 11:33 AM, Borja Salazar <borja.salazar@fon.com> wrote:
+> When channel context is enabled, we could be
+> stopping/awakening an incorrect queue.
 >
->>> The thing though is that there are now use cases in the standard(s)
->>> that want/require doing this. So just adding it as a hint will run the
->>> risk of userspace (like wpa_s) using this "hint" for implementing newer
->>> spec functionality, testing on ath9k and hwsim and declaring that it
->>> works :-) And then we're stuck with this feature being used/advertised
->>> on older devices where it doesn't actually work.
->>
->> Scanning is already best effort.  Someone implementing this new hint
->> can just be aware of the limitations.  If nothing else, start a scan on
->> a known number of channels (or single channel), see how long it takes..then you know if the
->> driver is ignoring your hint or not.
+> Signed-off-by: Borja Salazar <borja.salazar@fon.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/xmit.c | 22 ++++++++++++----------
+>  1 file changed, 12 insertions(+), 10 deletions(-)
 >
-> But if you were asked to measure something on that channel, for a given
-> amount of time while scanning, you could reasonably implement it that
-> way. If you don't really know how long the device is *actually* going
-> to do this, then you can't rightfully say you implement that spec.
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 3e3dac3..9b17a59 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -147,7 +147,12 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+>  {
+>         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>         struct ath_frame_info *fi = get_frame_info(skb);
+> -       int q = fi->txq;
+> +       int q;
+> +
+> +       if (ath9k_is_chanctx_enabled())
+> +               q = fi->txq;
+> +       else
+> +               q = info->hw_queue;
 >
-> You can't really start a scan and measure the time either since there's
-> no guarantee the scan will start right away.
-
-Grep for 'dwell_time' in ath10k driver dir...it is already using different
-values (active 50, passive 150) than what mac80211 does, so anyone assuming scan time is exactly some
-duration is already confused.
-
->>> Now, having those standard use cases is actually a good argument *for*
->>> adding them in the standard API, but I think we need to be more careful
->>> around these issues - perhaps having drivers indicate that they support
->>> it, maybe even with valid ranges, etc.
->>
->> I think that is vastly over-engineering the problem, but truth is, it
->> can always be added later if there is an actual need for that knowledge.
->>
+>         if (q < 0)
+>                 return;
+> @@ -158,10 +163,7 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
 >
-> Well, not really. The only way for this to work would be to outright
-> reject requests that weren't within the advertised ranges; doing this
-> after already having the API would break existing clients thereof.
-
-It wouldn't break clients if the value is known to just be a hint
-from the beginning..ie clients cannot ever expect that this value
-is guaranteed to be used.
-
-But, if it would help this feature get upstream, then I will work on
-adding a driver flag.  Would that make it acceptable for upstream?
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+>         if (txq->stopped &&
+>             txq->pending_frames < sc->tx.txq_max_pending[q]) {
+> -               if (ath9k_is_chanctx_enabled())
+> -                       ieee80211_wake_queue(sc->hw, info->hw_queue);
+> -               else
+> -                       ieee80211_wake_queue(sc->hw, q);
+> +               ieee80211_wake_queue(sc->hw, q);
+>                 txq->stopped = false;
+>         }
+>  }
+> @@ -2299,17 +2301,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+>          * info are no longer valid (overwritten by the ath_frame_info data.
+>          */
+>
+> -       q = skb_get_queue_mapping(skb);
+> +       if (ath9k_is_chanctx_enabled())
+> +               q = skb_get_queue_mapping(skb);
+> +       else
+> +               q = info->hw_queue;
+>
+>         ath_txq_lock(sc, txq);
+>         if (txq == sc->tx.txq_map[q]) {
+>                 fi->txq = q;
+>                 if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
+>                     !txq->stopped) {
+> -                       if (ath9k_is_chanctx_enabled())
+> -                               ieee80211_stop_queue(sc->hw, info->hw_queue);
+> -                       else
+> -                               ieee80211_stop_queue(sc->hw, q);
+> +                       ieee80211_stop_queue(sc->hw, q);
+>                         txq->stopped = true;
+>                 }
+>         }
+> --
+> 2.3.6
+>
