@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44650 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbbKZNB2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 08:01:28 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: Delete unnecessary checks before the function
- call"kfree_skb"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <5649C99E.2070602@users.sourceforge.net>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <20151126130127.DDFC3140731@smtp.codeaurora.org> (sfid-20151126_140148_557019_7548E058)
-Date: Thu, 26 Nov 2015 13:01:27 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:59621 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932281AbbKMQfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2015 11:35:43 -0500
+Message-ID: <1447432539.3271.23.camel@sipsolutions.net> (sfid-20151113_173554_933071_58FCFE93)
+Subject: Re: [RFC v4 8/8] mac80211: use Kconfig counters to determine
+ feature optimisation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-wireless@vger.kernel.org, Jason Baron <jbaron@akamai.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Michal Marek <mmarek@suse.com>
+Date: Fri, 13 Nov 2015 17:35:39 +0100
+In-Reply-To: <20151113112922.3442aa1a@gandalf.local.home>
+References: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net>
+	 <1447318073-22669-9-git-send-email-johannes@sipsolutions.net>
+	 <20151113112922.3442aa1a@gandalf.local.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2015-11-13 at 11:29 -0500, Steven Rostedt wrote:
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Mon, 16 Nov 2015 13:12:25 +0100
+> > -	select MAC80211_HW_HAS_RATE_CONTROL_OFF
+> > -	select MAC80211_HW_RX_INCLUDES_FCS_OFF
 > 
-> The kfree_skb() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the calls is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> What happened to these two?
 
-Thanks, applied to wireless-drivers-next.git.
+I removed the _OFF ones entirely, and instead with this patch am now
+relying on modified logic:
 
-Kalle Valo
+ _on  = flags_counter > 0
+ _off = flags_counter < driver_counter
+
+So the ones that are requested _OFF no longer need to be listed in
+Kconfig - that was the entire point of doing the count (increment)
+thing since we can then add new flags without touching all the drivers
+to select them to _OFF.
+
+> > +config MAC80211_NUM_DRIVERS
+> > +	int
+> > +	depends on MAC80211
+> 
+> Why the depends? Does it make it 1 to start with?
+> 
+
+No, it just removes it from the Kconfig entirely when you don't even
+have MAC80211 instead of leaving it set there to 0. Probably not really
+necessary, or could be better to put them all inside an "if mac80211"
+block.
+
+johannes
