@@ -1,90 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26480 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbbKEFeQ (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:35939 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbbKMGbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:34:16 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 08/38] staging: wilc1000: rename gau8MulticastMacAddrList variable
-Date: Thu, 5 Nov 2015 14:36:09 +0900
-Message-ID: <1446701799-24870-8-git-send-email-glen.lee@atmel.com> (sfid-20151105_063420_022234_46D64EA5)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+	Fri, 13 Nov 2015 01:31:08 -0500
+Received: by wmww144 with SMTP id w144so15748282wmw.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 22:31:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1446572241-2246-1-git-send-email-borja.salazar@fon.com>
+References: <1446572241-2246-1-git-send-email-borja.salazar@fon.com>
+Date: Fri, 13 Nov 2015 07:31:06 +0100
+Message-ID: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com> (sfid-20151113_073121_523601_AE09A0A4)
+Subject: Re: [PATCH] ath9k: incorrect queue may be stopped/awaken
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Borja Salazar <borja.salazar@fon.com>,
+	Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On 3 November 2015 at 18:37, Borja Salazar <borja.salazar@fon.com> wrote:
+> When channel context is enabled, we could be
+> stopping/awakening an incorrect queue.
+> ---
+>  drivers/net/wireless/ath/ath9k/xmit.c | 22 ++++++++++++----------
+>  1 file changed, 12 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 3e3dac3..9b17a59 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -147,7 +147,12 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+>  {
+>         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>         struct ath_frame_info *fi = get_frame_info(skb);
+> -       int q = fi->txq;
+> +       int q;
+> +
+> +       if (ath9k_is_chanctx_enabled())
+> +               q = fi->txq;
+> +       else
+> +               q = info->hw_queue;
+>
+>         if (q < 0)
+>                 return;
+> @@ -158,10 +163,7 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+>
+>         if (txq->stopped &&
+>             txq->pending_frames < sc->tx.txq_max_pending[q]) {
+> -               if (ath9k_is_chanctx_enabled())
+> -                       ieee80211_wake_queue(sc->hw, info->hw_queue);
+> -               else
+> -                       ieee80211_wake_queue(sc->hw, q);
+> +               ieee80211_wake_queue(sc->hw, q);
+>                 txq->stopped = false;
+>         }
+>  }
+> @@ -2299,17 +2301,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+>          * info are no longer valid (overwritten by the ath_frame_info data.
+>          */
+>
+> -       q = skb_get_queue_mapping(skb);
+> +       if (ath9k_is_chanctx_enabled())
+> +               q = skb_get_queue_mapping(skb);
+> +       else
+> +               q = info->hw_queue;
+>
+>         ath_txq_lock(sc, txq);
+>         if (txq == sc->tx.txq_map[q]) {
+>                 fi->txq = q;
+>                 if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
+>                     !txq->stopped) {
+> -                       if (ath9k_is_chanctx_enabled())
+> -                               ieee80211_stop_queue(sc->hw, info->hw_queue);
+> -                       else
+> -                               ieee80211_stop_queue(sc->hw, q);
+> +                       ieee80211_stop_queue(sc->hw, q);
+>                         txq->stopped = true;
+>                 }
+>         }
+> --
+> 2.3.6
+>
+Hello, could you check it again?
+I see such patch that enable hw_queues only for MCC and disable for
+non-MCC mode.
 
-This patch renames gau8MulticastMacAddrList variable to multicast_mac_addr_list
-to avoid CamelCase naming convention.
+ath9k: Enable HW queue control only for MCC
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c |  5 +++--
- drivers/staging/wilc1000/linux_wlan.c     | 11 ++++++++---
- 2 files changed, 11 insertions(+), 5 deletions(-)
+    Enabling HW queue control for normal (non-mcc) mode
+    causes problems with queue management, resulting
+    in traffic stall. Since it is mainly required for
+    fairness in MCC mode, disable it for the general case.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8494a032..d0e4039 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -243,7 +243,7 @@ static struct semaphore hif_sema_wait_response;
- static struct semaphore hif_sema_deinit;
- static struct timer_list periodic_rssi;
- 
--u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-+u8 multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- 
- static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
- 
-@@ -2713,7 +2713,8 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
- 
- 	if ((strHostIfSetMulti->cnt) > 0)
--		memcpy(pu8CurrByte, gau8MulticastMacAddrList, ((strHostIfSetMulti->cnt) * ETH_ALEN));
-+		memcpy(pu8CurrByte, multicast_mac_addr_list,
-+		       ((strHostIfSetMulti->cnt) * ETH_ALEN));
- 
- 	result = send_config_pkt(SET_CFG, &wid, 1,
- 				 get_id_from_handler(hif_drv));
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 09ddba2..1e14e97 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -46,7 +46,7 @@
- 
- extern bool g_obtainingIP;
- extern void resolve_disconnect_aberration(void *drvHandler);
--extern u8 gau8MulticastMacAddrList[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-+extern u8 multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- extern struct timer_list hDuringIpTimer;
- 
- static int linux_wlan_device_power(int on_off)
-@@ -1343,9 +1343,14 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	/* Store all of the multicast addresses in the hardware filter */
- 	netdev_for_each_mc_addr(ha, dev)
- 	{
--		memcpy(gau8MulticastMacAddrList[i], ha->addr, ETH_ALEN);
-+		memcpy(multicast_mac_addr_list[i], ha->addr, ETH_ALEN);
- 		PRINT_D(INIT_DBG, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i,
--			gau8MulticastMacAddrList[i][0], gau8MulticastMacAddrList[i][1], gau8MulticastMacAddrList[i][2], gau8MulticastMacAddrList[i][3], gau8MulticastMacAddrList[i][4], gau8MulticastMacAddrList[i][5]);
-+			multicast_mac_addr_list[i][0],
-+			multicast_mac_addr_list[i][1],
-+			multicast_mac_addr_list[i][2],
-+			multicast_mac_addr_list[i][3],
-+			multicast_mac_addr_list[i][4],
-+			multicast_mac_addr_list[i][5]);
- 		i++;
- 	}
- 
--- 
-1.9.1
+    Bug: https://dev.openwrt.org/ticket/18164
 
+BR
+Janusz
