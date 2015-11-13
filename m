@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34096 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56912 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbbKVRaS (ORCPT
+	with ESMTP id S932363AbbKMLh2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 12:30:18 -0500
+	Fri, 13 Nov 2015 06:37:28 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/27] wireless drivers vendor directories
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-Date: Sun, 22 Nov 2015 19:30:12 +0200
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org> (Kalle
-	Valo's message of "Wed, 18 Nov 2015 16:45:39 +0200")
-Message-ID: <87h9kerlgb.fsf@kamboji.qca.qualcomm.com> (sfid-20151122_183119_745161_30F17A0F)
+To: Borja Salazar <borja.salazar@fon.com>
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	sujith@msujith.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH v2] ath9k: incorrect queue may be stopped/awaken
+References: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
+	<1447410786-31874-1-git-send-email-borja.salazar@fon.com>
+	<CADqurOFRewt0OTU_HSCozBfmQBy53Q2DBs2vKkfw29O+pZeR7w@mail.gmail.com>
+Date: Fri, 13 Nov 2015 13:37:18 +0200
+In-Reply-To: <CADqurOFRewt0OTU_HSCozBfmQBy53Q2DBs2vKkfw29O+pZeR7w@mail.gmail.com>
+	(Borja Salazar's message of "Fri, 13 Nov 2015 11:49:13 +0100")
+Message-ID: <8737wa2kr5.fsf@kamboji.qca.qualcomm.com> (sfid-20151113_123742_960668_9E99A0CD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Borja Salazar <borja.salazar@fon.com> writes:
 
-> Hi,
->
-> I started to reorganise drivers/net/wireless directory and follow what
-> drivers/net/ethernet has. The major change is that new vendor
-> directories are created and most of the drivers are now under those
-> vendor directories:
->
-> admtek/
-> ath/
-> atmel/
-> broadcom/
-> cisco/
-> intel/
-> intersil/
-> marvell/
-> mediatek/
-> ralink/
-> realtek/
-> rsi/
-> st/
-> ti/
-> zydas/
->
+> Let me explain the patch more thoroughly. We are testing MCC and we've
+> found some issues with the queues handlers, the main problem is that
+> when we transmit a multicast/broadcast frame, where hw_queue is 8
+> (CAB), we check queue status, which is 2(q), and if it is full and we
+> have to stop it, we end stopping the wrong queue, 8, which is not
+> full. From this point onwards stations are unable to connect to the
+> AP.
 
-[...]
-
-> Kalle Valo (27):
->   adm80211: move under admtek vendor directory
->   airo: move under cisco vendor directory
->   atmel: move under atmel vendor directory
->   b43: move under broadcom vendor directory
->   b43legacy: move under broadcom vendor directory
->   brcm80211: move under broadcom vendor directory
->   cw1200: move under st vendor directory
->   ipw2x00: move under intel vendor directory
->   iwlegacy: move under intel directory
->   iwlwifi: move under intel vendor directory
->   libertas: move under marvell vendor directory
->   libertas_tf: move under marvell vendor directory
->   mwifiex: move under marvell vendor directory
->   mwl8k: move under marvell vendor directory
->   zd1201: move under zydas vendor directory
->   zd1211rw: move under zydas vendor directory
->   hostap: move under intersil vendor directory
->   p54: move under intersil vendor directory
->   orinoco: move under intersil vendor directory
->   prism54: move under intersil vendor directory
->   realtek: create separate Kconfig file
->   rsi: add vendor Kconfig entry
->   rt2x00: move under ralink vendor directory
->   mediatek: unify Kconfig with other vendors
->   ti: unify Kconfig with other vendors
->   ath: unify Kconfig with other vendors
->   mac80211_hwsim: move Kconfig entry for sorting alphabetically
-
-Applied to wireless-drivers-next.git.
+This information should be in the commit log.
 
 -- 
 Kalle Valo
