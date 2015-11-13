@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33123 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755176AbbKRGTk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:19:40 -0500
-Date: Wed, 18 Nov 2015 11:49:28 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Bogicevic Sasa <brutallesale@gmail.com>
-Cc: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
-	austin.shin@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers:staging:wilc1000 Fix comparison to NULL messages
-Message-ID: <20151118061927.GA6229@sudip-pc> (sfid-20151118_071955_703232_EF255281)
-References: <1447790488-17742-1-git-send-email-brutallesale@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447790488-17742-1-git-send-email-brutallesale@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57449 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754690AbbKMJwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2015 04:52:36 -0500
+Message-ID: <1447408352.3271.11.camel@sipsolutions.net> (sfid-20151113_105242_906025_8ED4659E)
+Subject: Re: [RFC v5 4/5] mac80211: use Kconfig counters to elide
+ unnecessary code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Marek <mmarek@suse.com>
+Date: Fri, 13 Nov 2015 10:52:32 +0100
+In-Reply-To: <CAGRGNgUr=ygLh-B1ZZ5ojPeRJVXCEbY3dniAtXZq_29DZzqjCw@mail.gmail.com> (sfid-20151113_104917_989701_911D22D2)
+References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+	 <1447365652-23716-5-git-send-email-johannes@sipsolutions.net>
+	 <CAGRGNgUr=ygLh-B1ZZ5ojPeRJVXCEbY3dniAtXZq_29DZzqjCw@mail.gmail.com>
+	 (sfid-20151113_104917_989701_911D22D2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 09:01:28PM +0100, Bogicevic Sasa wrote:
-> This fixes all "Comparison to NULL could be written like..."
-> messages from checkpatch.pl
+On Fri, 2015-11-13 at 20:48 +1100, Julian Calaby wrote:
+> 
+> Am I missing something or are you not actually doing anything with
+> MAC80211_DRIVER_NO_HWFLAGS?
 > 
-> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index fd7240c..a31ac55 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -434,7 +434,7 @@ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
->  
->  		/* Get DTIM Period */
->  		pu8TimElm = get_tim_elm(pu8msa, u16RxLen + FCS_LEN, u8index);
-> -		if (pu8TimElm != NULL)
-> +		if (!pu8TimElm)
 
-You are now checking for -  if (pu8TimElm == NULL)	
-It should actually be: if (pu8TimElm)
+Crap. I meant to pass it to the macro like this (I think):
 
-regards
-sudip
+#define __DEFINE_HWFLAG(_flg, _dyn, _on, _off)                         \
+       HWFLAGS_STATE_##_flg = -1 + (!(_dyn)) * (((_on) ^ (_off)) * (1 + (_on))),
+#define DEFINE_HWFLAG(_flg)                                            \
+       __DEFINE_HWFLAG(_flg,                                           \
+                       IS_ENABLED(CONFIG_MAC80211_HW_##_flg##_DYN) ||  \
+                       (CONFIG_MAC80211_DRIVER_NO_HWFLAGS > 0),        \
+                       CONFIG_MAC80211_HW_##_flg > 0,                  \
+                       CONFIG_MAC80211_HW_##_flg < CONFIG_MAC80211_NUM_DRIVERS)
+
+I'll take a closer look.
+
+FWIW, I pushed this into the hwflags-elide branch in mac80211-next.git
+(kernel.org) - will update there (also already fixed a compile issue)
+
+johannes
