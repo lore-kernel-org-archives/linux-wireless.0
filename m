@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:49709 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbbKZMQO (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35112 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbbKNGwh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 07:16:14 -0500
-From: Mark Brown <broonie@kernel.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Mark Brown <broonie@kernel.org>
-Date: Thu, 26 Nov 2015 12:15:35 +0000
-Message-Id: <1448540135-9388-1-git-send-email-broonie@kernel.org> (sfid-20151126_131619_387172_D2FFBDAD)
-Subject: [PATCH] ath10k: Fix check for !THERMAL case
+	Sat, 14 Nov 2015 01:52:37 -0500
+Received: by pacej9 with SMTP id ej9so14972827pac.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 22:52:37 -0800 (PST)
+Date: Sat, 14 Nov 2015 12:22:29 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: remove new line around else and braces
+Message-ID: <20151114065229.GC3685@sudip-pc> (sfid-20151114_075304_765702_7EA4F182)
+References: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When defining stubs for !THERMAL cases we currently check if CONFIG_THERMAL
-is defined but this fails when the thermal code is built as a module in
-which case CONFIG_THERMAL_MODULE is defined instead causing us to define
-the stubs as well as building the actual ath10k thermal code which in turn
-causes the build to fail on arm64 allmodconfig. Fix this by changing the
-check in the header to use IS_ENABLED().
+On Fri, Nov 13, 2015 at 11:59:47PM +0200, Panayiotis Tembriotis wrote:
+> Remove excess new line characters as suggested by checkpatch.pl:
+> ERROR: else should follow close brace '}'
+> ERROR: that open brace { should be on the previous line
+> 
+> Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+> ---
 
-Signed-off-by: Mark Brown <broonie@kernel.org>
----
- drivers/net/wireless/ath/ath10k/thermal.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This has already been done. please use staging-testing tree.
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index b610ea5caae8..793eec160e65 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -36,7 +36,7 @@ struct ath10k_thermal {
- 	int temperature;
- };
- 
--#ifdef CONFIG_THERMAL
-+#if IS_ENABLED(CONFIG_THERMAL)
- int ath10k_thermal_register(struct ath10k *ar);
- void ath10k_thermal_unregister(struct ath10k *ar);
- void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature);
--- 
-2.6.2
-
+regards
+sudip
