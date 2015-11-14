@@ -1,114 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48680 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934237AbbKTKcv (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34555 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbbKNHuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 05:32:51 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-11-20
-Date: Fri, 20 Nov 2015 12:32:42 +0200
-Message-ID: <87egflt0z9.fsf@kamboji.qca.qualcomm.com> (sfid-20151120_113343_733172_2C7E678F)
+	Sat, 14 Nov 2015 02:50:44 -0500
+Received: by wmvv187 with SMTP id v187so111344412wmv.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 23:50:43 -0800 (PST)
+Date: Sat, 14 Nov 2015 09:50:39 +0200
+From: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: remove new line around else and braces
+Message-ID: <20151114075039.GA588@maclinux> (sfid-20151114_085109_202764_99E64377)
+References: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
+ <20151114065229.GC3685@sudip-pc>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151114065229.GC3685@sudip-pc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Sat, Nov 14, 2015 at 12:22:29PM +0530, Sudip Mukherjee wrote:
+> On Fri, Nov 13, 2015 at 11:59:47PM +0200, Panayiotis Tembriotis wrote:
+> > Remove excess new line characters as suggested by checkpatch.pl:
+> > ERROR: else should follow close brace '}'
+> > ERROR: that open brace { should be on the previous line
+> > 
+> > Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
+> > ---
+> 
+> This has already been done. please use staging-testing tree.
 
-here first wireless-driver fixes for 4.4. Here there are few patches
-adding new device support and a new firmware but I think they are
-justified at this early stage of release cycle. Otherwise there should
-not be anything special, all patches are really small. Please let me
-know if you have any problems.
+Sorry for spamming and thanks for letting me know.
 
-Kalle
-
-The following changes since commit f1a454a37618b819f2528ccd234f77a02b3a6016:
-
-  ipg: Remove ipg driver (2015-11-16 17:11:31 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-11-20
-
-for you to fetch changes up to eeec5d0ef7ee54a75e09e861c3cc44177b8752c7:
-
-  rtlwifi: rtl8821ae: Fix lockups on boot (2015-11-17 15:58:53 +0200)
-
-----------------------------------------------------------------
-iwlwifi
-
-* bump API to firmware 19 - not released yet.
-* fix D3 flows (Luca)
-* new device IDs (Oren)
-* fix NULL pointer dereference (Avri)
-
-ath10k
-
-* fix invalid NSS for 4x4 devices
-* add QCA9377 hw1.0 support
-* fix QCA6174 regression with CE5 usage
-
-wil6210
-
-* new maintainer - Maya Erez
-
-rtlwifi
-
-* rtl8821ae: Fix lockups on boot
-
-----------------------------------------------------------------
-Avri Altman (1):
-      iwlwifi: mvm: Avoid dereferencing sta if it was already flushed
-
-Bartosz Markowski (4):
-      ath10k: fix the currently supported QCA9377 target version name
-      ath10k: update missing hw_params of QCA9377 hw1.1
-      ath10k: introduce dev_id to hw_params
-      ath10k: add QCA9377 hw1.0 support
-
-Emmanuel Grumbach (1):
-      iwlwifi: bump firmware API to 19
-
-Kalle Valo (2):
-      Merge tag 'iwlwifi-for-kalle-2015-11-15' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-      Merge ath-current from ath.git
-
-Larry Finger (1):
-      rtlwifi: rtl8821ae: Fix lockups on boot
-
-Luca Coelho (1):
-      iwlwifi: mvm: don't overwrite the key indices in D3 entry
-
-Oren Givon (1):
-      iwlwifi: Add new PCI IDs for the 8260 series
-
-Rajkumar Manoharan (2):
-      ath10k: fix invalid NSS for 4x4 devices
-      ath10k: poll HTT send completion when CE 5 is unused
-
-Ryan Hsu (1):
-      ath10k: override CE5 configuration for QCA6147 device
-
-Vladimir Kondratiev (1):
-      MAINTAINERS: wil6210: new maintainer - Maya Erez
-
- MAINTAINERS                                        |    2 +-
- drivers/net/wireless/ath/ath10k/core.c             |   49 ++++++++++-
- drivers/net/wireless/ath/ath10k/core.h             |    1 +
- drivers/net/wireless/ath/ath10k/hw.h               |   17 +++-
- drivers/net/wireless/ath/ath10k/mac.c              |    2 +-
- drivers/net/wireless/ath/ath10k/pci.c              |   53 +++++++++---
- drivers/net/wireless/iwlwifi/iwl-7000.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-8000.c            |    2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c              |    8 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |   11 ++-
- drivers/net/wireless/iwlwifi/mvm/sta.c             |   88 +++++++++++---------
- drivers/net/wireless/iwlwifi/mvm/sta.h             |    4 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c            |   19 ++++-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |    2 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |    2 +-
- 15 files changed, 189 insertions(+), 73 deletions(-)
+Regards,
+Panayiotis
