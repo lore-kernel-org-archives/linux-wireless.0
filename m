@@ -1,128 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34950 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933222AbbKROq6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:58 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 25/27] ti: unify Kconfig with other vendors
-Date: Wed, 18 Nov 2015 16:46:04 +0200
-Message-Id: <1447857966-19560-26-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154857_124768_201F0116)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43936 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751817AbbKOOiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 09:38:13 -0500
+Message-ID: <1447598285.2554.1.camel@sipsolutions.net> (sfid-20151115_153840_582285_0CE05C2D)
+Subject: Re: [PATCH v2] cfg80211: add VHT support for Mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peter Oh <poh@codeaurora.org>, Peter Oh <poh@qca.qualcomm.com>,
+	ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 15 Nov 2015 15:38:05 +0100
+In-Reply-To: <5646774D.2000801@codeaurora.org>
+References: <ab294ba62856f00c06dde10b1bf57f5f341a7198.1447351137.git.poh@qca.qualcomm.com>
+	 <1447358605.2131.3.camel@sipsolutions.net>
+	 <564505A6.9030001@codeaurora.org>
+	 <1447364413.2131.5.camel@sipsolutions.net>
+	 <56451294.9060205@codeaurora.org>
+	 <1447367523.2131.6.camel@sipsolutions.net>
+	 <56451B2F.3060704@codeaurora.org>
+	 <1447400275.3271.2.camel@sipsolutions.net>
+	 <5646774D.2000801@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename WL_TI to WLAN_VENDOR_TI to match with other vendor configs and make sure
-that it's enabled by default in new configs. Convert menuconfigs to regular
-configs to unify the wireless drivers menuconfig. Part of reorganising wireless
-drivers directory and Kconfig.
+On Fri, 2015-11-13 at 15:50 -0800, Peter Oh wrote:
+> 
+> I'm saying, cannot use VHT Mesh by wpa_supplicant because a lack of 
+> communication method between driver and wpa_supplicant, hence
+> extending NL80211 feature flag.
+> > 
 
-Also remove WLCORE dependency to WL_TI. It should not be needed as WLCORE is
-already under if  WLAN_VENDOR_TI.
+And I'm arguing that you don't need such a communication method since,
+unlike IBSS, mesh doesn't restrict the channel width usable further
+than the HT/VHT capabilities.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/Kconfig           |    2 +-
- drivers/net/wireless/Makefile          |    3 +--
- drivers/net/wireless/ti/Kconfig        |   18 +++++++++++-------
- drivers/net/wireless/ti/wl1251/Kconfig |    2 +-
- drivers/net/wireless/ti/wlcore/Kconfig |    2 +-
- 5 files changed, 15 insertions(+), 12 deletions(-)
+It might, on the other hand, very well be that mesh stuff is missing
+some VHT compatibility today - that would be an argument for a more
+comprehensive patch that then includes the feature flag to say "we've
+fixed the VHT issues in mesh mode". That's quite obviously not what
+you're doing though.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 2225e06611fa..cb115db309ce 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -29,6 +29,7 @@ source "drivers/net/wireless/ralink/Kconfig"
- source "drivers/net/wireless/realtek/Kconfig"
- source "drivers/net/wireless/rsi/Kconfig"
- source "drivers/net/wireless/st/Kconfig"
-+source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zydas/Kconfig"
- 
- config PCMCIA_RAYCS
-@@ -99,6 +100,5 @@ config MAC80211_HWSIM
- 	  called mac80211_hwsim.  If unsure, say N.
- 
- source "drivers/net/wireless/ath/Kconfig"
--source "drivers/net/wireless/ti/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 0fa909072846..8c99b9faab09 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -14,6 +14,7 @@ obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
- obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
- obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
- obj-$(CONFIG_WLAN_VENDOR_ST) += st/
-+obj-$(CONFIG_WLAN_VENDOR_TI) += ti/
- obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
- 
- # 16-bit wireless PCMCIA client drivers
-@@ -25,5 +26,3 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- obj-$(CONFIG_ATH_CARDS)		+= ath/
- 
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
--
--obj-$(CONFIG_WL_TI)	+= ti/
-diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
-index cbe1e7fef61b..92fbd6597e34 100644
---- a/drivers/net/wireless/ti/Kconfig
-+++ b/drivers/net/wireless/ti/Kconfig
-@@ -1,11 +1,15 @@
--menuconfig WL_TI
--	bool "TI Wireless LAN support"
-+config WLAN_VENDOR_TI
-+	bool "Texas Instrument devices"
-+	default y
- 	---help---
--	  This section contains support for all the wireless drivers
--	  for Texas Instruments WLAN chips, such as wl1251 and the wl12xx
--	  family.
-+	  If you have a wireless card belonging to this class, say Y.
-+
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
- 
--if WL_TI
-+if WLAN_VENDOR_TI
- source "drivers/net/wireless/ti/wl1251/Kconfig"
- source "drivers/net/wireless/ti/wl12xx/Kconfig"
- source "drivers/net/wireless/ti/wl18xx/Kconfig"
-@@ -21,4 +25,4 @@ config WILINK_PLATFORM_DATA
- 	Small platform data bit needed to pass data to the sdio modules.
- 
- 
--endif # WL_TI
-+endif # WLAN_VENDOR_TI
-diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
-index 477a206c098e..7142ccf3a425 100644
---- a/drivers/net/wireless/ti/wl1251/Kconfig
-+++ b/drivers/net/wireless/ti/wl1251/Kconfig
-@@ -1,4 +1,4 @@
--menuconfig WL1251
-+config WL1251
- 	tristate "TI wl1251 driver support"
- 	depends on MAC80211
- 	select FW_LOADER
-diff --git a/drivers/net/wireless/ti/wlcore/Kconfig b/drivers/net/wireless/ti/wlcore/Kconfig
-index 7c099542b214..969c9d79bfc8 100644
---- a/drivers/net/wireless/ti/wlcore/Kconfig
-+++ b/drivers/net/wireless/ti/wlcore/Kconfig
-@@ -1,6 +1,6 @@
- config WLCORE
- 	tristate "TI wlcore support"
--	depends on WL_TI && MAC80211
-+	depends on MAC80211
- 	select FW_LOADER
- 	---help---
- 	  This module contains the main code for TI WLAN chips.  It abstracts
--- 
-1.7.9.5
-
+johannes
