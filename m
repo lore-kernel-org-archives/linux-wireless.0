@@ -1,92 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:36631 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbbKVUNz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 15:13:55 -0500
-Received: by qgcc31 with SMTP id c31so61018012qgc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 12:13:54 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58830 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751187AbbKOHbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 02:31:16 -0500
+Date: Sun, 15 Nov 2015 15:31:05 +0800
+From: Dave Young <dyoung@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	davem@davemloft.net, johannes@sipsolutions.net
+Subject: [PATCH] wireless: change cfg80211 regulatory domain info as debug
+ messages
+Message-ID: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com> (sfid-20151115_083216_083746_3CE98FA3)
 MIME-Version: 1.0
-In-Reply-To: <564433A2.1080407@linaro.org>
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
-	<1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
-	<20151109154040.GD5395@localhost>
-	<CAJAp7OhJyj4qEU+quqs3RLr10FB1D+XUCsSsH04DaQ8bVWsd_A@mail.gmail.com>
-	<564433A2.1080407@linaro.org>
-Date: Sun, 22 Nov 2015 20:13:54 +0000
-Message-ID: <CAFSJ42bGR1EFrve0+g3VkqObm5hG=Hy01oaZE-mcgLBNyohYjQ@mail.gmail.com> (sfid-20151122_211358_744286_8CE6A048)
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620 trigger_ba
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: "fengwei.yin" <fengwei.yin@linaro.org>
-Cc: Bjorn Andersson <bjorn@kryo.se>, Bob Copeland <me@bobcopeland.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	Andy Green <andy.green@linaro.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yin,
+cfg80211 module prints a lot of messages like below. Actually printing
+once is acceptable but sometimes it will print again and again, it looks
+very annoying. It is better to change these detail messages to debugging
+only.
 
-Yes, it seems like response is FW specific other than chip spesific.
+cfg80211: World regulatory domain updated:
+cfg80211:  DFS Master region: unset
+cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
+cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
+cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
+cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm), (N/A)
+cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz, 160000 KHz AUTO), (N/A, 2000 mBm), (N/A)
+cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz, 160000 KHz AUTO), (N/A, 2000 mBm), (0 s)
+cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
+cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 2000 mBm), (N/A)
+cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 0 mBm), (N/A)
 
-2015-11-12 6:37 GMT+00:00 fengwei.yin <fengwei.yin@linaro.org>:
-> Hi Bjorn,
->
-> On 2015/11/12 12:50, Bjorn Andersson wrote:
->>
->> On Mon, Nov 9, 2015 at 7:40 AM, Bob Copeland <me@bobcopeland.com> wrote:
->>>
->>> On Mon, Nov 09, 2015 at 05:02:41AM -0500, Yin, Fengwei wrote:
->>>>
->>>> From: Andy Green <andy.green@linaro.org>
->>>>
->>>> From: Andy Green <andy.green@linaro.org>
->>>>
->>>> On wcn3620, firmware response to trigger_ba uses the new, larger
->>>> "v2" format
->>>
->>>
->>>> -     ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf,
->>>> wcn->hal_rsp_len);
->>>> +     ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
->>>> +                                             wcn->hal_rsp_len);
->>>
->>>
->>> It's unclear from the changelog -- is it safe to call
->>> wcn36xx_smd_rsp_status_check_v2 on the 3660/3680 as well?
->>>
->>> Is wcn36xx_smd_rsp_status_check() still needed?
->>>
->>
->> I had to introduce this on one of my 3680 devices recently to silence
->> the error described originally by Andy. So it not only seems safe but
->> seems required. But still, based on how the code was written this
->> doesn't seem to be the case on all versions of the firmware or all
->> chips(?)
->>
-> Thanks for the information. It confirm my thought that the change sticks
-> to new firmware instead of specific platform.
->
-> But we couldn't tell which version of firmware need this new format. Andy's
-> original change has two conditions to use the new format:
-> 1. The platform is 3620. - this should be removed because you need the same
->    change for 3680. And patch v2 already remove it.
->
-> 2. The packet size from firmware is larger than old response size. I suppose
->    this one works in most case.
->
-> Regards
-> Yin, Fengwei
->
->> Regards,
->> Bjorn
->>
->
+The changes in this patch is to replace pr_info with pr_debug in function
+print_rd_rules and print_regdomain_info
 
+Signed-off-by: Dave Young <dyoung@redhat.com>
+---
+ net/wireless/reg.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-
--- 
-Best regards,
-Eugene
+--- linux.orig/net/wireless/reg.c
++++ linux/net/wireless/reg.c
+@@ -2763,7 +2763,7 @@ static void print_rd_rules(const struct
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	char bw[32], cac_time[32];
+ 
+-	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)\n");
++	pr_debug("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)\n");
+ 
+ 	for (i = 0; i < rd->n_reg_rules; i++) {
+ 		reg_rule = &rd->reg_rules[i];
+@@ -2790,7 +2790,7 @@ static void print_rd_rules(const struct
+ 		 * in certain regions
+ 		 */
+ 		if (power_rule->max_antenna_gain)
+-			pr_info("  (%d KHz - %d KHz @ %s), (%d mBi, %d mBm), (%s)\n",
++			pr_debug("  (%d KHz - %d KHz @ %s), (%d mBi, %d mBm), (%s)\n",
+ 				freq_range->start_freq_khz,
+ 				freq_range->end_freq_khz,
+ 				bw,
+@@ -2798,7 +2798,7 @@ static void print_rd_rules(const struct
+ 				power_rule->max_eirp,
+ 				cac_time);
+ 		else
+-			pr_info("  (%d KHz - %d KHz @ %s), (N/A, %d mBm), (%s)\n",
++			pr_debug("  (%d KHz - %d KHz @ %s), (N/A, %d mBm), (%s)\n",
+ 				freq_range->start_freq_khz,
+ 				freq_range->end_freq_khz,
+ 				bw,
+@@ -2831,35 +2831,35 @@ static void print_regdomain(const struct
+ 			struct cfg80211_registered_device *rdev;
+ 			rdev = cfg80211_rdev_by_wiphy_idx(lr->wiphy_idx);
+ 			if (rdev) {
+-				pr_info("Current regulatory domain updated by AP to: %c%c\n",
++				pr_debug("Current regulatory domain updated by AP to: %c%c\n",
+ 					rdev->country_ie_alpha2[0],
+ 					rdev->country_ie_alpha2[1]);
+ 			} else
+-				pr_info("Current regulatory domain intersected:\n");
++				pr_debug("Current regulatory domain intersected:\n");
+ 		} else
+-			pr_info("Current regulatory domain intersected:\n");
++			pr_debug("Current regulatory domain intersected:\n");
+ 	} else if (is_world_regdom(rd->alpha2)) {
+-		pr_info("World regulatory domain updated:\n");
++		pr_debug("World regulatory domain updated:\n");
+ 	} else {
+ 		if (is_unknown_alpha2(rd->alpha2))
+-			pr_info("Regulatory domain changed to driver built-in settings (unknown country)\n");
++			pr_debug("Regulatory domain changed to driver built-in settings (unknown country)\n");
+ 		else {
+ 			if (reg_request_cell_base(lr))
+-				pr_info("Regulatory domain changed to country: %c%c by Cell Station\n",
++				pr_debug("Regulatory domain changed to country: %c%c by Cell Station\n",
+ 					rd->alpha2[0], rd->alpha2[1]);
+ 			else
+-				pr_info("Regulatory domain changed to country: %c%c\n",
++				pr_debug("Regulatory domain changed to country: %c%c\n",
+ 					rd->alpha2[0], rd->alpha2[1]);
+ 		}
+ 	}
+ 
+-	pr_info(" DFS Master region: %s", reg_dfs_region_str(rd->dfs_region));
++	pr_debug(" DFS Master region: %s", reg_dfs_region_str(rd->dfs_region));
+ 	print_rd_rules(rd);
+ }
+ 
+ static void print_regdomain_info(const struct ieee80211_regdomain *rd)
+ {
+-	pr_info("Regulatory domain: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
++	pr_debug("Regulatory domain: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
+ 	print_rd_rules(rd);
+ }
+ 
