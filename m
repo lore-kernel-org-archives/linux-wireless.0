@@ -1,155 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:35878 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbbKWAjv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 19:39:51 -0500
-Received: by igcph11 with SMTP id ph11so42198608igc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 16:39:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1448183242-3397-4-git-send-email-tvboxspy@gmail.com>
-References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com> <1448183242-3397-4-git-send-email-tvboxspy@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 23 Nov 2015 11:39:31 +1100
-Message-ID: <CAGRGNgUvE0-7RnW-_+QWKky6cwyEEbY8UpYzqJpB0tKHqmsMjg@mail.gmail.com> (sfid-20151123_013955_089883_584295B4)
-Subject: Re: [PATCH 4/8] staging: vt6655: rf.c rename bResult ret.
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:48833 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbbKOTeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 14:34:09 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>, <stable@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/4] iwlwifi: Add new PCI IDs for the 8260 series
+Date: Sun, 15 Nov 2015 21:34:02 +0200
+Message-Id: <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151115_203415_464419_FF8570A4)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Malcolm,
+From: Oren Givon <oren.givon@intel.com>
 
-A couple of these comments apply to a few of the patches.
+Add some new PCI IDs for the 8260 series which were missing.
+The following sub-system IDs were added:
+0x0130, 0x1130, 0x0132, 0x1132, 0x1150, 0x8110, 0x9110, 0x8130,
+0x9130, 0x8132, 0x9132, 0x8150, 0x9150, 0x0044, 0x0930
 
-On Sun, Nov 22, 2015 at 8:07 PM, Malcolm Priestley <tvboxspy@gmail.com> wrote:
-> Removing camel case and reflecting return value.
->
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> ---
->  drivers/staging/vt6655/rf.c | 138 ++++++++++++++++++++++----------------------
->  1 file changed, 69 insertions(+), 69 deletions(-)
->
-> diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-> index 4c22bb3..1c0691d 100644
-> --- a/drivers/staging/vt6655/rf.c
-> +++ b/drivers/staging/vt6655/rf.c
-> @@ -420,9 +420,9 @@ static bool s_bAL7230Init(struct vnt_private *priv)
->  {
->         void __iomem *dwIoBase = priv->PortOffset;
->         int     ii;
-> -       bool bResult;
-> +       bool ret;
->
-> -       bResult = true;
-> +       ret = true;
+CC: <stable@vger.kernel.org> [4.1+]
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-These two lines could be combined into one.
-
->         /* 3-wire control for normal mode */
->         VNSvOutPortB(dwIoBase + MAC_REG_SOFTPWRCTL, 0);
-> @@ -432,7 +432,7 @@ static bool s_bAL7230Init(struct vnt_private *priv)
->         BBvPowerSaveModeOFF(priv); /* RobertYu:20050106, have DC value for Calibration */
->
->         for (ii = 0; ii < CB_AL7230_INIT_SEQ; ii++)
-> -               bResult &= IFRFbWriteEmbedded(priv, dwAL7230InitTable[ii]);
-> +               ret &= IFRFbWriteEmbedded(priv, dwAL7230InitTable[ii]);
-
-Now that I understand why it's always ret &= ..., I'm truly horrified
-by the error handling in this driver. =)
-
->         /* PLL On */
->         MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPE3);
-
-> @@ -616,26 +616,26 @@ bool RFbInit(
->         struct vnt_private *priv
->  )
->  {
-> -       bool bResult = true;
-> +       bool ret = true;
->
->         switch (priv->byRFType) {
->         case RF_AIROHA:
->         case RF_AL2230S:
->                 priv->byMaxPwrLevel = AL2230_PWR_IDX_LEN;
-> -               bResult = RFbAL2230Init(priv);
-> +               ret = RFbAL2230Init(priv);
->                 break;
->         case RF_AIROHA7230:
->                 priv->byMaxPwrLevel = AL7230_PWR_IDX_LEN;
-> -               bResult = s_bAL7230Init(priv);
-> +               ret = s_bAL7230Init(priv);
->                 break;
->         case RF_NOTHING:
-> -               bResult = true;
-> +               ret = true;
->                 break;
->         default:
-> -               bResult = false;
-> +               ret = false;
->                 break;
->         }
-> -       return bResult;
-> +       return ret;
->  }
->
->  /*
-> @@ -654,26 +654,26 @@ bool RFbInit(
->  bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType,
->                       u16 byChannel)
->  {
-> -       bool bResult = true;
-> +       bool ret = true;
->
->         switch (byRFType) {
->         case RF_AIROHA:
->         case RF_AL2230S:
-> -               bResult = RFbAL2230SelectChannel(priv, byChannel);
-> +               ret = RFbAL2230SelectChannel(priv, byChannel);
->                 break;
->                 /*{{ RobertYu: 20050104 */
->         case RF_AIROHA7230:
-> -               bResult = s_bAL7230SelectChannel(priv, byChannel);
-> +               ret = s_bAL7230SelectChannel(priv, byChannel);
->                 break;
->                 /*}} RobertYu */
->         case RF_NOTHING:
-> -               bResult = true;
-> +               ret = true;
-
-Isn't this line unnecessary?
-
->                 break;
->         default:
-> -               bResult = false;
-> +               ret = false;
->                 break;
->         }
-> -       return bResult;
-> +       return ret;
->  }
->
->  /*
-
-> @@ -879,13 +879,13 @@ bool RFbRawSetPower(
->                 dwMax7230Pwr = 0x080C0B00 | ((byPwr) << 12) |
->                         (BY_AL7230_REG_LEN << 3)  | IFREGCTL_REGW;
->
-> -               bResult &= IFRFbWriteEmbedded(priv, dwMax7230Pwr);
-> +               ret &= IFRFbWriteEmbedded(priv, dwMax7230Pwr);
->                 break;
->
->         default:
->                 break;
-
-You could remove this default case in another round of cleanups.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 644b58b..639761f 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -423,14 +423,21 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 8000 Series */
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0130, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1130, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0132, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1132, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0110, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x01F0, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0012, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1012, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0250, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0150, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1150, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x24F4, 0x1130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x1030, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xC010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xC110, iwl8260_2ac_cfg)},
+@@ -438,18 +445,28 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0xC050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xD050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x9010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x8030, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x9030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8130, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9130, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8132, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9132, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8150, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x9050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9150, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0044, iwl8260_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0810, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0910, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0850, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0950, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
