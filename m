@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45294 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbbKDUvg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 15:51:36 -0500
-Date: Wed, 4 Nov 2015 12:51:34 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 01/38] staging: wilc1000: rename pu8IPAddr of fuction
- Handle_set_IPAddress
-Message-ID: <20151104205134.GA24488@kroah.com> (sfid-20151104_215139_120036_FDBFABD2)
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+Received: from mga03.intel.com ([134.134.136.65]:48833 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751184AbbKOTeK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 14:34:10 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/4] iwlwifi: bump firmware API to 19
+Date: Sun, 15 Nov 2015 21:34:03 +0200
+Message-Id: <1447616045-31484-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151115_203419_348999_73435913)
+In-Reply-To: <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
+ <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2015 at 05:50:44PM +0900, Glen Lee wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patch renames pu8IPAddr of fuction Handle_set_IPAddress to ip_addr
-> to avoid CamelCase naming convention.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
+This firmware will be the first firmware to support
+3168. It hasn't been released yet.
 
-This series doesn't apply probably because I didn't take your previous
-series.  Please resend after you refresh and resend that one.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 1a73c7a..bf88ec3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -69,7 +69,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	17
++#define IWL7260_UCODE_API_MAX	19
+ 
+ /* Oldest version we won't warn about */
+ #define IWL7260_UCODE_API_OK	13
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 0116e5a..9bcc0bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -69,7 +69,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	17
++#define IWL8000_UCODE_API_MAX	19
+ 
+ /* Oldest version we won't warn about */
+ #define IWL8000_UCODE_API_OK	13
+-- 
+2.5.0
 
-greg k-h
