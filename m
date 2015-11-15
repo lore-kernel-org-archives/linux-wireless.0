@@ -1,31 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38351 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751274AbbKZRsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:48:17 -0500
-Message-ID: <1448560094.2167.39.camel@sipsolutions.net> (sfid-20151126_184821_499298_9FB3FC6F)
-Subject: Re: [PATCH v2 3/8] cfg80211: reg: Refactor calculation of bandwidth
- flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
-Date: Thu, 26 Nov 2015 18:48:14 +0100
-In-Reply-To: <1448303241-27747-4-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192815_578111_C2D7CE4F)
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448303241-27747-4-git-send-email-sojkam1@fel.cvut.cz>
-	 (sfid-20151123_192815_578111_C2D7CE4F)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0034.hostedemail.com ([216.40.44.34]:46461 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751977AbbKORi6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 12:38:58 -0500
+Message-ID: <1447609134.6012.15.camel@perches.com> (sfid-20151115_183953_234906_4748E527)
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
+From: Joe Perches <joe@perches.com>
+To: Dave Young <dyoung@redhat.com>, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	davem@davemloft.net, johannes@sipsolutions.net
+Date: Sun, 15 Nov 2015 09:38:54 -0800
+In-Reply-To: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
-> The same piece of code appears at two places. Make a function from
-> it.
-> 
-Also applied.
+On Sun, 2015-11-15 at 15:31 +0800, Dave Young wrote:
+> cfg80211 module prints a lot of messages like below. Actually printing
+> once is acceptable but sometimes it will print again and again, it looks
+> very annoying. It is better to change these detail messages to debugging
+> only.
 
-johannes
+So maybe add some wrapper that does a pr_info then
+a pr_debug for the second and subsequent uses like:
+
+#define pr_info_once_then_debug(fmt, ...)			\
+({								\
+	static bool __print_once __read_mostly;			\
+								\
+	if (!__print_once) {					\
+		__print_once = true;				\
+		pr_info(fmt, ##__VA_ARGS__);			\
+	} else {						\
+		pr_debug(fmt, ##__VA_ARGS__);			\
+	}							\
+})
+
