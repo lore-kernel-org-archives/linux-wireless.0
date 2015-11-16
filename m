@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34734 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757240AbbKFKLn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59756 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbbKPTxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 05:11:43 -0500
-Received: by padhx2 with SMTP id hx2so110743083pad.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2015 02:11:42 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 02/12] staging: wilc1000: fix parameter name of host_int_del_beacon
-Date: Fri,  6 Nov 2015 19:11:11 +0900
-Message-Id: <1446804681-8873-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151106_111147_591204_BCECE898)
-In-Reply-To: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446804681-8873-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 16 Nov 2015 14:53:18 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH v1] wil6210: hold wil->mutex while managing vrings
+References: <1446807044-19341-1-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Mon, 16 Nov 2015 21:53:09 +0200
+In-Reply-To: <1446807044-19341-1-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Fri, 6 Nov 2015 12:50:44 +0200")
+Message-ID: <876111202i.fsf@kamboji.qca.qualcomm.com> (sfid-20151116_205325_273716_A2956DC9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes struct host_if_drv of host_int_del_beacon function
-declaration from hWFIDrv to hif_drv.
-With this change, first parameter name of this function declaration and
-definition has same name as hif_drv.
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: rebase latest staging-testing.
+> From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+>
+> To prevent race when connect flow may run in parallel with
+> the disconnect event.
+>
+> Scenario leading to the bug is: while running connect flow on the AP,
+> STA sends disconnect. log follows.
+>
+> <7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Configure for connection CID 1
+> <7>[  668.736269] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_init_tx() max_mpdu_size 2048
+> <7>[  668.736301] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_alloc()
+> <7>[  668.736363] wil6210 0000:01:00.0: wlan0: DBG[MISC]vring[1024] 0xffbe8000:d962ce08 0xdb244000
+> <7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Head 0x00880300 -> 0x00880308
+> <7>[  668.736394] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI command 0x0821 [28]
+> <7>[  668.736426] DBG[ WMI]Cmd 00000000: 20 00 24 00 00 00 00 00 00 00 21 08 00 00 00 00   .$.......!.....
+> <7>[  668.736426] DBG[ WMI]cmd 00000000: 00 00 00 00 00 00 5f 5c 00 00 00 00 00 04 00 08  ......_\........
+> <7>[  668.736457] DBG[ WMI]cmd 00000010: 01 01 00 00 00 00 00 00 00 00 ff 0f              ............
+> <7>[  668.736488] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Pseudo IRQ 0x00000004
+> <7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1824 (reply_id 0x1821)
+> <7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_mask_irq_pseudo()
+> <7>[  668.736519] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]ISR MISC 0x20000000
+> <7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1003 (reply_id 0x1821)
+> <7>[  668.736551] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Disconnect 04:ce:14:00:07:70 reason [proto 3 wmi 4]
+> <7>[  668.736582] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
+> <7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread IRQ
+> <7>[  668.736613] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]Thread ISR MISC 0x20000000
+> <7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]MBOX event
+> <7>[  668.736644] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox head 00880330 tail 00880328
+> <7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Mbox evt 001a 0010 0000 00
+> <7>[  668.736676] wil6210 0000:01:00.0: wlan0: DBG[ WMI]WMI event 0x1821 MID 0 @3255145 msec
+> <7>[  668.736707] DBG[ WMI]evt 00000000: 1a 00 10 00 00 00 00 10 00 00 21 18 69 ab 31 00  ..........!.i.1.
+> <7>[  668.736707] DBG[ WMI]evt 00000010: 01 01 00 00 00 00 00 00                          ........
+> <7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]queue_work -> 0
+> <7>[  668.736738] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_recv_cmd -> 1 events queued
+> <7>[  668.736769] wil6210 0000:01:00.0: wlan0: DBG[ IRQ]wil6210_unmask_irq_pseudo()
+> <7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=1, reason=3
+> <7>[  668.736832] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_disconnect_cid(CID 1, status 1)
+> <7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_vring_fini_tx() id=1
+> <7>[  668.736894] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0xffbe8000:d962ce08 0xdb244000
+> <7>[  668.736957] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Handle WMI 0x1821 (reply_id 0x1821)
+> <7>[  668.736988] wil6210 0000:01:00.0: wlan0: DBG[ WMI]Complete WMI 0x1821
+> <7>[  668.737019] wil6210 0000:01:00.0: wlan0: DBG[ WMI]wmi_call(0x0821->0x1821) completed in 0 msec
+> <3>[  668.737019] wil6210 0000:01:00.0: wlan0: Tx config failed, status 0x01
+> <7>[  668.739518] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil_cfg80211_del_station(04:ce:14:00:07:70, reason=2)
+> <7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]wil6210_disconnect()
+> <7>[  668.739550] wil6210 0000:01:00.0: wlan0: DBG[MISC]_wil6210_disconnect(bssid=04:ce:14:00:07:70, reason=2, ev-)
+> <7>[  668.739581] wil6210 0000:01:00.0: wlan0: DBG[MISC]Disconnect 04:ce:14:00:07:70, CID=-2, reason=2
+> <7>[  668.742705] wil6210 0000:01:00.0: wlan0: DBG[MISC]free Tx vring 1 [1024] 0x  (null):d962ce08 0x  (null)
+> <3>[  668.742736] __dma_free_remap: trying to free invalid coherent area:   (null)
+>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to ath.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 417f682..e6c99bc 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -377,7 +377,7 @@ s32 host_int_add_beacon(struct host_if_drv *hWFIDrv, u32 u32Interval,
- 			u8 *pu8Head,
- 			u32 u32TailLen,
- 			u8 *pu8tail);
--int host_int_del_beacon(struct host_if_drv *hWFIDrv);
-+int host_int_del_beacon(struct host_if_drv *hif_drv);
- s32 host_int_add_station(struct host_if_drv *hWFIDrv,
- 			 struct add_sta_param *pstrStaParams);
- s32 host_int_del_allstation(struct host_if_drv *hWFIDrv,
 -- 
-2.6.3
-
+Kalle Valo
