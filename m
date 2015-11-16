@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37256 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031044AbbKFCPE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:15:04 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 46/73] staging: wilc1000: fixes braces {} are not necessary for any arm of this statement
-Date: Fri, 6 Nov 2015 11:13:07 +0900
-Message-ID: <1446776014-28094-46-git-send-email-glen.lee@atmel.com> (sfid-20151106_033804_896365_FCBF6D21)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58641 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752054AbbKPB6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2015 20:58:53 -0500
+Date: Mon, 16 Nov 2015 09:58:45 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@davemloft.net,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
+Message-ID: <20151116015845.GA3439@dhcp-128-65.nay.redhat.com> (sfid-20151116_025925_866405_7B33C69C)
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+ <20151115192547.3fd1b3cc@mir>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151115192547.3fd1b3cc@mir>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi,
 
-This patch fixes the warning reported by checkpatch.pl
-for braces {} are not necessary for any arm of this statement
+On 11/15/15 at 07:25pm, Stefan Lippers-Hollmann wrote:
+> Hi
+> 
+> On 2015-11-15, Dave Young wrote:
+> > cfg80211 module prints a lot of messages like below. Actually printing
+> > once is acceptable but sometimes it will print again and again, it looks
+> > very annoying. It is better to change these detail messages to debugging
+> > only.
+> 
+> It is a lot of info, easily repeated 3 times on boot, but it's also the
+> only real chance to determine why you ended up with the regulatory 
+> domain settings you got, rather than just the values itself. Given that
+> a lot (most?) of officially shipping wireless devices are misconfigured
+> (wrong EEPROM regdom settings for the region they're sold in) and 
+> considering that the limits can even change at runtime (IEEE 802.11d), 
+> it is imho quite important not just to be able what the current 
+> restrictions (iw reg get) are, but also why the kernel settled on those.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+If it is really important then a kernel cmdline param to disable the logs
+sounds better?
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3b097c1..d7834c5 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1457,11 +1457,10 @@ static int wilc_wlan_cfg_commit(int type, u32 drvHandler)
- 	int seq_no = p->cfg_seq_no % 256;
- 	int driver_handler = (u32)drvHandler;
- 
--	if (type == WILC_CFG_SET) {
-+	if (type == WILC_CFG_SET)
- 		cfg->wid_header[0] = 'W';
--	} else {
-+	else
- 		cfg->wid_header[0] = 'Q';
--	}
- 	cfg->wid_header[1] = seq_no;
- 	cfg->wid_header[2] = (u8)total_len;
- 	cfg->wid_header[3] = (u8)(total_len >> 8);
--- 
-1.9.1
-
+Thanks
+Dave
