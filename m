@@ -1,137 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:40414 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752098AbbKRIKX convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:60088 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190AbbKPOLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 03:10:23 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhao, Yingying" <yingying.zhao@intel.com>,
-	"Guo, Chaohong" <chaohong.guo@intel.com>
-Subject: pull request: iwlwifi firmware for iwlmvm devices
-Date: Wed, 18 Nov 2015 08:10:11 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F0C94@hasmsx107.ger.corp.intel.com> (sfid-20151118_091037_541647_34939E97)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 16 Nov 2015 09:11:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 07/19] staging/wilc1000: remove linux_wlan_{device_power,device_detection}
+Date: Mon, 16 Nov 2015 15:04:58 +0100
+Message-Id: <1447682710-2908925-8-git-send-email-arnd@arndb.de> (sfid-20151116_151117_254384_DBE8149D)
+In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The driver provides an interface for custom power management
+and detection that is meant to be filled by people customizing
+the driver. The default implementation of this is empty, and
+we don't actually want people to have to modify the source code.
 
-This is a release of the -16.ucode firmware for Intel Wireless devices
-driven by iwlmvm.
+If anybody needs this, they need to describe the respective
+hardware specifics using device tree or platform data and make
+the driver handle this is a more general way.
 
-This firmware is supported by kernel 4.3 and newer.
-Please pull.
+This removes the empty stubs.
 
-Thanks!
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 40 -----------------------------------
+ 1 file changed, 40 deletions(-)
 
-The following changes since commit 1406ec112423c8f70d503d3cd44c6f8e147f7ac3:
-
-  linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
-(2015-11-11 16:18:35 -0800)
-
-are available in the git repository at:
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 040caa0d0d0b..6e1ef99fc856 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -31,40 +31,6 @@
+ #include "linux_wlan_spi.h"
+ #endif
  
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git
-tags/iwlwifi-fw-2015-11-18
-
-for you to fetch changes up to 7514f28c7621398a187e98b9439fba8f9fa5dca0:
-
-  iwlwifi: add new -16 firmware for iwlmvm devices (2015-11-18 09:51:46
-+0200)
-
-----------------------------------------------------------------
-deliver -16.ucode
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: add new -16 firmware for iwlmvm devices
-
- WHENCE                 |  15 +++++++++++++++
- iwlwifi-3160-16.ucode  | Bin 0 -> 918212 bytes
- iwlwifi-7260-16.ucode  | Bin 0 -> 1049284 bytes
- iwlwifi-7265-16.ucode  | Bin 0 -> 1180356 bytes
- iwlwifi-7265D-16.ucode | Bin 0 -> 1384500 bytes
- iwlwifi-8000C-16.ucode | Bin 0 -> 2351636 bytes
- 6 files changed, 15 insertions(+)
- create mode 100644 iwlwifi-3160-16.ucode
- create mode 100644 iwlwifi-7260-16.ucode
- create mode 100644 iwlwifi-7265-16.ucode
- create mode 100644 iwlwifi-7265D-16.ucode
- create mode 100644 iwlwifi-8000C-16.ucode
-
-diff --git a/WHENCE b/WHENCE
-index cbe528e..e06b53b 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -833,6 +833,9 @@ Version: 25.17.12.0
- File: iwlwifi-7260-13.ucode
- Version: 25.30.13.0
+- #define _linux_wlan_device_power_on()		{}
+- #define _linux_wlan_device_power_off()		{}
+-
+- #define _linux_wlan_device_detection()		{}
+- #define _linux_wlan_device_removal()		{}
+-
+-static int linux_wlan_device_power(int on_off)
+-{
+-	PRINT_D(INIT_DBG, "linux_wlan_device_power.. (%d)\n", on_off);
+-
+-	if (on_off) {
+-		_linux_wlan_device_power_on();
+-	} else {
+-		_linux_wlan_device_power_off();
+-	}
+-
+-	return 0;
+-}
+-
+-static int linux_wlan_device_detection(int on_off)
+-{
+-	PRINT_D(INIT_DBG, "linux_wlan_device_detection.. (%d)\n", on_off);
+-
+-#ifdef WILC_SDIO
+-	if (on_off) {
+-		_linux_wlan_device_detection();
+-	} else {
+-		_linux_wlan_device_removal();
+-	}
+-#endif
+-
+-	return 0;
+-}
+-
+ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
  
-+File: iwlwifi-7260-16.ucode
-+Version 16.242414.0
-+
- File: iwlwifi-3160-7.ucode
- Version: 22.1.7.0
+ static struct notifier_block g_dev_notifier = {
+@@ -1476,8 +1442,6 @@ void wl_wlan_cleanup(struct wilc *wilc)
+ #if defined(WILC_DEBUGFS)
+ 	wilc_debugfs_remove();
+ #endif
+-	linux_wlan_device_detection(0);
+-	linux_wlan_device_power(0);
+ }
  
-@@ -851,6 +854,9 @@ Version: 25.17.12.0
- File: iwlwifi-3160-13.ucode
- Version: 25.30.13.0
+ int wilc_netdev_init(struct wilc **wilc)
+@@ -1579,10 +1543,6 @@ static int __init init_wilc_driver(void)
+ 	printk("IN INIT FUNCTION\n");
+ 	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
  
-+File: iwlwifi-3160-16.ucode
-+Version 16.242414.0
-+
- File: iwlwifi-7265-8.ucode
- Version: 22.24.8.0
- 
-@@ -866,6 +872,9 @@ Version: 25.17.12.0
- File: iwlwifi-7265-13.ucode
- Version: 25.30.13.0
- 
-+File: iwlwifi-7265-16.ucode
-+Version 16.242414.0
-+
- File: iwlwifi-7265D-10.ucode
- Version: 23.15.10.0
- 
-@@ -875,9 +884,15 @@ Version: 25.17.12.0
- File: iwlwifi-7265D-13.ucode
- Version: 25.30.13.0
- 
-+File: iwlwifi-7265D-16.ucode
-+Version 16.242414.0
-+
- File: iwlwifi-8000C-13.ucode
- Version: 25.30.13.0
- 
-+File: iwlwifi-8000C-16.ucode
-+Version 16.242414.0
-+
- Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
- 
- Also available from
-http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
-diff --git a/iwlwifi-3160-16.ucode b/iwlwifi-3160-16.ucode
-new file mode 100644
-index 0000000..f6a02b6
-Binary files /dev/null and b/iwlwifi-3160-16.ucode differ
-diff --git a/iwlwifi-7260-16.ucode b/iwlwifi-7260-16.ucode
-new file mode 100644
-index 0000000..1f954da
-Binary files /dev/null and b/iwlwifi-7260-16.ucode differ
-diff --git a/iwlwifi-7265-16.ucode b/iwlwifi-7265-16.ucode
-new file mode 100644
-index 0000000..37060e6
-Binary files /dev/null and b/iwlwifi-7265-16.ucode differ
-diff --git a/iwlwifi-7265D-16.ucode b/iwlwifi-7265D-16.ucode
-new file mode 100644
-index 0000000..b8efb69
-Binary files /dev/null and b/iwlwifi-7265D-16.ucode differ
-diff --git a/iwlwifi-8000C-16.ucode b/iwlwifi-8000C-16.ucode
-new file mode 100644
-index 0000000..0a43568
-Binary files /dev/null and b/iwlwifi-8000C-16.ucode differ
+-	linux_wlan_device_power(1);
+-	msleep(100);
+-	linux_wlan_device_detection(1);
+-
+ #ifdef WILC_SDIO
+ 	{
+ 		int ret;
+-- 
+2.1.0.rc2
 
