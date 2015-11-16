@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36374 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031061AbbKFCKg (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:64572 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbKPOF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:10:36 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/73] staging: wilc1000: fixes a struct allocation to match coding standards
-Date: Fri, 6 Nov 2015 11:12:23 +0900
-Message-ID: <1446776014-28094-2-git-send-email-glen.lee@atmel.com> (sfid-20151106_031038_900593_DCA49227)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 16 Nov 2015 09:05:26 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 05/19] staging/wilc1000: use NO_SECURITY instead of NO_ENCRYPT
+Date: Mon, 16 Nov 2015 15:04:56 +0100
+Message-Id: <1447682710-2908925-6-git-send-email-arnd@arndb.de> (sfid-20151116_150732_669494_67EC6450)
+In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The linux_wlan.c file uses a set of enums from wilc_wlan_if.h,
+with the exception of the NO_ENCRYPT that comes from
+wilc_wfi_cfgoperations.h. The two sets of enums clearly have
+the same intention but are defined a bit different.
 
-This patch fixes the checks reported by checkpatch.pl
-for prefer kmalloc(sizeof(*tx_data)...) over kmalloc(sizeof(struct tx_complete_data)...)
+To prepare to clean up the ones in wilc_wfi_cfgoperations.h, this
+first changes over the only other user.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
  drivers/staging/wilc1000/linux_wlan.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 976964d..947c9f9 100644
+index f1e70b225deb..040caa0d0d0b 100644
 --- a/drivers/staging/wilc1000/linux_wlan.c
 +++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1236,7 +1236,7 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 		return 0;
- 	}
+@@ -643,7 +643,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	if (!wilc_wlan_cfg_set(0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+ 		goto _fail_;
  
--	tx_data = kmalloc(sizeof(struct tx_complete_data), GFP_ATOMIC);
-+	tx_data = kmalloc(sizeof(*tx_data), GFP_ATOMIC);
- 	if (!tx_data) {
- 		PRINT_ER("Failed to allocate memory for tx_data structure\n");
- 		dev_kfree_skb(skb);
+-	c_val[0] = NO_ENCRYPT;
++	c_val[0] = NO_SECURITY; /* NO_ENCRYPT, 0x79 */
+ 	if (!wilc_wlan_cfg_set(0, WID_11I_MODE, c_val, 1, 0, 0))
+ 		goto _fail_;
+ 
 -- 
-1.9.1
+2.1.0.rc2
 
