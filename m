@@ -1,70 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7680 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbbKBIuj (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:49399 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbbKPOF1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:50:39 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 24/38] staging: wilc1000: rename pMacHeader of function get_if_handler
-Date: Mon, 2 Nov 2015 17:51:07 +0900
-Message-ID: <1446454281-22484-24-git-send-email-glen.lee@atmel.com> (sfid-20151102_095042_670329_8B398020)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 16 Nov 2015 09:05:27 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 12/19] staging/wilc1000: use device pointer for phy creation
+Date: Mon, 16 Nov 2015 15:05:03 +0100
+Message-Id: <1447682710-2908925-13-git-send-email-arnd@arndb.de> (sfid-20151116_150836_434166_0AA8CA69)
+In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+wilc_create_wiphy tries to get a pointer to a device from the
+global wilc_sdio_func variable. This is a layering violation
+and we can use the wilc_dev->dev pointer instead.
 
-This patch renames pMacHeader of function get_if_handler to mac_header
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             | 2 +-
+ drivers/staging/wilc1000/linux_wlan_sdio.c        | 2 +-
+ drivers/staging/wilc1000/linux_wlan_sdio.h        | 2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 ++-------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
+ 5 files changed, 5 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 8321b76..166f240 100644
+index b1707147aa7d..08c3be8728b2 100644
 --- a/drivers/staging/wilc1000/linux_wlan.c
 +++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -332,13 +332,13 @@ void linux_wlan_mac_indicate(struct wilc *wilc, int flag)
- 	}
- }
+@@ -1457,7 +1457,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type)
  
--struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
-+struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
+ 		{
+ 			struct wireless_dev *wdev;
+-			wdev = wilc_create_wiphy(ndev);
++			wdev = wilc_create_wiphy(ndev, dev);
+ 
+ 			if (dev)
+ 				SET_NETDEV_DEV(ndev, dev);
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index d2843b949a1b..874a859cad21 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -22,7 +22,7 @@
+  #define MAX_SPEED (6 * 1000000) /* Max 50M */
+ #endif
+ 
+-struct sdio_func *wilc_sdio_func;
++static struct sdio_func *wilc_sdio_func;
+ static unsigned int sdio_default_speed;
+ 
+ #define SDIO_VENDOR_ID_WILC 0x0296
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
+index 3e1618526e78..df733c25e770 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.h
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
+@@ -1,7 +1,5 @@
+ #include <linux/mmc/sdio_func.h>
+ 
+-extern struct sdio_func *wilc_sdio_func;
+-
+ int wilc_sdio_init(void);
+ int wilc_sdio_cmd52(sdio_cmd52_t *cmd);
+ int wilc_sdio_cmd53(sdio_cmd53_t *cmd);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 46c3f578a6fd..cc279c654e53 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -11,9 +11,6 @@
+  */
+ 
+ #include "wilc_wfi_cfgoperations.h"
+-#ifdef WILC_SDIO
+-#include "linux_wlan_sdio.h"
+-#endif
+ #include "host_interface.h"
+ #include <linux/errno.h>
+ 
+@@ -3414,7 +3411,7 @@ _fail_:
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-struct wireless_dev *wilc_create_wiphy(struct net_device *net)
++struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev)
  {
- 	u8 *Bssid, *Bssid1;
- 	int i = 0;
+ 	struct wilc_priv *priv;
+ 	struct wireless_dev *wdev;
+@@ -3466,9 +3463,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net)
+ 		   wdev->wiphy->max_scan_ssids, wdev->wiphy->max_scan_ie_len, wdev->wiphy->signal_type,
+ 		   wdev->wiphy->interface_modes, wdev->iftype);
  
--	Bssid  = pMacHeader + 10;
--	Bssid1 = pMacHeader + 4;
-+	Bssid = mac_header + 10;
-+	Bssid1 = mac_header + 4;
+-	#ifdef WILC_SDIO
+-	set_wiphy_dev(wdev->wiphy, &wilc_sdio_func->dev);
+-	#endif
++	set_wiphy_dev(wdev->wiphy, dev);
  
- 	for (i = 0; i < wilc->vif_num; i++)
- 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
-@@ -347,9 +347,9 @@ struct net_device *get_if_handler(struct wilc *wilc, u8 *pMacHeader)
+ 	/*Register wiphy structure*/
+ 	s32Error = wiphy_register(wdev->wiphy);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 158d98c0eb87..ab53d9d59081 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -10,7 +10,7 @@
+ #define NM_WFI_CFGOPERATIONS
+ #include "wilc_wfi_netdevice.h"
  
- 	PRINT_INFO(INIT_DBG, "Invalide handle\n");
- 	for (i = 0; i < 25; i++)
--		PRINT_D(INIT_DBG, "%02x ", pMacHeader[i]);
--	Bssid  = pMacHeader + 18;
--	Bssid1 = pMacHeader + 12;
-+		PRINT_D(INIT_DBG, "%02x ", mac_header[i]);
-+	Bssid = mac_header + 18;
-+	Bssid1 = mac_header + 12;
- 	for (i = 0; i < wilc->vif_num; i++)
- 		if (!memcmp(Bssid1, wilc->vif[i].bssid, ETH_ALEN) ||
- 		    !memcmp(Bssid, wilc->vif[i].bssid, ETH_ALEN))
+-struct wireless_dev *wilc_create_wiphy(struct net_device *net);
++struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev);
+ void wilc_free_wiphy(struct net_device *net);
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
+ int wilc_deinit_host_int(struct net_device *net);
 -- 
-1.9.1
+2.1.0.rc2
 
