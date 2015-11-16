@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37275 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760851AbbKTReb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 12:34:31 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: fix board data fetch error message
-Date: Fri, 20 Nov 2015 09:33:14 -0800
-Message-ID: <1448040794-1139-1-git-send-email-poh@qca.qualcomm.com> (sfid-20151120_183434_852579_169EF582)
+Received: from mout.web.de ([212.227.17.12]:52789 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750944AbbKPMSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Nov 2015 07:18:49 -0500
+Subject: [PATCH] rtlwifi: Delete unnecessary checks before the function call
+ "kfree_skb"
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5649C99E.2070602@users.sourceforge.net> (sfid-20151116_131900_772121_7FA7BBFE)
+Date: Mon, 16 Nov 2015 13:18:38 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The error message order of board data fetch is board info,
-directory, and then file name, hence place print arguments
-in the order.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 16 Nov 2015 13:12:25 +0100
 
-Fixes: 0a51b343abfe ("ath10k: add board 2 API support")
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+The kfree_skb() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the calls is not needed.
+
+This issue was detected by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/core.c                 | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 4 +---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dc4fc4e..6b5ece7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -844,7 +844,7 @@ out:
- 	if (!ar->board_data || !ar->board_len) {
- 		ath10k_err(ar,
- 			   "failed to fetch board data for %s from %s/%s\n",
--			   ar->hw_params.fw.dir, boardname, filename);
-+			   boardname, ar->hw_params.fw.dir, filename);
- 		ret = -ENODATA;
- 		goto err;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index c925a4d..4ae421e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1833,8 +1833,7 @@ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+ 	pskb = __skb_dequeue(&ring->queue);
+-	if (pskb)
+-		kfree_skb(pskb);
++	kfree_skb(pskb);
+ 
+ 	/*this is wrong, fill_tx_cmddesc needs update*/
+ 	pdesc = &ring->desc[0];
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index a2f5e89..6e51862 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -318,9 +318,7 @@ bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
+ 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+ 
+ 	pskb = __skb_dequeue(&ring->queue);
+-	if (pskb)
+-		kfree_skb(pskb);
+-
++	kfree_skb(pskb);
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+ 
+ 	pdesc = &ring->desc[0];
 -- 
-1.9.1
+2.6.2
 
