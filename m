@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:38153 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159AbbKMGUI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 01:20:08 -0500
-Received: by wmec201 with SMTP id c201so16456627wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 22:20:06 -0800 (PST)
+Received: from ozlabs.org ([103.22.144.67]:58630 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751694AbbKQW2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 17:28:36 -0500
+Date: Wed, 18 Nov 2015 09:28:34 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next inclusion request for mac80211
+Message-ID: <20151118092834.7956b883@canb.auug.org.au> (sfid-20151117_232855_497297_DD48941A)
+In-Reply-To: <1447773252.14408.9.camel@sipsolutions.net>
+References: <1447773252.14408.9.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-	<1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
-	<87mvuj585b.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 13 Nov 2015 07:20:06 +0100
-Message-ID: <CA+BoTQnQioRd_aR4+DVRsR942JoCAH1dUc2fdWX-Td7=j5++NA@mail.gmail.com> (sfid-20151113_072012_799680_29CB0B84)
-Subject: Re: [PATCH v2 0/9] ath10k: clean up ath10k_skb_cb
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 November 2015 at 20:29, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> The ath10k_skb_cb structure wasn't really space
->> efficient. Some stuff is removed or replaced with
->> more compact representation.
->>
->> This cleanup is necessary for future features.
->>
->> The size of ath10k_skb_cb:
->>
->>           before   after
->>  x86-32   26       12
->>  x86-64   34       20
->>
->>
->> v2:
->>  * fix a bug (patch 7/9 introduced)
->>
->>
->> Michal Kazior (9):
->>   ath10k: merge is_protected with nohwcrypt
->>   ath10k: rename function to adhere to naming convention
->>   ath10k: remove txmode from skb_cb
->>   ath10k: remove is_offchan
->>   ath10k: remove freq from skb_cb
->>   ath10k: pack up flags in skb_cb
->>   ath10k: fix tx header parsing
->>   ath10k: replace vdev_id and tid in skb cb
->>   ath10k: store msdu_id instead of txbuf pointers
->
-> I have a conflict which I can't fix myself:
->
-> Applying: ath10k: merge is_protected with nohwcrypt
-> Applying: ath10k: rename function to adhere to naming convention
-> Applying: ath10k: remove txmode from skb_cb
-> Applying: ath10k: remove is_offchan
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
-> Repository lacks necessary blobs to fall back on 3-way merge.
-> Cannot fall back to three-way merge.
-> Patch failed at 0004 ath10k: remove is_offchan
+Hi Johannes,
 
-Ah, sorry. I thought I rebased on top of your master branch but it
-looks like I didn't. Let me fix that..
+On Tue, 17 Nov 2015 16:14:12 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> Could you please add my mac80211 and mac80211-next trees, found at
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
+> 
+> with their 'master' branches to linux-next?
+> 
+> These trees are feeding net and net-next respectively, but I don't
+> always send them immediately and it'd be good to have early integration
+> with other things happening elsewhere, in particular of course with the
+> wifi drivers found in wireless-drivers{,-next}.
 
+Added from today.
 
-Michał
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgment of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window. 
+
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+        Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and 
+     * destined for the current or next Linux merge window.
+
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
+
+-- 
+Cheers,
+Stephen Rothwell 
+sfr@canb.auug.org.au
