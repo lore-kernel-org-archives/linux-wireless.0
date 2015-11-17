@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33036 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064AbbKDHeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 02:34:04 -0500
-Message-ID: <1446622439.2478.5.camel@sipsolutions.net> (sfid-20151104_083433_915598_E7A26DAE)
-Subject: Re: Intel 7260 - limited in 5GHz spectrum
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Pushpal Sidhu <psidhu@gateworks.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 04 Nov 2015 08:33:59 +0100
-In-Reply-To: <CAJ+vNU1d8=Z=0j_1jaqh__830-K56MnnM=5w550+e15NveqeOg@mail.gmail.com> (sfid-20151103_184304_584889_0EBF3178)
-References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com>
-	 <CAJ+vNU3u_KCOjRi1HR_f9hCi-aYYMDciR7C0+nCwJh3N6GAETQ@mail.gmail.com>
-	 <1446568044.29010.25.camel@sipsolutions.net>
-	 <CAJ+vNU1d8=Z=0j_1jaqh__830-K56MnnM=5w550+e15NveqeOg@mail.gmail.com>
-	 (sfid-20151103_184304_584889_0EBF3178)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:36203 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706AbbKQRmF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 12:42:05 -0500
+Received: by ykdr82 with SMTP id r82so18535196ykd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 09:42:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+	<1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
+	<CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com>
+Date: Tue, 17 Nov 2015 09:42:04 -0800
+Message-ID: <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com> (sfid-20151117_184238_872813_3BEB7A24)
+Subject: Re: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for
+ CHIP_PWD_L pin
+From: Steve deRosier <derosier@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-11-03 at 09:43 -0800, Tim Harvey wrote:
+Hi Julian,
 
-> No surprise that its sold outside the US, but why should that mean it
-> should exclude 5GHz support? They all have their regulatory domains
-> and my understanding is that the intersection of the reg domain rules
-> and card capabilities should dictate if they can operate as an AP per
-> 5GHz channel. So I'm trying to understand why this card is dropping
-> that capability.
-> 
+Thanks for looking at this.
 
-It does have 5 GHz capability, but not for active operation, since
-that's not permitted everywhere in the world. The device doesn't want
-to rely on software regulatory enforcement, nor are there multiple
-versions of the device for different countries, so this is about the
-only option left.
+In short - I agree with your review and will do most of them. As a
+well as a few minor changes suggested by the kbuild test robot. Expect
+a new version shortly.
 
-johannes
+On Mon, Nov 16, 2015 at 10:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>
+>>  static void __exit ath6kl_sdio_exit(void)
+>>  {
+>>         sdio_unregister_driver(&ath6kl_sdio_driver);
+>> +
+>> +#ifdef CONFIG_GPIOLIB
+>> +       /* Delay to avoid pulling the plug on the chip when an irq is pending
+>> +        * and then getting a spurious message:
+>> +        * "ath6kl: failed to get pending recv messages: -125"
+>> +        */
+>> +       msleep(300);
+>
+> Is there some actual synchronisation you can do here against the IRQ?
+> 300msec isn't a long time to wait, but it seems wrong here.
+>
+
+Considering this is only called on exit, I wasn't too worried about
+this, but then again, on reboot as well as a few types of
+reconfiguring the interface speed is an important consideration for
+our system.
+
+I'm open to suggestions.  I had looked at this and didn't see an
+obvious way to try to sync with the IRQ as it goes through several
+subsystems.
+
+But looking at it again in a different light...
+
+125 is ECANCELED.  Which is exactly right and appropriate, and
+ath6kl_htc_rxmsg_pending_handler() where the message comes from does a
+proper cleanup, or so it looks like. I wonder if maybe we can consider
+ECANCELED not an error that needs an error message as it might be a
+reasonable case?
+
+So instead of synchronization, just consider that particular status an
+expected and properly handled exception condition and not print an
+error?
+
+Thoughts?
+
+- Steve
