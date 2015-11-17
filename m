@@ -1,83 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35146 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012AbbKRF7f (ORCPT
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:36332 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbbKQFek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 00:59:35 -0500
-Received: by lfdo63 with SMTP id o63so19573307lfd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:34 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 4/9] ath10k: remove is_offchan
-Date: Wed, 18 Nov 2015 06:59:18 +0100
-Message-Id: <1447826363-16818-5-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065951_970246_352A94CC)
-In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
- <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 17 Nov 2015 00:34:40 -0500
+Received: by qgad10 with SMTP id d10so65982307qga.3
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 21:34:40 -0800 (PST)
+From: Steve deRosier <derosier@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Subject: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for CHIP_PWD_L pin
+Date: Mon, 16 Nov 2015 21:32:52 -0800
+Message-Id: <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com> (sfid-20151117_063445_266727_04A0D144)
+In-Reply-To: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to keep it in the struct.
+Many ath6k chips have a reset pin, usually labeled CHIP_PWD_L. This pin can
+be pulled low by the host processor to hold the wifi chip in reset. By
+holding the chip in reset, the lowest power consumption available can be
+achieved.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This adds a module parameter so the ath6kl_sdio driver can control the
+CHIP_PWD_L pin if the implementer so desires. This code is only available
+if GPIOLIB is configured.
+
+Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h | 1 -
- drivers/net/wireless/ath/ath10k/mac.c  | 2 --
- drivers/net/wireless/ath/ath10k/txrx.c | 7 ++++++-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c | 80 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 79 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 0228000ecf50..89a83e3c5cb6 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -89,7 +89,6 @@ struct ath10k_skb_cb {
- 	struct {
- 		u8 tid;
- 		u16 freq;
--		bool is_offchan;
- 		bool nohwcrypt;
- 		struct ath10k_htt_txbuf *txbuf;
- 		u32 txbuf_paddr;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4d3b8dc8e5de..164a3e5ae6da 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3683,7 +3683,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index eab0ab9..7a732f3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -67,8 +67,18 @@ struct ath6kl_sdio {
  
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ 	/* protects access to wr_asyncq */
+ 	spinlock_t wr_async_lock;
++
+ };
  
--	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
-@@ -3715,7 +3714,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
++#ifdef CONFIG_GPIOLIB
++#include <linux/gpio.h>
++#define NO_GPIO    0xffffffff
++
++static unsigned int reset_pwd_gpio = NO_GPIO;
++module_param(reset_pwd_gpio, uint, 0644);
++MODULE_PARM_DESC(reset_pwd_gpio, "WIFI CHIP_PWD reset pin GPIO");
++#endif
++
+ #define CMD53_ARG_READ          0
+ #define CMD53_ARG_WRITE         1
+ #define CMD53_ARG_BLOCK_BASIS   1
+@@ -1414,20 +1424,88 @@ static struct sdio_driver ath6kl_sdio_driver = {
+ 	.drv.pm = ATH6KL_SDIO_PM_OPS,
+ };
  
- 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
- 			ATH10K_SKB_CB(skb)->htt.freq = 0;
--			ATH10K_SKB_CB(skb)->htt.is_offchan = true;
- 
- 			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %p\n",
- 				   skb);
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 6d1105ab4592..9e14c04ac89f 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -23,7 +23,12 @@
- 
- static void ath10k_report_offchan_tx(struct ath10k *ar, struct sk_buff *skb)
++static int __init ath6kl_sdio_init_gpio(void)
++{
++	int ret = 0;
++
++#ifdef CONFIG_GPIOLIB
++	if (!gpio_is_valid(reset_pwd_gpio))
++		return 0;
++
++	/* Request the reset GPIO, and assert it to make sure we get a 100%
++	 * clean boot in-case we had a floating input or other issue.
++	 */
++	ret = gpio_request_one(reset_pwd_gpio,
++			       GPIOF_OUT_INIT_LOW | GPIOF_EXPORT_DIR_FIXED,
++			       "WIFI_RESET");
++	if (ret) {
++		ath6kl_err("Unable to get WIFI power gpio: %d\n", ret);
++		return ret;
++	}
++
++	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "Setup wifi gpio #%d\n", reset_pwd_gpio);
++	usleep_range(20, 50); /* Pin must be asserted at least 5 usec */
++	gpio_set_value(reset_pwd_gpio, 1); /* De-assert the pin for operation */
++
++	/* Delay to avoid the mmc driver calling the probe on the prior notice
++	 * of the chip, which we just killed. If this is missing, it results in
++	 * a spurious warning:
++	 * "ath6kl_sdio: probe of mmc0:0001:1 failed with error -110"
++	 */
++	msleep(150); /* Time chosen experimentally, with padding */
++#endif
++
++	return ret;
++}
++
++static void __exit ath6kl_sdio_release_gpio(void)
++{
++#ifdef CONFIG_GPIOLIB
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		/* Be sure we leave the chip in reset when we unload and also
++		 * release the GPIO
++		 */
++		gpio_set_value(reset_pwd_gpio, 0);
++		gpio_free(reset_pwd_gpio);
++	}
++#endif
++}
++
+ static int __init ath6kl_sdio_init(void)
  {
--	if (!ATH10K_SKB_CB(skb)->htt.is_offchan)
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	if (likely(!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)))
-+		return;
-+
-+	if (ath10k_mac_tx_frm_has_freq(ar))
- 		return;
+ 	int ret;
  
- 	/* If the original wait_for_completion() timed out before
+-	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	ret = ath6kl_sdio_init_gpio();
+ 	if (ret)
++		goto err_gpio;
++
++	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	if (ret) {
+ 		ath6kl_err("sdio driver registration failed: %d\n", ret);
++		goto err_register;
++	}
++
++	return ret;
++
++err_register:
++	ath6kl_sdio_release_gpio();
+ 
++err_gpio:
+ 	return ret;
+ }
+ 
+ static void __exit ath6kl_sdio_exit(void)
+ {
+ 	sdio_unregister_driver(&ath6kl_sdio_driver);
++
++#ifdef CONFIG_GPIOLIB
++	/* Delay to avoid pulling the plug on the chip when an irq is pending
++	 * and then getting a spurious message:
++	 * "ath6kl: failed to get pending recv messages: -125"
++	 */
++	msleep(300);
++	ath6kl_sdio_release_gpio();
++#endif
+ }
+ 
+ module_init(ath6kl_sdio_init);
 -- 
-2.1.4
+1.9.1
 
