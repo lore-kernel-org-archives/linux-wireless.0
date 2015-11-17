@@ -1,125 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:56651 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbbKDMGm (ORCPT
+Received: from mail-io0-f173.google.com ([209.85.223.173]:33816 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbbKQGZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 07:06:42 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 1/3] ath10k: Fix peer assoc complete WMI command for 10.4
-Date: Wed, 4 Nov 2015 17:35:35 +0530
-Message-ID: <1446638737-7953-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20151104_130645_697151_FA05A197)
-In-Reply-To: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1446638737-7953-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Tue, 17 Nov 2015 01:25:25 -0500
+Received: by ioir85 with SMTP id r85so9111869ioi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 22:25:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com> <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Nov 2015 17:25:05 +1100
+Message-ID: <CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com> (sfid-20151117_072533_571622_810A5F3A)
+Subject: Re: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for
+ CHIP_PWD_L pin
+To: Steve deRosier <derosier@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is an extra 4-byte member when compared to WMI 10.2 added to
-assoc complete command in WMI 10.4. This new member is used for 160Mhz
-related configuration. This WMI command mismatch between host and
-firmware does not cause any real issues because this new member is not
-used in 10.4 firmwares so far (10.4.1.00030-1). This difference in WMI
-command interface brings in a new wmi_ops for 10.4 gen_peer_assoc().
-No noticeable functionality differences with this change can be seen
-with the current 10.4 firmwares, but the WMI interface has to be
-fixed to work with future 10.4 firmwares which may be using this new
-member.
+Hi Steve,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 37 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h |  5 +++++
- 2 files changed, 41 insertions(+), 1 deletion(-)
+On Tue, Nov 17, 2015 at 4:32 PM, Steve deRosier <derosier@gmail.com> wrote:
+> Many ath6k chips have a reset pin, usually labeled CHIP_PWD_L. This pin can
+> be pulled low by the host processor to hold the wifi chip in reset. By
+> holding the chip in reset, the lowest power consumption available can be
+> achieved.
+>
+> This adds a module parameter so the ath6kl_sdio driver can control the
+> CHIP_PWD_L pin if the implementer so desires. This code is only available
+> if GPIOLIB is configured.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 7569db0..e8614ab 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -6328,6 +6328,16 @@ ath10k_wmi_peer_assoc_fill_10_2(struct ath10k *ar, void *buf,
- 	cmd->info0 = __cpu_to_le32(info0);
- }
- 
-+static void
-+ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
-+				const struct wmi_peer_assoc_complete_arg *arg)
-+{
-+	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
-+
-+	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
-+	cmd->peer_bw_rxnss_override = 0;
-+}
-+
- static int
- ath10k_wmi_peer_assoc_check_arg(const struct wmi_peer_assoc_complete_arg *arg)
- {
-@@ -6417,6 +6427,31 @@ ath10k_wmi_10_2_op_gen_peer_assoc(struct ath10k *ar,
- }
- 
- static struct sk_buff *
-+ath10k_wmi_10_4_op_gen_peer_assoc(struct ath10k *ar,
-+				  const struct wmi_peer_assoc_complete_arg *arg)
-+{
-+	size_t len = sizeof(struct wmi_10_4_peer_assoc_complete_cmd);
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	ret = ath10k_wmi_peer_assoc_check_arg(arg);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ath10k_wmi_peer_assoc_fill_10_4(ar, skb->data, arg);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi peer assoc vdev %d addr %pM (%s)\n",
-+		   arg->vdev_id, arg->addr,
-+		   arg->peer_reassoc ? "reassociate" : "new");
-+	return skb;
-+}
-+
-+static struct sk_buff *
- ath10k_wmi_10_2_op_gen_pdev_get_temperature(struct ath10k *ar)
- {
- 	struct sk_buff *skb;
-@@ -7536,6 +7571,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.gen_peer_delete = ath10k_wmi_op_gen_peer_delete,
- 	.gen_peer_flush = ath10k_wmi_op_gen_peer_flush,
- 	.gen_peer_set_param = ath10k_wmi_op_gen_peer_set_param,
-+	.gen_peer_assoc = ath10k_wmi_10_4_op_gen_peer_assoc,
- 	.gen_set_psmode = ath10k_wmi_op_gen_set_psmode,
- 	.gen_set_sta_ps = ath10k_wmi_op_gen_set_sta_ps,
- 	.gen_set_ap_ps = ath10k_wmi_op_gen_set_ap_ps,
-@@ -7555,7 +7591,6 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.fw_stats_fill = ath10k_wmi_10_4_op_fw_stats_fill,
- 
- 	/* shared with 10.2 */
--	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
- 	.gen_request_stats = ath10k_wmi_op_gen_request_stats,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index a8ea93e..ab6d218 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5741,6 +5741,11 @@ struct wmi_10_2_peer_assoc_complete_cmd {
- 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
- } __packed;
- 
-+struct wmi_10_4_peer_assoc_complete_cmd {
-+	struct wmi_10_2_peer_assoc_complete_cmd cmd;
-+	__le32 peer_bw_rxnss_override;
-+} __packed;
-+
- struct wmi_peer_assoc_complete_arg {
- 	u8 addr[ETH_ALEN];
- 	u32 vdev_id;
+linux/gpio.h is built so that the exported functions are no-ops when
+GPIOLIB isn't defined. Providing you include linux/gpio.h
+unconditionally, all of your #ifdefs except the one around the module
+parameter can be removed and the code will be optimised away by the
+compiler.
+
+> Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/sdio.c | 80 +++++++++++++++++++++++++++++++++-
+>  1 file changed, 79 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index eab0ab9..7a732f3 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -67,8 +67,18 @@ struct ath6kl_sdio {
+>
+>         /* protects access to wr_asyncq */
+>         spinlock_t wr_async_lock;
+> +
+>  };
+>
+> +#ifdef CONFIG_GPIOLIB
+> +#include <linux/gpio.h>
+> +#define NO_GPIO    0xffffffff
+
+ARCH_NR_GPIOS could be used here instead of defining NO_GPIO.
+
+> +
+> +static unsigned int reset_pwd_gpio = NO_GPIO;
+> +module_param(reset_pwd_gpio, uint, 0644);
+> +MODULE_PARM_DESC(reset_pwd_gpio, "WIFI CHIP_PWD reset pin GPIO");
+> +#endif
+> +
+>  #define CMD53_ARG_READ          0
+>  #define CMD53_ARG_WRITE         1
+>  #define CMD53_ARG_BLOCK_BASIS   1
+> @@ -1414,20 +1424,88 @@ static struct sdio_driver ath6kl_sdio_driver = {
+>         .drv.pm = ATH6KL_SDIO_PM_OPS,
+>  };
+>
+> +static int __init ath6kl_sdio_init_gpio(void)
+> +{
+> +       int ret = 0;
+> +
+> +#ifdef CONFIG_GPIOLIB
+> +       if (!gpio_is_valid(reset_pwd_gpio))
+> +               return 0;
+> +
+> +       /* Request the reset GPIO, and assert it to make sure we get a 100%
+> +        * clean boot in-case we had a floating input or other issue.
+> +        */
+> +       ret = gpio_request_one(reset_pwd_gpio,
+> +                              GPIOF_OUT_INIT_LOW | GPIOF_EXPORT_DIR_FIXED,
+> +                              "WIFI_RESET");
+> +       if (ret) {
+> +               ath6kl_err("Unable to get WIFI power gpio: %d\n", ret);
+> +               return ret;
+> +       }
+> +
+> +       ath6kl_dbg(ATH6KL_DBG_SUSPEND, "Setup wifi gpio #%d\n", reset_pwd_gpio);
+> +       usleep_range(20, 50); /* Pin must be asserted at least 5 usec */
+> +       gpio_set_value(reset_pwd_gpio, 1); /* De-assert the pin for operation */
+> +
+> +       /* Delay to avoid the mmc driver calling the probe on the prior notice
+> +        * of the chip, which we just killed. If this is missing, it results in
+> +        * a spurious warning:
+> +        * "ath6kl_sdio: probe of mmc0:0001:1 failed with error -110"
+> +        */
+> +       msleep(150); /* Time chosen experimentally, with padding */
+
+Should this be in a #define?
+
+> +#endif
+> +
+> +       return ret;
+
+ret is always zero here. You should just return 0 here.
+
+> +}
+> +
+> +static void __exit ath6kl_sdio_release_gpio(void)
+> +{
+> +#ifdef CONFIG_GPIOLIB
+> +       if (gpio_is_valid(reset_pwd_gpio)) {
+> +               /* Be sure we leave the chip in reset when we unload and also
+> +                * release the GPIO
+> +                */
+> +               gpio_set_value(reset_pwd_gpio, 0);
+> +               gpio_free(reset_pwd_gpio);
+> +       }
+> +#endif
+> +}
+> +
+>  static int __init ath6kl_sdio_init(void)
+>  {
+>         int ret;
+>
+> -       ret = sdio_register_driver(&ath6kl_sdio_driver);
+> +       ret = ath6kl_sdio_init_gpio();
+>         if (ret)
+> +               goto err_gpio;
+> +
+> +       ret = sdio_register_driver(&ath6kl_sdio_driver);
+> +       if (ret) {
+>                 ath6kl_err("sdio driver registration failed: %d\n", ret);
+> +               goto err_register;
+> +       }
+> +
+> +       return ret;
+> +
+> +err_register:
+> +       ath6kl_sdio_release_gpio();
+>
+> +err_gpio:
+>         return ret;
+>  }
+>
+>  static void __exit ath6kl_sdio_exit(void)
+>  {
+>         sdio_unregister_driver(&ath6kl_sdio_driver);
+> +
+> +#ifdef CONFIG_GPIOLIB
+> +       /* Delay to avoid pulling the plug on the chip when an irq is pending
+> +        * and then getting a spurious message:
+> +        * "ath6kl: failed to get pending recv messages: -125"
+> +        */
+> +       msleep(300);
+
+Is there some actual synchronisation you can do here against the IRQ?
+300msec isn't a long time to wait, but it seems wrong here.
+
+> +       ath6kl_sdio_release_gpio();
+> +#endif
+>  }
+>
+>  module_init(ath6kl_sdio_init);
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
