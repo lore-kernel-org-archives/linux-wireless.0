@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58861 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857AbbKSGx0 (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:34008 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396AbbKQGKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:53:26 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/26] staging: wilc1000: rename WILC_WFI_2ghz_channels variable
-Date: Thu, 19 Nov 2015 15:56:12 +0900
-Message-ID: <1447916195-24851-3-git-send-email-glen.lee@atmel.com> (sfid-20151119_075329_424014_936D386A)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+	Tue, 17 Nov 2015 01:10:43 -0500
+Received: by ioir85 with SMTP id r85so8868194ioi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 22:10:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Nov 2015 17:10:23 +1100
+Message-ID: <CAGRGNgXezDJhLkYKVexKQOOF7OrLLXg+M8h4M7=OJSF_qLgQvA@mail.gmail.com> (sfid-20151117_071050_023665_BA7E7671)
+Subject: Re: [PATCH 0/2] ath6kl_sdio: add control of CHIP_PWD_L via GPIO
+To: Steve deRosier <derosier@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Steve,
 
-This patch renames WILC_WFI_2ghz_channels variable to ieee80211_2ghz_channels
-to avoid camelcase.
+On Tue, Nov 17, 2015 at 4:32 PM, Steve deRosier <derosier@gmail.com> wrote:
+> This set of two patches adds the ablity for ath6kl_sdio to control the
+> CHIP_PWD_L pin on startup and for suspend/wakeup. This is importaint because
+> on some platforms, this is the only way to achieve minimum power consumption.
+> The CHIP_PWD_L pin is used to hold the ath chip in reset and this is the
+> proper way to achieve its lowest power state (per QCA's datasheets).
+>
+> This GPIO is controled by the kernel standard GPIOLIB and as such depends on
+> CONFIG_GPIOLIB. If this isn't enabled, then the various usages will generally
+> compile out. Even if enabled, by default the GPIO is set to an invalid number,
+> and each use will check: if not a valid GPIO, then behavior will be unchanged.
+>
+> This adds a new module parameter to allow the user to set the GPIO to use.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I want to say that this should go in DeviceTree or equivalent, however
+ath6kl doesn't have DeviceTree support, so...
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 32cc734..349b720 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -124,7 +124,7 @@ u8 wilc_initialized = 1;
- }
- 
- /*Frequency range for channels*/
--static struct ieee80211_channel WILC_WFI_2ghz_channels[] = {
-+static struct ieee80211_channel ieee80211_2ghz_channels[] = {
- 	CHAN2G(1,  2412, 0),
- 	CHAN2G(2,  2417, 0),
- 	CHAN2G(3,  2422, 0),
-@@ -181,8 +181,8 @@ static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
- static bool bWilc_ie;
- 
- static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
--	.channels = WILC_WFI_2ghz_channels,
--	.n_channels = ARRAY_SIZE(WILC_WFI_2ghz_channels),
-+	.channels = ieee80211_2ghz_channels,
-+	.n_channels = ARRAY_SIZE(ieee80211_2ghz_channels),
- 	.bitrates = WILC_WFI_rates,
- 	.n_bitrates = ARRAY_SIZE(WILC_WFI_rates),
- };
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
