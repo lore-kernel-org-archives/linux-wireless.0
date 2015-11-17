@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47929 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589AbbKMJ3w (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:35064 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315AbbKQW1G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 04:29:52 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 6/9] brcmfmac: Add RSDB support.
-References: <1446147199-21671-1-git-send-email-arend@broadcom.com>
-	<1446147199-21671-7-git-send-email-arend@broadcom.com>
-	<87io57576r.fsf@kamboji.qca.qualcomm.com>
-	<5645A944.3080105@broadcom.com>
-Date: Fri, 13 Nov 2015 11:29:44 +0200
-In-Reply-To: <5645A944.3080105@broadcom.com> (Arend van Spriel's message of
-	"Fri, 13 Nov 2015 10:11:32 +0100")
-Message-ID: <87y4e22qnr.fsf@kamboji.qca.qualcomm.com> (sfid-20151113_103000_279141_BF04CC3C)
+	Tue, 17 Nov 2015 17:27:06 -0500
+Received: by igl9 with SMTP id 9so89620042igl.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 14:27:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALupW3CrA=q5dBAqYdRwbNpAECXNahf1NaL31jpcsEf=BkbzHg@mail.gmail.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+ <CAGRGNgXezDJhLkYKVexKQOOF7OrLLXg+M8h4M7=OJSF_qLgQvA@mail.gmail.com> <CALupW3CrA=q5dBAqYdRwbNpAECXNahf1NaL31jpcsEf=BkbzHg@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 18 Nov 2015 09:26:45 +1100
+Message-ID: <CAGRGNgX3D=J4djzRvWGC_1uCbW3q5EpE9HpmdM_khnJkmks4HA@mail.gmail.com> (sfid-20151117_232710_744129_3423B46A)
+Subject: Re: [PATCH 0/2] ath6kl_sdio: add control of CHIP_PWD_L via GPIO
+To: Steve deRosier <derosier@gmail.com>
+Cc: ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+Hi Steve,
 
-> On 11/12/2015 08:49 PM, Kalle Valo wrote:
->> Arend van Spriel <arend@broadcom.com> writes:
+Firstly, always reply-to-all, don't drop the CCs.
+
+On Wed, Nov 18, 2015 at 4:14 AM, Steve deRosier <derosier@gmail.com> wrote:
+> Hi Julian,
+>
+> On Mon, Nov 16, 2015 at 10:10 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
 >>
->>> From: Hante Meuleman <meuleman@broadcom.com>
->>>
->>> RSDB works almost autonomously in firmware except for AP config.
->>> When device supports RSDB then the interface should not be
->>> brought down when configuring it, otherwise the link (if
->>> configured) on the other interface will be lost.
->>>
->>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 >>
->> I have never heard of acronym RSDB before and after some googling I
->> think it might mean Real Simultaneous Dual Band. But please try to avoid
->> using acronyms and clearly spell it out in the commit log what the
->> feature is about.
+>> I want to say that this should go in DeviceTree or equivalent, however
+>> ath6kl doesn't have DeviceTree support, so...
+>>
 >
-> Google is correct and the acronym is cooked up by Broadcom ;-) In the
-> cover letter I mentioned:
->
-> * support bcm4359 which can operate in two bands concurrently.
->
-> which is a device with two 802.11 cores and hence supports RSDB.
+> I can't disagree.  In fact, my first try was via DT, but the driver
+> doesn't really support it and I couldn't just "bolt it on". I realized
+> the chunk of DT support that is there (for bdata files) would need a
+> bit of rearchitecting and I didn't have the stomach for that yet.
+> Hence this approach. Later I'd like to go and move it to DT, but
+> that's a different chunk of work.
 
-Yeah, but the problem is that the cover letter contents are not stored
-to git. Johannes once suggested that maybe I should do the same as Dave
-does, he adds an extra merge with the cover letter (see below). Hmm..
+I'm not the maintainer of the driver, so I can't say whether or not
+your patches should be applied or not, however this really is
+something that should be in DT and I suspect that your patches might
+not be applied because of this.
 
-commit e18f6ac30d31433d8cd9ccf693d3cdd5d2e66ef9
-Merge: e407f39afdc0 c02b05011fad
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue Oct 27 20:27:45 2015 -0700
+I'll discuss this more in my reply to your other email.
 
-    Merge branch 'mlx4-fixes'
-    
-    Or Gerlitz says:
-    
-    ====================
-    Mellanox mlx4 driver fixes for 4.3-rc7
-    
-    Jack's fix is for a regression introduced in 4.3-rc1
-    
-    Carol's fix addresses an issue which exists for while and
-    turns to beat us hard on PPC, please queue for -stable.
-    ====================
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
->> If you send me suggestions what to add I can edit the commit log before
->> I apply this patch.
->
-> If needed I can resubmit the patch. This would be the proposed commit log:
->
-> Broadcom devices with a single 802.11 core can work on two band
-> concurrently using VSDB feature, ie. Virtual Simultaneous Dual-Band.
-> For devices that are fitted with two 802.11 cores and RF paths the
-> driver should support a firmware feature called RSDB, which stands
-> for Real Simultaneous Dual-Band. RSDB works almost autonomously in
-> firmware except for AP config. When the device supports RSDB then
-> the interface should not be brought down when configuring it,
-> otherwise the link (if configured) on the other interface will be
-> lost.
->
-> Hope this helps and let me know if other actions are required from us.
-
-Thanks, this is perfect. I'll update the commit log once I open
-wireless-drivers-next and apply this patch.
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
