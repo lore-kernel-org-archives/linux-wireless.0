@@ -1,76 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01-fr.bfs.de ([193.174.231.67]:18165 "EHLO mx01-fr.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106AbbKZMWD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 07:22:03 -0500
-Message-ID: <5656F95C.60107@bfs.de> (sfid-20151126_132208_869280_152C1223)
-Date: Thu, 26 Nov 2015 13:21:48 +0100
-From: walter harms <wharms@bfs.de>
-Reply-To: wharms@bfs.de
-MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] rt2x00: type bug in _rt2500usb_register_read()
-References: <20151126115523.GD10556@mwanda>
-In-Reply-To: <20151126115523.GD10556@mwanda>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.codeaurora.org ([198.145.29.96]:57843 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455AbbKQPpu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 10:45:50 -0500
+Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 580751419A7
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 15:45:48 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/5] admtek: create new wireless vendor directory
+Date: Tue, 17 Nov 2015 17:45:32 +0200
+Message-Id: <1447775136-21173-2-git-send-email-kvalo@codeaurora.org> (sfid-20151117_164626_152662_C206D41E)
+In-Reply-To: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
+References: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ MAINTAINERS                                 |    2 +-
+ drivers/net/wireless/Kconfig                |   29 ++-----------------
+ drivers/net/wireless/Makefile               |    4 +--
+ drivers/net/wireless/admtek/Kconfig         |   41 +++++++++++++++++++++++++++
+ drivers/net/wireless/admtek/Makefile        |    1 +
+ drivers/net/wireless/{ => admtek}/adm8211.c |    0
+ drivers/net/wireless/{ => admtek}/adm8211.h |    0
+ 7 files changed, 47 insertions(+), 30 deletions(-)
+ create mode 100644 drivers/net/wireless/admtek/Kconfig
+ create mode 100644 drivers/net/wireless/admtek/Makefile
+ rename drivers/net/wireless/{ => admtek}/adm8211.c (100%)
+ rename drivers/net/wireless/{ => admtek}/adm8211.h (100%)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b6d822d50781..436c12006773 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -382,7 +382,7 @@ ADM8211 WIRELESS DRIVER
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/
+ S:	Orphan
+-F:	drivers/net/wireless/adm8211.*
++F:	drivers/net/wireless/admtek/adm8211.*
+ 
+ ADP1653 FLASH CONTROLLER DRIVER
+ M:	Sakari Ailus <sakari.ailus@iki.fi>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f9f94229bf1b..7d8f47117c4d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -17,6 +17,8 @@ menuconfig WLAN
+ 
+ if WLAN
+ 
++source "drivers/net/wireless/admtek/Kconfig"
++
+ config PCMCIA_RAYCS
+ 	tristate "Aviator/Raytheon 2.4GHz wireless support"
+ 	depends on PCMCIA
+@@ -214,33 +216,6 @@ config USB_NET_RNDIS_WLAN
+ 
+ 	  If you choose to build a module, it'll be called rndis_wlan.
+ 
+-config ADM8211
+-	tristate "ADMtek ADM8211 support"
+-	depends on MAC80211 && PCI
+-	select CRC32
+-	select EEPROM_93CX6
+-	---help---
+-	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
+-	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
+-
+-	  Xterasys Cardbus XN-2411b
+-	  Blitz NetWave Point PC
+-	  TrendNet 221pc
+-	  Belkin F5D6001
+-	  SMC 2635W
+-	  Linksys WPC11 v1
+-	  Fiberline FL-WL-200X
+-	  3com Office Connect (3CRSHPW796)
+-	  Corega WLPCIB-11
+-	  SMC 2602W V2 EU
+-	  D-Link DWL-520 Revision C
+-
+-	  However, some of these cards have been replaced with other chips
+-	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
+-	  the Ralink RT2400 (SMC2635W) without a model number change.
+-
+-	  Thanks to Infineon-ADMtek for their support of this driver.
+-
+ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+ 
+ config MAC80211_HWSIM
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 740fdd353c5d..be215f43ec1d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -2,6 +2,8 @@
+ # Makefile for the Linux Wireless network device drivers.
+ #
+ 
++obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++
+ obj-$(CONFIG_IPW2100) += ipw2x00/
+ obj-$(CONFIG_IPW2200) += ipw2x00/
+ 
+@@ -35,8 +37,6 @@ obj-$(CONFIG_LIBERTAS)		+= libertas/
+ 
+ obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
+ 
+-obj-$(CONFIG_ADM8211)	+= adm8211.o
+-
+ obj-$(CONFIG_MWL8K)	+= mwl8k.o
+ 
+ obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
+diff --git a/drivers/net/wireless/admtek/Kconfig b/drivers/net/wireless/admtek/Kconfig
+new file mode 100644
+index 000000000000..d5a2dc728078
+--- /dev/null
++++ b/drivers/net/wireless/admtek/Kconfig
+@@ -0,0 +1,41 @@
++config WLAN_VENDOR_ADMTEK
++	bool "ADMtek devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_ADMTEK
++
++config ADM8211
++	tristate "ADMtek ADM8211 support"
++	depends on MAC80211 && PCI
++	select CRC32
++	select EEPROM_93CX6
++	---help---
++	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
++	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
++
++	  Xterasys Cardbus XN-2411b
++	  Blitz NetWave Point PC
++	  TrendNet 221pc
++	  Belkin F5D6001
++	  SMC 2635W
++	  Linksys WPC11 v1
++	  Fiberline FL-WL-200X
++	  3com Office Connect (3CRSHPW796)
++	  Corega WLPCIB-11
++	  SMC 2602W V2 EU
++	  D-Link DWL-520 Revision C
++
++	  However, some of these cards have been replaced with other chips
++	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
++	  the Ralink RT2400 (SMC2635W) without a model number change.
++
++	  Thanks to Infineon-ADMtek for their support of this driver.
++
++endif # WLAN_VENDOR_ADMTEK
+diff --git a/drivers/net/wireless/admtek/Makefile b/drivers/net/wireless/admtek/Makefile
+new file mode 100644
+index 000000000000..9cca7e571cdd
+--- /dev/null
++++ b/drivers/net/wireless/admtek/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_ADM8211)	+= adm8211.o
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
+similarity index 100%
+rename from drivers/net/wireless/adm8211.c
+rename to drivers/net/wireless/admtek/adm8211.c
+diff --git a/drivers/net/wireless/adm8211.h b/drivers/net/wireless/admtek/adm8211.h
+similarity index 100%
+rename from drivers/net/wireless/adm8211.h
+rename to drivers/net/wireless/admtek/adm8211.h
+-- 
+1.7.9.5
 
-Am 26.11.2015 12:55, schrieb Dan Carpenter:
-> This code causes a static checker bug.
-> 
-> drivers/net/wireless/ralink/rt2x00/rt2500usb.c:232 _rt2500usb_register_read()
-> warn: passing casted pointer 'value' to 'rt2500usb_register_read()' 32 vs 16.
-> 
-> If the low 16 bits were initialized to zero then this code would only be
-> a problem on big endian systems.  But in this case this is case the low
-> 16 bits are never initialized.  This is called from a function which is
-> created using a macro:
-> 
-> RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
-> 
-> We end up copying uninitialized data to the user which is bogus and an
-> information leak.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Not tested.  Perhaps we should just remove this code since it has never
-> worked.
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> index b50d873..d26018f 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> @@ -229,7 +229,10 @@ static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
->  				     const unsigned int offset,
->  				     u32 *value)
->  {
-> -	rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
-> +	u16 tmp;
-> +
-> +	rt2500usb_register_read(rt2x00dev, offset, &tmp);
-> +	*value = tmp;
->  }
->  
-
-perhaps, cleaning *value would be sufficient ? Avoiding the need for a tmp var.
-
-*value = 0
-rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
-
-
-re,
- wh
-
->  static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
