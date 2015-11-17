@@ -1,95 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:33854 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932526AbbKQWeR (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57928 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbbKQIrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 17:34:17 -0500
-Received: by ioir85 with SMTP id r85so34841122ioi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 14:34:16 -0800 (PST)
+	Tue, 17 Nov 2015 03:47:07 -0500
+Message-ID: <564AE987.60709@broadcom.com> (sfid-20151117_094731_409092_9190FEE4)
+Date: Tue, 17 Nov 2015 09:47:03 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com>
-References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
- <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
- <CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com> <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 18 Nov 2015 09:33:57 +1100
-Message-ID: <CAGRGNgXHkLiSPeh9QjRuptmjnB=Qvz4fmaucZGUyGubXzZVCCg@mail.gmail.com> (sfid-20151117_233421_371761_CF758E5F)
-Subject: Re: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for
- CHIP_PWD_L pin
-To: Steve deRosier <derosier@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Content-Type: text/plain; charset=UTF-8
+To: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Brett Rudley <brudley@broadcom.com>
+CC: <kernel-janitors@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: constify brcmf_bus_ops structures
+References: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Steve,
-
-On Wed, Nov 18, 2015 at 4:42 AM, Steve deRosier <derosier@gmail.com> wrote:
-> Hi Julian,
+On 11/14/2015 05:22 PM, Julia Lawall wrote:
+> The brcmf_bus_ops structures are never modified, so declare them as const.
 >
-> Thanks for looking at this.
+> Done with the help of Coccinelle.
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 >
-> In short - I agree with your review and will do most of them. As a
-> well as a few minor changes suggested by the kbuild test robot. Expect
-> a new version shortly.
-
-I'm only really reviewing for style, you might want to wait for Kalle
-or someone else to do a technical review.
-
-> On Mon, Nov 16, 2015 at 10:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>>
->>>  static void __exit ath6kl_sdio_exit(void)
->>>  {
->>>         sdio_unregister_driver(&ath6kl_sdio_driver);
->>> +
->>> +#ifdef CONFIG_GPIOLIB
->>> +       /* Delay to avoid pulling the plug on the chip when an irq is pending
->>> +        * and then getting a spurious message:
->>> +        * "ath6kl: failed to get pending recv messages: -125"
->>> +        */
->>> +       msleep(300);
->>
->> Is there some actual synchronisation you can do here against the IRQ?
->> 300msec isn't a long time to wait, but it seems wrong here.
->>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bus.h  |    2 +-
+>   drivers/net/wireless/brcm80211/brcmfmac/pcie.c |    2 +-
+>   drivers/net/wireless/brcm80211/brcmfmac/sdio.c |    2 +-
+>   drivers/net/wireless/brcm80211/brcmfmac/usb.c  |    2 +-
+>   4 files changed, 4 insertions(+), 4 deletions(-)
 >
-> Considering this is only called on exit, I wasn't too worried about
-> this, but then again, on reboot as well as a few types of
-> reconfiguring the interface speed is an important consideration for
-> our system.
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+> index 230cad7..36093f9 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+> @@ -137,7 +137,7 @@ struct brcmf_bus {
+>   	bool always_use_fws_queue;
+>   	bool wowl_supported;
 >
-> I'm open to suggestions.  I had looked at this and didn't see an
-> obvious way to try to sync with the IRQ as it goes through several
-> subsystems.
-
-Maybe having this in ath6kl is having it in the wrong layer?
-
-I'm guessing this is on some board that already has a DTS. Do the mmc
-pwrseq drivers do what you're after?
-https://www.kernel.org/doc/Documentation/devicetree/bindings/mmc/mmc-pwrseq-emmc.txt
-or https://www.kernel.org/doc/Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
-
-> But looking at it again in a different light...
+> -	struct brcmf_bus_ops *ops;
+> +	const struct brcmf_bus_ops *ops;
+>   	struct brcmf_bus_msgbuf *msgbuf;
+>   };
 >
-> 125 is ECANCELED.  Which is exactly right and appropriate, and
-> ath6kl_htc_rxmsg_pending_handler() where the message comes from does a
-> proper cleanup, or so it looks like. I wonder if maybe we can consider
-> ECANCELED not an error that needs an error message as it might be a
-> reasonable case?
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> index 83d8042..65ae3b0 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> @@ -1419,7 +1419,7 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
+>   }
 >
-> So instead of synchronization, just consider that particular status an
-> expected and properly handled exception condition and not print an
-> error?
+>
+> -static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+> +static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+>   	.txdata = brcmf_pcie_tx,
+>   	.stop = brcmf_pcie_down,
+>   	.txctl = brcmf_pcie_tx_ctlpkt,
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> index 7e74ac3..01f359e 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+> @@ -4025,7 +4025,7 @@ brcmf_sdio_watchdog(unsigned long data)
+>   	}
+>   }
+>
+> -static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+> +static const struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+>   	.stop = brcmf_sdio_bus_stop,
+>   	.preinit = brcmf_sdio_bus_preinit,
+>   	.txdata = brcmf_sdio_bus_txdata,
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> index 689e64d..4bdd3b3 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> @@ -1163,7 +1163,7 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
+>   		device_set_wakeup_enable(devinfo->dev, false);
+>   }
+>
+> -static struct brcmf_bus_ops brcmf_usb_bus_ops = {
+> +static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
+>   	.txdata = brcmf_usb_tx,
+>   	.stop = brcmf_usb_down,
+>   	.txctl = brcmf_usb_tx_ctlpkt,
+>
 
-Printing it as a debug instead of an error is probably a better option
-here if you want to "silence" that error.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
