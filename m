@@ -1,68 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34139 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474AbbKHHug (ORCPT
+Received: from mail-io0-f174.google.com ([209.85.223.174]:33854 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932526AbbKQWeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:50:36 -0500
-Received: by padhx2 with SMTP id hx2so157837108pad.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:35 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 21/32] staging: wilc1000: rename u8Ciphermode in host_int_add_rx_gtk
-Date: Sun,  8 Nov 2015 16:49:14 +0900
-Message-Id: <1446968965-8958-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085042_618985_3DF53857)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 17 Nov 2015 17:34:17 -0500
+Received: by ioir85 with SMTP id r85so34841122ioi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 14:34:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com>
+References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
+ <1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
+ <CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com> <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 18 Nov 2015 09:33:57 +1100
+Message-ID: <CAGRGNgXHkLiSPeh9QjRuptmjnB=Qvz4fmaucZGUyGubXzZVCCg@mail.gmail.com> (sfid-20151117_233421_371761_CF758E5F)
+Subject: Re: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for
+ CHIP_PWD_L pin
+To: Steve deRosier <derosier@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes u8Ciphermode to cipher_mode to avoid camelcase.
+Hi Steve,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Wed, Nov 18, 2015 at 4:42 AM, Steve deRosier <derosier@gmail.com> wrote:
+> Hi Julian,
+>
+> Thanks for looking at this.
+>
+> In short - I agree with your review and will do most of them. As a
+> well as a few minor changes suggested by the kbuild test robot. Expect
+> a new version shortly.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7ca924a..7b647ce 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3277,7 +3277,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
- 			u8 gtk_key_len,	u8 index,
- 			u32 key_rsc_len, const u8 *key_rsc,
- 			const u8 *rx_mic, const u8 *tx_mic,
--			u8 mode, u8 u8Ciphermode)
-+			u8 mode, u8 cipher_mode)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3306,7 +3306,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
- 
- 	if (mode == AP_MODE) {
- 		msg.body.key_info.action = ADDKEY_AP;
--		msg.body.key_info.attr.wpa.mode = u8Ciphermode;
-+		msg.body.key_info.attr.wpa.mode = cipher_mode;
- 	}
- 	if (mode == STATION_MODE)
- 		msg.body.key_info.action = ADDKEY;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index e25f838..da81b92 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -321,7 +321,7 @@ int host_int_add_rx_gtk(struct host_if_drv *hif_drv, const u8 *rx_gtk,
- 			u8 gtk_key_len,	u8 index,
- 			u32 key_rsc_len, const u8 *key_rsc,
- 			const u8 *rx_mic, const u8 *tx_mic,
--			u8 mode, u8 u8Ciphermode);
-+			u8 mode, u8 cipher_mode);
- s32 host_int_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen,
- 			u8 *pu8TxGtk, u8 u8KeyIdx);
- s32 host_int_set_pmkid_info(struct host_if_drv *hWFIDrv,
+I'm only really reviewing for style, you might want to wait for Kalle
+or someone else to do a technical review.
+
+> On Mon, Nov 16, 2015 at 10:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>>
+>>>  static void __exit ath6kl_sdio_exit(void)
+>>>  {
+>>>         sdio_unregister_driver(&ath6kl_sdio_driver);
+>>> +
+>>> +#ifdef CONFIG_GPIOLIB
+>>> +       /* Delay to avoid pulling the plug on the chip when an irq is pending
+>>> +        * and then getting a spurious message:
+>>> +        * "ath6kl: failed to get pending recv messages: -125"
+>>> +        */
+>>> +       msleep(300);
+>>
+>> Is there some actual synchronisation you can do here against the IRQ?
+>> 300msec isn't a long time to wait, but it seems wrong here.
+>>
+>
+> Considering this is only called on exit, I wasn't too worried about
+> this, but then again, on reboot as well as a few types of
+> reconfiguring the interface speed is an important consideration for
+> our system.
+>
+> I'm open to suggestions.  I had looked at this and didn't see an
+> obvious way to try to sync with the IRQ as it goes through several
+> subsystems.
+
+Maybe having this in ath6kl is having it in the wrong layer?
+
+I'm guessing this is on some board that already has a DTS. Do the mmc
+pwrseq drivers do what you're after?
+https://www.kernel.org/doc/Documentation/devicetree/bindings/mmc/mmc-pwrseq-emmc.txt
+or https://www.kernel.org/doc/Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
+
+> But looking at it again in a different light...
+>
+> 125 is ECANCELED.  Which is exactly right and appropriate, and
+> ath6kl_htc_rxmsg_pending_handler() where the message comes from does a
+> proper cleanup, or so it looks like. I wonder if maybe we can consider
+> ECANCELED not an error that needs an error message as it might be a
+> reasonable case?
+>
+> So instead of synchronization, just consider that particular status an
+> expected and properly handled exception condition and not print an
+> error?
+
+Printing it as a debug instead of an error is probably a better option
+here if you want to "silence" that error.
+
+Thanks,
+
 -- 
-2.6.3
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
