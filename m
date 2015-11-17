@@ -1,47 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17010 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbbKLRhD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 12:37:03 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: add VHT support for Mesh
-Date: Thu, 12 Nov 2015 09:36:31 -0800
-Message-ID: <1447349791-3849-1-git-send-email-poh@qca.qualcomm.com> (sfid-20151112_183714_500359_E1D5F1DE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:36244 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752691AbbKQIYq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 03:24:46 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/8] cfg80211: add complete data to station add/change tracing
+Date: Tue, 17 Nov 2015 10:24:34 +0200
+Message-Id: <1447748680-23075-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092513_804524_F5E072CF)
+In-Reply-To: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add NL80211_EXT_FEATURE_VHT_MESH flag to allow drivers
-to indicate support for VHT in Mesh mode.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Complete the tracepoint with the missing data - it's not printed
+by default (a lot of it is dynamic arrays) but will be recorded
+and be available during post-processing.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/uapi/linux/nl80211.h | 2 ++
- 1 file changed, 2 insertions(+)
+ net/wireless/trace.h | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1f0b4cf..4a16ed5 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4389,12 +4389,14 @@ enum nl80211_feature_flags {
- /**
-  * enum nl80211_ext_feature_index - bit index of extended features.
-  * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
-+ * @NL80211_EXT_FEATURE_VHT_MESH: This driver supports Mesh with VHT datarates.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
- enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_VHT_IBSS,
-+	NL80211_EXT_FEATURE_VHT_MESH,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 62d9b96..5b9139e 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -623,12 +623,24 @@ DECLARE_EVENT_CLASS(station_add_change,
+ 		__field(u32, sta_flags_set)
+ 		__field(u32, sta_modify_mask)
+ 		__field(int, listen_interval)
++		__field(u16, capability)
+ 		__field(u16, aid)
+ 		__field(u8, plink_action)
+ 		__field(u8, plink_state)
+ 		__field(u8, uapsd_queues)
++		__field(u8, max_sp)
++		__field(u8, opmode_notif)
++		__field(bool, opmode_notif_used)
+ 		__array(u8, ht_capa, (int)sizeof(struct ieee80211_ht_cap))
++		__array(u8, vht_capa, (int)sizeof(struct ieee80211_vht_cap))
+ 		__array(char, vlan, IFNAMSIZ)
++		__dynamic_array(u8, supported_rates,
++				params->supported_rates_len)
++		__dynamic_array(u8, ext_capab, params->ext_capab_len)
++		__dynamic_array(u8, supported_channels,
++				params->supported_channels_len)
++		__dynamic_array(u8, supported_oper_classes,
++				params->supported_oper_classes_len)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+@@ -646,9 +658,35 @@ DECLARE_EVENT_CLASS(station_add_change,
+ 		if (params->ht_capa)
+ 			memcpy(__entry->ht_capa, params->ht_capa,
+ 			       sizeof(struct ieee80211_ht_cap));
++		memset(__entry->vht_capa, 0, sizeof(struct ieee80211_vht_cap));
++		if (params->vht_capa)
++			memcpy(__entry->vht_capa, params->vht_capa,
++			       sizeof(struct ieee80211_vht_cap));
+ 		memset(__entry->vlan, 0, sizeof(__entry->vlan));
+ 		if (params->vlan)
+ 			memcpy(__entry->vlan, params->vlan->name, IFNAMSIZ);
++		if (params->supported_rates && params->supported_rates_len)
++			memcpy(__get_dynamic_array(supported_rates),
++			       params->supported_rates,
++			       params->supported_rates_len);
++		if (params->ext_capab && params->ext_capab_len)
++			memcpy(__get_dynamic_array(ext_capab),
++			       params->ext_capab,
++			       params->ext_capab_len);
++		if (params->supported_channels &&
++		    params->supported_channels_len)
++			memcpy(__get_dynamic_array(supported_channels),
++			       params->supported_channels,
++			       params->supported_channels_len);
++		if (params->supported_oper_classes &&
++		    params->supported_oper_classes_len)
++			memcpy(__get_dynamic_array(supported_oper_classes),
++			       params->supported_oper_classes,
++			       params->supported_oper_classes_len);
++		__entry->max_sp = params->max_sp;
++		__entry->capability = params->capability;
++		__entry->opmode_notif = params->opmode_notif;
++		__entry->opmode_notif_used = params->opmode_notif_used;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
+ 		  ", station flags mask: %u, station flags set: %u, "
 -- 
-1.9.1
+2.5.0
 
