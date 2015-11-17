@@ -1,246 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57854 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbbKQPpw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 10:45:52 -0500
-Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id 1A3D01419AB
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 15:45:49 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 3/5] atmel: create new wireless vendor directory
-Date: Tue, 17 Nov 2015 17:45:34 +0200
-Message-Id: <1447775136-21173-4-git-send-email-kvalo@codeaurora.org> (sfid-20151117_164602_421226_FFABEF7A)
-In-Reply-To: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
-References: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
+Received: from mga11.intel.com ([192.55.52.93]:52992 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752670AbbKQIYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 03:24:52 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 6/8] mac80211: always set the buf_size in AddBA req to 64
+Date: Tue, 17 Nov 2015 10:24:38 +0200
+Message-Id: <1447748680-23075-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092509_817970_62315733)
+In-Reply-To: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- MAINTAINERS                                     |    2 +-
- drivers/net/wireless/Kconfig                    |   44 +----------------
- drivers/net/wireless/Makefile                   |    7 +--
- drivers/net/wireless/atmel/Kconfig              |   57 +++++++++++++++++++++++
- drivers/net/wireless/atmel/Makefile             |    5 ++
- drivers/net/wireless/{ => atmel}/at76c50x-usb.c |    0
- drivers/net/wireless/{ => atmel}/at76c50x-usb.h |    0
- drivers/net/wireless/{ => atmel}/atmel.c        |    0
- drivers/net/wireless/{ => atmel}/atmel.h        |    0
- drivers/net/wireless/{ => atmel}/atmel_cs.c     |    0
- drivers/net/wireless/{ => atmel}/atmel_pci.c    |    0
- 11 files changed, 65 insertions(+), 50 deletions(-)
- create mode 100644 drivers/net/wireless/atmel/Kconfig
- create mode 100644 drivers/net/wireless/atmel/Makefile
- rename drivers/net/wireless/{ => atmel}/at76c50x-usb.c (100%)
- rename drivers/net/wireless/{ => atmel}/at76c50x-usb.h (100%)
- rename drivers/net/wireless/{ => atmel}/atmel.c (100%)
- rename drivers/net/wireless/{ => atmel}/atmel.h (100%)
- rename drivers/net/wireless/{ => atmel}/atmel_cs.c (100%)
- rename drivers/net/wireless/{ => atmel}/atmel_pci.c (100%)
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 436c12006773..e42fcda9ef82 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1948,7 +1948,7 @@ L:	linux-wireless@vger.kernel.org
- W:	http://www.thekelleys.org.uk/atmel
- W:	http://atmelwlandriver.sourceforge.net/
- S:	Maintained
--F:	drivers/net/wireless/atmel*
-+F:	drivers/net/wireless/atmel/atmel*
+Advertising reordering window in ADDBA less than 64 can crash some APs,
+an example is LinkSys WRT120N (with FW v1.0.07 build 002 Jun 18 2012).
+On the other hand, a driver may need to limit Tx A-MPDU size for its own
+reasons, like specific HW limitations.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 6 ++++--
+ net/mac80211/agg-tx.c  | 3 ++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bcb7022..a68051c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2009,8 +2009,10 @@ enum ieee80211_hw_flags {
+  *	it shouldn't be set.
+  *
+  * @max_tx_aggregation_subframes: maximum number of subframes in an
+- *	aggregate an HT driver will transmit, used by the peer as a
+- *	hint to size its reorder buffer.
++ *	aggregate an HT driver will transmit. Though ADDBA will advertise
++ *	a constant value of 64 as some older APs can crash if the window
++ *	size is smaller (an example is LinkSys WRT120N with FW v1.0.07
++ *	build 002 Jun 18 2012).
+  *
+  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
+  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index a758eb84..ff75718 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -500,7 +500,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, start_seq_num,
+-				     local->hw.max_tx_aggregation_subframes,
++				     IEEE80211_MAX_AMPDU_BUF,
+ 				     tid_tx->timeout);
+ }
  
- ATMEL MAXTOUCH DRIVER
- M:	Nick Dyer <nick.dyer@itdev.co.uk>
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index ce5211ba1b29..275b6ed93f15 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -18,6 +18,7 @@ menuconfig WLAN
- if WLAN
+@@ -926,6 +926,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
+ 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
+ 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
++	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
  
- source "drivers/net/wireless/admtek/Kconfig"
-+source "drivers/net/wireless/atmel/Kconfig"
- source "drivers/net/wireless/cisco/Kconfig"
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
  
- config PCMCIA_RAYCS
-@@ -54,49 +55,6 @@ config LIBERTAS_THINFIRM_USB
- 	---help---
- 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
- 
--config ATMEL
--      tristate "Atmel at76c50x chipset  802.11b support"
--      depends on CFG80211 && (PCI || PCMCIA)
--      select WIRELESS_EXT
--      select WEXT_PRIV
--      select FW_LOADER
--      select CRC32
--       ---help---
--        A driver 802.11b wireless cards based on the Atmel fast-vnet
--        chips. This driver supports standard Linux wireless extensions.
--
--        Many  cards based on this chipset do not have flash memory
--        and need their firmware loaded at start-up. If yours is
--        one of these, you will need to provide a firmware image
--        to be loaded into the card by the driver. The Atmel
--        firmware package can be downloaded from
--        <http://www.thekelleys.org.uk/atmel>
--
--config PCI_ATMEL
--      tristate "Atmel at76c506 PCI cards"
--      depends on ATMEL && PCI
--       ---help---
--        Enable support for PCI and mini-PCI cards containing the
--        Atmel at76c506 chip.
--
--config PCMCIA_ATMEL
--	tristate "Atmel at76c502/at76c504 PCMCIA cards"
--	depends on ATMEL && PCMCIA
--	select WIRELESS_EXT
--	select FW_LOADER
--	select CRC32
--	---help---
--	  Enable support for PCMCIA cards containing the
--	  Atmel at76c502 and at76c504 chips.
--
--config AT76C50X_USB
--        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
--        depends on MAC80211 && USB
--        select FW_LOADER
--        ---help---
--          Enable support for USB Wireless devices using Atmel at76c503,
--          at76c505 or at76c505a chips.
--
- config PCMCIA_WL3501
- 	tristate "Planet WL3501 PCMCIA cards"
- 	depends on CFG80211 && PCMCIA
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 853294d84fa9..87eb6b2f3227 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -3,6 +3,7 @@
- #
- 
- obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
-+obj-$(CONFIG_WLAN_VENDOR_ATMEL) += atmel/
- obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
- 
- obj-$(CONFIG_IPW2100) += ipw2x00/
-@@ -10,12 +11,6 @@ obj-$(CONFIG_IPW2200) += ipw2x00/
- 
- obj-$(CONFIG_HERMES)		+= orinoco/
- 
--obj-$(CONFIG_ATMEL)             += atmel.o
--obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
--obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
--
--obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
--
- obj-$(CONFIG_PRISM54)		+= prism54/
- 
- obj-$(CONFIG_HOSTAP)		+= hostap/
-diff --git a/drivers/net/wireless/atmel/Kconfig b/drivers/net/wireless/atmel/Kconfig
-new file mode 100644
-index 000000000000..a43cfd163254
---- /dev/null
-+++ b/drivers/net/wireless/atmel/Kconfig
-@@ -0,0 +1,57 @@
-+config WLAN_VENDOR_ATMEL
-+	bool "Atmel devices"
-+	default y
-+	---help---
-+	  If you have a wireless card belonging to this class, say Y.
-+
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
-+
-+if WLAN_VENDOR_ATMEL
-+
-+config ATMEL
-+      tristate "Atmel at76c50x chipset  802.11b support"
-+      depends on CFG80211 && (PCI || PCMCIA)
-+      select WIRELESS_EXT
-+      select WEXT_PRIV
-+      select FW_LOADER
-+      select CRC32
-+       ---help---
-+        A driver 802.11b wireless cards based on the Atmel fast-vnet
-+        chips. This driver supports standard Linux wireless extensions.
-+
-+        Many  cards based on this chipset do not have flash memory
-+        and need their firmware loaded at start-up. If yours is
-+        one of these, you will need to provide a firmware image
-+        to be loaded into the card by the driver. The Atmel
-+        firmware package can be downloaded from
-+        <http://www.thekelleys.org.uk/atmel>
-+
-+config PCI_ATMEL
-+      tristate "Atmel at76c506 PCI cards"
-+      depends on ATMEL && PCI
-+       ---help---
-+        Enable support for PCI and mini-PCI cards containing the
-+        Atmel at76c506 chip.
-+
-+config PCMCIA_ATMEL
-+	tristate "Atmel at76c502/at76c504 PCMCIA cards"
-+	depends on ATMEL && PCMCIA
-+	select WIRELESS_EXT
-+	select FW_LOADER
-+	select CRC32
-+	---help---
-+	  Enable support for PCMCIA cards containing the
-+	  Atmel at76c502 and at76c504 chips.
-+
-+config AT76C50X_USB
-+        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
-+        depends on MAC80211 && USB
-+        select FW_LOADER
-+        ---help---
-+          Enable support for USB Wireless devices using Atmel at76c503,
-+          at76c505 or at76c505a chips.
-+
-+endif # WLAN_VENDOR_ATMEL
-diff --git a/drivers/net/wireless/atmel/Makefile b/drivers/net/wireless/atmel/Makefile
-new file mode 100644
-index 000000000000..e62e345f7af6
---- /dev/null
-+++ b/drivers/net/wireless/atmel/Makefile
-@@ -0,0 +1,5 @@
-+obj-$(CONFIG_ATMEL)             += atmel.o
-+obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
-+obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
-+
-+obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-similarity index 100%
-rename from drivers/net/wireless/at76c50x-usb.c
-rename to drivers/net/wireless/atmel/at76c50x-usb.c
-diff --git a/drivers/net/wireless/at76c50x-usb.h b/drivers/net/wireless/atmel/at76c50x-usb.h
-similarity index 100%
-rename from drivers/net/wireless/at76c50x-usb.h
-rename to drivers/net/wireless/atmel/at76c50x-usb.h
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel/atmel.c
-similarity index 100%
-rename from drivers/net/wireless/atmel.c
-rename to drivers/net/wireless/atmel/atmel.c
-diff --git a/drivers/net/wireless/atmel.h b/drivers/net/wireless/atmel/atmel.h
-similarity index 100%
-rename from drivers/net/wireless/atmel.h
-rename to drivers/net/wireless/atmel/atmel.h
-diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel/atmel_cs.c
-similarity index 100%
-rename from drivers/net/wireless/atmel_cs.c
-rename to drivers/net/wireless/atmel/atmel_cs.c
-diff --git a/drivers/net/wireless/atmel_pci.c b/drivers/net/wireless/atmel/atmel_pci.c
-similarity index 100%
-rename from drivers/net/wireless/atmel_pci.c
-rename to drivers/net/wireless/atmel/atmel_pci.c
 -- 
-1.7.9.5
+2.5.0
 
