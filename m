@@ -1,402 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:53770 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbbKYJcP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 04:32:15 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 3/4] staging: wilc1000: linux_wlan_sdio.c: move all the codes to wilc_sdio.c
-Date: Wed, 25 Nov 2015 18:35:28 +0900
-Message-ID: <1448444129-11045-3-git-send-email-glen.lee@atmel.com> (sfid-20151125_103220_379392_B344F0EA)
-In-Reply-To: <1448444129-11045-1-git-send-email-glen.lee@atmel.com>
-References: <1448444129-11045-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:49155 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752666AbbKQIYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 03:24:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 0/8] various mac80211 patches
+Date: Tue, 17 Nov 2015 10:24:32 +0200
+Message-Id: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092451_269247_2DC41D10)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To Combine linux_wlan_sdio.c and wilc_sdio.c as one file, move all the codes
-in linux_wlan_sdio.c to wilc_sdio.c, and make functions static only.
-No Modification has not been made except static, just moved them.
-Function declaration in linux_wlan_sdio.h is needless, so just remove them.
-linux_wlan_sdio.[ch] will be deleted in the next patch.
+Hi Johannes,
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_sdio.c | 160 ----------------------------
- drivers/staging/wilc1000/linux_wlan_sdio.h |   7 --
- drivers/staging/wilc1000/wilc_sdio.c       | 164 ++++++++++++++++++++++++++++-
- 3 files changed, 163 insertions(+), 168 deletions(-)
+Here are a few patches we have on our internal tree.
+Ilan's has been applied already but somehow wasn't merged.
+Since I know you apply patches in the merge window and
+rebase them, I am afraid it got lost, so I am resending it
+here just as a heads up.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 4b9cb55..67d99e9 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -8,163 +8,3 @@
- #include <linux/of_gpio.h>
- 
- #include "linux_wlan_sdio.h"
--
--#define SDIO_MODALIAS "wilc1000_sdio"
--
--#define SDIO_VENDOR_ID_WILC 0x0296
--#define SDIO_DEVICE_ID_WILC 0x5347
--
--static const struct sdio_device_id wilc_sdio_ids[] = {
--	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
--	{ },
--};
--
--
--static void wilc_sdio_interrupt(struct sdio_func *func)
--{
--	sdio_release_host(func);
--	wilc_handle_isr(sdio_get_drvdata(func));
--	sdio_claim_host(func);
--}
--
--int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
--{
--	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
--	int ret;
--	u8 data;
--
--	sdio_claim_host(func);
--
--	func->num = cmd->function;
--	if (cmd->read_write) {  /* write */
--		if (cmd->raw) {
--			sdio_writeb(func, cmd->data, cmd->address, &ret);
--			data = sdio_readb(func, cmd->address, &ret);
--			cmd->data = data;
--		} else {
--			sdio_writeb(func, cmd->data, cmd->address, &ret);
--		}
--	} else {        /* read */
--		data = sdio_readb(func, cmd->address, &ret);
--		cmd->data = data;
--	}
--
--	sdio_release_host(func);
--
--	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
--	return ret;
--}
--
--
--int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
--{
--	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
--	int size, ret;
--
--	sdio_claim_host(func);
--
--	func->num = cmd->function;
--	func->cur_blksize = cmd->block_size;
--	if (cmd->block_mode)
--		size = cmd->count * cmd->block_size;
--	else
--		size = cmd->count;
--
--	if (cmd->read_write) {  /* write */
--		ret = sdio_memcpy_toio(func, cmd->address,
--				       (void *)cmd->buffer, size);
--	} else {        /* read */
--		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
--					 cmd->address,  size);
--	}
--
--	sdio_release_host(func);
--
--	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
--
--	return ret;
--}
--
--static int linux_sdio_probe(struct sdio_func *func,
--			    const struct sdio_device_id *id)
--{
--	struct wilc *wilc;
--	int gpio, ret;
--
--	gpio = -1;
--	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
--		gpio = of_get_gpio(func->dev.of_node, 0);
--		if (gpio < 0)
--			gpio = GPIO_NUM;
--	}
--
--	dev_dbg(&func->dev, "Initializing netdev\n");
--	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
--			     &wilc_hif_sdio);
--	if (ret) {
--		dev_err(&func->dev, "Couldn't initialize netdev\n");
--		return ret;
--	}
--	sdio_set_drvdata(func, wilc);
--	wilc->dev = &func->dev;
--
--	dev_info(&func->dev, "Driver Initializing success\n");
--	return 0;
--}
--
--static void linux_sdio_remove(struct sdio_func *func)
--{
--	wilc_netdev_cleanup(sdio_get_drvdata(func));
--}
--
--static struct sdio_driver wilc1000_sdio_driver = {
--	.name		= SDIO_MODALIAS,
--	.id_table	= wilc_sdio_ids,
--	.probe		= linux_sdio_probe,
--	.remove		= linux_sdio_remove,
--};
--module_driver(wilc1000_sdio_driver,
--	      sdio_register_driver,
--	      sdio_unregister_driver);
--MODULE_LICENSE("GPL");
--
--int wilc_sdio_enable_interrupt(struct wilc *dev)
--{
--	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
--	int ret = 0;
--
--	sdio_claim_host(func);
--	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
--	sdio_release_host(func);
--
--	if (ret < 0) {
--		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
--		ret = -EIO;
--	}
--	return ret;
--}
--
--void wilc_sdio_disable_interrupt(struct wilc *dev)
--{
--	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
--	int ret;
--
--	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
--
--	sdio_claim_host(func);
--	ret = sdio_release_irq(func);
--	if (ret < 0)
--		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
--	sdio_release_host(func);
--
--	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
--}
--
--int wilc_sdio_init(void)
--{
--	return 1;
--}
--
--MODULE_LICENSE("GPL");
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
-index 8d276c6..abb2312 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.h
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
-@@ -1,8 +1 @@
- #include <linux/mmc/sdio_func.h>
--
--int wilc_sdio_init(void);
--int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd);
--int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd);
--
--int wilc_sdio_enable_interrupt(struct wilc *);
--void wilc_sdio_disable_interrupt(struct wilc *);
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index fd640f1..464d27d 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -10,8 +10,23 @@
- #include <linux/string.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
--#include "linux_wlan_sdio.h"
- #include "wilc_wfi_netdevice.h"
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/host.h>
-+#include <linux/of_gpio.h>
-+
-+#define SDIO_MODALIAS "wilc1000_sdio"
-+
-+#define SDIO_VENDOR_ID_WILC 0x0296
-+#define SDIO_DEVICE_ID_WILC 0x5347
-+
-+static const struct sdio_device_id wilc_sdio_ids[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
-+	{ },
-+};
- 
- #define WILC_SDIO_BLOCK_SIZE 512
- 
-@@ -28,6 +43,153 @@ static wilc_sdio_t g_sdio;
- static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
- static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
- 
-+static void wilc_sdio_interrupt(struct sdio_func *func)
-+{
-+	sdio_release_host(func);
-+	wilc_handle_isr(sdio_get_drvdata(func));
-+	sdio_claim_host(func);
-+}
-+
-+static int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
-+{
-+	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
-+	int ret;
-+	u8 data;
-+
-+	sdio_claim_host(func);
-+
-+	func->num = cmd->function;
-+	if (cmd->read_write) {  /* write */
-+		if (cmd->raw) {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+			data = sdio_readb(func, cmd->address, &ret);
-+			cmd->data = data;
-+		} else {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+		}
-+	} else {        /* read */
-+		data = sdio_readb(func, cmd->address, &ret);
-+		cmd->data = data;
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
-+	return ret;
-+}
-+
-+
-+static int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
-+{
-+	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
-+	int size, ret;
-+
-+	sdio_claim_host(func);
-+
-+	func->num = cmd->function;
-+	func->cur_blksize = cmd->block_size;
-+	if (cmd->block_mode)
-+		size = cmd->count * cmd->block_size;
-+	else
-+		size = cmd->count;
-+
-+	if (cmd->read_write) {  /* write */
-+		ret = sdio_memcpy_toio(func, cmd->address,
-+				       (void *)cmd->buffer, size);
-+	} else {        /* read */
-+		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
-+					 cmd->address,  size);
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
-+
-+	return ret;
-+}
-+
-+static int linux_sdio_probe(struct sdio_func *func,
-+			    const struct sdio_device_id *id)
-+{
-+	struct wilc *wilc;
-+	int gpio, ret;
-+
-+	gpio = -1;
-+	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
-+		gpio = of_get_gpio(func->dev.of_node, 0);
-+		if (gpio < 0)
-+			gpio = GPIO_NUM;
-+	}
-+
-+	dev_dbg(&func->dev, "Initializing netdev\n");
-+	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
-+			     &wilc_hif_sdio);
-+	if (ret) {
-+		dev_err(&func->dev, "Couldn't initialize netdev\n");
-+		return ret;
-+	}
-+	sdio_set_drvdata(func, wilc);
-+	wilc->dev = &func->dev;
-+
-+	dev_info(&func->dev, "Driver Initializing success\n");
-+	return 0;
-+}
-+
-+static void linux_sdio_remove(struct sdio_func *func)
-+{
-+	wilc_netdev_cleanup(sdio_get_drvdata(func));
-+}
-+
-+static struct sdio_driver wilc1000_sdio_driver = {
-+	.name		= SDIO_MODALIAS,
-+	.id_table	= wilc_sdio_ids,
-+	.probe		= linux_sdio_probe,
-+	.remove		= linux_sdio_remove,
-+};
-+module_driver(wilc1000_sdio_driver,
-+	      sdio_register_driver,
-+	      sdio_unregister_driver);
-+MODULE_LICENSE("GPL");
-+
-+static int wilc_sdio_enable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
-+	int ret = 0;
-+
-+	sdio_claim_host(func);
-+	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
-+	sdio_release_host(func);
-+
-+	if (ret < 0) {
-+		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
-+		ret = -EIO;
-+	}
-+	return ret;
-+}
-+
-+static void wilc_sdio_disable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
-+	int ret;
-+
-+	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
-+
-+	sdio_claim_host(func);
-+	ret = sdio_release_irq(func);
-+	if (ret < 0)
-+		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
-+	sdio_release_host(func);
-+
-+	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
-+}
-+
-+static int wilc_sdio_init(void)
-+{
-+	return 1;
-+}
-+
- /********************************************
-  *
-  *      Function 0
+There are bugfixes (Gregory's one, my tx power thing and
+Eliad's teardown related patch), along with improvements.
+A few improvements are needed for bugfix on the driver side,
+but I think they don't deserve to be merged in 4.4. Your call
+obviously.
+
+Eliad Peller (2):
+  mac80211: add atomic uploaded keys iterator
+  mac80211: don't teardown sdata on sdata stop
+
+Emmanuel Grumbach (2):
+  mac80211: allow the driver to send EOSP when needed
+  mac80211: ensure we don't update tx power on a non-running sdata
+
+Gregory Greenman (1):
+  mac80211: always set the buf_size in AddBA req to 64
+
+Ilan Peer (1):
+  cfg80211: Add missing tracing to cfg80211
+
+Johannes Berg (2):
+  cfg80211: add complete data to station add/change tracing
+  mac80211: allow driver to prevent two stations w/ same address
+
+ include/net/mac80211.h  |  58 ++++++++++++++++-
+ net/mac80211/agg-tx.c   |   3 +-
+ net/mac80211/debugfs.c  |   1 +
+ net/mac80211/iface.c    |   5 +-
+ net/mac80211/key.c      |  56 +++++++++++++++--
+ net/mac80211/sta_info.c | 163 +++++++++++++++++++++++++++++++++++-------------
+ net/mac80211/sta_info.h |   2 +
+ net/mac80211/trace.h    |  25 ++++++++
+ net/wireless/nl80211.c  |   9 ++-
+ net/wireless/rdev-ops.h |  43 +++++++++++++
+ net/wireless/trace.h    |  99 +++++++++++++++++++++++++++++
+ 11 files changed, 405 insertions(+), 59 deletions(-)
+
 -- 
-1.9.1
+2.5.0
 
