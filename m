@@ -1,189 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34908 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57854 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933274AbbKROqt (ORCPT
+	with ESMTP id S1752912AbbKQPpw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:49 -0500
+	Tue, 17 Nov 2015 10:45:52 -0500
+Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 1A3D01419AB
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 15:45:49 +0000 (UTC)
 From: Kalle Valo <kvalo@codeaurora.org>
 To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 18/27] p54: move under intersil vendor directory
-Date: Wed, 18 Nov 2015 16:45:57 +0200
-Message-Id: <1447857966-19560-19-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155122_070657_EE26C978)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+Subject: [RFC 3/5] atmel: create new wireless vendor directory
+Date: Tue, 17 Nov 2015 17:45:34 +0200
+Message-Id: <1447775136-21173-4-git-send-email-kvalo@codeaurora.org> (sfid-20151117_164602_421226_FFABEF7A)
+In-Reply-To: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
+References: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
-
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- MAINTAINERS                                        |    2 +-
- drivers/net/wireless/Kconfig                       |    1 -
- drivers/net/wireless/Makefile                      |    2 --
- drivers/net/wireless/intersil/Kconfig              |    1 +
- drivers/net/wireless/intersil/Makefile             |    1 +
- drivers/net/wireless/{ => intersil}/p54/Kconfig    |    0
- drivers/net/wireless/{ => intersil}/p54/Makefile   |    0
- drivers/net/wireless/{ => intersil}/p54/eeprom.c   |    0
- drivers/net/wireless/{ => intersil}/p54/eeprom.h   |    0
- drivers/net/wireless/{ => intersil}/p54/fwio.c     |    0
- drivers/net/wireless/{ => intersil}/p54/led.c      |    0
- drivers/net/wireless/{ => intersil}/p54/lmac.h     |    0
- drivers/net/wireless/{ => intersil}/p54/main.c     |    0
- drivers/net/wireless/{ => intersil}/p54/p54.h      |    0
- drivers/net/wireless/{ => intersil}/p54/p54pci.c   |    0
- drivers/net/wireless/{ => intersil}/p54/p54pci.h   |    0
- drivers/net/wireless/{ => intersil}/p54/p54spi.c   |    0
- drivers/net/wireless/{ => intersil}/p54/p54spi.h   |    0
- .../wireless/{ => intersil}/p54/p54spi_eeprom.h    |    0
- drivers/net/wireless/{ => intersil}/p54/p54usb.c   |    0
- drivers/net/wireless/{ => intersil}/p54/p54usb.h   |    0
- drivers/net/wireless/{ => intersil}/p54/txrx.c     |    0
- 22 files changed, 3 insertions(+), 4 deletions(-)
- rename drivers/net/wireless/{ => intersil}/p54/Kconfig (100%)
- rename drivers/net/wireless/{ => intersil}/p54/Makefile (100%)
- rename drivers/net/wireless/{ => intersil}/p54/eeprom.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/eeprom.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/fwio.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/led.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/lmac.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/main.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54pci.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54pci.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54spi.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54spi.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54spi_eeprom.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54usb.c (100%)
- rename drivers/net/wireless/{ => intersil}/p54/p54usb.h (100%)
- rename drivers/net/wireless/{ => intersil}/p54/txrx.c (100%)
+ MAINTAINERS                                     |    2 +-
+ drivers/net/wireless/Kconfig                    |   44 +----------------
+ drivers/net/wireless/Makefile                   |    7 +--
+ drivers/net/wireless/atmel/Kconfig              |   57 +++++++++++++++++++++++
+ drivers/net/wireless/atmel/Makefile             |    5 ++
+ drivers/net/wireless/{ => atmel}/at76c50x-usb.c |    0
+ drivers/net/wireless/{ => atmel}/at76c50x-usb.h |    0
+ drivers/net/wireless/{ => atmel}/atmel.c        |    0
+ drivers/net/wireless/{ => atmel}/atmel.h        |    0
+ drivers/net/wireless/{ => atmel}/atmel_cs.c     |    0
+ drivers/net/wireless/{ => atmel}/atmel_pci.c    |    0
+ 11 files changed, 65 insertions(+), 50 deletions(-)
+ create mode 100644 drivers/net/wireless/atmel/Kconfig
+ create mode 100644 drivers/net/wireless/atmel/Makefile
+ rename drivers/net/wireless/{ => atmel}/at76c50x-usb.c (100%)
+ rename drivers/net/wireless/{ => atmel}/at76c50x-usb.h (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel.c (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel.h (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel_cs.c (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel_pci.c (100%)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 63c601b04e68..818899a4c268 100644
+index 436c12006773..e42fcda9ef82 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -7956,7 +7956,7 @@ M:	Christian Lamparter <chunkeey@googlemail.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/en/users/Drivers/p54
+@@ -1948,7 +1948,7 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://www.thekelleys.org.uk/atmel
+ W:	http://atmelwlandriver.sourceforge.net/
  S:	Maintained
--F:	drivers/net/wireless/p54/
-+F:	drivers/net/wireless/intersil/p54/
+-F:	drivers/net/wireless/atmel*
++F:	drivers/net/wireless/atmel/atmel*
  
- PA SEMI ETHERNET DRIVER
- M:	Olof Johansson <olof@lixom.net>
+ ATMEL MAXTOUCH DRIVER
+ M:	Nick Dyer <nick.dyer@itdev.co.uk>
 diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index da10b00d8af1..bea2fbb4a238 100644
+index ce5211ba1b29..275b6ed93f15 100644
 --- a/drivers/net/wireless/Kconfig
 +++ b/drivers/net/wireless/Kconfig
-@@ -118,7 +118,6 @@ config MAC80211_HWSIM
+@@ -18,6 +18,7 @@ menuconfig WLAN
+ if WLAN
  
- source "drivers/net/wireless/ath/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
--source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
+ source "drivers/net/wireless/admtek/Kconfig"
++source "drivers/net/wireless/atmel/Kconfig"
+ source "drivers/net/wireless/cisco/Kconfig"
+ 
+ config PCMCIA_RAYCS
+@@ -54,49 +55,6 @@ config LIBERTAS_THINFIRM_USB
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
+ 
+-config ATMEL
+-      tristate "Atmel at76c50x chipset  802.11b support"
+-      depends on CFG80211 && (PCI || PCMCIA)
+-      select WIRELESS_EXT
+-      select WEXT_PRIV
+-      select FW_LOADER
+-      select CRC32
+-       ---help---
+-        A driver 802.11b wireless cards based on the Atmel fast-vnet
+-        chips. This driver supports standard Linux wireless extensions.
+-
+-        Many  cards based on this chipset do not have flash memory
+-        and need their firmware loaded at start-up. If yours is
+-        one of these, you will need to provide a firmware image
+-        to be loaded into the card by the driver. The Atmel
+-        firmware package can be downloaded from
+-        <http://www.thekelleys.org.uk/atmel>
+-
+-config PCI_ATMEL
+-      tristate "Atmel at76c506 PCI cards"
+-      depends on ATMEL && PCI
+-       ---help---
+-        Enable support for PCI and mini-PCI cards containing the
+-        Atmel at76c506 chip.
+-
+-config PCMCIA_ATMEL
+-	tristate "Atmel at76c502/at76c504 PCMCIA cards"
+-	depends on ATMEL && PCMCIA
+-	select WIRELESS_EXT
+-	select FW_LOADER
+-	select CRC32
+-	---help---
+-	  Enable support for PCMCIA cards containing the
+-	  Atmel at76c502 and at76c504 chips.
+-
+-config AT76C50X_USB
+-        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
+-        depends on MAC80211 && USB
+-        select FW_LOADER
+-        ---help---
+-          Enable support for USB Wireless devices using Atmel at76c503,
+-          at76c505 or at76c505a chips.
+-
+ config PCMCIA_WL3501
+ 	tristate "Planet WL3501 PCMCIA cards"
+ 	depends on CFG80211 && PCMCIA
 diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index a60c5e55b55e..046963fc3958 100644
+index 853294d84fa9..87eb6b2f3227 100644
 --- a/drivers/net/wireless/Makefile
 +++ b/drivers/net/wireless/Makefile
-@@ -28,8 +28,6 @@ obj-$(CONFIG_RT2X00)	+= rt2x00/
+@@ -3,6 +3,7 @@
+ #
  
- obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
+ obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++obj-$(CONFIG_WLAN_VENDOR_ATMEL) += atmel/
+ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
  
--obj-$(CONFIG_P54_COMMON)	+= p54/
+ obj-$(CONFIG_IPW2100) += ipw2x00/
+@@ -10,12 +11,6 @@ obj-$(CONFIG_IPW2200) += ipw2x00/
+ 
+ obj-$(CONFIG_HERMES)		+= orinoco/
+ 
+-obj-$(CONFIG_ATMEL)             += atmel.o
+-obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
+-obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
 -
- obj-$(CONFIG_ATH_CARDS)		+= ath/
+-obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
+-
+ obj-$(CONFIG_PRISM54)		+= prism54/
  
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/intersil/Kconfig b/drivers/net/wireless/intersil/Kconfig
-index ec80b9117fd2..4bc3688bfa93 100644
---- a/drivers/net/wireless/intersil/Kconfig
-+++ b/drivers/net/wireless/intersil/Kconfig
-@@ -12,5 +12,6 @@ config WLAN_VENDOR_INTERSIL
- if WLAN_VENDOR_INTERSIL
- 
- source "drivers/net/wireless/intersil/hostap/Kconfig"
-+source "drivers/net/wireless/intersil/p54/Kconfig"
- 
- endif # WLAN_VENDOR_INTERSIL
-diff --git a/drivers/net/wireless/intersil/Makefile b/drivers/net/wireless/intersil/Makefile
-index 4890ef79f280..90a72830b1ae 100644
---- a/drivers/net/wireless/intersil/Makefile
-+++ b/drivers/net/wireless/intersil/Makefile
-@@ -1 +1,2 @@
  obj-$(CONFIG_HOSTAP)		+= hostap/
-+obj-$(CONFIG_P54_COMMON)	+= p54/
-diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/intersil/p54/Kconfig
+diff --git a/drivers/net/wireless/atmel/Kconfig b/drivers/net/wireless/atmel/Kconfig
+new file mode 100644
+index 000000000000..a43cfd163254
+--- /dev/null
++++ b/drivers/net/wireless/atmel/Kconfig
+@@ -0,0 +1,57 @@
++config WLAN_VENDOR_ATMEL
++	bool "Atmel devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_ATMEL
++
++config ATMEL
++      tristate "Atmel at76c50x chipset  802.11b support"
++      depends on CFG80211 && (PCI || PCMCIA)
++      select WIRELESS_EXT
++      select WEXT_PRIV
++      select FW_LOADER
++      select CRC32
++       ---help---
++        A driver 802.11b wireless cards based on the Atmel fast-vnet
++        chips. This driver supports standard Linux wireless extensions.
++
++        Many  cards based on this chipset do not have flash memory
++        and need their firmware loaded at start-up. If yours is
++        one of these, you will need to provide a firmware image
++        to be loaded into the card by the driver. The Atmel
++        firmware package can be downloaded from
++        <http://www.thekelleys.org.uk/atmel>
++
++config PCI_ATMEL
++      tristate "Atmel at76c506 PCI cards"
++      depends on ATMEL && PCI
++       ---help---
++        Enable support for PCI and mini-PCI cards containing the
++        Atmel at76c506 chip.
++
++config PCMCIA_ATMEL
++	tristate "Atmel at76c502/at76c504 PCMCIA cards"
++	depends on ATMEL && PCMCIA
++	select WIRELESS_EXT
++	select FW_LOADER
++	select CRC32
++	---help---
++	  Enable support for PCMCIA cards containing the
++	  Atmel at76c502 and at76c504 chips.
++
++config AT76C50X_USB
++        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
++        depends on MAC80211 && USB
++        select FW_LOADER
++        ---help---
++          Enable support for USB Wireless devices using Atmel at76c503,
++          at76c505 or at76c505a chips.
++
++endif # WLAN_VENDOR_ATMEL
+diff --git a/drivers/net/wireless/atmel/Makefile b/drivers/net/wireless/atmel/Makefile
+new file mode 100644
+index 000000000000..e62e345f7af6
+--- /dev/null
++++ b/drivers/net/wireless/atmel/Makefile
+@@ -0,0 +1,5 @@
++obj-$(CONFIG_ATMEL)             += atmel.o
++obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
++obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
++
++obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
 similarity index 100%
-rename from drivers/net/wireless/p54/Kconfig
-rename to drivers/net/wireless/intersil/p54/Kconfig
-diff --git a/drivers/net/wireless/p54/Makefile b/drivers/net/wireless/intersil/p54/Makefile
+rename from drivers/net/wireless/at76c50x-usb.c
+rename to drivers/net/wireless/atmel/at76c50x-usb.c
+diff --git a/drivers/net/wireless/at76c50x-usb.h b/drivers/net/wireless/atmel/at76c50x-usb.h
 similarity index 100%
-rename from drivers/net/wireless/p54/Makefile
-rename to drivers/net/wireless/intersil/p54/Makefile
-diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
+rename from drivers/net/wireless/at76c50x-usb.h
+rename to drivers/net/wireless/atmel/at76c50x-usb.h
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel/atmel.c
 similarity index 100%
-rename from drivers/net/wireless/p54/eeprom.c
-rename to drivers/net/wireless/intersil/p54/eeprom.c
-diff --git a/drivers/net/wireless/p54/eeprom.h b/drivers/net/wireless/intersil/p54/eeprom.h
+rename from drivers/net/wireless/atmel.c
+rename to drivers/net/wireless/atmel/atmel.c
+diff --git a/drivers/net/wireless/atmel.h b/drivers/net/wireless/atmel/atmel.h
 similarity index 100%
-rename from drivers/net/wireless/p54/eeprom.h
-rename to drivers/net/wireless/intersil/p54/eeprom.h
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+rename from drivers/net/wireless/atmel.h
+rename to drivers/net/wireless/atmel/atmel.h
+diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel/atmel_cs.c
 similarity index 100%
-rename from drivers/net/wireless/p54/fwio.c
-rename to drivers/net/wireless/intersil/p54/fwio.c
-diff --git a/drivers/net/wireless/p54/led.c b/drivers/net/wireless/intersil/p54/led.c
+rename from drivers/net/wireless/atmel_cs.c
+rename to drivers/net/wireless/atmel/atmel_cs.c
+diff --git a/drivers/net/wireless/atmel_pci.c b/drivers/net/wireless/atmel/atmel_pci.c
 similarity index 100%
-rename from drivers/net/wireless/p54/led.c
-rename to drivers/net/wireless/intersil/p54/led.c
-diff --git a/drivers/net/wireless/p54/lmac.h b/drivers/net/wireless/intersil/p54/lmac.h
-similarity index 100%
-rename from drivers/net/wireless/p54/lmac.h
-rename to drivers/net/wireless/intersil/p54/lmac.h
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-similarity index 100%
-rename from drivers/net/wireless/p54/main.c
-rename to drivers/net/wireless/intersil/p54/main.c
-diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/intersil/p54/p54.h
-similarity index 100%
-rename from drivers/net/wireless/p54/p54.h
-rename to drivers/net/wireless/intersil/p54/p54.h
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/intersil/p54/p54pci.c
-similarity index 100%
-rename from drivers/net/wireless/p54/p54pci.c
-rename to drivers/net/wireless/intersil/p54/p54pci.c
-diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/intersil/p54/p54pci.h
-similarity index 100%
-rename from drivers/net/wireless/p54/p54pci.h
-rename to drivers/net/wireless/intersil/p54/p54pci.h
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/intersil/p54/p54spi.c
-similarity index 100%
-rename from drivers/net/wireless/p54/p54spi.c
-rename to drivers/net/wireless/intersil/p54/p54spi.c
-diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/intersil/p54/p54spi.h
-similarity index 100%
-rename from drivers/net/wireless/p54/p54spi.h
-rename to drivers/net/wireless/intersil/p54/p54spi.h
-diff --git a/drivers/net/wireless/p54/p54spi_eeprom.h b/drivers/net/wireless/intersil/p54/p54spi_eeprom.h
-similarity index 100%
-rename from drivers/net/wireless/p54/p54spi_eeprom.h
-rename to drivers/net/wireless/intersil/p54/p54spi_eeprom.h
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
-similarity index 100%
-rename from drivers/net/wireless/p54/p54usb.c
-rename to drivers/net/wireless/intersil/p54/p54usb.c
-diff --git a/drivers/net/wireless/p54/p54usb.h b/drivers/net/wireless/intersil/p54/p54usb.h
-similarity index 100%
-rename from drivers/net/wireless/p54/p54usb.h
-rename to drivers/net/wireless/intersil/p54/p54usb.h
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
-similarity index 100%
-rename from drivers/net/wireless/p54/txrx.c
-rename to drivers/net/wireless/intersil/p54/txrx.c
+rename from drivers/net/wireless/atmel_pci.c
+rename to drivers/net/wireless/atmel/atmel_pci.c
 -- 
 1.7.9.5
 
