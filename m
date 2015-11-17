@@ -1,233 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:59414 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752201AbbKPOF1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57865 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753978AbbKQPpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 09:05:27 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 06/19] staging/wilc1000: avoid static definitions in header
-Date: Mon, 16 Nov 2015 15:04:57 +0100
-Message-Id: <1447682710-2908925-7-git-send-email-arnd@arndb.de> (sfid-20151116_150810_636550_F2B1145F)
-In-Reply-To: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
-References: <1447682710-2908925-1-git-send-email-arnd@arndb.de>
+	Tue, 17 Nov 2015 10:45:55 -0500
+Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 2094C1419B1
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 15:45:52 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 5/5] b43legacy: move under broadcom vendor directory
+Date: Tue, 17 Nov 2015 17:45:36 +0200
+Message-Id: <1447775136-21173-6-git-send-email-kvalo@codeaurora.org> (sfid-20151117_164606_010030_98851CB4)
+In-Reply-To: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
+References: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wilc_wfi_cfgoperations.h header defines the ieee80211_txrx_stypes
-and cipher_suites variables that are only used in wilc_wfi_cfgoperations.c
-and should not be shared in a header file.
-
-This moves over all that data into the .c file, and also moves all
-the macro definitions from the file that are also not needed here.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 84 +++++++++++++++++++++++
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 83 ----------------------
- 2 files changed, 84 insertions(+), 83 deletions(-)
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/Kconfig                       |    1 -
+ drivers/net/wireless/Makefile                      |    1 -
+ drivers/net/wireless/broadcom/Kconfig              |    1 +
+ drivers/net/wireless/broadcom/Makefile             |    1 +
+ .../net/wireless/{ => broadcom}/b43legacy/Kconfig  |    0
+ .../net/wireless/{ => broadcom}/b43legacy/Makefile |    0
+ .../wireless/{ => broadcom}/b43legacy/b43legacy.h  |    0
+ .../wireless/{ => broadcom}/b43legacy/debugfs.c    |    0
+ .../wireless/{ => broadcom}/b43legacy/debugfs.h    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/dma.c    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/dma.h    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/ilt.c    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/ilt.h    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/leds.c   |    0
+ .../net/wireless/{ => broadcom}/b43legacy/leds.h   |    0
+ .../net/wireless/{ => broadcom}/b43legacy/main.c   |    0
+ .../net/wireless/{ => broadcom}/b43legacy/main.h   |    0
+ .../net/wireless/{ => broadcom}/b43legacy/phy.c    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/phy.h    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/pio.c    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/pio.h    |    0
+ .../net/wireless/{ => broadcom}/b43legacy/radio.c  |    0
+ .../net/wireless/{ => broadcom}/b43legacy/radio.h  |    0
+ .../net/wireless/{ => broadcom}/b43legacy/rfkill.c |    0
+ .../net/wireless/{ => broadcom}/b43legacy/rfkill.h |    0
+ .../net/wireless/{ => broadcom}/b43legacy/sysfs.c  |    0
+ .../net/wireless/{ => broadcom}/b43legacy/sysfs.h  |    0
+ .../net/wireless/{ => broadcom}/b43legacy/xmit.c   |    0
+ .../net/wireless/{ => broadcom}/b43legacy/xmit.h   |    0
+ 30 files changed, 3 insertions(+), 3 deletions(-)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/Kconfig (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/Makefile (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/b43legacy.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/debugfs.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/debugfs.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/dma.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/dma.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/ilt.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/ilt.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/leds.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/leds.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/main.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/main.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/phy.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/phy.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/pio.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/pio.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/radio.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/radio.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/rfkill.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/rfkill.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/sysfs.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/sysfs.h (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/xmit.c (100%)
+ rename drivers/net/wireless/{ => broadcom}/b43legacy/xmit.h (100%)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 49b82b4a0688..46c3f578a6fd 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -17,6 +17,90 @@
- #include "host_interface.h"
- #include <linux/errno.h>
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9464ba3cb298..e3ebc6804bdf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2045,7 +2045,7 @@ L:	linux-wireless@vger.kernel.org
+ L:	b43-dev@lists.infradead.org
+ W:	http://wireless.kernel.org/en/users/Drivers/b43
+ S:	Maintained
+-F:	drivers/net/wireless/b43legacy/
++F:	drivers/net/wireless/broadcom/b43legacy/
  
-+/* The following macros describe the bitfield map used by the firmware to determine its 11i mode */
-+#define NO_ENCRYPT		0
-+#define ENCRYPT_ENABLED		BIT(0)
-+#define WEP			BIT(1)
-+#define WEP_EXTENDED		BIT(2)
-+#define WPA			BIT(3)
-+#define WPA2			BIT(4)
-+#define AES			BIT(5)
-+#define TKIP			BIT(6)
-+
-+/*Public action frame index IDs*/
-+#define FRAME_TYPE_ID			0
-+#define ACTION_CAT_ID			24
-+#define ACTION_SUBTYPE_ID		25
-+#define P2P_PUB_ACTION_SUBTYPE		30
-+
-+/*Public action frame Attribute IDs*/
-+#define ACTION_FRAME			0xd0
-+#define GO_INTENT_ATTR_ID		0x04
-+#define CHANLIST_ATTR_ID		0x0b
-+#define OPERCHAN_ATTR_ID		0x11
-+#define PUB_ACTION_ATTR_ID		0x04
-+#define P2PELEM_ATTR_ID			0xdd
-+
-+/*Public action subtype values*/
-+#define GO_NEG_REQ			0x00
-+#define GO_NEG_RSP			0x01
-+#define GO_NEG_CONF			0x02
-+#define P2P_INV_REQ			0x03
-+#define P2P_INV_RSP			0x04
-+#define PUBLIC_ACT_VENDORSPEC		0x09
-+#define GAS_INTIAL_REQ			0x0a
-+#define GAS_INTIAL_RSP			0x0b
-+
-+#define INVALID_CHANNEL			0
-+
-+#define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
-+#define SCAN_RESULT_EXPIRE		(40 * HZ)
-+
-+static const u32 cipher_suites[] = {
-+	WLAN_CIPHER_SUITE_WEP40,
-+	WLAN_CIPHER_SUITE_WEP104,
-+	WLAN_CIPHER_SUITE_TKIP,
-+	WLAN_CIPHER_SUITE_CCMP,
-+	WLAN_CIPHER_SUITE_AES_CMAC,
-+};
-+
-+static const struct ieee80211_txrx_stypes
-+	wilc_wfi_cfg80211_mgmt_types[NUM_NL80211_IFTYPES] = {
-+	[NL80211_IFTYPE_STATION] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
-+	},
-+	[NL80211_IFTYPE_AP] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-+			BIT(IEEE80211_STYPE_ACTION >> 4)
-+	},
-+	[NL80211_IFTYPE_P2P_CLIENT] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4)
-+	}
-+};
-+
-+/* Time to stay on the channel */
-+#define WILC_WFI_DWELL_PASSIVE 100
-+#define WILC_WFI_DWELL_ACTIVE  40
-+
-+#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
-+#define DEFAULT_LINK_SPEED			72
-+
-+
- #define IS_MANAGMEMENT				0x100
- #define IS_MANAGMEMENT_CALLBACK			0x080
- #define IS_MGMT_STATUS_SUCCES			0x040
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index ae2aaea508db..158d98c0eb87 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -10,86 +10,6 @@
- #define NM_WFI_CFGOPERATIONS
- #include "wilc_wfi_netdevice.h"
+ BACKLIGHT CLASS/SUBSYSTEM
+ M:	Jingoo Han <jingoohan1@gmail.com>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 0c47f2ca2207..e261df26b0dd 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -159,7 +159,6 @@ config MWL8K
+ 	  will be called mwl8k.  If unsure, say N.
  
--/* The following macros describe the bitfield map used by the firmware to determine its 11i mode */
--#define NO_ENCRYPT		0
--#define ENCRYPT_ENABLED		BIT(0)
--#define WEP			BIT(1)
--#define WEP_EXTENDED		BIT(2)
--#define WPA			BIT(3)
--#define WPA2			BIT(4)
--#define AES			BIT(5)
--#define TKIP			BIT(6)
--
--/*Public action frame index IDs*/
--#define FRAME_TYPE_ID			0
--#define ACTION_CAT_ID			24
--#define ACTION_SUBTYPE_ID		25
--#define P2P_PUB_ACTION_SUBTYPE		30
--
--/*Public action frame Attribute IDs*/
--#define ACTION_FRAME			0xd0
--#define GO_INTENT_ATTR_ID		0x04
--#define CHANLIST_ATTR_ID		0x0b
--#define OPERCHAN_ATTR_ID		0x11
--#define PUB_ACTION_ATTR_ID		0x04
--#define P2PELEM_ATTR_ID			0xdd
--
--/*Public action subtype values*/
--#define GO_NEG_REQ			0x00
--#define GO_NEG_RSP			0x01
--#define GO_NEG_CONF			0x02
--#define P2P_INV_REQ			0x03
--#define P2P_INV_RSP			0x04
--#define PUBLIC_ACT_VENDORSPEC		0x09
--#define GAS_INTIAL_REQ			0x0a
--#define GAS_INTIAL_RSP			0x0b
--
--#define INVALID_CHANNEL			0
--
--#define nl80211_SCAN_RESULT_EXPIRE	(3 * HZ)
--#define SCAN_RESULT_EXPIRE		(40 * HZ)
--
--static const u32 cipher_suites[] = {
--	WLAN_CIPHER_SUITE_WEP40,
--	WLAN_CIPHER_SUITE_WEP104,
--	WLAN_CIPHER_SUITE_TKIP,
--	WLAN_CIPHER_SUITE_CCMP,
--	WLAN_CIPHER_SUITE_AES_CMAC,
--};
--
--static const struct ieee80211_txrx_stypes
--	wilc_wfi_cfg80211_mgmt_types[NUM_NL80211_IFTYPES] = {
--	[NL80211_IFTYPE_STATION] = {
--		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
--			BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
--	},
--	[NL80211_IFTYPE_AP] = {
--		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
--			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
--			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
--			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
--			BIT(IEEE80211_STYPE_AUTH >> 4) |
--			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
--			BIT(IEEE80211_STYPE_ACTION >> 4)
--	},
--	[NL80211_IFTYPE_P2P_CLIENT] = {
--		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
--			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
--			BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
--			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
--			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
--			BIT(IEEE80211_STYPE_AUTH >> 4) |
--			BIT(IEEE80211_STYPE_DEAUTH >> 4)
--	}
--};
--
--/* Time to stay on the channel */
--#define WILC_WFI_DWELL_PASSIVE 100
--#define WILC_WFI_DWELL_ACTIVE  40
--
- struct wireless_dev *wilc_create_wiphy(struct net_device *net);
- void wilc_free_wiphy(struct net_device *net);
- int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
-@@ -101,7 +21,4 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			      u16 frame_type, bool reg);
+ source "drivers/net/wireless/ath/Kconfig"
+-source "drivers/net/wireless/b43legacy/Kconfig"
+ source "drivers/net/wireless/brcm80211/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/ipw2x00/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 7907674ad5b4..13ac61737acd 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -15,7 +15,6 @@ obj-$(CONFIG_HERMES)		+= orinoco/
+ obj-$(CONFIG_PRISM54)		+= prism54/
  
--#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
--#define DEFAULT_LINK_SPEED			72
--
- #endif
+ obj-$(CONFIG_HOSTAP)		+= hostap/
+-obj-$(CONFIG_B43LEGACY)		+= b43legacy/
+ obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
+ obj-$(CONFIG_WLAN)		+= realtek/
+ 
+diff --git a/drivers/net/wireless/broadcom/Kconfig b/drivers/net/wireless/broadcom/Kconfig
+index 0ba8119d2cf2..323e738dd96f 100644
+--- a/drivers/net/wireless/broadcom/Kconfig
++++ b/drivers/net/wireless/broadcom/Kconfig
+@@ -12,5 +12,6 @@ config WLAN_VENDOR_BROADCOM
+ if WLAN_VENDOR_BROADCOM
+ 
+ source "drivers/net/wireless/broadcom/b43/Kconfig"
++source "drivers/net/wireless/broadcom/b43legacy/Kconfig"
+ 
+ endif # WLAN_VENDOR_BROADCOM
+diff --git a/drivers/net/wireless/broadcom/Makefile b/drivers/net/wireless/broadcom/Makefile
+index 0140a810107c..66d7cc461fcf 100644
+--- a/drivers/net/wireless/broadcom/Makefile
++++ b/drivers/net/wireless/broadcom/Makefile
+@@ -1 +1,2 @@
+ obj-$(CONFIG_B43)		+= b43/
++obj-$(CONFIG_B43LEGACY)		+= b43legacy/
+diff --git a/drivers/net/wireless/b43legacy/Kconfig b/drivers/net/wireless/broadcom/b43legacy/Kconfig
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/Kconfig
+rename to drivers/net/wireless/broadcom/b43legacy/Kconfig
+diff --git a/drivers/net/wireless/b43legacy/Makefile b/drivers/net/wireless/broadcom/b43legacy/Makefile
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/Makefile
+rename to drivers/net/wireless/broadcom/b43legacy/Makefile
+diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/broadcom/b43legacy/b43legacy.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/b43legacy.h
+rename to drivers/net/wireless/broadcom/b43legacy/b43legacy.h
+diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/broadcom/b43legacy/debugfs.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/debugfs.c
+rename to drivers/net/wireless/broadcom/b43legacy/debugfs.c
+diff --git a/drivers/net/wireless/b43legacy/debugfs.h b/drivers/net/wireless/broadcom/b43legacy/debugfs.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/debugfs.h
+rename to drivers/net/wireless/broadcom/b43legacy/debugfs.h
+diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/broadcom/b43legacy/dma.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/dma.c
+rename to drivers/net/wireless/broadcom/b43legacy/dma.c
+diff --git a/drivers/net/wireless/b43legacy/dma.h b/drivers/net/wireless/broadcom/b43legacy/dma.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/dma.h
+rename to drivers/net/wireless/broadcom/b43legacy/dma.h
+diff --git a/drivers/net/wireless/b43legacy/ilt.c b/drivers/net/wireless/broadcom/b43legacy/ilt.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/ilt.c
+rename to drivers/net/wireless/broadcom/b43legacy/ilt.c
+diff --git a/drivers/net/wireless/b43legacy/ilt.h b/drivers/net/wireless/broadcom/b43legacy/ilt.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/ilt.h
+rename to drivers/net/wireless/broadcom/b43legacy/ilt.h
+diff --git a/drivers/net/wireless/b43legacy/leds.c b/drivers/net/wireless/broadcom/b43legacy/leds.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/leds.c
+rename to drivers/net/wireless/broadcom/b43legacy/leds.c
+diff --git a/drivers/net/wireless/b43legacy/leds.h b/drivers/net/wireless/broadcom/b43legacy/leds.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/leds.h
+rename to drivers/net/wireless/broadcom/b43legacy/leds.h
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/main.c
+rename to drivers/net/wireless/broadcom/b43legacy/main.c
+diff --git a/drivers/net/wireless/b43legacy/main.h b/drivers/net/wireless/broadcom/b43legacy/main.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/main.h
+rename to drivers/net/wireless/broadcom/b43legacy/main.h
+diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/broadcom/b43legacy/phy.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/phy.c
+rename to drivers/net/wireless/broadcom/b43legacy/phy.c
+diff --git a/drivers/net/wireless/b43legacy/phy.h b/drivers/net/wireless/broadcom/b43legacy/phy.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/phy.h
+rename to drivers/net/wireless/broadcom/b43legacy/phy.h
+diff --git a/drivers/net/wireless/b43legacy/pio.c b/drivers/net/wireless/broadcom/b43legacy/pio.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/pio.c
+rename to drivers/net/wireless/broadcom/b43legacy/pio.c
+diff --git a/drivers/net/wireless/b43legacy/pio.h b/drivers/net/wireless/broadcom/b43legacy/pio.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/pio.h
+rename to drivers/net/wireless/broadcom/b43legacy/pio.h
+diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/broadcom/b43legacy/radio.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/radio.c
+rename to drivers/net/wireless/broadcom/b43legacy/radio.c
+diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/broadcom/b43legacy/radio.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/radio.h
+rename to drivers/net/wireless/broadcom/b43legacy/radio.h
+diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/broadcom/b43legacy/rfkill.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/rfkill.c
+rename to drivers/net/wireless/broadcom/b43legacy/rfkill.c
+diff --git a/drivers/net/wireless/b43legacy/rfkill.h b/drivers/net/wireless/broadcom/b43legacy/rfkill.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/rfkill.h
+rename to drivers/net/wireless/broadcom/b43legacy/rfkill.h
+diff --git a/drivers/net/wireless/b43legacy/sysfs.c b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/sysfs.c
+rename to drivers/net/wireless/broadcom/b43legacy/sysfs.c
+diff --git a/drivers/net/wireless/b43legacy/sysfs.h b/drivers/net/wireless/broadcom/b43legacy/sysfs.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/sysfs.h
+rename to drivers/net/wireless/broadcom/b43legacy/sysfs.h
+diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/broadcom/b43legacy/xmit.c
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/xmit.c
+rename to drivers/net/wireless/broadcom/b43legacy/xmit.c
+diff --git a/drivers/net/wireless/b43legacy/xmit.h b/drivers/net/wireless/broadcom/b43legacy/xmit.h
+similarity index 100%
+rename from drivers/net/wireless/b43legacy/xmit.h
+rename to drivers/net/wireless/broadcom/b43legacy/xmit.h
 -- 
-2.1.0.rc2
+1.7.9.5
 
