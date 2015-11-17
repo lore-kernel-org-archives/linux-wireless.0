@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3890 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754718AbbKXRjP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:39:15 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath10k: update WMI 10.x service map
-Date: Tue, 24 Nov 2015 09:37:33 -0800
-Message-ID: <1448386655-13936-2-git-send-email-poh@qca.qualcomm.com> (sfid-20151124_183924_185640_BDFE09CD)
-In-Reply-To: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-References: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:52992 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751847AbbKQIY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2015 03:24:56 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 8/8] mac80211: don't teardown sdata on sdata stop
+Date: Tue, 17 Nov 2015 10:24:40 +0200
+Message-Id: <1447748680-23075-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092506_152322_F389191F)
+In-Reply-To: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update WMI 10.x service map to sync with firmware 10.2.4.70.12-2
-released on 11/11/2015 which is the latest QCA988X firmware as of
-11/18/2015.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Interfaces are being initialized (setup) on addition,
+and torn down on removal.
+
+However, p2p device is being torn down when stopped,
+resulting in the next p2p start operation being done
+on uninitialized interface.
+
+Solve it by calling ieee80211_teardown_sdata() only
+on interface removal (for the non-netdev case).
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ net/mac80211/iface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 80d3f1c..0747055 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -208,6 +208,11 @@ enum wmi_10x_service {
- 	WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
- 	WMI_10X_SERVICE_ATF,
- 	WMI_10X_SERVICE_COEX_GPIO,
-+	WMI_10X_SERVICE_AUX_SPECTRAL_INTF,
-+	WMI_10X_SERVICE_AUX_CHAN_LOAD_INTF,
-+	WMI_10X_SERVICE_BSS_CHANNEL_INFO_64,
-+	WMI_10X_SERVICE_MESH,
-+	WMI_10X_SERVICE_EXT_RES_CFG_SUPPORT,
- };
- 
- enum wmi_main_service {
-@@ -448,6 +453,16 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_ATF, len);
- 	SVCMAP(WMI_10X_SERVICE_COEX_GPIO,
- 	       WMI_SERVICE_COEX_GPIO, len);
-+	SVCMAP(WMI_10X_SERVICE_AUX_SPECTRAL_INTF,
-+	       WMI_SERVICE_AUX_SPECTRAL_INTF, len);
-+	SVCMAP(WMI_10X_SERVICE_AUX_CHAN_LOAD_INTF,
-+	       WMI_SERVICE_AUX_CHAN_LOAD_INTF, len);
-+	SVCMAP(WMI_10X_SERVICE_BSS_CHANNEL_INFO_64,
-+	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
-+	SVCMAP(WMI_10X_SERVICE_MESH,
-+	       WMI_SERVICE_MESH, len);
-+	SVCMAP(WMI_10X_SERVICE_EXT_RES_CFG_SUPPORT,
-+	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 53ee049..d6a1a46 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1861,6 +1861,7 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ 	if (sdata->dev) {
+ 		unregister_netdevice(sdata->dev);
+ 	} else {
++		ieee80211_teardown_sdata(sdata);
+ 		cfg80211_unregister_wdev(&sdata->wdev);
+ 		kfree(sdata);
+ 	}
+@@ -1871,7 +1872,6 @@ void ieee80211_sdata_stop(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON_ONCE(!test_bit(SDATA_STATE_RUNNING, &sdata->state)))
+ 		return;
+ 	ieee80211_do_stop(sdata, true);
+-	ieee80211_teardown_sdata(sdata);
  }
  
- static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
+ void ieee80211_remove_interfaces(struct ieee80211_local *local)
 -- 
-1.9.1
+2.5.0
 
