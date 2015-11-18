@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:54443 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754040AbbK0JoK convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37389 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486AbbKRLaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 04:44:10 -0500
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?utf-8?Q?Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>
-Subject: Re: [PATCH v2 6/8] cfg80211: reg: Add NL80211_RRF_USER_REGD_NEEDED flag
-In-Reply-To: <1448613316.2531.13.camel@sipsolutions.net>
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz> <1448303241-27747-7-git-send-email-sojkam1@fel.cvut.cz> <1448613316.2531.13.camel@sipsolutions.net>
-Date: Fri, 27 Nov 2015 10:43:59 +0100
-Message-ID: <87si3r22w0.fsf@steelpick.2x.cz> (sfid-20151127_104415_814161_3C2AB1B0)
+	Wed, 18 Nov 2015 06:30:35 -0500
+Date: Wed, 18 Nov 2015 12:30:16 +0100
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
+	austin.shin@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers:staging:wilc1000 Fix comparison to NULL messages
+Message-ID: <20151118113016.GA26728@gmail.com> (sfid-20151118_123052_416900_C88F17E4)
+References: <1447790488-17742-1-git-send-email-brutallesale@gmail.com>
+ <20151118061927.GA6229@sudip-pc>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20151118061927.GA6229@sudip-pc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 27 2015, Johannes Berg wrote:
-> On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
->> 
->> The NL80211_RRF_USER_REGD_NEEDED flag introduced in this commit
->> allows
->> drivers to specify that certain band is enabled only if it is
->> additionally enabled in user-supplied regulatory database. If the
->> band
->> is not present there, the channels are simply disabled.
+On 11/18, Sudip Mukherjee wrote:
+>On Tue, Nov 17, 2015 at 09:01:28PM +0100, Bogicevic Sasa wrote:
+>> This fixes all "Comparison to NULL could be written like..."
+>> messages from checkpatch.pl
+>>
+>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>> ---
+>>  drivers/staging/wilc1000/coreconfigurator.c | 10 +++++-----
+>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+>> index fd7240c..a31ac55 100644
+>> --- a/drivers/staging/wilc1000/coreconfigurator.c
+>> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+>> @@ -434,7 +434,7 @@ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+>>
+>>  		/* Get DTIM Period */
+>>  		pu8TimElm = get_tim_elm(pu8msa, u16RxLen + FCS_LEN, u8index);
+>> -		if (pu8TimElm != NULL)
+>> +		if (!pu8TimElm)
 >
-> I can see why you'd want this flag internally (although it'll require
-> rework given the comments on the previous patch) - but is there a
-> reason to export it in nl80211?
-
-I don't see any reason either. Only all regulatory rule flags
-(nl80211_reg_rule_flags) happen to be "exported". Shall I add new field
-(e.g. internal_flags) to struct ieee80211_reg_rule and define new enum
-for it?
-
-> Then again, perhaps it *would* be good to show this information in
-> userspace?
-
-What do you mean by "show"? nl80211_put_regdom() already sends regdom
-flags to userspace. Or do you mean introducing a new channel attribute
-and send it in nl80211_msg_put_channel()?
-
--Michal
+>You are now checking for -  if (pu8TimElm == NULL)	
+>It should actually be: if (pu8TimElm)
+>
+>regards
+>sudip
+Right, so stuped, Ill resend it
