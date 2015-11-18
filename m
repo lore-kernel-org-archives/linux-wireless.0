@@ -1,122 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20618 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbbKRGJD (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:35464 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbbKRF7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:03 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/16] staging: wilc1000: wilc_sdio_cmd53: pass struct wilc
-Date: Wed, 18 Nov 2015 15:11:28 +0900
-Message-ID: <1447827097-9436-8-git-send-email-glen.lee@atmel.com> (sfid-20151118_070906_909592_DFB8484C)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 00:59:33 -0500
+Received: by lbbsy6 with SMTP id sy6so18357899lbb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:31 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 2/9] ath10k: rename function to adhere to naming convention
+Date: Wed, 18 Nov 2015 06:59:16 +0100
+Message-Id: <1447826363-16818-3-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065939_974208_4D9D18AA)
+In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
+ <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new function parameter struct wilc and use it instead of
-global variable wilc_dev and pass wilc to the function as well.
+All functions should have ath10k_{filename}_
+prefixes.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/linux_wlan_sdio.c |  4 ++--
- drivers/staging/wilc1000/linux_wlan_sdio.h |  2 +-
- drivers/staging/wilc1000/wilc_sdio.c       | 12 ++++++------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 6a38876..92633aa 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -61,9 +61,9 @@ int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ab2e5677f771..be323ad537ad 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3149,8 +3149,10 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
  }
  
- 
--int wilc_sdio_cmd53(sdio_cmd53_t *cmd)
-+int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
+ static enum ath10k_hw_txrx_mode
+-ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta, struct sk_buff *skb)
++ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct sk_buff *skb)
  {
--	struct sdio_func *func = container_of(wilc_dev->dev, struct sdio_func, dev);
-+	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
- 	int size, ret;
+ 	const struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+@@ -3664,7 +3666,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+-	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
++	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
++								skb);
  
- 	sdio_claim_host(func);
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
-index d966bb9..8d276c6 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.h
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
-@@ -2,7 +2,7 @@
- 
- int wilc_sdio_init(void);
- int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd);
--int wilc_sdio_cmd53(sdio_cmd53_t *cmd);
-+int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd);
- 
- int wilc_sdio_enable_interrupt(struct wilc *);
- void wilc_sdio_disable_interrupt(struct wilc *);
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 4d0ee69..a68a7a4 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -197,7 +197,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
- 		cmd.buffer = (u8 *)&data;
- 		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
- 
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53, write reg (%08x)...\n", addr);
- 			goto _fail_;
- 		}
-@@ -260,7 +260,7 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- 			if (!sdio_set_func0_csa_address(wilc, addr))
- 				goto _fail_;
- 		}
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], block send...\n", addr);
- 			goto _fail_;
- 		}
-@@ -281,7 +281,7 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- 			if (!sdio_set_func0_csa_address(wilc, addr))
- 				goto _fail_;
- 		}
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], bytes send...\n", addr);
- 			goto _fail_;
- 		}
-@@ -324,7 +324,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
- 
- 		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
- 
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53, read reg (%08x)...\n", addr);
- 			goto _fail_;
- 		}
-@@ -391,7 +391,7 @@ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- 			if (!sdio_set_func0_csa_address(wilc, addr))
- 				goto _fail_;
- 		}
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], block read...\n", addr);
- 			goto _fail_;
- 		}
-@@ -412,7 +412,7 @@ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- 			if (!sdio_set_func0_csa_address(wilc, addr))
- 				goto _fail_;
- 		}
--		if (!wilc_sdio_cmd53(&cmd)) {
-+		if (!wilc_sdio_cmd53(wilc, &cmd)) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd53 [%x], bytes read...\n", addr);
- 			goto _fail_;
- 		}
+ 	switch (ATH10K_SKB_CB(skb)->txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
 -- 
-1.9.1
+2.1.4
 
