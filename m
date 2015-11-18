@@ -1,74 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47652 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032934AbbKFJji (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34858 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933121AbbKROqg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:38 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 24/26] staging: wilc1000: remove os_context
-Date: Fri, 6 Nov 2015 18:40:21 +0900
-Message-ID: <1446802823-22598-25-git-send-email-glen.lee@atmel.com> (sfid-20151106_110755_836131_E27CDA05)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 09:46:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 08/27] ipw2x00: move under intel vendor directory
+Date: Wed, 18 Nov 2015 16:45:47 +0200
+Message-Id: <1447857966-19560-9-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155633_512531_0A34D52E)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes variable os_context of wilc_sdio_t and wilc_spi_t because
-os_context is not used, and delete it's related code.
+Part of reorganising wireless drivers directory and Kconfig.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 2 --
- drivers/staging/wilc1000/wilc_spi.c  | 2 --
- 2 files changed, 4 deletions(-)
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/Kconfig                       |    2 +-
+ drivers/net/wireless/Makefile                      |    4 +---
+ drivers/net/wireless/intel/Kconfig                 |   16 ++++++++++++++++
+ drivers/net/wireless/intel/Makefile                |    2 ++
+ drivers/net/wireless/{ => intel}/ipw2x00/Kconfig   |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/Makefile  |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/ipw.h     |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/ipw2100.c |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/ipw2100.h |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/ipw2200.c |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/ipw2200.h |    0
+ drivers/net/wireless/{ => intel}/ipw2x00/libipw.h  |    0
+ .../net/wireless/{ => intel}/ipw2x00/libipw_geo.c  |    0
+ .../wireless/{ => intel}/ipw2x00/libipw_module.c   |    0
+ .../net/wireless/{ => intel}/ipw2x00/libipw_rx.c   |    0
+ .../net/wireless/{ => intel}/ipw2x00/libipw_tx.c   |    0
+ .../net/wireless/{ => intel}/ipw2x00/libipw_wx.c   |    0
+ 18 files changed, 21 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/Kconfig
+ create mode 100644 drivers/net/wireless/intel/Makefile
+ rename drivers/net/wireless/{ => intel}/ipw2x00/Kconfig (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/Makefile (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/ipw.h (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/ipw2100.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/ipw2100.h (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/ipw2200.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/ipw2200.h (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw.h (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw_geo.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw_module.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw_rx.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw_tx.c (100%)
+ rename drivers/net/wireless/{ => intel}/ipw2x00/libipw_wx.c (100%)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 01a8e5b..a5307a7 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -15,7 +15,6 @@
- #define WILC_SDIO_BLOCK_SIZE 512
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4cbd4641e6fb..b341dabeb579 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5607,7 +5607,7 @@ L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/networking/README.ipw2100
+ F:	Documentation/networking/README.ipw2200
+-F:	drivers/net/wireless/ipw2x00/
++F:	drivers/net/wireless/intel/ipw2x00/
  
- typedef struct {
--	void *os_context;
- 	u32 block_size;
- 	wilc_debug_func dPrint;
- 	int nint;
-@@ -560,7 +559,6 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
+ INTEL(R) TRACE HUB
+ M:	Alexander Shishkin <alexander.shishkin@linux.intel.com>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c1742f228fec..73e3b53caf45 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -21,6 +21,7 @@ source "drivers/net/wireless/admtek/Kconfig"
+ source "drivers/net/wireless/atmel/Kconfig"
+ source "drivers/net/wireless/broadcom/Kconfig"
+ source "drivers/net/wireless/cisco/Kconfig"
++source "drivers/net/wireless/intel/Kconfig"
+ source "drivers/net/wireless/st/Kconfig"
  
- 	g_sdio.dPrint = func;
--	g_sdio.os_context = inp->os_context.os_private;
+ config PCMCIA_RAYCS
+@@ -161,7 +162,6 @@ config MWL8K
  
- 	if (!linux_sdio_init()) {
- 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed io init bus...\n");
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index fe16d70..5a6bbfd 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -13,7 +13,6 @@
- #include "linux_wlan_spi.h"
+ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+-source "drivers/net/wireless/ipw2x00/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/iwlegacy/Kconfig"
+ source "drivers/net/wireless/libertas/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index d7211a7949e6..52946d8dd31d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -6,11 +6,9 @@ obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
+ obj-$(CONFIG_WLAN_VENDOR_ATMEL) += atmel/
+ obj-$(CONFIG_WLAN_VENDOR_BROADCOM) += broadcom/
+ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
++obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
+ obj-$(CONFIG_WLAN_VENDOR_ST) += st/
  
- typedef struct {
--	void *os_context;
- 	wilc_debug_func dPrint;
- 	int crc_off;
- 	int nint;
-@@ -965,7 +964,6 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	memset(&g_spi, 0, sizeof(wilc_spi_t));
+-obj-$(CONFIG_IPW2100) += ipw2x00/
+-obj-$(CONFIG_IPW2200) += ipw2x00/
+-
+ obj-$(CONFIG_HERMES)		+= orinoco/
  
- 	g_spi.dPrint = func;
--	g_spi.os_context = inp->os_context.os_private;
- 	if (!linux_spi_init()) {
- 		PRINT_ER("[wilc spi]: Failed io init bus...\n");
- 		return 0;
+ obj-$(CONFIG_PRISM54)		+= prism54/
+diff --git a/drivers/net/wireless/intel/Kconfig b/drivers/net/wireless/intel/Kconfig
+new file mode 100644
+index 000000000000..3f8eacc4209a
+--- /dev/null
++++ b/drivers/net/wireless/intel/Kconfig
+@@ -0,0 +1,16 @@
++config WLAN_VENDOR_INTEL
++	bool "Intel devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_INTEL
++
++source "drivers/net/wireless/intel/ipw2x00/Kconfig"
++
++endif # WLAN_VENDOR_INTEL
+diff --git a/drivers/net/wireless/intel/Makefile b/drivers/net/wireless/intel/Makefile
+new file mode 100644
+index 000000000000..8e5dcb2d425e
+--- /dev/null
++++ b/drivers/net/wireless/intel/Makefile
+@@ -0,0 +1,2 @@
++obj-$(CONFIG_IPW2100) += ipw2x00/
++obj-$(CONFIG_IPW2200) += ipw2x00/
+diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/intel/ipw2x00/Kconfig
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/Kconfig
+rename to drivers/net/wireless/intel/ipw2x00/Kconfig
+diff --git a/drivers/net/wireless/ipw2x00/Makefile b/drivers/net/wireless/intel/ipw2x00/Makefile
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/Makefile
+rename to drivers/net/wireless/intel/ipw2x00/Makefile
+diff --git a/drivers/net/wireless/ipw2x00/ipw.h b/drivers/net/wireless/intel/ipw2x00/ipw.h
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/ipw.h
+rename to drivers/net/wireless/intel/ipw2x00/ipw.h
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/ipw2100.c
+rename to drivers/net/wireless/intel/ipw2x00/ipw2100.c
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/intel/ipw2x00/ipw2100.h
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/ipw2100.h
+rename to drivers/net/wireless/intel/ipw2x00/ipw2100.h
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/ipw2200.c
+rename to drivers/net/wireless/intel/ipw2x00/ipw2200.c
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/intel/ipw2x00/ipw2200.h
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/ipw2200.h
+rename to drivers/net/wireless/intel/ipw2x00/ipw2200.h
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/intel/ipw2x00/libipw.h
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw.h
+rename to drivers/net/wireless/intel/ipw2x00/libipw.h
+diff --git a/drivers/net/wireless/ipw2x00/libipw_geo.c b/drivers/net/wireless/intel/ipw2x00/libipw_geo.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw_geo.c
+rename to drivers/net/wireless/intel/ipw2x00/libipw_geo.c
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/intel/ipw2x00/libipw_module.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw_module.c
+rename to drivers/net/wireless/intel/ipw2x00/libipw_module.c
+diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw_rx.c
+rename to drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+diff --git a/drivers/net/wireless/ipw2x00/libipw_tx.c b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw_tx.c
+rename to drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/intel/ipw2x00/libipw_wx.c
+similarity index 100%
+rename from drivers/net/wireless/ipw2x00/libipw_wx.c
+rename to drivers/net/wireless/intel/ipw2x00/libipw_wx.c
 -- 
-1.9.1
+1.7.9.5
 
