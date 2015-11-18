@@ -1,100 +1,325 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59037 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20554 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757787AbbKSGyH (ORCPT
+	with ESMTP id S1754391AbbKRGIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:54:07 -0500
+	Wed, 18 Nov 2015 01:08:44 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/26] staging: wilc1000: rename bWilc_ie variable
-Date: Thu, 19 Nov 2015 15:56:19 +0900
-Message-ID: <1447916195-24851-10-git-send-email-glen.lee@atmel.com> (sfid-20151119_075411_444187_A5CB5BB0)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 04/16] staging: wilc1000: pass struct wilc to the functions which use hif_func
+Date: Wed, 18 Nov 2015 15:11:25 +0900
+Message-ID: <1447827097-9436-5-git-send-email-glen.lee@atmel.com> (sfid-20151118_070847_508680_9463B7BE)
+In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch passes struct wilc to the functions which use hif_func inside.
+The function pointers of wilc_hif_func will pass wilc also in the later
+patch. Pass wilc to the functions if necessary.
 
-This patch renames bWilc_ie variable to wilc_ie to avoid camelcase.
+Flollowings are modified functions.
+chip_wakeup
+wilc_chip_sleep_manually
+chip_allow_sleep
+wilc_get_chipid
+wilc_unknown_isr_ext
+wilc_pllupdate_isr_ext
+wilc_sleeptimer_isr_ext
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/host_interface.c |  3 +-
+ drivers/staging/wilc1000/linux_wlan.c     |  5 +--
+ drivers/staging/wilc1000/wilc_wlan.c      | 56 +++++++++++++++----------------
+ drivers/staging/wilc1000/wilc_wlan.h      |  2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h   |  3 +-
+ 5 files changed, 36 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0a7226c..24e1e15 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -175,7 +175,7 @@ static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
- static u8 p2p_local_random = 0x01;
- static u8 p2p_recv_random = 0x00;
- static u8 p2p_vendor_spec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
--static bool bWilc_ie;
-+static bool wilc_ie;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 640cb6b..2531d20 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2834,6 +2834,7 @@ static int hostIFthread(void *pvArg)
+ 	u32 u32Ret;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv;
++	struct wilc *wilc = (struct wilc*)pvArg;
  
- static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
- 	.channels = ieee80211_2ghz_channels,
-@@ -643,7 +643,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 			 pstrDisconnectNotifInfo->u16reason, priv->dev);
- 		p2p_local_random = 0x01;
- 		p2p_recv_random = 0x00;
--		bWilc_ie = false;
-+		wilc_ie = false;
- 		eth_zero_addr(priv->au8AssociatedBss);
- 		wilc_wlan_set_bssid(priv->dev, NullBssid);
- 		eth_zero_addr(wilc_connected_SSID);
-@@ -1073,7 +1073,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
  
- 	p2p_local_random = 0x01;
- 	p2p_recv_random = 0x00;
--	bWilc_ie = false;
-+	wilc_ie = false;
- 	pstrWFIDrv->p2p_timeout = 0;
+@@ -2906,7 +2907,7 @@ static int hostIFthread(void *pvArg)
+ 			PRINT_D(HOSTINF_DBG, "scan completed successfully\n");
  
- 	s32Error = wilc_disconnect(priv->hWILCWFIDrv, reason_code);
-@@ -1998,11 +1998,11 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 				case PUBLIC_ACT_VENDORSPEC:
- 					if (!memcmp(p2p_oui, &buff[ACTION_SUBTYPE_ID + 1], 4)) {
- 						if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP))	{
--							if (!bWilc_ie) {
-+							if (!wilc_ie) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
- 									if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
- 										p2p_recv_random = buff[i + 6];
--										bWilc_ie = true;
-+										wilc_ie = true;
- 										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", p2p_recv_random);
- 										break;
- 									}
-@@ -2025,7 +2025,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 					}
+ 			if (!wilc_wlan_get_num_conn_ifcs(wilc_dev))
+-				wilc_chip_sleep_manually();
++				wilc_chip_sleep_manually(wilc);
  
+ 			Handle_ScanDone(msg.drv, SCAN_EVENT_DONE);
  
--					if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP) && (bWilc_ie))	{
-+					if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP) && (wilc_ie))	{
- 						PRINT_D(GENERIC_DBG, "Sending P2P to host without extra elemnt\n");
- 						/* extra attribute for sig_dbm: signal strength in mBm, or 0 if unknown */
- 						cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
-@@ -2560,9 +2560,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
- 	p2p_local_random = 0x01;
- 	p2p_recv_random = 0x00;
--
--	bWilc_ie = false;
--
-+	wilc_ie = false;
- 	wilc_optaining_ip = false;
- 	del_timer(&wilc_during_ip_timer);
- 	PRINT_D(GENERIC_DBG, "Changing virtual interface, enable scan\n");
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ab17110..43458e6 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -514,7 +514,8 @@ static int wilc1000_firmware_download(struct net_device *dev)
+ 	return 0;
+ }
+ 
+-static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_nic)
++static int linux_wlan_init_test_config(struct net_device *dev,
++				       struct wilc *wilc)
+ {
+ 	unsigned char c_val[64];
+ 	unsigned char mac_add[] = {0x00, 0x80, 0xC2, 0x5E, 0xa2, 0xff};
+@@ -532,7 +533,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, struct wilc *p_ni
+ 	PRINT_D(INIT_DBG, "MAC address is : %02x-%02x-%02x-%02x-%02x-%02x\n",
+ 		mac_add[0], mac_add[1], mac_add[2],
+ 		mac_add[3], mac_add[4], mac_add[5]);
+-	wilc_get_chipid(0);
++	wilc_get_chipid(wilc, 0);
+ 
+ 	*(int *)c_val = 1;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 114ea95..e30a34d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -35,9 +35,9 @@ typedef struct {
+ static wilc_wlan_dev_t g_wlan;
+ 
+ #ifdef WILC_OPTIMIZE_SLEEP_INT
+-static inline void chip_allow_sleep(void);
++static inline void chip_allow_sleep(struct wilc *wilc);
+ #endif
+-static inline void chip_wakeup(void);
++static inline void chip_wakeup(struct wilc *wilc);
+ static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
+ 
+ /* FIXME: replace with dev_debug() */
+@@ -65,7 +65,7 @@ static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
+ 	#endif
+ 	{
+ 		if (acquire == ACQUIRE_AND_WAKEUP)
+-			chip_wakeup();
++			chip_wakeup(wilc);
+ 	}
+ }
+ 
+@@ -73,7 +73,7 @@ static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
+ {
+ 	#ifdef WILC_OPTIMIZE_SLEEP_INT
+ 	if (release == RELEASE_ALLOW_SLEEP)
+-		chip_allow_sleep();
++		chip_allow_sleep(wilc);
+ 	#endif
+ 	mutex_unlock(&wilc->hif_cs);
+ }
+@@ -562,7 +562,7 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
+ 
+ #ifdef WILC_OPTIMIZE_SLEEP_INT
+ 
+-static inline void chip_allow_sleep(void)
++static inline void chip_allow_sleep(struct wilc *wilc)
+ {
+ 	u32 reg = 0;
+ 
+@@ -571,7 +571,7 @@ static inline void chip_allow_sleep(void)
+ 	g_wlan.hif_func.hif_write_reg(0xf0, reg & ~BIT(0));
+ }
+ 
+-static inline void chip_wakeup(void)
++static inline void chip_wakeup(struct wilc *wilc)
+ {
+ 	u32 reg, clk_status_reg, trials = 0;
+ 	u32 sleep_time;
+@@ -584,12 +584,12 @@ static inline void chip_wakeup(void)
+ 
+ 			do {
+ 				usleep_range(2 * 1000, 2 * 1000);
+-				if ((wilc_get_chipid(true) == 0))
++				if ((wilc_get_chipid(wilc, true) == 0))
+ 					wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
+ 
+-			} while ((wilc_get_chipid(true) == 0) && ((++trials % 3) == 0));
++			} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
+ 
+-		} while (wilc_get_chipid(true) == 0);
++		} while (wilc_get_chipid(wilc, true) == 0);
+ 	} else if ((g_wlan.io_type & 0x1) == HIF_SDIO)	 {
+ 		g_wlan.hif_func.hif_read_reg(0xf0, &reg);
+ 		do {
+@@ -616,7 +616,7 @@ static inline void chip_wakeup(void)
+ 		reg &= ~BIT(0);
+ 		g_wlan.hif_func.hif_write_reg(0x1C0C, reg);
+ 
+-		if (wilc_get_chipid(false) >= 0x1002b0) {
++		if (wilc_get_chipid(wilc, false) >= 0x1002b0) {
+ 			u32 val32;
+ 
+ 			g_wlan.hif_func.hif_read_reg(0x1e1c, &val32);
+@@ -631,7 +631,7 @@ static inline void chip_wakeup(void)
+ 	chip_ps_state = CHIP_WAKEDUP;
+ }
+ #else
+-static inline void chip_wakeup(void)
++static inline void chip_wakeup(struct wilc *wilc)
+ {
+ 	u32 reg, trials = 0;
+ 
+@@ -651,19 +651,19 @@ static inline void chip_wakeup(void)
+ 		do {
+ 			mdelay(3);
+ 
+-			if ((wilc_get_chipid(true) == 0))
++			if ((wilc_get_chipid(wilc, true) == 0))
+ 				wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
+ 
+-		} while ((wilc_get_chipid(true) == 0) && ((++trials % 3) == 0));
++		} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
+ 
+-	} while (wilc_get_chipid(true) == 0);
++	} while (wilc_get_chipid(wilc, true) == 0);
+ 
+ 	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
+ 		g_wlan.hif_func.hif_read_reg(0x1C0C, &reg);
+ 		reg &= ~BIT(0);
+ 		g_wlan.hif_func.hif_write_reg(0x1C0C, reg);
+ 
+-		if (wilc_get_chipid(false) >= 0x1002b0) {
++		if (wilc_get_chipid(wilc, false) >= 0x1002b0) {
+ 			u32 val32;
+ 
+ 			g_wlan.hif_func.hif_read_reg(0x1e1c, &val32);
+@@ -678,19 +678,19 @@ static inline void chip_wakeup(void)
+ 	chip_ps_state = CHIP_WAKEDUP;
+ }
+ #endif
+-void wilc_chip_sleep_manually(void)
++void wilc_chip_sleep_manually(struct wilc *wilc)
+ {
+ 	if (chip_ps_state != CHIP_WAKEDUP)
+ 		return;
+-	acquire_bus(wilc_dev, ACQUIRE_ONLY);
++	acquire_bus(wilc, ACQUIRE_ONLY);
+ 
+ #ifdef WILC_OPTIMIZE_SLEEP_INT
+-	chip_allow_sleep();
++	chip_allow_sleep(wilc);
+ #endif
+ 	g_wlan.hif_func.hif_write_reg(0x10a8, 1);
+ 
+ 	chip_ps_state = CHIP_SLEEPING_MANUAL;
+-	release_bus(wilc_dev, RELEASE_ONLY);
++	release_bus(wilc, RELEASE_ONLY);
+ }
+ 
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+@@ -1056,12 +1056,12 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 	PRINT_D(RX_DBG, "THREAD: Exiting RX thread\n");
+ }
+ 
+-static void wilc_unknown_isr_ext(void)
++static void wilc_unknown_isr_ext(struct wilc *wilc)
+ {
+ 	g_wlan.hif_func.hif_clear_int_ext(0);
+ }
+ 
+-static void wilc_pllupdate_isr_ext(u32 int_stats)
++static void wilc_pllupdate_isr_ext(struct wilc *wilc, u32 int_stats)
+ {
+ 	int trials = 10;
+ 
+@@ -1072,13 +1072,13 @@ static void wilc_pllupdate_isr_ext(u32 int_stats)
+ 	else
+ 		mdelay(WILC_PLL_TO_SPI);
+ 
+-	while (!(ISWILC1000(wilc_get_chipid(true)) && --trials)) {
++	while (!(ISWILC1000(wilc_get_chipid(wilc, true)) && --trials)) {
+ 		PRINT_D(TX_DBG, "PLL update retrying\n");
+ 		mdelay(1);
+ 	}
+ }
+ 
+-static void wilc_sleeptimer_isr_ext(u32 int_stats1)
++static void wilc_sleeptimer_isr_ext(struct wilc *wilc, u32 int_stats1)
+ {
+ 	g_wlan.hif_func.hif_clear_int_ext(SLEEP_INT_CLR);
+ #ifndef WILC_OPTIMIZE_SLEEP_INT
+@@ -1165,7 +1165,7 @@ void wilc_handle_isr(struct wilc *wilc)
+ 	g_wlan.hif_func.hif_read_int(&int_status);
+ 
+ 	if (int_status & PLL_INT_EXT)
+-		wilc_pllupdate_isr_ext(int_status);
++		wilc_pllupdate_isr_ext(wilc, int_status);
+ 
+ 	if (int_status & DATA_INT_EXT) {
+ 		wilc_wlan_handle_isr_ext(wilc, int_status);
+@@ -1174,10 +1174,10 @@ void wilc_handle_isr(struct wilc *wilc)
+ 	#endif
+ 	}
+ 	if (int_status & SLEEP_INT_EXT)
+-		wilc_sleeptimer_isr_ext(int_status);
++		wilc_sleeptimer_isr_ext(wilc, int_status);
+ 
+ 	if (!(int_status & (ALL_INT_EXT))) {
+-		wilc_unknown_isr_ext();
++		wilc_unknown_isr_ext(wilc);
+ 	}
+ 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ }
+@@ -1587,7 +1587,7 @@ static u32 init_chip(struct net_device *dev)
+ 
+ 	acquire_bus(wilc, ACQUIRE_ONLY);
+ 
+-	chipid = wilc_get_chipid(true);
++	chipid = wilc_get_chipid(wilc, true);
+ 
+ 	if ((chipid & 0xfff) != 0xa0) {
+ 		ret = g_wlan.hif_func.hif_read_reg(0x1118, &reg);
+@@ -1613,7 +1613,7 @@ static u32 init_chip(struct net_device *dev)
+ 	return ret;
+ }
+ 
+-u32 wilc_get_chipid(u8 update)
++u32 wilc_get_chipid(struct wilc *wilc, u8 update)
+ {
+ 	static u32 chipid;
+ 	u32 tempchipid = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index ee13771e..334abafe 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -295,7 +295,7 @@ int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			       u32 buffer_size, wilc_tx_complete_func_t func);
+-void wilc_chip_sleep_manually(void);
++void wilc_chip_sleep_manually(struct wilc *wilc);
+ 
+ void wilc_enable_tcp_ack_filter(bool value);
+ int wilc_wlan_get_num_conn_ifcs(struct wilc *);
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 2f465f4..618903c 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -909,9 +909,10 @@ typedef enum {
+ 	WID_MAX				= 0xFFFF
+ } WID_T;
+ 
++struct wilc;
+ int wilc_wlan_init(struct net_device *dev);
+ void wilc_bus_set_max_speed(void);
+ void wilc_bus_set_default_speed(void);
+-u32 wilc_get_chipid(u8 update);
++u32 wilc_get_chipid(struct wilc *wilc, u8 update);
+ 
+ #endif
 -- 
 1.9.1
 
