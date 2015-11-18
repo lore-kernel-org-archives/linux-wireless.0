@@ -1,87 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33266 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbbKJHZF (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:33475 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbbKRF7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 02:25:05 -0500
-Received: by pabfh17 with SMTP id fh17so226304612pab.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 23:25:05 -0800 (PST)
-From: "Yin, Fengwei" <fengwei.yin@linaro.org>
-To: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org
-Subject: [PATCH v2 3/5] wcn36xx: handle new hal response format
-Date: Tue, 10 Nov 2015 03:25:53 -0500
-Message-Id: <1447143955-10304-4-git-send-email-fengwei.yin@linaro.org> (sfid-20151110_082510_484789_BD5C0738)
-In-Reply-To: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
-References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
+	Wed, 18 Nov 2015 00:59:41 -0500
+Received: by lbbkw15 with SMTP id kw15so18477477lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:39 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 8/9] ath10k: replace vdev_id and tid in skb cb
+Date: Wed, 18 Nov 2015 06:59:22 +0100
+Message-Id: <1447826363-16818-9-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065948_402302_69873218)
+In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
+ <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy.green@linaro.org>
+This prepares the driver for future ieee80211_txq
+and wake_tx_queue() support.
 
-wcn3620 has a new message structure for the reply to some hal
-commands.  This patch adds the struct and helper routine that
-uses it if the chip is wcn3620, or falls back to the old
-helper routine.
-
-We don't know what to do with the candidate list he sends back,
-but we can at least accept and ignore it nicely instead of dying.
-
-Signed-off-by: Andy Green <andy.green@linaro.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 16 ++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
- 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index be317f4..b7e61a0 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -302,6 +302,22 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+Notes:
+    v2:
+     * fix parsing eth frame as 802.11
+
+ drivers/net/wireless/ath/ath10k/core.h   |  4 ++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 36 +++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/mac.c    | 40 +++++---------------------------
+ drivers/net/wireless/ath/ath10k/wmi.c    | 10 +++++++-
+ 4 files changed, 50 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 6bbd95477325..75dee79ec206 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -86,16 +86,16 @@ enum ath10k_skb_flags {
+ 	ATH10K_SKB_F_DTIM_ZERO = BIT(1),
+ 	ATH10K_SKB_F_DELIVER_CAB = BIT(2),
+ 	ATH10K_SKB_F_MGMT = BIT(3),
++	ATH10K_SKB_F_QOS = BIT(4),
+ };
+ 
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	u8 flags;
+ 	u8 eid;
+-	u8 vdev_id;
++	struct ieee80211_vif *vif;
+ 
+ 	struct {
+-		u8 tid;
+ 		struct ath10k_htt_txbuf *txbuf;
+ 		u32 txbuf_paddr;
+ 	} __packed htt;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index c955c6b6ea9d..23e047b0aca3 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -439,6 +439,35 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
  	return 0;
  }
  
-+static int wcn36xx_smd_rsp_status_check_v2(struct wcn36xx *wcn, void *buf,
-+					     size_t len)
++static u8 ath10k_htt_tx_get_vdev_id(struct ath10k *ar, struct sk_buff *skb)
 +{
-+	struct wcn36xx_fw_msg_status_rsp_v2 *rsp;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
++	struct ath10k_vif *arvif = (void *)cb->vif->drv_priv;
 +
-+	if (len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
-+		return wcn36xx_smd_rsp_status_check(buf, len);
-+
-+	rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
-+
-+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
-+		return rsp->status;
-+
-+	return 0;
++	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
++		return ar->scan.vdev_id;
++	else if (cb->vif)
++		return arvif->vdev_id;
++	else if (ar->monitor_started)
++		return ar->monitor_vdev_id;
++	else
++		return 0;
 +}
 +
- int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
++static u8 ath10k_htt_tx_get_tid(struct sk_buff *skb, bool is_eth)
++{
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
++
++	if (!is_eth && ieee80211_is_mgmt(hdr->frame_control))
++		return HTT_DATA_TX_EXT_TID_MGMT;
++	else if (cb->flags & ATH10K_SKB_F_QOS)
++		return skb->priority % IEEE80211_QOS_CTL_TID_MASK;
++	else
++		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++}
++
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
  {
- 	struct nv_data *nv_d;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 008d034..8361f9e 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
- 	u32	status;
- } __packed;
+ 	struct ath10k *ar = htt->ar;
+@@ -446,7 +475,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct sk_buff *txdesc = NULL;
+ 	struct htt_cmd *cmd;
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+-	u8 vdev_id = skb_cb->vdev_id;
++	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
+ 	int len = 0;
+ 	int msdu_id = -1;
+ 	int res;
+@@ -542,8 +571,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+ 	struct ath10k_hif_sg_item sg_items[2];
+ 	struct htt_data_tx_desc_frag *frags;
+-	u8 vdev_id = skb_cb->vdev_id;
+-	u8 tid = skb_cb->htt.tid;
++	bool is_eth = (txmode == ATH10K_HW_TXRX_ETHERNET);
++	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
++	u8 tid = ath10k_htt_tx_get_tid(msdu, is_eth);
+ 	int prefetch_len;
+ 	int res;
+ 	u8 flags0 = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index fd36200e5396..cb95314b8058 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3122,32 +3122,6 @@ void ath10k_mac_handle_tx_pause_vdev(struct ath10k *ar, u32 vdev_id,
+ 	spin_unlock_bh(&ar->htt.tx_lock);
+ }
  
-+/* wcn3620 returns this for tigger_ba */
+-static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+-{
+-	if (ieee80211_is_mgmt(hdr->frame_control))
+-		return HTT_DATA_TX_EXT_TID_MGMT;
+-
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
+-		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+-
+-	if (!is_unicast_ether_addr(ieee80211_get_DA(hdr)))
+-		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+-
+-	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+-}
+-
+-static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+-{
+-	if (vif)
+-		return ath10k_vif_to_arvif(vif)->vdev_id;
+-
+-	if (ar->monitor_started)
+-		return ar->monitor_vdev_id;
+-
+-	ath10k_warn(ar, "failed to resolve vdev id\n");
+-	return 0;
+-}
+-
+ static enum ath10k_hw_txrx_mode
+ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
+ 			   struct ieee80211_vif *vif,
+@@ -3244,7 +3218,7 @@ static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 */
+ 	hdr = (void *)skb->data;
+ 	if (ieee80211_is_qos_nullfunc(hdr->frame_control))
+-		cb->htt.tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++		cb->flags &= ~ATH10K_SKB_F_QOS;
+ 
+ 	hdr->frame_control &= ~__cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ }
+@@ -3413,9 +3387,9 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		peer_addr = ieee80211_get_DA(hdr);
+-		vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
+ 
+ 		spin_lock_bh(&ar->data_lock);
++		vdev_id = ar->scan.vdev_id;
+ 		peer = ath10k_peer_find(ar, vdev_id, peer_addr);
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+@@ -3692,8 +3666,10 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	if (ieee80211_is_mgmt(hdr->frame_control))
+ 		skb_cb->flags |= ATH10K_SKB_F_MGMT;
+ 
+-	skb_cb->htt.tid = ath10k_tx_h_get_tid(hdr);
+-	skb_cb->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
++	if (ieee80211_is_data_qos(hdr->frame_control))
++		skb_cb->flags |= ATH10K_SKB_F_QOS;
 +
-+struct wcn36xx_fw_msg_status_rsp_v2 {
-+	u8	bss_id[6];
-+	u32	status __packed;
-+	u16	count_following_candidates __packed;
-+	/* candidate list follows */
-+};
++	skb_cb->vif = vif;
+ 
+ 	switch (txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
+@@ -3714,10 +3690,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+-		spin_lock_bh(&ar->data_lock);
+-		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
+-		spin_unlock_bh(&ar->data_lock);
+-
+ 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
+ 			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %p\n",
+ 				   skb);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6028a598c199..2a44d63a03cd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1814,16 +1814,24 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+ static struct sk_buff *
+ ath10k_wmi_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
+ {
++	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(msdu);
++	struct ath10k_vif *arvif = (void *)cb->vif->drv_priv;
+ 	struct wmi_mgmt_tx_cmd *cmd;
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb;
+ 	int len;
++	u32 vdev_id;
+ 	u32 buf_len = msdu->len;
+ 	u16 fc;
+ 
+ 	hdr = (struct ieee80211_hdr *)msdu->data;
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
++	if (cb->vif)
++		vdev_id = arvif->vdev_id;
++	else
++		vdev_id = 0;
 +
- struct wcn36xx_hal_ind_msg {
- 	struct list_head list;
- 	u8 *msg;
+ 	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
+ 		return ERR_PTR(-EINVAL);
+ 
+@@ -1845,7 +1853,7 @@ ath10k_wmi_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
+ 
+ 	cmd = (struct wmi_mgmt_tx_cmd *)skb->data;
+ 
+-	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(msdu)->vdev_id);
++	cmd->hdr.vdev_id = __cpu_to_le32(vdev_id);
+ 	cmd->hdr.tx_rate = 0;
+ 	cmd->hdr.tx_power = 0;
+ 	cmd->hdr.buf_len = __cpu_to_le32(buf_len);
 -- 
 2.1.4
 
