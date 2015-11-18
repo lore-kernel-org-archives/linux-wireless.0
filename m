@@ -1,146 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:36467 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480AbbKRQaY (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:36790 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222AbbKRXWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 11:30:24 -0500
-Subject: Re: [PATCH v2 21/27] realtek: create separate Kconfig file
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
- <1447857966-19560-22-git-send-email-kvalo@codeaurora.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <564CA79C.9050308@lwfinger.net> (sfid-20151118_173040_079848_30F75E2A)
-Date: Wed, 18 Nov 2015 10:30:20 -0600
-MIME-Version: 1.0
-In-Reply-To: <1447857966-19560-22-git-send-email-kvalo@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Wed, 18 Nov 2015 18:22:41 -0500
+Received: by qkda6 with SMTP id a6so20223388qkd.3
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2015 15:22:41 -0800 (PST)
+From: Steve deRosier <derosier@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Subject: [PATCH v2 2/2] ath6kl_sdio: Add power gpio reset feature into sdio driver for suspend
+Date: Wed, 18 Nov 2015 15:20:48 -0800
+Message-Id: <1447888848-19530-3-git-send-email-steve.derosier@lairdtech.com> (sfid-20151119_002244_690385_06900655)
+In-Reply-To: <1447888848-19530-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1447888848-19530-1-git-send-email-steve.derosier@lairdtech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2015 08:46 AM, Kalle Valo wrote:
-> Add new a Kconfig file and a vendor config for realtek. Also update MAINTAINERS
-> which we missed to do when earlier moving rtlwifi.
->
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> ---
+This change adds pm suspend callbacks in order to trigger a gpio line
+to push the CHIP_PWD_L reset/power line low on suspend. This puts the chip
+into the lowest power state on suspend. On resume, it releases the line,
+allowing the chip to boot. Slower, but provides a clean reset of the
+chip and recovery from standby.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c | 40 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 38 insertions(+), 2 deletions(-)
 
-Thanks,
-
-Larry
-
->   MAINTAINERS                          |    8 ++++----
->   drivers/net/wireless/Kconfig         |    5 +----
->   drivers/net/wireless/Makefile        |    3 +--
->   drivers/net/wireless/realtek/Kconfig |   18 ++++++++++++++++++
->   4 files changed, 24 insertions(+), 10 deletions(-)
->   create mode 100644 drivers/net/wireless/realtek/Kconfig
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 2c41981e4fdd..a9f7f968f64e 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9035,7 +9035,7 @@ L:	linux-wireless@vger.kernel.org
->   W:	http://wireless.kernel.org/
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Orphan
-> -F:	drivers/net/wireless/rtl818x/rtl8180/
-> +F:	drivers/net/wireless/realtek/rtl818x/rtl8180/
->
->   RTL8187 WIRELESS DRIVER
->   M:	Herton Ronaldo Krzesinski <herton@canonical.com>
-> @@ -9045,7 +9045,7 @@ L:	linux-wireless@vger.kernel.org
->   W:	http://wireless.kernel.org/
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Maintained
-> -F:	drivers/net/wireless/rtl818x/rtl8187/
-> +F:	drivers/net/wireless/realtek/rtl818x/rtl8187/
->
->   RTL8192CE WIRELESS DRIVER
->   M:	Larry Finger <Larry.Finger@lwfinger.net>
-> @@ -9054,8 +9054,8 @@ L:	linux-wireless@vger.kernel.org
->   W:	http://wireless.kernel.org/
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Maintained
-> -F:	drivers/net/wireless/rtlwifi/
-> -F:	drivers/net/wireless/rtlwifi/rtl8192ce/
-> +F:	drivers/net/wireless/realtek/rtlwifi/
-> +F:	drivers/net/wireless/realtek/rtlwifi/rtl8192ce/
->
->   RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
->   M:	Jes Sorensen <Jes.Sorensen@redhat.com>
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index c92671f8b1c6..28af8b10a66e 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -24,6 +24,7 @@ source "drivers/net/wireless/cisco/Kconfig"
->   source "drivers/net/wireless/intel/Kconfig"
->   source "drivers/net/wireless/intersil/Kconfig"
->   source "drivers/net/wireless/marvell/Kconfig"
-> +source "drivers/net/wireless/realtek/Kconfig"
->   source "drivers/net/wireless/st/Kconfig"
->   source "drivers/net/wireless/zydas/Kconfig"
->
-> @@ -81,8 +82,6 @@ config USB_NET_RNDIS_WLAN
->
->   	  If you choose to build a module, it'll be called rndis_wlan.
->
-> -source "drivers/net/wireless/realtek/rtl818x/Kconfig"
-> -
->   config MAC80211_HWSIM
->   	tristate "Simulated radio testing tool for mac80211"
->   	depends on MAC80211
-> @@ -99,8 +98,6 @@ config MAC80211_HWSIM
->   source "drivers/net/wireless/ath/Kconfig"
->   source "drivers/net/wireless/rt2x00/Kconfig"
->   source "drivers/net/wireless/mediatek/Kconfig"
-> -source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
-> -source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
->   source "drivers/net/wireless/ti/Kconfig"
->   source "drivers/net/wireless/rsi/Kconfig"
->
-> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-> index 679a1a0a048d..12f6c59668a5 100644
-> --- a/drivers/net/wireless/Makefile
-> +++ b/drivers/net/wireless/Makefile
-> @@ -9,11 +9,10 @@ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
->   obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
->   obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
->   obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
-> +obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
->   obj-$(CONFIG_WLAN_VENDOR_ST) += st/
->   obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
->
-> -obj-$(CONFIG_WLAN)		+= realtek/
-> -
->   # 16-bit wireless PCMCIA client drivers
->   obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
->   obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
-> diff --git a/drivers/net/wireless/realtek/Kconfig b/drivers/net/wireless/realtek/Kconfig
-> new file mode 100644
-> index 000000000000..8a8ba2003964
-> --- /dev/null
-> +++ b/drivers/net/wireless/realtek/Kconfig
-> @@ -0,0 +1,18 @@
-> +config WLAN_VENDOR_REALTEK
-> +	bool "Realtek devices"
-> +	default y
-> +	---help---
-> +	  If you have a wireless card belonging to this class, say Y.
-> +
-> +	  Note that the answer to this question doesn't directly affect the
-> +	  kernel: saying N will just cause the configurator to skip all
-> +	  the questions about  cards. If you say Y, you will be asked for
-> +	  your specific card in the following questions.
-> +
-> +if WLAN_VENDOR_REALTEK
-> +
-> +source "drivers/net/wireless/realtek/rtl818x/Kconfig"
-> +source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
-> +source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
-> +
-> +endif # WLAN_VENDOR_REALTEK
->
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index c0755eb..c411033 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1288,8 +1288,44 @@ static int ath6kl_sdio_pm_resume(struct device *device)
+ 	return 0;
+ }
+ 
+-static SIMPLE_DEV_PM_OPS(ath6kl_sdio_pm_ops, ath6kl_sdio_pm_suspend,
+-			 ath6kl_sdio_pm_resume);
++/* Below handlers leverage the PM system to make sure we turn on and off
++ * the power gpio at the right time. If we do it in the earlier power on
++ * and off handlers for the sdio, we get errors from the mmc subsystem.
++ */
++static int ath6kl_sdio_pm_suspend_late(struct device *device)
++{
++	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sdio pm ath6kl_sdio_pm_suspend_late\n");
++
++	if (gpio_is_valid(reset_pwd_gpio))
++		gpio_set_value(reset_pwd_gpio, 0);
++
++	return 0;
++}
++
++static int ath6kl_sdio_pm_resume_early(struct device *device)
++{
++	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sdio pm ath6kl_sdio_pm_resume_early\n");
++
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		gpio_set_value(reset_pwd_gpio, 1);
++		usleep_range(1000, 5000); /* wait for power up */
++	}
++	return 0;
++}
++
++/* The GPIO version requires the more complex dev_pm_ops setup */
++const struct dev_pm_ops ath6kl_sdio_pm_ops = {
++	.suspend = ath6kl_sdio_pm_suspend,
++	.suspend_late = ath6kl_sdio_pm_suspend_late,
++	.resume_early = ath6kl_sdio_pm_resume_early,
++	.resume = ath6kl_sdio_pm_resume,
++	.freeze = ath6kl_sdio_pm_suspend,
++	.thaw = ath6kl_sdio_pm_resume,
++	.poweroff = ath6kl_sdio_pm_suspend,
++	.poweroff_late = ath6kl_sdio_pm_suspend_late,
++	.restore_early = ath6kl_sdio_pm_resume_early,
++	.restore = ath6kl_sdio_pm_resume,
++};
+ 
+ #define ATH6KL_SDIO_PM_OPS (&ath6kl_sdio_pm_ops)
+ 
+-- 
+1.9.1
 
