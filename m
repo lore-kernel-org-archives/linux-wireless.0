@@ -1,234 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vsmtp3.tin.it ([212.216.176.223]:44644 "EHLO vsmtp3.tin.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932366AbbKCVoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 16:44:06 -0500
-From: Alberto Mattea <alberto@mattea.info>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Alexis Green <agreen@cococorp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Ralink RT5592 5Ghz capability not working
-Date: Tue, 03 Nov 2015 22:44 +0100
-Message-ID: <5025703.zW4b3xGolO@alby> (sfid-20151103_224410_506529_C877B1B5)
-In-Reply-To: <5639281F.3040502@gmail.com>
-References: <5638B98F.2080908@gmail.com> <4873488.GRdkDhHADR@alby> <5639281F.3040502@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:34927 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933289AbbKROqy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2015 09:46:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 22/27] rsi: add vendor Kconfig entry
+Date: Wed, 18 Nov 2015 16:46:01 +0200
+Message-Id: <1447857966-19560-23-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155104_938427_B2252B79)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+Part of reorganising wireless drivers directory and Kconfig.
 
-I didn't have to, it was recognized this way out of the box.
-I had to install an eeprom for the other onboard chip though (5390).
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/Kconfig     |    2 +-
+ drivers/net/wireless/Makefile    |    3 +--
+ drivers/net/wireless/rsi/Kconfig |   15 +++++++++++++++
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-In data mar 3 novembre 2015 22:33:19, Gertjan van Wingerde ha scritto:
-> Did you have to install an eeprom file for the RT5592 PCI device?
-> 
-> If yes, this eeprom file could be the problem. As far as I can tell the
-> rt2x00 driver only enables the 2.4 GHz band because it determines that
-> the RF chip doesn't support the 5GHz band. The RF chip is determined
-> from the EEPROM, and is currently read as an RF2820 chip (the message
-> rt2x00_set_rf: Info - RF chipset 0001 detected)
-> 
-> ---
-> Gertjan.
-> 
-> On 11/03/15 22:07, Alberto Mattea wrote:
-> > I found the FCC photos for the RP-N53:
-> > https://apps.fcc.gov/eas/GetApplicationAttachment.html?id=2001985
-> > 
-> > On page 9 there is a photo of the ralink chip, unfortunately very blurred.
-> > But I also found the photos for the Buffalo WHR-600D (which exhibits the
-> > same behaviour):
-> > https://apps.fcc.gov/eas/GetApplicationAttachment.html?id=1950610
-> > Here (page 12) we can clearly read "RT5692N", and if we look closer that's
-> > the same number you can see on the RP-N53. That's a model I cannot find
-> > anywhere. So it seems some kind of OEM specific chip.
-> > 
-> > In data mar 3 novembre 2015 11:31:42, hai scritto:
-> >> All signs point to RT5592 not supported by rt2x00 driver... I'm
-> >> guessing they fudged pci id for some internal reasons (maybe even to
-> >> mess with OpenWRT people).
-> >> 
-> >> On Tue, Nov 3, 2015 at 11:09 AM, Alberto Mattea <alberto@mattea.info> 
-wrote:
-> >>> My device (the RP-N53) has 2 chips too: the other is integrated in the
-> >>> mt7620 soc and reports itself as
-> >>> 
-> >>> [   14.120000] ieee80211 phy1: rt2x00lib_request_eeprom_file: Info -
-> >>> Loading EEPROM data from 'soc_wmac.eeprom'. [   14.140000] ieee80211
-> >>> phy1: rt2x00_set_rt: Info - RT chipset 5390, rev 0500 detected [
-> >>> 14.150000] ieee80211 phy1: rt2x00_set_rf: Info - RF chipset 7620
-> >>> detected
-> >>> [   14.170000] ieee80211 phy1: Selected rate control algorithm
-> >>> 'minstrel_ht'
-> >>> 
-> >>> it is used for 2.4Ghz only (https://wikidevi.com/wiki/ASUS_RP-N53)
-> >>> Unfortunately opening the RP-N53 appears impossible without voiding the
-> >>> warranty :(>
-> >>> 
-> >>> In data mar 3 novembre 2015 10:32:29, hai scritto:
-> >>>> This is so strange. Asus RT-N56U you mentioned earlier as one of the
-> >>>> examples actually has two separate chips for each band (and one of
-> >>>> them is RT3091) - https://wikidevi.com/wiki/ASUS_RT-N56U
-> >>>> Are you able to take a picture of the chip?
-> >>>> 
-> >>>> On Tue, Nov 3, 2015 at 10:10 AM, Alberto Mattea <alberto@mattea.info>
-> > 
-> > wrote:
-> >>>>> Hey, thanks for your answer. The device definitely isn't a RT3091, so
-> >>>>> do
-> >>>>> you think it's some sort of an OEM hybrid? Do you think it would be
-> >>>>> better to report this to the openwrt bugzilla?
-> >>>>> 
-> >>>>> Thanks
-> >>>>> 
-> >>>>> In data mar 3 novembre 2015 14:41:35, Xose Vazquez Perez ha scritto:
-> >>>>>> Alberto Mattea wrote:
-> >>>>>>> this is about the mini-pcie version used in some embedded products
-> >>>>>>> (for example the Buffalo WHR-600D and the Asus RP-N53).
-> >>>>>>> It has an RT5592 chip and the hardware supports both 2.4 and 5Ghz
-> >>>>>>> (5Ghz works with the proprietary driver supplied with the devices),
-> >>>>>>> but rt2800pci seems to see only the 2.4 Ghz capability.
-> >>>>>> 
-> >>>>>> As far as I know, RT5592 PCIe devices are unsupported by rt2800pci.
-> >>>>>> 
-> >>>>>>> dmesg:
-> >>>>>>> 
-> >>>>>>> [   14.070000] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset
-> >>>>>>> 5592,
-> >>>>>>> rev
-> >>>>>>> 0222 detected [   14.080000] ieee80211 phy0: rt2x00_set_rf: Info -
-> >>>>>>> RF
-> >>>>>>> chipset 0001 detected [   14.100000] ieee80211 phy0: Selected rate
-> >>>>>>> control algorithm 'minstrel_ht' [  134.420000] ieee80211 phy0:
-> >>>>>>> rt2x00lib_request_firmware: Info - Loading firmware file
-> >>>>>>> 'rt2860.bin' [
-> >>>>>>> 134.460000] ieee80211 phy0: rt2x00lib_request_firmware: Info -
-> >>>>>>> Firmware
-> >>>>>>> detected - version: 0.34
-> >>>>>> 
-> >>>>>> Here is the output of a real RT5592 PCIe device with rt2800pci
-> >>>>>> driver(Feb
-> >>>>>> 2013):
-> >>>>>> 
-> >>>>>> phy1 -> rt2x00_set_chip: Info - Chipset detected - rt: 5592, rf:
-> >>>>>> 000f,
-> >>>>>> rev:
-> >>>>>> 0222. phy1 -> rt2800_init_eeprom: Error - Invalid RT chipset 0x5592
-> >>>>>> detected. phy1 -> rt2x00lib_probe_dev: Error - Failed to allocate
-> >>>>>> device.
-> >>>>>> 
-> >>>>>>> The weird thing is that in lspci it is reported as an RT3091, due to
-> >>>>>>> the
-> >>>>>>> 0x3091 pci device id:
-> >>>>>>> 
-> >>>>>>> 01:00.0 Network controller [0280]: Ralink corp. RT3091 Wireless
-> >>>>>>> 802.11n
-> >>>>>>> 1T/2R PCIe [1814:3091]>
-> >>>>>>> 
-> >>>>>>>         Subsystem: Ralink corp. RT3091 Wireless 802.11n 1T/2R PCIe
-> >>>>>>>         [1814:3091]
-> >>>>>>> 
-> >>>>>>> [...]
-> >>>>>> 
-> >>>>>> 06:00.0 Network controller [0280]: Ralink corp. Device [1814:5592]
-> >>>>>> 
-> >>>>>>         Subsystem: ASUSTeK Computer Inc. Device [1043:851a]
-> >>>>>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> >>>>>>         ParErr-
-> >>>>>> 
-> >>>>>> Stepping- SERR+ FastB2B- DisINTx- Status: Cap+ 66MHz- UDF- FastB2B-
-> >>>>>> ParErr-
-> >>>>>> DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx- Latency:
-> >>>>>> 0,
-> >>>>>> Cache Line Size: 64 bytes
-> >>>>>> 
-> >>>>>>         Interrupt: pin A routed to IRQ 11
-> >>>>>>         Region 0: Memory at fe500000 (32-bit, non-prefetchable)
-> >>>>>>         [size=64K]
-> >>>>>>         Capabilities: [40] Power Management version 3
-> >>>>>>         
-> >>>>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
-> >>>>>> 
-> >>>>>> PME(D0-,D1-,D2-,D3hot-,D3cold-) Status: D0 NoSoftRst- PME-Enable-
-> >>>>>> DSel=0
-> >>>>>> DScale=0 PME- Capabilities: [50] MSI: Enable- Count=1/32 Maskable-
-> >>>>>> 64bit+
-> >>>>>> Address: 0000000000000000  Data: 0000
-> >>>>>> 
-> >>>>>>         Capabilities: [70] Express (v2) Endpoint, MSI 00
-> >>>>>>         
-> >>>>>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
-> >>>>>>                 L0s
-> >>>>>> 
-> >>>>>> <512ns, L1 unlimited ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> >>>>>> DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> >>>>>> RlxdOrd-
-> >>>>>> ExtTag- PhantFunc- AuxPwr- NoSnoop- MaxPayload 128 bytes, MaxReadReq
-> >>>>>> 128
-> >>>>>> bytes DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr-
-> >>>>>> TransPend-
-> >>>>>> LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0
-> >>>>>> <512ns,
-> >>>>>> L1 <64us ClockPM+ Surprise- LLActRep- BwNot-
-> >>>>>> 
-> >>>>>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
-> >>>>>>                 Retrain-
-> >>>>>> 
-> >>>>>> CommClk+ ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- LnkSta: Speed
-> >>>>>> 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> >>>>>> DevCap2: Completion Timeout: Not Supported, TimeoutDis+ DevCtl2:
-> >>>>>> Completion
-> >>>>>> Timeout: 50us to 50ms, TimeoutDis- LnkCtl2: Target Link Speed:
-> >>>>>> 2.5GT/s,
-> >>>>>> EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB Transmit
-> >>>>>> Margin:
-> >>>>>> Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-> >>>>>> Compliance
-> >>>>>> De-emphasis: -6dB
-> >>>>>> 
-> >>>>>>                 LnkSta2: Current De-emphasis Level: -6dB,
-> >>>>>> 
-> >>>>>> EqualizationComplete-, EqualizationPhase1- EqualizationPhase2-,
-> >>>>>> EqualizationPhase3-, LinkEqualizationRequest- Capabilities: [100 v1]
-> >>>>>> Advanced Error Reporting
-> >>>>>> 
-> >>>>>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-> >>>>>>                 UnxCmplt-
-> >>>>>> 
-> >>>>>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol- UEMsk:  DLP- SDES- TLP- FCP-
-> >>>>>> CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >>>>>> UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-> >>>>>> MalfTLP+
-> >>>>>> ECRC- UnsupReq- ACSViol- CESta:  RxErr- BadTLP- BadDLLP- Rollover-
-> >>>>>> Timeout-
-> >>>>>> NonFatalErr+ CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> >>>>>> NonFatalErr+ AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
-> >>>>>> ChkEn- Capabilities: [140 v1] Device Serial Number
-> >>>>>> c1-a5-f3-ff-fe-a9-85-30
-> >>>>>> 
-> >>>>>>> So maybe due to this (i'm not sure), rt2800pci only enables the 2.4
-> >>>>>>> Ghz
-> >>>>> 
-> >>>>> band support:
-> >>>>>> Your device does not look like a real RT5592 chip.
-> >>>>>> 
-> >>>>>>> All this with kernel 3.18 (openwrt 15.05 Chaos Calmer).
-> >>>>>>> Any ideas?
-> >>>>>> 
-> >>>>>> OpenWrt brings _a lot of_ code out upstream kernel.
-> >>>>>> Who knows what is running.
-> >>>>> 
-> >>>>> --
-> >>>>> To unsubscribe from this list: send the line "unsubscribe
-> >>>>> linux-wireless"
-> >>>>> in the body of a message to majordomo@vger.kernel.org
-> >>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 28af8b10a66e..518608403bd3 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -25,6 +25,7 @@ source "drivers/net/wireless/intel/Kconfig"
+ source "drivers/net/wireless/intersil/Kconfig"
+ source "drivers/net/wireless/marvell/Kconfig"
+ source "drivers/net/wireless/realtek/Kconfig"
++source "drivers/net/wireless/rsi/Kconfig"
+ source "drivers/net/wireless/st/Kconfig"
+ source "drivers/net/wireless/zydas/Kconfig"
+ 
+@@ -99,6 +100,5 @@ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/mediatek/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
+-source "drivers/net/wireless/rsi/Kconfig"
+ 
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 12f6c59668a5..d38b6cc338df 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
+ obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
+ obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
+ obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
++obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
+ obj-$(CONFIG_WLAN_VENDOR_ST) += st/
+ obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
+ 
+@@ -28,5 +29,3 @@ obj-$(CONFIG_ATH_CARDS)		+= ath/
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+ 
+ obj-$(CONFIG_WL_TI)	+= ti/
+-
+-obj-$(CONFIG_RSI_91X)	+= rsi/
+diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
+index 35245f994c10..7c5e4ca4e3d0 100644
+--- a/drivers/net/wireless/rsi/Kconfig
++++ b/drivers/net/wireless/rsi/Kconfig
+@@ -1,3 +1,16 @@
++config WLAN_VENDOR_RSI
++	bool "Redpine Signals Inc devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_RSI
++
+ config RSI_91X
+ 	tristate "Redpine Signals Inc 91x WLAN driver support"
+ 	depends on MAC80211
+@@ -28,3 +41,5 @@ config RSI_USB
+ 	---help---
+ 	  This option enables the USB bus support in rsi drivers.
+ 	  Select M (recommended), if you have a RSI 1x1 wireless module.
++
++endif # WLAN_VENDOR_RSI
+-- 
+1.7.9.5
 
