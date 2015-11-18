@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:54743 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbbKWS1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 13:27:54 -0500
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
-	Michal Sojka <sojkam1@fel.cvut.cz>
-Subject: [PATCH v2 0/8] Regulatory and ath9k support for ITS-G5 band (5.9 GHz)
-Date: Mon, 23 Nov 2015 19:27:13 +0100
-Message-Id: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192757_832385_39FB12CA)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20722 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754758AbbKRGJ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2015 01:09:27 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/16] staging: wilc1000: add struct wilc to host_if_drv
+Date: Wed, 18 Nov 2015 15:11:32 +0900
+Message-ID: <1447827097-9436-12-git-send-email-glen.lee@atmel.com> (sfid-20151118_070930_893565_C1F08653)
+In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series is another attempt to mainline support for ITS-G5
-band (5.9 GHz) designated for Intelligent Transportation Systems.
+This patch adds struct wilc to host_if_dev and assign wilc to use driver's
+primary structure in host_if_dev.
 
-Based on the discussion with Jouni [1], this version adds the
-following restrictions for using the band:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 +
+ drivers/staging/wilc1000/host_interface.h | 2 ++
+ 2 files changed, 3 insertions(+)
 
-1. Custom reg db must be provided by the user.
-2. CONFIG_CFG80211_REG_ITSG5_BAND must be enabled.
-3. The band is restricted to OCB mode. I.e. beaconing and scanning is
-   disabled.
-
-Patches 1-3 do some refactoring and cleanup. They are independent of
-the rest of the series. Patches 4-7 add regulatory support (mainly the
-points mentioned above) and finally patch 8 adds support for ITS-G5 to
-the ath9k driver.
-
-[1]: http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg13795.html
-
-
-Michal Sojka (8):
-  cfg80211: reg: Remove unused function parameter
-  cfg80211: Remove unused cfg80211_can_use_iftype_chan()
-  cfg80211: reg: Refactor calculation of bandwidth flags
-  cfg80211: reg: Properly handle rules for 5 and 10 MHz channels
-  cfg80211: Add support for OCB-only channels
-  cfg80211: reg: Add NL80211_RRF_USER_REGD_NEEDED flag
-  cfg80211: Add Kconfig option for ITS-G5 band (5.9 GHz)
-  ath9k: Add support for ITS-G5 band (5.9 GHz)
-
- drivers/net/wireless/ath/ath9k/common-init.c |  19 +++++
- drivers/net/wireless/ath/ath9k/hw.h          |   2 +-
- drivers/net/wireless/ath/regd.c              |  23 +++--
- include/net/cfg80211.h                       |   5 ++
- include/uapi/linux/nl80211.h                 |   6 ++
- net/wireless/Kconfig                         |  27 ++++++
- net/wireless/chan.c                          |   6 +-
- net/wireless/core.h                          |   7 --
- net/wireless/ibss.c                          |  12 ++-
- net/wireless/mesh.c                          |   3 +-
- net/wireless/nl80211.c                       |  12 +--
- net/wireless/reg.c                           | 123 +++++++++++++--------------
- net/wireless/scan.c                          |   4 +-
- net/wireless/sme.c                           |   3 +-
- net/wireless/util.c                          | 114 -------------------------
- net/wireless/wext-sme.c                      |   3 +-
- 16 files changed, 161 insertions(+), 208 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2531d20..3609949 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3848,6 +3848,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		result = -ENOMEM;
+ 		goto _fail_;
+ 	}
++	hif_drv->wilc = wilc;
+ 	*hif_drv_handler = hif_drv;
+ 	err = add_handler_in_list(hif_drv);
+ 	if (err) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index efeb9e2..004467c6 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -259,7 +259,9 @@ enum p2p_listen_state {
+ 	P2P_GRP_FORMATION
+ };
+ 
++struct wilc;
+ struct host_if_drv {
++	struct wilc *wilc;
+ 	struct user_scan_req usr_scan_req;
+ 	struct user_conn_req usr_conn_req;
+ 	struct remain_ch remain_on_ch;
 -- 
-2.5.3
+1.9.1
 
