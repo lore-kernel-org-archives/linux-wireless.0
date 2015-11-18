@@ -1,57 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9615 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1032624AbbKEJJc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34820 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932355AbbKROq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 04:09:32 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-CC: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: mwifiex problem: incompatible network settings
-Date: Thu, 5 Nov 2015 08:59:34 +0000
-Message-ID: <cffeead80528479fbe6883776d115208@SC-EXCH04.marvell.com> (sfid-20151105_100942_942101_FF8D6C04)
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	<87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
-	<87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
-	<87vb9qsmg1.fsf@free.fr>
-	<b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
- <87r3k5h161.fsf@free.fr>
-In-Reply-To: <87r3k5h161.fsf@free.fr>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 18 Nov 2015 09:46:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 02/27] airo: move under cisco vendor directory
+Date: Wed, 18 Nov 2015 16:45:41 +0200
+Message-Id: <1447857966-19560-3-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155953_050373_4881E8E8)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSnVsaWVuLA0KDQo+IEZyb206IEp1bGllbiBDdWJpem9sbGVzIFttYWlsdG86ai5jdWJpem9s
-bGVzQGZyZWUuZnJdDQo+IFNlbnQ6IFRodXJzZGF5LCBOb3ZlbWJlciAwNSwgMjAxNSAzOjM0IEFN
-DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBEYW4gV2lsbGlhbXM7IGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZzsgTmlzaGFudCBTYXJtdWthZGFtDQo+IFN1YmplY3Q6IFJlOiBt
-d2lmaWV4IHByb2JsZW06IGluY29tcGF0aWJsZSBuZXR3b3JrIHNldHRpbmdzDQo+IA0KPiBBbWl0
-a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IFRoYW5r
-cyBmb3IgdGhlIGxvZ3MuIEkgY29tcGFyZWQgeW91ciBuZXR3b3JrIG1hbmFnZXIgbG9nIHdpdGgg
-dGhlIG9uZQ0KPiA+IG9uIG15IHNldHVwLiBCb3RoIGFyZSBzYW1lLiBCYXNpY2FsbHkgbmV0d29y
-ayBtYW5hZ2VyIGxvZyBkb2Vzbid0IHNob3cNCj4gPiBzZWN1cml0eSBpbmZvIChXUEEvV1BBMiwg
-ZW5jcnlwdGlvbiBtb2RlIGV0YykuIFNvIHdlIGNhbid0IHJlbHkgb24NCj4gPiB0aGF0Lg0KPiA+
-IEkgY2hlY2tlZCB5b3VyIGtlcm5lbCBsb2cgc2hhcmVkIGluIHByZXZpb3VzIGVtYWlsLiBJdCdz
-IGluY29tcGxldGUuDQo+ID4gSXQgZGlkbid0IGluY2x1ZGUgaW5mb3JtYXRpb24gd2hlbiBjb25u
-ZWN0aW9uIHdhcyBhY3R1YWxseSBhdHRlbXB0ZWQuDQo+ID4gUHJvYmFibHkgeW91IGNhbiBydW4g
-ImRtZXNnIC1jID4+IGRtZXNnLmxvZyIgaW4gbG9vcCB3aXRoIHNvbWUgZGVsYXkNCj4gPiB0byBj
-YXB0dXJlIGNvbXBsZXRlIGluZm8uIE90aGVyd2lzZSBzaGFyaW5nICIvdmFyL2xvZy9tZXNzYWdl
-cyIgaXMNCj4gPiBhbHNvIGFuIG9wdGlvbi4NCj4gPiBJIGhhdmUgY3JlYXRlZCBhIGRyaXZlciBk
-ZWJ1ZyBwYXRjaChhdHRhY2hlZCkuIENvdWxkIHlvdSBwbGVhc2UgYXBwbHkNCj4gaXQgYW5kIHNo
-YXJlIGNvbXBsZXRlIGRtZXNnIGxvZz8NCj4gDQo+IEkgYXBwbGllZCB5b3VyIHBhdGNoLiBIZXJl
-IGFyZSB0aGUgZG1lc2cgbG9ncyB3aGVuIGxvZ2dpbmcgdG8gYSBXUEENCj4gbmV0d29yayB3aXRo
-IGF1dGhlbnRpZmljYXRpb24gKGRtZXNnLVdQQS5sb2csIHNzaWQgc291dGhjZW50cmFsKSBhbmQg
-YQ0KPiBuZXR3b3JrIHdpdGhvdXQgYXV0aGVudGlmaWNhdGlvbiAoZG1lc2ctbm9XUEEubG9nLCBz
-c2lkIEZyZWVXaWZpKS4NCj4gDQo+IExldCBtZSBrbm93IGlmIHlvdSBuZWVkIGFueXRoaW5nIGVs
-c2UuDQo+IA0KPiA+IEJ0dywgZG8geW91IHNlZSB0aGUgcHJvYmxlbSBpZiBBUCBpcyBjb25maWd1
-cmVkIGluIFdQQTIgc2VjdXJpdHkgbW9kZT8NCj4gDQo+IEdvb2QgY2F0Y2gsIEkgY2hhbmdlZCBt
-eSBhY2Nlc3MgcG9pbnQgdG8gV1BBMiBhbmQgbm93IEkgY2FuIGNvbm5lY3QgdG8NCj4gaXTCoCEg
-SSBhdHRhY2hlZCB0aGUgY29ycmVzcG9uZGluZyBkbWVzZyBsb2dzIChkbWVzZy1XUEEyLmxvZywg
-c3NpZA0KPiBzb3V0aGNlbnRyYWwpLg0KDQpUaGFua3MgZm9yIHRoZSBsb2dzLiBXZSBmb3VuZCBv
-bmUgYnVnIGluIG91ciBjb2RlLiBXZSBleHBlY3QgdmVuZG9yIHNwZWNpZmljIElFIGF0IHRoZSBi
-ZWdpbm5pbmcgb2YgSUUgYnVmZmVyIG90aGVyd2lzZSBjb25uZWN0aW9uIGlzIHJlamVjdGVkLg0K
-V2Ugd2lsbCBwcmVwYXJlIGEgZml4IGFuZCBnZXQgYmFjay4NCg0KUmVnYXJkcywNCkFtaXRrdW1h
-cg0K
+Part of reorganising wireless drivers directory and Kconfig.
+
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/Kconfig               |   43 +--------------------
+ drivers/net/wireless/Makefile              |    4 +-
+ drivers/net/wireless/cisco/Kconfig         |   56 ++++++++++++++++++++++++++++
+ drivers/net/wireless/cisco/Makefile        |    2 +
+ drivers/net/wireless/{ => cisco}/airo.c    |    0
+ drivers/net/wireless/{ => cisco}/airo.h    |    0
+ drivers/net/wireless/{ => cisco}/airo_cs.c |    0
+ 7 files changed, 60 insertions(+), 45 deletions(-)
+ create mode 100644 drivers/net/wireless/cisco/Kconfig
+ create mode 100644 drivers/net/wireless/cisco/Makefile
+ rename drivers/net/wireless/{ => cisco}/airo.c (100%)
+ rename drivers/net/wireless/{ => cisco}/airo.h (100%)
+ rename drivers/net/wireless/{ => cisco}/airo_cs.c (100%)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 7d8f47117c4d..ce5211ba1b29 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -18,6 +18,7 @@ menuconfig WLAN
+ if WLAN
+ 
+ source "drivers/net/wireless/admtek/Kconfig"
++source "drivers/net/wireless/cisco/Kconfig"
+ 
+ config PCMCIA_RAYCS
+ 	tristate "Aviator/Raytheon 2.4GHz wireless support"
+@@ -53,26 +54,6 @@ config LIBERTAS_THINFIRM_USB
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
+ 
+-config AIRO
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+-	depends on CFG80211 && ISA_DMA_API && (PCI || BROKEN)
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select WEXT_SPY
+-	select WEXT_PRIV
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet ISA and
+-	  PCI 802.11 wireless cards.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B).
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+-	  The driver can be compiled as a module and will be named "airo".
+-
+ config ATMEL
+       tristate "Atmel at76c50x chipset  802.11b support"
+       depends on CFG80211 && (PCI || PCMCIA)
+@@ -116,28 +97,6 @@ config AT76C50X_USB
+           Enable support for USB Wireless devices using Atmel at76c503,
+           at76c505 or at76c505a chips.
+ 
+-config AIRO_CS
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+-	depends on CFG80211 && PCMCIA && (BROKEN || !M32R)
+-	select WIRELESS_EXT
+-	select WEXT_SPY
+-	select WEXT_PRIV
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
+-	  802.11 wireless cards.  This driver is the same as the Aironet
+-	  driver part of the Linux Pcmcia package.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
+-	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
+-	  802.11b cards.
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+ config PCMCIA_WL3501
+ 	tristate "Planet WL3501 PCMCIA cards"
+ 	depends on CFG80211 && PCMCIA
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index be215f43ec1d..853294d84fa9 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -3,15 +3,13 @@
+ #
+ 
+ obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
+ 
+ obj-$(CONFIG_IPW2100) += ipw2x00/
+ obj-$(CONFIG_IPW2200) += ipw2x00/
+ 
+ obj-$(CONFIG_HERMES)		+= orinoco/
+ 
+-obj-$(CONFIG_AIRO)		+= airo.o
+-obj-$(CONFIG_AIRO_CS)		+= airo_cs.o airo.o
+-
+ obj-$(CONFIG_ATMEL)             += atmel.o
+ obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
+ obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
+diff --git a/drivers/net/wireless/cisco/Kconfig b/drivers/net/wireless/cisco/Kconfig
+new file mode 100644
+index 000000000000..b22567dff893
+--- /dev/null
++++ b/drivers/net/wireless/cisco/Kconfig
+@@ -0,0 +1,56 @@
++config WLAN_VENDOR_CISCO
++	bool "Cisco devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_CISCO
++
++config AIRO
++	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
++	depends on CFG80211 && ISA_DMA_API && (PCI || BROKEN)
++	select WIRELESS_EXT
++	select CRYPTO
++	select WEXT_SPY
++	select WEXT_PRIV
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet ISA and
++	  PCI 802.11 wireless cards.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B).
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
++	  The driver can be compiled as a module and will be named "airo".
++
++config AIRO_CS
++	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
++	depends on CFG80211 && PCMCIA && (BROKEN || !M32R)
++	select WIRELESS_EXT
++	select WEXT_SPY
++	select WEXT_PRIV
++	select CRYPTO
++	select CRYPTO_AES
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
++	  802.11 wireless cards.  This driver is the same as the Aironet
++	  driver part of the Linux Pcmcia package.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
++	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
++	  802.11b cards.
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
++endif # WLAN_VENDOR_CISCO
+diff --git a/drivers/net/wireless/cisco/Makefile b/drivers/net/wireless/cisco/Makefile
+new file mode 100644
+index 000000000000..d4110b19d6ef
+--- /dev/null
++++ b/drivers/net/wireless/cisco/Makefile
+@@ -0,0 +1,2 @@
++obj-$(CONFIG_AIRO)		+= airo.o
++obj-$(CONFIG_AIRO_CS)		+= airo_cs.o airo.o
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/cisco/airo.c
+similarity index 100%
+rename from drivers/net/wireless/airo.c
+rename to drivers/net/wireless/cisco/airo.c
+diff --git a/drivers/net/wireless/airo.h b/drivers/net/wireless/cisco/airo.h
+similarity index 100%
+rename from drivers/net/wireless/airo.h
+rename to drivers/net/wireless/cisco/airo.h
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/cisco/airo_cs.c
+similarity index 100%
+rename from drivers/net/wireless/airo_cs.c
+rename to drivers/net/wireless/cisco/airo_cs.c
+-- 
+1.7.9.5
+
