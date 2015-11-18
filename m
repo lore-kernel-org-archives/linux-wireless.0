@@ -1,58 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:34222 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbbKSD2w (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34950 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933222AbbKROq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 22:28:52 -0500
-Received: by qgeb1 with SMTP id b1so43138337qge.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2015 19:28:52 -0800 (PST)
-Date: Wed, 18 Nov 2015 22:28:50 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Antunes <baantunes@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: linux-wireless rebased (probably for the last time) on 4.4-rc1
-Message-ID: <20151119032850.GA29270@localhost> (sfid-20151119_042856_310578_8AF0A883)
-References: <20151116195551.GD8895@tuxdriver.com>
- <87oaesyb1s.fsf@kamboji.qca.qualcomm.com>
- <CABUTiXU-i7u=1Bbmf=RFfEJM3QYedngxnCr+vVdMPr_pFQ+-tw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABUTiXU-i7u=1Bbmf=RFfEJM3QYedngxnCr+vVdMPr_pFQ+-tw@mail.gmail.com>
+	Wed, 18 Nov 2015 09:46:58 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 25/27] ti: unify Kconfig with other vendors
+Date: Wed, 18 Nov 2015 16:46:04 +0200
+Message-Id: <1447857966-19560-26-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154857_124768_201F0116)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2015 at 11:44:43PM +0000, Bruno Antunes wrote:
-> On 17 November 2015 at 14:07, Kalle Valo <kvalo@codeaurora.org> wrote:
-> >
-> > I hope we can find some solution and wireless-testing continues to
-> > exist. Otherwise testing latest wireless code will become more
-> > difficult.
-> 
-> Is this tree very difficult to maintain?
-> In case there are no volunteers what will be future options for using
-> the latest wireless code?
+Rename WL_TI to WLAN_VENDOR_TI to match with other vendor configs and make sure
+that it's enabled by default in new configs. Convert menuconfigs to regular
+configs to unify the wireless drivers menuconfig. Part of reorganising wireless
+drivers directory and Kconfig.
 
-I also tend to use wireless-testing as the main kernel on my laptop, and
-find it handy at times to have both recent drivers and mac80211 changes
-in the same tree without resorting to backports or merging the trees
-myself.  Not much problem doing those, but if I'm going to do it anyway...
-might as well share.
+Also remove WLCORE dependency to WL_TI. It should not be needed as WLCORE is
+already under if  WLAN_VENDOR_TI.
 
-So, I'd be willing to help keep it running for a time after said sunset
-date.
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/Kconfig           |    2 +-
+ drivers/net/wireless/Makefile          |    3 +--
+ drivers/net/wireless/ti/Kconfig        |   18 +++++++++++-------
+ drivers/net/wireless/ti/wl1251/Kconfig |    2 +-
+ drivers/net/wireless/ti/wlcore/Kconfig |    2 +-
+ 5 files changed, 15 insertions(+), 12 deletions(-)
 
-> says the diagram is out of date, thats obvious, since wireless tree is now
-> wireless-drivers and the maintainer is Kalle.
-> wireless-drivers ----> net -----> linux
-> So what is the process for wireless-testing tree, the merge of linux,
-> mac80211and wireless-drivers trees?
-
-mac80211 and wireless-drivers go into net, wireless-testing doesn't
-go upstream; it's exactly just for testing.  That said, it's an easy
-base to work against since all the bits are reasonably up-to-date.
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 2225e06611fa..cb115db309ce 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -29,6 +29,7 @@ source "drivers/net/wireless/ralink/Kconfig"
+ source "drivers/net/wireless/realtek/Kconfig"
+ source "drivers/net/wireless/rsi/Kconfig"
+ source "drivers/net/wireless/st/Kconfig"
++source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/zydas/Kconfig"
+ 
+ config PCMCIA_RAYCS
+@@ -99,6 +100,5 @@ config MAC80211_HWSIM
+ 	  called mac80211_hwsim.  If unsure, say N.
+ 
+ source "drivers/net/wireless/ath/Kconfig"
+-source "drivers/net/wireless/ti/Kconfig"
+ 
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 0fa909072846..8c99b9faab09 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
+ obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
+ obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
+ obj-$(CONFIG_WLAN_VENDOR_ST) += st/
++obj-$(CONFIG_WLAN_VENDOR_TI) += ti/
+ obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
+ 
+ # 16-bit wireless PCMCIA client drivers
+@@ -25,5 +26,3 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ obj-$(CONFIG_ATH_CARDS)		+= ath/
+ 
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+-
+-obj-$(CONFIG_WL_TI)	+= ti/
+diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
+index cbe1e7fef61b..92fbd6597e34 100644
+--- a/drivers/net/wireless/ti/Kconfig
++++ b/drivers/net/wireless/ti/Kconfig
+@@ -1,11 +1,15 @@
+-menuconfig WL_TI
+-	bool "TI Wireless LAN support"
++config WLAN_VENDOR_TI
++	bool "Texas Instrument devices"
++	default y
+ 	---help---
+-	  This section contains support for all the wireless drivers
+-	  for Texas Instruments WLAN chips, such as wl1251 and the wl12xx
+-	  family.
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
+ 
+-if WL_TI
++if WLAN_VENDOR_TI
+ source "drivers/net/wireless/ti/wl1251/Kconfig"
+ source "drivers/net/wireless/ti/wl12xx/Kconfig"
+ source "drivers/net/wireless/ti/wl18xx/Kconfig"
+@@ -21,4 +25,4 @@ config WILINK_PLATFORM_DATA
+ 	Small platform data bit needed to pass data to the sdio modules.
+ 
+ 
+-endif # WL_TI
++endif # WLAN_VENDOR_TI
+diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+index 477a206c098e..7142ccf3a425 100644
+--- a/drivers/net/wireless/ti/wl1251/Kconfig
++++ b/drivers/net/wireless/ti/wl1251/Kconfig
+@@ -1,4 +1,4 @@
+-menuconfig WL1251
++config WL1251
+ 	tristate "TI wl1251 driver support"
+ 	depends on MAC80211
+ 	select FW_LOADER
+diff --git a/drivers/net/wireless/ti/wlcore/Kconfig b/drivers/net/wireless/ti/wlcore/Kconfig
+index 7c099542b214..969c9d79bfc8 100644
+--- a/drivers/net/wireless/ti/wlcore/Kconfig
++++ b/drivers/net/wireless/ti/wlcore/Kconfig
+@@ -1,6 +1,6 @@
+ config WLCORE
+ 	tristate "TI wlcore support"
+-	depends on WL_TI && MAC80211
++	depends on MAC80211
+ 	select FW_LOADER
+ 	---help---
+ 	  This module contains the main code for TI WLAN chips.  It abstracts
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.7.9.5
+
