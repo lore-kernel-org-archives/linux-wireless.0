@@ -1,79 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:42969 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753937AbbK0I7N convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34839 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932895AbbKROq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 03:59:13 -0500
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?utf-8?Q?Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH v2 5/8] cfg80211: Add support for OCB-only channels
-In-Reply-To: <1448613238.2531.12.camel@sipsolutions.net>
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz> <1448303241-27747-6-git-send-email-sojkam1@fel.cvut.cz> <1448613238.2531.12.camel@sipsolutions.net>
-Date: Fri, 27 Nov 2015 09:59:09 +0100
-Message-ID: <87zixz24yq.fsf@steelpick.2x.cz> (sfid-20151127_095916_699740_E2A7F50D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 18 Nov 2015 09:46:29 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 03/27] atmel: move under atmel vendor directory
+Date: Wed, 18 Nov 2015 16:45:42 +0200
+Message-Id: <1447857966-19560-4-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155920_153065_9BD05E7A)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 27 2015, Johannes Berg wrote:
-> On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
->
->>  #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
->> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
->> index 59cabc9..b1ab77a 100644
->> --- a/net/wireless/chan.c
->> +++ b/net/wireless/chan.c
->> @@ -804,7 +804,8 @@ static bool _cfg80211_reg_can_beacon(struct wiphy
->> *wiphy,
->>  {
->>  	bool res;
->>  	u32 prohibited_flags = IEEE80211_CHAN_DISABLED |
->> -			       IEEE80211_CHAN_RADAR;
->> +			       IEEE80211_CHAN_RADAR |
->> +			       IEEE80211_CHAN_OCB_ONLY;
->
-> So ... for the kernel, I don't *like* this approach, because it
-> requires touching every single driver, and every single person who
-> writes code in the future must be aware of the special handling for
-> this flag.
->
-> For userspace, however, this approach is simply impossible. Consider an
-> older version of wpa_supplicant, that queries the channel list and
-> isn't aware of the OCB_ONLY flag. This version would take the channel
-> list and build a scan request with it, only to get the scan rejected
-> since some channels it picked were only usable for OCB, as far as I can
-> tell.
->
-> I think the solution to this would be to redefine the CHAN_DISABLED
-> flag to mean "channel disabled for non-ocb mode" and add a
-> CHAN_OCB_ENABLED flag.
->
-> Then code that knows about OCB would simply not test CHAN_DISABLED, but
-> would instead test CHAN_OCB_ENABLED instead - and if that's clear OCB
-> would not be permitted.
->
-> However, this would have the side effect of enabling OCB *only* on OCB
-> channels, which might not be a good idea, for testing purposes one
-> might want to use the regular 2.4 or 5 GHz channels? If so, OCB could
-> still be made to do something like
->
-> 	ocb_usable = (flags & OCB_ENABLED) || !(flags & DISABLED);
->
-> or we could even make the channel list internally maintain a
-> CHAN_OCB_USABLE flag that essentially encodes the logic above.
->
-> In any case, this would collapse the patch down to modifying only OCB
-> code and nothing else, which is nice, and would keep existing userspace
-> working since it would just see disabled channels while ignoring the
-> OCB flag.
+Part of reorganising wireless drivers directory and Kconfig.
 
-Yes, this makes perfect sense. I'll rework the patch.
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ MAINTAINERS                                     |    2 +-
+ drivers/net/wireless/Kconfig                    |   44 +----------------
+ drivers/net/wireless/Makefile                   |    7 +--
+ drivers/net/wireless/atmel/Kconfig              |   57 +++++++++++++++++++++++
+ drivers/net/wireless/atmel/Makefile             |    5 ++
+ drivers/net/wireless/{ => atmel}/at76c50x-usb.c |    0
+ drivers/net/wireless/{ => atmel}/at76c50x-usb.h |    0
+ drivers/net/wireless/{ => atmel}/atmel.c        |    0
+ drivers/net/wireless/{ => atmel}/atmel.h        |    0
+ drivers/net/wireless/{ => atmel}/atmel_cs.c     |    0
+ drivers/net/wireless/{ => atmel}/atmel_pci.c    |    0
+ 11 files changed, 65 insertions(+), 50 deletions(-)
+ create mode 100644 drivers/net/wireless/atmel/Kconfig
+ create mode 100644 drivers/net/wireless/atmel/Makefile
+ rename drivers/net/wireless/{ => atmel}/at76c50x-usb.c (100%)
+ rename drivers/net/wireless/{ => atmel}/at76c50x-usb.h (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel.c (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel.h (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel_cs.c (100%)
+ rename drivers/net/wireless/{ => atmel}/atmel_pci.c (100%)
 
--Michal
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f1adb66094f1..2f3ea01c101c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1992,7 +1992,7 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://www.thekelleys.org.uk/atmel
+ W:	http://atmelwlandriver.sourceforge.net/
+ S:	Maintained
+-F:	drivers/net/wireless/atmel*
++F:	drivers/net/wireless/atmel/atmel*
+ 
+ ATMEL MAXTOUCH DRIVER
+ M:	Nick Dyer <nick.dyer@itdev.co.uk>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index ce5211ba1b29..275b6ed93f15 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -18,6 +18,7 @@ menuconfig WLAN
+ if WLAN
+ 
+ source "drivers/net/wireless/admtek/Kconfig"
++source "drivers/net/wireless/atmel/Kconfig"
+ source "drivers/net/wireless/cisco/Kconfig"
+ 
+ config PCMCIA_RAYCS
+@@ -54,49 +55,6 @@ config LIBERTAS_THINFIRM_USB
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
+ 
+-config ATMEL
+-      tristate "Atmel at76c50x chipset  802.11b support"
+-      depends on CFG80211 && (PCI || PCMCIA)
+-      select WIRELESS_EXT
+-      select WEXT_PRIV
+-      select FW_LOADER
+-      select CRC32
+-       ---help---
+-        A driver 802.11b wireless cards based on the Atmel fast-vnet
+-        chips. This driver supports standard Linux wireless extensions.
+-
+-        Many  cards based on this chipset do not have flash memory
+-        and need their firmware loaded at start-up. If yours is
+-        one of these, you will need to provide a firmware image
+-        to be loaded into the card by the driver. The Atmel
+-        firmware package can be downloaded from
+-        <http://www.thekelleys.org.uk/atmel>
+-
+-config PCI_ATMEL
+-      tristate "Atmel at76c506 PCI cards"
+-      depends on ATMEL && PCI
+-       ---help---
+-        Enable support for PCI and mini-PCI cards containing the
+-        Atmel at76c506 chip.
+-
+-config PCMCIA_ATMEL
+-	tristate "Atmel at76c502/at76c504 PCMCIA cards"
+-	depends on ATMEL && PCMCIA
+-	select WIRELESS_EXT
+-	select FW_LOADER
+-	select CRC32
+-	---help---
+-	  Enable support for PCMCIA cards containing the
+-	  Atmel at76c502 and at76c504 chips.
+-
+-config AT76C50X_USB
+-        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
+-        depends on MAC80211 && USB
+-        select FW_LOADER
+-        ---help---
+-          Enable support for USB Wireless devices using Atmel at76c503,
+-          at76c505 or at76c505a chips.
+-
+ config PCMCIA_WL3501
+ 	tristate "Planet WL3501 PCMCIA cards"
+ 	depends on CFG80211 && PCMCIA
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 853294d84fa9..87eb6b2f3227 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -3,6 +3,7 @@
+ #
+ 
+ obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++obj-$(CONFIG_WLAN_VENDOR_ATMEL) += atmel/
+ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
+ 
+ obj-$(CONFIG_IPW2100) += ipw2x00/
+@@ -10,12 +11,6 @@ obj-$(CONFIG_IPW2200) += ipw2x00/
+ 
+ obj-$(CONFIG_HERMES)		+= orinoco/
+ 
+-obj-$(CONFIG_ATMEL)             += atmel.o
+-obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
+-obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
+-
+-obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
+-
+ obj-$(CONFIG_PRISM54)		+= prism54/
+ 
+ obj-$(CONFIG_HOSTAP)		+= hostap/
+diff --git a/drivers/net/wireless/atmel/Kconfig b/drivers/net/wireless/atmel/Kconfig
+new file mode 100644
+index 000000000000..a43cfd163254
+--- /dev/null
++++ b/drivers/net/wireless/atmel/Kconfig
+@@ -0,0 +1,57 @@
++config WLAN_VENDOR_ATMEL
++	bool "Atmel devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_ATMEL
++
++config ATMEL
++      tristate "Atmel at76c50x chipset  802.11b support"
++      depends on CFG80211 && (PCI || PCMCIA)
++      select WIRELESS_EXT
++      select WEXT_PRIV
++      select FW_LOADER
++      select CRC32
++       ---help---
++        A driver 802.11b wireless cards based on the Atmel fast-vnet
++        chips. This driver supports standard Linux wireless extensions.
++
++        Many  cards based on this chipset do not have flash memory
++        and need their firmware loaded at start-up. If yours is
++        one of these, you will need to provide a firmware image
++        to be loaded into the card by the driver. The Atmel
++        firmware package can be downloaded from
++        <http://www.thekelleys.org.uk/atmel>
++
++config PCI_ATMEL
++      tristate "Atmel at76c506 PCI cards"
++      depends on ATMEL && PCI
++       ---help---
++        Enable support for PCI and mini-PCI cards containing the
++        Atmel at76c506 chip.
++
++config PCMCIA_ATMEL
++	tristate "Atmel at76c502/at76c504 PCMCIA cards"
++	depends on ATMEL && PCMCIA
++	select WIRELESS_EXT
++	select FW_LOADER
++	select CRC32
++	---help---
++	  Enable support for PCMCIA cards containing the
++	  Atmel at76c502 and at76c504 chips.
++
++config AT76C50X_USB
++        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
++        depends on MAC80211 && USB
++        select FW_LOADER
++        ---help---
++          Enable support for USB Wireless devices using Atmel at76c503,
++          at76c505 or at76c505a chips.
++
++endif # WLAN_VENDOR_ATMEL
+diff --git a/drivers/net/wireless/atmel/Makefile b/drivers/net/wireless/atmel/Makefile
+new file mode 100644
+index 000000000000..e62e345f7af6
+--- /dev/null
++++ b/drivers/net/wireless/atmel/Makefile
+@@ -0,0 +1,5 @@
++obj-$(CONFIG_ATMEL)             += atmel.o
++obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
++obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
++
++obj-$(CONFIG_AT76C50X_USB)      += at76c50x-usb.o
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+similarity index 100%
+rename from drivers/net/wireless/at76c50x-usb.c
+rename to drivers/net/wireless/atmel/at76c50x-usb.c
+diff --git a/drivers/net/wireless/at76c50x-usb.h b/drivers/net/wireless/atmel/at76c50x-usb.h
+similarity index 100%
+rename from drivers/net/wireless/at76c50x-usb.h
+rename to drivers/net/wireless/atmel/at76c50x-usb.h
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel/atmel.c
+similarity index 100%
+rename from drivers/net/wireless/atmel.c
+rename to drivers/net/wireless/atmel/atmel.c
+diff --git a/drivers/net/wireless/atmel.h b/drivers/net/wireless/atmel/atmel.h
+similarity index 100%
+rename from drivers/net/wireless/atmel.h
+rename to drivers/net/wireless/atmel/atmel.h
+diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel/atmel_cs.c
+similarity index 100%
+rename from drivers/net/wireless/atmel_cs.c
+rename to drivers/net/wireless/atmel/atmel_cs.c
+diff --git a/drivers/net/wireless/atmel_pci.c b/drivers/net/wireless/atmel/atmel_pci.c
+similarity index 100%
+rename from drivers/net/wireless/atmel_pci.c
+rename to drivers/net/wireless/atmel/atmel_pci.c
+-- 
+1.7.9.5
+
