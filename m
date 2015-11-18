@@ -1,210 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:59941 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbbKJXm7 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36842 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbbKRLpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 18:42:59 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 09/20] staging/wilc1000: move wilc_wlan_inp_t into struct wilc
-Date: Wed, 11 Nov 2015 00:42:29 +0100
-Message-Id: <1447198960-2760143-10-git-send-email-arnd@arndb.de> (sfid-20151111_004908_029535_AEC5EE08)
-In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+	Wed, 18 Nov 2015 06:45:13 -0500
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com,
+	sudipm.mukherjee@gmail.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:staging:wilc1000 Fix all comparison to NULL could be written ...
+Date: Wed, 18 Nov 2015 12:45:05 +0100
+Message-Id: <1447847105-27221-1-git-send-email-brutallesale@gmail.com> (sfid-20151118_124522_485549_7E2C3458)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_wlan_inp_t is an unnecessary indirection and requires linux_wlan.c
-to have knowledge of the specific sdio and spi front-ends. This
-removes the structure and places io_type directly inside the struct wilc.
+This fixes all "comparison to NULL could be written like ..."
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 21 ++++++---------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
- drivers/staging/wilc1000/wilc_wlan.c          | 19 +++++++++----------
- drivers/staging/wilc1000/wilc_wlan_if.h       | 11 +----------
- 4 files changed, 17 insertions(+), 35 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6e1ef99fc856..0747a0eefe92 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -839,17 +839,6 @@ static int wlan_deinit_locks(struct net_device *dev)
- 	return 0;
- }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index fd7240c..6b59058 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -434,7 +434,7 @@ s32 parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
  
--static void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
--{
--	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
--
--#ifdef WILC_SDIO
--	nwi->io_func.io_type = HIF_SDIO;
--#else
--	nwi->io_func.io_type = HIF_SPI;
--#endif
--}
--
- static int wlan_initialize_threads(struct net_device *dev)
+ 		/* Get DTIM Period */
+ 		pu8TimElm = get_tim_elm(pu8msa, u16RxLen + FCS_LEN, u8index);
+-		if (pu8TimElm != NULL)
++		if (pu8TimElm)
+ 			pstrNetworkInfo->u8DtimPeriod = pu8TimElm[3];
+ 		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
+ 		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+@@ -468,8 +468,8 @@ s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo)
  {
- 	perInterface_wlan_t *nic;
-@@ -893,7 +882,6 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	s32 s32Error = 0;
  
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+-	if (pstrNetworkInfo != NULL) {
+-		if (pstrNetworkInfo->pu8IEs != NULL) {
++	if (pstrNetworkInfo) {
++		if (pstrNetworkInfo->pu8IEs) {
+ 			kfree(pstrNetworkInfo->pu8IEs);
+ 			pstrNetworkInfo->pu8IEs = NULL;
+ 		} else {
+@@ -553,8 +553,8 @@ s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo)
  {
--	wilc_wlan_inp_t nwi;
- 	perInterface_wlan_t *nic = p_nic;
- 	int ret = 0;
- 	struct wilc *wl = nic->wilc;
-@@ -904,9 +892,12 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
+ 	s32 s32Error = 0;
  
- 		wlan_init_locks(dev);
- 
--		linux_to_wlan(&nwi, wl);
--
--		ret = wilc_wlan_init(dev, &nwi);
-+#ifdef WILC_SDIO
-+		wl->io_type = HIF_SDIO;
-+#else
-+		wl->io_type = HIF_SPI;
-+#endif
-+		ret = wilc_wlan_init(dev);
- 		if (ret < 0) {
- 			PRINT_ER("Initializing WILC_Wlan FAILED\n");
- 			ret = -EIO;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3358fe3bcd0a..0c608d73a22e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -156,6 +156,7 @@ struct wilc_vif {
- };
- 
- struct wilc {
-+	int io_type;
- 	int mac_status;
- 	bool initialized;
- 	#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f7359f79ff8d..2958689a13c6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -5,7 +5,7 @@
- 
- typedef struct {
- 	int quit;
--	wilc_wlan_io_func_t io_func;
-+	int io_type;
- 	struct wilc_hif_func hif_func;
- 	int cfg_frame_in_use;
- 	struct wilc_cfg_frame cfg_frame;
-@@ -576,7 +576,7 @@ static inline void chip_wakeup(void)
- 	u32 reg, clk_status_reg, trials = 0;
- 	u32 sleep_time;
- 
--	if ((g_wlan.io_func.io_type & 0x1) == HIF_SPI) {
-+	if ((g_wlan.io_type & 0x1) == HIF_SPI) {
- 		do {
- 			g_wlan.hif_func.hif_read_reg(1, &reg);
- 			g_wlan.hif_func.hif_write_reg(1, reg | BIT(1));
-@@ -590,7 +590,7 @@ static inline void chip_wakeup(void)
- 			} while ((wilc_get_chipid(true) == 0) && ((++trials % 3) == 0));
- 
- 		} while (wilc_get_chipid(true) == 0);
--	} else if ((g_wlan.io_func.io_type & 0x1) == HIF_SDIO)	 {
-+	} else if ((g_wlan.io_type & 0x1) == HIF_SDIO)	 {
- 		g_wlan.hif_func.hif_read_reg(0xf0, &reg);
- 		do {
- 			g_wlan.hif_func.hif_write_reg(0xf0, reg | BIT(0));
-@@ -636,12 +636,12 @@ static inline void chip_wakeup(void)
- 	u32 reg, trials = 0;
- 
- 	do {
--		if ((g_wlan.io_func.io_type & 0x1) == HIF_SPI) {
-+		if ((g_wlan.io_type & 0x1) == HIF_SPI) {
- 			g_wlan.hif_func.hif_read_reg(1, &reg);
- 			g_wlan.hif_func.hif_write_reg(1, reg & ~BIT(1));
- 			g_wlan.hif_func.hif_write_reg(1, reg | BIT(1));
- 			g_wlan.hif_func.hif_write_reg(1, reg  & ~BIT(1));
--		} else if ((g_wlan.io_func.io_type & 0x1) == HIF_SDIO)	 {
-+		} else if ((g_wlan.io_type & 0x1) == HIF_SDIO)	 {
- 			g_wlan.hif_func.hif_read_reg(0xf0, &reg);
- 			g_wlan.hif_func.hif_write_reg(0xf0, reg & ~BIT(0));
- 			g_wlan.hif_func.hif_write_reg(0xf0, reg | BIT(0));
-@@ -1252,10 +1252,10 @@ int wilc_wlan_start(void)
- 	int ret;
- 	u32 chipid;
- 
--	if (p->io_func.io_type == HIF_SDIO) {
-+	if (p->io_type == HIF_SDIO) {
- 		reg = 0;
- 		reg |= BIT(3);
--	} else if (p->io_func.io_type == HIF_SPI) {
-+	} else if (p->io_type == HIF_SPI) {
- 		reg = 1;
- 	}
- 	acquire_bus(ACQUIRE_ONLY);
-@@ -1649,7 +1649,7 @@ _fail_:
- 	return chipid;
- }
- 
--int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
-+int wilc_wlan_init(struct net_device *dev)
- {
- 	int ret = 0;
- 	perInterface_wlan_t *nic = netdev_priv(dev);
-@@ -1660,8 +1660,7 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
- 	memset((void *)&g_wlan, 0, sizeof(wilc_wlan_dev_t));
--	memcpy((void *)&g_wlan.io_func, (void *)&inp->io_func,
--	       sizeof(wilc_wlan_io_func_t));
-+	g_wlan.io_type = wilc->io_type;
- 
- #ifdef WILC_SDIO
- 	if (!wilc_hif_sdio.hif_init(wilc, wilc_debug)) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 5980ece49daa..2f465f4fb063 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -72,10 +72,6 @@ typedef struct {
- 	u32 block_size;
- } sdio_cmd53_t;
- 
--typedef struct {
--	int io_type;
--} wilc_wlan_io_func_t;
--
- #define WILC_MAC_INDICATE_STATUS	0x1
- #define WILC_MAC_STATUS_INIT		-1
- #define WILC_MAC_STATUS_READY		0
-@@ -83,10 +79,6 @@ typedef struct {
- 
- #define WILC_MAC_INDICATE_SCAN		0x2
- 
--typedef struct {
--	wilc_wlan_io_func_t io_func;
--} wilc_wlan_inp_t;
--
- struct tx_complete_data {
- 	int size;
- 	void *buff;
-@@ -917,8 +909,7 @@ typedef enum {
- 	WID_MAX				= 0xFFFF
- } WID_T;
- 
--int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp);
--
-+int wilc_wlan_init(struct net_device *dev);
- void wilc_bus_set_max_speed(void);
- void wilc_bus_set_default_speed(void);
- u32 wilc_get_chipid(u8 update);
+-	if (pstrConnectRespInfo != NULL) {
+-		if (pstrConnectRespInfo->pu8RespIEs != NULL) {
++	if (pstrConnectRespInfo) {
++		if (pstrConnectRespInfo->pu8RespIEs) {
+ 			kfree(pstrConnectRespInfo->pu8RespIEs);
+ 			pstrConnectRespInfo->pu8RespIEs = NULL;
+ 		} else {
 -- 
-2.1.0.rc2
+2.1.4
 
