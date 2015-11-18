@@ -1,324 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20793 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbbKRGJj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34817 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932273AbbKROq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:39 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/16] staging: wilc1000: wilc_wlan_cfg_set: pass struct wilc
-Date: Wed, 18 Nov 2015 15:11:34 +0900
-Message-ID: <1447827097-9436-14-git-send-email-glen.lee@atmel.com> (sfid-20151118_071410_417244_B857D24A)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 09:46:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 01/27] adm80211: move under admtek vendor directory
+Date: Wed, 18 Nov 2015 16:45:40 +0200
+Message-Id: <1447857966-19560-2-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155933_120225_1A091D05)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch pass struct wilc to the function and use it instead of global
-variable wilc_dev.
+Part of reorganising wireless drivers directory and Kconfig.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.c |   2 +-
- drivers/staging/wilc1000/linux_wlan.c       | 101 ++++++++++++++++------------
- drivers/staging/wilc1000/wilc_wlan.c        |   5 +-
- drivers/staging/wilc1000/wilc_wlan.h        |   4 +-
- 4 files changed, 63 insertions(+), 49 deletions(-)
+ MAINTAINERS                                 |    2 +-
+ drivers/net/wireless/Kconfig                |   29 ++-----------------
+ drivers/net/wireless/Makefile               |    4 +--
+ drivers/net/wireless/admtek/Kconfig         |   41 +++++++++++++++++++++++++++
+ drivers/net/wireless/admtek/Makefile        |    1 +
+ drivers/net/wireless/{ => admtek}/adm8211.c |    0
+ drivers/net/wireless/{ => admtek}/adm8211.h |    0
+ 7 files changed, 47 insertions(+), 30 deletions(-)
+ create mode 100644 drivers/net/wireless/admtek/Kconfig
+ create mode 100644 drivers/net/wireless/admtek/Makefile
+ rename drivers/net/wireless/{ => admtek}/adm8211.c (100%)
+ rename drivers/net/wireless/{ => admtek}/adm8211.h (100%)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index dc290d1..6278aec 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -616,7 +616,7 @@ s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 	} else if (mode == SET_CFG) {
- 		for (counter = 0; counter < count; counter++) {
- 			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].id);
--			if (!wilc_wlan_cfg_set(!counter,
-+			if (!wilc_wlan_cfg_set(wilc, !counter,
- 					       wids[counter].id,
- 					       wids[counter].val,
- 					       wids[counter].size,
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 43458e6..792cc0b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -537,179 +537,194 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 35fe7ae0492e..f1adb66094f1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -388,7 +388,7 @@ ADM8211 WIRELESS DRIVER
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/
+ S:	Orphan
+-F:	drivers/net/wireless/adm8211.*
++F:	drivers/net/wireless/admtek/adm8211.*
  
- 	*(int *)c_val = 1;
+ ADP1653 FLASH CONTROLLER DRIVER
+ M:	Sakari Ailus <sakari.ailus@iki.fi>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f9f94229bf1b..7d8f47117c4d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -17,6 +17,8 @@ menuconfig WLAN
  
--	if (!wilc_wlan_cfg_set(1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
- 		goto _fail_;
+ if WLAN
  
- 	c_val[0] = 0;
--	if (!wilc_wlan_cfg_set(0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
- 		goto _fail_;
++source "drivers/net/wireless/admtek/Kconfig"
++
+ config PCMCIA_RAYCS
+ 	tristate "Aviator/Raytheon 2.4GHz wireless support"
+ 	depends on PCMCIA
+@@ -214,33 +216,6 @@ config USB_NET_RNDIS_WLAN
  
- 	c_val[0] = INFRASTRUCTURE;
--	if (!wilc_wlan_cfg_set(0, WID_BSS_TYPE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
+ 	  If you choose to build a module, it'll be called rndis_wlan.
  
- 	c_val[0] = RATE_AUTO;
--	if (!wilc_wlan_cfg_set(0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
- 		goto _fail_;
+-config ADM8211
+-	tristate "ADMtek ADM8211 support"
+-	depends on MAC80211 && PCI
+-	select CRC32
+-	select EEPROM_93CX6
+-	---help---
+-	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
+-	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
+-
+-	  Xterasys Cardbus XN-2411b
+-	  Blitz NetWave Point PC
+-	  TrendNet 221pc
+-	  Belkin F5D6001
+-	  SMC 2635W
+-	  Linksys WPC11 v1
+-	  Fiberline FL-WL-200X
+-	  3com Office Connect (3CRSHPW796)
+-	  Corega WLPCIB-11
+-	  SMC 2602W V2 EU
+-	  D-Link DWL-520 Revision C
+-
+-	  However, some of these cards have been replaced with other chips
+-	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
+-	  the Ralink RT2400 (SMC2635W) without a model number change.
+-
+-	  Thanks to Infineon-ADMtek for their support of this driver.
+-
+ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
  
- 	c_val[0] = G_MIXED_11B_2_MODE;
--	if (!wilc_wlan_cfg_set(0, WID_11G_OPERATING_MODE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11G_OPERATING_MODE, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
+ config MAC80211_HWSIM
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 740fdd353c5d..be215f43ec1d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -2,6 +2,8 @@
+ # Makefile for the Linux Wireless network device drivers.
+ #
  
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
- 		goto _fail_;
++obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++
+ obj-$(CONFIG_IPW2100) += ipw2x00/
+ obj-$(CONFIG_IPW2200) += ipw2x00/
  
- 	c_val[0] = G_SHORT_PREAMBLE;
--	if (!wilc_wlan_cfg_set(0, WID_PREAMBLE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_PREAMBLE, c_val, 1, 0, 0))
- 		goto _fail_;
+@@ -35,8 +37,6 @@ obj-$(CONFIG_LIBERTAS)		+= libertas/
  
- 	c_val[0] = AUTO_PROT;
--	if (!wilc_wlan_cfg_set(0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
- 		goto _fail_;
+ obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
  
- 	c_val[0] = ACTIVE_SCAN;
--	if (!wilc_wlan_cfg_set(0, WID_SCAN_TYPE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_SCAN_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
+-obj-$(CONFIG_ADM8211)	+= adm8211.o
+-
+ obj-$(CONFIG_MWL8K)	+= mwl8k.o
  
- 	c_val[0] = SITE_SURVEY_OFF;
--	if (!wilc_wlan_cfg_set(0, WID_SITE_SURVEY, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_SITE_SURVEY, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	*((int *)c_val) = 0xffff;
--	if (!wilc_wlan_cfg_set(0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
- 		goto _fail_;
- 
- 	*((int *)c_val) = 2346;
--	if (!wilc_wlan_cfg_set(0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 0;
--	if (!wilc_wlan_cfg_set(0, WID_BCAST_SSID, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_BCAST_SSID, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_QOS_ENABLE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_QOS_ENABLE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = NO_POWERSAVE;
--	if (!wilc_wlan_cfg_set(0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = NO_SECURITY; /* NO_ENCRYPT, 0x79 */
--	if (!wilc_wlan_cfg_set(0, WID_11I_MODE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11I_MODE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = OPEN_SYSTEM;
--	if (!wilc_wlan_cfg_set(0, WID_AUTH_TYPE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_AUTH_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	strcpy(c_val, "123456790abcdef1234567890");
--	if (!wilc_wlan_cfg_set(0, WID_WEP_KEY_VALUE, c_val, (strlen(c_val) + 1), 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_WEP_KEY_VALUE, c_val,
-+			       (strlen(c_val) + 1), 0, 0))
- 		goto _fail_;
- 
- 	strcpy(c_val, "12345678");
--	if (!wilc_wlan_cfg_set(0, WID_11I_PSK, c_val, (strlen(c_val)), 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11I_PSK, c_val, (strlen(c_val)), 0,
-+			       0))
- 		goto _fail_;
- 
- 	strcpy(c_val, "password");
--	if (!wilc_wlan_cfg_set(0, WID_1X_KEY, c_val, (strlen(c_val) + 1), 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_1X_KEY, c_val, (strlen(c_val) + 1),
-+			       0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 192;
- 	c_val[1] = 168;
- 	c_val[2] = 1;
- 	c_val[3] = 112;
--	if (!wilc_wlan_cfg_set(0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 3;
--	if (!wilc_wlan_cfg_set(0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 3;
--	if (!wilc_wlan_cfg_set(0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = NORMAL_ACK;
--	if (!wilc_wlan_cfg_set(0, WID_ACK_POLICY, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_ACK_POLICY, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 0;
--	if (!wilc_wlan_cfg_set(0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1,
-+			       0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 48;
--	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = 28;
--	if (!wilc_wlan_cfg_set(0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	*((int *)c_val) = 100;
--	if (!wilc_wlan_cfg_set(0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = REKEY_DISABLE;
--	if (!wilc_wlan_cfg_set(0, WID_REKEY_POLICY, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_REKEY_POLICY, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	*((int *)c_val) = 84600;
--	if (!wilc_wlan_cfg_set(0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
- 		goto _fail_;
- 
- 	*((int *)c_val) = 500;
--	if (!wilc_wlan_cfg_set(0, WID_REKEY_PACKET_COUNT, c_val, 4, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_REKEY_PACKET_COUNT, c_val, 4, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = G_SELF_CTS_PROT;
--	if (!wilc_wlan_cfg_set(0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_11N_ENABLE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_ENABLE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = HT_MIXED_MODE;
--	if (!wilc_wlan_cfg_set(0, WID_11N_OPERATING_MODE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_OPERATING_MODE, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	memcpy(c_val, mac_add, 6);
- 
--	if (!wilc_wlan_cfg_set(0, WID_MAC_ADDR, c_val, 6, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_MAC_ADDR, c_val, 6, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = DETECT_PROTECT_REPORT;
--	if (!wilc_wlan_cfg_set(0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1,
-+			       0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = RTS_CTS_NONHT_PROT;
--	if (!wilc_wlan_cfg_set(0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 0;
--	if (!wilc_wlan_cfg_set(0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = MIMO_MODE;
--	if (!wilc_wlan_cfg_set(0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
- 	c_val[0] = 7;
--	if (!wilc_wlan_cfg_set(0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0, 0))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0,
-+			       0))
- 		goto _fail_;
- 
- 	c_val[0] = 1;
--	if (!wilc_wlan_cfg_set(0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, 1))
-+	if (!wilc_wlan_cfg_set(wilc, 0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1,
-+			       1, 1))
- 		goto _fail_;
- 
- 	return 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 9ac6ad7..03c707b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1499,11 +1499,10 @@ static int wilc_wlan_cfg_commit(struct wilc *wilc, int type, u32 drv_handler)
- 	return 0;
- }
- 
--int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
--		      int commit, u32 drv_handler)
-+int wilc_wlan_cfg_set(struct wilc *wilc, int start, u32 wid, u8 *buffer,
-+		      u32 buffer_size, int commit, u32 drv_handler)
- {
- 	wilc_wlan_dev_t *p = &g_wlan;
--	struct wilc *wilc = wilc_dev;
- 	u32 offset;
- 	int ret_size;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index c3f13aa..e1a8c73 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -289,8 +289,8 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count);
- void wilc_handle_isr(struct wilc *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
--int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
--		      int commit, u32 drv_handler);
-+int wilc_wlan_cfg_set(struct wilc *wilc, int start, u32 wid, u8 *buffer,
-+		      u32 buffer_size, int commit, u32 drv_handler);
- int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drv_handler);
- int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
+diff --git a/drivers/net/wireless/admtek/Kconfig b/drivers/net/wireless/admtek/Kconfig
+new file mode 100644
+index 000000000000..d5a2dc728078
+--- /dev/null
++++ b/drivers/net/wireless/admtek/Kconfig
+@@ -0,0 +1,41 @@
++config WLAN_VENDOR_ADMTEK
++	bool "ADMtek devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_ADMTEK
++
++config ADM8211
++	tristate "ADMtek ADM8211 support"
++	depends on MAC80211 && PCI
++	select CRC32
++	select EEPROM_93CX6
++	---help---
++	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
++	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
++
++	  Xterasys Cardbus XN-2411b
++	  Blitz NetWave Point PC
++	  TrendNet 221pc
++	  Belkin F5D6001
++	  SMC 2635W
++	  Linksys WPC11 v1
++	  Fiberline FL-WL-200X
++	  3com Office Connect (3CRSHPW796)
++	  Corega WLPCIB-11
++	  SMC 2602W V2 EU
++	  D-Link DWL-520 Revision C
++
++	  However, some of these cards have been replaced with other chips
++	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
++	  the Ralink RT2400 (SMC2635W) without a model number change.
++
++	  Thanks to Infineon-ADMtek for their support of this driver.
++
++endif # WLAN_VENDOR_ADMTEK
+diff --git a/drivers/net/wireless/admtek/Makefile b/drivers/net/wireless/admtek/Makefile
+new file mode 100644
+index 000000000000..9cca7e571cdd
+--- /dev/null
++++ b/drivers/net/wireless/admtek/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_ADM8211)	+= adm8211.o
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
+similarity index 100%
+rename from drivers/net/wireless/adm8211.c
+rename to drivers/net/wireless/admtek/adm8211.c
+diff --git a/drivers/net/wireless/adm8211.h b/drivers/net/wireless/admtek/adm8211.h
+similarity index 100%
+rename from drivers/net/wireless/adm8211.h
+rename to drivers/net/wireless/admtek/adm8211.h
 -- 
-1.9.1
+1.7.9.5
 
