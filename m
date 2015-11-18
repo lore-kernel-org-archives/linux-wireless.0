@@ -1,112 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20665 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbbKRGJP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34923 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933281AbbKROqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:15 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/16] staging: wilc1000: wilc_spi_read: pass struct wilc
-Date: Wed, 18 Nov 2015 15:11:30 +0900
-Message-ID: <1447827097-9436-10-git-send-email-glen.lee@atmel.com> (sfid-20151118_070918_553745_3B0520DA)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 09:46:53 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 21/27] realtek: create separate Kconfig file
+Date: Wed, 18 Nov 2015 16:46:00 +0200
+Message-Id: <1447857966-19560-22-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155144_962842_44167D6C)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new function parameter struct wilc and use it instead of
-global variable wilc_dev, and pass wilc to the functions as well.
+Add new a Kconfig file and a vendor config for realtek. Also update MAINTAINERS
+which we missed to do when earlier moving rtlwifi.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/linux_wlan_spi.c |  4 ++--
- drivers/staging/wilc1000/linux_wlan_spi.h |  2 +-
- drivers/staging/wilc1000/wilc_spi.c       | 10 +++++-----
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ MAINTAINERS                          |    8 ++++----
+ drivers/net/wireless/Kconfig         |    5 +----
+ drivers/net/wireless/Makefile        |    3 +--
+ drivers/net/wireless/realtek/Kconfig |   18 ++++++++++++++++++
+ 4 files changed, 24 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/Kconfig
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 7be750b..5066191 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -112,9 +112,9 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
- 	return ret;
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2c41981e4fdd..a9f7f968f64e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9035,7 +9035,7 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Orphan
+-F:	drivers/net/wireless/rtl818x/rtl8180/
++F:	drivers/net/wireless/realtek/rtl818x/rtl8180/
  
--int wilc_spi_read(u8 *rb, u32 rlen)
-+int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
- {
--	struct spi_device *spi = to_spi_device(wilc_dev->dev);
-+	struct spi_device *spi = to_spi_device(wilc->dev);
- 	int ret;
+ RTL8187 WIRELESS DRIVER
+ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
+@@ -9045,7 +9045,7 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+-F:	drivers/net/wireless/rtl818x/rtl8187/
++F:	drivers/net/wireless/realtek/rtl818x/rtl8187/
  
- 	if (rlen > 0) {
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index 41d47dc..16f0b9f 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -6,6 +6,6 @@
+ RTL8192CE WIRELESS DRIVER
+ M:	Larry Finger <Larry.Finger@lwfinger.net>
+@@ -9054,8 +9054,8 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+-F:	drivers/net/wireless/rtlwifi/
+-F:	drivers/net/wireless/rtlwifi/rtl8192ce/
++F:	drivers/net/wireless/realtek/rtlwifi/
++F:	drivers/net/wireless/realtek/rtlwifi/rtl8192ce/
  
- int wilc_spi_init(void);
- int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len);
--int wilc_spi_read(u8 *rb, u32 rlen);
-+int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen);
- int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 0d89a282..f5db2fc 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -365,7 +365,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				/**
- 				 * Read bytes
- 				 **/
--				if (!wilc_spi_read(&b[ix], nbytes)) {
-+				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
- 					PRINT_ER("[wilc spi]: Failed data block read, bus error...\n");
- 					result = N_FAIL;
- 					goto _error_;
-@@ -375,7 +375,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 * Read Crc
- 				 **/
- 				if (!g_spi.crc_off) {
--					if (!wilc_spi_read(crc, 2)) {
-+					if (!wilc_spi_read(wilc, crc, 2)) {
- 						PRINT_ER("[wilc spi]: Failed data block crc read, bus error...\n");
- 						result = N_FAIL;
- 						goto _error_;
-@@ -406,7 +406,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 **/
- 				retry = 10;
- 				do {
--					if (!wilc_spi_read(&rsp, 1)) {
-+					if (!wilc_spi_read(wilc, &rsp, 1)) {
- 						PRINT_ER("[wilc spi]: Failed data response read, bus error...\n");
- 						result = N_FAIL;
- 						break;
-@@ -422,7 +422,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				/**
- 				 * Read bytes
- 				 **/
--				if (!wilc_spi_read(&b[ix], nbytes)) {
-+				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
- 					PRINT_ER("[wilc spi]: Failed data block read, bus error...\n");
- 					result = N_FAIL;
- 					break;
-@@ -432,7 +432,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 * Read Crc
- 				 **/
- 				if (!g_spi.crc_off) {
--					if (!wilc_spi_read(crc, 2)) {
-+					if (!wilc_spi_read(wilc, crc, 2)) {
- 						PRINT_ER("[wilc spi]: Failed data block crc read, bus error...\n");
- 						result = N_FAIL;
- 						break;
+ RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
+ M:	Jes Sorensen <Jes.Sorensen@redhat.com>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c92671f8b1c6..28af8b10a66e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -24,6 +24,7 @@ source "drivers/net/wireless/cisco/Kconfig"
+ source "drivers/net/wireless/intel/Kconfig"
+ source "drivers/net/wireless/intersil/Kconfig"
+ source "drivers/net/wireless/marvell/Kconfig"
++source "drivers/net/wireless/realtek/Kconfig"
+ source "drivers/net/wireless/st/Kconfig"
+ source "drivers/net/wireless/zydas/Kconfig"
+ 
+@@ -81,8 +82,6 @@ config USB_NET_RNDIS_WLAN
+ 
+ 	  If you choose to build a module, it'll be called rndis_wlan.
+ 
+-source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+-
+ config MAC80211_HWSIM
+ 	tristate "Simulated radio testing tool for mac80211"
+ 	depends on MAC80211
+@@ -99,8 +98,6 @@ config MAC80211_HWSIM
+ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/mediatek/Kconfig"
+-source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
+-source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/rsi/Kconfig"
+ 
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 679a1a0a048d..12f6c59668a5 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -9,11 +9,10 @@ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
+ obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
+ obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
+ obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
++obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
+ obj-$(CONFIG_WLAN_VENDOR_ST) += st/
+ obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
+ 
+-obj-$(CONFIG_WLAN)		+= realtek/
+-
+ # 16-bit wireless PCMCIA client drivers
+ obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+diff --git a/drivers/net/wireless/realtek/Kconfig b/drivers/net/wireless/realtek/Kconfig
+new file mode 100644
+index 000000000000..8a8ba2003964
+--- /dev/null
++++ b/drivers/net/wireless/realtek/Kconfig
+@@ -0,0 +1,18 @@
++config WLAN_VENDOR_REALTEK
++	bool "Realtek devices"
++	default y
++	---help---
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
++
++if WLAN_VENDOR_REALTEK
++
++source "drivers/net/wireless/realtek/rtl818x/Kconfig"
++source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
++source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
++
++endif # WLAN_VENDOR_REALTEK
 -- 
-1.9.1
+1.7.9.5
 
