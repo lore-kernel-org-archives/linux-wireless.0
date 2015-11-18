@@ -1,207 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:33161 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753435AbbKBOEG (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:40414 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752098AbbKRIKX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 09:04:06 -0500
-Received: by lbbec13 with SMTP id ec13so89526537lbb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2015 06:04:05 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/8] ath10k: remove txmode from skb_cb
-Date: Mon,  2 Nov 2015 15:03:03 +0100
-Message-Id: <1446472988-2603-4-git-send-email-michal.kazior@tieto.com> (sfid-20151102_150417_290134_20DF266A)
-In-Reply-To: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 18 Nov 2015 03:10:23 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhao, Yingying" <yingying.zhao@intel.com>,
+	"Guo, Chaohong" <chaohong.guo@intel.com>
+Subject: pull request: iwlwifi firmware for iwlmvm devices
+Date: Wed, 18 Nov 2015 08:10:11 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F0C94@hasmsx107.ger.corp.intel.com> (sfid-20151118_091037_541647_34939E97)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to keep it in the struct because
-it can be passed as function argument down the tx
-path.
+Hi,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |  1 -
- drivers/net/wireless/ath/ath10k/htt.h    |  3 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  9 +++----
- drivers/net/wireless/ath/ath10k/mac.c    | 40 ++++++++++++++++++++++++--------
- 4 files changed, 37 insertions(+), 16 deletions(-)
+This is a release of the -16.ucode firmware for Intel Wireless devices
+driven by iwlmvm.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 64d9a63e6b48..efc34b1412b4 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -85,7 +85,6 @@ struct ath10k_skb_cb {
- 	dma_addr_t paddr;
- 	u8 eid;
- 	u8 vdev_id;
--	enum ath10k_hw_txrx_mode txmode;
+This firmware is supported by kernel 4.3 and newer.
+Please pull.
+
+Thanks!
+
+The following changes since commit 1406ec112423c8f70d503d3cd44c6f8e147f7ac3:
+
+  linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+(2015-11-11 16:18:35 -0800)
+
+are available in the git repository at:
+
  
- 	struct {
- 		u8 tid;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 2bad50e520b5..9d15924b1f90 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1597,6 +1597,7 @@ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
- void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
- int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
--int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
-+int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		  struct sk_buff *msdu);
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git
+tags/iwlwifi-fw-2015-11-18
+
+for you to fetch changes up to 7514f28c7621398a187e98b9439fba8f9fa5dca0:
+
+  iwlwifi: add new -16 firmware for iwlmvm devices (2015-11-18 09:51:46
++0200)
+
+----------------------------------------------------------------
+deliver -16.ucode
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: add new -16 firmware for iwlmvm devices
+
+ WHENCE                 |  15 +++++++++++++++
+ iwlwifi-3160-16.ucode  | Bin 0 -> 918212 bytes
+ iwlwifi-7260-16.ucode  | Bin 0 -> 1049284 bytes
+ iwlwifi-7265-16.ucode  | Bin 0 -> 1180356 bytes
+ iwlwifi-7265D-16.ucode | Bin 0 -> 1384500 bytes
+ iwlwifi-8000C-16.ucode | Bin 0 -> 2351636 bytes
+ 6 files changed, 15 insertions(+)
+ create mode 100644 iwlwifi-3160-16.ucode
+ create mode 100644 iwlwifi-7260-16.ucode
+ create mode 100644 iwlwifi-7265-16.ucode
+ create mode 100644 iwlwifi-7265D-16.ucode
+ create mode 100644 iwlwifi-8000C-16.ucode
+
+diff --git a/WHENCE b/WHENCE
+index cbe528e..e06b53b 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -833,6 +833,9 @@ Version: 25.17.12.0
+ File: iwlwifi-7260-13.ucode
+ Version: 25.30.13.0
  
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index eaa9263f6151..bada9695a4fb 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -525,7 +525,8 @@ err:
- 	return res;
- }
- 
--int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
-+int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		  struct sk_buff *msdu)
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
-@@ -577,7 +578,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	} else if (!skb_cb->htt.nohwcrypt &&
--		   skb_cb->txmode == ATH10K_HW_TXRX_RAW &&
-+		   txmode == ATH10K_HW_TXRX_RAW &&
- 		   ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	}
-@@ -590,7 +591,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		goto err_free_msdu_id;
- 	}
- 
--	switch (skb_cb->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-@@ -619,7 +620,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 
- 			frags_paddr = skb_cb->htt.txbuf_paddr;
- 		}
--		flags0 |= SM(skb_cb->txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
- 		break;
- 	case ATH10K_HW_TXRX_MGMT:
- 		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 14a705ca87b2..dd24bc970b00 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3324,24 +3324,24 @@ unlock:
- 	return ret;
- }
- 
--static void ath10k_mac_tx(struct ath10k *ar, struct sk_buff *skb)
-+static void ath10k_mac_tx(struct ath10k *ar, enum ath10k_hw_txrx_mode txmode,
-+			  struct sk_buff *skb)
- {
--	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
- 	struct ath10k_htt *htt = &ar->htt;
- 	int ret = 0;
- 
--	switch (cb->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 	case ATH10K_HW_TXRX_ETHERNET:
--		ret = ath10k_htt_tx(htt, skb);
-+		ret = ath10k_htt_tx(htt, txmode, skb);
- 		break;
- 	case ATH10K_HW_TXRX_MGMT:
- 		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
- 			     ar->fw_features))
- 			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
- 		else if (ar->htt.target_version_major >= 3)
--			ret = ath10k_htt_tx(htt, skb);
-+			ret = ath10k_htt_tx(htt, txmode, skb);
- 		else
- 			ret = ath10k_htt_mgmt_tx(htt, skb);
- 		break;
-@@ -3371,9 +3371,13 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- {
- 	struct ath10k *ar = container_of(work, struct ath10k, offchan_tx_work);
- 	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
- 	struct ieee80211_hdr *hdr;
-+	struct ieee80211_vif *vif;
-+	struct ieee80211_sta *sta;
- 	struct sk_buff *skb;
- 	const u8 *peer_addr;
-+	enum ath10k_hw_txrx_mode txmode;
- 	int vdev_id;
- 	int ret;
- 	unsigned long time_left;
-@@ -3423,7 +3427,22 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		ar->offchan_tx_skb = skb;
- 		spin_unlock_bh(&ar->data_lock);
- 
--		ath10k_mac_tx(ar, skb);
-+		/* It's safe to access vif and sta - conf_mutex guarantees that
-+		 * sta_state() and remove_interface() are locked exclusively
-+		 * out wrt to this offchannel worker.
-+		 */
-+		arvif = ath10k_get_arvif(ar, vdev_id);
-+		if (arvif) {
-+			vif = arvif->vif;
-+			sta = ieee80211_find_sta(vif, peer_addr);
-+		} else {
-+			vif = NULL;
-+			sta = NULL;
-+		}
++File: iwlwifi-7260-16.ucode
++Version 16.242414.0
 +
-+		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ File: iwlwifi-3160-7.ucode
+ Version: 22.1.7.0
+ 
+@@ -851,6 +854,9 @@ Version: 25.17.12.0
+ File: iwlwifi-3160-13.ucode
+ Version: 25.30.13.0
+ 
++File: iwlwifi-3160-16.ucode
++Version 16.242414.0
 +
-+		ath10k_mac_tx(ar, txmode, skb);
+ File: iwlwifi-7265-8.ucode
+ Version: 22.24.8.0
  
- 		time_left =
- 		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
-@@ -3645,20 +3664,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	enum ath10k_hw_txrx_mode txmode;
+@@ -866,6 +872,9 @@ Version: 25.17.12.0
+ File: iwlwifi-7265-13.ucode
+ Version: 25.30.13.0
  
- 	/* We should disable CCK RATE due to P2P */
- 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
- 		ath10k_dbg(ar, ATH10K_DBG_MAC, "IEEE80211_TX_CTL_NO_CCK_RATE\n");
- 
-+	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
++File: iwlwifi-7265-16.ucode
++Version 16.242414.0
 +
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
--	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
--								skb);
+ File: iwlwifi-7265D-10.ucode
+ Version: 23.15.10.0
  
--	switch (ATH10K_SKB_CB(skb)->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		ath10k_tx_h_nwifi(hw, skb);
-@@ -3695,7 +3715,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		}
- 	}
+@@ -875,9 +884,15 @@ Version: 25.17.12.0
+ File: iwlwifi-7265D-13.ucode
+ Version: 25.30.13.0
  
--	ath10k_mac_tx(ar, skb);
-+	ath10k_mac_tx(ar, txmode, skb);
- }
++File: iwlwifi-7265D-16.ucode
++Version 16.242414.0
++
+ File: iwlwifi-8000C-13.ucode
+ Version: 25.30.13.0
  
- /* Must not be called with conf_mutex held as workers can use that also. */
--- 
-2.1.4
++File: iwlwifi-8000C-16.ucode
++Version 16.242414.0
++
+ Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
+ 
+ Also available from
+http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
+diff --git a/iwlwifi-3160-16.ucode b/iwlwifi-3160-16.ucode
+new file mode 100644
+index 0000000..f6a02b6
+Binary files /dev/null and b/iwlwifi-3160-16.ucode differ
+diff --git a/iwlwifi-7260-16.ucode b/iwlwifi-7260-16.ucode
+new file mode 100644
+index 0000000..1f954da
+Binary files /dev/null and b/iwlwifi-7260-16.ucode differ
+diff --git a/iwlwifi-7265-16.ucode b/iwlwifi-7265-16.ucode
+new file mode 100644
+index 0000000..37060e6
+Binary files /dev/null and b/iwlwifi-7265-16.ucode differ
+diff --git a/iwlwifi-7265D-16.ucode b/iwlwifi-7265D-16.ucode
+new file mode 100644
+index 0000000..b8efb69
+Binary files /dev/null and b/iwlwifi-7265D-16.ucode differ
+diff --git a/iwlwifi-8000C-16.ucode b/iwlwifi-8000C-16.ucode
+new file mode 100644
+index 0000000..0a43568
+Binary files /dev/null and b/iwlwifi-8000C-16.ucode differ
 
