@@ -1,60 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47225 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161044AbbKFJiK (ORCPT
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:33279 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222AbbKRXWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:38:10 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/26] staging: wilc1000: remove varialbe sdio_set_default_speed
-Date: Fri, 6 Nov 2015 18:40:06 +0900
-Message-ID: <1446802823-22598-10-git-send-email-glen.lee@atmel.com> (sfid-20151106_103823_685266_961979E2)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 18:22:38 -0500
+Received: by qgea14 with SMTP id a14so40139770qge.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2015 15:22:37 -0800 (PST)
+From: Steve deRosier <derosier@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Subject: [PATCH v2 1/2] ath6kl_sdio: Add reset gpio module parameter for CHIP_PWD_L pin
+Date: Wed, 18 Nov 2015 15:20:47 -0800
+Message-Id: <1447888848-19530-2-git-send-email-steve.derosier@lairdtech.com> (sfid-20151119_002241_243123_5E43314C)
+In-Reply-To: <1447888848-19530-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1447888848-19530-1-git-send-email-steve.derosier@lairdtech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes sdio_set_default_speed of wilc_wlan_io_func_t which is
-not used anymore and also remove struct sdio since it is empty.
+Many ath6k chips have a reset pin, usually labeled CHIP_PWD_L. This pin can
+be pulled low by the host processor to hold the wifi chip in reset. By
+holding the chip in reset, the lowest power consumption available can be
+achieved.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This adds a module parameter so the ath6kl_sdio driver can control the
+CHIP_PWD_L pin if the implementer so desires. This code is only available
+if GPIOLIB is configured.
+
+Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   | 1 -
- drivers/staging/wilc1000/wilc_wlan_if.h | 3 ---
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c | 73 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 72 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 9ecf307..b37ef4d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -894,7 +894,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- 	nwi->io_func.io_type = HIF_SDIO;
- 	nwi->io_func.io_init = linux_sdio_init;
- 	nwi->io_func.io_deinit = linux_sdio_deinit;
--	nwi->io_func.u.sdio.sdio_set_default_speed = linux_sdio_set_default_speed;
- #else
- 	nwi->io_func.io_type = HIF_SPI;
- 	nwi->io_func.io_init = linux_spi_init;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 2caad28..4568457 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -78,9 +78,6 @@ typedef struct {
- 	void (*io_deinit)(void *);
- 	union {
- 		struct {
--			int (*sdio_set_default_speed)(void);
--		} sdio;
--		struct {
- 			int (*spi_max_speed)(void);
- 			int (*spi_tx)(u8 *, u32);
- 			int (*spi_rx)(u8 *, u32);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index eab0ab9..c0755eb 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -23,6 +23,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sd.h>
++#include <linux/gpio.h>
+ #include "hif.h"
+ #include "hif-ops.h"
+ #include "target.h"
+@@ -67,8 +68,15 @@ struct ath6kl_sdio {
+ 
+ 	/* protects access to wr_asyncq */
+ 	spinlock_t wr_async_lock;
++
+ };
+ 
++static unsigned int reset_pwd_gpio = ARCH_NR_GPIOS;
++#ifdef CONFIG_GPIOLIB
++module_param(reset_pwd_gpio, uint, 0644);
++MODULE_PARM_DESC(reset_pwd_gpio, "WIFI CHIP_PWD reset pin GPIO");
++#endif
++
+ #define CMD53_ARG_READ          0
+ #define CMD53_ARG_WRITE         1
+ #define CMD53_ARG_BLOCK_BASIS   1
+@@ -1414,20 +1422,83 @@ static struct sdio_driver ath6kl_sdio_driver = {
+ 	.drv.pm = ATH6KL_SDIO_PM_OPS,
+ };
+ 
++/* Delay to avoid the mmc driver calling the probe on the prior notice of
++ * the chip, which we just killed. If this is missing, it results in a
++ * spurious warning:
++ * "ath6kl_sdio: probe of mmc0:0001:1 failed with error -110"
++ *
++ * Time chosen experimentally, with padding
++ */
++#define ATH6KL_MMC_PROBE_DELAY	150
++
++static int ath6kl_sdio_init_gpio(void)
++{
++	int ret = 0;
++
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		/* Request the reset GPIO, and assert it to make sure we get a
++		 * clean boot in-case we had a floating input or other issue.
++		 */
++		ret = gpio_request_one(reset_pwd_gpio,
++				       GPIOF_OUT_INIT_LOW |
++				       GPIOF_EXPORT_DIR_FIXED,
++				       "WIFI_RESET");
++		if (ret) {
++			ath6kl_err("Unable to get WIFI power gpio: %d\n", ret);
++			return ret;
++		}
++
++		ath6kl_dbg(ATH6KL_DBG_SUSPEND, "Setup wifi gpio #%d\n",
++			   reset_pwd_gpio);
++		usleep_range(20, 50); /* Pin must be asserted at least 5 usec */
++		gpio_set_value(reset_pwd_gpio, 1); /* De-assert the pin */
++
++		msleep(ATH6KL_MMC_PROBE_DELAY);
++	}
++
++	return 0;
++}
++
++static void ath6kl_sdio_release_gpio(void)
++{
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		/* Be sure we leave the chip in reset when we unload and also
++		 * release the GPIO
++		 */
++		gpio_set_value(reset_pwd_gpio, 0);
++		gpio_free(reset_pwd_gpio);
++	}
++}
++
+ static int __init ath6kl_sdio_init(void)
+ {
+ 	int ret;
+ 
+-	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	ret = ath6kl_sdio_init_gpio();
+ 	if (ret)
++		goto err_gpio;
++
++	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	if (ret) {
+ 		ath6kl_err("sdio driver registration failed: %d\n", ret);
++		goto err_register;
++	}
+ 
+ 	return ret;
++
++err_register:
++	ath6kl_sdio_release_gpio();
++
++err_gpio:
++	return ret;
+ }
+ 
+ static void __exit ath6kl_sdio_exit(void)
+ {
+ 	sdio_unregister_driver(&ath6kl_sdio_driver);
++
++	if (gpio_is_valid(reset_pwd_gpio))
++		ath6kl_sdio_release_gpio();
+ }
+ 
+ module_init(ath6kl_sdio_init);
 -- 
 1.9.1
 
