@@ -1,66 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:38488 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752419AbbK3J45 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34919 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933280AbbKROqw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 04:56:57 -0500
-Date: Mon, 30 Nov 2015 11:56:52 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Michal Sojka <sojkam1@fel.cvut.cz>
-Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
-	s.sander@nordsys.de, wireless-regdb@lists.infradead.org,
-	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
-	Jan =?utf-8?B?S2Fpc3Jsw61r?= <kaisrja1@fel.cvut.cz>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v2 4/8] cfg80211: reg: Properly handle rules for 5 and 10
- MHz channels
-Message-ID: <20151130095652.GA7054@w1.fi> (sfid-20151130_105700_562689_2529B730)
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
- <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz>
+	Wed, 18 Nov 2015 09:46:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 20/27] prism54: move under intersil vendor directory
+Date: Wed, 18 Nov 2015 16:45:59 +0200
+Message-Id: <1447857966-19560-21-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154707_102221_06011CE6)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 07:27:17PM +0100, Michal Sojka wrote:
-> Regulatory rules are applied to channels as if the channel is at least
-> 20 MHz wide. This is a problem when dealing with 5 and 10 MHz channels
-> because side channels of a regulatory rule get disabled even when they
-> fall into rule's frequency range.
-> 
-> This problem was already fixed in commit
-> 4edd56981c8fbb349b1529a2feaf772636eb1c83, but only for custom regulatory
-> domains provided by drivers. Here we fix it also for all other (e.g.
-> user-supplied) regulatory domains.
-> 
-> Before that, similar commit was
-> reverted (e33e2241e272eddc38339692500bd1c7d8753a77) due to it allowing
-> running AP on channel 12 in the US regulatory domain.
+Part of reorganising wireless drivers directory and Kconfig.
 
-I'm afraid this new patch needs to be reverted as well since it allows
-active scanning on channel 12 in the US regulatory domain. I.e., every
-full scan with this commit included results in a Probe Request frame
-being sent on channel 12..
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/Kconfig                       |   20 --------------------
+ drivers/net/wireless/Makefile                      |    2 --
+ drivers/net/wireless/intersil/Kconfig              |   20 ++++++++++++++++++++
+ drivers/net/wireless/intersil/Makefile             |    1 +
+ .../net/wireless/{ => intersil}/prism54/Makefile   |    0
+ .../net/wireless/{ => intersil}/prism54/isl_38xx.c |    0
+ .../net/wireless/{ => intersil}/prism54/isl_38xx.h |    0
+ .../wireless/{ => intersil}/prism54/isl_ioctl.c    |    0
+ .../wireless/{ => intersil}/prism54/isl_ioctl.h    |    0
+ .../net/wireless/{ => intersil}/prism54/isl_oid.h  |    0
+ .../wireless/{ => intersil}/prism54/islpci_dev.c   |    0
+ .../wireless/{ => intersil}/prism54/islpci_dev.h   |    0
+ .../wireless/{ => intersil}/prism54/islpci_eth.c   |    0
+ .../wireless/{ => intersil}/prism54/islpci_eth.h   |    0
+ .../{ => intersil}/prism54/islpci_hotplug.c        |    0
+ .../wireless/{ => intersil}/prism54/islpci_mgt.c   |    0
+ .../wireless/{ => intersil}/prism54/islpci_mgt.h   |    0
+ .../net/wireless/{ => intersil}/prism54/oid_mgt.c  |    0
+ .../net/wireless/{ => intersil}/prism54/oid_mgt.h  |    0
+ .../wireless/{ => intersil}/prism54/prismcompat.h  |    0
+ 21 files changed, 22 insertions(+), 23 deletions(-)
+ rename drivers/net/wireless/{ => intersil}/prism54/Makefile (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/isl_38xx.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/isl_38xx.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/isl_ioctl.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/isl_ioctl.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/isl_oid.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_dev.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_dev.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_eth.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_eth.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_hotplug.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_mgt.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/islpci_mgt.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/oid_mgt.c (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/oid_mgt.h (100%)
+ rename drivers/net/wireless/{ => intersil}/prism54/prismcompat.h (100%)
 
-This 5 and 10 MHz channel case needs to be handled in a way that does
-not enable 20 MHz channels that go beyond the regdb rule. Channel 12 is
-2457-2477 MHz and the regdb rule for US covers 2402-2472 MHz. This used
-to disable channel 12 correctly, but with this new change, that 5 MHz
-range going beyond the rule is not noticed and channel 12 gets included
-even with 20 MHz bandwidth.
-
-> I have checked that this is not possible with this change:
-> 
->   # iw reg set US
->   # iw dev wlan0 interface add wlan0_ap  type __ap
->   # iw dev wlan0_ap set channel 12
->   command failed: Invalid argument (-22)
-
-That's not sufficient. Please take a look at a sniffer capture on what
-goes out when running
-iw reg set US
-iw dev wlan0 scan
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 53c15af0d967..2c41981e4fdd 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8498,7 +8498,7 @@ M:	"Luis R. Rodriguez" <mcgrof@gmail.com>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/p54
+ S:	Obsolete
+-F:	drivers/net/wireless/prism54/
++F:	drivers/net/wireless/intersil/prism54/
+ 
+ PS3 NETWORK SUPPORT
+ M:	Geoff Levand <geoff@infradead.org>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index cc1f168603dc..c92671f8b1c6 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -52,26 +52,6 @@ config PCMCIA_WL3501
+ 	  It has basic support for Linux wireless extensions and initial
+ 	  micro support for ethtool.
+ 
+-config PRISM54
+-	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus (DEPRECATED)'
+-	depends on PCI
+-	select WIRELESS_EXT
+-	select WEXT_SPY
+-	select WEXT_PRIV
+-	select FW_LOADER
+-	---help---
+-	  This enables support for FullMAC PCI/Cardbus prism54 devices. This
+-	  driver is now deprecated in favor for the SoftMAC driver, p54pci.
+-	  p54pci supports FullMAC PCI/Cardbus devices as well.
+-
+-	  For more information refer to the p54 wiki:
+-
+-	  http://wireless.kernel.org/en/users/Drivers/p54
+-
+-	  Note: You need a motherboard with DMA support to use any of these cards
+-
+-	  When built as module you get the module prism54
+-
+ config USB_NET_RNDIS_WLAN
+ 	tristate "Wireless RNDIS USB support"
+ 	depends on USB
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index dd6d17cc4b7e..679a1a0a048d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -12,8 +12,6 @@ obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
+ obj-$(CONFIG_WLAN_VENDOR_ST) += st/
+ obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
+ 
+-obj-$(CONFIG_PRISM54)		+= prism54/
+-
+ obj-$(CONFIG_WLAN)		+= realtek/
+ 
+ # 16-bit wireless PCMCIA client drivers
+diff --git a/drivers/net/wireless/intersil/Kconfig b/drivers/net/wireless/intersil/Kconfig
+index 2b056b6daef8..9da136049955 100644
+--- a/drivers/net/wireless/intersil/Kconfig
++++ b/drivers/net/wireless/intersil/Kconfig
+@@ -15,4 +15,24 @@ source "drivers/net/wireless/intersil/hostap/Kconfig"
+ source "drivers/net/wireless/intersil/orinoco/Kconfig"
+ source "drivers/net/wireless/intersil/p54/Kconfig"
+ 
++config PRISM54
++	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus (DEPRECATED)'
++	depends on PCI
++	select WIRELESS_EXT
++	select WEXT_SPY
++	select WEXT_PRIV
++	select FW_LOADER
++	---help---
++	  This enables support for FullMAC PCI/Cardbus prism54 devices. This
++	  driver is now deprecated in favor for the SoftMAC driver, p54pci.
++	  p54pci supports FullMAC PCI/Cardbus devices as well.
++
++	  For more information refer to the p54 wiki:
++
++	  http://wireless.kernel.org/en/users/Drivers/p54
++
++	  Note: You need a motherboard with DMA support to use any of these cards
++
++	  When built as module you get the module prism54
++
+ endif # WLAN_VENDOR_INTERSIL
+diff --git a/drivers/net/wireless/intersil/Makefile b/drivers/net/wireless/intersil/Makefile
+index aedb713da746..9a8cbfee3ea5 100644
+--- a/drivers/net/wireless/intersil/Makefile
++++ b/drivers/net/wireless/intersil/Makefile
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_HOSTAP)		+= hostap/
+ obj-$(CONFIG_HERMES)		+= orinoco/
+ obj-$(CONFIG_P54_COMMON)	+= p54/
++obj-$(CONFIG_PRISM54)		+= prism54/
+diff --git a/drivers/net/wireless/prism54/Makefile b/drivers/net/wireless/intersil/prism54/Makefile
+similarity index 100%
+rename from drivers/net/wireless/prism54/Makefile
+rename to drivers/net/wireless/intersil/prism54/Makefile
+diff --git a/drivers/net/wireless/prism54/isl_38xx.c b/drivers/net/wireless/intersil/prism54/isl_38xx.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/isl_38xx.c
+rename to drivers/net/wireless/intersil/prism54/isl_38xx.c
+diff --git a/drivers/net/wireless/prism54/isl_38xx.h b/drivers/net/wireless/intersil/prism54/isl_38xx.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/isl_38xx.h
+rename to drivers/net/wireless/intersil/prism54/isl_38xx.h
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/intersil/prism54/isl_ioctl.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/isl_ioctl.c
+rename to drivers/net/wireless/intersil/prism54/isl_ioctl.c
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.h b/drivers/net/wireless/intersil/prism54/isl_ioctl.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/isl_ioctl.h
+rename to drivers/net/wireless/intersil/prism54/isl_ioctl.h
+diff --git a/drivers/net/wireless/prism54/isl_oid.h b/drivers/net/wireless/intersil/prism54/isl_oid.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/isl_oid.h
+rename to drivers/net/wireless/intersil/prism54/isl_oid.h
+diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/intersil/prism54/islpci_dev.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_dev.c
+rename to drivers/net/wireless/intersil/prism54/islpci_dev.c
+diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/intersil/prism54/islpci_dev.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_dev.h
+rename to drivers/net/wireless/intersil/prism54/islpci_dev.h
+diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/intersil/prism54/islpci_eth.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_eth.c
+rename to drivers/net/wireless/intersil/prism54/islpci_eth.c
+diff --git a/drivers/net/wireless/prism54/islpci_eth.h b/drivers/net/wireless/intersil/prism54/islpci_eth.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_eth.h
+rename to drivers/net/wireless/intersil/prism54/islpci_eth.h
+diff --git a/drivers/net/wireless/prism54/islpci_hotplug.c b/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_hotplug.c
+rename to drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+diff --git a/drivers/net/wireless/prism54/islpci_mgt.c b/drivers/net/wireless/intersil/prism54/islpci_mgt.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_mgt.c
+rename to drivers/net/wireless/intersil/prism54/islpci_mgt.c
+diff --git a/drivers/net/wireless/prism54/islpci_mgt.h b/drivers/net/wireless/intersil/prism54/islpci_mgt.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/islpci_mgt.h
+rename to drivers/net/wireless/intersil/prism54/islpci_mgt.h
+diff --git a/drivers/net/wireless/prism54/oid_mgt.c b/drivers/net/wireless/intersil/prism54/oid_mgt.c
+similarity index 100%
+rename from drivers/net/wireless/prism54/oid_mgt.c
+rename to drivers/net/wireless/intersil/prism54/oid_mgt.c
+diff --git a/drivers/net/wireless/prism54/oid_mgt.h b/drivers/net/wireless/intersil/prism54/oid_mgt.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/oid_mgt.h
+rename to drivers/net/wireless/intersil/prism54/oid_mgt.h
+diff --git a/drivers/net/wireless/prism54/prismcompat.h b/drivers/net/wireless/intersil/prism54/prismcompat.h
+similarity index 100%
+rename from drivers/net/wireless/prism54/prismcompat.h
+rename to drivers/net/wireless/intersil/prism54/prismcompat.h
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.9.5
+
