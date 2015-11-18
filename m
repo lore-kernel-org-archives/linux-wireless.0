@@ -1,58 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36986 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCNg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34961 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933349AbbKROq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:13:36 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 31/73] staging: wilc1000: rename Data_offset variable
-Date: Fri, 6 Nov 2015 11:12:52 +0900
-Message-ID: <1446776014-28094-31-git-send-email-glen.lee@atmel.com> (sfid-20151106_033804_001329_664D3E9D)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 09:46:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 26/27] ath: unify Kconfig with other vendors
+Date: Wed, 18 Nov 2015 16:46:05 +0200
+Message-Id: <1447857966-19560-27-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154802_279473_7AF96813)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Change menuconfig to config to keep the Kconfig entries unified. Part of
+reorganising wireless drivers directory and Kconfig.
 
-This patch rename the Data_offset variable to data_offset
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/Kconfig     |    3 +--
+ drivers/net/wireless/Makefile    |    3 +--
+ drivers/net/wireless/ath/Kconfig |   17 ++++++++++-------
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 34a8b47..6d72e09 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -298,14 +298,14 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index cb115db309ce..3af6d0b9ca21 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -18,6 +18,7 @@ menuconfig WLAN
+ if WLAN
  
- 		if (protocol == 0x06) {
- 			u8 *tcp_hdr_ptr;
--			u32 IHL, total_length, Data_offset;
-+			u32 IHL, total_length, data_offset;
+ source "drivers/net/wireless/admtek/Kconfig"
++source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/atmel/Kconfig"
+ source "drivers/net/wireless/broadcom/Kconfig"
+ source "drivers/net/wireless/cisco/Kconfig"
+@@ -99,6 +100,4 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
  
- 			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
- 			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
- 			total_length = ((u32)ip_hdr_ptr[2] << 8) +
- 					(u32)ip_hdr_ptr[3];
--			Data_offset = (((u32)tcp_hdr_ptr[12] & 0xf0) >> 2);
--			if (total_length == (IHL + Data_offset)) {
-+			data_offset = ((u32)tcp_hdr_ptr[12] & 0xf0) >> 2;
-+			if (total_length == (IHL + data_offset)) {
- 				u32 seq_no, Ack_no;
+-source "drivers/net/wireless/ath/Kconfig"
+-
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 8c99b9faab09..f00d42953fb8 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -3,6 +3,7 @@
+ #
  
- 				seq_no	= (((u32)tcp_hdr_ptr[4]) << 24) + (((u32)tcp_hdr_ptr[5]) << 16) + (((u32)tcp_hdr_ptr[6]) << 8) + ((u32)tcp_hdr_ptr[7]);
+ obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
++obj-$(CONFIG_WLAN_VENDOR_ATH) += ath/
+ obj-$(CONFIG_WLAN_VENDOR_ATMEL) += atmel/
+ obj-$(CONFIG_WLAN_VENDOR_BROADCOM) += broadcom/
+ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
+@@ -23,6 +24,4 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ 
+ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ 
+-obj-$(CONFIG_ATH_CARDS)		+= ath/
+-
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index ce7826009eeb..44b2470af81d 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -1,13 +1,16 @@
+ config ATH_COMMON
+ 	tristate
+ 
+-menuconfig ATH_CARDS
+-	tristate "Atheros Wireless Cards"
+-	depends on CFG80211 && (!UML || BROKEN)
++config WLAN_VENDOR_ATH
++	bool "Atheros/Qualcomm devices"
++	default y
+ 	---help---
+-	  This will enable the support for the Atheros wireless drivers.
+-	  ath5k, ath9k, ath9k_htc and ar9170 drivers share some common code, this option
+-	  enables the common ath.ko module which shares common helpers.
++	  If you have a wireless card belonging to this class, say Y.
++
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
+ 
+ 	  For more information and documentation on this module you can visit:
+ 
+@@ -17,7 +20,7 @@ menuconfig ATH_CARDS
+ 
+ 	  http://wireless.kernel.org/en/users/Drivers/Atheros
+ 
+-if ATH_CARDS
++if WLAN_VENDOR_ATH
+ 
+ config ATH_DEBUG
+ 	bool "Atheros wireless debugging"
 -- 
-1.9.1
+1.7.9.5
 
