@@ -1,192 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36556 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20535 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031107AbbKFCL1 (ORCPT
+	with ESMTP id S1754391AbbKRGIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:11:27 -0500
+	Wed, 18 Nov 2015 01:08:37 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/73] staging: wilc1000: replace explicit NULL comparisons with !
-Date: Fri, 6 Nov 2015 11:12:31 +0900
-Message-ID: <1446776014-28094-10-git-send-email-glen.lee@atmel.com> (sfid-20151106_031129_730967_11FD50FB)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 03/16] staging: wilc1000: remove paltform define PLAT_WMS8304
+Date: Wed, 18 Nov 2015 15:11:24 +0900
+Message-ID: <1447827097-9436-4-git-send-email-glen.lee@atmel.com> (sfid-20151118_070840_324912_4610FE07)
+In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
+References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch removes PLAT_WMS8304 and it's related codes as well. We will not
+use this way of supporting other platform. This will be supported if necessary
+by device tree later.
 
-This patch replace explicit NULL comparison with ! operator to simplify code.
-Reported by checkpatch.pl for Comparison to NULL could be written "!XXX" or "XXX".
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 161 ------------------------------
+ 1 file changed, 161 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c393e52..8ac0b1e 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -137,7 +137,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 5e3bff0..bfd3cc3 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -66,88 +66,6 @@ int wilc_spi_init(void)
+ 	return 1;
+ }
  
- 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+-#if defined(PLAT_WMS8304)
+-#define TXRX_PHASE_SIZE (4096)
+-#endif
+-
+-#if defined(TXRX_PHASE_SIZE)
+-
+-int wilc_spi_write(u8 *b, u32 len)
+-{
+-	struct spi_device *spi = to_spi_device(wilc_dev->dev);
+-	int ret;
+-
+-	if (len > 0 && b != NULL) {
+-		int i = 0;
+-		int blk = len / TXRX_PHASE_SIZE;
+-		int remainder = len % TXRX_PHASE_SIZE;
+-
+-		char *r_buffer = kzalloc(TXRX_PHASE_SIZE, GFP_KERNEL);
+-		if (!r_buffer)
+-			return -ENOMEM;
+-
+-		if (blk) {
+-			while (i < blk)	{
+-				struct spi_message msg;
+-				struct spi_transfer tr = {
+-					.tx_buf = b + (i * TXRX_PHASE_SIZE),
+-					.len = TXRX_PHASE_SIZE,
+-					.bits_per_word = 8,
+-					.delay_usecs = 0,
+-				};
+-
+-				tr.rx_buf = r_buffer;
+-
+-				memset(&msg, 0, sizeof(msg));
+-				spi_message_init(&msg);
+-				msg.spi = spi;
+-				msg.is_dma_mapped = USE_SPI_DMA;
+-
+-				spi_message_add_tail(&tr, &msg);
+-				ret = spi_sync(spi, &msg);
+-				if (ret < 0) {
+-					PRINT_ER("SPI transaction failed\n");
+-				}
+-				i++;
+-
+-			}
+-		}
+-		if (remainder) {
+-			struct spi_message msg;
+-			struct spi_transfer tr = {
+-				.tx_buf = b + (blk * TXRX_PHASE_SIZE),
+-				.len = remainder,
+-				.bits_per_word = 8,
+-				.delay_usecs = 0,
+-			};
+-			tr.rx_buf = r_buffer;
+-
+-			memset(&msg, 0, sizeof(msg));
+-			spi_message_init(&msg);
+-			msg.spi = spi;
+-			msg.is_dma_mapped = USE_SPI_DMA;                                /* rachel */
+-
+-			spi_message_add_tail(&tr, &msg);
+-			ret = spi_sync(spi, &msg);
+-			if (ret < 0) {
+-				PRINT_ER("SPI transaction failed\n");
+-			}
+-		}
+-		kfree(r_buffer);
+-	} else {
+-		PRINT_ER("can't write data with the following length: %d\n", len);
+-		PRINT_ER("FAILED due to NULL buffer or ZERO length check the following length: %d\n", len);
+-		ret = -1;
+-	}
+-
+-	/* change return value to match WILC interface */
+-	(ret < 0) ? (ret = 0) : (ret = 1);
+-
+-	return ret;
+-
+-}
+-
+-#else
+ int wilc_spi_write(u8 *b, u32 len)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc_dev->dev);
+@@ -194,83 +112,6 @@ int wilc_spi_write(u8 *b, u32 len)
+ 	return ret;
+ }
  
--	if (p->txq_head == NULL) {
-+	if (!p->txq_head) {
- 		tqe->next = NULL;
- 		tqe->prev = NULL;
- 		p->txq_head = tqe;
-@@ -168,7 +168,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
+-#endif
+-
+-#if defined(TXRX_PHASE_SIZE)
+-
+-int wilc_spi_read(u8 *rb, u32 rlen)
+-{
+-	struct spi_device *spi = to_spi_device(wilc_dev->dev);
+-	int ret;
+-
+-	if (rlen > 0) {
+-		int i = 0;
+-
+-		int blk = rlen / TXRX_PHASE_SIZE;
+-		int remainder = rlen % TXRX_PHASE_SIZE;
+-
+-		char *t_buffer = kzalloc(TXRX_PHASE_SIZE, GFP_KERNEL);
+-		if (!t_buffer)
+-			return -ENOMEM;
+-
+-		if (blk) {
+-			while (i < blk)	{
+-				struct spi_message msg;
+-				struct spi_transfer tr = {
+-					.rx_buf = rb + (i * TXRX_PHASE_SIZE),
+-					.len = TXRX_PHASE_SIZE,
+-					.bits_per_word = 8,
+-					.delay_usecs = 0,
+-				};
+-				tr.tx_buf = t_buffer;
+-
+-				memset(&msg, 0, sizeof(msg));
+-				spi_message_init(&msg);
+-				msg.spi = spi;
+-				msg.is_dma_mapped = USE_SPI_DMA;
+-
+-				spi_message_add_tail(&tr, &msg);
+-				ret = spi_sync(spi, &msg);
+-				if (ret < 0) {
+-					PRINT_ER("SPI transaction failed\n");
+-				}
+-				i++;
+-			}
+-		}
+-		if (remainder) {
+-			struct spi_message msg;
+-			struct spi_transfer tr = {
+-				.rx_buf = rb + (blk * TXRX_PHASE_SIZE),
+-				.len = remainder,
+-				.bits_per_word = 8,
+-				.delay_usecs = 0,
+-			};
+-			tr.tx_buf = t_buffer;
+-
+-			memset(&msg, 0, sizeof(msg));
+-			spi_message_init(&msg);
+-			msg.spi = spi;
+-			msg.is_dma_mapped = USE_SPI_DMA;                                /* rachel */
+-
+-			spi_message_add_tail(&tr, &msg);
+-			ret = spi_sync(spi, &msg);
+-			if (ret < 0) {
+-				PRINT_ER("SPI transaction failed\n");
+-			}
+-		}
+-
+-		kfree(t_buffer);
+-	} else {
+-		PRINT_ER("can't read data with the following length: %u\n", rlen);
+-		ret = -1;
+-	}
+-	/* change return value to match WILC interface */
+-	(ret < 0) ? (ret = 0) : (ret = 1);
+-
+-	return ret;
+-}
+-
+-#else
+ int wilc_spi_read(u8 *rb, u32 rlen)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc_dev->dev);
+@@ -313,8 +154,6 @@ int wilc_spi_read(u8 *rb, u32 rlen)
+ 	return ret;
+ }
  
- 	spin_lock_irqsave(&g_linux_wlan->txq_spinlock, flags);
- 
--	if (p->txq_head == NULL) {
-+	if (!p->txq_head) {
- 		tqe->next = NULL;
- 		tqe->prev = NULL;
- 		p->txq_head = tqe;
-@@ -407,7 +407,7 @@ static int wilc_wlan_txq_add_cfg_pkt(u8 *buffer, u32 buffer_size)
- 	}
- 
- 	tqe = kmalloc(sizeof(struct txq_entry_t), GFP_ATOMIC);
--	if (tqe == NULL) {
-+	if (!tqe) {
- 		PRINT_ER("Failed to allocate memory\n");
- 		return 0;
- 	}
-@@ -438,7 +438,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 
- 	tqe = kmalloc(sizeof(struct txq_entry_t), GFP_ATOMIC);
- 
--	if (tqe == NULL)
-+	if (!tqe)
- 		return 0;
- 	tqe->type = WILC_NET_PKT;
- 	tqe->buffer = buffer;
-@@ -467,7 +467,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 
- 	tqe = kmalloc(sizeof(struct txq_entry_t), GFP_KERNEL);
- 
--	if (tqe == NULL)
-+	if (!tqe)
- 		return 0;
- 	tqe->type = WILC_MGMT_PKT;
- 	tqe->buffer = buffer;
-@@ -518,7 +518,7 @@ static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
- 		return 0;
- 
- 	mutex_lock(&wilc->rxq_cs);
--	if (p->rxq_head == NULL) {
-+	if (!p->rxq_head) {
- 		PRINT_D(RX_DBG, "Add to Queue head\n");
- 		rqe->next = NULL;
- 		p->rxq_head = rqe;
-@@ -723,7 +723,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- 		i = 0;
- 		sum = 0;
- 		do {
--			if ((tqe != NULL) && (i < (WILC_VMM_TBL_SIZE - 1))) {
-+			if (tqe && (i < (WILC_VMM_TBL_SIZE - 1))) {
- 				if (tqe->type == WILC_CFG_PKT)
- 					vmm_sz = ETH_CONFIG_PKT_HDR_OFFSET;
- 
-@@ -871,7 +871,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
- 		i = 0;
- 		do {
- 			tqe = wilc_wlan_txq_remove_from_head(dev);
--			if (tqe != NULL && (vmm_table[i] != 0)) {
-+			if (tqe && (vmm_table[i] != 0)) {
- 				u32 header, buffer_offset;
- 
- #ifdef BIG_ENDIAN
-@@ -962,7 +962,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 			break;
- 		}
- 		rqe = wilc_wlan_rxq_remove(wilc);
--		if (rqe == NULL) {
-+		if (!rqe) {
- 			PRINT_D(RX_DBG, "nothing in the queue - exit 1st do-while\n");
- 			break;
- 		}
-@@ -1110,7 +1110,7 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
- 
- #else
- 		buffer = kmalloc(size, GFP_KERNEL);
--		if (buffer == NULL) {
-+		if (!buffer) {
- 			wilc_debug(N_ERR, "[wilc isr]: fail alloc host memory...drop the packets (%d)\n", size);
- 			usleep_range(100 * 1000, 100 * 1000);
- 			goto _end_;
-@@ -1130,7 +1130,7 @@ _end_:
- 			p->rx_buffer_offset = offset;
- #endif
- 			rqe = kmalloc(sizeof(struct rxq_entry_t), GFP_KERNEL);
--			if (rqe != NULL) {
-+			if (rqe) {
- 				rqe->buffer = buffer;
- 				rqe->buffer_size = size;
- 				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
-@@ -1184,7 +1184,7 @@ int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
- 	blksz = BIT(12);
- 
- 	dma_buffer = kmalloc(blksz, GFP_KERNEL);
--	if (dma_buffer == NULL) {
-+	if (!dma_buffer) {
- 		ret = -5;
- 		PRINT_ER("Can't allocate buffer for firmware download IO error\n ");
- 		goto _fail_1;
-@@ -1406,7 +1406,7 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 	p->quit = 1;
- 	do {
- 		tqe = wilc_wlan_txq_remove_from_head(dev);
--		if (tqe == NULL)
-+		if (!tqe)
- 			break;
- 		if (tqe->tx_complete_func)
- 			tqe->tx_complete_func(tqe->priv, 0);
-@@ -1415,7 +1415,7 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 
- 	do {
- 		rqe = wilc_wlan_rxq_remove(wilc);
--		if (rqe == NULL)
-+		if (!rqe)
- 			break;
- #ifndef MEMORY_STATIC
- 		kfree(rqe->buffer);
-@@ -1670,21 +1670,21 @@ int wilc_wlan_init(struct net_device *dev, wilc_wlan_inp_t *inp)
- 		goto _fail_;
- 	}
- 
--	if (g_wlan.tx_buffer == NULL)
-+	if (!g_wlan.tx_buffer)
- 		g_wlan.tx_buffer = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
- 	PRINT_D(TX_DBG, "g_wlan.tx_buffer = %p\n", g_wlan.tx_buffer);
- 
--	if (g_wlan.tx_buffer == NULL) {
-+	if (!g_wlan.tx_buffer) {
- 		ret = -105;
- 		PRINT_ER("Can't allocate Tx Buffer");
- 		goto _fail_;
- 	}
- 
- #if defined (MEMORY_STATIC)
--	if (g_wlan.rx_buffer == NULL)
-+	if (!g_wlan.rx_buffer)
- 		g_wlan.rx_buffer = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
- 	PRINT_D(TX_DBG, "g_wlan.rx_buffer =%p\n", g_wlan.rx_buffer);
--	if (g_wlan.rx_buffer == NULL) {
-+	if (!g_wlan.rx_buffer) {
- 		ret = -105;
- 		PRINT_ER("Can't allocate Rx Buffer");
- 		goto _fail_;
+-#endif
+-
+ int wilc_spi_write_read(u8 *wb, u8 *rb, u32 rlen)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc_dev->dev);
 -- 
 1.9.1
 
