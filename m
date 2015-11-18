@@ -1,93 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45301 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031997AbbKFK50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 05:57:26 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34889 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933224AbbKROqn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2015 09:46:43 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
 To: linux-wireless@vger.kernel.org
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: stop using pointers as cookies
-Date: Fri,  6 Nov 2015 11:57:23 +0100
-Message-Id: <1446807443-12133-1-git-send-email-johannes@sipsolutions.net> (sfid-20151106_115753_583110_62129990)
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 14/27] mwl8k: move under marvell vendor directory
+Date: Wed, 18 Nov 2015 16:45:53 +0200
+Message-Id: <1447857966-19560-15-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155327_920856_B059FA15)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Part of reorganising wireless drivers directory and Kconfig.
 
-Instead of using pointers, use sequentially assigned cookies.
-This is easier to understand while debugging and also avoids
-problems when the pointer is reused for the next allocation.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ MAINTAINERS                                |    2 +-
+ drivers/net/wireless/Kconfig               |    9 ---------
+ drivers/net/wireless/Makefile              |    2 --
+ drivers/net/wireless/marvell/Kconfig       |    9 +++++++++
+ drivers/net/wireless/marvell/Makefile      |    2 ++
+ drivers/net/wireless/{ => marvell}/mwl8k.c |    0
+ 6 files changed, 12 insertions(+), 12 deletions(-)
+ rename drivers/net/wireless/{ => marvell}/mwl8k.c (100%)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ee46f4647fbc..ffb6c72005fd 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -514,6 +514,7 @@ struct mac80211_hwsim_data {
- 	bool ps_poll_pending;
- 	struct dentry *debugfs;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5b889f6972c0..e622877aaab4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6734,7 +6734,7 @@ MARVELL MWL8K WIRELESS DRIVER
+ M:	Lennert Buytenhek <buytenh@wantstofly.org>
+ L:	linux-wireless@vger.kernel.org
+ S:	Odd Fixes
+-F:	drivers/net/wireless/mwl8k.c
++F:	drivers/net/wireless/marvell/mwl8k.c
  
-+	uintptr_t pending_cookie;
- 	struct sk_buff_head pending;	/* packets pending */
- 	/*
- 	 * Only radios in the same group can communicate together (the
-@@ -960,6 +961,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	unsigned int hwsim_flags = 0;
- 	int i;
- 	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
-+	uintptr_t cookie;
+ MARVELL SOC MMC/SD/SDIO CONTROLLER DRIVER
+ M:	Nicolas Pitre <nico@fluxnic.net>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 465665237308..315982a5ee73 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -133,15 +133,6 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
  
- 	if (data->ps != PS_DISABLED)
- 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-@@ -1018,7 +1020,10 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 		goto nla_put_failure;
+-config MWL8K
+-	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
+-	depends on MAC80211 && PCI
+-	---help---
+-	  This driver supports Marvell TOPDOG 802.11 wireless cards.
+-
+-	  To compile this driver as a module, choose M here: the module
+-	  will be called mwl8k.  If unsure, say N.
+-
+ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 7a95b58a5c76..9498753f596b 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -26,8 +26,6 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
  
- 	/* We create a cookie to identify this skb */
--	if (nla_put_u64(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb))
-+	data->pending_cookie++;
-+	cookie = data->pending_cookie;
-+	info->rate_driver_data[0] = (void *)cookie;
-+	if (nla_put_u64(skb, HWSIM_ATTR_COOKIE, cookie))
- 		goto nla_put_failure;
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
  
- 	genlmsg_end(skb, msg_head);
-@@ -2710,7 +2715,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	struct mac80211_hwsim_data *data2;
- 	struct ieee80211_tx_info *txi;
- 	struct hwsim_tx_rate *tx_attempts;
--	unsigned long ret_skb_ptr;
-+	u64 ret_skb_cookie;
- 	struct sk_buff *skb, *tmp;
- 	const u8 *src;
- 	unsigned int hwsim_flags;
-@@ -2728,7 +2733,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+-obj-$(CONFIG_MWL8K)	+= mwl8k.o
+-
+ obj-$(CONFIG_RT2X00)	+= rt2x00/
  
- 	src = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
- 	hwsim_flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
--	ret_skb_ptr = nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
-+	ret_skb_cookie = nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
+ obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
+diff --git a/drivers/net/wireless/marvell/Kconfig b/drivers/net/wireless/marvell/Kconfig
+index bbdbac9a2a45..4938c7ec0009 100644
+--- a/drivers/net/wireless/marvell/Kconfig
++++ b/drivers/net/wireless/marvell/Kconfig
+@@ -15,4 +15,13 @@ source "drivers/net/wireless/marvell/libertas/Kconfig"
+ source "drivers/net/wireless/marvell/libertas_tf/Kconfig"
+ source "drivers/net/wireless/marvell/mwifiex/Kconfig"
  
- 	data2 = get_hwsim_data_ref_from_addr(src);
- 	if (!data2)
-@@ -2736,7 +2741,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* look for the skb matching the cookie passed back from user */
- 	skb_queue_walk_safe(&data2->pending, skb, tmp) {
--		if ((unsigned long)skb == ret_skb_ptr) {
-+		u64 skb_cookie;
++config MWL8K
++	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
++	depends on MAC80211 && PCI
++	---help---
++	  This driver supports Marvell TOPDOG 802.11 wireless cards.
 +
-+		txi = IEEE80211_SKB_CB(skb);
-+		skb_cookie = (u64)(uintptr_t)txi->driver_data[0];
++	  To compile this driver as a module, choose M here: the module
++	  will be called mwl8k.  If unsure, say N.
 +
-+		if (skb_cookie == ret_skb_cookie) {
- 			skb_unlink(skb, &data2->pending);
- 			found = true;
- 			break;
+ endif # WLAN_VENDOR_MARVELL
+diff --git a/drivers/net/wireless/marvell/Makefile b/drivers/net/wireless/marvell/Makefile
+index f4ab48aaff3c..1b0a7d2bc8e6 100644
+--- a/drivers/net/wireless/marvell/Makefile
++++ b/drivers/net/wireless/marvell/Makefile
+@@ -2,3 +2,5 @@ obj-$(CONFIG_LIBERTAS)		+= libertas/
+ 
+ obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
+ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
++
++obj-$(CONFIG_MWL8K)	+= mwl8k.o
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+similarity index 100%
+rename from drivers/net/wireless/mwl8k.c
+rename to drivers/net/wireless/marvell/mwl8k.c
 -- 
-2.6.2
+1.7.9.5
 
