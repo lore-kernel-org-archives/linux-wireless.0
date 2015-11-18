@@ -1,75 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:36203 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706AbbKQRmF (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:32952 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173AbbKRF7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 12:42:05 -0500
-Received: by ykdr82 with SMTP id r82so18535196ykd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 09:42:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com>
-References: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com>
-	<1447738373-15804-2-git-send-email-steve.derosier@lairdtech.com>
-	<CAGRGNgUdSrwxw7j885ghFu5ivHfWgDCUC7RODbV8iW_AcmfE5Q@mail.gmail.com>
-Date: Tue, 17 Nov 2015 09:42:04 -0800
-Message-ID: <CALupW3C9GrvB24TZ9LVA46TH1oADtV5jgWXPjJDaHu_mp4iR4w@mail.gmail.com> (sfid-20151117_184238_872813_3BEB7A24)
-Subject: Re: [PATCH 1/2] ath6kl_sdio: Add reset gpio module parameter for
- CHIP_PWD_L pin
-From: Steve deRosier <derosier@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Nov 2015 00:59:38 -0500
+Received: by lfaz4 with SMTP id z4so19646910lfa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:37 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 6/9] ath10k: pack up flags in skb_cb
+Date: Wed, 18 Nov 2015 06:59:20 +0100
+Message-Id: <1447826363-16818-7-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065944_099345_D6CD9D3B)
+In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
+ <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+It was wasteful to have all the flags as separate
+bools.
 
-Thanks for looking at this.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h   | 13 +++++++------
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  4 ++--
+ drivers/net/wireless/ath/ath10k/mac.c    | 10 +++++++---
+ drivers/net/wireless/ath/ath10k/wmi.c    | 12 ++++++++----
+ 4 files changed, 24 insertions(+), 15 deletions(-)
 
-In short - I agree with your review and will do most of them. As a
-well as a few minor changes suggested by the kbuild test robot. Expect
-a new version shortly.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 804fd2e5bc38..6b9b37329621 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -81,22 +81,23 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ 	return "unknown";
+ }
+ 
++enum ath10k_skb_flags {
++	ATH10K_SKB_F_NO_HWCRYPT = BIT(0),
++	ATH10K_SKB_F_DTIM_ZERO = BIT(1),
++	ATH10K_SKB_F_DELIVER_CAB = BIT(2),
++};
++
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
++	u8 flags;
+ 	u8 eid;
+ 	u8 vdev_id;
+ 
+ 	struct {
+ 		u8 tid;
+-		bool nohwcrypt;
+ 		struct ath10k_htt_txbuf *txbuf;
+ 		u32 txbuf_paddr;
+ 	} __packed htt;
+-
+-	struct {
+-		bool dtim_zero;
+-		bool deliver_cab;
+-	} bcn;
+ } __packed;
+ 
+ struct ath10k_skb_rxcb {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a7d8798b2f37..c955c6b6ea9d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -586,7 +586,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	     ieee80211_is_disassoc(hdr->frame_control)) &&
+ 	     ieee80211_has_protected(hdr->frame_control)) {
+ 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+-	} else if (!skb_cb->htt.nohwcrypt &&
++	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
+ 		   txmode == ATH10K_HW_TXRX_RAW &&
+ 		   ieee80211_has_protected(hdr->frame_control)) {
+ 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+@@ -666,7 +666,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 			prefetch_len);
+ 	skb_cb->htt.txbuf->htc_hdr.flags = 0;
+ 
+-	if (skb_cb->htt.nohwcrypt)
++	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+ 
+ 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0ca5d5bea509..38c241596965 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3672,6 +3672,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 		      struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = hw->priv;
++	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
+@@ -3684,9 +3685,12 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ 
+-	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+-	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
+-	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
++	skb_cb->flags = 0;
++	if (!ath10k_tx_h_use_hwcrypto(vif, skb))
++		skb_cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
++
++	skb_cb->htt.tid = ath10k_tx_h_get_tid(hdr);
++	skb_cb->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
+ 
+ 	switch (txmode) {
+ 	case ATH10K_HW_TXRX_MGMT:
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 902107934edd..6028a598c199 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1715,6 +1715,8 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct ath10k_skb_cb *cb;
+ 	struct sk_buff *bcn;
++	bool dtim_zero;
++	bool deliver_cab;
+ 	int ret;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+@@ -1734,12 +1736,14 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
+ 		arvif->beacon_state = ATH10K_BEACON_SENDING;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
++		dtim_zero = !!(cb->flags & ATH10K_SKB_F_DTIM_ZERO);
++		deliver_cab = !!(cb->flags & ATH10K_SKB_F_DELIVER_CAB);
+ 		ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar,
+ 							arvif->vdev_id,
+ 							bcn->data, bcn->len,
+ 							cb->paddr,
+-							cb->bcn.dtim_zero,
+-							cb->bcn.deliver_cab);
++							dtim_zero,
++							deliver_cab);
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 
+@@ -3157,10 +3161,10 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
+ 	memcpy(tim->virtual_map, arvif->u.ap.tim_bitmap, pvm_len);
+ 
+ 	if (tim->dtim_count == 0) {
+-		ATH10K_SKB_CB(bcn)->bcn.dtim_zero = true;
++		ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DTIM_ZERO;
+ 
+ 		if (__le32_to_cpu(tim_info->tim_mcast) == 1)
+-			ATH10K_SKB_CB(bcn)->bcn.deliver_cab = true;
++			ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DELIVER_CAB;
+ 	}
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MGMT, "dtim %d/%d mcast %d pvmlen %d\n",
+-- 
+2.1.4
 
-On Mon, Nov 16, 2015 at 10:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>
->>  static void __exit ath6kl_sdio_exit(void)
->>  {
->>         sdio_unregister_driver(&ath6kl_sdio_driver);
->> +
->> +#ifdef CONFIG_GPIOLIB
->> +       /* Delay to avoid pulling the plug on the chip when an irq is pending
->> +        * and then getting a spurious message:
->> +        * "ath6kl: failed to get pending recv messages: -125"
->> +        */
->> +       msleep(300);
->
-> Is there some actual synchronisation you can do here against the IRQ?
-> 300msec isn't a long time to wait, but it seems wrong here.
->
-
-Considering this is only called on exit, I wasn't too worried about
-this, but then again, on reboot as well as a few types of
-reconfiguring the interface speed is an important consideration for
-our system.
-
-I'm open to suggestions.  I had looked at this and didn't see an
-obvious way to try to sync with the IRQ as it goes through several
-subsystems.
-
-But looking at it again in a different light...
-
-125 is ECANCELED.  Which is exactly right and appropriate, and
-ath6kl_htc_rxmsg_pending_handler() where the message comes from does a
-proper cleanup, or so it looks like. I wonder if maybe we can consider
-ECANCELED not an error that needs an error message as it might be a
-reasonable case?
-
-So instead of synchronization, just consider that particular status an
-expected and properly handled exception condition and not print an
-error?
-
-Thoughts?
-
-- Steve
