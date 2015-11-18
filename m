@@ -1,117 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58830 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751187AbbKOHbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2015 02:31:16 -0500
-Date: Sun, 15 Nov 2015 15:31:05 +0800
-From: Dave Young <dyoung@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34944 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933334AbbKROq6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2015 09:46:58 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
 To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	davem@davemloft.net, johannes@sipsolutions.net
-Subject: [PATCH] wireless: change cfg80211 regulatory domain info as debug
- messages
-Message-ID: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com> (sfid-20151115_083216_083746_3CE98FA3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 24/27] mediatek: unify Kconfig with other vendors
+Date: Wed, 18 Nov 2015 16:46:03 +0200
+Message-Id: <1447857966-19560-25-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154835_533892_2212F62B)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 module prints a lot of messages like below. Actually printing
-once is acceptable but sometimes it will print again and again, it looks
-very annoying. It is better to change these detail messages to debugging
-only.
+Part of reorganising wireless drivers directory and Kconfig.
 
-cfg80211: World regulatory domain updated:
-cfg80211:  DFS Master region: unset
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
-cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm), (N/A)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz, 160000 KHz AUTO), (N/A, 2000 mBm), (N/A)
-cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz, 160000 KHz AUTO), (N/A, 2000 mBm), (0 s)
-cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
-cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 2000 mBm), (N/A)
-cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 0 mBm), (N/A)
-
-The changes in this patch is to replace pr_info with pr_debug in function
-print_rd_rules and print_regdomain_info
-
-Signed-off-by: Dave Young <dyoung@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- net/wireless/reg.c |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/Kconfig          |    2 +-
+ drivers/net/wireless/Makefile         |    3 +--
+ drivers/net/wireless/mediatek/Kconfig |   16 ++++++++++------
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
---- linux.orig/net/wireless/reg.c
-+++ linux/net/wireless/reg.c
-@@ -2763,7 +2763,7 @@ static void print_rd_rules(const struct
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	char bw[32], cac_time[32];
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c58e244b5079..2225e06611fa 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -24,6 +24,7 @@ source "drivers/net/wireless/cisco/Kconfig"
+ source "drivers/net/wireless/intel/Kconfig"
+ source "drivers/net/wireless/intersil/Kconfig"
+ source "drivers/net/wireless/marvell/Kconfig"
++source "drivers/net/wireless/mediatek/Kconfig"
+ source "drivers/net/wireless/ralink/Kconfig"
+ source "drivers/net/wireless/realtek/Kconfig"
+ source "drivers/net/wireless/rsi/Kconfig"
+@@ -98,7 +99,6 @@ config MAC80211_HWSIM
+ 	  called mac80211_hwsim.  If unsure, say N.
  
--	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)\n");
-+	pr_debug("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)\n");
+ source "drivers/net/wireless/ath/Kconfig"
+-source "drivers/net/wireless/mediatek/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
  
- 	for (i = 0; i < rd->n_reg_rules; i++) {
- 		reg_rule = &rd->reg_rules[i];
-@@ -2790,7 +2790,7 @@ static void print_rd_rules(const struct
- 		 * in certain regions
- 		 */
- 		if (power_rule->max_antenna_gain)
--			pr_info("  (%d KHz - %d KHz @ %s), (%d mBi, %d mBm), (%s)\n",
-+			pr_debug("  (%d KHz - %d KHz @ %s), (%d mBi, %d mBm), (%s)\n",
- 				freq_range->start_freq_khz,
- 				freq_range->end_freq_khz,
- 				bw,
-@@ -2798,7 +2798,7 @@ static void print_rd_rules(const struct
- 				power_rule->max_eirp,
- 				cac_time);
- 		else
--			pr_info("  (%d KHz - %d KHz @ %s), (N/A, %d mBm), (%s)\n",
-+			pr_debug("  (%d KHz - %d KHz @ %s), (N/A, %d mBm), (%s)\n",
- 				freq_range->start_freq_khz,
- 				freq_range->end_freq_khz,
- 				bw,
-@@ -2831,35 +2831,35 @@ static void print_regdomain(const struct
- 			struct cfg80211_registered_device *rdev;
- 			rdev = cfg80211_rdev_by_wiphy_idx(lr->wiphy_idx);
- 			if (rdev) {
--				pr_info("Current regulatory domain updated by AP to: %c%c\n",
-+				pr_debug("Current regulatory domain updated by AP to: %c%c\n",
- 					rdev->country_ie_alpha2[0],
- 					rdev->country_ie_alpha2[1]);
- 			} else
--				pr_info("Current regulatory domain intersected:\n");
-+				pr_debug("Current regulatory domain intersected:\n");
- 		} else
--			pr_info("Current regulatory domain intersected:\n");
-+			pr_debug("Current regulatory domain intersected:\n");
- 	} else if (is_world_regdom(rd->alpha2)) {
--		pr_info("World regulatory domain updated:\n");
-+		pr_debug("World regulatory domain updated:\n");
- 	} else {
- 		if (is_unknown_alpha2(rd->alpha2))
--			pr_info("Regulatory domain changed to driver built-in settings (unknown country)\n");
-+			pr_debug("Regulatory domain changed to driver built-in settings (unknown country)\n");
- 		else {
- 			if (reg_request_cell_base(lr))
--				pr_info("Regulatory domain changed to country: %c%c by Cell Station\n",
-+				pr_debug("Regulatory domain changed to country: %c%c by Cell Station\n",
- 					rd->alpha2[0], rd->alpha2[1]);
- 			else
--				pr_info("Regulatory domain changed to country: %c%c\n",
-+				pr_debug("Regulatory domain changed to country: %c%c\n",
- 					rd->alpha2[0], rd->alpha2[1]);
- 		}
- 	}
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 8ac72fd44d17..0fa909072846 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -9,6 +9,7 @@ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
+ obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
+ obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
+ obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
++obj-$(CONFIG_WLAN_VENDOR_MEDIATEK) += mediatek/
+ obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
+ obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
+ obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
+@@ -21,8 +22,6 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
  
--	pr_info(" DFS Master region: %s", reg_dfs_region_str(rd->dfs_region));
-+	pr_debug(" DFS Master region: %s", reg_dfs_region_str(rd->dfs_region));
- 	print_rd_rules(rd);
- }
+ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
  
- static void print_regdomain_info(const struct ieee80211_regdomain *rd)
- {
--	pr_info("Regulatory domain: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
-+	pr_debug("Regulatory domain: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
- 	print_rd_rules(rd);
- }
+-obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
+-
+ obj-$(CONFIG_ATH_CARDS)		+= ath/
  
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/mediatek/Kconfig b/drivers/net/wireless/mediatek/Kconfig
+index cba300c6b5da..28843fed750a 100644
+--- a/drivers/net/wireless/mediatek/Kconfig
++++ b/drivers/net/wireless/mediatek/Kconfig
+@@ -1,10 +1,14 @@
+-menuconfig WL_MEDIATEK
+-	bool "Mediatek Wireless LAN support"
++config WLAN_VENDOR_MEDIATEK
++	bool "MediaTek devices"
++	default y
+ 	---help---
+-	  Enable community drivers for MediaTek WiFi devices.
+-	  Those drivers make use of the Linux mac80211 stack.
++	  If you have a wireless card belonging to this class, say Y.
+ 
++	  Note that the answer to this question doesn't directly affect the
++	  kernel: saying N will just cause the configurator to skip all
++	  the questions about  cards. If you say Y, you will be asked for
++	  your specific card in the following questions.
+ 
+-if WL_MEDIATEK
++if WLAN_VENDOR_MEDIATEK
+ source "drivers/net/wireless/mediatek/mt7601u/Kconfig"
+-endif # WL_MEDIATEK
++endif # WLAN_VENDOR_MEDIATEK
+-- 
+1.7.9.5
+
