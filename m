@@ -1,425 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:13991 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbbKZFAt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34908 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933274AbbKROqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 00:00:49 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 3/5] staging: wilc1000: linux_wlan_spi.c: move all the codes to wilc_spi.c
-Date: Thu, 26 Nov 2015 14:04:01 +0900
-Message-ID: <1448514243-14181-3-git-send-email-glen.lee@atmel.com> (sfid-20151126_060059_087067_A5D2D7FD)
-In-Reply-To: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
-References: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 18 Nov 2015 09:46:49 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 18/27] p54: move under intersil vendor directory
+Date: Wed, 18 Nov 2015 16:45:57 +0200
+Message-Id: <1447857966-19560-19-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155122_070657_EE26C978)
+In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves all the codes in linux_wlan_spi.c to wilc_spi.c to make
-one spi module. Make wilc_spi_tx, wilc_spi_rx and wilc_spi_tx_rx static
-functions. Remove function declaration in linux_wlan_spi.h, which is unnedded
-now. No modification has been made inside the codes.
-linux_wlan_spi.[ch] will be remove in the next patch.
+Part of reorganising wireless drivers directory and Kconfig.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/staging/wilc1000/linux_wlan_spi.c | 165 ---------------------------
- drivers/staging/wilc1000/linux_wlan_spi.h |   4 -
- drivers/staging/wilc1000/wilc_spi.c       | 180 +++++++++++++++++++++++++++++-
- 3 files changed, 178 insertions(+), 171 deletions(-)
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/Kconfig                       |    1 -
+ drivers/net/wireless/Makefile                      |    2 --
+ drivers/net/wireless/intersil/Kconfig              |    1 +
+ drivers/net/wireless/intersil/Makefile             |    1 +
+ drivers/net/wireless/{ => intersil}/p54/Kconfig    |    0
+ drivers/net/wireless/{ => intersil}/p54/Makefile   |    0
+ drivers/net/wireless/{ => intersil}/p54/eeprom.c   |    0
+ drivers/net/wireless/{ => intersil}/p54/eeprom.h   |    0
+ drivers/net/wireless/{ => intersil}/p54/fwio.c     |    0
+ drivers/net/wireless/{ => intersil}/p54/led.c      |    0
+ drivers/net/wireless/{ => intersil}/p54/lmac.h     |    0
+ drivers/net/wireless/{ => intersil}/p54/main.c     |    0
+ drivers/net/wireless/{ => intersil}/p54/p54.h      |    0
+ drivers/net/wireless/{ => intersil}/p54/p54pci.c   |    0
+ drivers/net/wireless/{ => intersil}/p54/p54pci.h   |    0
+ drivers/net/wireless/{ => intersil}/p54/p54spi.c   |    0
+ drivers/net/wireless/{ => intersil}/p54/p54spi.h   |    0
+ .../wireless/{ => intersil}/p54/p54spi_eeprom.h    |    0
+ drivers/net/wireless/{ => intersil}/p54/p54usb.c   |    0
+ drivers/net/wireless/{ => intersil}/p54/p54usb.h   |    0
+ drivers/net/wireless/{ => intersil}/p54/txrx.c     |    0
+ 22 files changed, 3 insertions(+), 4 deletions(-)
+ rename drivers/net/wireless/{ => intersil}/p54/Kconfig (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/Makefile (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/eeprom.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/eeprom.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/fwio.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/led.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/lmac.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/main.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54pci.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54pci.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54spi.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54spi.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54spi_eeprom.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54usb.c (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/p54usb.h (100%)
+ rename drivers/net/wireless/{ => intersil}/p54/txrx.c (100%)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 06935cf..c4315f5 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -14,168 +14,3 @@
- #include "wilc_wfi_netdevice.h"
- #include "linux_wlan_common.h"
- #include "wilc_wlan_if.h"
--
--#define USE_SPI_DMA     0
--
--static const struct wilc1000_ops wilc1000_spi_ops;
--
--static int wilc_bus_probe(struct spi_device *spi)
--{
--	int ret, gpio;
--	struct wilc *wilc;
--
--	gpio = of_get_gpio(spi->dev.of_node, 0);
--	if (gpio < 0)
--		gpio = GPIO_NUM;
--
--	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
--	if (ret)
--		return ret;
--
--	spi_set_drvdata(spi, wilc);
--	wilc->dev = &spi->dev;
--
--	return 0;
--}
--
--static int wilc_bus_remove(struct spi_device *spi)
--{
--	wilc_netdev_cleanup(spi_get_drvdata(spi));
--	return 0;
--}
--
--static const struct of_device_id wilc1000_of_match[] = {
--	{ .compatible = "atmel,wilc_spi", },
--	{}
--};
--MODULE_DEVICE_TABLE(of, wilc1000_of_match);
--
--struct spi_driver wilc1000_spi_driver = {
--	.driver = {
--		.name = MODALIAS,
--		.of_match_table = wilc1000_of_match,
--	},
--	.probe =  wilc_bus_probe,
--	.remove = wilc_bus_remove,
--};
--module_spi_driver(wilc1000_spi_driver);
--MODULE_LICENSE("GPL");
--
--int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--	struct spi_message msg;
--
--	if (len > 0 && b) {
--		struct spi_transfer tr = {
--			.tx_buf = b,
--			.len = len,
--			.delay_usecs = 0,
--		};
--		char *r_buffer = kzalloc(len, GFP_KERNEL);
--
--		if (!r_buffer)
--			return -ENOMEM;
--
--		tr.rx_buf = r_buffer;
--		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--		spi_message_add_tail(&tr, &msg);
--
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--
--		kfree(r_buffer);
--	} else {
--		dev_err(&spi->dev,
--			"can't write data with the following length: %d\n",
--			len);
--		dev_err(&spi->dev,
--			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
--			len);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
--
--int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--
--	if (rlen > 0) {
--		struct spi_message msg;
--		struct spi_transfer tr = {
--			.rx_buf = rb,
--			.len = rlen,
--			.delay_usecs = 0,
--
--		};
--		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
--
--		if (!t_buffer)
--			return -ENOMEM;
--
--		tr.tx_buf = t_buffer;
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--		spi_message_add_tail(&tr, &msg);
--
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--		kfree(t_buffer);
--	} else {
--		dev_err(&spi->dev,
--			"can't read data with the following length: %u\n",
--			rlen);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
--
--int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--
--	if (rlen > 0) {
--		struct spi_message msg;
--		struct spi_transfer tr = {
--			.rx_buf = rb,
--			.tx_buf = wb,
--			.len = rlen,
--			.bits_per_word = 8,
--			.delay_usecs = 0,
--
--		};
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--
--		spi_message_add_tail(&tr, &msg);
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--	} else {
--		dev_err(&spi->dev,
--			"can't read data with the following length: %u\n",
--			rlen);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index d41c16a..32e3926 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -3,8 +3,4 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 63c601b04e68..818899a4c268 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7956,7 +7956,7 @@ M:	Christian Lamparter <chunkeey@googlemail.com>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/p54
+ S:	Maintained
+-F:	drivers/net/wireless/p54/
++F:	drivers/net/wireless/intersil/p54/
  
- #include <linux/spi/spi.h>
- #include "wilc_wfi_netdevice.h"
--
--int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
--int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
--int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 0f730cd..86de50c 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -6,11 +6,22 @@
- /*  */
- /*  */
- /* //////////////////////////////////////////////////////////////////////////// */
--
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/fs.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+#include <linux/cdev.h>
-+#include <linux/uaccess.h>
-+#include <linux/device.h>
-+#include <linux/spi/spi.h>
-+#include <linux/of_gpio.h>
-+
-+#include "linux_wlan_common.h"
- #include <linux/string.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
--#include "linux_wlan_spi.h"
- #include "wilc_wfi_netdevice.h"
+ PA SEMI ETHERNET DRIVER
+ M:	Olof Johansson <olof@lixom.net>
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index da10b00d8af1..bea2fbb4a238 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -118,7 +118,6 @@ config MAC80211_HWSIM
  
- typedef struct {
-@@ -107,6 +118,171 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- #define DATA_PKT_SZ_8K				(8 * 1024)
- #define DATA_PKT_SZ					DATA_PKT_SZ_8K
+ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+-source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/mediatek/Kconfig"
+ source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index a60c5e55b55e..046963fc3958 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -28,8 +28,6 @@ obj-$(CONFIG_RT2X00)	+= rt2x00/
  
-+#define USE_SPI_DMA     0
-+
-+static const struct wilc1000_ops wilc1000_spi_ops;
-+
-+static int wilc_bus_probe(struct spi_device *spi)
-+{
-+	int ret, gpio;
-+	struct wilc *wilc;
-+
-+	gpio = of_get_gpio(spi->dev.of_node, 0);
-+	if (gpio < 0)
-+		gpio = GPIO_NUM;
-+
-+	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
-+	if (ret)
-+		return ret;
-+
-+	spi_set_drvdata(spi, wilc);
-+	wilc->dev = &spi->dev;
-+
-+	return 0;
-+}
-+
-+static int wilc_bus_remove(struct spi_device *spi)
-+{
-+	wilc_netdev_cleanup(spi_get_drvdata(spi));
-+	return 0;
-+}
-+
-+static const struct of_device_id wilc1000_of_match[] = {
-+	{ .compatible = "atmel,wilc_spi", },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, wilc1000_of_match);
-+
-+struct spi_driver wilc1000_spi_driver = {
-+	.driver = {
-+		.name = MODALIAS,
-+		.of_match_table = wilc1000_of_match,
-+	},
-+	.probe =  wilc_bus_probe,
-+	.remove = wilc_bus_remove,
-+};
-+module_spi_driver(wilc1000_spi_driver);
-+MODULE_LICENSE("GPL");
-+
-+static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+	struct spi_message msg;
-+
-+	if (len > 0 && b) {
-+		struct spi_transfer tr = {
-+			.tx_buf = b,
-+			.len = len,
-+			.delay_usecs = 0,
-+		};
-+		char *r_buffer = kzalloc(len, GFP_KERNEL);
-+
-+		if (!r_buffer)
-+			return -ENOMEM;
-+
-+		tr.rx_buf = r_buffer;
-+		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+
-+		kfree(r_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't write data with the following length: %d\n",
-+			len);
-+		dev_err(&spi->dev,
-+			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
-+			len);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.len = rlen,
-+			.delay_usecs = 0,
-+
-+		};
-+		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
-+
-+		if (!t_buffer)
-+			return -ENOMEM;
-+
-+		tr.tx_buf = t_buffer;
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+		kfree(t_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.tx_buf = wb,
-+			.len = rlen,
-+			.bits_per_word = 8,
-+			.delay_usecs = 0,
-+
-+		};
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+
-+		spi_message_add_tail(&tr, &msg);
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
- static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 			    u8 clockless)
- {
+ obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
+ 
+-obj-$(CONFIG_P54_COMMON)	+= p54/
+-
+ obj-$(CONFIG_ATH_CARDS)		+= ath/
+ 
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/intersil/Kconfig b/drivers/net/wireless/intersil/Kconfig
+index ec80b9117fd2..4bc3688bfa93 100644
+--- a/drivers/net/wireless/intersil/Kconfig
++++ b/drivers/net/wireless/intersil/Kconfig
+@@ -12,5 +12,6 @@ config WLAN_VENDOR_INTERSIL
+ if WLAN_VENDOR_INTERSIL
+ 
+ source "drivers/net/wireless/intersil/hostap/Kconfig"
++source "drivers/net/wireless/intersil/p54/Kconfig"
+ 
+ endif # WLAN_VENDOR_INTERSIL
+diff --git a/drivers/net/wireless/intersil/Makefile b/drivers/net/wireless/intersil/Makefile
+index 4890ef79f280..90a72830b1ae 100644
+--- a/drivers/net/wireless/intersil/Makefile
++++ b/drivers/net/wireless/intersil/Makefile
+@@ -1 +1,2 @@
+ obj-$(CONFIG_HOSTAP)		+= hostap/
++obj-$(CONFIG_P54_COMMON)	+= p54/
+diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/intersil/p54/Kconfig
+similarity index 100%
+rename from drivers/net/wireless/p54/Kconfig
+rename to drivers/net/wireless/intersil/p54/Kconfig
+diff --git a/drivers/net/wireless/p54/Makefile b/drivers/net/wireless/intersil/p54/Makefile
+similarity index 100%
+rename from drivers/net/wireless/p54/Makefile
+rename to drivers/net/wireless/intersil/p54/Makefile
+diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
+similarity index 100%
+rename from drivers/net/wireless/p54/eeprom.c
+rename to drivers/net/wireless/intersil/p54/eeprom.c
+diff --git a/drivers/net/wireless/p54/eeprom.h b/drivers/net/wireless/intersil/p54/eeprom.h
+similarity index 100%
+rename from drivers/net/wireless/p54/eeprom.h
+rename to drivers/net/wireless/intersil/p54/eeprom.h
+diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+similarity index 100%
+rename from drivers/net/wireless/p54/fwio.c
+rename to drivers/net/wireless/intersil/p54/fwio.c
+diff --git a/drivers/net/wireless/p54/led.c b/drivers/net/wireless/intersil/p54/led.c
+similarity index 100%
+rename from drivers/net/wireless/p54/led.c
+rename to drivers/net/wireless/intersil/p54/led.c
+diff --git a/drivers/net/wireless/p54/lmac.h b/drivers/net/wireless/intersil/p54/lmac.h
+similarity index 100%
+rename from drivers/net/wireless/p54/lmac.h
+rename to drivers/net/wireless/intersil/p54/lmac.h
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+similarity index 100%
+rename from drivers/net/wireless/p54/main.c
+rename to drivers/net/wireless/intersil/p54/main.c
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/intersil/p54/p54.h
+similarity index 100%
+rename from drivers/net/wireless/p54/p54.h
+rename to drivers/net/wireless/intersil/p54/p54.h
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/intersil/p54/p54pci.c
+similarity index 100%
+rename from drivers/net/wireless/p54/p54pci.c
+rename to drivers/net/wireless/intersil/p54/p54pci.c
+diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/intersil/p54/p54pci.h
+similarity index 100%
+rename from drivers/net/wireless/p54/p54pci.h
+rename to drivers/net/wireless/intersil/p54/p54pci.h
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/intersil/p54/p54spi.c
+similarity index 100%
+rename from drivers/net/wireless/p54/p54spi.c
+rename to drivers/net/wireless/intersil/p54/p54spi.c
+diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/intersil/p54/p54spi.h
+similarity index 100%
+rename from drivers/net/wireless/p54/p54spi.h
+rename to drivers/net/wireless/intersil/p54/p54spi.h
+diff --git a/drivers/net/wireless/p54/p54spi_eeprom.h b/drivers/net/wireless/intersil/p54/p54spi_eeprom.h
+similarity index 100%
+rename from drivers/net/wireless/p54/p54spi_eeprom.h
+rename to drivers/net/wireless/intersil/p54/p54spi_eeprom.h
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
+similarity index 100%
+rename from drivers/net/wireless/p54/p54usb.c
+rename to drivers/net/wireless/intersil/p54/p54usb.c
+diff --git a/drivers/net/wireless/p54/p54usb.h b/drivers/net/wireless/intersil/p54/p54usb.h
+similarity index 100%
+rename from drivers/net/wireless/p54/p54usb.h
+rename to drivers/net/wireless/intersil/p54/p54usb.h
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
+similarity index 100%
+rename from drivers/net/wireless/p54/txrx.c
+rename to drivers/net/wireless/intersil/p54/txrx.c
 -- 
-1.9.1
+1.7.9.5
 
