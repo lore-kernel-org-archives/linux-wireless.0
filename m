@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45012 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752987AbbKIKRy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20436 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbbKRGIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 05:17:54 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: samueltan@google.com, linux-wireless@vger.kernel.org
-Date: Mon,  9 Nov 2015 12:17:37 +0200
-Message-Id: <1447064257-723-1-git-send-email-luca@coelho.fi> (sfid-20151109_111757_220951_6DB57B2D)
-Subject: [PATCH v2] nl80211: clarify NL80211_ATTR_SCHED_SCAN_DELAY usage with net-detect
+	Wed, 18 Nov 2015 01:08:19 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 00/16] tidy up sdio/spi module and remove wilc_dev
+Date: Wed, 18 Nov 2015 15:11:21 +0900
+Message-ID: <1447827097-9436-1-git-send-email-glen.lee@atmel.com> (sfid-20151118_070826_837677_DC08C337)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+This patch series removes global variable wilc_dev and tidy up sdio/spi
+modules. I sync with arnd's latest patch series because this work depends
+on his patches.
 
-In this attribute's documentation, it was not clear whether the delay
-started counting when WoWLAN net-detect was enabled or when the system
-was suspended.  The correct answer is that it starts when the system
-suspends (which is when, in practice, the scan is scheduled).  Clarify
-that in the nl80211.h documentation.
+Glen Lee (16):
+  staging: wilc1000: remove sdio speed control codes
+  staging: wilc1000: remove spi speed control codes
+  staging: wilc1000: remove paltform define PLAT_WMS8304
+  staging: wilc1000: pass struct wilc to the functions which use
+    hif_func
+  staging: wilc1000: pass wilc to all function pointers of wilc_hif_func
+  staging: wilc1000: wilc_sdio_cmd52: pass struct wilc
+  staging: wilc1000: wilc_sdio_cmd53: pass struct wilc
+  staging: wilc1000: wilc_spi_write: pass struct wilc
+  staging: wilc1000: wilc_spi_read: pass struct wilc
+  staging: wilc1000: wilc_spi_write_read: pass struct wilc
+  staging: wilc1000: add struct wilc to host_if_drv
+  staging: wilc1000: wilc_send_config_pkt: pass struct wilc
+  staging: wilc1000: wilc_wlan_cfg_set: pass struct wilc
+  staging: wilc1000: wilc_wlan_cfg_get: pass struct wilc
+  staging: wilc1000: wilc_dbg: remove wilc
+  staging: wilc1000: use wilc instead of wilc_dev and remove wilc_dev
 
-Suggested-by: Samuel Tan <samueltan@google.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/uapi/linux/nl80211.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c   |   7 +-
+ drivers/staging/wilc1000/coreconfigurator.h   |   3 +-
+ drivers/staging/wilc1000/host_interface.c     | 133 +++++++-------
+ drivers/staging/wilc1000/host_interface.h     |   2 +
+ drivers/staging/wilc1000/linux_wlan.c         | 123 ++++++-------
+ drivers/staging/wilc1000/linux_wlan_sdio.c    |  60 +------
+ drivers/staging/wilc1000/linux_wlan_sdio.h    |   7 +-
+ drivers/staging/wilc1000/linux_wlan_spi.c     | 215 +----------------------
+ drivers/staging/wilc1000/linux_wlan_spi.h     |   9 +-
+ drivers/staging/wilc1000/wilc_sdio.c          | 150 ++++++++--------
+ drivers/staging/wilc1000/wilc_spi.c           | 142 +++++++--------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |   3 +-
+ drivers/staging/wilc1000/wilc_wlan.c          | 244 +++++++++++++-------------
+ drivers/staging/wilc1000/wilc_wlan.h          |  37 ++--
+ drivers/staging/wilc1000/wilc_wlan_if.h       |   3 +-
+ 15 files changed, 447 insertions(+), 691 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1f0b4cf..07099cb 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1764,8 +1764,9 @@ enum nl80211_commands {
-  *	over all channels.
-  *
-  * @NL80211_ATTR_SCHED_SCAN_DELAY: delay before the first cycle of a
-- *	scheduled scan (or a WoWLAN net-detect scan) is started, u32
-- *	in seconds.
-+ *	scheduled scan is started.  Or the delay before a WoWLAN
-+ *	net-detect scan is started, counting from the moment the
-+ *	system is suspended.  This value is a u32, in seconds.
- 
-  * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
-  *      is operating in an indoor environment.
 -- 
-2.6.2
+1.9.1
 
