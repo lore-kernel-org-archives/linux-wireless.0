@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:36093 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbbKIIvU (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33426 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbbKRF7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 03:51:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <20151109081842.GR18797@mwanda>
-References: <1447018310-4524-1-git-send-email-punitvara@gmail.com>
-	<20151108215953.GO18797@mwanda>
-	<563FFEEB.1090307@atmel.com>
-	<56405328.4040004@atmel.com>
-	<20151109081842.GR18797@mwanda>
-Date: Mon, 9 Nov 2015 14:21:19 +0530
-Message-ID: <CABXAfNKVB1X6zj+XD1rwTuFqFzcgfoXFRRb-F66yHBjcAfVCOg@mail.gmail.com> (sfid-20151109_095137_698018_19F20E57)
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-From: punit vara <punitvara@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: glen lee <glen.lee@atmel.com>, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	linux-kernel@vger.kernel.org, tony.cho@atmel.com, leo.kim@atmel.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Nov 2015 00:59:31 -0500
+Received: by lbbkw15 with SMTP id kw15so18475902lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:29 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 0/9] ath10k: clean up ath10k_skb_cb
+Date: Wed, 18 Nov 2015 06:59:14 +0100
+Message-Id: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065937_111393_25D6B290)
+In-Reply-To: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
+References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2015 at 1:48 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
->> Hi Punit Vara,
->>
->> I cannot find build errors on my build machines.
->>
->> According the log which you have posted before says *wilc is undeclared in the function init_wilc_driver,
->> which means WILC_SPI is selected because one of SPI or SDIO should be chosen at the moment.
->> Hence, struct wilc *wilc should be compiled together.
->> It looks like wilc1000 is compiled without SPI or SDIO.
->>
->> Of course, there are many cases that I don't know, so you could let me know the wilc1000 build configuration?
->>
->> static int __init init_wilc_driver(void)
->> {
->> #ifdef WILC_SPI
->
-> This should be #ifndef WILC_SDIO
->
->
->>       struct wilc *wilc;
->> #endif
->
-> But the large question remains of why do we have this variable here any
-> way?
->
-> regards,
-> dan carpenter
->
-I do not know why it is there .that is why I did not touch it first
-my proposed patch was like
-#if (defined WILC_SPI) || (!defined WILC_SDIO)
-struct wilc *wilc;
-#endif
+The ath10k_skb_cb structure wasn't really space
+efficient. Some stuff is removed or replaced with
+more compact representation.
+
+This cleanup is necessary for future features.
+
+The size of ath10k_skb_cb:
+
+          before   after
+ x86-32   26       12
+ x86-64   34       20
+
+
+v3:
+ * rebase
+
+v2:
+ * fix a bug (patch 7/9 introduced)
+
+
+Michal Kazior (9):
+  ath10k: merge is_protected with nohwcrypt
+  ath10k: rename function to adhere to naming convention
+  ath10k: remove txmode from skb_cb
+  ath10k: remove is_offchan
+  ath10k: remove freq from skb_cb
+  ath10k: pack up flags in skb_cb
+  ath10k: fix tx header parsing
+  ath10k: replace vdev_id and tid in skb cb
+  ath10k: store msdu_id instead of txbuf pointers
+
+ drivers/net/wireless/ath/ath10k/core.h   |  28 +++-----
+ drivers/net/wireless/ath/ath10k/htt.h    |   4 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 116 +++++++++++++++++++-----------
+ drivers/net/wireless/ath/ath10k/mac.c    | 117 ++++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/txrx.c   |  15 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c    |  22 ++++--
+ 6 files changed, 173 insertions(+), 129 deletions(-)
+
+-- 
+2.1.4
+
