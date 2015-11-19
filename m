@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36402 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948AbbKWXnj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59268 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757688AbbKSGy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 18:43:39 -0500
+	Thu, 19 Nov 2015 01:54:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 19/26] staging: wilc1000: update_scan_time: remove unused argument
+Date: Thu, 19 Nov 2015 15:56:28 +0900
+Message-ID: <1447916195-24851-19-git-send-email-glen.lee@atmel.com> (sfid-20151119_082253_801280_5466DB5F)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
-References: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
-Date: Tue, 24 Nov 2015 01:43:38 +0200
-Message-ID: <CAHp75Veb4UBKrGsODoKnZrvOZUTEm78yBvhmBRn68oZYRecdQA@mail.gmail.com> (sfid-20151124_004359_619109_931B2AAD)
-Subject: Re: [PATCH] libertas: fix possible NULL dereference
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	libertas-dev@lists.infradead.org,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 2:32 PM, Sudip Mukherjee
-<sudipm.mukherjee@gmail.com> wrote:
-> We were dereferencing cmd first and checking for NULL later. Lets first
-> check for NULL.
+From: Leo Kim <leo.kim@atmel.com>
 
-However the patch is valid due to reducing error prone part, the
-commit message seems wrong.
-There is no dereferencing, it is a simple pointer arithmetic.
+This patch removes pUserVoid that is first argument of
+update_scan_time function because it is not used in this function.
+Remove argument in the function call also.
 
->
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> ---
->  drivers/net/wireless/marvell/libertas/cfg.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-> index 8317afd..e38ad1d 100644
-> --- a/drivers/net/wireless/marvell/libertas/cfg.c
-> +++ b/drivers/net/wireless/marvell/libertas/cfg.c
-> @@ -1108,7 +1108,7 @@ static int lbs_associate(struct lbs_private *priv,
->         size_t len, resp_ie_len;
->         int status;
->         int ret;
-> -       u8 *pos = &(cmd->iebuf[0]);
-> +       u8 *pos;
->         u8 *tmp;
->
->         lbs_deb_enter(LBS_DEB_CFG80211);
-> @@ -1117,6 +1117,7 @@ static int lbs_associate(struct lbs_private *priv,
->                 ret = -ENOMEM;
->                 goto done;
->         }
-> +       pos = &cmd->iebuf[0];
->
->         /*
->          * cmd              50 00
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5032705..56005f6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -284,7 +284,7 @@ static void reset_shadow_found(void)
+ 		last_scanned_shadow[i].u8Found = 0;
+ }
+ 
+-static void update_scan_time(void *pUserVoid)
++static void update_scan_time(void)
+ {
+ 	int i;
+ 
+@@ -523,8 +523,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
+ 
+ 			PRINT_D(CFG80211_DBG, "Scan Aborted\n");
+ 			if (priv->pstrScanReq != NULL) {
+-
+-				update_scan_time(priv);
++				update_scan_time();
+ 				refresh_scan(priv, 1, false);
+ 
+ 				cfg80211_scan_done(priv->pstrScanReq, false);
 -- 
-With Best Regards,
-Andy Shevchenko
+1.9.1
+
