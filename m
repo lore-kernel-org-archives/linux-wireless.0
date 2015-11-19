@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34942 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbbKXV3O (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58309 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757872AbbKSGuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 16:29:14 -0500
-Subject: Re: ATH10 firmware question
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
-	ath10k@lists.infradead.org
-References: <773DB8A82AB6A046AE0195C68612A31901C5AFA5@sbs2003.acksys.local>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5654D6A8.9050002@candelatech.com> (sfid-20151124_222917_871491_8B2EFE1B)
-Date: Tue, 24 Nov 2015 13:29:12 -0800
+	Thu, 19 Nov 2015 01:50:16 -0500
+Message-ID: <564D71EE.20704@atmel.com> (sfid-20151119_075025_375925_F555727A)
+Date: Thu, 19 Nov 2015 15:53:34 +0900
+From: glen lee <glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901C5AFA5@sbs2003.acksys.local>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<tony.cho@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+Subject: Re: [PATCH 3/4] staging: wilc1000: rename index to tcp_pending_ack_idx
+References: <1447898761-6938-1-git-send-email-glen.lee@atmel.com> <1447898761-6938-3-git-send-email-glen.lee@atmel.com> <20151119062343.GR18797@mwanda>
+In-Reply-To: <20151119062343.GR18797@mwanda>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2015 10:07 AM, Cedric VONCKEN wrote:
-> 	Hi,
->
-> 	I have a simple test platform.
-> 	One PC connected to an equipment. This equipment is set in AP
-> mode.
-> 	Another PC connected to another equipment. This equipment is set
-> in STA + WDS mode.
->
-> 	Both equipment use the same openwrt Firmware (compat
-> 2015-07-21), I only changed the ath10k firmware (in
-> /lib/firmware/ath10k/...).
-> 	Both equipment has the same hardware.
-> 	I used a clear channel, and VHT80.
-> 	The radio was connected with a coaxial cable and I placed 40 dBm
-> attenuation per Rf chain.
-> 	I used the WLN350NX radio card from compex.
-> 	
-> 	First test : ATH10K firmware 10.2.4.70-2 on both equipment
-> 		An iperf from PC connected to the AP to the PC connected
-> to the STA give 919 Mbps.
-> 		An iperf from PC connected to the STA to the PC
-> connected to the AP give 500 Mbps.
->
-> 	Second test : ATHK firmware 10.2.4.70.10-2 on both equipment
-> 		An iperf from PC connected to the AP to the PC connected
-> to the STA give 921 Mbps.
-> 		An iperf from PC connected to the STA to the PC
-> connected to the AP give 441 Mbps.
->
-> 	If I cross the computer I have the same result. I did several
-> time these test and I always have the same result.
-
-We see similar.  One thing we notice is that if you actually try to send less
-throughput, then you get better overall throughput.
-
-In other words, trying to send 1Gbps UDP frames will give you more poor
-throughput than trying to send 650Mbps (in the upload direction).
-
-I thought it might be a poor interaction regarding backoff in the
-ath10k driver/firmware (see the congestion bins in firmware for why
-this is the case), but even fixing that in firmware didn't improve
-the situation in my testing.
-
-Thanks,
-Ben
-
->
-> 	Is it the expected result?
-> 	What is the recommanded firmware version for each mode?
-> 	
-> 	Thanks for your help.
->
-> 	Cedric Voncken.
-> 	
->
->
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+On 2015년 11월 19일 15:23, Dan Carpenter wrote:
+> On Thu, Nov 19, 2015 at 11:06:00AM +0900, Glen Lee wrote:
+>> This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
+>> this name could be confused index of txq_entry_t. It is index of tcp pending
+>> ack.
+>>
+>> It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
+>>
+> It is just a cleanup patch and not a bugfix patch so "fix" is the wrong
+> word here.  But the correct format for fixes tags is:
+>
+> Fixes: 123456789012 ('Title of patch')
+
+I see, I learned another one. Thanks.
+
+>
+> regards,
+> dan carpenter
+>
 
