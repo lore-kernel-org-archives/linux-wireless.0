@@ -1,26 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38039 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751723AbbKZQow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 11:44:52 -0500
-Message-ID: <1448556286.2167.20.camel@sipsolutions.net> (sfid-20151126_174454_564214_F73EE43A)
-Subject: Re: [PATCH] cfg80211: ocb: Fix null pointer deref if join_ocb is
- unimplemented
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Thu, 26 Nov 2015 17:44:46 +0100
-In-Reply-To: <1447102929-8906-1-git-send-email-ola1olsson@gmail.com> (sfid-20151109_220218_957818_4A103F31)
-References: <1447102929-8906-1-git-send-email-ola1olsson@gmail.com>
-	 (sfid-20151109_220218_957818_4A103F31)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:36934 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757384AbbKSHtG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2015 02:49:06 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>
+	<564CCF2A.4030203@hauke-m.de>
+Date: Thu, 19 Nov 2015 09:48:59 +0200
+In-Reply-To: <564CCF2A.4030203@hauke-m.de> (Hauke Mehrtens's message of "Wed,
+	18 Nov 2015 20:19:06 +0100")
+Message-ID: <871tbmwhsk.fsf@kamboji.qca.qualcomm.com> (sfid-20151119_084929_763841_5883BAFB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied, but only to mac80211-next as it's not really relevant - all
-drivers actually advertising OCB mode (should) have the pointer, and
-the iftype is checked here.
+Hauke Mehrtens <hauke@hauke-m.de> writes:
 
-johannes
+> On 11/18/2015 03:45 PM, Kalle Valo wrote:
+>> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
+>> edit Makefiles from subdirectories to use the new location.
+>> 
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>> ---
+>
+> I would prefer to remove the brcm80211 directory in this process and create:
+> drivers/net/wireless/broadcom/brcmfmac
+> drivers/net/wireless/broadcom/brcmsmac
+> drivers/net/wireless/broadcom/brcmutil
+> drivers/net/wireless/broadcom/include
+>
+> This way we have one directory less.
+
+I think this could be done separately. This patchset is big enough
+already, I would not like to make it anymore complicated.
+
+And I actually like the brcm80211 directory, I would not mind keeping it
+still.
+
+-- 
+Kalle Valo
