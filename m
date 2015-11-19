@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36602 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59009 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030909AbbKFCLl (ORCPT
+	with ESMTP id S1757787AbbKSGyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:11:41 -0500
+	Thu, 19 Nov 2015 01:54:01 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/73] staging: wilc1000: rename Statisitcs_DroppedAcks variable
-Date: Fri, 6 Nov 2015 11:12:33 +0900
-Message-ID: <1446776014-28094-12-git-send-email-glen.lee@atmel.com> (sfid-20151106_033803_703357_2780EA00)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 09/26] staging: wilc1000: rename u8P2P_vendorspec variable
+Date: Thu, 19 Nov 2015 15:56:18 +0900
+Message-ID: <1447916195-24851-9-git-send-email-glen.lee@atmel.com> (sfid-20151119_075405_523962_34FC5243)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,37 +22,57 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch rename Statisitcs_DroppedAcks variable to dropped_acks
-to avoid CamelCase naming convention.
+This patch renames u8P2P_vendorspec variable to p2p_vendor_spec
+to avoid camelcase.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8d6215b..9b1ca17 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -190,7 +190,7 @@ static int wilc_wlan_txq_add_to_head(struct txq_entry_t *tqe)
- 	return 0;
- }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 904b214..0a7226c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -174,7 +174,7 @@ static u8 curr_channel;
+ static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+ static u8 p2p_local_random = 0x01;
+ static u8 p2p_recv_random = 0x00;
+-static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
++static u8 p2p_vendor_spec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
+ static bool bWilc_ie;
  
--u32 total_acks = 0, Statisitcs_DroppedAcks = 0;
-+u32 total_acks = 0, dropped_acks = 0;
+ static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
+@@ -2000,7 +2000,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 						if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP))	{
+ 							if (!bWilc_ie) {
+ 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
+-									if (!memcmp(u8P2P_vendorspec, &buff[i], 6)) {
++									if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
+ 										p2p_recv_random = buff[i + 6];
+ 										bWilc_ie = true;
+ 										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", p2p_recv_random);
+@@ -2225,7 +2225,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 	struct host_if_drv *pstrWFIDrv;
+ 	u32 i;
+ 	perInterface_wlan_t *nic;
+-	u32 buf_len = len + sizeof(u8P2P_vendorspec) + sizeof(p2p_local_random);
++	u32 buf_len = len + sizeof(p2p_vendor_spec) + sizeof(p2p_local_random);
  
- #ifdef	TCP_ACK_FILTER
- struct Ack_session_info;
-@@ -354,7 +354,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 			tqe = Pending_Acks_info[i].txqe;
- 			if (tqe) {
- 				wilc_wlan_txq_remove(tqe);
--				Statisitcs_DroppedAcks++;
-+				dropped_acks++;
- 				tqe->status = 1;
- 				if (tqe->tx_complete_func)
- 					tqe->tx_complete_func(tqe->priv, tqe->status);
+ 	nic = netdev_priv(wdev->netdev);
+ 	priv = wiphy_priv(wiphy);
+@@ -2323,8 +2323,8 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 									 * Adding WILC information element to allow two WILC devices to
+ 									 * identify each other and connect
+ 									 */
+-									memcpy(&mgmt_tx->buff[len], u8P2P_vendorspec, sizeof(u8P2P_vendorspec));
+-									mgmt_tx->buff[len + sizeof(u8P2P_vendorspec)] = p2p_local_random;
++									memcpy(&mgmt_tx->buff[len], p2p_vendor_spec, sizeof(p2p_vendor_spec));
++									mgmt_tx->buff[len + sizeof(p2p_vendor_spec)] = p2p_local_random;
+ 									mgmt_tx->size = buf_len;
+ 								}
+ 							} else {
 -- 
 1.9.1
 
