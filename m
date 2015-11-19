@@ -1,112 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52992 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752666AbbKQIYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 03:24:47 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/8] mac80211: allow driver to prevent two stations w/ same address
-Date: Tue, 17 Nov 2015 10:24:35 +0200
-Message-Id: <1447748680-23075-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151117_092452_897142_ECB72390)
-In-Reply-To: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:35430 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934331AbbKSPE6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2015 10:04:58 -0500
+Received: by qgec40 with SMTP id c40so52462707qge.2
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2015 07:04:57 -0800 (PST)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id c185sm2435123qka.44.2015.11.19.07.04.56
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 19 Nov 2015 07:04:56 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: fix RTS/CTS by using proper rate flags
+Date: Thu, 19 Nov 2015 10:04:48 -0500
+Message-Id: <1447945488-13665-1-git-send-email-me@bobcopeland.com> (sfid-20151119_160502_408076_D7975AAE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The rates in the tx control rateset do not have the protection
+flags applied, so RTS/CTS would never get enabled if requested.
 
-Some devices or drivers cannot deal with having the same station
-address for different virtual interfaces, say as a client to two
-virtual AP interfaces. Rather than requiring each driver with a
-limitation like that to enforce it, add a hardware flag for it.
+Fix by using the rate flags in the rates returned by
+ieee80211_get_tx_rates().
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- include/net/mac80211.h  |  6 ++++++
- net/mac80211/debugfs.c  |  1 +
- net/mac80211/sta_info.c | 18 ++++++++++++++++--
- 3 files changed, 23 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 82045fc..e19da3b5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1901,6 +1901,11 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_BEACON_TX_STATUS: The device/driver provides TX status
-  *	for sent beacons.
-  *
-+ * @IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR: Hardware (or driver) requires that each
-+ *	station has a unique address, i.e. each station entry can be identified
-+ *	by just its MAC address; this prevents, for example, the same station
-+ *	from connecting to two virtual AP interfaces at the same time.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -1936,6 +1941,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TDLS_WIDER_BW,
- 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
- 	IEEE80211_HW_BEACON_TX_STATUS,
-+	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 342563a..3d946d8 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -767,7 +767,7 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		flags |= AR5K_TXDESC_NOACK;
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 4d2aaeb..abbdff0 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -125,6 +125,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(TDLS_WIDER_BW),
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
-+	FLAG(NEEDS_UNIQUE_STA_ADDR),
+-	rc_flags = info->control.rates[0].flags;
++	rc_flags = bf->rates[0].flags;
  
- 	/* keep last for the build bug below */
- 	(void *)0x1
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f91d187..8f630f5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -435,6 +435,19 @@ static int sta_info_insert_check(struct sta_info *sta)
- 		    is_multicast_ether_addr(sta->sta.addr)))
- 		return -EINVAL;
+ 	hw_rate = ath5k_get_rate_hw_value(ah->hw, info, bf, 0);
  
-+	/* Strictly speaking this isn't necessary as we hold the mutex, but
-+	 * the rhashtable code can't really deal with that distinction. We
-+	 * do require the mutex for correctness though.
-+	 */
-+	rcu_read_lock();
-+	lockdep_assert_held(&sdata->local->sta_mtx);
-+	if (ieee80211_hw_check(&sdata->local->hw, NEEDS_UNIQUE_STA_ADDR) &&
-+	    ieee80211_find_sta_by_ifaddr(&sdata->local->hw, sta->addr, NULL)) {
-+		rcu_read_unlock();
-+		return -ENOTUNIQ;
-+	}
-+	rcu_read_unlock();
-+
- 	return 0;
- }
- 
-@@ -554,14 +567,15 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
- 
- 	might_sleep();
- 
-+	mutex_lock(&local->sta_mtx);
-+
- 	err = sta_info_insert_check(sta);
- 	if (err) {
-+		mutex_unlock(&local->sta_mtx);
- 		rcu_read_lock();
- 		goto out_free;
- 	}
- 
--	mutex_lock(&local->sta_mtx);
--
- 	err = sta_info_insert_finish(sta);
- 	if (err)
- 		goto out_free;
 -- 
-2.5.0
+2.1.4
 
