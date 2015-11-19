@@ -1,127 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:36726 "EHLO
-	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbbKRF7g (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58985 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757770AbbKSGx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 00:59:36 -0500
-Received: by lfs39 with SMTP id 39so19580963lfs.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:35 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 5/9] ath10k: remove freq from skb_cb
-Date: Wed, 18 Nov 2015 06:59:19 +0100
-Message-Id: <1447826363-16818-6-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065940_829199_87AA562D)
-In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
- <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 19 Nov 2015 01:53:56 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/26] staging: wilc1000: rename u8P2Precvrandom variable
+Date: Thu, 19 Nov 2015 15:56:17 +0900
+Message-ID: <1447916195-24851-8-git-send-email-glen.lee@atmel.com> (sfid-20151119_075358_932280_56EFCB85)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to keep it in the struct.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This patch renames u8P2Precvrandom variable to p2p_recv_random
+to avoid camelcase.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h   | 1 -
- drivers/net/wireless/ath/ath10k/htt_tx.c | 9 +++++++--
- drivers/net/wireless/ath/ath10k/mac.c    | 5 +----
- 3 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 89a83e3c5cb6..804fd2e5bc38 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -88,7 +88,6 @@ struct ath10k_skb_cb {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index dd8d404..904b214 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -173,7 +173,7 @@ static u8 wlan_channel = INVALID_CHANNEL;
+ static u8 curr_channel;
+ static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+ static u8 p2p_local_random = 0x01;
+-static u8 u8P2Precvrandom = 0x00;
++static u8 p2p_recv_random = 0x00;
+ static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
+ static bool bWilc_ie;
  
- 	struct {
- 		u8 tid;
--		u16 freq;
- 		bool nohwcrypt;
- 		struct ath10k_htt_txbuf *txbuf;
- 		u32 txbuf_paddr;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index f6fb4f131542..a7d8798b2f37 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -538,6 +538,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct ath10k_hif_sg_item sg_items[2];
- 	struct htt_data_tx_desc_frag *frags;
-@@ -547,6 +548,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	int res;
- 	u8 flags0 = 0;
- 	u16 msdu_id, flags1 = 0;
-+	u16 freq = 0;
- 	u32 frags_paddr = 0;
- 	struct htt_msdu_ext_desc *ext_desc = NULL;
- 	bool limit_mgmt_desc = false;
-@@ -598,6 +600,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 		goto err_free_msdu_id;
- 	}
+@@ -642,7 +642,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 		PRINT_ER("Received MAC_DISCONNECTED from firmware with reason %d on dev [%p]\n",
+ 			 pstrDisconnectNotifInfo->u16reason, priv->dev);
+ 		p2p_local_random = 0x01;
+-		u8P2Precvrandom = 0x00;
++		p2p_recv_random = 0x00;
+ 		bWilc_ie = false;
+ 		eth_zero_addr(priv->au8AssociatedBss);
+ 		wilc_wlan_set_bssid(priv->dev, NullBssid);
+@@ -1072,7 +1072,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 	PRINT_D(CFG80211_DBG, "Disconnecting with reason code(%d)\n", reason_code);
  
-+	if (unlikely(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN))
-+		freq = ar->scan.roc_freq;
-+
- 	switch (txmode) {
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
-@@ -690,7 +695,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 		skb_cb->htt.txbuf->cmd_tx.offchan_tx.peerid =
- 				__cpu_to_le16(HTT_INVALID_PEERID);
- 		skb_cb->htt.txbuf->cmd_tx.offchan_tx.freq =
--				__cpu_to_le16(skb_cb->htt.freq);
-+				__cpu_to_le16(freq);
- 	} else {
- 		skb_cb->htt.txbuf->cmd_tx.peerid =
- 				__cpu_to_le32(HTT_INVALID_PEERID);
-@@ -700,7 +705,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	ath10k_dbg(ar, ATH10K_DBG_HTT,
- 		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %08x, msdu_paddr %08x vdev %hhu tid %hhu freq %hu\n",
- 		   flags0, flags1, msdu->len, msdu_id, frags_paddr,
--		   (u32)skb_cb->paddr, vdev_id, tid, skb_cb->htt.freq);
-+		   (u32)skb_cb->paddr, vdev_id, tid, freq);
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
- 			msdu->data, msdu->len);
- 	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 164a3e5ae6da..0ca5d5bea509 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3528,6 +3528,7 @@ void __ath10k_scan_finish(struct ath10k *ar)
- 	case ATH10K_SCAN_STARTING:
- 		ar->scan.state = ATH10K_SCAN_IDLE;
- 		ar->scan_channel = NULL;
-+		ar->scan.roc_freq = 0;
- 		ath10k_offchan_tx_purge(ar);
- 		cancel_delayed_work(&ar->scan.timeout);
- 		complete_all(&ar->scan.completed);
-@@ -3683,7 +3684,6 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	p2p_local_random = 0x01;
+-	u8P2Precvrandom = 0x00;
++	p2p_recv_random = 0x00;
+ 	bWilc_ie = false;
+ 	pstrWFIDrv->p2p_timeout = 0;
  
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+@@ -2001,15 +2001,15 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 							if (!bWilc_ie) {
+ 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
+ 									if (!memcmp(u8P2P_vendorspec, &buff[i], 6)) {
+-										u8P2Precvrandom = buff[i + 6];
++										p2p_recv_random = buff[i + 6];
+ 										bWilc_ie = true;
+-										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", u8P2Precvrandom);
++										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", p2p_recv_random);
+ 										break;
+ 									}
+ 								}
+ 							}
+ 						}
+-						if (p2p_local_random > u8P2Precvrandom)	{
++						if (p2p_local_random > p2p_recv_random)	{
+ 							if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
+ 							      || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
+ 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
+@@ -2020,7 +2020,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 								}
+ 							}
+ 						} else {
+-							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
++							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
+ 						}
+ 					}
  
--	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
-@@ -3708,13 +3708,10 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+@@ -2293,7 +2293,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 					if (!memcmp(p2p_oui, &buf[ACTION_SUBTYPE_ID + 1], 4)) {
+ 						/*For the connection of two WILC's connection generate a rand number to determine who will be a GO*/
+ 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP)) {
+-							if (p2p_local_random == 1 && u8P2Precvrandom < p2p_local_random) {
++							if (p2p_local_random == 1 && p2p_recv_random < p2p_local_random) {
+ 								get_random_bytes(&p2p_local_random, 1);
+ 								p2p_local_random++;
+ 							}
+@@ -2301,8 +2301,8 @@ static int mgmt_tx(struct wiphy *wiphy,
  
- 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
- 		spin_lock_bh(&ar->data_lock);
--		ATH10K_SKB_CB(skb)->htt.freq = ar->scan.roc_freq;
- 		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
- 		spin_unlock_bh(&ar->data_lock);
+ 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
+ 						      || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
+-							if (p2p_local_random > u8P2Precvrandom)	{
+-								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
++							if (p2p_local_random > p2p_recv_random)	{
++								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
  
- 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
--			ATH10K_SKB_CB(skb)->htt.freq = 0;
--
- 			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %p\n",
- 				   skb);
+ 								/*Search for the p2p information information element , after the Public action subtype theres a byte for teh dialog token, skip that*/
+ 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
+@@ -2328,7 +2328,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 									mgmt_tx->size = buf_len;
+ 								}
+ 							} else {
+-								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
++								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
+ 							}
+ 						}
+ 
+@@ -2559,7 +2559,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
+ 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
+ 	p2p_local_random = 0x01;
+-	u8P2Precvrandom = 0x00;
++	p2p_recv_random = 0x00;
+ 
+ 	bWilc_ie = false;
  
 -- 
-2.1.4
+1.9.1
 
