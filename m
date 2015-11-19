@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59419 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757787AbbKSGz1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:55:27 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 24/26] staging: wilc1000: rename pUserVoid in CfgScanResult function
-Date: Thu, 19 Nov 2015 15:56:33 +0900
-Message-ID: <1447916195-24851-24-git-send-email-glen.lee@atmel.com> (sfid-20151119_082255_027325_B95375E2)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+Received: from mga01.intel.com ([192.55.52.88]:43764 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752599AbbKSGmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2015 01:42:06 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Anatol Pomozov <anatol.pomozov@gmail.com>,
+	"Greenman, Gregory" <gregory.greenman@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Krauss, Assaf" <assaf.krauss@intel.com>
+Subject: RE: State of indoor navigation (11MC) in wireless core API
+Date: Thu, 19 Nov 2015 06:41:59 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F3218@hasmsx107.ger.corp.intel.com> (sfid-20151119_074210_468026_21524F78)
+References: <CAOMFOmX+D7sqjL+sKE3ae=6gowW-LJv1dHssdF71nTWODA950w@mail.gmail.com>
+In-Reply-To: <CAOMFOmX+D7sqjL+sKE3ae=6gowW-LJv1dHssdF71nTWODA950w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames pUserVoid to user_void that is
-third argument of CfgScanResult function to avoid camelcase.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index b0d1ed3..0b03e54 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -421,7 +421,7 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
-  */
- static void CfgScanResult(enum scan_event scan_event,
- 			  tstrNetworkInfo *network_info,
--			  void *pUserVoid,
-+			  void *user_void,
- 			  void *pJoinParams)
- {
- 	struct wilc_priv *priv;
-@@ -430,7 +430,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 	struct ieee80211_channel *channel;
- 	struct cfg80211_bss *bss = NULL;
- 
--	priv = (struct wilc_priv *)pUserVoid;
-+	priv = (struct wilc_priv *)user_void;
- 	if (priv->bCfgScanning) {
- 		if (scan_event == SCAN_EVENT_NETWORK_FOUND) {
- 			wiphy = priv->dev->ieee80211_ptr->wiphy;
--- 
-1.9.1
-
+SGkgQW5hdG9sLA0KDQo+IA0KPiBIaQ0KPiANCj4gVGhlcmUgaXMgaHVnZSBpbnRlcmVzdCBib3Ro
+IGZyb20gaGFyZHdpcmUgYW5kIHNvZnR3YXJlIHZlbmRvcnMgaW4gdXNpbmcNCj4gSW5kb29yIE5h
+dmlnYXRpb24gYXQgbW9iaWxlIGRldmljZXMuIFdlIGFyZSBpbnRlcmVzdGVkIGluIG1ha2luZyB0
+aGUNCj4gQ2hyb21lT1MgZWNvc3lzdGVtIHVzaW5nIHRoaXMgZmVhdHVyZSBhcyB3ZWxsLg0KPiAN
+Cj4gSSBjaGVja2VkIGhvdyBBbmRyb2lkIGltcGxlbWVudHMgaW5kb29yIG5hdmlnYXRpb24gd2hl
+cmUgaXQgaXMgdXNlZCBmb3IgYQ0KPiB3aGlsZS4gSXQgZGVmaW5lcyBpdHMgY3VzdG9tIEFQSSBj
+YWxsZWQgUm91bmQtdHJpcCB0aW1lIFsxXS4NCj4gQnJvYWRjb20gY2hpcHMgZmlybXdhcmUgaW1w
+bGVtZW50cyAxMU1DIGRyYWZ0IGZvciB0aGlzLg0KPiANCj4gSSBsb29rZWQgYXQgY3VycmVudCBM
+aW51eCB0cmVlIGFuZCBkbyBub3Qgc2VlIGFueSBzdGFuZGFyZCBBUEkgZm9yIHRoaXMNCj4gZmVh
+dHVyZS4gaXdsd2lmaS9tdm0vZGVidWdmcy12aWYuYyBmaWxlIG1lbnRpb25zICJUaW1lIG9mIEZs
+aWdodCINCj4gdGhhdCBzZWVtcyAxMU1DIHJlbGF0ZWQuIFRob3VnaCB0aGlzIGRyaXZlciB1c2Vz
+IGRlYnVnZnMgdG8gY29tbXVuaWNhdGUNCj4gd2l0aCB0aGUgZHJpdmVyLiBJdCBkb2VzIG5vdCBz
+b3VuZCBsaWtlIGEgYmVzdCB3YXkgdG8gZG8gaXQuIEkgd291bGQgZXhwZWN0IGENCj4gY2FsbGJh
+Y2sgaW4gY2ZnODAyMTEgaW50ZXJmYWNlLiBEb2VzIGFueWJvZHkgd29yayBvbiBtb3JlIGNvbnZl
+bnRpb25hbCBBUEkNCj4gZm9yIHRoaXMgMTFNQyBmZWF0dXJlPw0KDQpZZXMgd2UgYXJlLiBQYXRj
+aGVzIGFyZSB1bmRlciByZXZpZXcgaW50ZXJuYWxseSBhbmQgc2hvdWxkIGJlIHBvc3RlZCBzb29u
+Lg0KVGhlIGRlYnVnZnMgaW50ZXJmYWNlIHdhcyBpbXBsZW1lbnRlZCB3aGVuIHRoaW5ncyB3ZXJl
+IG5vdCBxdWl0ZSBjbGVhciBvbg0KaG93IHRoZSBpbnRlcmZhY2Ugc2hvdWxkIHJlYWxseSBsb29r
+IGxpa2UgYW5kIHNlcnZlZCBhcyBhbiBlbmFibGVyIHRvIHRoZSBmaXJtd2FyZQ0KdGVhbSAoc2lu
+Y2UgdGhpcyBmZWF0dXJlIGlzIG1haW5seSBhIGZpcm13YXJlIGZlYXR1cmUpLiBXZSBhcmUgbm93
+IGluIHRyYW5zaXRpb24gcGhhc2UNCmFuZCBtb3ZlIGFsbCB0aGF0IHRvIHByb3BlciBubDgwMjEx
+IEFQSXMgdGhhdCB3aWxsIGJlIHB1Ymxpc2hlZCB1cHN0cmVhbSBzb29uLg0KDQo+IA0KPiBJIGV4
+cGVjdCB0aGF0IG1hbnkgd2lyZWxlc3MgY2hpcHMgYXJlIGdvaW5nIHRvIGltcGxlbWVudCAxMU1D
+IGluIHRoZQ0KPiBuZWFyZXN0IGZ1dHVyZS4gSGF2aW5nIHN1Y2ggY2xlYW4gQVBJIGZyb20gdGhl
+IHN0YXJ0IHdpbGwgc2ltcGxpZnkgdGhlIGZlYXR1cmUNCj4gZGV2ZWxvcG1lbnQuDQoNCk5vYm9k
+eSBjYW4gZGlzYWdyZWUgb24gdGhhdCA6KQ0KDQo+IA0KPiBbMV0NCj4gaHR0cHM6Ly9hbmRyb2lk
+Lmdvb2dsZXNvdXJjZS5jb20vcGxhdGZvcm0vaGFyZHdhcmUvbGliaGFyZHdhcmVfbGVnYWN5Lw0K
+PiArL21hc3Rlci9pbmNsdWRlL2hhcmR3YXJlX2xlZ2FjeS9ydHQuaA0K
