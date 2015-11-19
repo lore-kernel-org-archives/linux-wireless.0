@@ -1,95 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57928 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbbKQIrH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58961 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757743AbbKSGxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 03:47:07 -0500
-Message-ID: <564AE987.60709@broadcom.com> (sfid-20151117_094731_409092_9190FEE4)
-Date: Tue, 17 Nov 2015 09:47:03 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 19 Nov 2015 01:53:50 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/26] staging: wilc1000: rename u8P2Plocalrandom variable
+Date: Thu, 19 Nov 2015 15:56:16 +0900
+Message-ID: <1447916195-24851-7-git-send-email-glen.lee@atmel.com> (sfid-20151119_075352_902168_25395E13)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-To: Julia Lawall <Julia.Lawall@lip6.fr>,
-	Brett Rudley <brudley@broadcom.com>
-CC: <kernel-janitors@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: constify brcmf_bus_ops structures
-References: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/2015 05:22 PM, Julia Lawall wrote:
-> The brcmf_bus_ops structures are never modified, so declare them as const.
->
-> Done with the help of Coccinelle.
+From: Leo Kim <leo.kim@atmel.com>
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bus.h  |    2 +-
->   drivers/net/wireless/brcm80211/brcmfmac/pcie.c |    2 +-
->   drivers/net/wireless/brcm80211/brcmfmac/sdio.c |    2 +-
->   drivers/net/wireless/brcm80211/brcmfmac/usb.c  |    2 +-
->   4 files changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-> index 230cad7..36093f9 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-> @@ -137,7 +137,7 @@ struct brcmf_bus {
->   	bool always_use_fws_queue;
->   	bool wowl_supported;
->
-> -	struct brcmf_bus_ops *ops;
-> +	const struct brcmf_bus_ops *ops;
->   	struct brcmf_bus_msgbuf *msgbuf;
->   };
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> index 83d8042..65ae3b0 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> @@ -1419,7 +1419,7 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
->   }
->
->
-> -static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
-> +static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
->   	.txdata = brcmf_pcie_tx,
->   	.stop = brcmf_pcie_down,
->   	.txctl = brcmf_pcie_tx_ctlpkt,
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> index 7e74ac3..01f359e 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> @@ -4025,7 +4025,7 @@ brcmf_sdio_watchdog(unsigned long data)
->   	}
->   }
->
-> -static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
-> +static const struct brcmf_bus_ops brcmf_sdio_bus_ops = {
->   	.stop = brcmf_sdio_bus_stop,
->   	.preinit = brcmf_sdio_bus_preinit,
->   	.txdata = brcmf_sdio_bus_txdata,
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> index 689e64d..4bdd3b3 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> @@ -1163,7 +1163,7 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
->   		device_set_wakeup_enable(devinfo->dev, false);
->   }
->
-> -static struct brcmf_bus_ops brcmf_usb_bus_ops = {
-> +static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
->   	.txdata = brcmf_usb_tx,
->   	.stop = brcmf_usb_down,
->   	.txctl = brcmf_usb_tx_ctlpkt,
->
+This patch renames u8P2Plocalrandom variable to p2p_local_random
+to avoid camelcase.
+And, remove the relation comment.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 35 ++++++++++++-----------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 6ab4a79..dd8d404 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -172,7 +172,7 @@ struct p2p_mgmt_data {
+ static u8 wlan_channel = INVALID_CHANNEL;
+ static u8 curr_channel;
+ static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+-static u8 u8P2Plocalrandom = 0x01;
++static u8 p2p_local_random = 0x01;
+ static u8 u8P2Precvrandom = 0x00;
+ static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
+ static bool bWilc_ie;
+@@ -641,7 +641,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 		wilc_optaining_ip = false;
+ 		PRINT_ER("Received MAC_DISCONNECTED from firmware with reason %d on dev [%p]\n",
+ 			 pstrDisconnectNotifInfo->u16reason, priv->dev);
+-		u8P2Plocalrandom = 0x01;
++		p2p_local_random = 0x01;
+ 		u8P2Precvrandom = 0x00;
+ 		bWilc_ie = false;
+ 		eth_zero_addr(priv->au8AssociatedBss);
+@@ -1071,7 +1071,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 
+ 	PRINT_D(CFG80211_DBG, "Disconnecting with reason code(%d)\n", reason_code);
+ 
+-	u8P2Plocalrandom = 0x01;
++	p2p_local_random = 0x01;
+ 	u8P2Precvrandom = 0x00;
+ 	bWilc_ie = false;
+ 	pstrWFIDrv->p2p_timeout = 0;
+@@ -2009,7 +2009,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 								}
+ 							}
+ 						}
+-						if (u8P2Plocalrandom > u8P2Precvrandom)	{
++						if (p2p_local_random > u8P2Precvrandom)	{
+ 							if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
+ 							      || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
+ 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
+@@ -2019,8 +2019,9 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 									}
+ 								}
+ 							}
+-						} else
+-							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", u8P2Plocalrandom, u8P2Precvrandom);
++						} else {
++							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
++						}
+ 					}
+ 
+ 
+@@ -2224,7 +2225,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 	struct host_if_drv *pstrWFIDrv;
+ 	u32 i;
+ 	perInterface_wlan_t *nic;
+-	u32 buf_len = len + sizeof(u8P2P_vendorspec) + sizeof(u8P2Plocalrandom);
++	u32 buf_len = len + sizeof(u8P2P_vendorspec) + sizeof(p2p_local_random);
+ 
+ 	nic = netdev_priv(wdev->netdev);
+ 	priv = wiphy_priv(wiphy);
+@@ -2292,17 +2293,16 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 					if (!memcmp(p2p_oui, &buf[ACTION_SUBTYPE_ID + 1], 4)) {
+ 						/*For the connection of two WILC's connection generate a rand number to determine who will be a GO*/
+ 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP)) {
+-							if (u8P2Plocalrandom == 1 && u8P2Precvrandom < u8P2Plocalrandom) {
+-								get_random_bytes(&u8P2Plocalrandom, 1);
+-								/*Increment the number to prevent if its 0*/
+-								u8P2Plocalrandom++;
++							if (p2p_local_random == 1 && u8P2Precvrandom < p2p_local_random) {
++								get_random_bytes(&p2p_local_random, 1);
++								p2p_local_random++;
+ 							}
+ 						}
+ 
+ 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
+ 						      || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
+-							if (u8P2Plocalrandom > u8P2Precvrandom)	{
+-								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", u8P2Plocalrandom, u8P2Precvrandom);
++							if (p2p_local_random > u8P2Precvrandom)	{
++								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
+ 
+ 								/*Search for the p2p information information element , after the Public action subtype theres a byte for teh dialog token, skip that*/
+ 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
+@@ -2324,11 +2324,12 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 									 * identify each other and connect
+ 									 */
+ 									memcpy(&mgmt_tx->buff[len], u8P2P_vendorspec, sizeof(u8P2P_vendorspec));
+-									mgmt_tx->buff[len + sizeof(u8P2P_vendorspec)] = u8P2Plocalrandom;
++									mgmt_tx->buff[len + sizeof(u8P2P_vendorspec)] = p2p_local_random;
+ 									mgmt_tx->size = buf_len;
+ 								}
+-							} else
+-								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", u8P2Plocalrandom, u8P2Precvrandom);
++							} else {
++								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
++							}
+ 						}
+ 
+ 					} else {
+@@ -2557,7 +2558,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
+ 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
+-	u8P2Plocalrandom = 0x01;
++	p2p_local_random = 0x01;
+ 	u8P2Precvrandom = 0x00;
+ 
+ 	bWilc_ie = false;
+-- 
+1.9.1
 
