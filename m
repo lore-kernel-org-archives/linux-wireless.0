@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51735 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779AbbKOTah convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59359 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862AbbKSGzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2015 14:30:37 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-11-15
-Date: Sun, 15 Nov 2015 19:30:30 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com> (sfid-20151115_203106_534527_A6F4B456)
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 19 Nov 2015 01:55:16 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 22/26] staging: wilc1000: rename enuScanEvent in CfgScanResult function
+Date: Thu, 19 Nov 2015 15:56:31 +0900
+Message-ID: <1447916195-24851-22-git-send-email-glen.lee@atmel.com> (sfid-20151119_082252_859427_B00E2FFF)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Leo Kim <leo.kim@atmel.com>
 
-Here is the first pull request for 4.4. I admit that the FW API is
-borderline but since we are very early in the cycle, I think it is fine.
-The firmware is far from being released yet (so that this patch doesn't
-change much now), but having this patch in will allow me to provide the
-new firmware to the 4.4 users.
-Along with that various bug fixes, a fix for a NULL pointer exception
-other things as explained in the tag.
+This patch renames enuScanEvent to scan_event that is
+first argument of CfgScanResult function to avoid camelcase.
+And, remove the relation comment.
 
-Please pull - thanks!
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
-The following changes since commit a493bcf8d6caf28f062c5f8f2ba486fdbf1ae899:
-
-  Merge tag 'wireless-drivers-next-for-davem-2015-10-29' of
-git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next (2015-10-30
-20:38:24 +0900)
-
-are available in the git repository at:
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7905f37..646beff 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -419,7 +419,10 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
+  *  @date
+  *  @version	1.0
+  */
+-static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid, void *pJoinParams)
++static void CfgScanResult(enum scan_event scan_event,
++			  tstrNetworkInfo *pstrNetworkInfo,
++			  void *pUserVoid,
++			  void *pJoinParams)
+ {
+ 	struct wilc_priv *priv;
+ 	struct wiphy *wiphy;
+@@ -429,7 +432,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
  
-https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-11-15
-
-for you to fetch changes up to 9513c5e18a0dc55a1fc9c890715098ba2315830b:
-
-  iwlwifi: mvm: Avoid dereferencing sta if it was already flushed
-(2015-11-15 21:18:01 +0200)
-
-----------------------------------------------------------------
-* bump API to firmware 19 - not released yet.
-* fix D3 flows (Luca)
-* new device IDs (Oren)
-* fix NULL pointer dereference (Avri)
-
-----------------------------------------------------------------
-Avri Altman (1):
-      iwlwifi: mvm: Avoid dereferencing sta if it was already flushed
-
-Emmanuel Grumbach (1):
-      iwlwifi: bump firmware API to 19
-
-Luca Coelho (1):
-      iwlwifi: mvm: don't overwrite the key indices in D3 entry
-
-Oren Givon (1):
-      iwlwifi: Add new PCI IDs for the 8260 series
-
- drivers/net/wireless/iwlwifi/iwl-7000.c     |  2 +-
- drivers/net/wireless/iwlwifi/iwl-8000.c     |  2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c       |  8 ++------
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 11 ++++++++---
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 88
-+++++++++++++++++++++++++++++++++++++++++++++++-----------------------------------------
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  4 ++--
- drivers/net/wireless/iwlwifi/pcie/drv.c     | 19 ++++++++++++++++++-
- 7 files changed, 79 insertions(+), 55 deletions(-)
+ 	priv = (struct wilc_priv *)pUserVoid;
+ 	if (priv->bCfgScanning) {
+-		if (enuScanEvent == SCAN_EVENT_NETWORK_FOUND) {
++		if (scan_event == SCAN_EVENT_NETWORK_FOUND) {
+ 			wiphy = priv->dev->ieee80211_ptr->wiphy;
+ 
+ 			if (!wiphy)
+@@ -498,7 +501,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
+ 					}
+ 				}
+ 			}
+-		} else if (enuScanEvent == SCAN_EVENT_DONE)    {
++		} else if (scan_event == SCAN_EVENT_DONE) {
+ 			PRINT_D(CFG80211_DBG, "Scan Done[%p]\n", priv->dev);
+ 			PRINT_D(CFG80211_DBG, "Refreshing Scan ...\n");
+ 			refresh_scan(priv, 1, false);
+@@ -517,10 +520,7 @@ static void CfgScanResult(enum scan_event enuScanEvent, tstrNetworkInfo *pstrNet
+ 				priv->pstrScanReq = NULL;
+ 			}
+ 			up(&(priv->hSemScanReq));
+-
+-		}
+-		/*Aborting any scan operation during mac close*/
+-		else if (enuScanEvent == SCAN_EVENT_ABORTED) {
++		} else if (scan_event == SCAN_EVENT_ABORTED) {
+ 			down(&(priv->hSemScanReq));
+ 
+ 			PRINT_D(CFG80211_DBG, "Scan Aborted\n");
+-- 
+1.9.1
 
