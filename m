@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:35520 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbbKQFek (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59297 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbbKSGzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 00:34:40 -0500
-Received: by qgec40 with SMTP id c40so65477820qge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2015 21:34:39 -0800 (PST)
-From: Steve deRosier <derosier@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: [PATCH 0/2] ath6kl_sdio: add control of CHIP_PWD_L via GPIO
-Date: Mon, 16 Nov 2015 21:32:51 -0800
-Message-Id: <1447738373-15804-1-git-send-email-steve.derosier@lairdtech.com> (sfid-20151117_063443_946096_7D570402)
+	Thu, 19 Nov 2015 01:55:04 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 20/26] staging: wilc1000: rename pUserVoid in is_network_in_shadow function
+Date: Thu, 19 Nov 2015 15:56:29 +0900
+Message-ID: <1447916195-24851-20-git-send-email-glen.lee@atmel.com> (sfid-20151119_082254_530253_DBC378D1)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of two patches adds the ablity for ath6kl_sdio to control the
-CHIP_PWD_L pin on startup and for suspend/wakeup. This is importaint because
-on some platforms, this is the only way to achieve minimum power consumption.
-The CHIP_PWD_L pin is used to hold the ath chip in reset and this is the
-proper way to achieve its lowest power state (per QCA's datasheets).
+From: Leo Kim <leo.kim@atmel.com>
 
-This GPIO is controled by the kernel standard GPIOLIB and as such depends on
-CONFIG_GPIOLIB. If this isn't enabled, then the various usages will generally
-compile out. Even if enabled, by default the GPIO is set to an invalid number,
-and each use will check: if not a valid GPIO, then behavior will be unchanged.
+This patch renames pUserVoid to user_void that is
+second argument of is_network_in_shadow function to avoid camelcase.
 
-This adds a new module parameter to allow the user to set the GPIO to use.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-To utilize:
-	modprobe ath6kl_sdio reset_pwd_gpio=28
-Where "28" should be replaced by the GPIO id of the pin connected to the
-CHIP_PWD_L pin on the wifi chip.
-
-
-Steve deRosier (2):
-  ath6kl_sdio: Add reset gpio module parameter for CHIP_PWD_L pin
-  ath6kl_sdio: Add power gpio reset feature into sdio driver for suspend
-
- drivers/net/wireless/ath/ath6kl/sdio.c | 125 ++++++++++++++++++++++++++++++++-
- 1 file changed, 124 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 56005f6..5a9d0e2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -330,14 +330,15 @@ static void clear_duringIP(unsigned long arg)
+ 	wilc_optaining_ip = false;
+ }
+ 
+-static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
++static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
++				void *user_void)
+ {
+ 	int state = -1;
+ 	int i;
+ 
+ 	if (last_scanned_cnt == 0) {
+ 		PRINT_D(CFG80211_DBG, "Starting Aging timer\n");
+-		hAgingTimer.data = (unsigned long)pUserVoid;
++		hAgingTimer.data = (unsigned long)user_void;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
 -- 
 1.9.1
 
