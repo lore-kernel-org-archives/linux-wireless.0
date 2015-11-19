@@ -1,199 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:52525 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420AbbKBKXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 05:23:13 -0500
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-To: linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
-	Michal Sojka <sojkam1@fel.cvut.cz>
-Subject: [PATCH v2] ath9k: Add support for ITS-G5 band (5.9 GHz)
-Date: Mon,  2 Nov 2015 11:22:57 +0100
-Message-Id: <1446459777-5944-1-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151102_112317_313810_544EA4AA)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58906 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757144AbbKSGxi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2015 01:53:38 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/26] staging: wilc1000: rename u8WLANChannel variable
+Date: Thu, 19 Nov 2015 15:56:14 +0900
+Message-ID: <1447916195-24851-5-git-send-email-glen.lee@atmel.com> (sfid-20151119_075340_943240_FE1CDF79)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
+From: Leo Kim <leo.kim@atmel.com>
 
-The patch adds support for Intelligent Transportation System (ITS-G5)
-band to the ath9k driver.
+This patch renames u8WLANChannel variable to wlan_channel to avoid camelcase.
+And, remove the relation comment.
 
-Signed-off-by: Jan Kaisrlik <kaisrja1@fel.cvut.cz>
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 29 +++++++++--------------
+ 1 file changed, 11 insertions(+), 18 deletions(-)
 
-Hi all,
-
-in this second version of the patch we removed dependency on
-CFG80211_CERTIFICATION_ONUS as suggested by Johannes. We are, however,
-not sure whether this is the right thing to do.
-
-The problem is that ath9k uses (REGULATORY_STRICT_REG |
-REGULATORY_CUSTOM_REG), which means that in order to use the 5.9 GHz
-band, ath9k's private regdomain has to be extended. This in turn means
-that the 5.9 GHz band is enabled by default in many configurations. It
-can be disabled if one sends a regulatory hint and has valid regdb in
-user space, but this cannot be relied upon.
-
-As I already wrote, I don't think that regulatory documents allow such
-behavior:
-
-  In EU, regulatory (ECC Decision (08)01) reads:
-
-    ... decides ... that CEPT administrations shall designate the
-    frequency sub-band 5875-5905 MHz on a non-exclusive basis for ITS
-    traffic safety applications;
-
-  I understand this that the band can be used only by "traffic safety
-  applications" and not by random laptops running Linux.
-
-  In US, regulatory (FCC 03-324) says among others:
-
-    § 95.603 (h) Each Dedicated Short-Range Communications Service
-    On-Board Unit (DSRCS-OBU) that operates or is intended to operate
-    in the DSRCS (5.850-5.925 GHz) must be certified in accordance
-    with subpart L of this part and subpart J of part 2 of this
-    chapter.
-
-Especially the US regulatory suggests that using
-CFG80211_CERTIFICATION_ONUS might have sense (see the previous version
-http://www.mail-archive.com/linux-wireless@vger.kernel.org/msg15228.html).
-What do you think?
-
-Thanks.
--Michal & Jan
-
-
- drivers/net/wireless/ath/ath9k/common-init.c | 19 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h          |  2 +-
- drivers/net/wireless/ath/regd.c              | 17 ++++++++++++-----
- 3 files changed, 32 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-index a006c14..0b61c63 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.c
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -86,6 +86,25 @@ static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
- 	CHAN5G(5785, 35), /* Channel 157 */
- 	CHAN5G(5805, 36), /* Channel 161 */
- 	CHAN5G(5825, 37), /* Channel 165 */
-+
-+	/* ITS-G5B */
-+	CHAN5G(5855, 38), /* Channel 171 */
-+	CHAN5G(5860, 39), /* Channel 172 */
-+	CHAN5G(5865, 40), /* Channel 173 */
-+	CHAN5G(5870, 41), /* Channel 174 */
-+	/* ITS-G5A */
-+	CHAN5G(5875, 42), /* Channel 175 */
-+	CHAN5G(5880, 43), /* Channel 176 */
-+	CHAN5G(5885, 44), /* Channel 177 */
-+	CHAN5G(5890, 45), /* Channel 178 */
-+	CHAN5G(5895, 46), /* Channel 179 */
-+	CHAN5G(5900, 47), /* Channel 180 */
-+	CHAN5G(5905, 48), /* Channel 181 */
-+	/* ITS-G5D */
-+	CHAN5G(5910, 49), /* Channel 182 */
-+	CHAN5G(5915, 50), /* Channel 183 */
-+	CHAN5G(5920, 51), /* Channel 184 */
-+	CHAN5G(5925, 52), /* Channel 185 */
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c2e7bf8..3b072ef 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -169,9 +169,7 @@ struct p2p_mgmt_data {
+ 	u8 *buff;
  };
  
- /* Atheros hardware rate code addition for short premble */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e8454db..debf609 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -73,7 +73,7 @@
+-/*Global variable used to state the current  connected STA channel*/
+-static u8 u8WLANChannel = INVALID_CHANNEL;
+-
++static u8 wlan_channel = INVALID_CHANNEL;
+ static u8 curr_channel;
  
- #define ATH9K_RSSI_BAD			-128
+ static u8 u8P2P_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+@@ -593,9 +591,8 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			wilc_wlan_set_bssid(priv->dev, NullBssid);
+ 			eth_zero_addr(wilc_connected_SSID);
  
--#define ATH9K_NUM_CHANNELS	38
-+#define ATH9K_NUM_CHANNELS	53
+-			/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+ 			if (!pstrWFIDrv->p2p_connect)
+-				u8WLANChannel = INVALID_CHANNEL;
++				wlan_channel = INVALID_CHANNEL;
  
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) \
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 444bd28..1f8b209 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -50,6 +50,8 @@ static int __ath_regd_init(struct ath_regulatory *reg);
- #define ATH9K_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 80, 0, 30,\
- 					 NL80211_RRF_NO_IR)
+ 			PRINT_ER("Unspecified failure: Connection status %d : MAC status = %d\n", u16ConnectStatus, u8MacStatus);
+ 		}
+@@ -652,9 +649,8 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 		wilc_wlan_set_bssid(priv->dev, NullBssid);
+ 		eth_zero_addr(wilc_connected_SSID);
  
-+#define ATH9K_5GHZ_ITSG5	REG_RULE(5855-5, 5925+5, 10, 0, 33, 0)
-+
- #define ATH9K_2GHZ_ALL		ATH9K_2GHZ_CH01_11, \
- 				ATH9K_2GHZ_CH12_13, \
- 				ATH9K_2GHZ_CH14
-@@ -64,53 +66,58 @@ static int __ath_regd_init(struct ath_regulatory *reg);
- /* Can be used for:
-  * 0x60, 0x61, 0x62 */
- static const struct ieee80211_regdomain ath_world_regdom_60_61_62 = {
--	.n_reg_rules = 5,
-+	.n_reg_rules = 6,
- 	.alpha2 =  "99",
- 	.reg_rules = {
- 		ATH9K_2GHZ_ALL,
- 		ATH9K_5GHZ_ALL,
-+		ATH9K_5GHZ_ITSG5,
+-		/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+ 		if (!pstrWFIDrv->p2p_connect)
+-			u8WLANChannel = INVALID_CHANNEL;
++			wlan_channel = INVALID_CHANNEL;
+ 		/*Incase "P2P CLIENT Connected" send deauthentication reason by 3 to force the WPA_SUPPLICANT to directly change
+ 		 *      virtual interface to station*/
+ 		if ((pstrWFIDrv->IFC_UP) && (dev == wl->vif[1].ndev)) {
+@@ -1029,7 +1025,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	curr_channel = pstrNetworkInfo->u8channel;
+ 
+ 	if (!pstrWFIDrv->p2p_connect)
+-		u8WLANChannel = pstrNetworkInfo->u8channel;
++		wlan_channel = pstrNetworkInfo->u8channel;
+ 
+ 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->au8bssid);
+ 
+@@ -1069,10 +1065,9 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 	wilc_connecting = 0;
+ 	priv = wiphy_priv(wiphy);
+ 
+-	/*Invalidate u8WLANChannel value on wlan0 disconnect*/
+ 	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
+ 	if (!pstrWFIDrv->p2p_connect)
+-		u8WLANChannel = INVALID_CHANNEL;
++		wlan_channel = INVALID_CHANNEL;
+ 	wilc_wlan_set_bssid(priv->dev, NullBssid);
+ 
+ 	PRINT_D(CFG80211_DBG, "Disconnecting with reason code(%d)\n", reason_code);
+@@ -1855,15 +1850,14 @@ static void WILC_WFI_CfgParseRxAction(u8 *buf, u32 len)
+ 			op_channel_attr_index = index;
+ 		index += buf[index + 1] + 3; /* ID,Length byte */
  	}
- };
- 
- /* Can be used by 0x63 and 0x65 */
- static const struct ieee80211_regdomain ath_world_regdom_63_65 = {
--	.n_reg_rules = 4,
-+	.n_reg_rules = 5,
- 	.alpha2 =  "99",
- 	.reg_rules = {
- 		ATH9K_2GHZ_CH01_11,
- 		ATH9K_2GHZ_CH12_13,
- 		ATH9K_5GHZ_NO_MIDBAND,
-+		ATH9K_5GHZ_ITSG5,
+-	if (u8WLANChannel != INVALID_CHANNEL) {
+-
++	if (wlan_channel != INVALID_CHANNEL) {
+ 		/*Modify channel list attribute*/
+ 		if (channel_list_attr_index) {
+ 			PRINT_D(GENERIC_DBG, "Modify channel list attribute\n");
+ 			for (i = channel_list_attr_index + 3; i < ((channel_list_attr_index + 3) + buf[channel_list_attr_index + 1]); i++) {
+ 				if (buf[i] == 0x51) {
+ 					for (j = i + 2; j < ((i + 2) + buf[i + 1]); j++) {
+-						buf[j] = u8WLANChannel;
++						buf[j] = wlan_channel;
+ 					}
+ 					break;
+ 				}
+@@ -1873,7 +1867,7 @@ static void WILC_WFI_CfgParseRxAction(u8 *buf, u32 len)
+ 		if (op_channel_attr_index) {
+ 			PRINT_D(GENERIC_DBG, "Modify operating channel attribute\n");
+ 			buf[op_channel_attr_index + 6] = 0x51;
+-			buf[op_channel_attr_index + 7] = u8WLANChannel;
++			buf[op_channel_attr_index + 7] = wlan_channel;
+ 		}
  	}
- };
- 
- /* Can be used by 0x64 only */
- static const struct ieee80211_regdomain ath_world_regdom_64 = {
--	.n_reg_rules = 3,
-+	.n_reg_rules = 4,
- 	.alpha2 =  "99",
- 	.reg_rules = {
- 		ATH9K_2GHZ_CH01_11,
- 		ATH9K_5GHZ_NO_MIDBAND,
-+		ATH9K_5GHZ_ITSG5,
+ }
+@@ -1909,15 +1903,14 @@ static void WILC_WFI_CfgParseTxAction(u8 *buf, u32 len, bool bOperChan, u8 iftyp
+ 			op_channel_attr_index = index;
+ 		index += buf[index + 1] + 3; /* ID,Length byte */
  	}
- };
- 
- /* Can be used by 0x66 and 0x69 */
- static const struct ieee80211_regdomain ath_world_regdom_66_69 = {
--	.n_reg_rules = 3,
-+	.n_reg_rules = 4,
- 	.alpha2 =  "99",
- 	.reg_rules = {
- 		ATH9K_2GHZ_CH01_11,
- 		ATH9K_5GHZ_ALL,
-+		ATH9K_5GHZ_ITSG5,
+-	if (u8WLANChannel != INVALID_CHANNEL && bOperChan) {
+-
++	if (wlan_channel != INVALID_CHANNEL && bOperChan) {
+ 		/*Modify channel list attribute*/
+ 		if (channel_list_attr_index) {
+ 			PRINT_D(GENERIC_DBG, "Modify channel list attribute\n");
+ 			for (i = channel_list_attr_index + 3; i < ((channel_list_attr_index + 3) + buf[channel_list_attr_index + 1]); i++) {
+ 				if (buf[i] == 0x51) {
+ 					for (j = i + 2; j < ((i + 2) + buf[i + 1]); j++) {
+-						buf[j] = u8WLANChannel;
++						buf[j] = wlan_channel;
+ 					}
+ 					break;
+ 				}
+@@ -1927,7 +1920,7 @@ static void WILC_WFI_CfgParseTxAction(u8 *buf, u32 len, bool bOperChan, u8 iftyp
+ 		if (op_channel_attr_index) {
+ 			PRINT_D(GENERIC_DBG, "Modify operating channel attribute\n");
+ 			buf[op_channel_attr_index + 6] = 0x51;
+-			buf[op_channel_attr_index + 7] = u8WLANChannel;
++			buf[op_channel_attr_index + 7] = wlan_channel;
+ 		}
  	}
- };
- 
- /* Can be used by 0x67, 0x68, 0x6A and 0x6C */
- static const struct ieee80211_regdomain ath_world_regdom_67_68_6A_6C = {
--	.n_reg_rules = 4,
-+	.n_reg_rules = 5,
- 	.alpha2 =  "99",
- 	.reg_rules = {
- 		ATH9K_2GHZ_CH01_11,
- 		ATH9K_2GHZ_CH12_13,
- 		ATH9K_5GHZ_ALL,
-+		ATH9K_5GHZ_ITSG5,
- 	}
- };
- 
+ }
 -- 
-2.5.3
+1.9.1
 
