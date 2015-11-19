@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:32978 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbbKDFET (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59419 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757787AbbKSGz1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 00:04:19 -0500
+	Thu, 19 Nov 2015 01:55:27 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 24/26] staging: wilc1000: rename pUserVoid in CfgScanResult function
+Date: Thu, 19 Nov 2015 15:56:33 +0900
+Message-ID: <1447916195-24851-24-git-send-email-glen.lee@atmel.com> (sfid-20151119_082255_027325_B95375E2)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Wed, 4 Nov 2015 00:03:59 -0500
-Message-ID: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com> (sfid-20151104_060423_372262_ACF24427)
-Subject: ath9k(?): AP stops sending traffic to iPhone 4S until another
- 802.11n-capable STA joins
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org
-Cc: Tim Shepard <shep@alum.mit.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Leo Kim <leo.kim@atmel.com>
 
-I have a pretty weird problem I've been chasing for a few weeks and
-have narrowed it down, but not quite solved it.  It may be caused by
-bugs in aggregation-related code.
+This patch renames pUserVoid to user_void that is
+third argument of CfgScanResult function to avoid camelcase.
 
-Steps:
-- Set up an ath9k-based Linux AP on an ARM processor (currently using
-this version of backports, though I've tried older and newer versions
-with no change: "backported from Linux (next-20150525-0-gc201847)
-using backports backports-20150525-0-g49969bd")
-- Join my iPhone 4S (running iOS 7.1.2) to the network
-- Use it for a while
-- Eventually it will stay connected, but Internet access doesn't work
-- Wireless packet captures show that packets are received *from* the
-iPhone, and ACKs are returned for those packets from the ath9k, and
-those packets are correctly forwarded to the AP's br0 interface.  But
-outgoing packets show up on br0 and wlan0 with tcpdump, but never make
-it onto the air.
-- Putting the iPhone 4S into airplane mode and then letting it
-reconnecting will fix it for a few more seconds/minutes before it
-stops again.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-More details:
-- It only seems to happen to my iPhone 4S client (never seen it with a
-different client).
-- It only seems to happen with my ath9k AP.
-- It only seems to happen on my home network (another instance of the
-same AP hardware on another network doesn't trigger the problem).
-- It only seems to happen when no other 802.11n-capable devices are
-connected to the same AP.
-- The moment I join an 802.11n-capable device to the AP, traffic
-instantly unblocks (see packet capture below).
-- Joining an 802.11g-only device (no aggregation) does *not* unblock traffic.
-- Disabling encryption and turning wmm_enable on and off have no effect.
-- Disabling 802.11n support on the AP (so that everyone has to use
-802.11g) makes the problem go away.
-- 'ip -s link show dev wlan0' shows tx packet counters continuing to
-increase during the outage, even though packets aren't flowing.
-- I applied a patch from Tim Shepard to track the most recent tx
-attempt, acked tx, and rx packet times inside mac80211.  According to
-this data, mac80211 thinks rx happened at most a couple of seconds ago
-(as expected).  The most recent tx was acked, but it was back around
-the time the outage started.  Note that this disagrees with 'ip -s
-link' and tcpdump, which think they transmitted much more recently
-than that.  (The patch is here:
-https://gfiber-review.googlesource.com/#/c/1250/ )
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b0d1ed3..0b03e54 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -421,7 +421,7 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
+  */
+ static void CfgScanResult(enum scan_event scan_event,
+ 			  tstrNetworkInfo *network_info,
+-			  void *pUserVoid,
++			  void *user_void,
+ 			  void *pJoinParams)
+ {
+ 	struct wilc_priv *priv;
+@@ -430,7 +430,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 	struct ieee80211_channel *channel;
+ 	struct cfg80211_bss *bss = NULL;
+ 
+-	priv = (struct wilc_priv *)pUserVoid;
++	priv = (struct wilc_priv *)user_void;
+ 	if (priv->bCfgScanning) {
+ 		if (scan_event == SCAN_EVENT_NETWORK_FOUND) {
+ 			wiphy = priv->dev->ieee80211_ptr->wiphy;
+-- 
+1.9.1
 
-I captured a pcap of a new 802.11n-capable device joining the network
-and unblocking the transmit.  The action starts around frame 325:
-   http://apenwarr.ca/tmp/iPod4-fixing-iPhone4-trimmed.pcap.gz
-
-In this pcap, the main players are:
-   ath9k AP: 88:dc:96:08:60:50
-   iPhone 4S with the problem: e4:25:e7:73:e6:31
-   New client fixing the problem (iPod 4): 18:e7:f4:7e:c1:42
-
-Observations from the pcap:
-- Upstream packets (iPhone->ath9k) are received and acked (see eg. frame 154)
-- Beacons from the ath9k show an empty TIM bitmap until the iPod
-joins, then it's nonempty and things unblock.
-
-Does anyone have any thoughts about what to look for here?
-
-Have fun,
-
-Avery
