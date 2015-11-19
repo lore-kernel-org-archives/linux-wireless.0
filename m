@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37142 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59197 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCO3 (ORCPT
+	with ESMTP id S1755587AbbKSGyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:14:29 -0500
+	Thu, 19 Nov 2015 01:54:41 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 40/73] staging: wilc1000: rename pu32TxqCount in wilc_wlan_handle_txq function
-Date: Fri, 6 Nov 2015 11:13:01 +0900
-Message-ID: <1446776014-28094-40-git-send-email-glen.lee@atmel.com> (sfid-20151106_033803_115929_EB988324)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 16/26] staging: wilc1000: rename pstrNetworkInfo variable
+Date: Thu, 19 Nov 2015 15:56:25 +0900
+Message-ID: <1447916195-24851-16-git-send-email-glen.lee@atmel.com> (sfid-20151119_082255_502426_8516EC77)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,51 +22,55 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch rename pu32TxqCount to txq_count that is second argument of
-wilc_wlan_handle_txq function to avoid camelcase.
+This patch renames pstrNetworkInfo variable to network_info
+to avoid camelcase.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 66d5d42..cffd720 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -695,7 +695,7 @@ void chip_sleep_manually(void)
- 	release_bus(RELEASE_ONLY);
- }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 6f79662..9416644 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -249,25 +249,24 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 	wiphy = priv->dev->ieee80211_ptr->wiphy;
  
--int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount)
-+int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	int i, entries = 0;
-@@ -949,7 +949,7 @@ _end_:
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+-		tstrNetworkInfo *pstrNetworkInfo;
++		tstrNetworkInfo *network_info;
  
- 	p->txq_exit = 1;
- 	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
--	*pu32TxqCount = p->txq_entries;
-+	*txq_count = p->txq_entries;
- 	return ret;
- }
+-		pstrNetworkInfo = &last_scanned_shadow[i];
++		network_info = &last_scanned_shadow[i];
  
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index de2fb7c..1eaac9a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -300,7 +300,7 @@ int wilc_wlan_start(void);
- int wilc_wlan_stop(void);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func);
--int wilc_wlan_handle_txq(struct net_device *dev, u32 *pu32TxqCount);
-+int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count);
- void wilc_handle_isr(void *wilc);
- void wilc_wlan_cleanup(struct net_device *dev);
- int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size,
+-		if ((!pstrNetworkInfo->u8Found) || all) {
++		if (!network_info->u8Found || all) {
+ 			s32 s32Freq;
+ 			struct ieee80211_channel *channel;
+ 
+-			if (pstrNetworkInfo != NULL) {
+-
+-				s32Freq = ieee80211_channel_to_frequency((s32)pstrNetworkInfo->u8channel, IEEE80211_BAND_2GHZ);
++			if (network_info) {
++				s32Freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
+ 				channel = ieee80211_get_channel(wiphy, s32Freq);
+ 
+-				rssi = get_rssi_avg(pstrNetworkInfo);
+-				if (memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7) ||
++				rssi = get_rssi_avg(network_info);
++				if (memcmp("DIRECT-", network_info->au8ssid, 7) ||
+ 				    direct_scan) {
+-					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, pstrNetworkInfo->au8bssid, pstrNetworkInfo->u64Tsf, pstrNetworkInfo->u16CapInfo,
+-								  pstrNetworkInfo->u16BeaconPeriod, (const u8 *)pstrNetworkInfo->pu8IEs,
+-								  (size_t)pstrNetworkInfo->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
++					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
++								  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
++								  (size_t)network_info->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
+ 					cfg80211_put_bss(wiphy, bss);
+ 				}
+ 			}
 -- 
 1.9.1
 
