@@ -1,392 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34935 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933325AbbKROq5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:59385 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757773AbbKSGzW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 23/27] rt2x00: move under ralink vendor directory
-Date: Wed, 18 Nov 2015 16:46:02 +0200
-Message-Id: <1447857966-19560-24-git-send-email-kvalo@codeaurora.org> (sfid-20151118_154945_075075_174F2A3E)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	Thu, 19 Nov 2015 01:55:22 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 23/26] staging: wilc1000: rename pstrNetworkInfo in CfgScanResult function
+Date: Thu, 19 Nov 2015 15:56:32 +0900
+Message-ID: <1447916195-24851-23-git-send-email-glen.lee@atmel.com> (sfid-20151119_082254_049654_DCB3152B)
+In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This patch renames pstrNetworkInfo to network_info that is
+second argument of CfgScanResult function to avoid camelcase.
+And, remove the relation comment.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- MAINTAINERS                                        |    2 +-
- drivers/net/wireless/Kconfig                       |    2 +-
- drivers/net/wireless/Makefile                      |    3 +--
- drivers/net/wireless/ralink/Kconfig                |   16 ++++++++++++++++
- drivers/net/wireless/ralink/Makefile               |    1 +
- drivers/net/wireless/{ => ralink}/rt2x00/Kconfig   |    0
- drivers/net/wireless/{ => ralink}/rt2x00/Makefile  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2400pci.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2400pci.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2500pci.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2500pci.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2500usb.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2500usb.h   |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt2800.h  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800lib.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800lib.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800mmio.c  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800mmio.h  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800pci.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800pci.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800soc.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800usb.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2800usb.h   |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt2x00.h  |    0
- .../wireless/{ => ralink}/rt2x00/rt2x00config.c    |    0
- .../wireless/{ => ralink}/rt2x00/rt2x00crypto.c    |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00debug.c |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00debug.h |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00dev.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00dump.h  |    0
- .../wireless/{ => ralink}/rt2x00/rt2x00firmware.c  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00leds.c  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00leds.h  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00lib.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00link.c  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00mac.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00mmio.c  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00mmio.h  |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00pci.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00pci.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00queue.c |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00queue.h |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00reg.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00soc.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00soc.h   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00usb.c   |    0
- .../net/wireless/{ => ralink}/rt2x00/rt2x00usb.h   |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt61pci.c |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt61pci.h |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt73usb.c |    0
- drivers/net/wireless/{ => ralink}/rt2x00/rt73usb.h |    0
- 51 files changed, 20 insertions(+), 4 deletions(-)
- create mode 100644 drivers/net/wireless/ralink/Kconfig
- create mode 100644 drivers/net/wireless/ralink/Makefile
- rename drivers/net/wireless/{ => ralink}/rt2x00/Kconfig (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/Makefile (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2400pci.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2400pci.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2500pci.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2500pci.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2500usb.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2500usb.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800lib.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800lib.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800mmio.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800mmio.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800pci.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800pci.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800soc.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800usb.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2800usb.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00config.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00crypto.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00debug.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00debug.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00dev.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00dump.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00firmware.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00leds.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00leds.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00lib.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00link.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00mac.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00mmio.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00mmio.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00pci.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00pci.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00queue.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00queue.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00reg.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00soc.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00soc.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00usb.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt2x00usb.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt61pci.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt61pci.h (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt73usb.c (100%)
- rename drivers/net/wireless/{ => ralink}/rt2x00/rt73usb.h (100%)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 41 ++++++++++-------------
+ 1 file changed, 17 insertions(+), 24 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a9f7f968f64e..38c049d07966 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8801,7 +8801,7 @@ M:	Stanislaw Gruszka <sgruszka@redhat.com>
- M:	Helmut Schaa <helmut.schaa@googlemail.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
--F:	drivers/net/wireless/rt2x00/
-+F:	drivers/net/wireless/ralink/rt2x00/
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 646beff..b0d1ed3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -420,7 +420,7 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
+  *  @version	1.0
+  */
+ static void CfgScanResult(enum scan_event scan_event,
+-			  tstrNetworkInfo *pstrNetworkInfo,
++			  tstrNetworkInfo *network_info,
+ 			  void *pUserVoid,
+ 			  void *pJoinParams)
+ {
+@@ -438,33 +438,27 @@ static void CfgScanResult(enum scan_event scan_event,
+ 			if (!wiphy)
+ 				return;
  
- RAMDISK RAM BLOCK DEVICE DRIVER
- M:	Jens Axboe <axboe@kernel.dk>
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 518608403bd3..c58e244b5079 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -24,6 +24,7 @@ source "drivers/net/wireless/cisco/Kconfig"
- source "drivers/net/wireless/intel/Kconfig"
- source "drivers/net/wireless/intersil/Kconfig"
- source "drivers/net/wireless/marvell/Kconfig"
-+source "drivers/net/wireless/ralink/Kconfig"
- source "drivers/net/wireless/realtek/Kconfig"
- source "drivers/net/wireless/rsi/Kconfig"
- source "drivers/net/wireless/st/Kconfig"
-@@ -97,7 +98,6 @@ config MAC80211_HWSIM
- 	  called mac80211_hwsim.  If unsure, say N.
+-			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC
+-			    &&
+-			    ((((s32)pstrNetworkInfo->s8rssi) * 100) < 0
+-			     ||
+-			     (((s32)pstrNetworkInfo->s8rssi) * 100) > 100)
+-			    ) {
++			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC &&
++			    (((s32)network_info->s8rssi * 100) < 0 ||
++			    ((s32)network_info->s8rssi * 100) > 100)) {
+ 				PRINT_ER("wiphy signal type fial\n");
+ 				return;
+ 			}
  
- source "drivers/net/wireless/ath/Kconfig"
--source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
+-			if (pstrNetworkInfo != NULL) {
+-				s32Freq = ieee80211_channel_to_frequency((s32)pstrNetworkInfo->u8channel, IEEE80211_BAND_2GHZ);
++			if (network_info) {
++				s32Freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
+ 				channel = ieee80211_get_channel(wiphy, s32Freq);
  
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index d38b6cc338df..8ac72fd44d17 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -9,6 +9,7 @@ obj-$(CONFIG_WLAN_VENDOR_CISCO) += cisco/
- obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
- obj-$(CONFIG_WLAN_VENDOR_INTERSIL) += intersil/
- obj-$(CONFIG_WLAN_VENDOR_MARVELL) += marvell/
-+obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
- obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
- obj-$(CONFIG_WLAN_VENDOR_RSI) += rsi/
- obj-$(CONFIG_WLAN_VENDOR_ST) += st/
-@@ -20,8 +21,6 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ 				if (!channel)
+ 					return;
  
- obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ 				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
+-					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)pstrNetworkInfo->s8rssi) * 100),
+-					   pstrNetworkInfo->u16CapInfo, pstrNetworkInfo->u16BeaconPeriod);
++					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)network_info->s8rssi) * 100),
++					   network_info->u16CapInfo, network_info->u16BeaconPeriod);
  
--obj-$(CONFIG_RT2X00)	+= rt2x00/
+-				if (pstrNetworkInfo->bNewNetwork) {
++				if (network_info->bNewNetwork) {
+ 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) { /* TODO: mostafa: to be replaced by */
+-						/*               max_scan_ssids */
+-						PRINT_D(CFG80211_DBG, "Network %s found\n", pstrNetworkInfo->au8ssid);
 -
- obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
+-
++						PRINT_D(CFG80211_DBG, "Network %s found\n", network_info->au8ssid);
+ 						priv->u32RcvdChCount++;
  
- obj-$(CONFIG_ATH_CARDS)		+= ath/
-diff --git a/drivers/net/wireless/ralink/Kconfig b/drivers/net/wireless/ralink/Kconfig
-new file mode 100644
-index 000000000000..41dbf3130e2b
---- /dev/null
-+++ b/drivers/net/wireless/ralink/Kconfig
-@@ -0,0 +1,16 @@
-+config WLAN_VENDOR_RALINK
-+	bool "Ralink devices"
-+	default y
-+	---help---
-+	  If you have a wireless card belonging to this class, say Y.
-+
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
-+
-+if WLAN_VENDOR_RALINK
-+
-+source "drivers/net/wireless/ralink/rt2x00/Kconfig"
-+
-+endif # WLAN_VENDOR_RALINK
-diff --git a/drivers/net/wireless/ralink/Makefile b/drivers/net/wireless/ralink/Makefile
-new file mode 100644
-index 000000000000..f84c0a2e4f4d
---- /dev/null
-+++ b/drivers/net/wireless/ralink/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_RT2X00)	+= rt2x00/
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/ralink/rt2x00/Kconfig
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/Kconfig
-rename to drivers/net/wireless/ralink/rt2x00/Kconfig
-diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/ralink/rt2x00/Makefile
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/Makefile
-rename to drivers/net/wireless/ralink/rt2x00/Makefile
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2400pci.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/ralink/rt2x00/rt2400pci.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2400pci.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2400pci.h
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2500pci.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/ralink/rt2x00/rt2500pci.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2500pci.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2500pci.h
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2500usb.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/ralink/rt2x00/rt2500usb.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2500usb.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2500usb.h
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2800.h
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800lib.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800lib.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-diff --git a/drivers/net/wireless/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800mmio.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-diff --git a/drivers/net/wireless/rt2x00/rt2800mmio.h b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800mmio.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2800mmio.h
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800pci.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2800pci.c
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.h b/drivers/net/wireless/ralink/rt2x00/rt2800pci.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800pci.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2800pci.h
-diff --git a/drivers/net/wireless/rt2x00/rt2800soc.c b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800soc.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800usb.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/ralink/rt2x00/rt2800usb.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2800usb.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2800usb.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00config.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00config.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00crypto.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00debug.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00debug.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00debug.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00dev.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dump.h b/drivers/net/wireless/ralink/rt2x00/rt2x00dump.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00dump.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00dump.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/ralink/rt2x00/rt2x00firmware.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00firmware.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00firmware.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/ralink/rt2x00/rt2x00leds.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00leds.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00leds.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.h b/drivers/net/wireless/ralink/rt2x00/rt2x00leds.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00leds.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00leds.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00lib.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00link.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00mac.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00mmio.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.h b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00mmio.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00pci.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00pci.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00queue.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00queue.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/ralink/rt2x00/rt2x00reg.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00reg.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00reg.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.c b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00soc.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.h b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00soc.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00soc.h
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00usb.c
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt2x00usb.h
-rename to drivers/net/wireless/ralink/rt2x00/rt2x00usb.h
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt61pci.c
-rename to drivers/net/wireless/ralink/rt2x00/rt61pci.c
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/ralink/rt2x00/rt61pci.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt61pci.h
-rename to drivers/net/wireless/ralink/rt2x00/rt61pci.h
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt73usb.c
-rename to drivers/net/wireless/ralink/rt2x00/rt73usb.c
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/ralink/rt2x00/rt73usb.h
-similarity index 100%
-rename from drivers/net/wireless/rt2x00/rt73usb.h
-rename to drivers/net/wireless/ralink/rt2x00/rt73usb.h
+ 
+@@ -472,14 +466,13 @@ static void CfgScanResult(enum scan_event scan_event,
+ 						if (pJoinParams == NULL) {
+ 							PRINT_INFO(CORECONFIG_DBG, ">> Something really bad happened\n");
+ 						}
+-						add_network_to_shadow(pstrNetworkInfo, priv, pJoinParams);
++						add_network_to_shadow(network_info, priv, pJoinParams);
+ 
+ 						/*P2P peers are sent to WPA supplicant and added to shadow table*/
+-
+-						if (!(memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7))) {
+-							bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN,  pstrNetworkInfo->au8bssid, pstrNetworkInfo->u64Tsf, pstrNetworkInfo->u16CapInfo,
+-										  pstrNetworkInfo->u16BeaconPeriod, (const u8 *)pstrNetworkInfo->pu8IEs,
+-										  (size_t)pstrNetworkInfo->u16IEsLen, (((s32)pstrNetworkInfo->s8rssi) * 100), GFP_KERNEL);
++						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
++							bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN,  network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
++										  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
++										  (size_t)network_info->u16IEsLen, (((s32)network_info->s8rssi) * 100), GFP_KERNEL);
+ 							cfg80211_put_bss(wiphy, bss);
+ 						}
+ 
+@@ -491,10 +484,10 @@ static void CfgScanResult(enum scan_event scan_event,
+ 					u32 i;
+ 					/* So this network is discovered before, we'll just update its RSSI */
+ 					for (i = 0; i < priv->u32RcvdChCount; i++) {
+-						if (memcmp(last_scanned_shadow[i].au8bssid, pstrNetworkInfo->au8bssid, 6) == 0) {
++						if (memcmp(last_scanned_shadow[i].au8bssid, network_info->au8bssid, 6) == 0) {
+ 							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].au8ssid);
+ 
+-							last_scanned_shadow[i].s8rssi = pstrNetworkInfo->s8rssi;
++							last_scanned_shadow[i].s8rssi = network_info->s8rssi;
+ 							last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
+ 							break;
+ 						}
 -- 
-1.7.9.5
+1.9.1
 
