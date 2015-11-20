@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59057 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757747AbbKSGyM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:54:12 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/26] staging: wilc1000: rename duringIP_TIME variable
-Date: Thu, 19 Nov 2015 15:56:20 +0900
-Message-ID: <1447916195-24851-11-git-send-email-glen.lee@atmel.com> (sfid-20151119_082253_089289_DDD691FB)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:52805 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1162980AbbKTP3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2015 10:29:37 -0500
+Message-ID: <1448033373.3141.46.camel@sipsolutions.net> (sfid-20151120_162940_123959_7801B6D3)
+Subject: Re: [RFC v5 4/5] mac80211: use Kconfig counters to elide
+ unnecessary code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Marek <mmarek@suse.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 20 Nov 2015 16:29:33 +0100
+In-Reply-To: <564F3B36.4040101@suse.com>
+References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+	 <1447365652-23716-5-git-send-email-johannes@sipsolutions.net>
+	 <564F3B36.4040101@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, 2015-11-20 at 16:24 +0100, Michal Marek wrote:
+> On 2015-11-12 23:00, Johannes Berg wrote:
+> > +	count MAC80211_NUM_DRIVERS
+> > +	select MAC80211_DRIVER_NO_HWFLAGS
+> 
+> Hi Johannes,
+> 
+> The MAC80211_DRIVER_NO_HWFLAGS config does not seem to be used
+> anywhere in the logic.
+> 
 
-This patch renames duringIP_TIME variable to during_ip_time
-to avoid camelcase.
+Yeah, I forgot in this version. I have an updated one at
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git/lo
+g/?h=hwflags-elide
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 24e1e15..c49b989 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -200,7 +200,7 @@ static bool g_gtk_keys_saved;
- static bool g_wep_keys_saved;
- 
- #define AGING_TIME	(9 * 1000)
--#define duringIP_TIME 15000
-+#define during_ip_time	15000
- 
- static void clear_shadow_scan(void *pUserVoid)
- {
-@@ -2772,7 +2772,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_D(GENERIC_DBG, "start duringIP timer\n");
- 
- 		wilc_optaining_ip = true;
--		mod_timer(&wilc_during_ip_timer, jiffies + msecs_to_jiffies(duringIP_TIME));
-+		mod_timer(&wilc_during_ip_timer,
-+			  jiffies + msecs_to_jiffies(during_ip_time));
- 		wilc_set_power_mgmt(priv->hWILCWFIDrv, 0, 0);
- 		/*Delete block ack has to be the latest config packet*/
- 		/*sent before downloading new FW. This is because it blocks on*/
--- 
-1.9.1
+haven't sent it yet though because I'm not really sure it's worth it at
+all?
 
+johannes
