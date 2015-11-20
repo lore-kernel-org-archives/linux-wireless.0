@@ -1,50 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42629 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757903AbbKSPpw (ORCPT
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:22566 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161286AbbKTLlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 10:45:52 -0500
-Date: Thu, 19 Nov 2015 07:45:51 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: glen lee <glen.lee@atmel.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 3/4] staging: wilc1000: rename index to
- tcp_pending_ack_idx
-Message-ID: <20151119154551.GB7601@kroah.com> (sfid-20151119_164556_197567_8730F608)
-References: <1447898761-6938-1-git-send-email-glen.lee@atmel.com>
- <1447898761-6938-3-git-send-email-glen.lee@atmel.com>
- <20151119062343.GR18797@mwanda>
- <564D71EE.20704@atmel.com>
+	Fri, 20 Nov 2015 06:41:00 -0500
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc] PATCH v5 3/3] DT: bindings: net: nfc: Add ST95HF binding doc
+Date: Fri, 20 Nov 2015 06:40:21 -0500
+Message-ID: <1448019621-14259-4-git-send-email-shikha.singh@st.com> (sfid-20151120_124104_333831_14A6EAF7)
+In-Reply-To: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
+References: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <564D71EE.20704@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 19, 2015 at 03:53:34PM +0900, glen lee wrote:
-> 
-> 
-> On 2015년 11월 19일 15:23, Dan Carpenter wrote:
-> >On Thu, Nov 19, 2015 at 11:06:00AM +0900, Glen Lee wrote:
-> >>This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
-> >>this name could be confused index of txq_entry_t. It is index of tcp pending
-> >>ack.
-> >>
-> >>It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
-> >>
-> >It is just a cleanup patch and not a bugfix patch so "fix" is the wrong
-> >word here.  But the correct format for fixes tags is:
-> >
-> >Fixes: 123456789012 ('Title of patch')
-> 
-> I see, I learned another one. Thanks.
+This patch includes ST95HF binding doc that guides how to
+make node entry of ST95HF in DT file of any platform.
 
-Git can do this automatically for you:
-	 git show -s --abbrev-commit --abbrev=12 --pretty=format:"%h (\"%s\")%n"
-I have an alias for this to make it easier to use frequently.
+Signed-off-by: Shikha Singh <shikha.singh@st.com>
+---
+ .../devicetree/bindings/net/nfc/st95hf.txt         | 50 ++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
 
-greg k-h
+diff --git a/Documentation/devicetree/bindings/net/nfc/st95hf.txt b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
+new file mode 100644
+index 0000000..ea3178b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/nfc/st95hf.txt
+@@ -0,0 +1,50 @@
++* STMicroelectronics : NFC Transceiver ST95HF
++
++ST NFC Transceiver is required to attach with SPI bus.
++ST95HF node should be defined in DT as SPI slave device of SPI
++master with which ST95HF transceiver is physically connected.
++The properties defined below are required to be the part of DT
++to include ST95HF transceiver into the platform.
++
++Required properties:
++===================
++- reg: Address of SPI slave "ST95HF transceiver" on SPI master bus.
++
++- compatible: should be "st,st95hf" for ST95HF NFC transceiver
++
++- spi-max-frequency: Max. operating SPI frequency for ST95HF
++	transceiver.
++
++- enable-gpio: GPIO line to enable ST95HF transceiver.
++
++- interrupt-parent : Standard way to specify the controller to which
++	ST95HF transceiver's interrupt is routed.
++
++- interrupts : Standard way to define ST95HF transceiver's out
++	interrupt.
++
++Optional property:
++=================
++- st95hfvin-supply : This is an optional property. It contains a
++	phandle to ST95HF transceiver's regulator supply node in DT.
++
++Example:
++=======
++spi@9840000 {
++	reg = <0x9840000 0x110>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	cs-gpios = <&pio0 4>;
++	status = "okay";
++
++	st95hf@0{
++		reg = <0>;
++		compatible = "st,st95hf";
++		status = "okay";
++		spi-max-frequency = <1000000>;
++		enable-gpio = <&pio4 0>;
++		interrupt-parent = <&pio0>;
++		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
++	};
++
++};
+-- 
+1.8.2.1
+
