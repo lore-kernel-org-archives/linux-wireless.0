@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:34832 "EHLO
-	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932297AbbKRWxw (ORCPT
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:33902 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935120AbbKTLkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 17:53:52 -0500
-Received: by qkao63 with SMTP id o63so19980379qka.2
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2015 14:53:51 -0800 (PST)
-From: Steve deRosier <derosier@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: [PATCH] ath6kl: Don't print error message when recv is canceled
-Date: Wed, 18 Nov 2015 14:51:28 -0800
-Message-Id: <1447887088-19018-1-git-send-email-steve.derosier@lairdtech.com> (sfid-20151118_235410_885558_393510F3)
+	Fri, 20 Nov 2015 06:40:51 -0500
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc] PATCH v5 0/3] *** ST95HF driver v5 ***
+Date: Fri, 20 Nov 2015 06:40:18 -0500
+Message-ID: <1448019621-14259-1-git-send-email-shikha.singh@st.com> (sfid-20151120_124055_948571_C58FB48D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An error message ath6kl_htc_rxmsg_pending_handler isn't appropate for when
-the error is ECANCELED. This could be the result of a perfectly appropriate
-RX cancel due to shutdown or suspend. This allows the right cleanup to
-continue, but without an alarming error message in this particular case.
+New patch series of ST95HF Linux Driver v5
 
-Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
----
- drivers/net/wireless/ath/ath6kl/htc_mbox.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Changelog:
+v5:
+1. Add read/write support of ISO15693 Type5 Tags.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index fffb65b..65c31da 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -2222,8 +2222,9 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
- 	}
- 
- 	if (status) {
--		ath6kl_err("failed to get pending recv messages: %d\n",
--			   status);
-+		if (status != -ECANCELED)
-+			ath6kl_err("failed to get pending recv messages: %d\n",
-+				   status);
- 
- 		/* cleanup any packets in sync completion queue */
- 		list_for_each_entry_safe(packets, tmp_pkt, &comp_pktq, list) {
+v4:
+1. Address feedback from Lars Steubesand:
+	Fix of issue in sending RESET command to ST95HF.
+2. Improvement of some comments in code.
+
+v3:
+Address feedbacks from Lars Steubesand:
+	i)Included modification in drivers/nfc/Kconfig and
+	drivers/nfc/Makefile to build ST95HF driver.
+	ii)Included header file linux/property.h explicitely in core.c
+	and all header files are included in sorted order.
+	iii)GPL version is modified in MODULE_LICENSE to match with header.
+
+v2.0:
+1.Address feedbacks from Samuel:
+	i)Code improvement and code optimization
+2.Address feedbacks from Lars Steubesand:
+	i)Code improvement and code optimization
+	ii)Bug fix : Kernel crash due to race between irq_thread_handler()
+	and  st95hf_remove() is resolved.
+3.Address feedback from Christophe Henri Ricard:
+	i)Correction in file headers.
+
+v1.0:
+First release of ST95HF driver.
+
+Shikha Singh (3):
+  NFC: digital: Add Type4A tags support
+  driver: nfc: Add ST95HF NFC Transceiver support
+  DT: bindings: net: nfc: Add ST95HF binding doc
+
+ .../devicetree/bindings/net/nfc/st95hf.txt         |   50 +
+ drivers/nfc/Kconfig                                |    1 +
+ drivers/nfc/Makefile                               |    1 +
+ drivers/nfc/st95hf/Kconfig                         |   10 +
+ drivers/nfc/st95hf/Makefile                        |    6 +
+ drivers/nfc/st95hf/core.c                          | 1273 ++++++++++++++++++++
+ drivers/nfc/st95hf/spi.c                           |  167 +++
+ drivers/nfc/st95hf/spi.h                           |   64 +
+ net/nfc/digital_core.c                             |    3 +-
+ 9 files changed, 1574 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+ create mode 100644 drivers/nfc/st95hf/Kconfig
+ create mode 100644 drivers/nfc/st95hf/Makefile
+ create mode 100644 drivers/nfc/st95hf/core.c
+ create mode 100644 drivers/nfc/st95hf/spi.c
+ create mode 100644 drivers/nfc/st95hf/spi.h
+
 -- 
-1.9.1
+1.8.2.1
 
