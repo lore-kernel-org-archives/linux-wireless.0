@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:34555 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbbKNHuo (ORCPT
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58224 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1162000AbbKTJul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2015 02:50:44 -0500
-Received: by wmvv187 with SMTP id v187so111344412wmv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 23:50:43 -0800 (PST)
-Date: Sat, 14 Nov 2015 09:50:39 +0200
-From: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: remove new line around else and braces
-Message-ID: <20151114075039.GA588@maclinux> (sfid-20151114_085109_202764_99E64377)
-References: <1447451987-5447-1-git-send-email-panayiotis.tembriotis@gmail.com>
- <20151114065229.GC3685@sudip-pc>
+	Fri, 20 Nov 2015 04:50:41 -0500
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc] PATCH v4 1/3] NFC: digital: Add Type4A tags support
+Date: Fri, 20 Nov 2015 04:49:55 -0500
+Message-ID: <1448012997-6000-2-git-send-email-shikha.singh@st.com> (sfid-20151120_105046_904590_3DD26804)
+In-Reply-To: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
+References: <1448012997-6000-1-git-send-email-shikha.singh@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151114065229.GC3685@sudip-pc>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 14, 2015 at 12:22:29PM +0530, Sudip Mukherjee wrote:
-> On Fri, Nov 13, 2015 at 11:59:47PM +0200, Panayiotis Tembriotis wrote:
-> > Remove excess new line characters as suggested by checkpatch.pl:
-> > ERROR: else should follow close brace '}'
-> > ERROR: that open brace { should be on the previous line
-> > 
-> > Signed-off-by: Panayiotis Tembriotis <panayiotis.tembriotis@gmail.com>
-> > ---
-> 
-> This has already been done. please use staging-testing tree.
+The definition of DIGITAL_PROTO_NFCA_RF_TECH is modified to support
+ISO14443 Type4A tags. Without this change it is not possible to start
+polling for ISO14443 Type4A tags from the initiator side.
 
-Sorry for spamming and thanks for letting me know.
+Signed-off-by: Shikha Singh <shikha.singh@st.com>
+---
+ net/nfc/digital_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards,
-Panayiotis
+diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
+index 23c2a11..dd9003f 100644
+--- a/net/nfc/digital_core.c
++++ b/net/nfc/digital_core.c
+@@ -20,7 +20,8 @@
+ #include "digital.h"
+ 
+ #define DIGITAL_PROTO_NFCA_RF_TECH \
+-	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | NFC_PROTO_NFC_DEP_MASK)
++	(NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK | \
++	NFC_PROTO_NFC_DEP_MASK | NFC_PROTO_ISO14443_MASK)
+ 
+ #define DIGITAL_PROTO_NFCB_RF_TECH	NFC_PROTO_ISO14443_B_MASK
+ 
+-- 
+1.8.2.1
+
