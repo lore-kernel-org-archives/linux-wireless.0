@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34007 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754708AbbKSQVT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43691 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030192AbbKTJ3L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 11:21:19 -0500
-Received: by wmvv187 with SMTP id v187so33724974wmv.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2015 08:21:18 -0800 (PST)
-Message-ID: <564DF6FB.8040706@gmail.com> (sfid-20151119_172126_878347_FE127158)
-Date: Thu, 19 Nov 2015 17:21:15 +0100
-From: ferran <ranker72@gmail.com>
+	Fri, 20 Nov 2015 04:29:11 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <moorray3@wp.pl>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 23/27] rt2x00: move under ralink vendor directory
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	<1447857966-19560-24-git-send-email-kvalo@codeaurora.org>
+	<20151119220522.24fa2733@laptop>
+Date: Fri, 20 Nov 2015 11:29:04 +0200
+In-Reply-To: <20151119220522.24fa2733@laptop> (Jakub Kicinski's message of
+	"Thu, 19 Nov 2015 22:05:22 +0000")
+Message-ID: <87twoht3xb.fsf@kamboji.qca.qualcomm.com> (sfid-20151120_102945_264284_A17AD391)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [question] Rate control algorithm for mesh
-References: <5649FE1F.4060203@gmail.com> <564A1D7F.6050201@openwrt.org>
-In-Reply-To: <564A1D7F.6050201@openwrt.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jakub Kicinski <moorray3@wp.pl> writes:
 
-
-On 16/11/15 19:16, Felix Fietkau wrote:
+> On Wed, 18 Nov 2015 16:46:02 +0200, Kalle Valo wrote:
+>> Part of reorganising wireless drivers directory and Kconfig.
+>> 
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 >
-> Rate control instances are always per sta (so per 802.11 destination).
-I totally ignored that.
-> The problem you are describing either doesn't exist, or is something
-> different from what you're describing.
-> I would recommend running a test with latest mac80211 and minstrel(_ht),
-> it should perform much better than PID.
+> For Ralink you could probably drop the rt2x00 directory.  RaLink Tech.
+> doesn't exist any more and rt2x00 contains drivers for all of their
+> devices.
 >
-> - Felix
+> Obviously this is just a suggestion, not a show stopper.
 
-In this case, I'll repeat the experiments with minstrel enabled. We have
-already planned it.
+Like I said with a similar comment to brcm80211 I would like to do that
+separately. This is 27 patches already and I don't want make these any
+more complicated than necessary.
 
-Thank you a lot.
-Ferran
+-- 
+Kalle Valo
