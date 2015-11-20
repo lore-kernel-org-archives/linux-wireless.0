@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59981 "EHLO
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:31894 "EHLO
 	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbbKKMBs (ORCPT
+	with ESMTP id S1759590AbbKTNcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 07:01:48 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: poll HTT send completion when CE 5 is unused
-Date: Wed, 11 Nov 2015 17:31:26 +0530
-Message-ID: <1447243286-22116-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151111_130159_708538_32C5D581)
+	Fri, 20 Nov 2015 08:32:46 -0500
+Date: Fri, 20 Nov 2015 19:02:16 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "Li, Yanbo" <yanbol@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr
+ mode
+Message-ID: <20151120133214.GA15797@shafi-laptop> (sfid-20151120_143249_579064_37450597)
+References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
+ <877fme40ny.fsf@kamboji.qca.qualcomm.com>
+ <2cd04da006cb4f2a8eea859b6aad3e10@nasanexm02e.na.qualcomm.com>
+ <87si45zmpj.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87si45zmpj.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
-moved send completion polling under HTT Rx (CE 5) service routine. For
-QCA6174 based devices copy engine 1 (CE 1) is used for HTT Rx instead
-of CE 5. So send completion never be called. This is causing "failed to
-transmit packet, dropping: -105" errors. Fix this by processing send
-completion from CE 1 service routine instead of CE 5.
+Hi Kalle\Yanbo,
 
-Tested-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+On Mon, Nov 16, 2015 at 10:57:44PM +0200, Kalle Valo wrote:
+> "Li, Yanbo" <yanbol@qca.qualcomm.com> writes:
+> 
+> >> > +		/* The padding bytes's location is different on various chips */
+> >> > +		enum ath10k_loc_4addr_pad loc_4addr_pad;
+> >> 
+> >> I think that loc prefix is a bit misleading, it reminds me of
+> >> locationing/positioning etc. What about ath10k_hw_4addr_pad?
+> >> 
+> >
+> >
+> > There is already a FW feature defined as
+> > "ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDIND" and the relative
+> > string is "no-4addr-pad", if we just remove the "loc" prefix, it may
+> > be confuse with this FW feature.
+> >
+> > How about we change the loc to offset in this case or any better suggestion?
+> 
+> I did some naming changes in the pending branch:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=42cd3832cd7c78bfeabb639a4086c7838fda5b57
+> 
+> Please review and let me know what you think.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 5c91a67..698e669 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -112,6 +112,7 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
- static void ath10k_pci_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
- static void ath10k_pci_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
- static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
-+static void ath10k_pci_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
- 
- static const struct ce_attr host_ce_config_wlan[] = {
- 	/* CE0: host->target HTC control and raw streams */
-@@ -129,7 +130,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 		.src_nentries = 0,
- 		.src_sz_max = 2048,
- 		.dest_nentries = 512,
--		.recv_cb = ath10k_pci_htc_rx_cb,
-+		.recv_cb = ath10k_pci_htt_htc_rx_cb,
- 	},
- 
- 	/* CE2: target->host WMI */
-@@ -1210,6 +1211,16 @@ static void ath10k_pci_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
- 	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
- }
- 
-+static void ath10k_pci_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
-+{
-+	/* CE4 polling needs to be done whenever CE pipe which transports
-+	 * HTT Rx (target->host) is processed.
-+	 */
-+	ath10k_ce_per_engine_service(ce_state->ar, 4);
-+
-+	ath10k_pci_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
-+}
-+
- /* Called by lower (CE) layer when data is received from the Target.
-  * Only 10.4 firmware uses separate CE to transfer pktlog data.
-  */
--- 
-2.6.2
+Please merge this change, as this is a critical fix (I hope Yanbo is fine with
+the change in naming convention). I went through the change, it looks good to
+me and I had tested the earlier version and it fixed a Repeater mode bug.
 
+regards,
+shafi
+
+> 
+> -- 
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
