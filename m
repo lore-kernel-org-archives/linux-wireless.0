@@ -1,213 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:36283 "EHLO
-	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbbKLNQY (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7976 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761013AbbKTVvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 08:16:24 -0500
-Received: by lfs39 with SMTP id 39so33706078lfs.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2015 05:16:22 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 11/12] ath9k: MCC add sta_ap_ratio module param
-Date: Thu, 12 Nov 2015 14:15:48 +0100
-Message-Id: <1447334149-15507-11-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151112_141628_411812_9BCBA771)
-In-Reply-To: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1447334149-15507-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 20 Nov 2015 16:51:33 -0500
+Message-ID: <564F95E1.7030508@broadcom.com> (sfid-20151120_225137_072741_88C4C51A)
+Date: Fri, 20 Nov 2015 22:51:29 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Florian Fainelli <f.fainelli@gmail.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>	<564CCF2A.4030203@hauke-m.de> <564CCFC3.3030909@gmail.com> <87wptev2zi.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wptev2zi.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of MCC we can setup STA/AP(GO) ratio.
-Eg. setting sta_ap_ratio=80
-STA will get 80% of time, while AP(GO) 20%.
-Setup correct ctwindow.
+On 11/19/2015 08:54 AM, Kalle Valo wrote:
+> Florian Fainelli <f.fainelli@gmail.com> writes:
+>
+>> On 18/11/15 11:19, Hauke Mehrtens wrote:
+>>> On 11/18/2015 03:45 PM, Kalle Valo wrote:
+>>>> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
+>>>> edit Makefiles from subdirectories to use the new location.
+>>>>
+>>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>>>> ---
+>>>
+>>> I would prefer to remove the brcm80211 directory in this process and create:
+>>> drivers/net/wireless/broadcom/brcmfmac
+>>> drivers/net/wireless/broadcom/brcmsmac
+>>> drivers/net/wireless/broadcom/brcmutil
+>>> drivers/net/wireless/broadcom/include
+>>>
+>>> This way we have one directory less.
+>>
+>> Would not that make keeping track of the previous and future history
+>> harder for people contributing to these drivers? I could imagine that
+>> for Arend and other Broadcom engineers, dealing with a simple level move
+>> would be manageable, but having to account for a different directory
+>> hierarchy could be a pain.
+>>
+>> What is the impact on compat-wireless after/before these changes by the way?
+>
+> It's called backports nowadays :)
+>
+> But I understood that as long as we have a separate kconfig option for
+> the vendor directories (CONFIG_WLAN_VENDOR_*) it should be ok. For 4.3
+> we didn't have that for realtek directory and that caused pain for
+> backports.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +
- drivers/net/wireless/ath/ath9k/channel.c | 69 +++++++++++++++++++++-----------
- drivers/net/wireless/ath/ath9k/hw.h      |  1 +
- drivers/net/wireless/ath/ath9k/init.c    |  3 ++
- 4 files changed, 51 insertions(+), 24 deletions(-)
+That is my understanding as well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b42f4a9..4616229 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -37,6 +37,7 @@ extern int ath9k_modparam_nohwcrypt;
- extern int ath9k_led_blink;
- extern bool is_ath9k_unloaded;
- extern int ath9k_use_chanctx;
-+extern int ath9k_sta_ap_ratio;
- 
- /*************************/
- /* Descriptor Management */
-@@ -335,6 +336,7 @@ struct ath_chanctx {
- 	struct timespec tsf_ts;
- 	u64 tsf_val;
- 	u32 last_beacon;
-+	u32 ctwindow;
- 
- 	int flush_timeout;
- 	u16 txpower;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 4320928..b0d74f0 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -313,11 +313,21 @@ ath_chanctx_get_next(struct ath_softc *sc, struct ath_chanctx *ctx)
- 	return &sc->chanctx[!idx];
- }
- 
-+static u32 get_ratio(u32 beacon_int)
-+{
-+	if (ath9k_sta_ap_ratio < 20 ||
-+	    ath9k_sta_ap_ratio > 80)
-+		return beacon_int / 2;
-+
-+	return (beacon_int * ath9k_sta_ap_ratio) / 100;
-+}
-+
- static void ath_chanctx_adjust_tbtt_delta(struct ath_softc *sc)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_chanctx *prev, *cur;
- 	struct timespec ts;
--	u32 cur_tsf, prev_tsf, beacon_int;
-+	u32 cur_tsf, prev_tsf, beacon_int, diff;
- 	s32 offset;
- 
- 	beacon_int = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
-@@ -344,7 +354,14 @@ static void ath_chanctx_adjust_tbtt_delta(struct ath_softc *sc)
- 	if (offset < 0 || offset > 3 * beacon_int)
- 		return;
- 
--	offset = beacon_int / 2 - (offset % beacon_int);
-+	diff = 2 * prev->ctwindow;
-+	diff += sc->sched.channel_switch_time;
-+	if (diff > beacon_int / 2)
-+		diff = beacon_int / 2;
-+
-+	ath_dbg(common, CHAN_CTX, "Setup beacon interval offset %u ms\n",
-+		diff / 1000);
-+	offset = diff - (offset % beacon_int);
- 	prev->tsf_val += offset;
- }
- 
-@@ -435,7 +452,7 @@ static void ath_chanctx_set_periodic_noa(struct ath_softc *sc,
- 			sc->sched.channel_switch_time;
- 	else
- 		avp->noa_duration =
--			TU_TO_USEC(cur_conf->beacon_interval) / 2 +
-+			TU_TO_USEC(get_ratio(cur_conf->beacon_interval)) +
- 			sc->sched.channel_switch_time;
- 
- 	if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
-@@ -481,7 +498,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	struct ath_beacon_config *cur_conf;
- 	struct ath_vif *avp = NULL;
- 	struct ath_chanctx *ctx;
--	u32 tsf_time;
-+	u32 tsf_time, defer_time;
-+	u32 beacon_resp_time = ah->config.sw_beacon_response_time;
- 	u32 beacon_int;
- 
- 	if (vif)
-@@ -565,10 +583,26 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		cur_conf = &sc->cur_chan->beacon;
- 		beacon_int = TU_TO_USEC(cur_conf->beacon_interval);
- 
--		/* defer channel switch by a quarter beacon interval */
--		tsf_time = sc->sched.next_tbtt + beacon_int / 4;
-+		/* defer channel switch */
-+		defer_time = beacon_int - get_ratio(beacon_int);
-+		defer_time -= sc->sched.channel_switch_time;
-+		defer_time /= 2;
-+
-+		if (defer_time < TU_TO_USEC(2 + beacon_resp_time)) {
-+			defer_time *= 2;
-+			if (defer_time > TU_TO_USEC(3 + beacon_resp_time))
-+				defer_time -= TU_TO_USEC(3 + beacon_resp_time);
-+			else
-+				defer_time = 1000;
-+		}
-+
-+		ath_dbg(common, CHAN_CTX, "Setup defer_time %u (%u ms)\n",
-+			defer_time, defer_time / 1000);
-+
-+		tsf_time = sc->sched.next_tbtt + defer_time;
- 		sc->sched.switch_start_time = tsf_time;
- 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
-+		sc->cur_chan->ctwindow = defer_time;
- 
- 		/*
- 		 * If an offchannel switch is scheduled to happen after
-@@ -707,7 +741,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_TIMER;
- 		sc->sched.wait_switch = false;
- 
--		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
-+		tsf_time = TU_TO_USEC(get_ratio(cur_conf->beacon_interval));
- 
- 		if (sc->sched.extend_absence) {
- 			sc->sched.beacon_miss = 0;
-@@ -1454,26 +1488,13 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
- 
- static u8 ath9k_get_ctwin(struct ath_softc *sc, struct ath_vif *avp)
- {
--	struct ath_beacon_config *cur_conf = &sc->cur_chan->beacon;
--	u8 switch_time, ctwin;
--
- 	/*
- 	 * Channel switch in multi-channel mode is deferred
--	 * by a quarter beacon interval when handling
--	 * ATH_CHANCTX_EVENT_BEACON_PREPARE, so the P2P-GO
--	 * interface is guaranteed to be discoverable
--	 * for that duration after a TBTT.
-+	 * when handling ATH_CHANCTX_EVENT_BEACON_PREPARE,
-+	 * so the P2P-GO interface is guaranteed to be
-+	 * discoverable for that duration after a TBTT.
- 	 */
--	switch_time = cur_conf->beacon_interval / 4;
--
--	ctwin = avp->vif->bss_conf.p2p_noa_attr.oppps_ctwindow;
--	if (ctwin && (ctwin < switch_time))
--		return ctwin;
--
--	if (switch_time < P2P_DEFAULT_CTWIN)
--		return 0;
--
--	return P2P_DEFAULT_CTWIN;
-+	return USEC_TO_TU(sc->cur_chan->ctwindow);
- }
- 
- void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 4f0a3f6..7528f00 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -193,6 +193,7 @@
- #define INIT_BCON_CNTRL_REG         0x00000000
- 
- #define TU_TO_USEC(_tu)             ((_tu) << 10)
-+#define USEC_TO_TU(_us)             ((_us) >> 10)
- 
- #define ATH9K_HW_RX_HP_QDEPTH	16
- #define ATH9K_HW_RX_LP_QDEPTH	128
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2e2b92b..6729a5f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -67,6 +67,9 @@ int ath9k_use_chanctx;
- module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
- MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
- 
-+int ath9k_sta_ap_ratio;
-+module_param_named(sta_ap_ratio, ath9k_sta_ap_ratio, int, 0444);
-+MODULE_PARM_DESC(sta_ap_ratio, "sta/ap ratio 20-80");
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
- 
- bool is_ath9k_unloaded;
--- 
-1.9.1
+Regards,
+Arend
 
