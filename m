@@ -1,195 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:35118 "EHLO
-	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbbK3M5L (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:53509 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934360AbbKTHxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 07:57:11 -0500
-Received: by lfdl133 with SMTP id l133so194307165lfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2015 04:57:09 -0800 (PST)
-From: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
-Subject: [PATCH] ath10k: deliver mgmt frames from htt to monitor vifs only
-Date: Mon, 30 Nov 2015 13:56:59 +0100
-Message-Id: <1448888219-2798-1-git-send-email-grzegorz.bajorski@tieto.com> (sfid-20151130_135715_260698_A0D39BEB)
+	Fri, 20 Nov 2015 02:53:35 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 4/6] staging: wilc1000: remove io_type of wilc_wlan_dev_t
+Date: Fri, 20 Nov 2015 16:56:34 +0900
+Message-ID: <1448006196-28555-4-git-send-email-glen.lee@atmel.com> (sfid-20151120_085339_451233_64D6F5D1)
+In-Reply-To: <1448006196-28555-1-git-send-email-glen.lee@atmel.com>
+References: <1448006196-28555-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Until now only WMI originating mgmt frames were
-reported to mac80211. Management frames on HTT
-were basically dropped (except frames which looked
-like management but had FCS error).
+io_type of wilc_wlan_dev_t is unneeded, we can use io_type of struct wilc.
+Remove io_type of wilc_wlan_dev_t and use io_type of wilc.
 
-To allow sniffing all frames (including offloaded
-frames) without interfering with mac80211
-operation and states a new rx_flag was introduced
-and is not being used to distinguish frames and
-classify them for mac80211.
-
-Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-depends on:
-mac80211: allow drivers to report (non-)monitor frames
+ drivers/staging/wilc1000/wilc_wlan.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 70 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath10k/wmi.c    |  6 +++
- 2 files changed, 40 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 396645b..898eff0 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1076,20 +1076,25 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
- 	hdr = (void *)msdu->data;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index b9bedc8..37879cd 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -5,7 +5,6 @@
  
- 	/* Tail */
--	skb_trim(msdu, msdu->len - ath10k_htt_rx_crypto_tail_len(ar, enctype));
-+	if (status->flag & RX_FLAG_IV_STRIPPED)
-+		skb_trim(msdu, msdu->len -
-+			 ath10k_htt_rx_crypto_tail_len(ar, enctype));
+ typedef struct {
+ 	int quit;
+-	int io_type;
+ 	int cfg_frame_in_use;
+ 	struct wilc_cfg_frame cfg_frame;
+ 	u32 cfg_frame_offset;
+@@ -573,7 +572,7 @@ static inline void chip_wakeup(struct wilc *wilc)
+ 	u32 reg, clk_status_reg, trials = 0;
+ 	u32 sleep_time;
  
- 	/* MMIC */
--	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-+	if ((status->flag & RX_FLAG_MMIC_STRIPPED) &&
-+	    !ieee80211_has_morefrags(hdr->frame_control) &&
- 	    enctype == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
- 		skb_trim(msdu, msdu->len - 8);
+-	if ((g_wlan.io_type & 0x1) == HIF_SPI) {
++	if ((wilc->io_type & 0x1) == HIF_SPI) {
+ 		do {
+ 			wilc->hif_func->hif_read_reg(wilc, 1, &reg);
+ 			wilc->hif_func->hif_write_reg(wilc, 1, reg | BIT(1));
+@@ -587,7 +586,7 @@ static inline void chip_wakeup(struct wilc *wilc)
+ 			} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
  
- 	/* Head */
--	hdr_len = ieee80211_hdrlen(hdr->frame_control);
--	crypto_len = ath10k_htt_rx_crypto_param_len(ar, enctype);
-+	if (status->flag & RX_FLAG_IV_STRIPPED) {
-+		hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+		crypto_len = ath10k_htt_rx_crypto_param_len(ar, enctype);
+ 		} while (wilc_get_chipid(wilc, true) == 0);
+-	} else if ((g_wlan.io_type & 0x1) == HIF_SDIO)	 {
++	} else if ((wilc->io_type & 0x1) == HIF_SDIO)	 {
+ 		wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
+ 		do {
+ 			wilc->hif_func->hif_write_reg(wilc, 0xf0,
+@@ -636,12 +635,12 @@ static inline void chip_wakeup(struct wilc *wilc)
+ 	u32 reg, trials = 0;
  
--	memmove((void *)msdu->data + crypto_len,
--		(void *)msdu->data, hdr_len);
--	skb_pull(msdu, crypto_len);
-+		memmove((void *)msdu->data + crypto_len,
-+			(void *)msdu->data, hdr_len);
-+		skb_pull(msdu, crypto_len);
-+	}
- }
+ 	do {
+-		if ((g_wlan.io_type & 0x1) == HIF_SPI) {
++		if ((wilc->io_type & 0x1) == HIF_SPI) {
+ 			wilc->hif_func->hif_read_reg(wilc, 1, &reg);
+ 			wilc->hif_func->hif_write_reg(wilc, 1, reg & ~BIT(1));
+ 			wilc->hif_func->hif_write_reg(wilc, 1, reg | BIT(1));
+ 			wilc->hif_func->hif_write_reg(wilc, 1, reg  & ~BIT(1));
+-		} else if ((g_wlan.io_type & 0x1) == HIF_SDIO)	 {
++		} else if ((wilc->io_type & 0x1) == HIF_SDIO)	 {
+ 			wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
+ 			wilc->hif_func->hif_write_reg(wilc, 0xf0,
+ 						      reg & ~BIT(0));
+@@ -1061,7 +1060,7 @@ static void wilc_pllupdate_isr_ext(struct wilc *wilc, u32 int_stats)
  
- static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
-@@ -1330,6 +1335,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	bool has_tkip_err;
- 	bool has_peer_idx_invalid;
- 	bool is_decrypted;
-+	bool is_mgmt;
- 	u32 attention;
+ 	wilc->hif_func->hif_clear_int_ext(wilc, PLL_INT_CLR);
  
- 	if (skb_queue_empty(amsdu))
-@@ -1338,6 +1344,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	first = skb_peek(amsdu);
- 	rxd = (void *)first->data - sizeof(*rxd);
+-	if (g_wlan.io_type == HIF_SDIO)
++	if (wilc->io_type == HIF_SDIO)
+ 		mdelay(WILC_PLL_TO_SDIO);
+ 	else
+ 		mdelay(WILC_PLL_TO_SPI);
+@@ -1225,15 +1224,14 @@ _fail_1:
  
-+	is_mgmt = !!(rxd->attention.flags &
-+		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
-+
- 	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
- 		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
- 
-@@ -1379,6 +1388,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 			  RX_FLAG_MMIC_ERROR |
- 			  RX_FLAG_DECRYPTED |
- 			  RX_FLAG_IV_STRIPPED |
-+			  RX_FLAG_ONLY_MONITOR |
- 			  RX_FLAG_MMIC_STRIPPED);
- 
- 	if (has_fcs_err)
-@@ -1387,10 +1397,21 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	if (has_tkip_err)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
- 
--	if (is_decrypted)
--		status->flag |= RX_FLAG_DECRYPTED |
--				RX_FLAG_IV_STRIPPED |
--				RX_FLAG_MMIC_STRIPPED;
-+	/* Firmware reports all necessary management frames via WMI already.
-+	 * They are not reported to monitor interfaces at all so pass the ones
-+	 * coming via HTT to monitor interfaces instead. This simplifies
-+	 * matters a lot.
-+	 */
-+	if (is_mgmt)
-+		status->flag |= RX_FLAG_ONLY_MONITOR;
-+
-+	if (is_decrypted) {
-+		status->flag |= RX_FLAG_DECRYPTED;
-+
-+		if (likely(!is_mgmt))
-+			status->flag |= RX_FLAG_IV_STRIPPED |
-+					RX_FLAG_MMIC_STRIPPED;
-+}
- 
- 	skb_queue_walk(amsdu, msdu) {
- 		ath10k_htt_rx_h_csum_offload(msdu);
-@@ -1403,6 +1424,8 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 		 */
- 		if (!is_decrypted)
- 			continue;
-+		if (is_mgmt)
-+			continue;
- 
- 		hdr = (void *)msdu->data;
- 		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
-@@ -1503,14 +1526,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- 					struct sk_buff_head *amsdu,
- 					struct ieee80211_rx_status *rx_status)
+ int wilc_wlan_start(struct wilc *wilc)
  {
--	struct sk_buff *msdu;
--	struct htt_rx_desc *rxd;
--	bool is_mgmt;
--	bool has_fcs_err;
--
--	msdu = skb_peek(amsdu);
--	rxd = (void *)msdu->data - sizeof(*rxd);
--
- 	/* FIXME: It might be a good idea to do some fuzzy-testing to drop
- 	 * invalid/dangerous frames.
- 	 */
-@@ -1520,23 +1535,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- 		return false;
+-	wilc_wlan_dev_t *p = &g_wlan;
+ 	u32 reg = 0;
+ 	int ret;
+ 	u32 chipid;
+ 
+-	if (p->io_type == HIF_SDIO) {
++	if (wilc->io_type == HIF_SDIO) {
+ 		reg = 0;
+ 		reg |= BIT(3);
+-	} else if (p->io_type == HIF_SPI) {
++	} else if (wilc->io_type == HIF_SPI) {
+ 		reg = 1;
  	}
+ 	acquire_bus(wilc, ACQUIRE_ONLY);
+@@ -1245,7 +1243,7 @@ int wilc_wlan_start(struct wilc *wilc)
+ 		return ret;
+ 	}
+ 	reg = 0;
+-	if (p->io_type == HIF_SDIO && wilc->dev_irq_num)
++	if (wilc->io_type == HIF_SDIO && wilc->dev_irq_num)
+ 		reg |= WILC_HAVE_SDIO_IRQ_GPIO;
  
--	is_mgmt = !!(rxd->attention.flags &
--		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
--	has_fcs_err = !!(rxd->attention.flags &
--			 __cpu_to_le32(RX_ATTENTION_FLAGS_FCS_ERR));
--
--	/* Management frames are handled via WMI events. The pros of such
--	 * approach is that channel is explicitly provided in WMI events
--	 * whereas HTT doesn't provide channel information for Rxed frames.
--	 *
--	 * However some firmware revisions don't report corrupted frames via
--	 * WMI so don't drop them.
--	 */
--	if (is_mgmt && !has_fcs_err) {
--		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
--		return false;
--	}
--
- 	if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags)) {
- 		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx cac running\n");
- 		return false;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9021079..847f91a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2298,6 +2298,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = le16_to_cpu(hdr->frame_control);
+ #ifdef WILC_DISABLE_PMU
+@@ -1627,7 +1625,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
  
-+	/* Firmware is guaranteed to report all essential management frames via
-+	 * WMI while it can deliver some extra via HTT. Since there can be
-+	 * duplicates split the reporting wrt monitor/sniffing.
-+	 */
-+	status->flag |= RX_FLAG_SKIP_MONITOR;
-+
- 	ath10k_wmi_handle_wep_reauth(ar, skb, status);
- 
- 	/* FW delivers WEP Shared Auth frame with Protected Bit set and
+ 	memset((void *)&g_wlan, 0, sizeof(wilc_wlan_dev_t));
+-	g_wlan.io_type = wilc->io_type;
+ 	if (!wilc->hif_func->hif_init(wilc, wilc_debug)) {
+ 		ret = -EIO;
+ 		goto _fail_;
 -- 
-2.3.7
+1.9.1
 
