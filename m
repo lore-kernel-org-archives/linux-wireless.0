@@ -1,146 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43370 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752892AbbKYOWX (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34147 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161286AbbKTCLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 09:22:23 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-CC: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Jeff CF Chen <jeffc@marvell.com>
-Subject: RE: mwifiex problem: incompatible network settings
-Date: Wed, 25 Nov 2015 14:22:18 +0000
-Message-ID: <c7d87577cb0c4c55921763b968ad78cc@SC-EXCH04.marvell.com> (sfid-20151125_152227_394581_D334A8BA)
-References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
-	<87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
-	<87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
-	<87vb9qsmg1.fsf@free.fr>
-	<b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
-	<87r3k5h161.fsf@free.fr>
-	<cffeead80528479fbe6883776d115208@SC-EXCH04.marvell.com>
- <878u6aqmxh.fsf@free.fr>
-In-Reply-To: <878u6aqmxh.fsf@free.fr>
-Content-Type: multipart/mixed;
-	boundary="_002_c7d87577cb0c4c55921763b968ad78ccSCEXCH04marvellcom_"
+	Thu, 19 Nov 2015 21:11:13 -0500
+Received: by padhx2 with SMTP id hx2so99879397pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2015 18:11:13 -0800 (PST)
+Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
+ trigger_ba
+To: Bob Copeland <me@bobcopeland.com>
+References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
+ <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
+ <20151109154040.GD5395@localhost> <56419805.4090902@linaro.org>
+ <20151110141336.GF5395@localhost> <564D3FEE.1000208@linaro.org>
+ <20151119174107.GB12931@localhost> <564E7A0E.5090105@linaro.org>
+ <20151120015238.GC12931@localhost>
+Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
+	bjorn.andersson@sonymobile.com
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <564E813D.1040109@linaro.org> (sfid-20151120_031118_393472_E61B169E)
+Date: Fri, 20 Nov 2015 10:11:09 +0800
 MIME-Version: 1.0
+In-Reply-To: <20151120015238.GC12931@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_c7d87577cb0c4c55921763b968ad78ccSCEXCH04marvellcom_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Hi Julien,
-
-> From: Julien Cubizolles [mailto:j.cubizolles@free.fr]
-> Sent: Saturday, November 07, 2015 1:08 PM
-> To: Amitkumar Karwar
-> Cc: Dan Williams; linux-wireless@vger.kernel.org; Nishant Sarmukadam
-> Subject: Re: mwifiex problem: incompatible network settings
->=20
-> Amitkumar Karwar <akarwar@marvell.com> writes:
->=20
->=20
-> > Thanks for the logs. We found one bug in our code. We expect vendor
-> > specific IE at the beginning of IE buffer otherwise connection is
-> > rejected.
-> > We will prepare a fix and get back.
->=20
-> Thanks a lot for making my laptop usable again. I'll be happy to test
-> the fix when it's ready.
 
 
-Could you check if attached patch fixes your connection problem with WPA AP=
-?
+On 2015/11/20 9:52, Bob Copeland wrote:
+> On Fri, Nov 20, 2015 at 09:40:30AM +0800, fengwei.yin wrote:
+>> Actually, this patch was using the v1 and DragonBoard needs v2 for trigger_ba.
+>> And I want to know whether the change from Andy could work on the platform
+>> which is using v1.
+>>
+>> Can you try this change on your platform? Thanks.
+>
+> I'm not sure I understand -- if you look at the right side of the diff
+> for the patch "wcn36xx: Parse trigger_ba response properly", it is changing
+> wcn36xx_smd_rsp_status_check() to wcn36xx_smd_trigger_ba_rsp(), whose
+> definition is the same as wcn36xx_smd_rsp_station_check_v2() as far as I can
+> tell.  Or am I missing something?
+>
+Yes. Exactly. So your platform is using the v2 format as well. We may not need
+to care the v1 format too much. Thanks.
 
-Regards,
-Amitkumar
-
---_002_c7d87577cb0c4c55921763b968ad78ccSCEXCH04marvellcom_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-fix-wpa_ie_not_at_beginning.patch"
-Content-Description: 0001-mwifiex-fix-wpa_ie_not_at_beginning.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-fix-wpa_ie_not_at_beginning.patch"; size=4164;
-	creation-date="Wed, 25 Nov 2015 14:01:19 GMT";
-	modification-date="Wed, 25 Nov 2015 13:55:53 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBlMmU3NWI5ZjJmMzAzNWIwZTViNGQ4OTZlNDVhZGM1OGMxMmMyMGE5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBjaHVuZmFuIGNoZW4gPGplZmZjQG1hcnZlbGwuY29tPgpEYXRl
-OiBXZWQsIDI1IE5vdiAyMDE1IDIxOjIxOjAyICswODAwClN1YmplY3Q6IFtQQVRDSF0gbXdpZmll
-eDogbW9kaWZ5IHBhcnNpbmcgbG9naWMgZm9yIElFIGJ1ZmZlciBmcm9tIGNmZzgwMjExCgpUaGlz
-IHBhdGNoIG1vZGlmeSBsb2dpYyB0byBwYXJzZSBJRSBidWZmZXIgZnJvbSBjZmc4MDIxMSBhbmQK
-Zml4IHRoZSBmb2xsb3dpbmcgaXNzdWUuCldQQSBJRSBjYW4gbm90IGJlIGZvdW5kIGlmIGl0IGlz
-IG5vdCBhdCB0aGUgYmVnaW5uaW5nIG9mIElFIGJ1ZmZlcgpyZWNlaXZlZCBmcm9tIGNmZzgwMjEx
-LgoKU2lnbmVkLW9mZi1ieTogY2h1bmZhbiBjaGVuIDxqZWZmY0BtYXJ2ZWxsLmNvbT4KLS0tCiBk
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jIHwgICA3NSArKysrKysrKysr
-KysrKysrKysrKystLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA1MyBpbnNlcnRpb25zKCspLCAy
-MiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
-L3N0YV9pb2N0bC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYwpp
-bmRleCBhNmM4YTRmLi4zZmZlOGY5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-d2lmaWV4L3N0YV9pb2N0bC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc3Rh
-X2lvY3RsLmMKQEAgLTEyOTMsNiArMTI5Myw4IEBAIG13aWZpZXhfc2V0X2dlbl9pZV9oZWxwZXIo
-c3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdTggKmllX2RhdGFfcHRyLAogCXN0cnVjdCBp
-ZWVlX3R5cGVzX3ZlbmRvcl9oZWFkZXIgKnB2ZW5kb3JfaWU7CiAJY29uc3QgdTggd3BhX291aVtd
-ID0geyAweDAwLCAweDUwLCAweGYyLCAweDAxIH07CiAJY29uc3QgdTggd3BzX291aVtdID0geyAw
-eDAwLCAweDUwLCAweGYyLCAweDA0IH07CisJdTE2IHVucGFyc2VkX2xlbiA9IGllX2xlbjsKKwlp
-bnQgZmluZF93cGFfaWUgPSAwOwogCiAJLyogSWYgdGhlIHBhc3NlZCBsZW5ndGggaXMgemVybywg
-cmVzZXQgdGhlIGJ1ZmZlciAqLwogCWlmICghaWVfbGVuKSB7CkBAIC0xMzA0LDQwICsxMzA2LDY5
-IEBAIG13aWZpZXhfc2V0X2dlbl9pZV9oZWxwZXIoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJp
-diwgdTggKmllX2RhdGFfcHRyLAogCQlyZXR1cm4gLTE7CiAJfQogCXB2ZW5kb3JfaWUgPSAoc3Ry
-dWN0IGllZWVfdHlwZXNfdmVuZG9yX2hlYWRlciAqKSBpZV9kYXRhX3B0cjsKLQkvKiBUZXN0IHRv
-IHNlZSBpZiBpdCBpcyBhIFdQQSBJRSwgaWYgbm90LCB0aGVuIGl0IGlzIGEgZ2VuIElFICovCi0J
-aWYgKCgocHZlbmRvcl9pZS0+ZWxlbWVudF9pZCA9PSBXTEFOX0VJRF9WRU5ET1JfU1BFQ0lGSUMp
-ICYmCi0JICAgICAoIW1lbWNtcChwdmVuZG9yX2llLT5vdWksIHdwYV9vdWksIHNpemVvZih3cGFf
-b3VpKSkpKSB8fAotCSAgICAocHZlbmRvcl9pZS0+ZWxlbWVudF9pZCA9PSBXTEFOX0VJRF9SU04p
-KSB7CiAKLQkJLyogSUUgaXMgYSBXUEEvV1BBMiBJRSBzbyBjYWxsIHNldF93cGEgZnVuY3Rpb24g
-Ki8KLQkJcmV0ID0gbXdpZmlleF9zZXRfd3BhX2llX2hlbHBlcihwcml2LCBpZV9kYXRhX3B0ciwg
-aWVfbGVuKTsKLQkJcHJpdi0+d3BzLnNlc3Npb25fZW5hYmxlID0gZmFsc2U7CisJd2hpbGUgKHB2
-ZW5kb3JfaWUpIHsKKwkJaWYgKHB2ZW5kb3JfaWUtPmVsZW1lbnRfaWQgPT0gV0xBTl9FSURfVkVO
-RE9SX1NQRUNJRklDKSB7CisJCQkvKiBUZXN0IHRvIHNlZSBpZiBpdCBpcyBhIFdQQSBJRSwgaWYg
-bm90LCB0aGVuIGl0IGlzIGEKKwkJCSAqIGdlbiBJRQorCQkJICovCisJCQlpZiAoIW1lbWNtcChw
-dmVuZG9yX2llLT5vdWksIHdwYV9vdWksCisJCQkJICAgIHNpemVvZih3cGFfb3VpKSkpIHsKKwkJ
-CQlmaW5kX3dwYV9pZSA9IDE7CisJCQkJYnJlYWs7CisJCQl9CiAKLQkJcmV0dXJuIHJldDsKLQl9
-IGVsc2UgaWYgKHB2ZW5kb3JfaWUtPmVsZW1lbnRfaWQgPT0gV0xBTl9FSURfQlNTX0FDX0FDQ0VT
-U19ERUxBWSkgeworCQkJLyogVGVzdCB0byBzZWUgaWYgaXQgaXMgYSBXUFMgSUUsIGlmIHNvLCBl
-bmFibGUKKwkJCSAqIHdwcyBzZXNzaW9uIGZsYWcKKwkJCSAqLworCQkJaWYgKCFtZW1jbXAocHZl
-bmRvcl9pZS0+b3VpLCB3cHNfb3VpLAorCQkJCSAgICBzaXplb2Yod3BzX291aSkpKSB7CisJCQkJ
-cHJpdi0+d3BzLnNlc3Npb25fZW5hYmxlID0gdHJ1ZTsKKwkJCQltd2lmaWV4X2RiZyhwcml2LT5h
-ZGFwdGVyLCBNU0csCisJCQkJCSAgICAiaW5mbzogV1BTIFNlc3Npb24gRW5hYmxlZC5cbiIpOwor
-CQkJCXJldCA9IG13aWZpZXhfc2V0X3dwc19pZShwcml2LAorCQkJCQkJCSAodTggKilwdmVuZG9y
-X2llLAorCQkJCQkJCSB1bnBhcnNlZF9sZW4pOworCQkJfQorCQl9CisKKwkJaWYgKHB2ZW5kb3Jf
-aWUtPmVsZW1lbnRfaWQgPT0gV0xBTl9FSURfUlNOKSB7CisJCQlmaW5kX3dwYV9pZSA9IDE7CisJ
-CQlicmVhazsKKwkJfQorCisJCWlmIChwdmVuZG9yX2llLT5lbGVtZW50X2lkID09IFdMQU5fRUlE
-X0JTU19BQ19BQ0NFU1NfREVMQVkpIHsKIAkJLyogSUUgaXMgYSBXQVBJIElFIHNvIGNhbGwgc2V0
-X3dhcGkgZnVuY3Rpb24gKi8KLQkJcmV0ID0gbXdpZmlleF9zZXRfd2FwaV9pZShwcml2LCBpZV9k
-YXRhX3B0ciwgaWVfbGVuKTsKKwkJCXJldCA9IG13aWZpZXhfc2V0X3dhcGlfaWUocHJpdiwgKHU4
-ICopcHZlbmRvcl9pZSwKKwkJCQkJCSAgdW5wYXJzZWRfbGVuKTsKKwkJCXJldHVybiByZXQ7CisJ
-CX0KKworCQl1bnBhcnNlZF9sZW4gLT0gKHB2ZW5kb3JfaWUtPmxlbiArCisJCQkJIHNpemVvZihz
-dHJ1Y3QgaWVlZV90eXBlc19oZWFkZXIpKTsKKworCQlpZiAodW5wYXJzZWRfbGVuIDw9IHNpemVv
-ZihzdHJ1Y3QgaWVlZV90eXBlc19oZWFkZXIpKQorCQkJcHZlbmRvcl9pZSA9IE5VTEw7CisJCWVs
-c2UKKwkJCXB2ZW5kb3JfaWUgPSAoc3RydWN0IGllZWVfdHlwZXNfdmVuZG9yX2hlYWRlciAqKQor
-CQkJCSgoKHU4ICopcHZlbmRvcl9pZSkgKyBwdmVuZG9yX2llLT5sZW4gKworCQkJCSBzaXplb2Yo
-c3RydWN0IGllZWVfdHlwZXNfaGVhZGVyKSk7CisJfQogCisJaWYgKGZpbmRfd3BhX2llKSB7CisJ
-CS8qIElFIGlzIGEgV1BBL1dQQTIgSUUgc28gY2FsbCBzZXRfd3BhIGZ1bmN0aW9uICovCisJCXJl
-dCA9IG13aWZpZXhfc2V0X3dwYV9pZV9oZWxwZXIocHJpdiwgKHU4ICopcHZlbmRvcl9pZSwKKwkJ
-CQkJCXVucGFyc2VkX2xlbik7CisJCXByaXYtPndwcy5zZXNzaW9uX2VuYWJsZSA9IGZhbHNlOwog
-CQlyZXR1cm4gcmV0OwogCX0KKwogCS8qCiAJICogVmVyaWZ5IHRoYXQgdGhlIHBhc3NlZCBsZW5n
-dGggaXMgbm90IGxhcmdlciB0aGFuIHRoZQogCSAqIGF2YWlsYWJsZSBzcGFjZSByZW1haW5pbmcg
-aW4gdGhlIGJ1ZmZlcgogCSAqLwogCWlmIChpZV9sZW4gPCAoc2l6ZW9mKHByaXYtPmdlbl9pZV9i
-dWYpIC0gcHJpdi0+Z2VuX2llX2J1Zl9sZW4pKSB7CiAKLQkJLyogVGVzdCB0byBzZWUgaWYgaXQg
-aXMgYSBXUFMgSUUsIGlmIHNvLCBlbmFibGUKLQkJICogd3BzIHNlc3Npb24gZmxhZwotCQkgKi8K
-LQkJcHZlbmRvcl9pZSA9IChzdHJ1Y3QgaWVlZV90eXBlc192ZW5kb3JfaGVhZGVyICopIGllX2Rh
-dGFfcHRyOwotCQlpZiAoKHB2ZW5kb3JfaWUtPmVsZW1lbnRfaWQgPT0gV0xBTl9FSURfVkVORE9S
-X1NQRUNJRklDKSAmJgotCQkgICAgKCFtZW1jbXAocHZlbmRvcl9pZS0+b3VpLCB3cHNfb3VpLCBz
-aXplb2Yod3BzX291aSkpKSkgewotCQkJcHJpdi0+d3BzLnNlc3Npb25fZW5hYmxlID0gdHJ1ZTsK
-LQkJCW13aWZpZXhfZGJnKHByaXYtPmFkYXB0ZXIsIElORk8sCi0JCQkJICAgICJpbmZvOiBXUFMg
-U2Vzc2lvbiBFbmFibGVkLlxuIik7Ci0JCQlyZXQgPSBtd2lmaWV4X3NldF93cHNfaWUocHJpdiwg
-aWVfZGF0YV9wdHIsIGllX2xlbik7Ci0JCX0KLQogCQkvKiBBcHBlbmQgdGhlIHBhc3NlZCBkYXRh
-IHRvIHRoZSBlbmQgb2YgdGhlCiAJCSAgIGdlbkllQnVmZmVyICovCiAJCW1lbWNweShwcml2LT5n
-ZW5faWVfYnVmICsgcHJpdi0+Z2VuX2llX2J1Zl9sZW4sIGllX2RhdGFfcHRyLAotLSAKMS43Ljku
-NQoK
-
---_002_c7d87577cb0c4c55921763b968ad78ccSCEXCH04marvellcom_--
+Regards
+Yin, Fengwei
