@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:57667
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753698AbbKMMQV (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:53447 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758949AbbKTHxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 07:16:21 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Robert Baldyga <r.baldyga@samsung.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>, linux-nfc@lists.01.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] nfc: s3fwrn5: constify s3fwrn5_phy_ops structures
-Date: Fri, 13 Nov 2015 13:04:41 +0100
-Message-Id: <1447416281-3357-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20151113_131634_176031_47A30CDF)
+	Fri, 20 Nov 2015 02:53:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/6] staging: wilc1000: remove unused variable
+Date: Fri, 20 Nov 2015 16:56:31 +0900
+Message-ID: <1448006196-28555-1-git-send-email-glen.lee@atmel.com> (sfid-20151120_085321_544788_02A7BC57)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The s3fwrn5_phy_ops structure is never modified, so declare it as const.
+wilc_sdio_func is not used anymore so just delete it.
 
-Done with the help of Coccinelle.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/nfc/s3fwrn5/core.c    |    2 +-
- drivers/nfc/s3fwrn5/i2c.c     |    2 +-
- drivers/nfc/s3fwrn5/s3fwrn5.h |    4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/nfc/s3fwrn5/core.c b/drivers/nfc/s3fwrn5/core.c
-index 0d866ca..9d9c8d5 100644
---- a/drivers/nfc/s3fwrn5/core.c
-+++ b/drivers/nfc/s3fwrn5/core.c
-@@ -147,7 +147,7 @@ static struct nci_ops s3fwrn5_nci_ops = {
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 92633aa..ae31f7d 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -11,8 +11,6 @@
  
- int s3fwrn5_probe(struct nci_dev **ndev, void *phy_id, struct device *pdev,
--	struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload)
-+	const struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload)
- {
- 	struct s3fwrn5_info *info;
- 	int ret;
-diff --git a/drivers/nfc/s3fwrn5/i2c.c b/drivers/nfc/s3fwrn5/i2c.c
-index c61d8a3..3ed0adf 100644
---- a/drivers/nfc/s3fwrn5/i2c.c
-+++ b/drivers/nfc/s3fwrn5/i2c.c
-@@ -125,7 +125,7 @@ static int s3fwrn5_i2c_write(void *phy_id, struct sk_buff *skb)
- 	return 0;
- }
+ #define SDIO_MODALIAS "wilc1000_sdio"
  
--static struct s3fwrn5_phy_ops i2c_phy_ops = {
-+static const struct s3fwrn5_phy_ops i2c_phy_ops = {
- 	.set_wake = s3fwrn5_i2c_set_wake,
- 	.set_mode = s3fwrn5_i2c_set_mode,
- 	.get_mode = s3fwrn5_i2c_get_mode,
-diff --git a/drivers/nfc/s3fwrn5/s3fwrn5.h b/drivers/nfc/s3fwrn5/s3fwrn5.h
-index 89210d4..7d5e516 100644
---- a/drivers/nfc/s3fwrn5/s3fwrn5.h
-+++ b/drivers/nfc/s3fwrn5/s3fwrn5.h
-@@ -44,7 +44,7 @@ struct s3fwrn5_info {
- 	void *phy_id;
- 	struct device *pdev;
+-static struct sdio_func *wilc_sdio_func;
+-
+ #define SDIO_VENDOR_ID_WILC 0x0296
+ #define SDIO_DEVICE_ID_WILC 0x5347
  
--	struct s3fwrn5_phy_ops *phy_ops;
-+	const struct s3fwrn5_phy_ops *phy_ops;
- 	unsigned int max_payload;
+@@ -105,7 +103,6 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
+ 	}
  
- 	struct s3fwrn5_fw_info fw_info;
-@@ -90,7 +90,7 @@ static inline int s3fwrn5_write(struct s3fwrn5_info *info, struct sk_buff *skb)
- }
- 
- int s3fwrn5_probe(struct nci_dev **ndev, void *phy_id, struct device *pdev,
--	struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload);
-+	const struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload);
- void s3fwrn5_remove(struct nci_dev *ndev);
- 
- int s3fwrn5_recv_frame(struct nci_dev *ndev, struct sk_buff *skb,
+ 	PRINT_D(INIT_DBG, "Initializing netdev\n");
+-	wilc_sdio_func = func;
+ 	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
+ 			     &wilc_hif_sdio)) {
+ 		PRINT_ER("Couldn't initialize netdev\n");
+-- 
+1.9.1
 
