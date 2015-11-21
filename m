@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37711 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:21909 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbbKZP0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 10:26:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] Revert "mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE"
-Date: Thu, 26 Nov 2015 16:26:14 +0100
-Message-Id: <1448551574-3207-3-git-send-email-johannes@sipsolutions.net> (sfid-20151126_162633_518464_4DFC98EA)
-In-Reply-To: <1448551574-3207-1-git-send-email-johannes@sipsolutions.net>
-References: <1448551574-3207-1-git-send-email-johannes@sipsolutions.net>
+	id S1752787AbbKUSYz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Nov 2015 13:24:55 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: linuxwifi <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>,
+	"Eyal Shapira" <eyal@wizery.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Kaufman, Liad" <liad.kaufman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [patch] iwlwifi: mvm: rs: fix a warning message
+Date: Sat, 21 Nov 2015 18:24:49 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F6961@hasmsx107.ger.corp.intel.com> (sfid-20151121_192500_796007_4B6B8698)
+References: <20151121103338.GE7002@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-This reverts commit 45bb780a2147b9995f3d288c44ecb87ca8a330e2,
-the previous two patches fixed the functionality.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 175ffcf7fb06..858f6b1cb149 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -541,7 +541,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_VIF_TXPOWER |
- 			   NL80211_FEATURE_MAC_ON_CREATE |
--			   NL80211_FEATURE_USERSPACE_MPM;
-+			   NL80211_FEATURE_USERSPACE_MPM |
-+			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
- 
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
--- 
-2.6.2
-
+On 11/21/2015 12:33 PM, Dan Carpenter wrote:
+> WARN_ON_ONCE() doesn't take a message, it only takes a condition.  I
+> have changed this to WARN(1, ...).
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+> index d1ad103..58d7bee 100644
+> --- a/drivers/net/wireless/iwlwifi/mvm/rs.c
+> +++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+> @@ -1827,7 +1827,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+>  		rate->type = lq_sta->is_vht ? LQ_VHT_MIMO2 : LQ_HT_MIMO2;
+>  		rate_mask = lq_sta->active_mimo2_rate;
+>  	} else {
+> -		WARN_ON_ONCE("Bad column mode");
+> +		WARN_ONCE(1, "Bad column mode");
+>  	}
+>  
+>  	if (column->mode != RS_LEGACY) {
+>
+Ouch - thanks. Clearly, this one doesn't trigger very often :)
