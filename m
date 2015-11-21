@@ -1,55 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23303 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbbKIITF (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58960 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759823AbbKUJzO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 03:19:05 -0500
-Date: Mon, 9 Nov 2015 11:18:42 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: glen lee <glen.lee@atmel.com>
-Cc: Punit Vara <punitvara@gmail.com>, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-Message-ID: <20151109081842.GR18797@mwanda> (sfid-20151109_091910_451799_4BE4F7C8)
-References: <1447018310-4524-1-git-send-email-punitvara@gmail.com>
- <20151108215953.GO18797@mwanda>
- <563FFEEB.1090307@atmel.com>
- <56405328.4040004@atmel.com>
+	Sat, 21 Nov 2015 04:55:14 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Enable AP + STA interface combination support for 10.x
+Date: Sat, 21 Nov 2015 15:24:41 +0530
+Message-ID: <1448099681-16448-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20151121_105524_723063_299045C6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56405328.4040004@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
-> Hi Punit Vara,
-> 
-> I cannot find build errors on my build machines.
-> 
-> According the log which you have posted before says *wilc is undeclared in the function init_wilc_driver,
-> which means WILC_SPI is selected because one of SPI or SDIO should be chosen at the moment.
-> Hence, struct wilc *wilc should be compiled together.
-> It looks like wilc1000 is compiled without SPI or SDIO.
-> 
-> Of course, there are many cases that I don't know, so you could let me know the wilc1000 build configuration?
-> 
-> static int __init init_wilc_driver(void)
-> {
-> #ifdef WILC_SPI
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-This should be #ifndef WILC_SDIO
+Enable AP + STA interface combination support for 10.x and
+this enables Repeater mode testing (with WDS Repeater combinations
+as well). Fix indentation as well.
 
+Based on the suggestions from Michal and Yanbo Li,
+thanks to them
 
-> 	struct wilc *wilc;
-> #endif
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
-But the large question remains of why do we have this variable here any
-way?
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 79490ad..9652384 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6766,35 +6766,39 @@ void ath10k_mac_destroy(struct ath10k *ar)
+ 
+ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+ 	{
+-	.max	= 8,
+-	.types	= BIT(NL80211_IFTYPE_STATION)
+-		| BIT(NL80211_IFTYPE_P2P_CLIENT)
++		.max	= 8,
++		.types	= BIT(NL80211_IFTYPE_STATION)
++			| BIT(NL80211_IFTYPE_P2P_CLIENT)
+ 	},
+ 	{
+-	.max	= 3,
+-	.types	= BIT(NL80211_IFTYPE_P2P_GO)
++		.max	= 3,
++		.types	= BIT(NL80211_IFTYPE_P2P_GO)
+ 	},
+ 	{
+-	.max	= 1,
+-	.types	= BIT(NL80211_IFTYPE_P2P_DEVICE)
++		.max	= 1,
++		.types	= BIT(NL80211_IFTYPE_P2P_DEVICE)
+ 	},
+ 	{
+-	.max	= 7,
+-	.types	= BIT(NL80211_IFTYPE_AP)
++		.max	= 7,
++		.types	= BIT(NL80211_IFTYPE_AP)
+ #ifdef CONFIG_MAC80211_MESH
+-		| BIT(NL80211_IFTYPE_MESH_POINT)
++			| BIT(NL80211_IFTYPE_MESH_POINT)
+ #endif
+ 	},
+ };
+ 
+ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
+ 	{
+-	.max	= 8,
+-	.types	= BIT(NL80211_IFTYPE_AP)
++		.max	= 8,
++		.types	= BIT(NL80211_IFTYPE_AP)
+ #ifdef CONFIG_MAC80211_MESH
+-		| BIT(NL80211_IFTYPE_MESH_POINT)
++			| BIT(NL80211_IFTYPE_MESH_POINT)
+ #endif
+ 	},
++	{
++		.max	= 1,
++		.types	= BIT(NL80211_IFTYPE_STATION)
++	},
+ };
+ 
+ static const struct ieee80211_iface_combination ath10k_if_comb[] = {
+-- 
+1.7.9.5
 
