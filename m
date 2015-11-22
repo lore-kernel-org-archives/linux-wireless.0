@@ -1,62 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47502 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032984AbbKFJjK (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:33347 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbbKVJII (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:10 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 19/26] staging: wilc1000: remove spi_max_speed of wilc_wlan_io_func_t
-Date: Fri, 6 Nov 2015 18:40:16 +0900
-Message-ID: <1446802823-22598-20-git-send-email-glen.lee@atmel.com> (sfid-20151106_110756_281815_FEEC1E13)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 22 Nov 2015 04:08:08 -0500
+Received: by wmec201 with SMTP id c201so123234325wme.0
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:07 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/8] staging: vt6655: channel.c replace pDevice with priv
+Date: Sun, 22 Nov 2015 09:07:15 +0000
+Message-Id: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100818_321163_1EF0A92F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes spi_max_speed of wilc_wlan_io_func_t which is not used
-anymore and removes union u and struct spi, which does not have members in it.
+Removing camel case.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   | 1 -
- drivers/staging/wilc1000/wilc_wlan_if.h | 5 -----
- 2 files changed, 6 deletions(-)
+ drivers/staging/vt6655/channel.c | 58 ++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 935314c5..3aa636a 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -898,7 +898,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- 	nwi->io_func.io_type = HIF_SPI;
- 	nwi->io_func.io_init = linux_spi_init;
- 	nwi->io_func.io_deinit = linux_spi_deinit;
--	nwi->io_func.u.spi.spi_max_speed = linux_spi_set_max_speed;
- #endif
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 7a71782..6edccb42 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -176,62 +176,62 @@ void vnt_init_bands(struct vnt_private *priv)
+  */
+ bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
+ {
+-	struct vnt_private *pDevice = pDeviceHandler;
++	struct vnt_private *priv = pDeviceHandler;
+ 	bool bResult = true;
+ 
+-	if (pDevice->byCurrentCh == ch->hw_value)
++	if (priv->byCurrentCh == ch->hw_value)
+ 		return bResult;
+ 
+ 	/* Set VGA to max sensitivity */
+-	if (pDevice->bUpdateBBVGA &&
+-	    pDevice->byBBVGACurrent != pDevice->abyBBVGA[0]) {
+-		pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
++	if (priv->bUpdateBBVGA &&
++	    priv->byBBVGACurrent != priv->abyBBVGA[0]) {
++		priv->byBBVGACurrent = priv->abyBBVGA[0];
+ 
+-		BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
++		BBvSetVGAGainOffset(priv, priv->byBBVGACurrent);
+ 	}
+ 
+ 	/* clear NAV */
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MACCR, MACCR_CLRNAV);
++	MACvRegBitsOn(priv->PortOffset, MAC_REG_MACCR, MACCR_CLRNAV);
+ 
+ 	/* TX_PE will reserve 3 us for MAX2829 A mode only,
+ 	   it is for better TX throughput */
+ 
+-	if (pDevice->byRFType == RF_AIROHA7230)
+-		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
++	if (priv->byRFType == RF_AIROHA7230)
++		RFbAL7230SelectChannelPostProcess(priv, priv->byCurrentCh,
+ 						  ch->hw_value);
+ 
+-	pDevice->byCurrentCh = ch->hw_value;
+-	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
++	priv->byCurrentCh = ch->hw_value;
++	bResult &= RFbSelectChannel(priv, priv->byRFType,
+ 				    ch->hw_value);
+ 
+ 	/* Init Synthesizer Table */
+-	if (pDevice->bEnablePSMode)
+-		RFvWriteWakeProgSyn(pDevice, pDevice->byRFType, ch->hw_value);
++	if (priv->bEnablePSMode)
++		RFvWriteWakeProgSyn(priv, priv->byRFType, ch->hw_value);
+ 
+-	BBvSoftwareReset(pDevice);
++	BBvSoftwareReset(priv);
+ 
+-	if (pDevice->byLocalID > REV_ID_VT3253_B1) {
++	if (priv->byLocalID > REV_ID_VT3253_B1) {
+ 		unsigned long flags;
+ 
+-		spin_lock_irqsave(&pDevice->lock, flags);
++		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		/* set HW default power register */
+-		MACvSelectPage1(pDevice->PortOffset);
+-		RFbSetPower(pDevice, RATE_1M, pDevice->byCurrentCh);
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_PWRCCK,
+-			     pDevice->byCurPwr);
+-		RFbSetPower(pDevice, RATE_6M, pDevice->byCurrentCh);
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_PWROFDM,
+-			     pDevice->byCurPwr);
+-		MACvSelectPage0(pDevice->PortOffset);
+-
+-		spin_unlock_irqrestore(&pDevice->lock, flags);
++		MACvSelectPage1(priv->PortOffset);
++		RFbSetPower(priv, RATE_1M, priv->byCurrentCh);
++		VNSvOutPortB(priv->PortOffset + MAC_REG_PWRCCK,
++			     priv->byCurPwr);
++		RFbSetPower(priv, RATE_6M, priv->byCurrentCh);
++		VNSvOutPortB(priv->PortOffset + MAC_REG_PWROFDM,
++			     priv->byCurPwr);
++		MACvSelectPage0(priv->PortOffset);
++
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 	}
+ 
+-	if (pDevice->byBBType == BB_TYPE_11B)
+-		RFbSetPower(pDevice, RATE_1M, pDevice->byCurrentCh);
++	if (priv->byBBType == BB_TYPE_11B)
++		RFbSetPower(priv, RATE_1M, priv->byCurrentCh);
+ 	else
+-		RFbSetPower(pDevice, RATE_6M, pDevice->byCurrentCh);
++		RFbSetPower(priv, RATE_6M, priv->byCurrentCh);
+ 
+ 	return bResult;
  }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index be73b02..0f15795 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -76,11 +76,6 @@ typedef struct {
- 	int io_type;
- 	int (*io_init)(void *);
- 	void (*io_deinit)(void *);
--	union {
--		struct {
--			int (*spi_max_speed)(void);
--		} spi;
--	} u;
- } wilc_wlan_io_func_t;
- 
- #define WILC_MAC_INDICATE_STATUS	0x1
 -- 
-1.9.1
+2.6.2
 
