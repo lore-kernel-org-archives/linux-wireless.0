@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47715 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032934AbbKFJju (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33951 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbbKVRXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:39:50 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 26/26] staging: wilc1000: remove os_private
-Date: Fri, 6 Nov 2015 18:40:23 +0900
-Message-ID: <1446802823-22598-27-git-send-email-glen.lee@atmel.com> (sfid-20151106_110753_898528_37BC615E)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
+	Sun, 22 Nov 2015 12:23:44 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
+References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	<1447857966-19560-7-git-send-email-kvalo@codeaurora.org>
+	<564CCF2A.4030203@hauke-m.de>
+	<871tbmwhsk.fsf@kamboji.qca.qualcomm.com>
+	<564F966A.7080300@broadcom.com>
+Date: Sun, 22 Nov 2015 19:23:37 +0200
+In-Reply-To: <564F966A.7080300@broadcom.com> (Arend van Spriel's message of
+	"Fri, 20 Nov 2015 22:53:46 +0100")
+Message-ID: <87lh9qrlra.fsf@kamboji.qca.qualcomm.com> (sfid-20151122_182402_381181_B09B9A75)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused variable os_private and delete
-struct wilc_wlan_os_context_t since there is no members in it. Remove it's
-related code also.
+Arend van Spriel <arend@broadcom.com> writes:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c   | 2 --
- drivers/staging/wilc1000/wilc_wlan_if.h | 5 -----
- 2 files changed, 7 deletions(-)
+> On 11/19/2015 08:48 AM, Kalle Valo wrote:
+>> Hauke Mehrtens <hauke@hauke-m.de> writes:
+>>
+>>> On 11/18/2015 03:45 PM, Kalle Valo wrote:
+>>>> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
+>>>> edit Makefiles from subdirectories to use the new location.
+>>>>
+>>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>>>> ---
+>>>
+>>> I would prefer to remove the brcm80211 directory in this process and create:
+>>> drivers/net/wireless/broadcom/brcmfmac
+>>> drivers/net/wireless/broadcom/brcmsmac
+>>> drivers/net/wireless/broadcom/brcmutil
+>>> drivers/net/wireless/broadcom/include
+>>>
+>>> This way we have one directory less.
+>>
+>> I think this could be done separately. This patchset is big enough
+>> already, I would not like to make it anymore complicated.
+>>
+>> And I actually like the brcm80211 directory, I would not mind keeping it
+>> still.
+>
+> I prefer to keep it as brcmsmac and brcmfmac rely on brcmutil module
+> so I want to keep them together under brcm80211.
+>
+> So does this patch go in before or after the patches I submitted
+> before the merge window. I hope after :-p
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index fcc669c..086f1db 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -888,8 +888,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- {
- 	PRINT_D(INIT_DBG, "Linux to Wlan services ...\n");
- 
--	nwi->os_context.os_private = (void *)nic;
--
- #ifdef WILC_SDIO
- 	nwi->io_func.io_type = HIF_SDIO;
- #else
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index b43e439..5980ece 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -84,11 +84,6 @@ typedef struct {
- #define WILC_MAC_INDICATE_SCAN		0x2
- 
- typedef struct {
--	void *os_private;
--} wilc_wlan_os_context_t;
--
--typedef struct {
--	wilc_wlan_os_context_t os_context;
- 	wilc_wlan_io_func_t io_func;
- } wilc_wlan_inp_t;
- 
+Sorry, the vendor patches go in first :) It's much safer that way.
+
+But I think that git should be smart enough and your patchset from
+before the merge window should still apply without issues.
+
 -- 
-1.9.1
-
+Kalle Valo
