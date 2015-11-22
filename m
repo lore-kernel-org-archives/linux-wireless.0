@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37832 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbbKKAdd (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:34480 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbbKVJIJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 19:33:33 -0500
-Date: Tue, 10 Nov 2015 16:33:32 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/20] staging/wilc1000: add struct net_device declaration
-Message-ID: <20151111003332.GA5422@kroah.com> (sfid-20151111_013350_160708_1DAD01AB)
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
- <1447198960-2760143-2-git-send-email-arnd@arndb.de>
- <20151111000248.GA5062@kroah.com>
- <4397901.37Xo7LRaFs@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4397901.37Xo7LRaFs@wuerfel>
+	Sun, 22 Nov 2015 04:08:09 -0500
+Received: by wmvv187 with SMTP id v187so123340172wmv.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:08 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/8] staging: vt6655: set_channel replace void handler.
+Date: Sun, 22 Nov 2015 09:07:16 +0000
+Message-Id: <1448183242-3397-2-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100820_848349_652FC1E5)
+In-Reply-To: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
+References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 11, 2015 at 01:13:33AM +0100, Arnd Bergmann wrote:
-> On Tuesday 10 November 2015 16:02:48 Greg Kroah-Hartman wrote:
-> > On Wed, Nov 11, 2015 at 12:42:21AM +0100, Arnd Bergmann wrote:
-> > I think this is already fixed in my staging-testing branch, right?
-> 
-> Ah right. I only got it with some rare randconfig builds, and assumed
-> the problem was still there because I did not see a patch that fixed
-> it. However, the config that originally failed is now fine, so it's
-> probably fixed.
-> 
-> The other patches won't apply cleanly without this one unfortunately.
-> Let me know if I should re-send them without this patch, as I don't
-> want to spam everyone unnecessarily.
+Replace with struct vnt_private.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c | 3 +--
+ drivers/staging/vt6655/channel.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-Let me see how well they apply if I skip this, I can always hand-edit
-patches (do it all the time...)
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 6edccb42..d1c9116 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -174,9 +174,8 @@ void vnt_init_bands(struct vnt_private *priv)
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
++bool set_channel(struct vnt_private *priv, struct ieee80211_channel *ch)
+ {
+-	struct vnt_private *priv = pDeviceHandler;
+ 	bool bResult = true;
+ 
+ 	if (priv->byCurrentCh == ch->hw_value)
+diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
+index e2be6fc..2d613e7 100644
+--- a/drivers/staging/vt6655/channel.h
++++ b/drivers/staging/vt6655/channel.h
+@@ -27,6 +27,6 @@
+ 
+ void vnt_init_bands(struct vnt_private *);
+ 
+-bool set_channel(void *pDeviceHandler, struct ieee80211_channel *);
++bool set_channel(struct vnt_private *, struct ieee80211_channel *);
+ 
+ #endif /* _CHANNEL_H_ */
+-- 
+2.6.2
 
-But give me a week or so to catch up on things, these are in my queue,
-not lost.
-
-thanks,
-
-greg k-h
