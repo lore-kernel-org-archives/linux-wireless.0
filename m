@@ -1,60 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7573 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbKBIuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:50:11 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 19/38] staging: wilc1000: remove extern function in c file and move it to header file.
-Date: Mon, 2 Nov 2015 17:51:02 +0900
-Message-ID: <1446454281-22484-19-git-send-email-glen.lee@atmel.com> (sfid-20151102_095016_359800_3D33EE8E)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+Received: from mout2.freenet.de ([195.4.92.92]:34006 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751011AbbKVILP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2015 03:11:15 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.85 #1)
+	id 1a0PdF-0000Ct-Sj
+	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2015 09:04:21 +0100
+Received: from localhost ([::1]:41530 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
+	id 1a0PdF-0007eN-O7
+	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2015 09:04:21 +0100
+Received: from mx3.freenet.de ([195.4.92.13]:51846)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
+	id 1a0PaG-0002kh-Rw
+	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2015 09:01:16 +0100
+Received: from pd9eaee06.dip0.t-ipconnect.de ([217.234.238.6]:52815 helo=mail.maya.org)
+	by mx3.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 587) (Exim 4.85 #1)
+	id 1a0PaG-00026e-NK
+	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2015 09:01:16 +0100
+Received: from [192.168.1.57] (notebook2.maya.org [192.168.1.57])
+	by mail.maya.org (8.14.7/8.13.8) with ESMTP id tAM7vT5s001367
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 08:57:30 +0100
+To: linux-wireless <linux-wireless@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Subject: [ath9k] failed to set TX queue parameters for queue 3
+Message-ID: <5651766E.9040802@maya.org> (sfid-20151122_091119_826041_A0CD7544)
+Date: Sun, 22 Nov 2015 09:01:50 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+ boundary="------------040607030405000402010905"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This is a multi-part message in MIME format.
+--------------040607030405000402010905
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch removes extern resolve_disconnect_aberration in c file and move
-it to proper header file. Rename argument also to match with declaration.
+Hello!
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- drivers/staging/wilc1000/linux_wlan.c     | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+I reproducibly got the attached error w/ kernel 4.1.13. I wasn't able to 
+get a working connect w/ 4.1.13.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index f9efb5a..510b4a5 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -421,5 +421,5 @@ void host_int_freeJoinParams(void *pJoinParams);
- 
- s32 host_int_get_statistics(struct host_if_drv *hWFIDrv,
- 			    struct rf_info *pstrStatistics);
--
-+void resolve_disconnect_aberration(struct host_if_drv *hif_drv);
- #endif
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 82495ce..ab4ab1f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -39,7 +39,6 @@
-  #define _linux_wlan_device_removal()		{}
- 
- extern bool g_obtainingIP;
--extern void resolve_disconnect_aberration(void *drvHandler);
- extern u8 multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- extern struct timer_list hDuringIpTimer;
- 
--- 
-1.9.1
+The same has been working fine w/ 3.16.7.
 
+I'm not able to retest because the error appears with hotspots in trains 
+of DB in Germany [1].
+
+
+Regards,
+Andreas Hartmann
+
+
+[1] http://www.bahn.de/p/view/service/zug/railnet_ice_bahnhof.shtml
+
+--------------040607030405000402010905
+Content-Type: text/plain; charset=UTF-8;
+ name="queue3.error"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="queue3.error"
+
+Tm92IDE4IDA3OjE0OjUzIG5iIGtlcm5lbDogWzExOTA5LjgzODE2Ml0gd2xwNXMwOiBhdXRo
+ZW50aWNhdGUgd2l0aCA0Njo5MDplODozMzo3Mjo5MwpOb3YgMTggMDc6MTQ6NTQgbmIga2Vy
+bmVsOiBbMTE5MDkuODU4MzE0XSB3bHA1czA6IHNlbmQgYXV0aCB0byA0Njo5MDplODozMzo3
+Mjo5MyAodHJ5IDEvMykKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2MDAx
+N10gd2xwNXMwOiBhdXRoZW50aWNhdGVkCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsx
+MTkwOS44NjAzNzldIHdscDVzMDogYXNzb2NpYXRlIHdpdGggNDY6OTA6ZTg6MzM6NzI6OTMg
+KHRyeSAxLzMpCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsxMTkwOS44NjMwOTZdIHds
+cDVzMDogUlggQXNzb2NSZXNwIGZyb20gNDY6OTA6ZTg6MzM6NzI6OTMgKGNhcGFiPTB4NDIx
+IHN0YXR1cz0wIGFpZD02KQpOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuODYz
+MjQ0XSB3bHA1czA6IGFzc29jaWF0ZWQKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzEx
+OTA5Ljg2MzMyMF0gY2ZnODAyMTE6IENhbGxpbmcgQ1JEQSBmb3IgY291bnRyeTogRlIKTm92
+IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2Njg2NF0gYXRoOiBFRVBST00gcmVn
+ZG9tYWluOiAweDgwZmEKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2Njg2
+OV0gYXRoOiBFRVBST00gaW5kaWNhdGVzIHdlIHNob3VsZCBleHBlY3QgYSBjb3VudHJ5IGNv
+ZGUKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2Njg3Ml0gYXRoOiBkb2lu
+ZyBFRVBST00gY291bnRyeS0+cmVnZG1uIG1hcCBzZWFyY2gKTm92IDE4IDA3OjE0OjU0IG5i
+IGtlcm5lbDogWzExOTA5Ljg2Njg3M10gYXRoOiBjb3VudHJ5IG1hcHMgdG8gcmVnZG1uIGNv
+ZGU6IDB4MzcKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2Njg3Nl0gYXRo
+OiBDb3VudHJ5IGFscGhhMiBiZWluZyB1c2VkOiBGUgpOb3YgMTggMDc6MTQ6NTQgbmIga2Vy
+bmVsOiBbMTE5MDkuODY2ODc3XSBhdGg6IFJlZ3BhaXIgdXNlZDogMHgzNwpOb3YgMTggMDc6
+MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuODY2ODc5XSBhdGg6IHJlZ2RvbWFpbiAweDgwZmEg
+ZHluYW1pY2FsbHkgdXBkYXRlZCBieSBjb3VudHJ5IElFCk5vdiAxOCAwNzoxNDo1NCBuYiBr
+ZXJuZWw6IFsxMTkwOS44NjY5MjFdIGNmZzgwMjExOiBSZWd1bGF0b3J5IGRvbWFpbiBjaGFu
+Z2VkIHRvIGNvdW50cnk6IEZSCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsxMTkwOS44
+NjY5MjNdIGNmZzgwMjExOiAgREZTIE1hc3RlciByZWdpb246IHVuc2V0Ck5vdiAxOCAwNzox
+NDo1NCBuYiBrZXJuZWw6IFsxMTkwOS44NjY5MjVdIGNmZzgwMjExOiAgIChzdGFydF9mcmVx
+IC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLCAobWF4X2FudGVubmFfZ2FpbiwgbWF4X2VpcnAp
+LCAoZGZzX2NhY190aW1lKQpOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuODY2
+OTI5XSBjZmc4MDIxMTogICAoMjQwMjAwMCBLSHogLSAyNDgyMDAwIEtIeiBAIDQwMDAwIEtI
+eiksIChOL0EsIDIwMDAgbUJtKSwgKE4vQSkKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDog
+WzExOTA5Ljg2NjkzMV0gY2ZnODAyMTE6ICAgKDUxNzAwMDAgS0h6IC0gNTI1MDAwMCBLSHog
+QCA0MDAwMCBLSHopLCAoTi9BLCAyMDAwIG1CbSksIChOL0EpCk5vdiAxOCAwNzoxNDo1NCBu
+YiBrZXJuZWw6IFsxMTkwOS44NjY5MzRdIGNmZzgwMjExOiAgICg1MjUwMDAwIEtIeiAtIDUz
+MzAwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKE4vQSwgMjAwMCBtQm0pLCAoMCBzKQpOb3YgMTgg
+MDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuODY2OTM3XSBjZmc4MDIxMTogICAoNTQ5MDAw
+MCBLSHogLSA1NzEwMDAwIEtIeiBAIDQwMDAwIEtIeiksIChOL0EsIDI3MDAgbUJtKSwgKDAg
+cykKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5Ljg2NjkzOV0gY2ZnODAyMTE6
+ICAgKDU3MjQwMDAwIEtIeiAtIDY1ODgwMDAwIEtIeiBAIDIxNjAwMDAgS0h6KSwgKE4vQSwg
+NDAwMCBtQm0pLCAoTi9BKQpOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1
+NTg0XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0KTm92IDE4IDA3OjE0
+OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTYyNl0gV0FSTklORzogQ1BVOiAxIFBJRDogMTA0
+MTMgYXQgLi4vbmV0L21hYzgwMjExL2RyaXZlci1vcHMuaDo2NzEgaWVlZTgwMjExX3N0YV93
+bW1fcGFyYW1zKzB4NDE2LzB4NDMwIFttYWM4MDIxMV0oKQpOb3YgMTggMDc6MTQ6NTQgbmIg
+a2VybmVsOiBbMTE5MDkuOTA1NjMwXSB3bHA1czA6IGludmFsaWQgQ1dfbWluL0NXX21heDog
+MTI3LzMKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTYzMl0gTW9kdWxl
+cyBsaW5rZWQgaW46IGF0aDlrIG1hYzgwMjExIGF0aDlrX2NvbW1vbiBhdGg5a19odyBhdGgg
+Y2ZnODAyMTEgYXJjNCByZWlzZXJmcyB1bXNfZW5ldWI2MjUwIHVzYl9zdG9yYWdlIGZ1c2Ug
+dHVuIGFmX3BhY2tldCBicmlkZ2Ugc3RwIGxsYwogc25kX2hkYV9jb2RlY19oZG1pIHNuZF9o
+ZGFfY29kZWNfcmVhbHRlayBzbmRfaGRhX2NvZGVjX2dlbmVyaWMgc25kX2hkYV9pbnRlbCBz
+bmRfaGRhX2NvbnRyb2xsZXIgc25kX2hkYV9jb2RlYyBzbmRfaGRhX2NvcmUgc25kX3BjbV9v
+c3Mgc25kX3BjbSBpVENPX3dkdCBtc2lfd21pIGlUQ09fdmVuZG9yX3N1cHBvcnQgc25kX2h3
+ZGVwIApzbmRfc2VxIHNuZF90aW1lciBzbmRfc2VxX2RldmljZSBpbnRlbF9wb3dlcmNsYW1w
+IGNvcmV0ZW1wIHNuZF9taXhlcl9vc3Mga3ZtX2ludGVsIG1zaV9sYXB0b3Agc3BhcnNlX2tl
+eW1hcCBrdm0gam95ZGV2IHNuZCByZmtpbGwgc2VyaW9fcmF3IHBjc3BrciBpbnRlbF9pcHMg
+aTJjX2k4MDEgc3JfbW9kIGNkcm9tIHI4MTY5IGxwY19pYwpoIG1mZF9jb3JlIG1paSB3bWkg
+YWMgYmF0dGVyeSBzb3VuZGNvcmUgbWVpX21lIG1laSBzaHBjaHAgYWNwaV9jcHVmcmVxIHNn
+IHh0cyBnZjEyOG11bCBsaW5lYXIgbWRfbW9kIGNyYzMyY19pbnRlbCBpOTE1IGRybV9rbXNf
+aGVscGVyIGRybSBpMmNfYWxnb19iaXQgZmFuIHRoZXJtYWwgdmlkZW8gYnV0dG9uIHByb2Nl
+c3NvciBzY3NpXwpkaF9ocF9zdyBzY3NpX2RoX3JkYWMgc2NzaV9kaF9hbHVhIHNjc2lfZGhf
+ZW1jIHNjc2lfZGggZG1fc25hcHNob3QgZG1fYnVmaW8gZG1fbWlycm9yIGRtX3JlZ2lvbl9o
+YXNoIGRtX2xvZyBkbV9jcnlwdCBkbV9tb2QgW2xhc3QgdW5sb2FkZWQ6IGNmZzgwMjExXQpO
+b3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1NzI5XSBDUFU6IDEgUElEOiAx
+MDQxMyBDb21tOiBrd29ya2VyL3UxNjo0MyBUYWludGVkOiBHICAgICAgICBXICBPICAgIDQu
+MS4xMi0xLmN1c3RvbS1kZXNrdG9wICMxCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsx
+MTkwOS45MDU3MzJdIEhhcmR3YXJlIG5hbWU6IE1pY3JvLVN0YXIgSW50ZXJuYXRpb25hbCBD
+UjYyMC9DUjYyMCwgQklPUyBFMTY4MUlNUyBWRVIuMTBDIDA0LzEyLzIwMTEKTm92IDE4IDA3
+OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTc1Ml0gV29ya3F1ZXVlOiBwaHkwIGllZWU4
+MDIxMV9pZmFjZV93b3JrIFttYWM4MDIxMV0KTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDog
+WzExOTA5LjkwNTc1Nl0gIDAwMDAwMDAwMDAwMDAwMDAgZmZmZmZmZmZhMDgwYThiZiBmZmZm
+ZmZmZjgxNjlmNDc5IDAwMDAwMDAwMDAwMDAwMDAKTm92IDE4IDA3OjE0OjU0IG5iIGtlcm5l
+bDogWzExOTA5LjkwNTc2MF0gIGZmZmZmZmZmODEwNjhhNzEgZmZmZjg4MDAwM2VhMDZhMCBm
+ZmZmODgwMDVlZDFjODQwIDAwMDAwMDAwMDAwMDAwMDMKTm92IDE4IDA3OjE0OjU0IG5iIGtl
+cm5lbDogWzExOTA5LjkwNTc2NF0gIDAwMDAwMDAwMDAwMDAwMGMgZmZmZjg4MDA1ZWQxY2Jl
+MCBmZmZmZmZmZjgxMDY4YWVhIGZmZmZmZmZmYTA4MDg0OTgKTm92IDE4IDA3OjE0OjU0IG5i
+IGtlcm5lbDogWzExOTA5LjkwNTc2OV0gQ2FsbCBUcmFjZToKTm92IDE4IDA3OjE0OjU0IG5i
+IGtlcm5lbDogWzExOTA5LjkwNTc4OF0gIFs8ZmZmZmZmZmY4MTAwNTYwYz5dIGR1bXBfdHJh
+Y2UrMHg4Yy8weDM0MApOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1Nzk1
+XSAgWzxmZmZmZmZmZjgxMDA1OWJjPl0gc2hvd19zdGFja19sb2dfbHZsKzB4ZmMvMHgxYTAK
+Tm92IDE4IDA3OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTgwMF0gIFs8ZmZmZmZmZmY4
+MTAwNmYxMT5dIHNob3dfc3RhY2srMHgyMS8weDUwCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJu
+ZWw6IFsxMTkwOS45MDU4MDldICBbPGZmZmZmZmZmODE2OWY0Nzk+XSBkdW1wX3N0YWNrKzB4
+NDcvMHg2NwpOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1ODE4XSAgWzxm
+ZmZmZmZmZjgxMDY4YTcxPl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg4MS8weGIwCk5vdiAx
+OCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsxMTkwOS45MDU4MjNdICBbPGZmZmZmZmZmODEwNjhh
+ZWE+XSB3YXJuX3Nsb3dwYXRoX2ZtdCsweDRhLzB4NTAKTm92IDE4IDA3OjE0OjU0IG5iIGtl
+cm5lbDogWzExOTA5LjkwNTg1MV0gIFs8ZmZmZmZmZmZhMDdkZTg0Nj5dIGllZWU4MDIxMV9z
+dGFfd21tX3BhcmFtcysweDQxNi8weDQzMCBbbWFjODAyMTFdCk5vdiAxOCAwNzoxNDo1NCBu
+YiBrZXJuZWw6IFsxMTkwOS45MDU4OTZdICBbPGZmZmZmZmZmYTA3ZTBjNTU+XSBpZWVlODAy
+MTFfcnhfbWdtdF9iZWFjb24rMHhiZTUvMHgxMjkwIFttYWM4MDIxMV0KTm92IDE4IDA3OjE0
+OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTkyOF0gIFs8ZmZmZmZmZmZhMDdlMjRkNT5dIGll
+ZWU4MDIxMV9zdGFfcnhfcXVldWVkX21nbXQrMHgyZDUvMHg2YTAgW21hYzgwMjExXQpOb3Yg
+MTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1OTUxXSAgWzxmZmZmZmZmZmEwN2E1
+YTRiPl0gaWVlZTgwMjExX2lmYWNlX3dvcmsrMHgzNWIvMHg0NjAgW21hYzgwMjExXQpOb3Yg
+MTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1OTYxXSAgWzxmZmZmZmZmZjgxMDgw
+ZGMyPl0gcHJvY2Vzc19vbmVfd29yaysweDE0Mi8weDQzMApOb3YgMTggMDc6MTQ6NTQgbmIg
+a2VybmVsOiBbMTE5MDkuOTA1OTY3XSAgWzxmZmZmZmZmZjgxMDgxMWM2Pl0gd29ya2VyX3Ro
+cmVhZCsweDExNi8weDQ4MApOb3YgMTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1
+OTczXSAgWzxmZmZmZmZmZjgxMDg2OGFhPl0ga3RocmVhZCsweGNhLzB4ZTAKTm92IDE4IDA3
+OjE0OjU0IG5iIGtlcm5lbDogWzExOTA5LjkwNTk4MF0gIFs8ZmZmZmZmZmY4MTZhNjIyMj5d
+IHJldF9mcm9tX2ZvcmsrMHg0Mi8weDcwCk5vdiAxOCAwNzoxNDo1NCBuYiBrZXJuZWw6IFsx
+MTkwOS45MDU5ODZdIC0tLVsgZW5kIHRyYWNlIDMyOGU1MWExYmE2YTE5NzUgXS0tLQpOb3Yg
+MTggMDc6MTQ6NTQgbmIga2VybmVsOiBbMTE5MDkuOTA1OTg4XSB3bHA1czA6IGZhaWxlZCB0
+byBzZXQgVFggcXVldWUgcGFyYW1ldGVycyBmb3IgcXVldWUgMwpOb3YgMTggMDc6MTQ6NTQg
+bmIga2VybmVsOiBbMTE5MDkuOTA2MDA1XSB3bHA1czA6IExpbWl0aW5nIFRYIHBvd2VyIHRv
+IDIwICgyMCAtIDApIGRCbSBhcyBhZHZlcnRpc2VkIGJ5IDQ2OjkwOmU4OjMzOjcyOjkzCg==
+--------------040607030405000402010905--
