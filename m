@@ -1,63 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60344 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494AbbKWSb6 (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:33378 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbbKVJIM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 13:31:58 -0500
-Subject: Re: [PATCH 4/4] staging: wilc1000: Fix typo in
- wilc_wfi_cfgoperations.c
-To: Masanari Iida <standby24x7@gmail.com>, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, chris.park@atmel.com,
-	austin.shin@atmel.com, johnny.kim@atmel.com,
-	linux-wireless@vger.kernel.org
-References: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
- <1448286080-14787-4-git-send-email-standby24x7@gmail.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <56535B9A.6000000@infradead.org> (sfid-20151123_193203_731983_504F053C)
-Date: Mon, 23 Nov 2015 10:31:54 -0800
-MIME-Version: 1.0
-In-Reply-To: <1448286080-14787-4-git-send-email-standby24x7@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+	Sun, 22 Nov 2015 04:08:12 -0500
+Received: by wmec201 with SMTP id c201so123235576wme.0
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:11 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 5/8] staging: vt6655: power.c replace pDevice with priv
+Date: Sun, 22 Nov 2015 09:07:19 +0000
+Message-Id: <1448183242-3397-5-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100833_183750_DEA3F92B)
+In-Reply-To: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
+References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/15 05:41, Masanari Iida wrote:
-> This patch fix some spelling typo in wilc_wfi_cfgoperations.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 34 +++++++++++------------
->  1 file changed, 17 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 6f40522..ee09d56 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -1923,7 +1923,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
->  	/* Get WILC header */
->  	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
->  
-> -	/* The packet offset field conain info about what type of managment frame */
-> +	/* The packet offset field contain info about what type of management frame */
+Removing camel case.
 
-	                           contains
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/power.c | 56 +++++++++++++++++++++---------------------
+ 1 file changed, 28 insertions(+), 28 deletions(-)
 
->  	/* we are dealing with and ack status */
->  	pkt_offset = GET_PKT_OFFSET(header);
->  
-> @@ -2283,7 +2283,7 @@ static int mgmt_tx(struct wiphy *wiphy,
->  							if (u8P2Plocalrandom > u8P2Precvrandom)	{
->  								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", u8P2Plocalrandom, u8P2Precvrandom);
->  
-> -								/*Search for the p2p information information element , after the Public action subtype theres a byte for teh dialog token, skip that*/
-> +								/*Search for the p2p information information element , after the Public action subtype theres a byte for the dialog token, skip that*/
-
-Please change "theres" to "there's" or "there is".
-
->  								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
->  									if (buf[i] == P2PELEM_ATTR_ID && !(memcmp(u8P2P_oui, &buf[i + 2], 4))) {
->  										if (buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)
-
-
+diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
+index 06e6b9d..e58afbd 100644
+--- a/drivers/staging/vt6655/power.c
++++ b/drivers/staging/vt6655/power.c
+@@ -68,40 +68,40 @@ PSvEnablePowerSaving(
+ 	unsigned short wListenInterval
+ )
+ {
+-	struct vnt_private *pDevice = hDeviceContext;
+-	u16 wAID = pDevice->current_aid | BIT(14) | BIT(15);
++	struct vnt_private *priv = hDeviceContext;
++	u16 wAID = priv->current_aid | BIT(14) | BIT(15);
+ 
+ 	/* set period of power up before TBTT */
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_PWBT, C_PWBT);
+-	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
++	VNSvOutPortW(priv->PortOffset + MAC_REG_PWBT, C_PWBT);
++	if (priv->op_mode != NL80211_IFTYPE_ADHOC) {
+ 		/* set AID */
+-		VNSvOutPortW(pDevice->PortOffset + MAC_REG_AIDATIM, wAID);
++		VNSvOutPortW(priv->PortOffset + MAC_REG_AIDATIM, wAID);
+ 	} else {
+ 		/* set ATIM Window */
+ #if 0 /* TODO atim window */
+-		MACvWriteATIMW(pDevice->PortOffset, pMgmt->wCurrATIMWindow);
++		MACvWriteATIMW(priv->PortOffset, pMgmt->wCurrATIMWindow);
+ #endif
+ 	}
+ 	/* Set AutoSleep */
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
++	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
+ 	/* Set HWUTSF */
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
++	MACvRegBitsOn(priv->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
+ 
+ 	if (wListenInterval >= 2) {
+ 		/* clear always listen beacon */
+-		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
++		MACvRegBitsOff(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
+ 		/* first time set listen next beacon */
+-		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
++		MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
+ 	} else {
+ 		/* always listen beacon */
+-		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
++		MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
+ 	}
+ 
+ 	/* enable power saving hw function */
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
+-	pDevice->bEnablePSMode = true;
++	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
++	priv->bEnablePSMode = true;
+ 
+-	pDevice->bPWBitOn = true;
++	priv->bPWBitOn = true;
+ 	pr_debug("PS:Power Saving Mode Enable...\n");
+ }
+ 
+@@ -120,20 +120,20 @@ PSvDisablePowerSaving(
+ 	void *hDeviceContext
+ )
+ {
+-	struct vnt_private *pDevice = hDeviceContext;
++	struct vnt_private *priv = hDeviceContext;
+ 
+ 	/* disable power saving hw function */
+-	MACbPSWakeup(pDevice->PortOffset);
++	MACbPSWakeup(priv->PortOffset);
+ 	/* clear AutoSleep */
+-	MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
++	MACvRegBitsOff(priv->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
+ 	/* clear HWUTSF */
+-	MACvRegBitsOff(pDevice->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
++	MACvRegBitsOff(priv->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
+ 	/* set always listen beacon */
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
++	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
+ 
+-	pDevice->bEnablePSMode = false;
++	priv->bEnablePSMode = false;
+ 
+-	pDevice->bPWBitOn = false;
++	priv->bPWBitOn = false;
+ }
+ 
+ 
+@@ -152,20 +152,20 @@ PSbIsNextTBTTWakeUp(
+ 	void *hDeviceContext
+ )
+ {
+-	struct vnt_private *pDevice = hDeviceContext;
+-	struct ieee80211_hw *hw = pDevice->hw;
++	struct vnt_private *priv = hDeviceContext;
++	struct ieee80211_hw *hw = priv->hw;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	bool bWakeUp = false;
+ 
+ 	if (conf->listen_interval > 1) {
+-		if (!pDevice->wake_up_count)
+-			pDevice->wake_up_count = conf->listen_interval;
++		if (!priv->wake_up_count)
++			priv->wake_up_count = conf->listen_interval;
+ 
+-		--pDevice->wake_up_count;
++		--priv->wake_up_count;
+ 
+-		if (pDevice->wake_up_count == 1) {
++		if (priv->wake_up_count == 1) {
+ 			/* Turn on wake up to listen next beacon */
+-			MACvRegBitsOn(pDevice->PortOffset,
++			MACvRegBitsOn(priv->PortOffset,
+ 				      MAC_REG_PSCTL, PSCTL_LNBCN);
+ 			bWakeUp = true;
+ 		}
 -- 
-~Randy
+2.6.2
+
