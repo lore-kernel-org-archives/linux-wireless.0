@@ -1,78 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59009 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757787AbbKSGyB (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:40619
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752263AbbKWNiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:54:01 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 09/26] staging: wilc1000: rename u8P2P_vendorspec variable
-Date: Thu, 19 Nov 2015 15:56:18 +0900
-Message-ID: <1447916195-24851-9-git-send-email-glen.lee@atmel.com> (sfid-20151119_075405_523962_34FC5243)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 23 Nov 2015 08:38:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath10k@lists.infradead.org
+Subject: [PATCH 2/2] ath10k: do not use coherent memory for tx buffers
+Date: Mon, 23 Nov 2015 14:18:49 +0100
+Message-Id: <1448284729-98078-2-git-send-email-nbd@openwrt.org> (sfid-20151123_143819_917009_2EC97DF3)
+In-Reply-To: <1448284729-98078-1-git-send-email-nbd@openwrt.org>
+References: <1448284729-98078-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Coherent memory is expensive to access, since all memory accesses bypass
+the cache. It is also completely unnecessary for this case.
+Convert to mapped memory instead and use the DMA API to flush the cache
+where necessary.
+Fixes allocation failures on embedded devices.
 
-This patch renames u8P2P_vendorspec variable to p2p_vendor_spec
-to avoid camelcase.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 77 +++++++++++++++++++++-----------
+ 1 file changed, 51 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 904b214..0a7226c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -174,7 +174,7 @@ static u8 curr_channel;
- static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
- static u8 p2p_local_random = 0x01;
- static u8 p2p_recv_random = 0x00;
--static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
-+static u8 p2p_vendor_spec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
- static bool bWilc_ie;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 8f76b9d..99d9793 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -100,7 +100,7 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+-	int ret, size;
++	int size;
  
- static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
-@@ -2000,7 +2000,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 						if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP))	{
- 							if (!bWilc_ie) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
--									if (!memcmp(u8P2P_vendorspec, &buff[i], 6)) {
-+									if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
- 										p2p_recv_random = buff[i + 6];
- 										bWilc_ie = true;
- 										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", p2p_recv_random);
-@@ -2225,7 +2225,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 	struct host_if_drv *pstrWFIDrv;
- 	u32 i;
- 	perInterface_wlan_t *nic;
--	u32 buf_len = len + sizeof(u8P2P_vendorspec) + sizeof(p2p_local_random);
-+	u32 buf_len = len + sizeof(p2p_vendor_spec) + sizeof(p2p_local_random);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
+ 		   htt->max_num_pending_tx);
+@@ -109,39 +109,41 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 	idr_init(&htt->pending_tx);
  
- 	nic = netdev_priv(wdev->netdev);
- 	priv = wiphy_priv(wiphy);
-@@ -2323,8 +2323,8 @@ static int mgmt_tx(struct wiphy *wiphy,
- 									 * Adding WILC information element to allow two WILC devices to
- 									 * identify each other and connect
- 									 */
--									memcpy(&mgmt_tx->buff[len], u8P2P_vendorspec, sizeof(u8P2P_vendorspec));
--									mgmt_tx->buff[len + sizeof(u8P2P_vendorspec)] = p2p_local_random;
-+									memcpy(&mgmt_tx->buff[len], p2p_vendor_spec, sizeof(p2p_vendor_spec));
-+									mgmt_tx->buff[len + sizeof(p2p_vendor_spec)] = p2p_local_random;
- 									mgmt_tx->size = buf_len;
- 								}
- 							} else {
+ 	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
+-	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
+-						  &htt->txbuf.paddr,
+-						  GFP_DMA);
+-	if (!htt->txbuf.vaddr) {
+-		ath10k_err(ar, "failed to alloc tx buffer\n");
+-		ret = -ENOMEM;
++	htt->txbuf.vaddr = kzalloc(size, GFP_KERNEL);
++	if (!htt->txbuf.vaddr)
+ 		goto free_idr_pending_tx;
+-	}
++
++	htt->txbuf.paddr = dma_map_single(ar->dev, htt->txbuf.vaddr, size,
++					  DMA_TO_DEVICE);
++	if (dma_mapping_error(ar->dev, htt->txbuf.paddr))
++		goto free_txbuf_vaddr;
+ 
+ 	if (!ar->hw_params.continuous_frag_desc)
+-		goto skip_frag_desc_alloc;
++		return 0;
+ 
+ 	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
+-	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
+-						  &htt->frag_desc.paddr,
+-						  GFP_DMA);
+-	if (!htt->frag_desc.vaddr) {
+-		ath10k_warn(ar, "failed to alloc fragment desc memory\n");
+-		ret = -ENOMEM;
++	htt->frag_desc.vaddr = kzalloc(size, GFP_KERNEL);
++	if (!htt->frag_desc.vaddr)
+ 		goto free_txbuf;
+-	}
+ 
+-skip_frag_desc_alloc:
++	htt->frag_desc.paddr = dma_map_single(ar->dev, htt->frag_desc.vaddr,
++					      size, DMA_TO_DEVICE);
++	if (dma_mapping_error(ar->dev, htt->txbuf.paddr))
++		goto free_frag_desc;
++
+ 	return 0;
+ 
++free_frag_desc:
++	kfree(htt->frag_desc.vaddr);
+ free_txbuf:
+ 	size = htt->max_num_pending_tx *
+ 			  sizeof(struct ath10k_htt_txbuf);
+-	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-			  htt->txbuf.paddr);
++	dma_unmap_single(htt->ar->dev, htt->txbuf.paddr, size, DMA_TO_DEVICE);
++free_txbuf_vaddr:
++	kfree(htt->txbuf.vaddr);
+ free_idr_pending_tx:
+ 	idr_destroy(&htt->pending_tx);
+-	return ret;
++	return -ENOMEM;
+ }
+ 
+ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+@@ -170,15 +172,17 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ 	if (htt->txbuf.vaddr) {
+ 		size = htt->max_num_pending_tx *
+ 				  sizeof(struct ath10k_htt_txbuf);
+-		dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-				  htt->txbuf.paddr);
++		dma_unmap_single(htt->ar->dev, htt->txbuf.paddr, size,
++				 DMA_TO_DEVICE);
++		kfree(htt->txbuf.vaddr);
+ 	}
+ 
+ 	if (htt->frag_desc.vaddr) {
+ 		size = htt->max_num_pending_tx *
+ 				  sizeof(struct htt_msdu_ext_desc);
+-		dma_free_coherent(htt->ar->dev, size, htt->frag_desc.vaddr,
+-				  htt->frag_desc.paddr);
++		dma_unmap_single(htt->ar->dev, htt->frag_desc.paddr, size,
++				 DMA_TO_DEVICE);
++		kfree(htt->frag_desc.vaddr);
+ 	}
+ }
+ 
+@@ -550,6 +554,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct htt_msdu_ext_desc *ext_desc = NULL;
+ 	bool limit_mgmt_desc = false;
+ 	bool is_probe_resp = false;
++	int txbuf_offset, frag_offset, frag_size;
+ 
+ 	if (unlikely(ieee80211_is_mgmt(hdr->frame_control)) &&
+ 	    ar->hw_params.max_probe_resp_desc_thres) {
+@@ -574,9 +579,11 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
+ 
++	frag_size = sizeof(struct htt_msdu_ext_desc);
++	frag_offset = frag_size * msdu_id;
++	txbuf_offset = sizeof(struct ath10k_htt_txbuf) * msdu_id;
+ 	skb_cb->htt.txbuf = &htt->txbuf.vaddr[msdu_id];
+-	skb_cb->htt.txbuf_paddr = htt->txbuf.paddr +
+-		(sizeof(struct ath10k_htt_txbuf) * msdu_id);
++	skb_cb->htt.txbuf_paddr = htt->txbuf.paddr + txbuf_offset;
+ 
+ 	if ((ieee80211_is_action(hdr->frame_control) ||
+ 	     ieee80211_is_deauth(hdr->frame_control) ||
+@@ -597,6 +604,15 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		goto err_free_msdu_id;
+ 	}
+ 
++	dma_sync_single_range_for_cpu(dev, htt->txbuf.paddr, txbuf_offset,
++				      sizeof(struct ath10k_htt_txbuf),
++				      DMA_TO_DEVICE);
++
++	if (ar->hw_params.continuous_frag_desc)
++		dma_sync_single_range_for_cpu(dev, htt->frag_desc.paddr,
++					      frag_offset, frag_size,
++					      DMA_TO_DEVICE);
++
+ 	switch (skb_cb->txmode) {
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+@@ -723,6 +739,15 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	sg_items[1].paddr = skb_cb->paddr;
+ 	sg_items[1].len = prefetch_len;
+ 
++	if (ar->hw_params.continuous_frag_desc)
++		dma_sync_single_range_for_device(dev, htt->frag_desc.paddr,
++						 frag_offset, frag_size,
++						 DMA_TO_DEVICE);
++
++	dma_sync_single_range_for_device(dev, htt->txbuf.paddr, txbuf_offset,
++					 sizeof(struct ath10k_htt_txbuf),
++					 DMA_TO_DEVICE);
++
+ 	res = ath10k_hif_tx_sg(htt->ar,
+ 			       htt->ar->htc.endpoint[htt->eid].ul_pipe_id,
+ 			       sg_items, ARRAY_SIZE(sg_items));
 -- 
-1.9.1
+2.2.2
 
