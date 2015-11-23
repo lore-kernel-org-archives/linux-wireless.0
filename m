@@ -1,89 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:36313 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162723AbbKTMxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 07:53:39 -0500
-Received: by pacdm15 with SMTP id dm15so116220928pac.3
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2015 04:53:38 -0800 (PST)
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if requested
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com>
- <1447464560-28104-2-git-send-email-antonio@meshcoding.com>
- <1448016547.3141.4.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-From: Antonio Quartulli <antonio@open-mesh.com>
-Message-ID: <564F1790.7030309@open-mesh.com> (sfid-20151120_135342_850532_59E6315E)
-Date: Fri, 20 Nov 2015 20:52:32 +0800
-MIME-Version: 1.0
-In-Reply-To: <1448016547.3141.4.camel@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ai6qep7n1gwLo3VBK2Nh3Ab3Hvti3EB5n"
+Received: from max.feld.cvut.cz ([147.32.192.36]:54730 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083AbbKWS1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 13:27:54 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2 1/8] cfg80211: reg: Remove unused function parameter
+Date: Mon, 23 Nov 2015 19:27:14 +0100
+Message-Id: <1448303241-27747-2-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192759_041502_E152FF6C)
+In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ai6qep7n1gwLo3VBK2Nh3Ab3Hvti3EB5n
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
+---
+ net/wireless/reg.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-On 20/11/15 18:49, Johannes Berg wrote:
->=20
->> @@ -599,7 +599,9 @@ static int __ieee80211_start_scan(struct
->> ieee80211_sub_if_data *sdata,
->> =20
->>  		if ((req->channels[0]->flags &
->>  		     IEEE80211_CHAN_NO_IR) ||
->> -		    !req->n_ssids) {
->> +		    !req->n_ssids ||
->> +		    ((req->channels[0]->flags &
->> IEEE80211_CHAN_RADAR) &&
->> +		     (req->flags &
->> NL80211_SCAN_FLAG_PASSIVE_RADAR))) {
->>  			next_delay =3D IEEE80211_PASSIVE_CHANNEL_TIME;
->>
->=20
-> I don't really see any circumstances under which it's valid to actively=
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2e8d6f3..43b3e57 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1052,7 +1052,7 @@ static u32 map_regdom_flags(u32 rd_flags)
+ }
+ 
+ static const struct ieee80211_reg_rule *
+-freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
++freq_reg_info_regd(u32 center_freq,
+ 		   const struct ieee80211_regdomain *regd, u32 bw)
+ {
+ 	int i;
+@@ -1097,7 +1097,7 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
+ 	u32 bw;
+ 
+ 	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
+-		reg_rule = freq_reg_info_regd(wiphy, center_freq, regd, bw);
++		reg_rule = freq_reg_info_regd(center_freq, regd, bw);
+ 		if (!IS_ERR(reg_rule))
+ 			return reg_rule;
+ 	}
+@@ -1765,8 +1765,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	u32 bw;
+ 
+ 	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
+-		reg_rule = freq_reg_info_regd(wiphy,
+-					      MHZ_TO_KHZ(chan->center_freq),
++		reg_rule = freq_reg_info_regd(MHZ_TO_KHZ(chan->center_freq),
+ 					      regd, bw);
+ 		if (!IS_ERR(reg_rule))
+ 			break;
+-- 
+2.5.3
 
-> scan radar channels ... seems like we should do this unconditionally?
-
-I think it would be reasonable only if the target channel is the one we
-are using and we have done CSA. But when scanning non-operative channels
-I don't think this could work.
-
-As discussed on IRC I'd rather go for passively scanning any DFS channel.=
-
-
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-
---ai6qep7n1gwLo3VBK2Nh3Ab3Hvti3EB5n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWTxeZAAoJENpFlCjNi1MRS0EQAJzlei4jwUXayNzknivBcQrt
-OO2f2hYgWItXUs1fCTQAuhJPvr6lCPWgurPowL/Jcr6j80+lPPnug04n7qWcL2GR
-036DDbFTm8mxVew7OeQ8XnRzwa50NOH66Z2JiZx8X+kOjPMc2b9P3Y146vK/Hbo+
-T6vCZS5J9Y8VEpY6Uj9PX72y+ou+BeZ4VqYq5j6+Gp23YfrN8reRY38so61RPmwJ
-KumI2vBoq0T+woTcYBIDsMEo+U8sqQZTDEbZxxMbCfatLJPankb5cqyMYA3sHkle
-3mPgLXOcngs0tqmNzAENYdX4Qtn9gbcL+8uXFcUs7QPaLqeIdzz3ptVVnerQboI4
-j7tp5ZaCF3kjgHjCVSps+i/cyjql4BzZMz4uWcJ9IE5G2UtmqXYg07rusvxcY9Mv
-RF3mifJy+3b5SGG3K/WemsW14SThxLS9DEGFrFJh3JCPgUNgRyMBd873jDlCraUS
-VOaooEeY2LJ3mymJY3gnBFM/kcgawqEBUJb9vSxudd3VAqE4z1IFe5pNw4DvWWMR
-+akOQixyFpFuUpOzpPEUuk356ITud68uxQ7mkwKk8XxXQNYJgWP3lCGL79d/A9DZ
-SHY2gihjqCDT17pOJn6AsC0DkJXlca94JeGAyHt++WjvALAIDRZeaG2TID2Xz1Hx
-qPM2ak64HqOsYFuoBYdL
-=yAFj
------END PGP SIGNATURE-----
-
---ai6qep7n1gwLo3VBK2Nh3Ab3Hvti3EB5n--
