@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37839 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031061AbbKFCSi (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:60365 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbbKWSdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:38 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 66/73] staging: wilc1000: rename Handle_SetOperationMode function
-Date: Fri, 6 Nov 2015 11:20:05 +0900
-Message-ID: <1446776412-30670-17-git-send-email-glen.lee@atmel.com> (sfid-20151106_031850_777828_0E435113)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+	Mon, 23 Nov 2015 13:33:32 -0500
+Subject: Re: [PATCH 1/4] staging: wilc1000: Fix typo in wilc_msgqueue.h
+To: Masanari Iida <standby24x7@gmail.com>, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	austin.shin@atmel.com, johnny.kim@atmel.com,
+	linux-wireless@vger.kernel.org
+References: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <56535BF7.1000808@infradead.org> (sfid-20151123_193335_568794_F9D79543)
+Date: Mon, 23 Nov 2015 10:33:27 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On 11/23/15 05:41, Masanari Iida wrote:
+> This patch fix some spelling typo in wilc_msgqueue.h
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 
-This patch renames Handle_SetOperationMode function to handle_set_operation_mode
-to avoid camelcase.
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index dcaf0eb..504763e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -371,8 +371,8 @@ static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
- 	return result;
- }
- 
--static s32 Handle_SetOperationMode(struct host_if_drv *hif_drv,
--				    struct op_mode *hif_op_mode)
-+static s32 handle_set_operation_mode(struct host_if_drv *hif_drv,
-+				     struct op_mode *hif_op_mode)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2974,7 +2974,7 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_SET_OPERATION_MODE:
--			Handle_SetOperationMode(msg.drv, &msg.body.mode);
-+			handle_set_operation_mode(msg.drv, &msg.body.mode);
- 			break;
- 
- 		case HOST_IF_MSG_SET_IPADDRESS:
+> ---
+>  drivers/staging/wilc1000/wilc_msgqueue.h | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+> index d231c33..d7e0328 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.h
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+
+
 -- 
-1.9.1
-
+~Randy
