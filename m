@@ -1,90 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48833 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779AbbKOTeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2015 14:34:09 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/4] iwlwifi: Add new PCI IDs for the 8260 series
-Date: Sun, 15 Nov 2015 21:34:02 +0200
-Message-Id: <1447616045-31484-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151115_203415_464419_FF8570A4)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8EAF98@hasmsx107.ger.corp.intel.com>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:33061 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840AbbKWARo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2015 19:17:44 -0500
+Received: by qgea14 with SMTP id a14so105744606qge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 16:17:43 -0800 (PST)
+From: Steve deRosier <derosier@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Subject: [PATCH v3 1/2] ath6kl_sdio: Add reset gpio module parameter for CHIP_PWD_L pin
+Date: Sun, 22 Nov 2015 16:15:46 -0800
+Message-Id: <1448237747-20037-2-git-send-email-steve.derosier@lairdtech.com> (sfid-20151123_011748_547783_B09BD869)
+In-Reply-To: <1448237747-20037-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1448237747-20037-1-git-send-email-steve.derosier@lairdtech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+Many ath6k chips have a reset pin, usually labeled CHIP_PWD_L. This pin can
+be pulled low by the host processor to hold the wifi chip in reset. By
+holding the chip in reset, the lowest power consumption available can be
+achieved.
 
-Add some new PCI IDs for the 8260 series which were missing.
-The following sub-system IDs were added:
-0x0130, 0x1130, 0x0132, 0x1132, 0x1150, 0x8110, 0x9110, 0x8130,
-0x9130, 0x8132, 0x9132, 0x8150, 0x9150, 0x0044, 0x0930
+This adds a module parameter so the ath6kl_sdio driver can control the
+CHIP_PWD_L pin if the implementer so desires. This code is only available
+if GPIOLIB is configured.
 
-CC: <stable@vger.kernel.org> [4.1+]
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/drv.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c | 70 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 69 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 644b58b..639761f 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -423,14 +423,21 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- /* 8000 Series */
- 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0130, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x1130, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0132, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x1132, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0110, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x01F0, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0012, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x1012, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x1110, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0050, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0250, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x1050, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0150, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x1150, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x24F4, 0x1130, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x1030, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0xC010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0xC110, iwl8260_2ac_cfg)},
-@@ -438,18 +445,28 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24F3, 0xC050, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0xD050, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x8010, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x8110, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x9010, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x9110, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x8030, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x9030, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x8130, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x9130, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x8132, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x9132, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x8050, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x8150, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x9050, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x9150, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0044, iwl8260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0810, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0910, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0850, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0950, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
- #endif /* CONFIG_IWLMVM */
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index eab0ab9..d06aa41 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -23,6 +23,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sd.h>
++#include <linux/gpio.h>
+ #include "hif.h"
+ #include "hif-ops.h"
+ #include "target.h"
+@@ -69,6 +70,20 @@ struct ath6kl_sdio {
+ 	spinlock_t wr_async_lock;
+ };
  
- 	{0}
++/* Delay to avoid the mmc driver calling the probe on the prior notice of
++ * the chip, which we just killed. If this is missing, it results in a
++ * spurious warning:
++ * "ath6kl_sdio: probe of mmc0:0001:1 failed with error -110"
++ *
++ * Time chosen experimentally, with padding
++ */
++#define ATH6KL_MMC_PROBE_DELAY	150
++static unsigned int reset_pwd_gpio = ARCH_NR_GPIOS;
++#ifdef CONFIG_GPIOLIB
++module_param(reset_pwd_gpio, uint, 0644);
++MODULE_PARM_DESC(reset_pwd_gpio, "WIFI CHIP_PWD reset pin GPIO");
++#endif
++
+ #define CMD53_ARG_READ          0
+ #define CMD53_ARG_WRITE         1
+ #define CMD53_ARG_BLOCK_BASIS   1
+@@ -1414,20 +1429,73 @@ static struct sdio_driver ath6kl_sdio_driver = {
+ 	.drv.pm = ATH6KL_SDIO_PM_OPS,
+ };
+ 
++static int ath6kl_sdio_init_gpio(void)
++{
++	int ret = 0;
++
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		/* Request the reset GPIO, and assert it to make sure we get a
++		 * clean boot in-case we had a floating input or other issue.
++		 */
++		ret = gpio_request_one(reset_pwd_gpio,
++				       GPIOF_OUT_INIT_LOW |
++				       GPIOF_EXPORT_DIR_FIXED,
++				       "WIFI_RESET");
++		if (ret) {
++			ath6kl_err("Unable to get WIFI power gpio: %d\n", ret);
++			return ret;
++		}
++
++		ath6kl_dbg(ATH6KL_DBG_SUSPEND, "Setup wifi gpio #%d\n",
++			   reset_pwd_gpio);
++		usleep_range(20, 50); /* Pin must be asserted at least 5 usec */
++		gpio_set_value(reset_pwd_gpio, 1); /* De-assert the pin */
++
++		msleep(ATH6KL_MMC_PROBE_DELAY);
++	}
++
++	return 0;
++}
++
++static void ath6kl_sdio_release_gpio(void)
++{
++	if (gpio_is_valid(reset_pwd_gpio)) {
++		/* Be sure we leave the chip in reset when we unload and also
++		 * release the GPIO
++		 */
++		gpio_set_value(reset_pwd_gpio, 0);
++		gpio_free(reset_pwd_gpio);
++	}
++}
++
+ static int __init ath6kl_sdio_init(void)
+ {
+ 	int ret;
+ 
+-	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	ret = ath6kl_sdio_init_gpio();
+ 	if (ret)
++		goto err_gpio;
++
++	ret = sdio_register_driver(&ath6kl_sdio_driver);
++	if (ret) {
+ 		ath6kl_err("sdio driver registration failed: %d\n", ret);
++		goto err_register;
++	}
+ 
+ 	return ret;
++
++err_register:
++	ath6kl_sdio_release_gpio();
++
++err_gpio:
++	return ret;
+ }
+ 
+ static void __exit ath6kl_sdio_exit(void)
+ {
+ 	sdio_unregister_driver(&ath6kl_sdio_driver);
++
++	ath6kl_sdio_release_gpio();
+ }
+ 
+ module_init(ath6kl_sdio_init);
 -- 
-2.5.0
+1.9.1
 
