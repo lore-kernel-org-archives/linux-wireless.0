@@ -1,66 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49469 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbbKZTpA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 14:45:00 -0500
-Date: Thu, 26 Nov 2015 22:44:51 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: (bug report) iwlwifi: inconsitent NULL checking
-Message-ID: <20151126194451.GH7289@mwanda> (sfid-20151126_204503_278586_92ED7EE0)
-References: <20151126120317.GJ10556@mwanda>
- <1448540211.2167.7.camel@sipsolutions.net>
- <20151126123756.GF7289@mwanda>
- <1448542297.2167.10.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448542297.2167.10.camel@sipsolutions.net>
+Received: from max.feld.cvut.cz ([147.32.192.36]:54784 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752348AbbKWS14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 13:27:56 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 4/8] cfg80211: reg: Properly handle rules for 5 and 10 MHz channels
+Date: Mon, 23 Nov 2015 19:27:17 +0100
+Message-Id: <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192801_651522_A290ADE4)
+In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two issues in Smatch that would need to be fixed:
+Regulatory rules are applied to channels as if the channel is at least
+20 MHz wide. This is a problem when dealing with 5 and 10 MHz channels
+because side channels of a regulatory rule get disabled even when they
+fall into rule's frequency range.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index d1ad103..d3bc193 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2767,6 +2767,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
- 	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq, init);
+This problem was already fixed in commit
+4edd56981c8fbb349b1529a2feaf772636eb1c83, but only for custom regulatory
+domains provided by drivers. Here we fix it also for all other (e.g.
+user-supplied) regulatory domains.
+
+Before that, similar commit was
+reverted (e33e2241e272eddc38339692500bd1c7d8753a77) due to it allowing
+running AP on channel 12 in the US regulatory domain. I have checked
+that this is not possible with this change:
+
+  # iw reg set US
+  # iw dev wlan0 interface add wlan0_ap  type __ap
+  # iw dev wlan0_ap set channel 12
+  command failed: Invalid argument (-22)
+
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
+---
+ net/wireless/reg.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 0a4f548..35eaeeb 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1201,11 +1201,6 @@ static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd
+ 	return bw_flags;
  }
  
-+#include "/home/dcarpenter/progs/smatch/devel/check_debug.h"
- static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
- 			struct ieee80211_tx_rate_control *txrc)
- {
-@@ -2795,9 +2796,13 @@ static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
- 		mvm_sta = NULL;
- 	}
+-/*
+- * Note that right now we assume the desired channel bandwidth
+- * is always 20 MHz for each individual channel (HT40 uses 20 MHz
+- * per channel, the primary and the extension channel).
+- */
+ static void handle_channel(struct wiphy *wiphy,
+ 			   enum nl80211_reg_initiator initiator,
+ 			   struct ieee80211_channel *chan)
+@@ -1221,7 +1216,8 @@ static void handle_channel(struct wiphy *wiphy,
  
-+	if (mvm_sta)
-+		__smatch_implied(lq_sta);
-+
- 	/* Send management frames and NO_ACK data using lowest rate. */
- 	if (rate_control_send_low(sta, mvm_sta, txrc))
- 		return;
-+	__smatch_implied(mvm_sta);
+ 	flags = chan->orig_flags;
  
- 	iwl_mvm_hwrate_to_tx_rate(lq_sta->last_rate_n_flags,
- 				  info->band, &info->control.rates[0]);
+-	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq));
++	reg_rule = __freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq),
++				   MHZ_TO_KHZ(5));
+ 	if (IS_ERR(reg_rule)) {
+ 		/*
+ 		 * We will disable all channels that do not match our
+-- 
+2.5.3
 
-
-If apply that patch (with changes for your system) and run
-kchecker drivers/net/wireless/intel/iwlwifi/mvm/rs.c then it prints:
-
-drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2800 rs_get_rate() implied: lq_sta = '0,4096-2117777777777777777'
-drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2805 rs_get_rate() implied: mvm_sta = 's64min-(-1),1-s64max'
-
-The first problem is that it doesn't see that if mvm_sta is non-NULL
-then that implies lq_sta is non-NULL.  But even if that worked, after we
-do the function call, it sees that the function that mvm_sta is non-NULL
-but it wouldn't see that that means lq_sta is non-NULL.  It's not so
-terribly far from working but it's not there yet.
-
-regards,
-dan carpenter
