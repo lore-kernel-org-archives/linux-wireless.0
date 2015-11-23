@@ -1,95 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37781 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031601AbbKFCSP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:15 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 62/73] staging: wilc1000: remove typedef from wilc_cfg_rsp_t
-Date: Fri, 6 Nov 2015 11:20:01 +0900
-Message-ID: <1446776412-30670-13-git-send-email-glen.lee@atmel.com> (sfid-20151106_031818_217780_38830875)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from max.feld.cvut.cz ([147.32.192.36]:54733 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881AbbKWS1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 13:27:54 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2 3/8] cfg80211: reg: Refactor calculation of bandwidth flags
+Date: Mon, 23 Nov 2015 19:27:16 +0100
+Message-Id: <1448303241-27747-4-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192815_578111_C2D7CE4F)
+In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The same piece of code appears at two places. Make a function from it.
 
-This patch removes typedef from the struct wilc_cfg_rsp_t and
-renames it to wilc_cfg_rsp.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
 ---
- drivers/staging/wilc1000/wilc_wlan.c     | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h     | 4 ++--
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ net/wireless/reg.c | 91 ++++++++++++++++++++++--------------------------------
+ 1 file changed, 37 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c61048b..7b8e70b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1023,7 +1023,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 						has_packet = 1;
- 					}
- 				} else {
--					wilc_cfg_rsp_t rsp;
-+					struct wilc_cfg_rsp rsp;
- 
- 					wilc_wlan_cfg_indicate_rx(&buffer[pkt_offset + offset], pkt_len, &rsp);
- 					if (rsp.type == WILC_CFG_RSP) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 6c784fd..368b7ff 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -271,10 +271,10 @@ struct wilc_cfg_frame {
- 	u8 frame[MAX_CFG_FRAME_SIZE];
- };
- 
--typedef struct {
-+struct wilc_cfg_rsp {
- 	int type;
- 	u32 seq_no;
--} wilc_cfg_rsp_t;
-+};
- 
- int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size);
- int wilc_wlan_start(void);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index a34a81c..e237963 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -505,7 +505,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	return ret;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 43b3e57..0a4f548 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1166,6 +1166,41 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
+ #endif
  }
  
--int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp)
-+int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, struct wilc_cfg_rsp *rsp)
- {
- 	int ret = 1;
- 	u8 msg_type;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 30e60ec..443b2d5 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -33,7 +33,7 @@ typedef struct {
- int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
--int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, wilc_cfg_rsp_t *rsp);
-+int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, struct wilc_cfg_rsp *rsp);
- int wilc_wlan_cfg_init(wilc_debug_func func);
++static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd,
++					  const struct ieee80211_reg_rule *reg_rule,
++					  const struct ieee80211_channel *chan)
++{
++	const struct ieee80211_freq_range *freq_range = NULL;
++	u32 max_bandwidth_khz, bw_flags = 0;
++
++	freq_range = &reg_rule->freq_range;
++
++	max_bandwidth_khz = freq_range->max_bandwidth_khz;
++	/* Check if auto calculation requested */
++	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
++		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
++
++	/* If we get a reg_rule we can assume that at least 5Mhz fit */
++	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
++			     MHZ_TO_KHZ(10)))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
++			     MHZ_TO_KHZ(20)))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
++
++	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
++	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
++		bw_flags |= IEEE80211_CHAN_NO_HT40;
++	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
++		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
++	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
++		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
++	return bw_flags;
++}
++
+ /*
+  * Note that right now we assume the desired channel bandwidth
+  * is always 20 MHz for each individual channel (HT40 uses 20 MHz
+@@ -1178,11 +1213,9 @@ static void handle_channel(struct wiphy *wiphy,
+ 	u32 flags, bw_flags = 0;
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+-	const struct ieee80211_freq_range *freq_range = NULL;
+ 	struct wiphy *request_wiphy = NULL;
+ 	struct regulatory_request *lr = get_last_request();
+ 	const struct ieee80211_regdomain *regd;
+-	u32 max_bandwidth_khz;
  
- #endif
+ 	request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
+ 
+@@ -1223,31 +1256,7 @@ static void handle_channel(struct wiphy *wiphy,
+ 	chan_reg_rule_print_dbg(regd, chan, reg_rule);
+ 
+ 	power_rule = &reg_rule->power_rule;
+-	freq_range = &reg_rule->freq_range;
+-
+-	max_bandwidth_khz = freq_range->max_bandwidth_khz;
+-	/* Check if auto calculation requested */
+-	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
+-		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
+-
+-	/* If we get a reg_rule we can assume that at least 5Mhz fit */
+-	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
+-			     MHZ_TO_KHZ(10)))
+-		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
+-	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
+-			     MHZ_TO_KHZ(20)))
+-		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+-
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
+-		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
+-		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags |= IEEE80211_CHAN_NO_HT40;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
+-		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+-		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
++	bw_flags = reg_rule_to_chan_bw_flags(regd, reg_rule, chan);
+ 
+ 	if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
+ 	    request_wiphy && request_wiphy == wiphy &&
+@@ -1760,8 +1769,6 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	u32 bw_flags = 0;
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+-	const struct ieee80211_freq_range *freq_range = NULL;
+-	u32 max_bandwidth_khz;
+ 	u32 bw;
+ 
+ 	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
+@@ -1786,31 +1793,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	chan_reg_rule_print_dbg(regd, chan, reg_rule);
+ 
+ 	power_rule = &reg_rule->power_rule;
+-	freq_range = &reg_rule->freq_range;
+-
+-	max_bandwidth_khz = freq_range->max_bandwidth_khz;
+-	/* Check if auto calculation requested */
+-	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
+-		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
+-
+-	/* If we get a reg_rule we can assume that at least 5Mhz fit */
+-	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
+-			     MHZ_TO_KHZ(10)))
+-		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
+-	if (!reg_does_bw_fit(freq_range, MHZ_TO_KHZ(chan->center_freq),
+-			     MHZ_TO_KHZ(20)))
+-		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+-
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
+-		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
+-		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags |= IEEE80211_CHAN_NO_HT40;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
+-		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+-		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
++	bw_flags = reg_rule_to_chan_bw_flags(regd, reg_rule, chan);
+ 
+ 	chan->dfs_state_entered = jiffies;
+ 	chan->dfs_state = NL80211_DFS_USABLE;
 -- 
-1.9.1
+2.5.3
 
