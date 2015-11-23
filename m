@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36397 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031277AbbKFCKn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:10:43 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/73] staging: wilc1000: fixes that open brace { should be on the previous line
-Date: Fri, 6 Nov 2015 11:12:24 +0900
-Message-ID: <1446776014-28094-3-git-send-email-glen.lee@atmel.com> (sfid-20151106_031045_678135_96A7C2E3)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:45088 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751847AbbKWPPP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 10:15:15 -0500
+Message-ID: <1448291710.5792.10.camel@sipsolutions.net> (sfid-20151123_161519_552768_7EC89FA8)
+Subject: Re: [RFC v5 4/5] mac80211: use Kconfig counters to elide
+ unnecessary code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Marek <mmarek@suse.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 23 Nov 2015 16:15:10 +0100
+In-Reply-To: <56532B67.5080508@suse.com>
+References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
+	 <1447365652-23716-5-git-send-email-johannes@sipsolutions.net>
+	 <5653283C.8050207@suse.com> <1448290682.5792.6.camel@sipsolutions.net>
+	 <56532B67.5080508@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Mon, 2015-11-23 at 16:06 +0100, Michal Marek wrote:
+> 
+> > Indeed, the runtime check will catch both of these.
+> 
+> Will it catch the former case? The driver built out of has not way to
+> select or increment any of the CONFIG_MAC80211_* options.
 
-This patch fixes the error reported by checkpatch.pl
-for that open brace { should be on the previous line.
+Correct, but ieee80211_hwflags_check() will verify that the flags are
+compatible with the compilation settings, regardless of the respective
+source. Note that our preferred way of working out-of-tree is backports
+anyway and that ships with mac80211 and cfg80211 due to the relatively
+tight coupling between all the pieces.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+In any case - consider first compiling mac80211 with a driver that does
+"count CONFIG_HWFLAG_XYZ", and no other drivers. This means
+that hwflags_state[XYZ] will end up as 1. So once the other (out-of-
+tree) driver is registered, it'll pass hw->flags with the bit of XYZ
+not set. This would cause a warning and refusal to register
+in ieee80211_hwflags_check().
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 947c9f9..c94cb13 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1186,8 +1186,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 		return;
- 	}
- 
--	netdev_for_each_mc_addr(ha, dev)
--	{
-+	netdev_for_each_mc_addr(ha, dev) {
- 		memcpy(multicast_mac_addr_list[i], ha->addr, ETH_ALEN);
- 		PRINT_D(INIT_DBG, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i,
- 			multicast_mac_addr_list[i][0],
--- 
-1.9.1
-
+johannes
