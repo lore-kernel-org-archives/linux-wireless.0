@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39073 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbbKIQrM (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48751 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567AbbKWJpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 11:47:12 -0500
-Subject: Re: ath10k AP "failed to delete peer" errors when using Nexus 5X
-To: Robert Hancock <hancockrwd@gmail.com>, ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <CADLC3L1xeetwWLn1FbSyzvFYHvPw2z8C3OmQ-w9Bi0U=iLqZiA@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5640CE0E.8040206@candelatech.com> (sfid-20151109_174715_765881_6C18FF7C)
-Date: Mon, 9 Nov 2015 08:47:10 -0800
+	Mon, 23 Nov 2015 04:45:05 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/10] staging: wilc1000: linux_wlan_sdio.c: fix checkpatch warning line over 80
+Date: Mon, 23 Nov 2015 18:48:02 +0900
+Message-ID: <1448272088-13973-4-git-send-email-glen.lee@atmel.com> (sfid-20151123_104509_430474_84722F05)
+In-Reply-To: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
+References: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <CADLC3L1xeetwWLn1FbSyzvFYHvPw2z8C3OmQ-w9Bi0U=iLqZiA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/2015 10:02 PM, Robert Hancock wrote:
-> I'm using OpenWRT on a TP-Link Archer C7, currently running
-> development rev 47397 which is kernel 4.1.1 and compat-wireless
-> 2015-10-26. Ever since I got a new Nexus 5X phone, it seems like
-> periodically (once a day or so), the 5GHz wireless (using ath10k)
-> craps out and I get a bunch of errors in the kernel log on the router.
-> I have to reboot the router to get the 5GHz working again. Full kernel
-> log from one of these failures is below. Any thoughts on what is going
-> on here?
->
-> There are reports of a newer Android build (which I don't have yet)
-> which supposedly has some wireless fixes on the Nexus 5X, but I'm not
-> sure what it could be doing that would be causing the router to crap
-> out like this.
+This patch fixes checkpatch warning line over 80 characters.
 
-> [ 2178.931641] ---[ end trace 6751cc6390d26848 ]---
-> [ 2181.926812] ath10k_pci 0000:01:00.0: failed to delete peer
-> 8c:3a:e3:15:29:f3 for vdev 0: -11
-> [ 2184.946721] ath10k_pci 0000:01:00.0: failed to set beacon mode for
-> vdev 0: -11
-> [ 2187.946538] ath10k_pci 0000:01:00.0: failed to set dtim period for
-> vdev 0: -11
-> [ 2190.986373] ath10k_pci 0000:01:00.0: failed to recalculate rts/cts
-> prot for vdev 0: -11
-> [ 2193.986210] ath10k_pci 0000:01:00.0: failed to set protection mode
-> 0 on vdev 0: -11
-> [ 2196.986045] ath10k_pci 0000:01:00.0: failed to set preamble for vdev 0: -11
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Usually this means firmware has stopped processing WMI messages.
-
-You might try different firmware versions in hopes one of them fixes the
-problem.
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 66cdca2..78e6808 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -74,9 +74,11 @@ int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
+ 		size = cmd->count;
+ 
+ 	if (cmd->read_write) {  /* write */
+-		ret = sdio_memcpy_toio(func, cmd->address, (void *)cmd->buffer, size);
++		ret = sdio_memcpy_toio(func, cmd->address,
++				       (void *)cmd->buffer, size);
+ 	} else {        /* read */
+-		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer, cmd->address,  size);
++		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
++					 cmd->address,  size);
+ 	}
+ 
+ 	sdio_release_host(func);
+@@ -90,7 +92,8 @@ int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
+ 	return 1;
+ }
+ 
+-static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
++static int linux_sdio_probe(struct sdio_func *func,
++			    const struct sdio_device_id *id)
+ {
+ 	struct wilc *wilc;
+ 	int gpio;
+@@ -126,7 +129,9 @@ static struct sdio_driver wilc1000_sdio_driver = {
+ 	.probe		= linux_sdio_probe,
+ 	.remove		= linux_sdio_remove,
+ };
+-module_driver(wilc1000_sdio_driver, sdio_register_driver, sdio_unregister_driver);
++module_driver(wilc1000_sdio_driver,
++	      sdio_register_driver,
++	      sdio_unregister_driver);
+ MODULE_LICENSE("GPL");
+ 
+ int wilc_sdio_enable_interrupt(struct wilc *dev)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
