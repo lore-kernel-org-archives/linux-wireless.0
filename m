@@ -1,37 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25112 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031997AbbKFKBj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 05:01:39 -0500
-Date: Fri, 6 Nov 2015 13:01:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org
-Subject: [patch] ath9k_htc: check for underflow in ath9k_htc_rx_msg()
-Message-ID: <20151106100120.GB18557@mwanda> (sfid-20151106_110146_331046_4C562B2B)
+Received: from mx1.redhat.com ([209.132.183.28]:47439 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752813AbbKWBhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2015 20:37:52 -0500
+Date: Mon, 23 Nov 2015 09:37:40 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@davemloft.net
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
+Message-ID: <20151123013740.GA27383@dhcp-128-32.nay.redhat.com> (sfid-20151123_023757_937742_137DFCC6)
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+ <20151115192547.3fd1b3cc@mir>
+ <1448020533.3141.27.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448020533.3141.27.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We check for overflow here, but we don't check for underflow so it
-causes a static checker warning.
+On 11/20/15 at 12:55pm, Johannes Berg wrote:
+> On Sun, 2015-11-15 at 19:25 +0100, Stefan Lippers-Hollmann wrote:
+> > Hi
+> > 
+> > On 2015-11-15, Dave Young wrote:
+> > > cfg80211 module prints a lot of messages like below. Actually
+> > > printing once is acceptable but sometimes it will print again and
+> > > again, it looks very annoying. It is better to change these detail
+> > > messages to debugging only.
+> > 
+> > It is a lot of info, easily repeated 3 times on boot, but it's also
+> > the only real chance to determine why you ended up with the
+> > regulatory domain settings you got, rather than just the values
+> > itself. Given that a lot (most?) of officially shipping wireless
+> > devices are misconfigured (wrong EEPROM regdom settings for the
+> > region they're sold in) and considering that the limits can even
+> > change at runtime (IEEE 802.11d), it is imho quite important not just
+> > to be able what the current restrictions (iw reg get) are, but also
+> > why the kernel settled on those.
+> > 
+> 
+> Hm. I kinda sympathize with both points of view here, not sure what to
+> do.
+> 
+> Maybe we could skip this for the world regdomain only? It doesn't
+> really change, and we typically don't care that much for it? That'd
+> probably get rid of most of the lines already.
+> 
+> Alternatively, perhaps the internal computations should be more
+> transparently visible through some other mechanism?
+> 
 
-Fixes: fb9987d0f748 ('ath9k_htc: Support for AR9271 chipset.')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+If they are for debugging purpose I would like to see them as pr_debug
+or something in debugfs. Especially for printks which will not only
+being called on initialization phase.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 2294709..fd85f996 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -414,7 +414,7 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 		return;
- 	}
- 
--	if (epid >= ENDPOINT_MAX) {
-+	if (epid < 0 || epid >= ENDPOINT_MAX) {
- 		if (pipe_id != USB_REG_IN_PIPE)
- 			dev_kfree_skb_any(skb);
- 		else
+Seems there're a lot of other wireless messages. Should we refactor 
+them as well? I still did not get chance to see where is the code.
+(My wireless driver being used is iwlwifi)
+
+# uptime
+ 09:36:31 up 17 days, 19:17, 11 users,  load average: 0.26, 0.25, 0.17
+
+#dmesg|grep wlp3s0|wc
+   4868   54014  404187
+
+# dmesg|grep "Limiting TX power"|wc
+   4128   49600  360052
+
+Thanks
+Dave
