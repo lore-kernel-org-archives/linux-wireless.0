@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37102 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbK3MqT (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:11062 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987AbbKWLib (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 07:46:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Yin\, Fengwei" <fengwei.yin@linaro.org>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Subject: Re: [PATCH v2 4/5] wcn3620: use new response format for wcn3620 trigger_ba
-References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
-	<1447143955-10304-5-git-send-email-fengwei.yin@linaro.org>
-Date: Mon, 30 Nov 2015 14:46:14 +0200
-In-Reply-To: <1447143955-10304-5-git-send-email-fengwei.yin@linaro.org>
-	(Fengwei Yin's message of "Tue, 10 Nov 2015 03:25:54 -0500")
-Message-ID: <87bnabk63t.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_134623_031431_5A0F5DBA)
+	Mon, 23 Nov 2015 06:38:31 -0500
+Message-ID: <5652FAB5.8030708@broadcom.com> (sfid-20151123_123834_866248_0900FEA7)
+Date: Mon, 23 Nov 2015 12:38:29 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-testing repo
+References: <5652F62A.4000109@broadcom.com>	 (sfid-20151123_121912_784278_85DDFCC6) <1448278260.5792.1.camel@sipsolutions.net>
+In-Reply-To: <1448278260.5792.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Yin, Fengwei" <fengwei.yin@linaro.org> writes:
-
-> From: Andy Green <andy.green@linaro.org>
+On 11/23/2015 12:31 PM, Johannes Berg wrote:
+> On Mon, 2015-11-23 at 12:19 +0100, Arend van Spriel wrote:
+>> Hi John,
+>>
+>> We have been using the wireless-testing repo in our nightly testing
+>> and as such appreciated the on-going support for it. I noticed your
+>> announcement (and misplaced it) and as I prefer to keep the nightly
+>> testing will have to do the work over here. Can you provide details
+>> on what trees are merged into wireless-testing. Is it
+>> wireless-drivers{,-next} and mac80211{,-next} or is there more to
+>> consider.
 >
-> On wcn3620, firmware response to trigger_ba uses the new, larger
-> "v2" format
->
-> Signed-off-by: Andy Green <andy.green@linaro.org>
+> I believe it was also the latest rc from Linus.
 
-Please prefix the patch title with the name of driver, in this case that
-would be "wcn36xx: ". This time I fixed it before I applied the patches.
+Indeed.
 
--- 
-Kalle Valo
+> If you're testing with backports you could also use the latest linux-
+> next with a restricted backport - I've added mac80211(-next) to that
+> now.
+
+We have some setups running on wl-testing kernel and some running distro 
+kernel using backports.
+
+Regards,
+Arend
