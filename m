@@ -1,28 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55412 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751512AbbKCJ26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 04:28:58 -0500
-Message-ID: <1446542934.29010.2.camel@sipsolutions.net> (sfid-20151103_103231_895171_C885E327)
-Subject: Re: [PATCH] nl80211: Fix potential memory leak from parse_acl_data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Tue, 03 Nov 2015 10:28:54 +0100
-In-Reply-To: <1446098698-10079-1-git-send-email-ola1olsson@gmail.com> (sfid-20151029_070502_508027_173CC484)
-References: <1446098698-10079-1-git-send-email-ola1olsson@gmail.com>
-	 (sfid-20151029_070502_508027_173CC484)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:36402 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbbKWXnj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 18:43:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
+References: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
+Date: Tue, 24 Nov 2015 01:43:38 +0200
+Message-ID: <CAHp75Veb4UBKrGsODoKnZrvOZUTEm78yBvhmBRn68oZYRecdQA@mail.gmail.com> (sfid-20151124_004359_619109_931B2AAD)
+Subject: Re: [PATCH] libertas: fix possible NULL dereference
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	libertas-dev@lists.infradead.org,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-10-29 at 07:04 +0100, Ola Olsson wrote:
-> If parse_acl_data succeeds but the subsequent parsing of smps
-> attributes fails, there will be a memory leak due to early returns.
-> Fix that.
-> 
-Applied, thanks!
+On Mon, Nov 23, 2015 at 2:32 PM, Sudip Mukherjee
+<sudipm.mukherjee@gmail.com> wrote:
+> We were dereferencing cmd first and checking for NULL later. Lets first
+> check for NULL.
 
-johannes
+However the patch is valid due to reducing error prone part, the
+commit message seems wrong.
+There is no dereferencing, it is a simple pointer arithmetic.
+
+>
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> ---
+>  drivers/net/wireless/marvell/libertas/cfg.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
+> index 8317afd..e38ad1d 100644
+> --- a/drivers/net/wireless/marvell/libertas/cfg.c
+> +++ b/drivers/net/wireless/marvell/libertas/cfg.c
+> @@ -1108,7 +1108,7 @@ static int lbs_associate(struct lbs_private *priv,
+>         size_t len, resp_ie_len;
+>         int status;
+>         int ret;
+> -       u8 *pos = &(cmd->iebuf[0]);
+> +       u8 *pos;
+>         u8 *tmp;
+>
+>         lbs_deb_enter(LBS_DEB_CFG80211);
+> @@ -1117,6 +1117,7 @@ static int lbs_associate(struct lbs_private *priv,
+>                 ret = -ENOMEM;
+>                 goto done;
+>         }
+> +       pos = &cmd->iebuf[0];
+>
+>         /*
+>          * cmd              50 00
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
