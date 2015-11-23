@@ -1,86 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:38087 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932921AbbKMKd2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2015 05:33:28 -0500
-Received: by wmec201 with SMTP id c201so24396811wme.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2015 02:33:27 -0800 (PST)
-From: Borja Salazar <borja.salazar@fon.com>
+Received: from max.feld.cvut.cz ([147.32.192.36]:54731 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751392AbbKWS1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 13:27:54 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
 To: linux-wireless@vger.kernel.org
-Cc: janusz.dziedzic@tieto.com, sujith@msujith.org,
-	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Borja Salazar <borja.salazar@fon.com>
-Subject: [PATCH v2] ath9k: incorrect queue may be stopped/awaken
-Date: Fri, 13 Nov 2015 11:33:06 +0100
-Message-Id: <1447410786-31874-1-git-send-email-borja.salazar@fon.com> (sfid-20151113_113339_840112_B9A69B46)
-In-Reply-To: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
-References: <CALhHN=ov0kqqgGGHwPMOq3VaVsg9oD59Ed_NNsdcKVyS2+go2Q@mail.gmail.com>
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2 2/8] cfg80211: Remove unused cfg80211_can_use_iftype_chan()
+Date: Mon, 23 Nov 2015 19:27:15 +0100
+Message-Id: <1448303241-27747-3-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192818_058797_3713F391)
+In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When channel context is enabled, we could be
-stopping/awakening an incorrect queue.
+Last caller of this function was removed in 3.17 in commit
+97dc94f1d933c9df2c0b327066ea130c0e92083f.
 
-Signed-off-by: Borja Salazar <borja.salazar@fon.com>
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ net/wireless/core.h |   7 ----
+ net/wireless/util.c | 114 ----------------------------------------------------
+ 2 files changed, 121 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3e3dac3..9b17a59 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -147,7 +147,12 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ath_frame_info *fi = get_frame_info(skb);
--	int q = fi->txq;
-+	int q;
-+
-+	if (ath9k_is_chanctx_enabled())
-+		q = fi->txq;
-+	else
-+		q = info->hw_queue;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index a618b4b..022ccad 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -416,13 +416,6 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
+ void cfg80211_process_wdev_events(struct wireless_dev *wdev);
  
- 	if (q < 0)
- 		return;
-@@ -158,10 +163,7 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	if (txq->stopped &&
- 	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
--		if (ath9k_is_chanctx_enabled())
--			ieee80211_wake_queue(sc->hw, info->hw_queue);
--		else
--			ieee80211_wake_queue(sc->hw, q);
-+		ieee80211_wake_queue(sc->hw, q);
- 		txq->stopped = false;
- 	}
+-int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+-				 struct wireless_dev *wdev,
+-				 enum nl80211_iftype iftype,
+-				 struct ieee80211_channel *chan,
+-				 enum cfg80211_chan_mode chanmode,
+-				 u8 radar_detect);
+-
+ /**
+  * cfg80211_chandef_dfs_usable - checks if chandef is DFS usable
+  * @wiphy: the wiphy to validate against
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index baf7218..44d30cc 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1620,120 +1620,6 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
  }
-@@ -2299,17 +2301,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * info are no longer valid (overwritten by the ath_frame_info data.
- 	 */
+ EXPORT_SYMBOL(cfg80211_check_combinations);
  
--	q = skb_get_queue_mapping(skb);
-+	if (ath9k_is_chanctx_enabled())
-+		q = skb_get_queue_mapping(skb);
-+	else
-+		q = info->hw_queue;
- 
- 	ath_txq_lock(sc, txq);
- 	if (txq == sc->tx.txq_map[q]) {
- 		fi->txq = q;
- 		if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
- 		    !txq->stopped) {
--			if (ath9k_is_chanctx_enabled())
--				ieee80211_stop_queue(sc->hw, info->hw_queue);
--			else
--				ieee80211_stop_queue(sc->hw, q);
-+			ieee80211_stop_queue(sc->hw, q);
- 			txq->stopped = true;
- 		}
- 	}
+-int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+-				 struct wireless_dev *wdev,
+-				 enum nl80211_iftype iftype,
+-				 struct ieee80211_channel *chan,
+-				 enum cfg80211_chan_mode chanmode,
+-				 u8 radar_detect)
+-{
+-	struct wireless_dev *wdev_iter;
+-	int num[NUM_NL80211_IFTYPES];
+-	struct ieee80211_channel
+-			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
+-	struct ieee80211_channel *ch;
+-	enum cfg80211_chan_mode chmode;
+-	int num_different_channels = 0;
+-	int total = 1;
+-	int i;
+-
+-	ASSERT_RTNL();
+-
+-	if (WARN_ON(hweight32(radar_detect) > 1))
+-		return -EINVAL;
+-
+-	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+-		return -EINVAL;
+-
+-	/* Always allow software iftypes */
+-	if (rdev->wiphy.software_iftypes & BIT(iftype)) {
+-		if (radar_detect)
+-			return -EINVAL;
+-		return 0;
+-	}
+-
+-	memset(num, 0, sizeof(num));
+-	memset(used_channels, 0, sizeof(used_channels));
+-
+-	num[iftype] = 1;
+-
+-	/* TODO: We'll probably not need this anymore, since this
+-	 * should only be called with CHAN_MODE_UNDEFINED. There are
+-	 * still a couple of pending calls where other chanmodes are
+-	 * used, but we should get rid of them.
+-	 */
+-	switch (chanmode) {
+-	case CHAN_MODE_UNDEFINED:
+-		break;
+-	case CHAN_MODE_SHARED:
+-		WARN_ON(!chan);
+-		used_channels[0] = chan;
+-		num_different_channels++;
+-		break;
+-	case CHAN_MODE_EXCLUSIVE:
+-		num_different_channels++;
+-		break;
+-	}
+-
+-	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
+-		if (wdev_iter == wdev)
+-			continue;
+-		if (wdev_iter->iftype == NL80211_IFTYPE_P2P_DEVICE) {
+-			if (!wdev_iter->p2p_started)
+-				continue;
+-		} else if (wdev_iter->netdev) {
+-			if (!netif_running(wdev_iter->netdev))
+-				continue;
+-		} else {
+-			WARN_ON(1);
+-		}
+-
+-		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
+-			continue;
+-
+-		/*
+-		 * We may be holding the "wdev" mutex, but now need to lock
+-		 * wdev_iter. This is OK because once we get here wdev_iter
+-		 * is not wdev (tested above), but we need to use the nested
+-		 * locking for lockdep.
+-		 */
+-		mutex_lock_nested(&wdev_iter->mtx, 1);
+-		__acquire(wdev_iter->mtx);
+-		cfg80211_get_chan_state(wdev_iter, &ch, &chmode, &radar_detect);
+-		wdev_unlock(wdev_iter);
+-
+-		switch (chmode) {
+-		case CHAN_MODE_UNDEFINED:
+-			break;
+-		case CHAN_MODE_SHARED:
+-			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
+-				if (!used_channels[i] || used_channels[i] == ch)
+-					break;
+-
+-			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
+-				return -EBUSY;
+-
+-			if (used_channels[i] == NULL) {
+-				used_channels[i] = ch;
+-				num_different_channels++;
+-			}
+-			break;
+-		case CHAN_MODE_EXCLUSIVE:
+-			num_different_channels++;
+-			break;
+-		}
+-
+-		num[wdev_iter->iftype]++;
+-		total++;
+-	}
+-
+-	if (total == 1 && !radar_detect)
+-		return 0;
+-
+-	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
+-					   radar_detect, num);
+-}
+-
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ 			   const u8 *rates, unsigned int n_rates,
+ 			   u32 *mask)
 -- 
-2.3.6
+2.5.3
 
