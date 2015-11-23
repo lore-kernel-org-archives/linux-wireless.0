@@ -1,75 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:22206 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1162313AbbKTJun (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:60163 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103AbbKWSXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 04:50:43 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v4 0/3] *** ST95HF driver v4 ***
-Date: Fri, 20 Nov 2015 04:49:54 -0500
-Message-ID: <1448012997-6000-1-git-send-email-shikha.singh@st.com> (sfid-20151120_105048_843454_3AC49349)
+	Mon, 23 Nov 2015 13:23:47 -0500
+Subject: Re: [PATCH 2/4] staging: wilc1000: Fix typo in host_interface.c
+To: Masanari Iida <standby24x7@gmail.com>, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, chris.park@atmel.com,
+	austin.shin@atmel.com, johnny.kim@atmel.com,
+	linux-wireless@vger.kernel.org
+References: <1448286080-14787-1-git-send-email-standby24x7@gmail.com>
+ <1448286080-14787-2-git-send-email-standby24x7@gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <565359AC.7020505@infradead.org> (sfid-20151123_192350_700048_DAB64E33)
+Date: Mon, 23 Nov 2015 10:23:40 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1448286080-14787-2-git-send-email-standby24x7@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New patch series of ST95HF Linux Driver v4
+On 11/23/15 05:41, Masanari Iida wrote:
+> This patch fix spelling typo in host_interface.c
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 30 +++++++++++++++---------------
+>  1 file changed, 15 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index d5b7725..b9f9541 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -844,7 +844,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+>  	}
+>  
+>  	if (g_obtainingIP || connecting) {
+> -		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP adresss is obtained\n");
+> +		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP addresses is obtained\n");
 
-Changelog:
-v4:
-1. Address feedback from Lars Steubesand:
-	Fix of issue in sending RESET command to ST95HF.
-2. Improvement of some comments in code.
+		                                                                 address
 
-v3:
-Address feedbacks from Lars Steubesand:
-	i)Included modification in drivers/nfc/Kconfig and
-	drivers/nfc/Makefile to build ST95HF driver.
-	ii)Included header file linux/property.h explicitely in core.c
-	and all header files are included in sorted order.
-	iii)GPL version is modified in MODULE_LICENSE to match with header.
+>  		PRINT_ER("Don't do obss scan\n");
+>  		result = -EBUSY;
+>  		goto ERRORHANDLER;
 
-v2.0:
-1.Address feedbacks from Samuel:
-	i)Code improvement and code optimization
-2.Address feedbacks from Lars Steubesand:
-	i)Code improvement and code optimization
-	ii)Bug fix : Kernel crash due to race between irq_thread_handler()
-	and  st95hf_remove() is resolved.
-3.Address feedback from Christophe Henri Ricard:
-	i)Correction in file headers.
+> @@ -2518,7 +2518,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+>  	}
+>  
+>  	if (g_obtainingIP || connecting) {
+> -		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP adresss is obtained\n");
+> +		PRINT_D(GENERIC_DBG, "[handle_scan]: Don't do obss scan until IP addresses is obtained\n");
 
-v1.0:
-First release of ST95HF driver.
+		                                                                 address
 
-Shikha Singh (3):
-  NFC: digital: Add Type4A tags support
-  driver: nfc: Add ST95HF NFC Transceiver support
-  DT: bindings: net: nfc: Add ST95HF binding doc
+>  		result = -EBUSY;
+>  		goto ERRORHANDLER;
+>  	}
 
- .../devicetree/bindings/net/nfc/st95hf.txt         |   50 +
- drivers/nfc/Kconfig                                |    1 +
- drivers/nfc/Makefile                               |    1 +
- drivers/nfc/st95hf/Kconfig                         |   10 +
- drivers/nfc/st95hf/Makefile                        |    6 +
- drivers/nfc/st95hf/core.c                          | 1246 ++++++++++++++++++++
- drivers/nfc/st95hf/spi.c                           |  167 +++
- drivers/nfc/st95hf/spi.h                           |   64 +
- net/nfc/digital_core.c                             |    3 +-
- 9 files changed, 1547 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
- create mode 100644 drivers/nfc/st95hf/Kconfig
- create mode 100644 drivers/nfc/st95hf/Makefile
- create mode 100644 drivers/nfc/st95hf/core.c
- create mode 100644 drivers/nfc/st95hf/spi.c
- create mode 100644 drivers/nfc/st95hf/spi.h
 
 -- 
-1.8.2.1
-
+~Randy
