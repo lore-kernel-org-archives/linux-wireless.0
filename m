@@ -1,52 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48007 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030665AbbKECJf (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:35878 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbbKWAjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 21:09:35 -0500
-Date: Wed, 4 Nov 2015 18:09:31 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: glen lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2 04/17] staging: wilc1000: wilc_wlan_cfg_set: add
- argument struct net_device
-Message-ID: <20151105020931.GA29296@kroah.com> (sfid-20151105_030938_304937_4BEBC243)
-References: <1446198443-6623-1-git-send-email-glen.lee@atmel.com>
- <1446198443-6623-4-git-send-email-glen.lee@atmel.com>
- <20151104204624.GC23896@kroah.com>
- <563AB36F.3070900@atmel.com>
+	Sun, 22 Nov 2015 19:39:51 -0500
+Received: by igcph11 with SMTP id ph11so42198608igc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 16:39:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563AB36F.3070900@atmel.com>
+In-Reply-To: <1448183242-3397-4-git-send-email-tvboxspy@gmail.com>
+References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com> <1448183242-3397-4-git-send-email-tvboxspy@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 23 Nov 2015 11:39:31 +1100
+Message-ID: <CAGRGNgUvE0-7RnW-_+QWKky6cwyEEbY8UpYzqJpB0tKHqmsMjg@mail.gmail.com> (sfid-20151123_013955_089883_584295B4)
+Subject: Re: [PATCH 4/8] staging: vt6655: rf.c rename bResult ret.
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 05, 2015 at 10:39:59AM +0900, glen lee wrote:
-> >>+int wilc_wlan_cfg_set(struct net_device *dev, int start, u32 wid, u8 *buffer,
-> >>+		      u32 buffer_size, int commit, u32 drvHandler)
-> >>  {
-> >>  	wilc_wlan_dev_t *p = &g_wlan;
-> >>  	u32 offset;
-> >>  	int ret_size;
-> >>+	perInterface_wlan_t *nic = netdev_priv(dev);
-> >>+	struct wilc *wilc;
-> >>+	wilc = nic->wilc;
-> >Again here, pass in a struct wilc *.
-> 
-> Thank you for your advise,
-> I can use local structure wilc as you said but there are print line inside the function.
-> The custom print lines will be changed with netdev_xxx format later, so I need to pass dev if necessary.
-> I used wilc if net_device is unnecessary or unavailable.
-> For this reason, Is this OK to use net_device if it is necessary?
+Hi Malcolm,
 
-You have a pointer to net_device in struct wilc, right?  Use that
-pointer when you need it, wilc is your "primary" thing, not struct
-net_device, to pass around.  You should never have to cast back and
-forth when calling internal functions like this.
+A couple of these comments apply to a few of the patches.
 
-thanks,
+On Sun, Nov 22, 2015 at 8:07 PM, Malcolm Priestley <tvboxspy@gmail.com> wrote:
+> Removing camel case and reflecting return value.
+>
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> ---
+>  drivers/staging/vt6655/rf.c | 138 ++++++++++++++++++++++----------------------
+>  1 file changed, 69 insertions(+), 69 deletions(-)
+>
+> diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
+> index 4c22bb3..1c0691d 100644
+> --- a/drivers/staging/vt6655/rf.c
+> +++ b/drivers/staging/vt6655/rf.c
+> @@ -420,9 +420,9 @@ static bool s_bAL7230Init(struct vnt_private *priv)
+>  {
+>         void __iomem *dwIoBase = priv->PortOffset;
+>         int     ii;
+> -       bool bResult;
+> +       bool ret;
+>
+> -       bResult = true;
+> +       ret = true;
 
-greg k-h
+These two lines could be combined into one.
+
+>         /* 3-wire control for normal mode */
+>         VNSvOutPortB(dwIoBase + MAC_REG_SOFTPWRCTL, 0);
+> @@ -432,7 +432,7 @@ static bool s_bAL7230Init(struct vnt_private *priv)
+>         BBvPowerSaveModeOFF(priv); /* RobertYu:20050106, have DC value for Calibration */
+>
+>         for (ii = 0; ii < CB_AL7230_INIT_SEQ; ii++)
+> -               bResult &= IFRFbWriteEmbedded(priv, dwAL7230InitTable[ii]);
+> +               ret &= IFRFbWriteEmbedded(priv, dwAL7230InitTable[ii]);
+
+Now that I understand why it's always ret &= ..., I'm truly horrified
+by the error handling in this driver. =)
+
+>         /* PLL On */
+>         MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPE3);
+
+> @@ -616,26 +616,26 @@ bool RFbInit(
+>         struct vnt_private *priv
+>  )
+>  {
+> -       bool bResult = true;
+> +       bool ret = true;
+>
+>         switch (priv->byRFType) {
+>         case RF_AIROHA:
+>         case RF_AL2230S:
+>                 priv->byMaxPwrLevel = AL2230_PWR_IDX_LEN;
+> -               bResult = RFbAL2230Init(priv);
+> +               ret = RFbAL2230Init(priv);
+>                 break;
+>         case RF_AIROHA7230:
+>                 priv->byMaxPwrLevel = AL7230_PWR_IDX_LEN;
+> -               bResult = s_bAL7230Init(priv);
+> +               ret = s_bAL7230Init(priv);
+>                 break;
+>         case RF_NOTHING:
+> -               bResult = true;
+> +               ret = true;
+>                 break;
+>         default:
+> -               bResult = false;
+> +               ret = false;
+>                 break;
+>         }
+> -       return bResult;
+> +       return ret;
+>  }
+>
+>  /*
+> @@ -654,26 +654,26 @@ bool RFbInit(
+>  bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType,
+>                       u16 byChannel)
+>  {
+> -       bool bResult = true;
+> +       bool ret = true;
+>
+>         switch (byRFType) {
+>         case RF_AIROHA:
+>         case RF_AL2230S:
+> -               bResult = RFbAL2230SelectChannel(priv, byChannel);
+> +               ret = RFbAL2230SelectChannel(priv, byChannel);
+>                 break;
+>                 /*{{ RobertYu: 20050104 */
+>         case RF_AIROHA7230:
+> -               bResult = s_bAL7230SelectChannel(priv, byChannel);
+> +               ret = s_bAL7230SelectChannel(priv, byChannel);
+>                 break;
+>                 /*}} RobertYu */
+>         case RF_NOTHING:
+> -               bResult = true;
+> +               ret = true;
+
+Isn't this line unnecessary?
+
+>                 break;
+>         default:
+> -               bResult = false;
+> +               ret = false;
+>                 break;
+>         }
+> -       return bResult;
+> +       return ret;
+>  }
+>
+>  /*
+
+> @@ -879,13 +879,13 @@ bool RFbRawSetPower(
+>                 dwMax7230Pwr = 0x080C0B00 | ((byPwr) << 12) |
+>                         (BY_AL7230_REG_LEN << 3)  | IFREGCTL_REGW;
+>
+> -               bResult &= IFRFbWriteEmbedded(priv, dwMax7230Pwr);
+> +               ret &= IFRFbWriteEmbedded(priv, dwMax7230Pwr);
+>                 break;
+>
+>         default:
+>                 break;
+
+You could remove this default case in another round of cleanups.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
