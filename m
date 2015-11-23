@@ -1,79 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37745 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031547AbbKFCSD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:03 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 60/73] staging: wilc1000: remove typedef from wilc_cfg_frame_t
-Date: Fri, 6 Nov 2015 11:19:59 +0900
-Message-ID: <1446776412-30670-11-git-send-email-glen.lee@atmel.com> (sfid-20151106_031808_451736_C07C54D3)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from max.feld.cvut.cz ([147.32.192.36]:54786 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127AbbKWS14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 13:27:56 -0500
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+To: linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	=?UTF-8?q?Jan=20Kaisrl=C3=ADk?= <kaisrja1@fel.cvut.cz>,
+	Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH v2 5/8] cfg80211: Add support for OCB-only channels
+Date: Mon, 23 Nov 2015 19:27:18 +0100
+Message-Id: <1448303241-27747-6-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192810_015203_959DA591)
+In-Reply-To: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+We don't want channels designated for Intelligent Transportation Systems
+to be used in other modes than OCB. We therefore introduce regulatory
+and channel flags that prevent scanning (for performance reasons) and
+beaconing on these channels.
 
-This patch removes typedef from the struct wilc_cfg_frame_t and
-renames it to wilc_cfg_frame.
+Although regulatory documents do not talk about which modes to use, we
+limit the mode to OCB in order to prevent accidental use of the band by
+other applications.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.h | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/chan.c          |  6 ++++--
+ net/wireless/ibss.c          | 12 ++++++++----
+ net/wireless/mesh.c          |  3 ++-
+ net/wireless/nl80211.c       | 12 ++++++------
+ net/wireless/reg.c           |  2 ++
+ net/wireless/scan.c          |  4 ++--
+ net/wireless/sme.c           |  3 ++-
+ net/wireless/wext-sme.c      |  3 ++-
+ 10 files changed, 32 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 283c506..c61048b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -11,7 +11,7 @@ typedef struct {
- 	wilc_wlan_io_func_t io_func;
- 	wilc_hif_func_t hif_func;
- 	int cfg_frame_in_use;
--	wilc_cfg_frame_t cfg_frame;
-+	struct wilc_cfg_frame cfg_frame;
- 	u32 cfg_frame_offset;
- 	int cfg_seq_no;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2c7bdb8..b47ac3e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -117,6 +117,7 @@ enum ieee80211_band {
+  *	on this channel.
+  * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
+  *	on this channel.
++ * @IEEE80211_CHAN_OCB_ONLY: only OCB mode is allowed on this channel.
+  *
+  */
+ enum ieee80211_channel_flags {
+@@ -133,6 +134,7 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_IR_CONCURRENT	= 1<<10,
+ 	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
+ 	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
++	IEEE80211_CHAN_OCB_ONLY		= 1<<13,
+ };
  
-@@ -1462,7 +1462,7 @@ void wilc_wlan_cleanup(struct net_device *dev)
- static int wilc_wlan_cfg_commit(int type, u32 drv_handler)
+ #define IEEE80211_CHAN_NO_HT40 \
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1f0b4cf..07e6105 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2865,6 +2865,7 @@ enum nl80211_sched_scan_match_attr {
+  * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
+  * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
+  * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
++ * @NL80211_RRF_OCB_ONLY: only OCB mode can be used here
+  */
+ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_NO_OFDM		= 1<<0,
+@@ -2882,6 +2883,7 @@ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_NO_HT40PLUS		= 1<<14,
+ 	NL80211_RRF_NO_80MHZ		= 1<<15,
+ 	NL80211_RRF_NO_160MHZ		= 1<<16,
++	NL80211_RRF_OCB_ONLY		= 1<<17,
+ };
+ 
+ #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 59cabc9..b1ab77a 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -804,7 +804,8 @@ static bool _cfg80211_reg_can_beacon(struct wiphy *wiphy,
  {
- 	wilc_wlan_dev_t *p = &g_wlan;
--	wilc_cfg_frame_t *cfg = &p->cfg_frame;
-+	struct wilc_cfg_frame *cfg = &p->cfg_frame;
- 	int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
- 	int seq_no = p->cfg_seq_no % 256;
- 	int driver_handler = (u32)drv_handler;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 74f6210..d15c848 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -263,13 +263,13 @@ typedef struct {
+ 	bool res;
+ 	u32 prohibited_flags = IEEE80211_CHAN_DISABLED |
+-			       IEEE80211_CHAN_RADAR;
++			       IEEE80211_CHAN_RADAR |
++			       IEEE80211_CHAN_OCB_ONLY;
  
- #define MAX_CFG_FRAME_SIZE	1468
+ 	trace_cfg80211_reg_can_beacon(wiphy, chandef, iftype, check_no_ir);
  
--typedef struct {
-+struct wilc_cfg_frame {
- 	u8 ether_header[14];
- 	u8 ip_header[20];
- 	u8 udp_header[8];
- 	u8 wid_header[8];
- 	u8 frame[MAX_CFG_FRAME_SIZE];
--} wilc_cfg_frame_t;
-+};
+@@ -814,7 +815,8 @@ static bool _cfg80211_reg_can_beacon(struct wiphy *wiphy,
+ 	if (cfg80211_chandef_dfs_required(wiphy, chandef, iftype) > 0 &&
+ 	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
+ 		/* We can skip IEEE80211_CHAN_NO_IR if chandef dfs available */
+-		prohibited_flags = IEEE80211_CHAN_DISABLED;
++		prohibited_flags = IEEE80211_CHAN_DISABLED |
++				   IEEE80211_CHAN_OCB_ONLY;
+ 	}
  
- typedef struct {
- 	int (*wlan_tx)(u8 *, u32, wilc_tx_complete_func_t);
+ 	res = cfg80211_chandef_usable(wiphy, chandef, prohibited_flags);
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 4c55fab..d9df7f0 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -258,9 +258,9 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 
+ 			for (i = 0; i < sband->n_channels; i++) {
+ 				chan = &sband->channels[i];
+-				if (chan->flags & IEEE80211_CHAN_NO_IR)
+-					continue;
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & IEEE80211_CHAN_NO_IR ||
++				    chan->flags & IEEE80211_CHAN_DISABLED ||
++				    chan->flags & IEEE80211_CHAN_OCB_ONLY)
+ 					continue;
+ 				new_chan = chan;
+ 				break;
+@@ -277,6 +277,9 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 					NL80211_CHAN_NO_HT);
+ 	}
+ 
++	if (wdev->wext.ibss.chandef.chan->flags & IEEE80211_CHAN_OCB_ONLY)
++		return -EINVAL;
++
+ 	/* don't join -- SSID is not there */
+ 	if (!wdev->wext.ibss.ssid_len)
+ 		return 0;
+@@ -331,7 +334,8 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+ 		if (!chan)
+ 			return -EINVAL;
+ 		if (chan->flags & IEEE80211_CHAN_NO_IR ||
+-		    chan->flags & IEEE80211_CHAN_DISABLED)
++		    chan->flags & IEEE80211_CHAN_DISABLED ||
++		    chan->flags & IEEE80211_CHAN_OCB_ONLY)
+ 			return -EINVAL;
+ 	}
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 092300b..99866ff 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -143,7 +143,8 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 				chan = &sband->channels[i];
+ 				if (chan->flags & (IEEE80211_CHAN_NO_IR |
+ 						   IEEE80211_CHAN_DISABLED |
+-						   IEEE80211_CHAN_RADAR))
++						   IEEE80211_CHAN_RADAR |
++						   IEEE80211_CHAN_OCB_ONLY))
+ 					continue;
+ 				setup->chandef.chan = chan;
+ 				break;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c71e274..85b1df6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5860,8 +5860,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 				goto out_free;
+ 			}
+ 
+-			/* ignore disabled channels */
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
++			/* ignore disabled and OCB-only channels */
++			if (chan->flags & (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_OCB_ONLY))
+ 				continue;
+ 
+ 			request->channels[i] = chan;
+@@ -5880,7 +5880,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 				chan = &wiphy->bands[band]->channels[j];
+ 
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_OCB_ONLY))
+ 					continue;
+ 
+ 				request->channels[i] = chan;
+@@ -6247,8 +6247,8 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 				goto out_free;
+ 			}
+ 
+-			/* ignore disabled channels */
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
++			/* ignore disabled and OCB-only channels */
++			if (chan->flags & (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_OCB_ONLY))
+ 				continue;
+ 
+ 			request->channels[i] = chan;
+@@ -6265,7 +6265,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 				chan = &wiphy->bands[band]->channels[j];
+ 
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_OCB_ONLY))
+ 					continue;
+ 
+ 				request->channels[i] = chan;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 35eaeeb..8b7110d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1048,6 +1048,8 @@ static u32 map_regdom_flags(u32 rd_flags)
+ 		channel_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 	if (rd_flags & NL80211_RRF_NO_160MHZ)
+ 		channel_flags |= IEEE80211_CHAN_NO_160MHZ;
++	if (rd_flags & NL80211_RRF_OCB_ONLY)
++		channel_flags |= IEEE80211_CHAN_OCB_ONLY;
+ 	return channel_flags;
+ }
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 14d5369..67e4515 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1236,9 +1236,9 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			continue;
+ 
+ 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
+-			/* ignore disabled channels */
++			/* ignore disabled and OCB-only channels */
+ 			if (wiphy->bands[band]->channels[j].flags &
+-						IEEE80211_CHAN_DISABLED)
++			    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_OCB_ONLY))
+ 				continue;
+ 
+ 			/* If we have a wireless request structure and the
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 8020b5b..817c879 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -103,7 +103,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 				continue;
+ 			for (j = 0; j < bands->n_channels; j++) {
+ 				channel = &bands->channels[j];
+-				if (channel->flags & IEEE80211_CHAN_DISABLED)
++				if (channel->flags & IEEE80211_CHAN_DISABLED ||
++				    channel->flags & IEEE80211_CHAN_OCB_ONLY)
+ 					continue;
+ 				request->channels[i++] = channel;
+ 			}
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index a4e8af3..34a50c1 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -83,7 +83,8 @@ int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
+ 		chan = ieee80211_get_channel(wdev->wiphy, freq);
+ 		if (!chan)
+ 			return -EINVAL;
+-		if (chan->flags & IEEE80211_CHAN_DISABLED)
++		if (chan->flags & IEEE80211_CHAN_DISABLED ||
++		    chan->flags & IEEE80211_CHAN_OCB_ONLY)
+ 			return -EINVAL;
+ 	}
+ 
 -- 
-1.9.1
+2.5.3
 
