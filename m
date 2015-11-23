@@ -1,108 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:49025 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbbKDHhY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38513 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754788AbbKWPVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 02:37:24 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2] Revert "Staging: wilc1000: coreconfigurator: Drop unneeded wrapper functions"
-Date: Wed, 4 Nov 2015 16:40:28 +0900
-Message-ID: <1446622828-1123-1-git-send-email-glen.lee@atmel.com> (sfid-20151104_083728_926888_7350E385)
+	Mon, 23 Nov 2015 10:21:00 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Adjust the RX packet pad offset at QCA99X0 4addr mode
+References: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Mon, 23 Nov 2015 17:20:44 +0200
+In-Reply-To: <1445575816-4500-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
+	Li's message of "Thu, 22 Oct 2015 21:50:16 -0700")
+Message-ID: <87d1v0spwz.fsf@kamboji.qca.qualcomm.com> (sfid-20151123_162107_233245_88764461)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The addresses are not properly aglined for using ether_addr_copy function.
-I revert this as author agree to drop this patch.
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-This reverts commit d4622f68db8095dd54179e3134e97812727f6b89.
+> The QCA99X0 4 addresses RX packets pad 2 bytes at the beginning of
+> MSDU instead the end of ieee80211 header to keep align. The currently
+> RX data path can't parse the header correctly in this case. This
+> patch fixes it for QCA99X0
+>
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 48 +++++++++++++++--------------
- 1 file changed, 25 insertions(+), 23 deletions(-)
+Applied, thanks.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 1caa66e..954b5eb 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -13,12 +13,8 @@
- #include "wilc_wlan.h"
- #include <linux/errno.h>
- #include <linux/slab.h>
--#include <linux/etherdevice.h>
- #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
- 							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
--#define ADDR1 4
--#define ADDR2 10
--#define ADDR3 16
- 
- /* Basic Frame Type Codes (2-bit) */
- enum basic_frame_type {
-@@ -175,32 +171,38 @@ static inline u8 get_from_ds(u8 *header)
- 	return ((header[1] & 0x02) >> 1);
- }
- 
-+/* This function extracts the MAC Address in 'address1' field of the MAC     */
-+/* header and updates the MAC Address in the allocated 'addr' variable.      */
-+static inline void get_address1(u8 *pu8msa, u8 *addr)
-+{
-+	memcpy(addr, pu8msa + 4, 6);
-+}
-+
-+/* This function extracts the MAC Address in 'address2' field of the MAC     */
-+/* header and updates the MAC Address in the allocated 'addr' variable.      */
-+static inline void get_address2(u8 *pu8msa, u8 *addr)
-+{
-+	memcpy(addr, pu8msa + 10, 6);
-+}
-+
-+/* This function extracts the MAC Address in 'address3' field of the MAC     */
-+/* header and updates the MAC Address in the allocated 'addr' variable.      */
-+static inline void get_address3(u8 *pu8msa, u8 *addr)
-+{
-+	memcpy(addr, pu8msa + 16, 6);
-+}
-+
- /* This function extracts the BSSID from the incoming WLAN packet based on   */
--/* the 'from ds' bit, and updates the MAC Address in the allocated 'data'    */
-+/* the 'from ds' bit, and updates the MAC Address in the allocated 'addr'    */
- /* variable.                                                                 */
- static inline void get_BSSID(u8 *data, u8 *bssid)
- {
- 	if (get_from_ds(data) == 1)
--		/*
--		 * Extract the MAC Address in 'address2' field of the MAC
--		 * header and update the MAC Address in the allocated 'data'
--		 *  variable.
--		 */
--		ether_addr_copy(data, bssid + ADDR2);
-+		get_address2(data, bssid);
- 	else if (get_to_ds(data) == 1)
--		/*
--		 * Extract the MAC Address in 'address1' field of the MAC
--		 * header and update the MAC Address in the allocated 'data'
--		 * variable.
--		 */
--		ether_addr_copy(data, bssid + ADDR1);
-+		get_address1(data, bssid);
- 	else
--		/*
--		 * Extract the MAC Address in 'address3' field of the MAC
--		 * header and update the MAC Address in the allocated 'data'
--		 * variable.
--		 */
--		ether_addr_copy(data, bssid + ADDR3);
-+		get_address3(data, bssid);
- }
- 
- /* This function extracts the SSID from a beacon/probe response frame        */
 -- 
-1.9.1
-
+Kalle Valo
