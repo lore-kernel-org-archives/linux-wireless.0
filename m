@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58630 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751694AbbKQW2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 17:28:36 -0500
-Date: Wed, 18 Nov 2015 09:28:34 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next inclusion request for mac80211
-Message-ID: <20151118092834.7956b883@canb.auug.org.au> (sfid-20151117_232855_497297_DD48941A)
-In-Reply-To: <1447773252.14408.9.camel@sipsolutions.net>
-References: <1447773252.14408.9.camel@sipsolutions.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51076 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbbKWQPU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 11:15:20 -0500
+Date: Mon, 23 Nov 2015 11:02:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: wireless-testing repo
+Message-ID: <20151123160159.GA3755@tuxdriver.com> (sfid-20151123_171917_126318_BD1E34D0)
+References: <5652F62A.4000109@broadcom.com>
+ <1448278260.5792.1.camel@sipsolutions.net>
+ <5652FAB5.8030708@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5652FAB5.8030708@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On Tue, 17 Nov 2015 16:14:12 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> Could you please add my mac80211 and mac80211-next trees, found at
+On Mon, Nov 23, 2015 at 12:38:29PM +0100, Arend van Spriel wrote:
+> On 11/23/2015 12:31 PM, Johannes Berg wrote:
+> >On Mon, 2015-11-23 at 12:19 +0100, Arend van Spriel wrote:
+> >>Hi John,
+> >>
+> >>We have been using the wireless-testing repo in our nightly testing
+> >>and as such appreciated the on-going support for it. I noticed your
+> >>announcement (and misplaced it) and as I prefer to keep the nightly
+> >>testing will have to do the work over here. Can you provide details
+> >>on what trees are merged into wireless-testing. Is it
+> >>wireless-drivers{,-next} and mac80211{,-next} or is there more to
+> >>consider.
+> >
+> >I believe it was also the latest rc from Linus.
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
+> Indeed.
+
+Yes, latest -rc plus those 4 trees is what I have been pulling for
+some time.  I used to include Bluetooth and NFC, but stopped doing
+that early this year.
+
+> >If you're testing with backports you could also use the latest linux-
+> >next with a restricted backport - I've added mac80211(-next) to that
+> >now.
 > 
-> with their 'master' branches to linux-next?
-> 
-> These trees are feeding net and net-next respectively, but I don't
-> always send them immediately and it'd be good to have early integration
-> with other things happening elsewhere, in particular of course with the
-> wifi drivers found in wireless-drivers{,-next}.
+> We have some setups running on wl-testing kernel and some running distro
+> kernel using backports.
 
-Added from today.
+I believe the Bob Copeland is considering taking on this mantle...
 
-Thanks for adding your subsystem tree as a participant of linux-next.  As
-you may know, this is not a judgment of your code.  The purpose of
-linux-next is for integration testing and to lower the impact of
-conflicts between subsystems in the next merge window. 
-
-You will need to ensure that the patches/commits in your tree/series have
-been:
-     * submitted under GPL v2 (or later) and include the Contributor's
-        Signed-off-by,
-     * posted to the relevant mailing list,
-     * reviewed by you (or another maintainer of your subsystem tree),
-     * successfully unit tested, and 
-     * destined for the current or next Linux merge window.
-
-Basically, this should be just what you would send to Linus (or ask him
-to fetch).  It is allowed to be rebased if you deem it necessary.
-
+John
 -- 
-Cheers,
-Stephen Rothwell 
-sfr@canb.auug.org.au
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
