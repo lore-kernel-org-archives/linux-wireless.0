@@ -1,163 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vsmtp1.tin.it ([212.216.176.141]:54517 "EHLO vsmtp1.tin.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751782AbbKCTJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 14:09:45 -0500
-From: Alberto Mattea <alberto@mattea.info>
-To: Alexis Green <agreen@cococorp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Ralink RT5592 5Ghz capability not working
-Date: Tue, 03 Nov 2015 20:09:40 +0100
-Message-ID: <2123913.hP4j56Dl4k@alby> (sfid-20151103_200951_749048_D7E58F75)
-In-Reply-To: <CAAnMG+O4hhyjphA=6CsH85cETyc25RwkW7zd2riizbo7tkSoag@mail.gmail.com>
-References: <5638B98F.2080908@gmail.com> <13779729.DhZWn6HO5Q@alby> <CAAnMG+O4hhyjphA=6CsH85cETyc25RwkW7zd2riizbo7tkSoag@mail.gmail.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48704 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753630AbbKWJo7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2015 04:44:59 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/10] staging: wilc1000: remove unused functions
+Date: Mon, 23 Nov 2015 18:48:01 +0900
+Message-ID: <1448272088-13973-3-git-send-email-glen.lee@atmel.com> (sfid-20151123_104503_512888_D5766E6A)
+In-Reply-To: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
+References: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My device (the RP-N53) has 2 chips too: the other is integrated in the mt7620 soc and reports itself as
+This patch removes unused function pointer hif_sync and hif_clear_int, and
+removes it's related functions sdio_clear_int, sdio_sync, wilc_spi_clear_int
+and wilc_spi_sync.
 
-[   14.120000] ieee80211 phy1: rt2x00lib_request_eeprom_file: Info - Loading EEPROM data from 'soc_wmac.eeprom'.
-[   14.140000] ieee80211 phy1: rt2x00_set_rt: Info - RT chipset 5390, rev 0500 detected
-[   14.150000] ieee80211 phy1: rt2x00_set_rf: Info - RF chipset 7620 detected
-[   14.170000] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 94 ------------------------------------
+ drivers/staging/wilc1000/wilc_spi.c  | 60 -----------------------
+ drivers/staging/wilc1000/wilc_wlan.h |  2 -
+ 3 files changed, 156 deletions(-)
 
-it is used for 2.4Ghz only (https://wikidevi.com/wiki/ASUS_RP-N53)
-Unfortunately opening the RP-N53 appears impossible without voiding the warranty :(
-
-In data mar 3 novembre 2015 10:32:29, hai scritto:
-> This is so strange. Asus RT-N56U you mentioned earlier as one of the
-> examples actually has two separate chips for each band (and one of
-> them is RT3091) - https://wikidevi.com/wiki/ASUS_RT-N56U
-> Are you able to take a picture of the chip?
-> 
-> On Tue, Nov 3, 2015 at 10:10 AM, Alberto Mattea <alberto@mattea.info> wrote:
-> > Hey, thanks for your answer. The device definitely isn't a RT3091, so do
-> > you think it's some sort of an OEM hybrid? Do you think it would be
-> > better to report this to the openwrt bugzilla?
-> > 
-> > Thanks
-> > 
-> > In data mar 3 novembre 2015 14:41:35, Xose Vazquez Perez ha scritto:
-> >> Alberto Mattea wrote:
-> >> > this is about the mini-pcie version used in some embedded products
-> >> > (for example the Buffalo WHR-600D and the Asus RP-N53).
-> >> > It has an RT5592 chip and the hardware supports both 2.4 and 5Ghz
-> >> > (5Ghz works with the proprietary driver supplied with the devices),
-> >> > but rt2800pci seems to see only the 2.4 Ghz capability.
-> >> 
-> >> As far as I know, RT5592 PCIe devices are unsupported by rt2800pci.
-> >> 
-> >> > dmesg:
-> >> > 
-> >> > [   14.070000] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592,
-> >> > rev
-> >> > 0222 detected [   14.080000] ieee80211 phy0: rt2x00_set_rf: Info - RF
-> >> > chipset 0001 detected [   14.100000] ieee80211 phy0: Selected rate
-> >> > control algorithm 'minstrel_ht' [  134.420000] ieee80211 phy0:
-> >> > rt2x00lib_request_firmware: Info - Loading firmware file 'rt2860.bin' [
-> >> > 134.460000] ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware
-> >> > detected - version: 0.34
-> >> 
-> >> Here is the output of a real RT5592 PCIe device with rt2800pci driver(Feb
-> >> 2013):
-> >> 
-> >> phy1 -> rt2x00_set_chip: Info - Chipset detected - rt: 5592, rf: 000f,
-> >> rev:
-> >> 0222. phy1 -> rt2800_init_eeprom: Error - Invalid RT chipset 0x5592
-> >> detected. phy1 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
-> >> 
-> >> > The weird thing is that in lspci it is reported as an RT3091, due to
-> >> > the
-> >> > 0x3091 pci device id:
-> >> > 
-> >> > 01:00.0 Network controller [0280]: Ralink corp. RT3091 Wireless 802.11n
-> >> > 1T/2R PCIe [1814:3091]>
-> >> > 
-> >> >         Subsystem: Ralink corp. RT3091 Wireless 802.11n 1T/2R PCIe
-> >> >         [1814:3091]
-> >> > 
-> >> > [...]
-> >> 
-> >> 06:00.0 Network controller [0280]: Ralink corp. Device [1814:5592]
-> >> 
-> >>         Subsystem: ASUSTeK Computer Inc. Device [1043:851a]
-> >>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> >>         ParErr-
-> >> 
-> >> Stepping- SERR+ FastB2B- DisINTx- Status: Cap+ 66MHz- UDF- FastB2B-
-> >> ParErr-
-> >> DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx- Latency: 0,
-> >> Cache Line Size: 64 bytes
-> >> 
-> >>         Interrupt: pin A routed to IRQ 11
-> >>         Region 0: Memory at fe500000 (32-bit, non-prefetchable)
-> >>         [size=64K]
-> >>         Capabilities: [40] Power Management version 3
-> >>         
-> >>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
-> >> 
-> >> PME(D0-,D1-,D2-,D3hot-,D3cold-) Status: D0 NoSoftRst- PME-Enable- DSel=0
-> >> DScale=0 PME- Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
-> >> Address: 0000000000000000  Data: 0000
-> >> 
-> >>         Capabilities: [70] Express (v2) Endpoint, MSI 00
-> >>         
-> >>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-> >> 
-> >> <512ns, L1 unlimited ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> >> DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> >> RlxdOrd-
-> >> ExtTag- PhantFunc- AuxPwr- NoSnoop- MaxPayload 128 bytes, MaxReadReq 128
-> >> bytes DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-> >> LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns,
-> >> L1 <64us ClockPM+ Surprise- LLActRep- BwNot-
-> >> 
-> >>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain-
-> >> 
-> >> CommClk+ ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- LnkSta: Speed
-> >> 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> >> DevCap2: Completion Timeout: Not Supported, TimeoutDis+ DevCtl2:
-> >> Completion
-> >> Timeout: 50us to 50ms, TimeoutDis- LnkCtl2: Target Link Speed: 2.5GT/s,
-> >> EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB Transmit Margin:
-> >> Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-> >> Compliance
-> >> De-emphasis: -6dB
-> >> 
-> >>                 LnkSta2: Current De-emphasis Level: -6dB,
-> >> 
-> >> EqualizationComplete-, EqualizationPhase1- EqualizationPhase2-,
-> >> EqualizationPhase3-, LinkEqualizationRequest- Capabilities: [100 v1]
-> >> Advanced Error Reporting
-> >> 
-> >>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-> >>                 UnxCmplt-
-> >> 
-> >> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol- UEMsk:  DLP- SDES- TLP- FCP-
-> >> CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >> UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-> >> ECRC- UnsupReq- ACSViol- CESta:  RxErr- BadTLP- BadDLLP- Rollover-
-> >> Timeout-
-> >> NonFatalErr+ CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> >> NonFatalErr+ AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
-> >> ChkEn- Capabilities: [140 v1] Device Serial Number
-> >> c1-a5-f3-ff-fe-a9-85-30
-> >> 
-> >> > So maybe due to this (i'm not sure), rt2800pci only enables the 2.4 Ghz
-> > 
-> > band support:
-> >> Your device does not look like a real RT5592 chip.
-> >> 
-> >> > All this with kernel 3.18 (openwrt 15.05 Chaos Calmer).
-> >> > Any ideas?
-> >> 
-> >> OpenWrt brings _a lot of_ code out upstream kernel.
-> >> Who knows what is running.
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index c2c10dd..1381a10 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -130,37 +130,6 @@ _fail_:
+ 	return 0;
+ }
+ 
+-static int sdio_clear_int(struct wilc *wilc)
+-{
+-	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-
+-	if (!g_sdio.irq_gpio) {
+-		/* u32 sts; */
+-		sdio_cmd52_t cmd;
+-
+-		cmd.read_write = 0;
+-		cmd.function = 1;
+-		cmd.raw = 0;
+-		cmd.address = 0x4;
+-		cmd.data = 0;
+-		wilc_sdio_cmd52(wilc, &cmd);
+-
+-		return cmd.data;
+-	} else {
+-		u32 reg;
+-
+-		if (!sdio_read_reg(wilc, WILC_HOST_RX_CTRL_0, &reg)) {
+-			dev_err(&func->dev, "Failed read reg (%08x)...\n",
+-				WILC_HOST_RX_CTRL_0);
+-			return 0;
+-		}
+-		reg &= ~0x1;
+-		sdio_write_reg(wilc, WILC_HOST_RX_CTRL_0, reg);
+-		return 1;
+-	}
+-
+-}
+-
+ /********************************************
+  *
+  *      Sdio interfaces
+@@ -451,67 +420,6 @@ static int sdio_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int sdio_sync(struct wilc *wilc)
+-{
+-	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-	u32 reg;
+-
+-	/**
+-	 *      Disable power sequencer
+-	 **/
+-	if (!sdio_read_reg(wilc, WILC_MISC, &reg)) {
+-		dev_err(&func->dev, "Failed read misc reg...\n");
+-		return 0;
+-	}
+-
+-	reg &= ~BIT(8);
+-	if (!sdio_write_reg(wilc, WILC_MISC, reg)) {
+-		dev_err(&func->dev, "Failed write misc reg...\n");
+-		return 0;
+-	}
+-
+-	if (g_sdio.irq_gpio) {
+-		u32 reg;
+-		int ret;
+-
+-		/**
+-		 *      interrupt pin mux select
+-		 **/
+-		ret = sdio_read_reg(wilc, WILC_PIN_MUX_0, &reg);
+-		if (!ret) {
+-			dev_err(&func->dev, "Failed read reg (%08x)...\n",
+-				WILC_PIN_MUX_0);
+-			return 0;
+-		}
+-		reg |= BIT(8);
+-		ret = sdio_write_reg(wilc, WILC_PIN_MUX_0, reg);
+-		if (!ret) {
+-			dev_err(&func->dev, "Failed write reg (%08x)...\n",
+-				WILC_PIN_MUX_0);
+-			return 0;
+-		}
+-
+-		/**
+-		 *      interrupt enable
+-		 **/
+-		ret = sdio_read_reg(wilc, WILC_INTR_ENABLE, &reg);
+-		if (!ret) {
+-			dev_err(&func->dev, "Failed read reg (%08x)...\n",
+-				WILC_INTR_ENABLE);
+-			return 0;
+-		}
+-		reg |= BIT(16);
+-		ret = sdio_write_reg(wilc, WILC_INTR_ENABLE, reg);
+-		if (!ret) {
+-			dev_err(&func->dev, "Failed write reg (%08x)...\n",
+-				WILC_INTR_ENABLE);
+-			return 0;
+-		}
+-	}
+-
+-	return 1;
+-}
+-
+ static int sdio_init(struct wilc *wilc)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+@@ -950,8 +858,6 @@ const struct wilc_hif_func wilc_hif_sdio = {
+ 	.hif_write_reg = sdio_write_reg,
+ 	.hif_block_rx = sdio_read,
+ 	.hif_block_tx = sdio_write,
+-	.hif_sync = sdio_sync,
+-	.hif_clear_int = sdio_clear_int,
+ 	.hif_read_int = sdio_read_int,
+ 	.hif_clear_int_ext = sdio_clear_int_ext,
+ 	.hif_read_size = sdio_read_size,
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 6032a8f..f54072b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -668,21 +668,6 @@ static int _wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+  *
+  ********************************************/
+ 
+-static int wilc_spi_clear_int(struct wilc *wilc)
+-{
+-	struct spi_device *spi = to_spi_device(wilc->dev);
+-	u32 reg;
+-
+-	if (!wilc_spi_read_reg(wilc, WILC_HOST_RX_CTRL_0, &reg)) {
+-		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
+-			WILC_HOST_RX_CTRL_0);
+-		return 0;
+-	}
+-	reg &= ~0x1;
+-	wilc_spi_write_reg(wilc, WILC_HOST_RX_CTRL_0, reg);
+-	return 1;
+-}
+-
+ static int _wilc_spi_deinit(struct wilc *wilc)
+ {
+ 	/**
+@@ -691,49 +676,6 @@ static int _wilc_spi_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int wilc_spi_sync(struct wilc *wilc)
+-{
+-	struct spi_device *spi = to_spi_device(wilc->dev);
+-	u32 reg;
+-	int ret;
+-
+-	/**
+-	 *      interrupt pin mux select
+-	 **/
+-	ret = wilc_spi_read_reg(wilc, WILC_PIN_MUX_0, &reg);
+-	if (!ret) {
+-		dev_err(&spi->dev,"Failed read reg (%08x)...\n",
+-			WILC_PIN_MUX_0);
+-		return 0;
+-	}
+-	reg |= BIT(8);
+-	ret = wilc_spi_write_reg(wilc, WILC_PIN_MUX_0, reg);
+-	if (!ret) {
+-		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
+-			WILC_PIN_MUX_0);
+-		return 0;
+-	}
+-
+-	/**
+-	 *      interrupt enable
+-	 **/
+-	ret = wilc_spi_read_reg(wilc, WILC_INTR_ENABLE, &reg);
+-	if (!ret) {
+-		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
+-			WILC_INTR_ENABLE);
+-		return 0;
+-	}
+-	reg |= BIT(16);
+-	ret = wilc_spi_write_reg(wilc, WILC_INTR_ENABLE, reg);
+-	if (!ret) {
+-		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
+-			WILC_INTR_ENABLE);
+-		return 0;
+-	}
+-
+-	return 1;
+-}
+-
+ static int _wilc_spi_init(struct wilc *wilc)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+@@ -1056,8 +998,6 @@ const struct wilc_hif_func wilc_hif_spi = {
+ 	.hif_write_reg = wilc_spi_write_reg,
+ 	.hif_block_rx = _wilc_spi_read,
+ 	.hif_block_tx = _wilc_spi_write,
+-	.hif_sync = wilc_spi_sync,
+-	.hif_clear_int = wilc_spi_clear_int,
+ 	.hif_read_int = wilc_spi_read_int,
+ 	.hif_clear_int_ext = wilc_spi_clear_int_ext,
+ 	.hif_read_size = wilc_spi_read_size,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 580e1d6..2edd744 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -232,8 +232,6 @@ struct wilc_hif_func {
+ 	int (*hif_write_reg)(struct wilc *, u32, u32);
+ 	int (*hif_block_rx)(struct wilc *, u32, u8 *, u32);
+ 	int (*hif_block_tx)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_sync)(struct wilc *);
+-	int (*hif_clear_int)(struct wilc *);
+ 	int (*hif_read_int)(struct wilc *, u32 *);
+ 	int (*hif_clear_int_ext)(struct wilc *, u32);
+ 	int (*hif_read_size)(struct wilc *, u32 *);
+-- 
+1.9.1
 
