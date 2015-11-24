@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:51911 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbbKYNrP (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:55918 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119AbbKXVUE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 08:47:15 -0500
-Subject: [PATCH 3/6] ath10k: always show bmi chip ids and subdevice ids
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 25 Nov 2015 15:38:19 +0200
-Message-ID: <20151125133819.25507.20279.stgit@potku.adurom.net> (sfid-20151125_144720_867602_2ED16FE4)
-In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
-References: <20151125133654.25507.10863.stgit@potku.adurom.net>
+	Tue, 24 Nov 2015 16:20:04 -0500
+Subject: ATH10 firmware question
+Date: Tue, 24 Nov 2015 19:07:28 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5AFA5@sbs2003.acksys.local> (sfid-20151124_222018_877943_21A3187B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <ath10k@lists.infradead.org>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That way we can split the messages to be printed in different stages of
-device initialisation.
+	Hi, 
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+	I have a simple test platform. 
+	One PC connected to an equipment. This equipment is set in AP
+mode.
+	Another PC connected to another equipment. This equipment is set
+in STA + WDS mode.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 4c0e0a1ef0f1..2bc7ae21ade4 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -130,25 +130,25 @@ void ath10k_print_driver_info(struct ath10k *ar)
- 	ath10k_core_get_fw_features_str(ar, fw_features, sizeof(fw_features));
- 
- 	if (ar->id.bmi_ids_valid)
--		scnprintf(boardinfo, sizeof(boardinfo), "bmi %d:%d",
-+		scnprintf(boardinfo, sizeof(boardinfo), "%d:%d",
- 			  ar->id.bmi_chip_id, ar->id.bmi_board_id);
- 	else
--		scnprintf(boardinfo, sizeof(boardinfo), "sub %04x:%04x",
--			  ar->id.subsystem_vendor, ar->id.subsystem_device);
-+		scnprintf(boardinfo, sizeof(boardinfo), "N/A");
- 
--	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x %s",
-+	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x sub %04x:%04x",
- 		    ar->hw_params.name,
- 		    ar->target_version,
- 		    ar->chip_id,
--		    boardinfo);
-+		    ar->id.subsystem_vendor, ar->id.subsystem_device);
- 
- 	ath10k_info(ar, "firmware ver %s api %d features %s\n",
- 		    ar->hw->wiphy->fw_version,
- 		    ar->fw_api,
- 		    fw_features);
- 
--	ath10k_info(ar, "board_file api %d",
--		    ar->bd_api);
-+	ath10k_info(ar, "board_file api %d bmi_id %s",
-+		    ar->bd_api,
-+		    boardinfo);
- 
- 	ath10k_info(ar, "kconfig debug %d debugfs %d tracing %d dfs %d testmode %d\n",
- 		    config_enabled(CONFIG_ATH10K_DEBUG),
+	Both equipment use the same openwrt Firmware (compat
+2015-07-21), I only changed the ath10k firmware (in
+/lib/firmware/ath10k/...).
+	Both equipment has the same hardware.
+	I used a clear channel, and VHT80.
+	The radio was connected with a coaxial cable and I placed 40 dBm
+attenuation per Rf chain.
+	I used the WLN350NX radio card from compex.
+	
+	First test : ATH10K firmware 10.2.4.70-2 on both equipment
+		An iperf from PC connected to the AP to the PC connected
+to the STA give 919 Mbps.
+		An iperf from PC connected to the STA to the PC
+connected to the AP give 500 Mbps.
+
+	Second test : ATHK firmware 10.2.4.70.10-2 on both equipment
+		An iperf from PC connected to the AP to the PC connected
+to the STA give 921 Mbps.
+		An iperf from PC connected to the STA to the PC
+connected to the AP give 441 Mbps.
+
+	If I cross the computer I have the same result. I did several
+time these test and I always have the same result.
+
+	Is it the expected result?
+	What is the recommanded firmware version for each mode?
+	
+	Thanks for your help.
+
+	Cedric Voncken.
+	
+
+
+
+
+
 
