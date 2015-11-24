@@ -1,43 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37707 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751224AbbKZP0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 10:26:17 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>
-Subject: [PATCH 1/3] cfg80211: use NL80211_ATTR_STA_AID in nl82011_set_station
-Date: Thu, 26 Nov 2015 16:26:12 +0100
-Message-Id: <1448551574-3207-1-git-send-email-johannes@sipsolutions.net> (sfid-20151126_162636_662722_3EF09236)
+Received: from mailout3.samsung.com ([203.254.224.33]:49192 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbbKXLqR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2015 06:46:17 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NYB00JQ0I13P0D0@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 24 Nov 2015 20:46:15 +0900 (KST)
+From: Rahul Jain <rahul.jain@samsung.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Amit Khatri <amit.khatri@samsung.com>,
+	Rahul Jain <rahul.jain@samsung.com>
+Subject: [PATCH] Fix memory leak if nla_put fails
+Date: Tue, 24 Nov 2015 17:15:27 +0530
+Message-id: <1448365527-14498-1-git-send-email-rahul.jain@samsung.com> (sfid-20151124_124627_493286_6E5F7541)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Amit Khatri <amit.khatri@samsung.com>
 
-Fix nl80211_set_station() to use the value of NL80211_ATTR_STA_AID
-attribute instead of NL80211_ATTR_PEER_AID attribute.
+Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
+Signed-off-by: Rahul Jain  <rahul.jain@samsung.com>
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+avoid memory leak because of nla_put_failure
 ---
- net/wireless/nl80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ coalesce.c |  7 ++++++-
+ wowlan.c   | 28 ++++++++++++++++++++++------
+ 2 files changed, 28 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c71e274c810a..5536b69df2ee 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4256,8 +4256,8 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	 * station. Include these parameters here and will check them in
- 	 * cfg80211_check_station_change().
- 	 */
--	if (info->attrs[NL80211_ATTR_PEER_AID])
--		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
-+	if (info->attrs[NL80211_ATTR_STA_AID])
-+		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+diff --git a/coalesce.c b/coalesce.c
+index 36dcaef..9b13ab3 100644
+--- a/coalesce.c
++++ b/coalesce.c
+@@ -124,7 +124,8 @@ static int handle_coalesce_enable(struct nl80211_state *state,
+ 					nla_nest_end(msg, nl_pat);
+ 					free(mask);
+ 					free(pat);
+-
++					pat=NULL;
++					mask=NULL;
+ 					if (!next_pat)
+ 						break;
+ 					cur_pat = next_pat;
+@@ -155,6 +156,10 @@ static int handle_coalesce_enable(struct nl80211_state *state,
+ 		err = 1;
+ 	goto close;
+ nla_put_failure:
++	if(pat)
++		free(pat);
++	if(mask)
++		free(mask);
+ 	err = -ENOBUFS;
+ close:
+ 	fclose(f);
+diff --git a/wowlan.c b/wowlan.c
+index c30eab7..2e1d43d 100644
+--- a/wowlan.c
++++ b/wowlan.c
+@@ -89,7 +89,10 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
  
- 	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
- 		params.listen_interval =
+ 			if (!pkt)
+ 				goto close;
+-			NLA_PUT(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD, len, pkt);
++			if(nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD, len, pkt) < 0){
++				free(pkt);
++				goto nla_put_failure;
++			}
+ 			free(pkt);
+ 		} else if (strncmp(buf, "data.interval=", 14) == 0) {
+ 			NLA_PUT_U32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
+@@ -97,13 +100,20 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
+ 		} else if (strncmp(buf, "wake=", 5) == 0) {
+ 			unsigned char *pat, *mask;
+ 			size_t patlen;
+-
+ 			if (parse_hex_mask(buf + 5, &pat, &patlen, &mask))
+ 				goto close;
+-			NLA_PUT(msg, NL80211_WOWLAN_TCP_WAKE_MASK,
+-				DIV_ROUND_UP(patlen, 8), mask);
+-			NLA_PUT(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
+-				patlen, pat);
++			if(nla_put(msg, NL80211_WOWLAN_TCP_WAKE_MASK,
++				DIV_ROUND_UP(patlen, 8), mask) < 0){
++				free(mask);
++				free(pat);
++				goto nla_put_failure;
++			}
++			if(nla_put(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
++				patlen, pat) < 0){
++				free(pat);
++				free(mask);
++				goto nla_put_failure;
++			}
+ 			free(mask);
+ 			free(pat);
+ 		} else if (strncmp(buf, "data.seq=", 9) == 0) {
+@@ -299,6 +309,8 @@ static int handle_wowlan_enable(struct nl80211_state *state,
+ 			nla_nest_end(patterns, pattern);
+ 			free(mask);
+ 			free(pat);
++			pat=NULL;
++			mask=NULL;
+ 			break;
+ 		}
+ 		argv++;
+@@ -312,6 +324,10 @@ static int handle_wowlan_enable(struct nl80211_state *state,
+ 	nla_nest_end(msg, wowlan);
+ 	err = 0;
+  nla_put_failure:
++	if(pat)
++		free(pat);
++	if(mask)
++		free(mask);
+ 	nlmsg_free(patterns);
+ 	return err;
+ }
 -- 
-2.6.2
+1.9.1
 
