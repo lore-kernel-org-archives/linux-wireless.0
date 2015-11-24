@@ -1,54 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44795 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbbKXRjP (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35154 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbbKXRmZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:39:15 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath10k: apply Mesh subtype when Mesh interface created.
-Date: Tue, 24 Nov 2015 09:37:35 -0800
-Message-ID: <1448386655-13936-4-git-send-email-poh@qca.qualcomm.com> (sfid-20151124_183928_045223_F9D30FA5)
-In-Reply-To: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-References: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 24 Nov 2015 12:42:25 -0500
+Received: by wmuu63 with SMTP id u63so106798421wmu.0
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2015 09:42:24 -0800 (PST)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Sven Eckelmann <sven@open-mesh.com>
+Subject: iw: add VHT80 support for 802.11s
+Date: Tue, 24 Nov 2015 18:42:07 +0100
+Message-Id: <1448386927-25170-1-git-send-email-sven@open-mesh.com> (sfid-20151124_184229_184297_92E42E6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QCA988X firmware starting from 10.2.4.70.12-2 has capability to support
-Mesh Control Field Present bit in QoS field in native Wi-Fi mode.
-Hence apply Mesh subtype according to the WMI service map.
+iw mesh supports non-HT and HT channel widths like HT20 or NOHT. But the
+Linux 802.11s implementation also supports VHT80 which can be specified
+during the mesh join.
 
-Firmware will allows unicast, broadcast, multicast, and WDS frame
-(FromDS = 1 and ToDS = 1) to be received via the interface, once Mesh
-subtype is used.
+    iw dev mesh0 mesh join "meshnet" freq 5180 80MHz
 
-The firmware and this patch together make native Wi-Fi mode comply to
-IEEE802.11s Mesh frame in open mode, but the firmware doesn't yet
-support secured Mesh mode.
-
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ ibss.c | 33 ---------------------------------
+ iw.h   |  9 +++++++++
+ mesh.c | 16 ++++++++--------
+ util.c | 26 ++++++++++++++++++++++++++
+ 4 files changed, 43 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6637854..6d151a2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4361,7 +4361,9 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		if (test_bit(WMI_SERVICE_MESH, ar->wmi.svc_map)) {
-+			arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH;
-+		} else if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
- 			ret = -EINVAL;
- 			ath10k_warn(ar, "must load driver with rawmode=1 to add mesh interfaces\n");
- 			goto err;
--- 
-1.9.1
-
+diff --git a/ibss.c b/ibss.c
+index 23bda70..ac06fc5 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -16,39 +16,6 @@
+ 
+ SECTION(ibss);
+ 
+-struct chanmode {
+-	const char *name;
+-	unsigned int width;
+-	int freq1_diff;
+-	int chantype; /* for older kernel */
+-};
+-
+-static int get_cf1(const struct chanmode *chanmode, unsigned long freq)
+-{
+-	int cf1 = freq, j;
+-	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
+-
+-	switch (chanmode->width) {
+-	case NL80211_CHAN_WIDTH_80:
+-	        /* setup center_freq1 */
+-		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
+-			if (freq >= vht80[j] && freq < vht80[j] + 80)
+-				break;
+-		}
+-
+-		if (j == ARRAY_SIZE(vht80))
+-			break;
+-
+-		cf1 = vht80[j] + 30;
+-		break;
+-	default:
+-		cf1 = freq + chanmode->freq1_diff;
+-		break;
+-	}
+-
+-	return cf1;
+-}
+-
+ static int join_ibss(struct nl80211_state *state,
+ 		     struct nl_msg *msg,
+ 		     int argc, char **argv,
+diff --git a/iw.h b/iw.h
+index cef9da8..8e1a37a 100644
+--- a/iw.h
++++ b/iw.h
+@@ -59,6 +59,13 @@ struct cmd {
+ 	const struct cmd *parent;
+ };
+ 
++struct chanmode {
++	const char *name;
++	unsigned int width;
++	int freq1_diff;
++	int chantype; /* for older kernel */
++};
++
+ #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
+ #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
+ 
+@@ -174,6 +181,8 @@ void print_ies(unsigned char *ie, int ielen, bool unknown,
+ void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
+ void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
+ 
++int get_cf1(const struct chanmode *chanmode, unsigned long freq);
++
+ #define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs>] " \
+ 	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] [randomise[=<addr>/<mask>]]"
+ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
+diff --git a/mesh.c b/mesh.c
+index 0090530..930d58f 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -439,12 +439,8 @@ static int join_mesh(struct nl80211_state *state,
+ 	int bintval, dtim_period, i, n_rates = 0;
+ 	char *end, *value = NULL, *sptr = NULL;
+ 	unsigned long freq = 0;
+-	static const struct {
+-		const char *name;
+-		unsigned int width;
+-		int freq1_diff;
+-		int chantype; /* for older kernel */
+-	} *chanmode_selected = NULL, chanmode[] = {
++	const struct chanmode *chanmode_selected = NULL;
++	static const struct chanmode chanmode[] = {
+ 		{ .name = "HT20",
+ 		  .width = NL80211_CHAN_WIDTH_20,
+ 		  .freq1_diff = 0,
+@@ -461,6 +457,10 @@ static int join_mesh(struct nl80211_state *state,
+ 		  .width = NL80211_CHAN_WIDTH_20_NOHT,
+ 		  .freq1_diff = 0,
+ 		  .chantype = NL80211_CHAN_NO_HT },
++		{ .name = "80MHz",
++		  .width = NL80211_CHAN_WIDTH_80,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
+ 	};
+ 
+ 	if (argc < 1)
+@@ -497,7 +497,7 @@ static int join_mesh(struct nl80211_state *state,
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
+ 				    chanmode_selected->width);
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
+-				    freq + chanmode_selected->freq1_diff);
++				    get_cf1(chanmode_selected, freq));
+ 			if (chanmode_selected->chantype != -1)
+ 				NLA_PUT_U32(msg,
+ 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+@@ -599,7 +599,7 @@ static int join_mesh(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
++COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT|80MHz>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>]], [mcast-rate <rate in Mbps>]"
+ 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
+ 	" [vendor_sync on|off] [<param>=<value>]*",
+diff --git a/util.c b/util.c
+index 4efc4c8..d75ffe0 100644
+--- a/util.c
++++ b/util.c
+@@ -728,3 +728,29 @@ void iw_hexdump(const char *prefix, const __u8 *buf, size_t size)
+ 	}
+ 	printf("\n\n");
+ }
++
++int get_cf1(const struct chanmode *chanmode, unsigned long freq)
++{
++	int cf1 = freq, j;
++	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
++
++	switch (chanmode->width) {
++	case NL80211_CHAN_WIDTH_80:
++	        /* setup center_freq1 */
++		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
++			if (freq >= vht80[j] && freq < vht80[j] + 80)
++				break;
++		}
++
++		if (j == ARRAY_SIZE(vht80))
++			break;
++
++		cf1 = vht80[j] + 30;
++		break;
++	default:
++		cf1 = freq + chanmode->freq1_diff;
++		break;
++	}
++
++	return cf1;
++}
