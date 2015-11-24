@@ -1,162 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:34264 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbbKJNNL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34942 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133AbbKXV3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 08:13:11 -0500
-Received: by lffu14 with SMTP id u14so27452099lff.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:09 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 6/9] ath10k: pack up flags in skb_cb
-Date: Tue, 10 Nov 2015 14:10:52 +0100
-Message-Id: <1447161055-2283-7-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141349_187602_BE2CF1AE)
-In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
- <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 24 Nov 2015 16:29:14 -0500
+Subject: Re: ATH10 firmware question
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	ath10k@lists.infradead.org
+References: <773DB8A82AB6A046AE0195C68612A31901C5AFA5@sbs2003.acksys.local>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5654D6A8.9050002@candelatech.com> (sfid-20151124_222917_871491_8B2EFE1B)
+Date: Tue, 24 Nov 2015 13:29:12 -0800
+MIME-Version: 1.0
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901C5AFA5@sbs2003.acksys.local>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to have all the flags as separate
-bools.
+On 11/24/2015 10:07 AM, Cedric VONCKEN wrote:
+> 	Hi,
+>
+> 	I have a simple test platform.
+> 	One PC connected to an equipment. This equipment is set in AP
+> mode.
+> 	Another PC connected to another equipment. This equipment is set
+> in STA + WDS mode.
+>
+> 	Both equipment use the same openwrt Firmware (compat
+> 2015-07-21), I only changed the ath10k firmware (in
+> /lib/firmware/ath10k/...).
+> 	Both equipment has the same hardware.
+> 	I used a clear channel, and VHT80.
+> 	The radio was connected with a coaxial cable and I placed 40 dBm
+> attenuation per Rf chain.
+> 	I used the WLN350NX radio card from compex.
+> 	
+> 	First test : ATH10K firmware 10.2.4.70-2 on both equipment
+> 		An iperf from PC connected to the AP to the PC connected
+> to the STA give 919 Mbps.
+> 		An iperf from PC connected to the STA to the PC
+> connected to the AP give 500 Mbps.
+>
+> 	Second test : ATHK firmware 10.2.4.70.10-2 on both equipment
+> 		An iperf from PC connected to the AP to the PC connected
+> to the STA give 921 Mbps.
+> 		An iperf from PC connected to the STA to the PC
+> connected to the AP give 441 Mbps.
+>
+> 	If I cross the computer I have the same result. I did several
+> time these test and I always have the same result.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h   | 13 +++++++------
- drivers/net/wireless/ath/ath10k/htt_tx.c |  4 ++--
- drivers/net/wireless/ath/ath10k/mac.c    | 10 +++++++---
- drivers/net/wireless/ath/ath10k/wmi.c    | 12 ++++++++----
- 4 files changed, 24 insertions(+), 15 deletions(-)
+We see similar.  One thing we notice is that if you actually try to send less
+throughput, then you get better overall throughput.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3706b0d235ca..1e8b5adeac37 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -81,22 +81,23 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 	return "unknown";
- }
- 
-+enum ath10k_skb_flags {
-+	ATH10K_SKB_F_NO_HWCRYPT = BIT(0),
-+	ATH10K_SKB_F_DTIM_ZERO = BIT(1),
-+	ATH10K_SKB_F_DELIVER_CAB = BIT(2),
-+};
-+
- struct ath10k_skb_cb {
- 	dma_addr_t paddr;
-+	u8 flags;
- 	u8 eid;
- 	u8 vdev_id;
- 
- 	struct {
- 		u8 tid;
--		bool nohwcrypt;
- 		struct ath10k_htt_txbuf *txbuf;
- 		u32 txbuf_paddr;
- 	} __packed htt;
--
--	struct {
--		bool dtim_zero;
--		bool deliver_cab;
--	} bcn;
- } __packed;
- 
- struct ath10k_skb_rxcb {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 51c40d52bbe9..3d1c46a82895 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -586,7 +586,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	     ieee80211_is_disassoc(hdr->frame_control)) &&
- 	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
--	} else if (!skb_cb->htt.nohwcrypt &&
-+	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
- 		   txmode == ATH10K_HW_TXRX_RAW &&
- 		   ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-@@ -666,7 +666,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 			prefetch_len);
- 	skb_cb->htt.txbuf->htc_hdr.flags = 0;
- 
--	if (skb_cb->htt.nohwcrypt)
-+	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
- 
- 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3abd684ccd1b..07b67c9132f6 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3668,6 +3668,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		      struct sk_buff *skb)
- {
- 	struct ath10k *ar = hw->priv;
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
-@@ -3680,9 +3681,12 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 
--	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
--	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
--	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
-+	skb_cb->flags = 0;
-+	if (!ath10k_tx_h_use_hwcrypto(vif, skb))
-+		skb_cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
-+
-+	skb_cb->htt.tid = ath10k_tx_h_get_tid(hdr);
-+	skb_cb->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
- 
- 	switch (txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 56806d94e65e..854136e0d6c8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1715,6 +1715,8 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
- 	struct ath10k *ar = arvif->ar;
- 	struct ath10k_skb_cb *cb;
- 	struct sk_buff *bcn;
-+	bool dtim_zero;
-+	bool deliver_cab;
- 	int ret;
- 
- 	spin_lock_bh(&ar->data_lock);
-@@ -1734,12 +1736,14 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
- 		arvif->beacon_state = ATH10K_BEACON_SENDING;
- 		spin_unlock_bh(&ar->data_lock);
- 
-+		dtim_zero = !!(cb->flags & ATH10K_SKB_F_DTIM_ZERO);
-+		deliver_cab = !!(cb->flags & ATH10K_SKB_F_DELIVER_CAB);
- 		ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar,
- 							arvif->vdev_id,
- 							bcn->data, bcn->len,
- 							cb->paddr,
--							cb->bcn.dtim_zero,
--							cb->bcn.deliver_cab);
-+							dtim_zero,
-+							deliver_cab);
- 
- 		spin_lock_bh(&ar->data_lock);
- 
-@@ -3157,10 +3161,10 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
- 	memcpy(tim->virtual_map, arvif->u.ap.tim_bitmap, pvm_len);
- 
- 	if (tim->dtim_count == 0) {
--		ATH10K_SKB_CB(bcn)->bcn.dtim_zero = true;
-+		ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DTIM_ZERO;
- 
- 		if (__le32_to_cpu(tim_info->tim_mcast) == 1)
--			ATH10K_SKB_CB(bcn)->bcn.deliver_cab = true;
-+			ATH10K_SKB_CB(bcn)->flags |= ATH10K_SKB_F_DELIVER_CAB;
- 	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT, "dtim %d/%d mcast %d pvmlen %d\n",
+In other words, trying to send 1Gbps UDP frames will give you more poor
+throughput than trying to send 650Mbps (in the upload direction).
+
+I thought it might be a poor interaction regarding backoff in the
+ath10k driver/firmware (see the congestion bins in firmware for why
+this is the case), but even fixing that in firmware didn't improve
+the situation in my testing.
+
+Thanks,
+Ben
+
+>
+> 	Is it the expected result?
+> 	What is the recommanded firmware version for each mode?
+> 	
+> 	Thanks for your help.
+>
+> 	Cedric Voncken.
+> 	
+>
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 -- 
-2.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
