@@ -1,167 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.246]:49160 "EHLO
-	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751515AbbKIH7i (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37456 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754292AbbKYN71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 02:59:38 -0500
-Message-ID: <56405328.4040004@atmel.com> (sfid-20151109_085958_675518_FA723707)
-Date: Mon, 9 Nov 2015 17:02:48 +0900
-From: glen lee <glen.lee@atmel.com>
-MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	Punit Vara <punitvara@gmail.com>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<chris.park@atmel.com>, <austin.shin@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
-	<linux-kernel@vger.kernel.org>, <tony.cho@atmel.com>,
-	<leo.kim@atmel.com>
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-References: <1447018310-4524-1-git-send-email-punitvara@gmail.com> <20151108215953.GO18797@mwanda> <563FFEEB.1090307@atmel.com>
-In-Reply-To: <563FFEEB.1090307@atmel.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Wed, 25 Nov 2015 08:59:27 -0500
+Received: by wmww144 with SMTP id w144so70468091wmw.0
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2015 05:59:26 -0800 (PST)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Sven Eckelmann <sven@open-mesh.com>
+Subject: [PATCH v3 1/4] iw: prepare get_cf1 for use in join_* functions
+Date: Wed, 25 Nov 2015 14:59:15 +0100
+Message-Id: <1448459959-23641-1-git-send-email-sven@open-mesh.com> (sfid-20151125_145931_857597_60A458AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Punit Vara,
+The chanmode structure and the function get_cf1 to calculate the center
+frequency one can be used by not only the ibss join code but also by the
+mesh and ocb join code.
 
-I cannot find build errors on my build machines.
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+---
+v3:
+ * split patch into two different patches (0001/0002) as request by
+   Julian Calaby <julian.calaby@gmail.com>
+ * change join_ocb to also use get_cf1
+ * move NOHT to the last entry in the mesh/ibss join usage texts as
+   requested by Julian Calaby <julian.calaby@gmail.com>
+v2:
+ * rebase from v4.3-ish version to current master
 
-According the log which you have posted before says *wilc is undeclared in the function init_wilc_driver,
-which means WILC_SPI is selected because one of SPI or SDIO should be chosen at the moment.
-Hence, struct wilc *wilc should be compiled together.
-It looks like wilc1000 is compiled without SPI or SDIO.
+ ibss.c | 33 ---------------------------------
+ iw.h   |  9 +++++++++
+ mesh.c | 10 +++-------
+ util.c | 26 ++++++++++++++++++++++++++
+ 4 files changed, 38 insertions(+), 40 deletions(-)
 
-Of course, there are many cases that I don't know, so you could let me know the wilc1000 build configuration?
-
-static int __init init_wilc_driver(void)
-{
-#ifdef WILC_SPI
-	struct wilc *wilc;
-#endif
-
-..
-
-#ifdef WILC_SDIO
-	{
-		int ret;
-
-		ret = sdio_register_driver(&wilc_bus);
-		if (ret < 0)
-			PRINT_D(INIT_DBG, "init_wilc_driver: Failed register sdio driver\n");
-
-		return ret;
-	}
-#else
-	PRINT_D(INIT_DBG, "Initializing netdev\n");
-	if (wilc_netdev_init(&wilc))
-		PRINT_ER("Couldn't initialize netdev\n");
-	return 0;
-#endif
-
-regards,
-glen lee.
-
-
-On 2015년 11월 09일 11:03, glen lee wrote:
-> I just check the email, I will get back here after I check the patches 
-> related with this issue.
->
-> regards,
-> glen lee.
->
->
-> On 2015년 11월 09일 06:59, Dan Carpenter wrote:
->> Top posting beucase I am a bad person. Punit, you should have CC'd Glen
->> since this is his code.
->>
->> The fix is still not right.  It will cause an unused variable warning on
->> some configs.
->>
->> To be honest, this code makes no sense.  Why do we even have the wilc
->> variable in this function when we never use it?  Just declare move it to
->> wilc_netdev_init().  Also there are too many ifdefs in this code.
->>
->> regards,
->> dan carpenter
->>
->> On Mon, Nov 09, 2015 at 03:01:50AM +0530, Punit Vara wrote:
->>> This patch is to the linux_wlan.c file that fixes up break found during
->>> make drivers/staging/wilc1000/linux_wlan.o
->>>
->>> Patch add following things to file :
->>> -init_irq declaration
->>> -At preprocessor (!defined WILC_SDIO) to defination of init_irq
->>> -At preprocessor (!defined WILC_SDIO) to defination isr_uh_routine
->>> -removes unnecessary lines to declare *wilc
->>>
->>> Patch fixes 702c0e50f and 2c1d05d10 tags.
->>>
->>> Signed-off-by: Punit Vara <punitvara@gmail.com>
->>> ---
->>> -Fixes tag added suggested by Dan carpenter.
->>> -Remove declaration of autovariable with same type and same name 
->>> suggested by Joe Perches
->>>
->>>   drivers/staging/wilc1000/linux_wlan.c | 10 ++++++----
->>>   1 file changed, 6 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/linux_wlan.c 
->>> b/drivers/staging/wilc1000/linux_wlan.c
->>> index 086f1db..5bd14ed 100644
->>> --- a/drivers/staging/wilc1000/linux_wlan.c
->>> +++ b/drivers/staging/wilc1000/linux_wlan.c
->>> @@ -208,7 +208,7 @@ static int dev_state_ev_handler(struct 
->>> notifier_block *this, unsigned long event
->>>       return NOTIFY_DONE;
->>>   }
->>>   -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->>> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined 
->>> WILC_SDIO)
->>>   static irqreturn_t isr_uh_routine(int irq, void *user_data)
->>>   {
->>>       perInterface_wlan_t *nic;
->>> @@ -246,7 +246,7 @@ irqreturn_t isr_bh_routine(int irq, void *userdata)
->>>       return IRQ_HANDLED;
->>>   }
->>>   -#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
->>> +#if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO) || (!defined 
->>> WILC_SDIO)
->>>   static int init_irq(struct net_device *dev)
->>>   {
->>>       int ret = 0;
->>> @@ -937,6 +937,10 @@ static void wlan_deinitialize_threads(struct 
->>> net_device *dev)
->>>       }
->>>   }
->>>   +#if (!defined WILC_SDIO) || (defined WILC_SDIO_IRQ_GPIO)
->>> +static int init_irq(struct net_device *dev);
->>> +#endif
->>> +
->>>   int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t 
->>> *p_nic)
->>>   {
->>>       wilc_wlan_inp_t nwi;
->>> @@ -1578,9 +1582,7 @@ int wilc_netdev_init(struct wilc **wilc)
->>>     static int __init init_wilc_driver(void)
->>>   {
->>> -#ifdef WILC_SPI
->>>       struct wilc *wilc;
->>> -#endif
->>>     #if defined(WILC_DEBUGFS)
->>>       if (wilc_debugfs_init() < 0) {
->>> -- 
->>> 2.6.2
->>>
->>> _______________________________________________
->>> devel mailing list
->>> devel@linuxdriverproject.org
->>> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel 
->>>
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/ibss.c b/ibss.c
+index 024981a..a761794 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -16,39 +16,6 @@
+ 
+ SECTION(ibss);
+ 
+-struct chanmode {
+-	const char *name;
+-	unsigned int width;
+-	int freq1_diff;
+-	int chantype; /* for older kernel */
+-};
+-
+-static int get_cf1(const struct chanmode *chanmode, unsigned long freq)
+-{
+-	unsigned int cf1 = freq, j;
+-	unsigned int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
+-
+-	switch (chanmode->width) {
+-	case NL80211_CHAN_WIDTH_80:
+-	        /* setup center_freq1 */
+-		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
+-			if (freq >= vht80[j] && freq < vht80[j] + 80)
+-				break;
+-		}
+-
+-		if (j == ARRAY_SIZE(vht80))
+-			break;
+-
+-		cf1 = vht80[j] + 30;
+-		break;
+-	default:
+-		cf1 = freq + chanmode->freq1_diff;
+-		break;
+-	}
+-
+-	return cf1;
+-}
+-
+ static int join_ibss(struct nl80211_state *state,
+ 		     struct nl_msg *msg,
+ 		     int argc, char **argv,
+diff --git a/iw.h b/iw.h
+index 263e8b1..d91a33e 100644
+--- a/iw.h
++++ b/iw.h
+@@ -59,6 +59,13 @@ struct cmd {
+ 	const struct cmd *parent;
+ };
+ 
++struct chanmode {
++	const char *name;
++	unsigned int width;
++	int freq1_diff;
++	int chantype; /* for older kernel */
++};
++
+ #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
+ #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
+ 
+@@ -174,6 +181,8 @@ void print_ies(unsigned char *ie, int ielen, bool unknown,
+ void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
+ void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
+ 
++int get_cf1(const struct chanmode *chanmode, unsigned long freq);
++
+ #define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs>] " \
+ 	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] [randomise[=<addr>/<mask>]]"
+ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
+diff --git a/mesh.c b/mesh.c
+index f2415f3..593ab7a 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -448,12 +448,8 @@ static int join_mesh(struct nl80211_state *state,
+ 	char *end, *value = NULL, *sptr = NULL;
+ 	unsigned int i;
+ 	unsigned long freq = 0;
+-	static const struct {
+-		const char *name;
+-		unsigned int width;
+-		int freq1_diff;
+-		int chantype; /* for older kernel */
+-	} *chanmode_selected = NULL, chanmode[] = {
++	const struct chanmode *chanmode_selected = NULL;
++	static const struct chanmode chanmode[] = {
+ 		{ .name = "HT20",
+ 		  .width = NL80211_CHAN_WIDTH_20,
+ 		  .freq1_diff = 0,
+@@ -506,7 +502,7 @@ static int join_mesh(struct nl80211_state *state,
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
+ 				    chanmode_selected->width);
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
+-				    freq + chanmode_selected->freq1_diff);
++				    get_cf1(chanmode_selected, freq));
+ 			if (chanmode_selected->chantype != -1)
+ 				NLA_PUT_U32(msg,
+ 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+diff --git a/util.c b/util.c
+index 55e1e26..da3be32 100644
+--- a/util.c
++++ b/util.c
+@@ -726,3 +726,29 @@ void iw_hexdump(const char *prefix, const __u8 *buf, size_t size)
+ 	}
+ 	printf("\n\n");
+ }
++
++int get_cf1(const struct chanmode *chanmode, unsigned long freq)
++{
++	unsigned int cf1 = freq, j;
++	unsigned int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
++
++	switch (chanmode->width) {
++	case NL80211_CHAN_WIDTH_80:
++	        /* setup center_freq1 */
++		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
++			if (freq >= vht80[j] && freq < vht80[j] + 80)
++				break;
++		}
++
++		if (j == ARRAY_SIZE(vht80))
++			break;
++
++		cf1 = vht80[j] + 30;
++		break;
++	default:
++		cf1 = freq + chanmode->freq1_diff;
++		break;
++	}
++
++	return cf1;
++}
+-- 
+2.6.2
 
