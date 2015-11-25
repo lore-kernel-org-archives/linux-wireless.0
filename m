@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38370 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277AbbKZRvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:51:23 -0500
-Message-ID: <1448560280.2167.41.camel@sipsolutions.net> (sfid-20151126_185126_474566_D358D3ED)
-Subject: Re: [PATCH v2 4/8] cfg80211: reg: Properly handle rules for 5 and
- 10 MHz channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Thu, 26 Nov 2015 18:51:20 +0100
-In-Reply-To: <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192801_651522_A290ADE4)
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz>
-	 (sfid-20151123_192801_651522_A290ADE4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:35594 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754720AbbKYJQa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2015 04:16:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Stephan Mueller <smueller@chronox.de>,
+	"Sepehrdad\, Pouyan" <pouyans@qti.qualcomm.com>,
+	"Jacobson\, David" <djacobso@qti.qualcomm.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	"linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"linux-crypto\@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"nhorman\@tuxdriver.com" <nhorman@tuxdriver.com>
+Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
+References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
+	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
+	<55B60BC9.8040800@rempel-privat.de>
+	<3945775.m5HblJPgiO@tauon.atsec.com>
+	<8738043ith.fsf@kamboji.qca.qualcomm.com>
+	<3ec13417acdc48628adaedb68d259b9c@NASANEXM01E.na.qualcomm.com>
+	<CAFtRNNyWzRKQbq1wa8=6V=tOQzB3g9jEBLhAO7iSchNAzf=fkQ@mail.gmail.com>
+Date: Wed, 25 Nov 2015 11:16:22 +0200
+In-Reply-To: <CAFtRNNyWzRKQbq1wa8=6V=tOQzB3g9jEBLhAO7iSchNAzf=fkQ@mail.gmail.com>
+	(Nick Kossifidis's message of "Sat, 7 Nov 2015 17:39:21 -0600")
+Message-ID: <87io4qphg9.fsf@kamboji.qca.qualcomm.com> (sfid-20151125_101637_254144_4C3605B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
-> Regulatory rules are applied to channels as if the channel is at
-> least
-> 20 MHz wide. This is a problem when dealing with 5 and 10 MHz
-> channels
-> because side channels of a regulatory rule get disabled even when
-> they
-> fall into rule's frequency range.
-> 
-> This problem was already fixed in commit
-> 4edd56981c8fbb349b1529a2feaf772636eb1c83, but only for custom
-> regulatory
-> domains provided by drivers. Here we fix it also for all other (e.g.
-> user-supplied) regulatory domains.
-> 
-> Before that, similar commit was
-> reverted (e33e2241e272eddc38339692500bd1c7d8753a77) due to it
-> allowing
-> running AP on channel 12 in the US regulatory domain. I have checked
-> that this is not possible with this change:
-> 
->   # iw reg set US
->   # iw dev wlan0 interface add wlan0_ap  type __ap
->   # iw dev wlan0_ap set channel 12
->   command failed: Invalid argument (-22)
-> 
-Applied, with some fixups to the commit message :)
+Nick Kossifidis <mickflemm@gmail.com> writes:
 
-johannes
+> That was partially my intention too when I submitted
+> 2aa56cca3571fd08c0c38f3e2d4bb0bfb3def3c5 which mixes FFT measurements
+> to the entropy pool without providing any estimation on entropy
+> (entropy estimation is the wrong approach, read the papers on fortuna
+> for more information on that). I believe that this approach is better
+> than mine because FFT data is too much (high throughput) and may have
+> a negative impact on the pool when mixed like this (even without the
+> entropy count) so Kale please revert my patch also (I was about to
+> submit a request for reverting it and writing something similar when
+> this thread came up).
+
+Could you submit the revert as a patch and with the explonation in the
+commit log, please?
+
+-- 
+Kalle Valo
