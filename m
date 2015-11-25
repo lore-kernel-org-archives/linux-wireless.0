@@ -1,121 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:42862
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754221AbbK3ScM (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:5691 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbbKYKcv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 13:32:12 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath10k@lists.infradead.org
-Subject: [PATCH v2] ath10k: do not use coherent memory for allocated device memory chunks
-Date: Mon, 30 Nov 2015 19:32:01 +0100
-Message-Id: <1448908321-3042-1-git-send-email-nbd@openwrt.org> (sfid-20151130_193218_108877_9E49CBB6)
+	Wed, 25 Nov 2015 05:32:51 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/11] brcmfmac: Change error print on wlan0 existence.
+Date: Wed, 25 Nov 2015 11:32:39 +0100
+Message-ID: <1448447567-12189-4-git-send-email-arend@broadcom.com> (sfid-20151125_113256_163025_60163AF2)
+In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Coherent memory is more expensive to allocate (and constrained on some
-architectures where it has to be pre-allocated). It is also completely
-unnecessary, since the host has no reason to even access these allocated
-memory spaces
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+During initialization of the device, but also on some other
+moments the driver prints an error that the netdev already exists.
+This is a result of the way the driver is initializing the
+firmware and not really an error. The code is not treating it as
+an error either. This error print has resulted in many questions
+by users and is confusing and incorrect. This patch changes the
+error log into a debug info log.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 61 ++++++++++++++++++++++++-----------
- 1 file changed, 43 insertions(+), 18 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9021079..1386dd8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4300,34 +4300,58 @@ void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar, struct sk_buff *skb)
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_RESUME_REQ_EVENTID\n");
- }
- 
--static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
--				     u32 num_units, u32 unit_len)
-+static int ath10k_wmi_alloc_chunk(struct ath10k *ar, u32 req_id,
-+				  u32 num_units, u32 unit_len)
- {
- 	dma_addr_t paddr;
--	u32 pool_size;
-+	u32 pool_size = 0;
- 	int idx = ar->wmi.num_mem_chunks;
-+	void *vaddr = NULL;
- 
--	pool_size = num_units * round_up(unit_len, 4);
-+	if (ar->wmi.num_mem_chunks == ARRAY_SIZE(ar->wmi.mem_chunks))
-+		return -ENOMEM;
- 
--	if (!pool_size)
--		return -EINVAL;
-+	while (!vaddr && num_units) {
-+		pool_size = num_units * round_up(unit_len, 4);
-+		if (!pool_size)
-+			return -EINVAL;
- 
--	ar->wmi.mem_chunks[idx].vaddr = dma_alloc_coherent(ar->dev,
--							   pool_size,
--							   &paddr,
--							   GFP_KERNEL);
--	if (!ar->wmi.mem_chunks[idx].vaddr) {
--		ath10k_warn(ar, "failed to allocate memory chunk\n");
--		return -ENOMEM;
-+		vaddr = kzalloc(pool_size, GFP_KERNEL | __GFP_NOWARN);
-+		if (!vaddr)
-+			num_units /= 2;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 8d16f50..9038932 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -811,14 +811,15 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 	 * in case we missed the BRCMF_E_IF_DEL event.
+ 	 */
+ 	if (ifp) {
+-		brcmf_err("ERROR: netdev:%s already exists\n",
+-			  ifp->ndev->name);
+ 		if (ifidx) {
++			brcmf_err("ERROR: netdev:%s already exists\n",
++				  ifp->ndev->name);
+ 			netif_stop_queue(ifp->ndev);
+ 			brcmf_net_detach(ifp->ndev);
+ 			drvr->iflist[bsscfgidx] = NULL;
+ 		} else {
+-			brcmf_err("ignore IF event\n");
++			brcmf_dbg(INFO, "netdev:%s ignore IF event\n",
++				  ifp->ndev->name);
+ 			return ERR_PTR(-EINVAL);
+ 		}
  	}
- 
--	memset(ar->wmi.mem_chunks[idx].vaddr, 0, pool_size);
-+	if (!num_units)
-+		return -ENOMEM;
-+
-+	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_TO_DEVICE);
-+	if (dma_mapping_error(ar->dev, paddr)) {
-+		kfree(vaddr);
-+		return -ENOMEM;
-+	}
- 
-+	ar->wmi.mem_chunks[idx].vaddr = vaddr;
- 	ar->wmi.mem_chunks[idx].paddr = paddr;
- 	ar->wmi.mem_chunks[idx].len = pool_size;
- 	ar->wmi.mem_chunks[idx].req_id = req_id;
- 	ar->wmi.num_mem_chunks++;
- 
-+	return num_units;
-+}
-+
-+static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
-+				     u32 num_units, u32 unit_len)
-+{
-+	int ret;
-+
-+	while (num_units) {
-+		ret = ath10k_wmi_alloc_chunk(ar, req_id, num_units, unit_len);
-+		if (ret < 0)
-+			return ret;
-+
-+		num_units -= ret;
-+	}
-+
- 	return 0;
- }
- 
-@@ -7705,10 +7729,11 @@ void ath10k_wmi_free_host_mem(struct ath10k *ar)
- 
- 	/* free the host memory chunks requested by firmware */
- 	for (i = 0; i < ar->wmi.num_mem_chunks; i++) {
--		dma_free_coherent(ar->dev,
--				  ar->wmi.mem_chunks[i].len,
--				  ar->wmi.mem_chunks[i].vaddr,
--				  ar->wmi.mem_chunks[i].paddr);
-+		dma_unmap_single(ar->dev,
-+				 ar->wmi.mem_chunks[i].paddr,
-+				 ar->wmi.mem_chunks[i].len,
-+				 DMA_TO_DEVICE);
-+		kfree(ar->wmi.mem_chunks[i].vaddr);
- 	}
- 
- 	ar->wmi.num_mem_chunks = 0;
 -- 
-2.2.2
+1.9.1
 
