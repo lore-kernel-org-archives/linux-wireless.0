@@ -1,133 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58985 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757770AbbKSGx4 (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:38507 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754295AbbKYN7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:53:56 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/26] staging: wilc1000: rename u8P2Precvrandom variable
-Date: Thu, 19 Nov 2015 15:56:17 +0900
-Message-ID: <1447916195-24851-8-git-send-email-glen.lee@atmel.com> (sfid-20151119_075358_932280_56EFCB85)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Nov 2015 08:59:30 -0500
+Received: by wmec201 with SMTP id c201so71305785wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2015 05:59:29 -0800 (PST)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Sven Eckelmann <sven@open-mesh.com>
+Subject: [PATCH v3 2/4] iw: add VHT80 support for 802.11s
+Date: Wed, 25 Nov 2015 14:59:16 +0100
+Message-Id: <1448459959-23641-2-git-send-email-sven@open-mesh.com> (sfid-20151125_145933_213473_06142314)
+In-Reply-To: <1448459959-23641-1-git-send-email-sven@open-mesh.com>
+References: <1448459959-23641-1-git-send-email-sven@open-mesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+iw mesh supports non-HT and HT channel widths like HT20 or NOHT. But the
+Linux 802.11s implementation also supports VHT80 which can be specified
+during the mesh join.
 
-This patch renames u8P2Precvrandom variable to p2p_recv_random
-to avoid camelcase.
+    iw dev mesh0 mesh join "meshnet" freq 5180 80MHz
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+v3:
+ * split patch into two different patches (0001/0002) as request by
+   Julian Calaby <julian.calaby@gmail.com>
+ * change join_ocb to also use get_cf1
+ * move NOHT to the last entry in the mesh/ibss join usage texts as
+   requested by Julian Calaby <julian.calaby@gmail.com>
+v2:
+ * rebase from v4.3-ish version to current master
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index dd8d404..904b214 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -173,7 +173,7 @@ static u8 wlan_channel = INVALID_CHANNEL;
- static u8 curr_channel;
- static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
- static u8 p2p_local_random = 0x01;
--static u8 u8P2Precvrandom = 0x00;
-+static u8 p2p_recv_random = 0x00;
- static u8 u8P2P_vendorspec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
- static bool bWilc_ie;
+ mesh.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/mesh.c b/mesh.c
+index 593ab7a..d674d61 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -466,6 +466,10 @@ static int join_mesh(struct nl80211_state *state,
+ 		  .width = NL80211_CHAN_WIDTH_20_NOHT,
+ 		  .freq1_diff = 0,
+ 		  .chantype = NL80211_CHAN_NO_HT },
++		{ .name = "80MHz",
++		  .width = NL80211_CHAN_WIDTH_80,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
+ 	};
  
-@@ -642,7 +642,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 		PRINT_ER("Received MAC_DISCONNECTED from firmware with reason %d on dev [%p]\n",
- 			 pstrDisconnectNotifInfo->u16reason, priv->dev);
- 		p2p_local_random = 0x01;
--		u8P2Precvrandom = 0x00;
-+		p2p_recv_random = 0x00;
- 		bWilc_ie = false;
- 		eth_zero_addr(priv->au8AssociatedBss);
- 		wilc_wlan_set_bssid(priv->dev, NullBssid);
-@@ -1072,7 +1072,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- 	PRINT_D(CFG80211_DBG, "Disconnecting with reason code(%d)\n", reason_code);
- 
- 	p2p_local_random = 0x01;
--	u8P2Precvrandom = 0x00;
-+	p2p_recv_random = 0x00;
- 	bWilc_ie = false;
- 	pstrWFIDrv->p2p_timeout = 0;
- 
-@@ -2001,15 +2001,15 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 							if (!bWilc_ie) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
- 									if (!memcmp(u8P2P_vendorspec, &buff[i], 6)) {
--										u8P2Precvrandom = buff[i + 6];
-+										p2p_recv_random = buff[i + 6];
- 										bWilc_ie = true;
--										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", u8P2Precvrandom);
-+										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", p2p_recv_random);
- 										break;
- 									}
- 								}
- 							}
- 						}
--						if (p2p_local_random > u8P2Precvrandom)	{
-+						if (p2p_local_random > p2p_recv_random)	{
- 							if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
- 							      || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
-@@ -2020,7 +2020,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 								}
- 							}
- 						} else {
--							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
-+							PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
- 						}
- 					}
- 
-@@ -2293,7 +2293,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 					if (!memcmp(p2p_oui, &buf[ACTION_SUBTYPE_ID + 1], 4)) {
- 						/*For the connection of two WILC's connection generate a rand number to determine who will be a GO*/
- 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP)) {
--							if (p2p_local_random == 1 && u8P2Precvrandom < p2p_local_random) {
-+							if (p2p_local_random == 1 && p2p_recv_random < p2p_local_random) {
- 								get_random_bytes(&p2p_local_random, 1);
- 								p2p_local_random++;
- 							}
-@@ -2301,8 +2301,8 @@ static int mgmt_tx(struct wiphy *wiphy,
- 
- 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
- 						      || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
--							if (p2p_local_random > u8P2Precvrandom)	{
--								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
-+							if (p2p_local_random > p2p_recv_random)	{
-+								PRINT_D(GENERIC_DBG, "LOCAL WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
- 
- 								/*Search for the p2p information information element , after the Public action subtype theres a byte for teh dialog token, skip that*/
- 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
-@@ -2328,7 +2328,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 									mgmt_tx->size = buf_len;
- 								}
- 							} else {
--								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, u8P2Precvrandom);
-+								PRINT_D(GENERIC_DBG, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
- 							}
- 						}
- 
-@@ -2559,7 +2559,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
- 	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
- 	p2p_local_random = 0x01;
--	u8P2Precvrandom = 0x00;
-+	p2p_recv_random = 0x00;
- 
- 	bWilc_ie = false;
- 
+ 	if (argc < 1)
+@@ -604,7 +608,7 @@ static int join_mesh(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
++COMMAND(mesh, join, "<mesh ID> [[freq <freq in MHz> <HT20|HT40+|HT40-|NOHT|80MHz>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>]], [mcast-rate <rate in Mbps>]"
+ 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
+ 	" [vendor_sync on|off] [<param>=<value>]*",
 -- 
-1.9.1
+2.6.2
 
