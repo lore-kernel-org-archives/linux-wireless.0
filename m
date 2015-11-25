@@ -1,78 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58065 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751711AbbKQOqF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 09:46:05 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: mesh: fix call_rcu() usage
-Date: Tue, 17 Nov 2015 15:46:01 +0100
-Message-Id: <1447771561-28070-1-git-send-email-johannes@sipsolutions.net> (sfid-20151117_154609_445829_918D6751)
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20307 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbbKYKcv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2015 05:32:51 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 04/11] brcmfmac: no retries on rxglom superframe errors
+Date: Wed, 25 Nov 2015 11:32:40 +0100
+Message-ID: <1448447567-12189-5-git-send-email-arend@broadcom.com> (sfid-20151125_113313_999426_C722E842)
+In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-When using call_rcu(), the called function may be delayed quite
-significantly, and without a matching rcu_barrier() there's no
-way to be sure it has finished.
-Therefore, global state that could be gone/freed/reused should
-never be touched in the callback.
+Aborting the current read attempt on the superframe also removes the
+packet from the pipeline. Retries should not be attempted on the next
+packet since it would not be a superframe(either a superframe descriptor
+or other data packet) and should not be handled by brcmf_sdio_rxglom
 
-Fix this in mesh by moving the atomic_dec() into the caller;
-that's not really a problem since we already unlinked the path
-and it will be destroyed anyway.
-
-This fixes a crash Jouni observed when running certain tests in
-a certain order, in which the mesh interface was torn down, the
-memory reused for a function pointer (work struct) and running
-that then crashed since the pointer had been decremented by 1,
-resulting in an invalid instruction byte stream.
-
-Cc: stable@vger.kernel.org
-Fixes: eb2b9311fd00 ("mac80211: mesh path table implementation")
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/mesh_pathtbl.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 30 ++++++----------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index b890e225a8f1..b3b44a5dd375 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -779,10 +779,8 @@ void mesh_plink_broken(struct sta_info *sta)
- static void mesh_path_node_reclaim(struct rcu_head *rp)
- {
- 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
--	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 7e74ac3..bf3c281 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -460,7 +460,6 @@ struct brcmf_sdio {
  
- 	del_timer_sync(&node->mpath->timer);
--	atomic_dec(&sdata->u.mesh.mpaths);
- 	kfree(node->mpath);
- 	kfree(node);
- }
-@@ -790,8 +788,9 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
- /* needs to be called with the corresponding hashwlock taken */
- static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
- {
--	struct mesh_path *mpath;
--	mpath = node->mpath;
-+	struct mesh_path *mpath = node->mpath;
-+	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
-+
- 	spin_lock(&mpath->state_lock);
- 	mpath->flags |= MESH_PATH_RESOLVING;
- 	if (mpath->is_gate)
-@@ -799,6 +798,7 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
- 	hlist_del_rcu(&node->list);
- 	call_rcu(&node->rcu, mesh_path_node_reclaim);
- 	spin_unlock(&mpath->state_lock);
-+	atomic_dec(&sdata->u.mesh.mpaths);
- 	atomic_dec(&tbl->entries);
- }
+ 	struct sk_buff *glomd;	/* Packet containing glomming descriptor */
+ 	struct sk_buff_head glom; /* Packet list for glommed superframe */
+-	uint glomerr;		/* Glom packet read errors */
  
+ 	u8 *rxbuf;		/* Buffer for receiving control packets */
+ 	uint rxblen;		/* Allocated length of rxbuf */
+@@ -1654,20 +1653,15 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 		sdio_release_host(bus->sdiodev->func[1]);
+ 		bus->sdcnt.f2rxdata++;
+ 
+-		/* On failure, kill the superframe, allow a couple retries */
++		/* On failure, kill the superframe */
+ 		if (errcode < 0) {
+ 			brcmf_err("glom read of %d bytes failed: %d\n",
+ 				  dlen, errcode);
+ 
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			if (bus->glomerr++ < 3) {
+-				brcmf_sdio_rxfail(bus, true, true);
+-			} else {
+-				bus->glomerr = 0;
+-				brcmf_sdio_rxfail(bus, true, false);
+-				bus->sdcnt.rxglomfail++;
+-				brcmf_sdio_free_glom(bus);
+-			}
++			brcmf_sdio_rxfail(bus, true, false);
++			bus->sdcnt.rxglomfail++;
++			brcmf_sdio_free_glom(bus);
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			return 0;
+ 		}
+@@ -1708,19 +1702,11 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 		}
+ 
+ 		if (errcode) {
+-			/* Terminate frame on error, request
+-				 a couple retries */
++			/* Terminate frame on error */
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			if (bus->glomerr++ < 3) {
+-				/* Restore superframe header space */
+-				skb_push(pfirst, sfdoff);
+-				brcmf_sdio_rxfail(bus, true, true);
+-			} else {
+-				bus->glomerr = 0;
+-				brcmf_sdio_rxfail(bus, true, false);
+-				bus->sdcnt.rxglomfail++;
+-				brcmf_sdio_free_glom(bus);
+-			}
++			brcmf_sdio_rxfail(bus, true, false);
++			bus->sdcnt.rxglomfail++;
++			brcmf_sdio_free_glom(bus);
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			bus->cur_read.len = 0;
+ 			return 0;
 -- 
-2.6.2
+1.9.1
 
