@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39186 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753349AbbKXNqF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 08:46:05 -0500
-Date: Tue, 24 Nov 2015 16:45:51 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: zhaolei@cn.fujitsu.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: Fix debugfs_create_*'s error checking method for wireless/rt2x00/
-Message-ID: <20151124134551.GA25396@mwanda> (sfid-20151124_144613_685410_08197F15)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from m50-133.163.com ([123.125.50.133]:34581 "EHLO m50-133.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753744AbbKYNNG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2015 08:13:06 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/7] iwlwifi: fix a problematic usage of WARN_ON_ONCE()
+Date: Wed, 25 Nov 2015 21:12:17 +0800
+Message-Id: <7701ed112cc71a9a17ba5b3022166011a98d0dca.1448456395.git.geliangtang@163.com> (sfid-20151125_141452_534186_9A64EAFF)
+In-Reply-To: <86c73f180d3054c1bf17bdac8c89026209167c9b.1448456395.git.geliangtang@163.com>
+References: <86c73f180d3054c1bf17bdac8c89026209167c9b.1448456395.git.geliangtang@163.com>
+In-Reply-To: <582529c23f77af64373f59fa92e29186df700d79.1448456395.git.geliangtang@163.com>
+References: <86c73f180d3054c1bf17bdac8c89026209167c9b.1448456395.git.geliangtang@163.com> <8bb789c0803579a01e1ee977ed67408c422acd79.1448456395.git.geliangtang@163.com> <582529c23f77af64373f59fa92e29186df700d79.1448456395.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Zhaolei,
+WARN_ON_ONCE() takes a condition rather than a format string. This
+patch converted WARN_ON_ONCE() to WARN_ONCE() instead.
 
-The patch cfa3fa405a5e: "Fix debugfs_create_*'s error checking method
-for wireless/rt2x00/" from Oct 22, 2008, leads to the following
-static checker warning:
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	drivers/net/wireless/ralink/rt2x00/rt2x00debug.c:674 rt2x00debug_register()
-	warn: 'intf->driver_entry' isn't an ERR_PTR
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index d1ad103..58d7bee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1827,7 +1827,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 		rate->type = lq_sta->is_vht ? LQ_VHT_MIMO2 : LQ_HT_MIMO2;
+ 		rate_mask = lq_sta->active_mimo2_rate;
+ 	} else {
+-		WARN_ON_ONCE("Bad column mode");
++		WARN_ONCE(1, "Bad column mode");
+ 	}
+ 
+ 	if (column->mode != RS_LEGACY) {
+-- 
+2.5.0
 
-drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-   651  void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
-   652  {
-   653          const struct rt2x00debug *debug = rt2x00dev->ops->debugfs;
-   654          struct rt2x00debug_intf *intf;
-   655  
-   656          intf = kzalloc(sizeof(struct rt2x00debug_intf), GFP_KERNEL);
-   657          if (!intf) {
-   658                  rt2x00_err(rt2x00dev, "Failed to allocate debug handler\n");
-   659                  return;
-   660          }
-   661  
-   662          intf->debug = debug;
-   663          intf->rt2x00dev = rt2x00dev;
-   664          rt2x00dev->debugfs_intf = intf;
-   665  
-   666          intf->driver_folder =
-   667              debugfs_create_dir(intf->rt2x00dev->ops->name,
-   668                                 rt2x00dev->hw->wiphy->debugfsdir);
-   669          if (IS_ERR(intf->driver_folder) || !intf->driver_folder)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This code ensures that debugfs is enabled.
 
-   670                  goto exit;
-   671  
-   672          intf->driver_entry =
-   673              rt2x00debug_create_file_driver("driver", intf, &intf->driver_blob);
-   674          if (IS_ERR(intf->driver_entry) || !intf->driver_entry)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-So there is no need to check again.
-
-rt2x00debug_create_file_driver() is not a raw debugfs call, but
-generally the correct thing is that we should not check debugfs
-functions for errors.  Debugfs functions are designed so that, for
-example, if debugfs_create_dir() fails then the files will just be
-created in the root directory.  You don't need to have error checking
-for debugfs_create_dir(), even if it returns null that's handled.
-
-   675                  goto exit;
-   676  
-   677          intf->chipset_entry =
-   678              rt2x00debug_create_file_chipset("chipset",
-   679                                              intf, &intf->chipset_blob);
-   680          if (IS_ERR(intf->chipset_entry) || !intf->chipset_entry)
-   681                  goto exit;
-   682  
-   683          intf->dev_flags = debugfs_create_file("dev_flags", S_IRUSR,
-   684                                                intf->driver_folder, intf,
-   685                                                &rt2x00debug_fop_dev_flags);
-   686          if (IS_ERR(intf->dev_flags) || !intf->dev_flags)
-   687                  goto exit;
-   688  
-
-regards,
-dan carpenter
