@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51884 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759595AbbKTLzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 06:55:41 -0500
-Message-ID: <1448020533.3141.27.camel@sipsolutions.net> (sfid-20151120_125546_394051_3AB16D8C)
-Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
- debug messages
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
-	Dave Young <dyoung@redhat.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, davem@davemloft.net
-Date: Fri, 20 Nov 2015 12:55:33 +0100
-In-Reply-To: <20151115192547.3fd1b3cc@mir>
-References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
-	 <20151115192547.3fd1b3cc@mir>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:10271 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932277AbbKYC5U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2015 21:57:20 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/10] staging: wilc1000: Handle_SetMulticastFilter(): fixes right shifting more than type allows
+Date: Wed, 25 Nov 2015 11:59:49 +0900
+Message-ID: <1448420389-4192-10-git-send-email-glen.lee@atmel.com> (sfid-20151125_035724_699961_1037ACB0)
+In-Reply-To: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+References: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-11-15 at 19:25 +0100, Stefan Lippers-Hollmann wrote:
-> Hi
-> 
-> On 2015-11-15, Dave Young wrote:
-> > cfg80211 module prints a lot of messages like below. Actually
-> > printing once is acceptable but sometimes it will print again and
-> > again, it looks very annoying. It is better to change these detail
-> > messages to debugging only.
-> 
-> It is a lot of info, easily repeated 3 times on boot, but it's also
-> the only real chance to determine why you ended up with the
-> regulatory domain settings you got, rather than just the values
-> itself. Given that a lot (most?) of officially shipping wireless
-> devices are misconfigured (wrong EEPROM regdom settings for the
-> region they're sold in) and considering that the limits can even
-> change at runtime (IEEE 802.11d), it is imho quite important not just
-> to be able what the current restrictions (iw reg get) are, but also
-> why the kernel settled on those.
-> 
+From: Leo Kim <leo.kim@atmel.com>
 
-Hm. I kinda sympathize with both points of view here, not sure what to
-do.
+This patch fixes the warning reported by smatch.
+ - Handle_SetMulticastFilter() warn: right shifting more than type allows
 
-Maybe we could skip this for the world regdomain only? It doesn't
-really change, and we typically don't care that much for it? That'd
-probably get rid of most of the lines already.
+That is unnecessary action of boolean type. just assign 0.
 
-Alternatively, perhaps the internal computations should be more
-transparently visible through some other mechanism?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c309deb..3b986cb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2713,9 +2713,9 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
+ 
+ 	pu8CurrByte = wid.val;
+ 	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
++	*pu8CurrByte++ = 0;
++	*pu8CurrByte++ = 0;
++	*pu8CurrByte++ = 0;
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+-- 
+1.9.1
+
