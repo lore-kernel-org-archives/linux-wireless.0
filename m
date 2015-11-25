@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:36336 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbbKJNNF (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:5691 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbbKYKcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 08:13:05 -0500
-Received: by lbblt2 with SMTP id lt2so100752574lbb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2015 05:13:03 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/9] ath10k: rename function to adhere to naming convention
-Date: Tue, 10 Nov 2015 14:10:48 +0100
-Message-Id: <1447161055-2283-3-git-send-email-michal.kazior@tieto.com> (sfid-20151110_141337_833875_ADCE16CA)
-In-Reply-To: <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
- <1447161055-2283-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 25 Nov 2015 05:32:52 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/11] brcmfmac: Return actual error by fwil.
+Date: Wed, 25 Nov 2015 11:32:38 +0100
+Message-ID: <1448447567-12189-3-git-send-email-arend@broadcom.com> (sfid-20151125_113316_294751_356DB724)
+In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All functions should have ath10k_{filename}_
-prefixes.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+FWIL is always mapping back errors to EBADE. This is not very
+conventient when trying to understand problems by reading logs.
+Some callers print the error code, but that is quite useless
+when the exact error code is not returned. It also makes it
+impossible to differentiate based on error code. This patch
+changes the return of EBADE into the actual error code.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2eb647913a9f..374187e25f2d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3146,8 +3146,10 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+index bbf7abb..f6a2df9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+@@ -126,7 +126,8 @@ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
+ 
+ 	brcmf_dbg(FIL, "Failed: %s (%d)\n",
+ 		  brcmf_fil_get_errstr((u32)(-err)), err);
+-	return -EBADE;
++
++	return err;
  }
  
- static enum ath10k_hw_txrx_mode
--ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
--		       struct ieee80211_sta *sta, struct sk_buff *skb)
-+ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
-+			   struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta,
-+			   struct sk_buff *skb)
- {
- 	const struct ieee80211_hdr *hdr = (void *)skb->data;
- 	__le16 fc = hdr->frame_control;
-@@ -3660,7 +3662,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
--	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
-+	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
-+								skb);
- 
- 	switch (ATH10K_SKB_CB(skb)->txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
+ s32
 -- 
-2.1.4
+1.9.1
 
