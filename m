@@ -1,43 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:57976 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbKKIvv (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53647 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbbKYKcx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 03:51:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	devel@driverdev.osuosl.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 19/20] staging/wilc1000: use more regular probing
-Date: Wed, 11 Nov 2015 09:51:38 +0100
-Message-ID: <3835296.cXNgyFJAb6@wuerfel> (sfid-20151111_095210_613409_7809A10E)
-In-Reply-To: <CAHp75VfpbEC0T54quQb0NV25=oCpH_1yDZnvSFdrQAe0VrnQ9g@mail.gmail.com>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de> <1447198960-2760143-20-git-send-email-arnd@arndb.de> <CAHp75VfpbEC0T54quQb0NV25=oCpH_1yDZnvSFdrQAe0VrnQ9g@mail.gmail.com>
+	Wed, 25 Nov 2015 05:32:53 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
+Date: Wed, 25 Nov 2015 11:32:44 +0100
+Message-ID: <1448447567-12189-9-git-send-email-arend@broadcom.com> (sfid-20151125_113309_671311_0B12771F)
+In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 November 2015 09:54:57 Andy Shevchenko wrote:
-> > diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-> > index f2ea8280b8f8..72b524a98cba 100644
-> > --- a/drivers/staging/wilc1000/linux_wlan_common.h
-> > +++ b/drivers/staging/wilc1000/linux_wlan_common.h
-> > @@ -38,9 +38,6 @@ enum debug_region {
-> >  #define FIRM_DBG                (1 << Firmware_debug)
-> >
-> >  #if defined (WILC_DEBUGFS)
-> 
-> if this is still in use?
-> Is it about DEBUG or DEBUGFS?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-It's DEBUGFS, and it's currently set unconditionally by the Makefile.
+By default the 5G band has an advantage of 8 dBm on the RSSI when
+it comes to selection during join and roam. This patch adds a
+module param to make this value configurable. Using the value 99
+results in configuration that 5G has always preference over 2.4G.
 
-	Arnd
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 31 +++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 474de11..6bc0ae9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/kernel.h>
++#include <linux/module.h>
+ #include <linux/string.h>
+ #include <linux/netdevice.h>
+ #include <brcmu_wifi.h>
+@@ -32,8 +33,18 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+ #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
+ #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ 
+-/* boost value for RSSI_DELTA in preferred join selection */
++/* default boost value for RSSI_DELTA in preferred join selection */
+ #define BRCMF_JOIN_PREF_RSSI_BOOST	8
++#define BRCMF_RSSI_BOOST_IS_5G		99
++
++/* Module param joinboost_5g used for preferred join selection.
++ * Use value 99 to configure preferred join to choose 5G always over 2.4G, any
++ * other value configures the advantage of 5G signal strength over 2.4G signal
++ * strength.
++ */
++static int brcmf_joinboost_5g_rssi = BRCMF_JOIN_PREF_RSSI_BOOST;
++module_param_named(joinboost_5g, brcmf_joinboost_5g_rssi, int, 0);
++MODULE_PARM_DESC(joinboost_5g, "Join preference 5G RSSI boost");
+ 
+ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ {
+@@ -106,11 +117,19 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		goto done;
+ 	}
+ 
+-	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
+-	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
+-	join_pref_params[0].len = 2;
+-	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
+-	join_pref_params[0].band = WLC_BAND_5G;
++	if (brcmf_joinboost_5g_rssi == BRCMF_RSSI_BOOST_IS_5G) {
++		/* Setup join_pref to select 5GHz over 2.4Ghz */
++		join_pref_params[0].type = BRCMF_JOIN_PREF_BAND;
++		join_pref_params[0].len = 2;
++		join_pref_params[0].rssi_gain = 0;
++		join_pref_params[0].band = WLC_BAND_5G;
++	} else {
++		/* Setup join_pref to select target by RSSI (boost on 5GHz) */
++		join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
++		join_pref_params[0].len = 2;
++		join_pref_params[0].rssi_gain = brcmf_joinboost_5g_rssi;
++		join_pref_params[0].band = WLC_BAND_5G;
++	}
+ 	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
+ 	join_pref_params[1].len = 2;
+ 	join_pref_params[1].rssi_gain = 0;
+-- 
+1.9.1
+
