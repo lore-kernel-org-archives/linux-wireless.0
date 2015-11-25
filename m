@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23000 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759590AbbKTLCM convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:10195 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755298AbbKYC44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2015 06:02:12 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/8] various mac80211 patches
-Date: Fri, 20 Nov 2015 11:02:08 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8F6129@hasmsx107.ger.corp.intel.com> (sfid-20151120_120216_429960_15C0F722)
-References: <1447748680-23075-1-git-send-email-emmanuel.grumbach@intel.com>
- <1448016142.3141.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 24 Nov 2015 21:56:56 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 06/10] staging: wilc1000: wilc_init(): fixes inconsistent returns
+Date: Wed, 25 Nov 2015 11:59:45 +0900
+Message-ID: <1448420389-4192-6-git-send-email-glen.lee@atmel.com> (sfid-20151125_035659_287536_AF702651)
+In-Reply-To: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+References: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch fixes the warning reported by smatch.
+ - wilc_init() warn: inconsistent returns 'sem:&hif_drv->sem_cfg_values'
 
-On 11/20/2015 12:42 PM, Johannes Berg wrote:
-> I'm ignoring patches 1-3 since I already have them pending.
->
-> I've applied 6-8 to mac80211 now.
->
-> I'll leave 4 and 5 pending for now and apply them to mac80211-next,
-> unless you speak up now and tell me you really want those driver fixes
-> they prepare for. Doesn't really seem relevant though.
+No need to up the sema here since down was not called before get here.
 
-mac80211-next is good enough for 4 and 5.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index da4f4c6..3aea6ec 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3940,7 +3940,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	return result;
+ 
+ _fail_timer_2:
+-	up(&hif_drv->sem_cfg_values);
+ 	del_timer_sync(&hif_drv->connect_timer);
+ 	del_timer_sync(&hif_drv->scan_timer);
+ 	kthread_stop(hif_thread_handler);
+-- 
+1.9.1
+
