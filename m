@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41731 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751563AbbKWPGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 10:06:17 -0500
-Subject: Re: [RFC v5 4/5] mac80211: use Kconfig counters to elide unnecessary
- code
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
- <1447365652-23716-5-git-send-email-johannes@sipsolutions.net>
- <5653283C.8050207@suse.com> <1448290682.5792.6.camel@sipsolutions.net>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:51911 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736AbbKYNrP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2015 08:47:15 -0500
+Subject: [PATCH 3/6] ath10k: always show bmi chip ids and subdevice ids
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-From: Michal Marek <mmarek@suse.com>
-Message-ID: <56532B67.5080508@suse.com> (sfid-20151123_160620_841452_81D37DD1)
-Date: Mon, 23 Nov 2015 16:06:15 +0100
+Date: Wed, 25 Nov 2015 15:38:19 +0200
+Message-ID: <20151125133819.25507.20279.stgit@potku.adurom.net> (sfid-20151125_144720_867602_2ED16FE4)
+In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
+References: <20151125133654.25507.10863.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1448290682.5792.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-11-23 15:58, Johannes Berg wrote:
-> On Mon, 2015-11-23 at 15:52 +0100, Michal Marek wrote:
->>  
->> So one issue with this logic is that it is not safe to build and use an
->> out-of-tree mac80211 driver after the kernel has been built. Also, any
->> new driver needs the 'count MAC80211_NUM_DRIVERS' annotation, but there
->> is the runtime check to catch omissions. 
-> 
-> Indeed, the runtime check will catch both of these.
+That way we can split the messages to be printed in different stages of
+device initialisation.
 
-Will it catch the former case? The driver built out of has not way to
-select or increment any of the CONFIG_MAC80211_* options.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
->> Since this is targeting users
->> of very specific configs, how about an opt-in scheme à la
->>
->> - User has to select CONFIG_MAC80211_SINGLE_DRIVER, the help text
->>   explains the caveats and lists drivers known to work in such mode.
->> - mac80211 uses the Kconfig-defined constants + dynamic bits iff
->>   CONFIG_MAC80211_SINGLE_DRIVER=y, otherwise it behaves as before.
->> - Some build- or compile-time check ensuring that we are not building /
->>   loading multiple drivers with CONFIG_MAC80211_SINGLE_DRIVER=y.
-> 
-> That'd be possible - but I know of at least one potential use case that
-> would like to have two similar drivers, with similar flags: some
-> routers ship with ath9k hardware for the 2.4 GHz band and ath10k
-> hardware for the 5 GHz band. Doing "single-driver" and avoiding the
-> counters would not allow those to have any kind of optimisation, and
-> such low-power platforms are the ones who'd most likely benefit from
-> it...
-
-I see.
-
-
-> I'd actually Cc'ed you out of confusion, thinking you were maintaining
-> kconfig. I guess I really should've Cc'ed Yann instead.
-
-That's fine. It is a very interesting problem :-).
-
-Michal
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 4c0e0a1ef0f1..2bc7ae21ade4 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -130,25 +130,25 @@ void ath10k_print_driver_info(struct ath10k *ar)
+ 	ath10k_core_get_fw_features_str(ar, fw_features, sizeof(fw_features));
+ 
+ 	if (ar->id.bmi_ids_valid)
+-		scnprintf(boardinfo, sizeof(boardinfo), "bmi %d:%d",
++		scnprintf(boardinfo, sizeof(boardinfo), "%d:%d",
+ 			  ar->id.bmi_chip_id, ar->id.bmi_board_id);
+ 	else
+-		scnprintf(boardinfo, sizeof(boardinfo), "sub %04x:%04x",
+-			  ar->id.subsystem_vendor, ar->id.subsystem_device);
++		scnprintf(boardinfo, sizeof(boardinfo), "N/A");
+ 
+-	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x %s",
++	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x sub %04x:%04x",
+ 		    ar->hw_params.name,
+ 		    ar->target_version,
+ 		    ar->chip_id,
+-		    boardinfo);
++		    ar->id.subsystem_vendor, ar->id.subsystem_device);
+ 
+ 	ath10k_info(ar, "firmware ver %s api %d features %s\n",
+ 		    ar->hw->wiphy->fw_version,
+ 		    ar->fw_api,
+ 		    fw_features);
+ 
+-	ath10k_info(ar, "board_file api %d",
+-		    ar->bd_api);
++	ath10k_info(ar, "board_file api %d bmi_id %s",
++		    ar->bd_api,
++		    boardinfo);
+ 
+ 	ath10k_info(ar, "kconfig debug %d debugfs %d tracing %d dfs %d testmode %d\n",
+ 		    config_enabled(CONFIG_ATH10K_DEBUG),
 
