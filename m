@@ -1,60 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37856 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031061AbbKFCSo (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42415 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbbKYNrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:18:44 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 67/73] staging: wilc1000: rename Handle_set_IPAddress function
-Date: Fri, 6 Nov 2015 11:20:06 +0900
-Message-ID: <1446776412-30670-18-git-send-email-glen.lee@atmel.com> (sfid-20151106_031851_389913_6EE27090)
-In-Reply-To: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
-References: <1446776412-30670-1-git-send-email-glen.lee@atmel.com>
+	Wed, 25 Nov 2015 08:47:16 -0500
+Subject: [PATCH 5/6] ath10k: print crc32 checksums for firmware and board files
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 25 Nov 2015 15:38:34 +0200
+Message-ID: <20151125133834.25507.23767.stgit@potku.adurom.net> (sfid-20151125_144721_451839_504DDA5E)
+In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
+References: <20151125133654.25507.10863.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+To detect cases if the firmare or board file is corrupted or otherwise modified print crc32 value
+of both. Now the output looks like:
 
-This patch renames Handle_set_IPAddress function to handle_set_ip_address
-to avoid camelcase.
+ath10k_pci 0000:02:00.0: pci irq msi interrupts 1 irq_mode 0 reset_mode 0
+ath10k_pci 0000:02:00.0: qca99x0 hw2.0 target 0x01000000 chip_id 0x003801ff sub 168c:0002
+ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
+ath10k_pci 0000:02:00.0: firmware ver 10.4.1.00030-1 api 5 features no-p2p crc32 d2901e01
+ath10k_pci 0000:02:00.0: board_file api 1 bmi_id 1:1 crc32 7e56fd07
+ath10k_pci 0000:02:00.0: htt-ver 2.2 wmi-op 6 htt-op 4 cal otp max-sta 512 raw 0 hwcrypto 1
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/Kconfig |    1 +
+ drivers/net/wireless/ath/ath10k/debug.c |   12 ++++++++----
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 504763e..4612723 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -396,7 +396,7 @@ static s32 handle_set_operation_mode(struct host_if_drv *hif_drv,
- 	return result;
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 72acb822bb11..03aa35f999a1 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -2,6 +2,7 @@ config ATH10K
+         tristate "Atheros 802.11ac wireless cards support"
+         depends on MAC80211 && HAS_DMA
+ 	select ATH_COMMON
++	select CRC32
+         ---help---
+           This module adds support for wireless adapters based on
+           Atheros IEEE 802.11ac family of chipsets.
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index ebe3e52cdd1d..79d9426426da 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -19,6 +19,8 @@
+ #include <linux/debugfs.h>
+ #include <linux/vmalloc.h>
+ #include <linux/utsname.h>
++#include <linux/crc32.h>
++#include <linux/firmware.h>
+ 
+ #include "core.h"
+ #include "debug.h"
+@@ -141,10 +143,11 @@ void ath10k_debug_print_hwfw_info(struct ath10k *ar)
+ 		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED),
+ 		    config_enabled(CONFIG_NL80211_TESTMODE));
+ 
+-	ath10k_info(ar, "firmware ver %s api %d features %s\n",
++	ath10k_info(ar, "firmware ver %s api %d features %s crc32 %08x\n",
+ 		    ar->hw->wiphy->fw_version,
+ 		    ar->fw_api,
+-		    fw_features);
++		    fw_features,
++		    crc32_le(0, ar->firmware->data, ar->firmware->size));
  }
  
--s32 Handle_set_IPAddress(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
-+s32 handle_set_ip_address(struct host_if_drv *hif_drv, u8 *ip_addr, u8 idx)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2979,7 +2979,9 @@ static int hostIFthread(void *pvArg)
+ void ath10k_debug_print_board_info(struct ath10k *ar)
+@@ -157,9 +160,10 @@ void ath10k_debug_print_board_info(struct ath10k *ar)
+ 	else
+ 		scnprintf(boardinfo, sizeof(boardinfo), "N/A");
  
- 		case HOST_IF_MSG_SET_IPADDRESS:
- 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
--			Handle_set_IPAddress(msg.drv, msg.body.ip_info.ip_addr, msg.body.ip_info.idx);
-+			handle_set_ip_address(msg.drv,
-+					      msg.body.ip_info.ip_addr,
-+					      msg.body.ip_info.idx);
- 			break;
+-	ath10k_info(ar, "board_file api %d bmi_id %s",
++	ath10k_info(ar, "board_file api %d bmi_id %s crc32 %08x",
+ 		    ar->bd_api,
+-		    boardinfo);
++		    boardinfo,
++		    crc32_le(0, ar->board->data, ar->board->size));
+ }
  
- 		case HOST_IF_MSG_GET_IPADDRESS:
--- 
-1.9.1
+ void ath10k_debug_print_boot_info(struct ath10k *ar)
 
