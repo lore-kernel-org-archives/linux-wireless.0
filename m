@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:59844 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752346AbbKFMjr (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:10183 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755298AbbKYC4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 07:39:47 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>
-Subject: [[linux-nfc] PATCH v2.0 0/3] *** ST95HF driver v2.0 ***
-Date: Fri, 6 Nov 2015 07:38:15 -0500
-Message-ID: <1446813498-22981-1-git-send-email-shikha.singh@st.com> (sfid-20151106_133950_202944_EE9CDEAA)
+	Tue, 24 Nov 2015 21:56:51 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/10] staging: wilc1000: fixes potential null dereference 'wid.val'
+Date: Wed, 25 Nov 2015 11:59:44 +0900
+Message-ID: <1448420389-4192-5-git-send-email-glen.lee@atmel.com> (sfid-20151125_035653_484484_E00A76C0)
+In-Reply-To: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+References: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New patch series of ST95HF Linux Driver v2.0
+From: Leo Kim <leo.kim@atmel.com>
 
-Changelog:
+This patch fixes the error reported by smatch.
+ - Handle_ListenStateExpired() error: potential null dereference 'wid.val'
+If kmalloc failed, referenced to a NULL pointer.
 
-v2.0:
-1.Address feedbacks from Samuel:
-	i)Code improvement and code optimization
-2.Address feedbacks from Lars Steubesand:
-	i)Code improvement and code optimization
-	ii)Bug fix : Kernel crash due to race between irq_thread_handler()
-	and  st95hf_remove() is resolved.
-3.Address feedback from Christophe Henri Ricard:
-	i)Correction in file headers.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-v1.0:
-First release of ST95HF driver.   
-
-Shikha Singh (3):
-  NFC: digital: Type4A tags support
-  driver: nfc: st95hf: ST NFC Transceiver support
-  DT: bindings: net: nfc: ST95HF binding doc
-
- .../devicetree/bindings/net/nfc/st95hf.txt         |   48 +
- drivers/nfc/st95hf/Kconfig                         |   10 +
- drivers/nfc/st95hf/Makefile                        |    6 +
- drivers/nfc/st95hf/core.c                          | 1240 ++++++++++++++++++++
- drivers/nfc/st95hf/spi.c                           |  168 +++
- drivers/nfc/st95hf/spi.h                           |   58 +
- net/nfc/digital_core.c                             |    3 +-
- 7 files changed, 1532 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
- create mode 100644 drivers/nfc/st95hf/Kconfig
- create mode 100644 drivers/nfc/st95hf/Makefile
- create mode 100644 drivers/nfc/st95hf/core.c
- create mode 100644 drivers/nfc/st95hf/spi.c
- create mode 100644 drivers/nfc/st95hf/spi.h
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index aae5a03..da4f4c6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2629,8 +2629,10 @@ static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
+ 		wid.size = 2;
+ 		wid.val = kmalloc(wid.size, GFP_KERNEL);
+ 
+-		if (!wid.val)
++		if (!wid.val) {
+ 			PRINT_ER("Failed to allocate memory\n");
++			return -ENOMEM;
++		}
+ 
+ 		wid.val[0] = u8remain_on_chan_flag;
+ 		wid.val[1] = FALSE_FRMWR_CHANNEL;
 -- 
-1.8.2.1
+1.9.1
 
