@@ -1,52 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7206 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbbKZMj6 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:1707 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbbKYKcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 07:39:58 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mark Brown <broonie@kernel.org>
-CC: <kernel-build-reports@lists.linaro.org>,
-	<linaro-kernel@lists.linaro.org>, <linux-next@vger.kernel.org>,
-	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>
-Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
-References: <E1a1sVV-00079q-My@optimist> <20151126121551.GE1929@sirena.org.uk>
-Date: Thu, 26 Nov 2015 14:39:40 +0200
-In-Reply-To: <20151126121551.GE1929@sirena.org.uk> (Mark Brown's message of
-	"Thu, 26 Nov 2015 12:15:51 +0000")
-Message-ID: <87y4dllysz.fsf@kamboji.qca.qualcomm.com> (sfid-20151126_134007_712760_D4BBD07F)
+	Wed, 25 Nov 2015 05:32:55 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 05/11] brcmfmac: Remove redundant parameter action from scan.
+Date: Wed, 25 Nov 2015 11:32:41 +0100
+Message-ID: <1448447567-12189-6-git-send-email-arend@broadcom.com> (sfid-20151125_115251_681144_26678697)
+In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mark Brown <broonie@kernel.org> writes:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> On Thu, Nov 26, 2015 at 09:06:25AM +0000, Build bot for Mark Brown wrote:
->
-> Today's -next fails to build an arm64 allmodconfig due to:
->
->> 	arm64-allmodconfig
->> ../drivers/net/wireless/ath/ath10k/thermal.c:119:6: error: redefinition of 'ath10k_thermal_event_temperature'
->> ../drivers/net/wireless/ath/ath10k/thermal.c:136:6: error: redefinition of 'ath10k_thermal_set_throttling'
->> ../drivers/net/wireless/ath/ath10k/thermal.c:162:5: error: redefinition of 'ath10k_thermal_register'
->> ../drivers/net/wireless/ath/ath10k/thermal.c:216:6: error: redefinition of 'ath10k_thermal_unregister'
->
-> This is happening because there are stub functions provided in the
-> driver's thermal.h for !THERMAL cases but these are guarded by an #ifdef
-> not an #if and so fails to do the right thing if the thermal code is
-> built as a module.
+ESCAN is always performed using action start scan. No need to
+pass this parameter on to different functions.
 
-Thanks, I'll apply the fix soon. Just wait for comments from others
-first.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c |  6 +++---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h |  2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 13 +++++--------
+ 3 files changed, 9 insertions(+), 12 deletions(-)
 
-> It looks like this was somehow triggered as part of the reorganisation
-> of the WiFi directory structure.
-
-This is surprising and also worrying, any ideas why? It would be good to
-understand the root cause in case there's a bug in wireless drivers
-directory reorganisation.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 49dfc00..53831f5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -946,7 +946,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 
+ static s32
+ brcmf_run_escan(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp,
+-		struct cfg80211_scan_request *request, u16 action)
++		struct cfg80211_scan_request *request)
+ {
+ 	s32 params_size = BRCMF_SCAN_PARAMS_FIXED_SIZE +
+ 			  offsetof(struct brcmf_escan_params_le, params_le);
+@@ -971,7 +971,7 @@ brcmf_run_escan(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp,
+ 	BUG_ON(params_size + sizeof("escan") >= BRCMF_DCMD_MEDLEN);
+ 	brcmf_escan_prep(cfg, &params->params_le, request);
+ 	params->version = cpu_to_le32(BRCMF_ESCAN_REQ_VERSION);
+-	params->action = cpu_to_le16(action);
++	params->action = cpu_to_le16(WL_ESCAN_ACTION_START);
+ 	params->sync_id = cpu_to_le16(0x1234);
+ 
+ 	err = brcmf_fil_iovar_data_set(ifp, "escan", params, params_size);
+@@ -1013,7 +1013,7 @@ brcmf_do_escan(struct brcmf_cfg80211_info *cfg, struct wiphy *wiphy,
+ 	results->count = 0;
+ 	results->buflen = WL_ESCAN_RESULTS_FIXED_SIZE;
+ 
+-	err = escan->run(cfg, ifp, request, WL_ESCAN_ACTION_START);
++	err = escan->run(cfg, ifp, request);
+ 	if (err)
+ 		brcmf_scan_config_mpc(ifp, 1);
+ 	return err;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 98c8920..3b3096b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -231,7 +231,7 @@ struct escan_info {
+ 	struct wiphy *wiphy;
+ 	struct brcmf_if *ifp;
+ 	s32 (*run)(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp,
+-		   struct cfg80211_scan_request *request, u16 action);
++		   struct cfg80211_scan_request *request);
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index a5902c3..b23dcbc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -625,11 +625,10 @@ exit:
+  * @num_chans: number of channels to scan.
+  * @chanspecs: channel parameters for @num_chans channels.
+  * @search_state: P2P discover state to use.
+- * @action: scan action to pass to firmware.
+  * @bss_type: type of P2P bss.
+  */
+ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+-			   u16 chanspecs[], s32 search_state, u16 action,
++			   u16 chanspecs[], s32 search_state,
+ 			   enum p2p_bss_type bss_type)
+ {
+ 	s32 ret = 0;
+@@ -738,7 +737,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+ 
+ 	/* set the escan specific parameters */
+ 	p2p_params->eparams.version = cpu_to_le32(BRCMF_ESCAN_REQ_VERSION);
+-	p2p_params->eparams.action =  cpu_to_le16(action);
++	p2p_params->eparams.action =  cpu_to_le16(WL_ESCAN_ACTION_START);
+ 	p2p_params->eparams.sync_id = cpu_to_le16(0x1234);
+ 	/* perform p2p scan on primary device */
+ 	ret = brcmf_fil_bsscfg_data_set(vif->ifp, "p2p_scan", memblk, memsize);
+@@ -762,8 +761,7 @@ exit:
+  */
+ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 			       struct brcmf_if *ifp,
+-			       struct cfg80211_scan_request *request,
+-			       u16 action)
++			       struct cfg80211_scan_request *request)
+ {
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
+ 	s32 err = 0;
+@@ -823,7 +821,7 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 			num_nodfs++;
+ 		}
+ 		err = brcmf_p2p_escan(p2p, num_nodfs, chanspecs, search_state,
+-				      action, P2PAPI_BSSCFG_DEVICE);
++				      P2PAPI_BSSCFG_DEVICE);
+ 		kfree(chanspecs);
+ 	}
+ exit:
+@@ -1092,8 +1090,7 @@ static s32 brcmf_p2p_act_frm_search(struct brcmf_p2p_info *p2p, u16 channel)
+ 		default_chan_list[2] = ch.chspec;
+ 	}
+ 	err = brcmf_p2p_escan(p2p, channel_cnt, default_chan_list,
+-			      WL_P2P_DISC_ST_SEARCH, WL_ESCAN_ACTION_START,
+-			      P2PAPI_BSSCFG_DEVICE);
++			      WL_P2P_DISC_ST_SEARCH, P2PAPI_BSSCFG_DEVICE);
+ 	kfree(default_chan_list);
+ exit:
+ 	return err;
 -- 
-Kalle Valo
+1.9.1
+
