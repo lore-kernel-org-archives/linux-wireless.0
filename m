@@ -1,97 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53647 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbbKYKcx (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:49874 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752618AbbKYNiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 05:32:53 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
-Date: Wed, 25 Nov 2015 11:32:44 +0100
-Message-ID: <1448447567-12189-9-git-send-email-arend@broadcom.com> (sfid-20151125_113309_671311_0B12771F)
-In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
-References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+	Wed, 25 Nov 2015 08:38:01 -0500
+Subject: [PATCH 0/6] ath10k: print crc32 checksum
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 25 Nov 2015 15:37:56 +0200
+Message-ID: <20151125133654.25507.10863.stgit@potku.adurom.net> (sfid-20151125_143805_445008_61B5850A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Print crc32 checksum for firmware and board files. Also some improvements how
+we print info messages during boot.
 
-By default the 5G band has an advantage of 8 dBm on the RSSI when
-it comes to selection during join and roam. This patch adds a
-module param to make this value configurable. Using the value 99
-results in configuration that 5G has always preference over 2.4G.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 31 +++++++++++++++++-----
- 1 file changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 474de11..6bc0ae9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/string.h>
- #include <linux/netdevice.h>
- #include <brcmu_wifi.h>
-@@ -32,8 +33,18 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
- 
--/* boost value for RSSI_DELTA in preferred join selection */
-+/* default boost value for RSSI_DELTA in preferred join selection */
- #define BRCMF_JOIN_PREF_RSSI_BOOST	8
-+#define BRCMF_RSSI_BOOST_IS_5G		99
-+
-+/* Module param joinboost_5g used for preferred join selection.
-+ * Use value 99 to configure preferred join to choose 5G always over 2.4G, any
-+ * other value configures the advantage of 5G signal strength over 2.4G signal
-+ * strength.
-+ */
-+static int brcmf_joinboost_5g_rssi = BRCMF_JOIN_PREF_RSSI_BOOST;
-+module_param_named(joinboost_5g, brcmf_joinboost_5g_rssi, int, 0);
-+MODULE_PARM_DESC(joinboost_5g, "Join preference 5G RSSI boost");
- 
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
-@@ -106,11 +117,19 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 		goto done;
- 	}
- 
--	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
--	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
--	join_pref_params[0].len = 2;
--	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
--	join_pref_params[0].band = WLC_BAND_5G;
-+	if (brcmf_joinboost_5g_rssi == BRCMF_RSSI_BOOST_IS_5G) {
-+		/* Setup join_pref to select 5GHz over 2.4Ghz */
-+		join_pref_params[0].type = BRCMF_JOIN_PREF_BAND;
-+		join_pref_params[0].len = 2;
-+		join_pref_params[0].rssi_gain = 0;
-+		join_pref_params[0].band = WLC_BAND_5G;
-+	} else {
-+		/* Setup join_pref to select target by RSSI (boost on 5GHz) */
-+		join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
-+		join_pref_params[0].len = 2;
-+		join_pref_params[0].rssi_gain = brcmf_joinboost_5g_rssi;
-+		join_pref_params[0].band = WLC_BAND_5G;
-+	}
- 	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
- 	join_pref_params[1].len = 2;
- 	join_pref_params[1].rssi_gain = 0;
--- 
-1.9.1
+Kalle Valo (6):
+      ath10k: fix otp board id error message
+      ath10k: reorganise hardware and firmware info messages
+      ath10k: always show bmi chip ids and subdevice ids
+      ath10k: split driver info messages during device initialisation
+      ath10k: print crc32 checksums for firmware and board files
+      ath10k: implement fw_checksums debugfs file
+
+
+ drivers/net/wireless/ath/ath10k/Kconfig |    1 
+ drivers/net/wireless/ath/ath10k/core.c  |    8 ++
+ drivers/net/wireless/ath/ath10k/debug.c |  119 ++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/debug.h |    4 +
+ 4 files changed, 111 insertions(+), 21 deletions(-)
 
