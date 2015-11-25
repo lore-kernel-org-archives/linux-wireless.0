@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54886 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753668AbbKLVk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 16:40:27 -0500
-Message-ID: <1447364413.2131.5.camel@sipsolutions.net> (sfid-20151112_224033_417377_94801D76)
-Subject: Re: [PATCH v2] cfg80211: add VHT support for Mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <poh@codeaurora.org>, Peter Oh <poh@qca.qualcomm.com>,
-	ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 12 Nov 2015 22:40:13 +0100
-In-Reply-To: <564505A6.9030001@codeaurora.org>
-References: <ab294ba62856f00c06dde10b1bf57f5f341a7198.1447351137.git.poh@qca.qualcomm.com>
-	 <1447358605.2131.3.camel@sipsolutions.net>
-	 <564505A6.9030001@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:10101 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755298AbbKYC4W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2015 21:56:22 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/10] staging: wilc1000: fix rmmod failure
+Date: Wed, 25 Nov 2015 11:59:40 +0900
+Message-ID: <1448420389-4192-1-git-send-email-glen.lee@atmel.com> (sfid-20151125_035626_251911_27166AFE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-11-12 at 13:33 -0800, Peter Oh wrote:
-> 
-> At this moment Mesh Point is not able to be brought up by userspace
-> such 
-> as wap_supplicant at VHT data rates because there is no
-> events/NL80211 
-> defined that userspace can check out if drivers can support Mesh
-> Point 
-> (802.11s) at VHT data rates or not, hence only HT data rates can be
-> used 
-> for
-> Mesh Point by userspace now.
-> This patch is introducing NL80211 event to cover the issue.
+This patch fixes rmmod failure. wilc->firmware needs to be set to NULL because
+it is used again to check firmware is released when module exit.
 
-No... this patch doesn't introduce an nl80211 event. It introduces a
-feature flag, but I'm arguing it's useless.
+Fixes: 8b8ad7bc90bc ("staging: wilc1000: rename wilc_firmware in the struct wilc")
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Look - what's the difference that userspace would do based on this
-flag? Clearly, setting the flag in the driver has no effect on kernel
-code whatsoever, so your "is not able to be brought up" makes no sense.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 7ccc9b0..92ca072 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -506,6 +506,7 @@ static int wilc1000_firmware_download(struct net_device *dev)
+ 	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+ 	PRINT_D(INIT_DBG, "Releasing firmware\n");
+ 	release_firmware(wilc->firmware);
++	wilc->firmware = NULL;
+ 
+ 	PRINT_D(INIT_DBG, "Download Succeeded\n");
+ 
+-- 
+1.9.1
 
-Perhaps it'll become clearer once you post the wpa_supplicant code, but
-you should still coherently explain in the commit message why this is
-necessary. So far, I don't see it, since no kernel code ever depends on
-this flag.
-
-johannes
