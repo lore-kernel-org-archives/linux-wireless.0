@@ -1,46 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:36175 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbbK3HSB (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:53722 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbbKYJcD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 02:18:01 -0500
-From: Rahul Jain <rahul.jain@samsung.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Amit Khatri <amit.khatri@samsung.com>,
-	Rahul Jain <rahul.jain@samsung.com>
-Subject: [PATCH] mac80211_hwsim: missing NULL check
-Date: Mon, 30 Nov 2015 12:46:52 +0530
-Message-id: <1448867812-11089-1-git-send-email-rahul.jain@samsung.com> (sfid-20151130_081822_747132_014FEC1F)
+	Wed, 25 Nov 2015 04:32:03 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/4] staging: wilc1000: linux_wlan_spi.c: return linux error value
+Date: Wed, 25 Nov 2015 18:35:26 +0900
+Message-ID: <1448444129-11045-1-git-send-email-glen.lee@atmel.com> (sfid-20151125_103208_572560_3383D9F9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amit Khatri <amit.khatri@samsung.com>
+return linux error value instead of 0 or 1 and use -EINVAL. Related codes
+also changed together.
 
-txrate variable might be NULL and passing inside function
-without NULL check.
-
-Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
-Signed-off-by: Rahul Jain <rahul.jain@samsung.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 14 +++-----------
+ drivers/staging/wilc1000/wilc_spi.c       | 18 +++++++++---------
+ 2 files changed, 12 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 194264c..72e4931 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -814,6 +814,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
- 	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 6111405..c7d2542 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -104,13 +104,9 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
+ 		dev_err(&spi->dev,
+ 			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
+ 			len);
+-		ret = -1;
++		ret = -EINVAL;
+ 	}
  
-+	if (!txrate)
-+		return;
-+
- 	if (!netif_running(hwsim_mon))
- 		return;
+-	/* change return value to match WILC interface */
+-	(ret < 0) ? (ret = 0) : (ret = 1);
+-
+-
+ 	return ret;
+ }
  
+@@ -148,10 +144,8 @@ int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
+ 		dev_err(&spi->dev,
+ 			"can't read data with the following length: %u\n",
+ 			rlen);
+-		ret = -1;
++		ret = -EINVAL;
+ 	}
+-	/* change return value to match WILC interface */
+-	(ret < 0) ? (ret = 0) : (ret = 1);
+ 
+ 	return ret;
+ }
+@@ -185,10 +179,8 @@ int wilc_spi_write_read(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
+ 		dev_err(&spi->dev,
+ 			"can't read data with the following length: %u\n",
+ 			rlen);
+-		ret = -1;
++		ret = -EINVAL;
+ 	}
+-	/* change return value to match WILC interface */
+-	(ret < 0) ? (ret = 0) : (ret = 1);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index f54072b..450adc0 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -250,7 +250,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 	}
+ 	rix = len;
+ 
+-	if (!wilc_spi_write_read(wilc, wb, rb, len2)) {
++	if (wilc_spi_write_read(wilc, wb, rb, len2)) {
+ 		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
+ 		result = N_FAIL;
+ 		return result;
+@@ -366,7 +366,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				/**
+ 				 * Read bytes
+ 				 **/
+-				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
++				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
+ 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+ 					result = N_FAIL;
+ 					goto _error_;
+@@ -376,7 +376,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 * Read Crc
+ 				 **/
+ 				if (!g_spi.crc_off) {
+-					if (!wilc_spi_read(wilc, crc, 2)) {
++					if (wilc_spi_read(wilc, crc, 2)) {
+ 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+ 						result = N_FAIL;
+ 						goto _error_;
+@@ -407,7 +407,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 **/
+ 				retry = 10;
+ 				do {
+-					if (!wilc_spi_read(wilc, &rsp, 1)) {
++					if (wilc_spi_read(wilc, &rsp, 1)) {
+ 						dev_err(&spi->dev, "Failed data response read, bus error...\n");
+ 						result = N_FAIL;
+ 						break;
+@@ -423,7 +423,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				/**
+ 				 * Read bytes
+ 				 **/
+-				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
++				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
+ 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+ 					result = N_FAIL;
+ 					break;
+@@ -433,7 +433,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 * Read Crc
+ 				 **/
+ 				if (!g_spi.crc_off) {
+-					if (!wilc_spi_read(wilc, crc, 2)) {
++					if (wilc_spi_read(wilc, crc, 2)) {
+ 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+ 						result = N_FAIL;
+ 						break;
+@@ -484,7 +484,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 				order = 0x2;
+ 		}
+ 		cmd |= order;
+-		if (!wilc_spi_write(wilc, &cmd, 1)) {
++		if (wilc_spi_write(wilc, &cmd, 1)) {
+ 			dev_err(&spi->dev,
+ 				"Failed data block cmd write, bus error...\n");
+ 			result = N_FAIL;
+@@ -494,7 +494,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 		/**
+ 		 *      Write data
+ 		 **/
+-		if (!wilc_spi_write(wilc, &b[ix], nbytes)) {
++		if (wilc_spi_write(wilc, &b[ix], nbytes)) {
+ 			dev_err(&spi->dev,
+ 				"Failed data block write, bus error...\n");
+ 			result = N_FAIL;
+@@ -505,7 +505,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 		 *      Write Crc
+ 		 **/
+ 		if (!g_spi.crc_off) {
+-			if (!wilc_spi_write(wilc, crc, 2)) {
++			if (wilc_spi_write(wilc, crc, 2)) {
+ 				dev_err(&spi->dev,"Failed data block crc write, bus error...\n");
+ 				result = N_FAIL;
+ 				break;
 -- 
 1.9.1
 
