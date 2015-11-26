@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:45506 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751300AbbKPSQm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 13:16:42 -0500
-Subject: Re: [question] Rate control algorithm for mesh
-To: ferran <ranker72@gmail.com>, linux-wireless@vger.kernel.org
-References: <5649FE1F.4060203@gmail.com>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <564A1D7F.6050201@openwrt.org> (sfid-20151116_191645_843087_0DAC3B64)
-Date: Mon, 16 Nov 2015 19:16:31 +0100
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:50053 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474AbbKZRDN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 12:03:13 -0500
+Date: Thu, 26 Nov 2015 17:03:00 +0000
+From: Mark Brown <broonie@kernel.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linaro-kernel@lists.linaro.org,
+	kernel-build-reports@lists.linaro.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-next@vger.kernel.org
+Message-ID: <20151126170300.GH1929@sirena.org.uk> (sfid-20151126_180320_033955_9B28872B)
+References: <E1a1sVV-00079q-My@optimist>
+ <20151126121551.GE1929@sirena.org.uk>
+ <87y4dllysz.fsf@kamboji.qca.qualcomm.com>
+ <20151126132228.GG1929@sirena.org.uk>
+ <87lh9kn1dz.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <5649FE1F.4060203@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="gHypzss5dW8YUwgb"
+In-Reply-To: <87lh9kn1dz.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-11-16 17:02, ferran wrote:
-> Hello everybody,
-> 
-> I would like to know if there is a transmit rate control algorithm out
-> there that takes into account the destination MAC address. My setting is
-> like this:
-> 
-> [node0]·  ·  ·  ·  ·[node1]············[node2]
-> 
-> Where the spaced pattern means a poor connection and the densely dotted
-> pattern means a good connection.
-> 
-> The problem here is that node1 oscillates between fast rates and slow
-> rates, as when transmitting to node0 it must reduce the rate, and when
-> transmitting to node2 it increases the rate since it must take profit of
-> the channel. I am therefore getting many re-tx between n1 and n0, and
-> n1-->n2 isn't as fast as it could.
-> 
-> Currently I am using the PID-based RC, but I'm afraid that this problem
-> isn't adressed at Minstrel neither.
-> Am I wrong?
-Rate control instances are always per sta (so per 802.11 destination).
-The problem you are describing either doesn't exist, or is something
-different from what you're describing.
-I would recommend running a test with latest mac80211 and minstrel(_ht),
-it should perform much better than PID.
 
-- Felix
+--gHypzss5dW8YUwgb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Thu, Nov 26, 2015 at 06:58:32PM +0200, Kalle Valo wrote:
+> Mark Brown <broonie@kernel.org> writes:
+
+> > No, I didn't make much effort to check though since the use of ifdef was
+> > clearly a bug waiting to happen anyway, I was more surprised it worked
+> > at all than anything.
+
+> Michal Marek explains[1] that this is due to commit cf4f21938e13
+> ("kbuild: Allow to specify composite modules with modname-m") and has
+> nothing to do with the wireless drivers reorganisation. I'll drop this
+> patch as Michal will apply his fix to the kbuild tree.
+
+It still ought to be fixed regardless of why it showed up - the
+intention of the code is that we build the real thermal code regardless
+of if that's modular or not but that's not what the code actually does.
+
+--gHypzss5dW8YUwgb
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWVztDAAoJECTWi3JdVIfQZfsH/j5BbsMESTHNsKSVftN52wLV
+vBY9RxwUHln8MsEthVU2r1xiA+WjUiR59q0WeunUZI6pbEo8Ykydh4L5vbKpAbRv
+REqb5kK4CJeP5UvddEkeGR9SPuBubrFcEE6gQxJtQKBCcdAgHzOY+YvqMF5GYHZL
+/RE8NIZI8WeMQho5KCLGXLw00LhSQ1aPitlkVhuHiPle5cFbit4jSdbrR5r35DL8
+E7OedYiZ3TNEfSSP3/Wk73TUTHNhKk9Jg3/uYB+T/A80waZx/ZC0DLxW8Fiv0C4I
+63MyInN5NxLIcztHhzXAyJCcQxj2YYFElWzZLp99hnAwQIU3wtHS2wBNPGeUUKs=
+=p6C8
+-----END PGP SIGNATURE-----
+
+--gHypzss5dW8YUwgb--
