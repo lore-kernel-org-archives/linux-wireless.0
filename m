@@ -1,68 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46982 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36351 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818AbbKKO3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 09:29:07 -0500
-Message-ID: <1447252142.2276.19.camel@sipsolutions.net> (sfid-20151111_152911_490442_B38C978E)
-Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
+	id S1751916AbbKZK5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 05:57:54 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-	Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Date: Wed, 11 Nov 2015 15:29:02 +0100
-In-Reply-To: <20151111091859.55f6a4fd@gandalf.local.home>
-References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
-	 <1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
-	 <1447201345.2475.15.camel@coelho.fi>
-	 <1447227472.2276.7.camel@sipsolutions.net>
-	 <20151111083430.1e77c329@gandalf.local.home>
-	 <1447249156.2276.17.camel@sipsolutions.net>
-	 <20151111091859.55f6a4fd@gandalf.local.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/8] mac80211: simplify ack_skb handling
+Date: Thu, 26 Nov 2015 11:57:46 +0100
+Message-Id: <1448535468-12237-6-git-send-email-johannes@sipsolutions.net> (sfid-20151126_115831_403225_6B92992A)
+In-Reply-To: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
+References: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OnOn Wed, 11 Nov 2015 14:39:16 +0100
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> > > On Wed, 2015-11-11 at 08:34 -0500, Steven Rostedt wrote:
-> > 
-> > > > config MY_DRIVER
-> > > > 	depends on MAC80211
-> > > > 	increment MAC80211_NUM_DRIVERS
-> > > > 	increment MAC80211_HW_MYFLAG  
-> > > 
-> > > If you don't need to check more that >0 why not just use
-> > > SELECT?  
-> > 
-> > > > if (CONFIG_MAC80211_HW_MYFLAG == 0)
-> > > > 	/* optimise for flag OFF */
-> > > > else if (CONFIG_MAC80211_HW_MYFLAG > 0 &&
-> > > >          CONFIG_MAC80211_NUM_DRIVERS ==
-> > > > CONFIG_MAC80211_HW_MYFLAG)
-> > > > 	/* optimise for flag ON */
-> > > > else if (CONFIG_MAC80211_HW_MYFLAG > 0)
-> > > > 	/* don't optimise */  
-> > 
-> > I'm comparing those numbers to see if there's a driver that's
-> > incrementing NUM_DRIVERS but not HW_MYFLAG.
-> > 
- Wed, 2015-11-11 at 09:18 -0500, Steven Rostedt wrote:
-> 
-> OK, I'm still a bit confused. What happens if another driver
-> increments
-> NUM_DRIVERS? Then the above wont be equal right? That's what you
-> want?
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Right. Basically it'd be one of three options:
- * all compiled drivers want the flag set:
-   use a static key to make the fast case "flag set"
- * no compiled driver wants the flag set:
-   use a static key to make the fast case "flag unset"
- * different drivers are compiled:
-   don't use a static key since we don't know which one will get used
+Since the cookie is assigned inside ieee80211_make_ack_skb()
+now, we no longer need to return the ack_skb as the cookie
+and can simplify the function's return and the callers. Also
+rename it to ieee80211_attach_ack_skb() to more accurately
+reflect its purpose.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c         | 18 ++++++++----------
+ net/mac80211/ieee80211_i.h |  5 ++---
+ net/mac80211/offchannel.c  | 11 +++--------
+ 3 files changed, 13 insertions(+), 21 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ae1b92a58e23..2274a163874f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2992,9 +2992,8 @@ u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local)
+ 	return local->roc_cookie_counter;
+ }
+ 
+-struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
+-				       struct sk_buff *skb, u64 *cookie,
+-				       gfp_t gfp)
++int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
++			     u64 *cookie, gfp_t gfp)
+ {
+ 	unsigned long spin_flags;
+ 	struct sk_buff *ack_skb;
+@@ -3002,7 +3001,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
+ 
+ 	ack_skb = skb_copy(skb, gfp);
+ 	if (!ack_skb)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 
+ 	spin_lock_irqsave(&local->ack_status_lock, spin_flags);
+ 	id = idr_alloc(&local->ack_status_frames, ack_skb,
+@@ -3011,7 +3010,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
+ 
+ 	if (id < 0) {
+ 		kfree_skb(ack_skb);
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 	}
+ 
+ 	IEEE80211_SKB_CB(skb)->ack_frame_id = id;
+@@ -3019,7 +3018,7 @@ struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
+ 	*cookie = ieee80211_mgmt_tx_cookie(local);
+ 	IEEE80211_SKB_CB(ack_skb)->ack.cookie = *cookie;
+ 
+-	return ack_skb;
++	return 0;
+ }
+ 
+ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+@@ -3097,7 +3096,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_qos_hdr *nullfunc;
+-	struct sk_buff *skb, *ack_skb;
++	struct sk_buff *skb;
+ 	int size = sizeof(*nullfunc);
+ 	__le16 fc;
+ 	bool qos;
+@@ -3165,10 +3164,9 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	if (qos)
+ 		nullfunc->qos_ctrl = cpu_to_le16(7);
+ 
+-	ack_skb = ieee80211_make_ack_skb(local, skb, cookie, GFP_ATOMIC);
+-	if (IS_ERR(ack_skb)) {
++	ret = ieee80211_attach_ack_skb(local, skb, cookie, GFP_ATOMIC);
++	if (ret) {
+ 		kfree_skb(skb);
+-		ret = PTR_ERR(ack_skb);
+ 		goto unlock;
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b03d5410a2e9..0c50031fadac 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1484,9 +1484,8 @@ void ieee80211_configure_filter(struct ieee80211_local *local);
+ u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
+ 
+ u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local);
+-struct sk_buff *ieee80211_make_ack_skb(struct ieee80211_local *local,
+-				       struct sk_buff *skb, u64 *cookie,
+-				       gfp_t gfp);
++int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
++			     u64 *cookie, gfp_t gfp);
+ 
+ /* STA code */
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index bf21301dfa4b..d616ce34fea7 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -733,7 +733,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb, *ack_skb;
++	struct sk_buff *skb;
+ 	struct sta_info *sta;
+ 	const struct ieee80211_mgmt *mgmt = (void *)params->buf;
+ 	bool need_offchan = false;
+@@ -876,16 +876,11 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		/* make a copy to preserve the frame contents
+ 		 * in case of encryption.
+ 		 */
+-		ack_skb = ieee80211_make_ack_skb(local, skb, cookie,
+-						 GFP_KERNEL);
+-		if (IS_ERR(ack_skb)) {
+-			ret = PTR_ERR(ack_skb);
++		ret = ieee80211_attach_ack_skb(local, skb, cookie, GFP_KERNEL);
++		if (ret) {
+ 			kfree_skb(skb);
+ 			goto out_unlock;
+ 		}
+-	} else {
+-		/* for cookie below */
+-		ack_skb = skb;
+ 	}
+ 
+ 	if (!need_offchan) {
+-- 
+2.6.2
 
