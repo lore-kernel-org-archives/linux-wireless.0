@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:3534 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755437AbbJAHEq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2015 03:04:46 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/12] staging: wilc1000: delete define ACTION and PROBE_REQ
-Date: Thu, 1 Oct 2015 16:03:39 +0900
-Message-ID: <1443683023-6498-8-git-send-email-tony.cho@atmel.com> (sfid-20151001_090448_716622_4CAEBDF9)
-In-Reply-To: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
-References: <1443683023-6498-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:39191 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457AbbKZUVl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 15:21:41 -0500
+Message-ID: <1448569296.2167.45.camel@sipsolutions.net> (sfid-20151126_212144_228593_03CF48E6)
+Subject: Re: (bug report) iwlwifi: inconsitent NULL checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2015 21:21:36 +0100
+In-Reply-To: <20151126194451.GH7289@mwanda>
+References: <20151126120317.GJ10556@mwanda>
+	 <1448540211.2167.7.camel@sipsolutions.net> <20151126123756.GF7289@mwanda>
+	 <1448542297.2167.10.camel@sipsolutions.net> <20151126194451.GH7289@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Glen Lee <glen.lee@atmel.com>
+On Thu, 2015-11-26 at 22:44 +0300, Dan Carpenter wrote:
+> 
+> The first problem is that it doesn't see that if mvm_sta is non-NULL
+> then that implies lq_sta is non-NULL.  But even if that worked, after
+> we do the function call, it sees that the function that mvm_sta is
+> non-NULL but it wouldn't see that that means lq_sta is non-
+> NULL.  It's not so terribly far from working but it's not there yet.
+> 
 
-The define ACTION and PROBE_REQ are duplicate. They are aleady defined in
-host_interface.h. Just delete it.
+Ah, yes, I completely forgot that it's two (related) variables :)
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.h | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 198ddb7..bf0c7c7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -32,8 +32,6 @@
- 
- #define ETH_CONFIG_PKT_HDR_OFFSET (ETH_ETHERNET_HDR_OFFSET + \
- 				   ETH_CONFIG_PKT_HDR_LEN)
--#define   ACTION         0xD0
--#define   PROBE_REQ   0x40
- 
- /********************************************
-  *
--- 
-1.9.1
-
+johannes
