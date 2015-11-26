@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51198 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36341 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753482AbbKLIr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2015 03:47:59 -0500
+	id S1751014AbbKZK5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 05:57:53 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Michal Marek <mmarek@suse.com>
-Subject: [RFC v4 0/8] mac80211: jump labels for HW flags
-Date: Thu, 12 Nov 2015 09:47:45 +0100
-Message-Id: <1447318073-22669-1-git-send-email-johannes@sipsolutions.net> (sfid-20151112_094805_614727_0B70184A)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/8] mac80211: properly free TX skbs when monitor TX fails
+Date: Thu, 26 Nov 2015 11:57:42 +0100
+Message-Id: <1448535468-12237-2-git-send-email-johannes@sipsolutions.net> (sfid-20151126_115827_787101_0C978D8E)
+In-Reply-To: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
+References: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes since v3:
- * fix Kconfig count to count only enabled (!= n) symbols
- * fix code when CONFIG_JUMP_LABEL is not enabled
+From: Johannes Berg <johannes.berg@intel.com>
 
-Changes since v2:
- * introduce Kconfig count and use it instead of _ON/_OFF in
-   the first few patches and described below
-   (I'll squash that later if I don't abandon the whole thing)
+We need to free all skbs here, not just the one we peeked
+from the list.
 
-Changes since v1:
- * use struct static_key_false
- * get rid of all those generated macros and use the optimiser
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
------
-
-This was an experiment I thought of on Sunday ...
-
-As also explained in the log for patch 3, we have a lot of behaviour
-differences in mac80211 based on which driver we're working against.
-In many cases (say OpenWRT router, or a phone/tablet, ChromeBook, etc.)
-we only have a single driver built into the system though. In that
-case we could - theoretically - elide all the code that isn't required
-by that driver, but that seems too dangerous.
-
-Instead, use static keys to set a default for each of the flags. If
-the flag is selected as _OFF in Kconfig, then any code that needs it
-to be on will be placed out of line and the jump NOPed out; if then
-a driver registers that actually needs the code the jump will be put
-back and the first thing in the out-of-line section will be to check
-the real hw flags.
-
-This pretty much results in the same thing as removing the code/if,
-but with more safety.
-
-I haven't done any measurements whatsoever, but I think it might be
-something to test on a little MIPS router box.
-
-
-As far as the code is concerned, there are two really ugly things:
- 1) I still use struct static_key - couldn't quite figure it out
-    with static_key_false. I think I can replace it easily though.
- 2) There are a lot of boilerplate ifdefs/macros.
-
-I can't see a way to avoid more of (2), although I think that we
-can probably remove it for a lot of flags and just not have this
-ability for those that aren't used in RX/TX/status paths. That'd
-probably reduce the code quite a bit.
-
-If anyone has an easy setup to test it on a low-power platform that
-would be great.
-
-johannes
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index bdc224d5053a..3311ce0f3d6c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1431,7 +1431,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 			info->hw_queue =
+ 				vif->hw_queue[skb_get_queue_mapping(skb)];
+ 		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
+-			dev_kfree_skb(skb);
++			ieee80211_purge_tx_queue(&local->hw, skbs);
+ 			return true;
+ 		} else
+ 			vif = NULL;
+-- 
+2.6.2
 
