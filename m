@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26742 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755926AbbKEFfV (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:24858 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbbKZLzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:35:21 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 19/38] staging: wilc1000: remove extern function in c file and move it to header file.
-Date: Thu, 5 Nov 2015 14:36:20 +0900
-Message-ID: <1446701799-24870-19-git-send-email-glen.lee@atmel.com> (sfid-20151105_063802_411596_5F336126)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+	Thu, 26 Nov 2015 06:55:38 -0500
+Date: Thu, 26 Nov 2015 14:55:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] rt2x00: type bug in _rt2500usb_register_read()
+Message-ID: <20151126115523.GD10556@mwanda> (sfid-20151126_125602_648789_FE200A98)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This code causes a static checker bug.
 
-This patch removes extern resolve_disconnect_aberration in c file and move
-it to proper header file. Rename argument also to match with declaration.
+drivers/net/wireless/ralink/rt2x00/rt2500usb.c:232 _rt2500usb_register_read()
+warn: passing casted pointer 'value' to 'rt2500usb_register_read()' 32 vs 16.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+If the low 16 bits were initialized to zero then this code would only be
+a problem on big endian systems.  But in this case this is case the low
+16 bits are never initialized.  This is called from a function which is
+created using a macro:
+
+RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
+
+We end up copying uninitialized data to the user which is bogus and an
+information leak.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- drivers/staging/wilc1000/linux_wlan.c     | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Not tested.  Perhaps we should just remove this code since it has never
+worked.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 72c4797..f73817a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -420,5 +420,5 @@ void host_int_freeJoinParams(void *pJoinParams);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+index b50d873..d26018f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+@@ -229,7 +229,10 @@ static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+ 				     const unsigned int offset,
+ 				     u32 *value)
+ {
+-	rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
++	u16 tmp;
++
++	rt2500usb_register_read(rt2x00dev, offset, &tmp);
++	*value = tmp;
+ }
  
- s32 host_int_get_statistics(struct host_if_drv *hWFIDrv,
- 			    struct rf_info *pstrStatistics);
--
-+void resolve_disconnect_aberration(struct host_if_drv *hif_drv);
- #endif
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 432f0be..3aedc28 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -38,7 +38,6 @@
-  #define _linux_wlan_device_removal()		{}
- 
- extern bool g_obtainingIP;
--extern void resolve_disconnect_aberration(void *drvHandler);
- extern u8 multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- extern struct timer_list hDuringIpTimer;
- 
--- 
-1.9.1
-
+ static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
