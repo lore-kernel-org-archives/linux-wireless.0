@@ -1,26 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:35662 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbbKWUu7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 15:50:59 -0500
-Received: by ykba77 with SMTP id a77so251682673ykb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2015 12:50:58 -0800 (PST)
-Received: from [172.254.254.2] (pool-72-64-232-78.tampfl.fios.verizon.net. [72.64.232.78])
-        by smtp.gmail.com with ESMTPSA id s83sm12930879ywg.21.2015.11.23.12.50.56
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1/SSLv3 cipher=OTHER);
-        Mon, 23 Nov 2015 12:50:56 -0800 (PST)
-From: Robert <robert.offenbacker@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: RegulatoryDB
-Message-ID: <56537C2D.8030506@gmail.com> (sfid-20151123_215105_783006_AEF259F5)
-Date: Mon, 23 Nov 2015 15:50:53 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:35738 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752893AbbKZJgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 04:36:41 -0500
+Message-ID: <1448530595.2167.0.camel@sipsolutions.net> (sfid-20151126_103645_411866_09E9618C)
+Subject: Re: [PATCH 2/2]iw: UNSPECIFIED_CHAR_IN_COND : Fix
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rahul Jain <rahul.jain@samsung.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amit Khatri <amit.khatri@samsung.com>
+Date: Thu, 26 Nov 2015 10:36:35 +0100
+In-Reply-To: <1448529080-710-1-git-send-email-rahul.jain@samsung.com>
+References: <1448529080-710-1-git-send-email-rahul.jain@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     For Educational/Learning Purposes I am attempting to change some 
-information in this database... Is it possible to change data within 
-this binary file?
+Err, the other patch I can kinda understand - but this one? What kind
+of static checker is giving that warning, and what does it really mean?
+please describe in the commit log... actually I'm not sure why I should
+apply this at all even, if there's a problem just make the function
+prototype "unsigned char"?
+
+johannes
