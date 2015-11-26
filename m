@@ -1,56 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26525 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbbKPP1h (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:13953 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698AbbKZFAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2015 10:27:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: Matching crc32 checksums from kernel and user space
-References: <87lh9y1520.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 16 Nov 2015 17:27:21 +0200
-In-Reply-To: <87lh9y1520.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 16 Nov 2015 14:50:47 +0200")
-Message-ID: <87egfq0xt2.fsf@kamboji.qca.qualcomm.com> (sfid-20151116_162753_335185_B166F04D)
+	Thu, 26 Nov 2015 00:00:37 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/5] staging: wilc1000: rename spi function names
+Date: Thu, 26 Nov 2015 14:03:59 +0900
+Message-ID: <1448514243-14181-1-git-send-email-glen.lee@atmel.com> (sfid-20151126_060056_831519_C2465924)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+There are several similar function names, such as wilc_spi_write and
+_wilc_spi_write. It is likely to be confused after merging linux_wlan_spi.c and
+wilc_spi.c, so rename following functions properly.
+Rename wilc_spi_write to wilc_spi_tx, wilc_spi_read to wilc_spi_rx,
+wilc_spi_write_read to wilc_spi_tx_rx, _wilc_spi_write to wilc_spi_write,
+_wilc_spi_read to wilc_spi_read.
 
-> Hi,
->
-> I want ath10k to print a checksum for the firmware image and include
-> that to the firmware crash dump file as well. Then I want to print the
-> same checksum from user space scripts and verify it with the crash dump
-> file.
->
-> I thought that crc32 would be good enough for me but it wasn't that
-> simple as I can't seem to getting matching checksums, at least not with
-> the user space tools I found. For a test case I created a simple file:
->
-> $ xxd /lib/firmware/ath10k/crc-test.bin 
-> 00000000: 3132 3334 3536 3738 3930 0a              1234567890.
->
-> In kernel I get these checksums:
->
-> [  574.867724] crc32_le(0) 8916bc26
-> [  574.867739] crc32_le(~0) 1d6ef235
-> [  574.867743] crc32_be(0) b9346a4c
-> [  574.867746] crc32_be(~0) 71467465
->
-> And from python I got (value in parenthesis is the seed I used):
->
-> binascii.crc32(00000000) 0xe2910dcaL
-> binascii.crc32(ffffffff) 0x76e943d9L
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_spi.c |  6 +++---
+ drivers/staging/wilc1000/linux_wlan_spi.h |  6 +++---
+ drivers/staging/wilc1000/wilc_spi.c       | 34 +++++++++++++++----------------
+ 3 files changed, 23 insertions(+), 23 deletions(-)
 
-Johannes Berg pointed out that this looks to be a sign issue, I just
-need to invert the python value and then I get the same value:
-
->>> hex(~0x76e943d9 & 0xffffffff)
-'0x8916bc26'
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index c7d2542..e9ad33f 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -66,7 +66,7 @@ int wilc_spi_init(void)
+ 	return 1;
+ }
+ 
+-int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
++int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	int ret;
+@@ -110,7 +110,7 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
+ 	return ret;
+ }
+ 
+-int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
++int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	int ret;
+@@ -150,7 +150,7 @@ int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
+ 	return ret;
+ }
+ 
+-int wilc_spi_write_read(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
++int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	int ret;
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
+index 00733ab..5ff070b 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.h
++++ b/drivers/staging/wilc1000/linux_wlan_spi.h
+@@ -5,7 +5,7 @@
+ #include "wilc_wfi_netdevice.h"
+ 
+ int wilc_spi_init(void);
+-int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len);
+-int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen);
+-int wilc_spi_write_read(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
++int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
++int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
++int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 450adc0..ef1ad3b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -21,8 +21,8 @@ typedef struct {
+ 
+ static wilc_spi_t g_spi;
+ 
+-static int _wilc_spi_read(struct wilc *wilc, u32, u8 *, u32);
+-static int _wilc_spi_write(struct wilc *wilc, u32, u8 *, u32);
++static int wilc_spi_read(struct wilc *wilc, u32, u8 *, u32);
++static int wilc_spi_write(struct wilc *wilc, u32, u8 *, u32);
+ 
+ /********************************************
+  *
+@@ -250,7 +250,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 	}
+ 	rix = len;
+ 
+-	if (wilc_spi_write_read(wilc, wb, rb, len2)) {
++	if (wilc_spi_tx_rx(wilc, wb, rb, len2)) {
+ 		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
+ 		result = N_FAIL;
+ 		return result;
+@@ -366,7 +366,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				/**
+ 				 * Read bytes
+ 				 **/
+-				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
++				if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+ 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+ 					result = N_FAIL;
+ 					goto _error_;
+@@ -376,7 +376,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 * Read Crc
+ 				 **/
+ 				if (!g_spi.crc_off) {
+-					if (wilc_spi_read(wilc, crc, 2)) {
++					if (wilc_spi_rx(wilc, crc, 2)) {
+ 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+ 						result = N_FAIL;
+ 						goto _error_;
+@@ -407,7 +407,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 **/
+ 				retry = 10;
+ 				do {
+-					if (wilc_spi_read(wilc, &rsp, 1)) {
++					if (wilc_spi_rx(wilc, &rsp, 1)) {
+ 						dev_err(&spi->dev, "Failed data response read, bus error...\n");
+ 						result = N_FAIL;
+ 						break;
+@@ -423,7 +423,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				/**
+ 				 * Read bytes
+ 				 **/
+-				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
++				if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+ 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+ 					result = N_FAIL;
+ 					break;
+@@ -433,7 +433,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 				 * Read Crc
+ 				 **/
+ 				if (!g_spi.crc_off) {
+-					if (wilc_spi_read(wilc, crc, 2)) {
++					if (wilc_spi_rx(wilc, crc, 2)) {
+ 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+ 						result = N_FAIL;
+ 						break;
+@@ -484,7 +484,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 				order = 0x2;
+ 		}
+ 		cmd |= order;
+-		if (wilc_spi_write(wilc, &cmd, 1)) {
++		if (wilc_spi_tx(wilc, &cmd, 1)) {
+ 			dev_err(&spi->dev,
+ 				"Failed data block cmd write, bus error...\n");
+ 			result = N_FAIL;
+@@ -494,7 +494,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 		/**
+ 		 *      Write data
+ 		 **/
+-		if (wilc_spi_write(wilc, &b[ix], nbytes)) {
++		if (wilc_spi_tx(wilc, &b[ix], nbytes)) {
+ 			dev_err(&spi->dev,
+ 				"Failed data block write, bus error...\n");
+ 			result = N_FAIL;
+@@ -505,7 +505,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 		 *      Write Crc
+ 		 **/
+ 		if (!g_spi.crc_off) {
+-			if (wilc_spi_write(wilc, crc, 2)) {
++			if (wilc_spi_tx(wilc, crc, 2)) {
+ 				dev_err(&spi->dev,"Failed data block crc write, bus error...\n");
+ 				result = N_FAIL;
+ 				break;
+@@ -589,7 +589,7 @@ static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 	return result;
+ }
+ 
+-static int _wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
++static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	int result;
+@@ -644,7 +644,7 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 	return 1;
+ }
+ 
+-static int _wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
++static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	u8 cmd = CMD_DMA_EXT_READ;
+@@ -996,12 +996,12 @@ const struct wilc_hif_func wilc_hif_spi = {
+ 	.hif_deinit = _wilc_spi_deinit,
+ 	.hif_read_reg = wilc_spi_read_reg,
+ 	.hif_write_reg = wilc_spi_write_reg,
+-	.hif_block_rx = _wilc_spi_read,
+-	.hif_block_tx = _wilc_spi_write,
++	.hif_block_rx = wilc_spi_read,
++	.hif_block_tx = wilc_spi_write,
+ 	.hif_read_int = wilc_spi_read_int,
+ 	.hif_clear_int_ext = wilc_spi_clear_int_ext,
+ 	.hif_read_size = wilc_spi_read_size,
+-	.hif_block_tx_ext = _wilc_spi_write,
+-	.hif_block_rx_ext = _wilc_spi_read,
++	.hif_block_tx_ext = wilc_spi_write,
++	.hif_block_rx_ext = wilc_spi_read,
+ 	.hif_sync_ext = wilc_spi_sync_ext,
+ };
 -- 
-Kalle Valo
+1.9.1
+
