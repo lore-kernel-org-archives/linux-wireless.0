@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:36056 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbbKIPkz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44329 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbbKZMzP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2015 10:40:55 -0500
-Received: by qkcl124 with SMTP id l124so72364739qkc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2015 07:40:52 -0800 (PST)
-Date: Mon, 9 Nov 2015 10:40:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "Yin, Fengwei" <fengwei.yin@linaro.org>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
- trigger_ba
-Message-ID: <20151109154040.GD5395@localhost> (sfid-20151109_164058_980433_658DF22A)
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
+	Thu, 26 Nov 2015 07:55:15 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
+Subject: Re: brcmfmac: constify brcmf_bus_ops structures
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1447518127-1994-1-git-send-email-Julia.Lawall@lip6.fr>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	kernel-janitors@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20151126125514.86D88140631@smtp.codeaurora.org> (sfid-20151126_135521_417764_517181CA)
+Date: Thu, 26 Nov 2015 12:55:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2015 at 05:02:41AM -0500, Yin, Fengwei wrote:
-> From: Andy Green <andy.green@linaro.org>
+
+> The brcmf_bus_ops structures are never modified, so declare them as const.
 > 
-> From: Andy Green <andy.green@linaro.org>
+> Done with the help of Coccinelle.
 > 
-> On wcn3620, firmware response to trigger_ba uses the new, larger
-> "v2" format
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
-> -	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-> +	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
-> +						wcn->hal_rsp_len);
+Thanks, applied to wireless-drivers-next.git.
 
-It's unclear from the changelog -- is it safe to call
-wcn36xx_smd_rsp_status_check_v2 on the 3660/3680 as well?
-
-Is wcn36xx_smd_rsp_status_check() still needed?
-
--- 
-Bob Copeland %% http://bobcopeland.com/
+Kalle Valo
