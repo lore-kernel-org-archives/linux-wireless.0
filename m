@@ -1,67 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36651 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030909AbbKFCLw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44650 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbbKZNB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:11:52 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 14/73] staging: wilc1000: rename Ack_seq_num of struct ack_session_info
-Date: Fri, 6 Nov 2015 11:12:35 +0900
-Message-ID: <1446776014-28094-14-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_895407_64F23261)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
+	Thu, 26 Nov 2015 08:01:28 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: Delete unnecessary checks before the function
+ call"kfree_skb"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <5649C99E.2070602@users.sourceforge.net>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Message-Id: <20151126130127.DDFC3140731@smtp.codeaurora.org> (sfid-20151126_140148_557019_7548E058)
+Date: Thu, 26 Nov 2015 13:01:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
 
-This patch rename Ack_seq_num of struct ack_session_info to seq_num
-to avoid CamelCase naming convention.
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Mon, 16 Nov 2015 13:12:25 +0100
+> 
+> The kfree_skb() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the calls is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f3968fd..7162473 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -195,7 +195,7 @@ u32 total_acks = 0, dropped_acks = 0;
- #ifdef	TCP_ACK_FILTER
- struct ack_session_info;
- struct ack_session_info {
--	u32 Ack_seq_num;
-+	u32 seq_num;
- 	u32 Bigger_Ack_num;
- 	u16 src_port;
- 	u16 dst_port;
-@@ -229,7 +229,7 @@ static inline int Init_TCP_tracking(void)
- 
- static inline int add_TCP_track_session(u32 src_prt, u32 dst_prt, u32 seq)
- {
--	Acks_keep_track_info[Opened_TCP_session].Ack_seq_num = seq;
-+	Acks_keep_track_info[Opened_TCP_session].seq_num = seq;
- 	Acks_keep_track_info[Opened_TCP_session].Bigger_Ack_num = 0;
- 	Acks_keep_track_info[Opened_TCP_session].src_port = src_prt;
- 	Acks_keep_track_info[Opened_TCP_session].dst_port = dst_prt;
-@@ -313,7 +313,7 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 				Ack_no	= (((u32)tcp_hdr_ptr[8]) << 24) + (((u32)tcp_hdr_ptr[9]) << 16) + (((u32)tcp_hdr_ptr[10]) << 8) + ((u32)tcp_hdr_ptr[11]);
- 
- 				for (i = 0; i < Opened_TCP_session; i++) {
--					if (Acks_keep_track_info[i].Ack_seq_num == seq_no) {
-+					if (Acks_keep_track_info[i].seq_num == seq_no) {
- 						Update_TCP_track_session(i, Ack_no);
- 						break;
- 					}
--- 
-1.9.1
-
+Kalle Valo
