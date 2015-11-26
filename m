@@ -1,260 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57835 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753050AbbKQPpt (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:42230 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752056AbbKZQws convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2015 10:45:49 -0500
-Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id 647FE1419A5
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 15:45:47 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/5] wireless drivers vendor directories
-Date: Tue, 17 Nov 2015 17:45:31 +0200
-Message-Id: <1447775136-21173-1-git-send-email-kvalo@codeaurora.org> (sfid-20151117_164624_237042_2E6CA4D4)
+	Thu, 26 Nov 2015 11:52:48 -0500
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>,
+	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kaufman\, Liad" <liad.kaufman@intel.com>
+Subject: Re: [PATCH] iwlwifi: mvm: add hwmon device for the temperature sensor
+References: <541F23D2.90600@gmail.com>
+	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+	<87ppeoc4s0.fsf@nemi.mork.no>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
+	<87d2amd24t.fsf@nemi.mork.no>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com>
+	<1411760678.18773.5.camel@dubbel>
+	<A66968BA-6B95-4437-8A95-5EBFD6BCF583@mork.no>
+	<877flbuke9.fsf_-_@nemi.mork.no>
+	<1448552793.2167.17.camel@sipsolutions.net>
+Date: Thu, 26 Nov 2015 17:52:38 +0100
+In-Reply-To: <1448552793.2167.17.camel@sipsolutions.net> (Johannes Berg's
+	message of "Thu, 26 Nov 2015 16:46:33 +0100")
+Message-ID: <874mg8vh2h.fsf@nemi.mork.no> (sfid-20151126_175251_329450_BC2194D8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I started to look how to implement the vendor directories for wireless
-drivers, similarly like ethernet has. Here's my first proposal where I
-experimented with five different drivers. There's also a git branch
-which I keep up-to-date:
+> Hi Bjørn,
+>
+>> I got bored and made an attempt on this. Still just for fun.  I don't
+>> have a real usecase.  What do you think?  Completely useless?
+>
+> It's not so bad :)
+>
+> However, it's (soon going to be) redundant, we're planning to implement
+> a thermal_zone_device in this code, and if you then set the Kconfig
+> option THERMAL_HWMON you'll get a hwmon to go along with it. So I'd
+> rather not take this patch since we'd otherwise end up with two ways to
+> do the same thing in the driver.
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=wd-reorg
+Ah, right.  I wondered a bit about that, but concluded that you probably
+didn't want it since you had all your own temp limit handling.
 
-Please review and send comments.
+Sounds like a good plan to me
 
-Kalle Valo (5):
-  admtek: create new wireless vendor directory
-  cisco: create new wireless vendor directory
-  atmel: create new wireless vendor directory
-  b43: move under broadcom vendor directory
-  b43legacy: move under broadcom vendor directory
 
- MAINTAINERS                                        |    8 +-
- drivers/net/wireless/Kconfig                       |  119 +-------------------
- drivers/net/wireless/Makefile                      |   18 +--
- drivers/net/wireless/admtek/Kconfig                |   41 +++++++
- drivers/net/wireless/admtek/Makefile               |    1 +
- drivers/net/wireless/{ => admtek}/adm8211.c        |    0
- drivers/net/wireless/{ => admtek}/adm8211.h        |    0
- drivers/net/wireless/atmel/Kconfig                 |   57 ++++++++++
- drivers/net/wireless/atmel/Makefile                |    5 +
- drivers/net/wireless/{ => atmel}/at76c50x-usb.c    |    0
- drivers/net/wireless/{ => atmel}/at76c50x-usb.h    |    0
- drivers/net/wireless/{ => atmel}/atmel.c           |    0
- drivers/net/wireless/{ => atmel}/atmel.h           |    0
- drivers/net/wireless/{ => atmel}/atmel_cs.c        |    0
- drivers/net/wireless/{ => atmel}/atmel_pci.c       |    0
- drivers/net/wireless/broadcom/Kconfig              |   17 +++
- drivers/net/wireless/broadcom/Makefile             |    2 +
- drivers/net/wireless/{ => broadcom}/b43/Kconfig    |    0
- drivers/net/wireless/{ => broadcom}/b43/Makefile   |    0
- drivers/net/wireless/{ => broadcom}/b43/b43.h      |    0
- drivers/net/wireless/{ => broadcom}/b43/bus.c      |    0
- drivers/net/wireless/{ => broadcom}/b43/bus.h      |    0
- drivers/net/wireless/{ => broadcom}/b43/debugfs.c  |    0
- drivers/net/wireless/{ => broadcom}/b43/debugfs.h  |    0
- drivers/net/wireless/{ => broadcom}/b43/dma.c      |    0
- drivers/net/wireless/{ => broadcom}/b43/dma.h      |    0
- drivers/net/wireless/{ => broadcom}/b43/leds.c     |    0
- drivers/net/wireless/{ => broadcom}/b43/leds.h     |    0
- drivers/net/wireless/{ => broadcom}/b43/lo.c       |    0
- drivers/net/wireless/{ => broadcom}/b43/lo.h       |    0
- drivers/net/wireless/{ => broadcom}/b43/main.c     |    0
- drivers/net/wireless/{ => broadcom}/b43/main.h     |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_a.c    |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_a.h    |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_ac.c   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_ac.h   |    0
- .../net/wireless/{ => broadcom}/b43/phy_common.c   |    0
- .../net/wireless/{ => broadcom}/b43/phy_common.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_g.c    |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_g.h    |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_ht.c   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_ht.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_lcn.c  |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_lcn.h  |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_lp.c   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_lp.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_n.c    |    0
- drivers/net/wireless/{ => broadcom}/b43/phy_n.h    |    0
- drivers/net/wireless/{ => broadcom}/b43/pio.c      |    0
- drivers/net/wireless/{ => broadcom}/b43/pio.h      |    0
- drivers/net/wireless/{ => broadcom}/b43/ppr.c      |    0
- drivers/net/wireless/{ => broadcom}/b43/ppr.h      |    0
- .../net/wireless/{ => broadcom}/b43/radio_2055.c   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2055.h   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2056.c   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2056.h   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2057.c   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2057.h   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2059.c   |    0
- .../net/wireless/{ => broadcom}/b43/radio_2059.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/rfkill.c   |    0
- drivers/net/wireless/{ => broadcom}/b43/rfkill.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/sdio.c     |    0
- drivers/net/wireless/{ => broadcom}/b43/sdio.h     |    0
- drivers/net/wireless/{ => broadcom}/b43/sysfs.c    |    0
- drivers/net/wireless/{ => broadcom}/b43/sysfs.h    |    0
- drivers/net/wireless/{ => broadcom}/b43/tables.c   |    0
- drivers/net/wireless/{ => broadcom}/b43/tables.h   |    0
- .../net/wireless/{ => broadcom}/b43/tables_lpphy.c |    0
- .../net/wireless/{ => broadcom}/b43/tables_lpphy.h |    0
- .../net/wireless/{ => broadcom}/b43/tables_nphy.c  |    0
- .../net/wireless/{ => broadcom}/b43/tables_nphy.h  |    0
- .../wireless/{ => broadcom}/b43/tables_phy_ht.c    |    0
- .../wireless/{ => broadcom}/b43/tables_phy_ht.h    |    0
- .../wireless/{ => broadcom}/b43/tables_phy_lcn.c   |    0
- .../wireless/{ => broadcom}/b43/tables_phy_lcn.h   |    0
- drivers/net/wireless/{ => broadcom}/b43/wa.c       |    0
- drivers/net/wireless/{ => broadcom}/b43/wa.h       |    0
- drivers/net/wireless/{ => broadcom}/b43/xmit.c     |    0
- drivers/net/wireless/{ => broadcom}/b43/xmit.h     |    0
- .../net/wireless/{ => broadcom}/b43legacy/Kconfig  |    0
- .../net/wireless/{ => broadcom}/b43legacy/Makefile |    0
- .../wireless/{ => broadcom}/b43legacy/b43legacy.h  |    0
- .../wireless/{ => broadcom}/b43legacy/debugfs.c    |    0
- .../wireless/{ => broadcom}/b43legacy/debugfs.h    |    0
- .../net/wireless/{ => broadcom}/b43legacy/dma.c    |    0
- .../net/wireless/{ => broadcom}/b43legacy/dma.h    |    0
- .../net/wireless/{ => broadcom}/b43legacy/ilt.c    |    0
- .../net/wireless/{ => broadcom}/b43legacy/ilt.h    |    0
- .../net/wireless/{ => broadcom}/b43legacy/leds.c   |    0
- .../net/wireless/{ => broadcom}/b43legacy/leds.h   |    0
- .../net/wireless/{ => broadcom}/b43legacy/main.c   |    0
- .../net/wireless/{ => broadcom}/b43legacy/main.h   |    0
- .../net/wireless/{ => broadcom}/b43legacy/phy.c    |    0
- .../net/wireless/{ => broadcom}/b43legacy/phy.h    |    0
- .../net/wireless/{ => broadcom}/b43legacy/pio.c    |    0
- .../net/wireless/{ => broadcom}/b43legacy/pio.h    |    0
- .../net/wireless/{ => broadcom}/b43legacy/radio.c  |    0
- .../net/wireless/{ => broadcom}/b43legacy/radio.h  |    0
- .../net/wireless/{ => broadcom}/b43legacy/rfkill.c |    0
- .../net/wireless/{ => broadcom}/b43legacy/rfkill.h |    0
- .../net/wireless/{ => broadcom}/b43legacy/sysfs.c  |    0
- .../net/wireless/{ => broadcom}/b43legacy/sysfs.h  |    0
- .../net/wireless/{ => broadcom}/b43legacy/xmit.c   |    0
- .../net/wireless/{ => broadcom}/b43legacy/xmit.h   |    0
- drivers/net/wireless/cisco/Kconfig                 |   56 +++++++++
- drivers/net/wireless/cisco/Makefile                |    2 +
- drivers/net/wireless/{ => cisco}/airo.c            |    0
- drivers/net/wireless/{ => cisco}/airo.h            |    0
- drivers/net/wireless/{ => cisco}/airo_cs.c         |    0
- 110 files changed, 195 insertions(+), 131 deletions(-)
- create mode 100644 drivers/net/wireless/admtek/Kconfig
- create mode 100644 drivers/net/wireless/admtek/Makefile
- rename drivers/net/wireless/{ => admtek}/adm8211.c (100%)
- rename drivers/net/wireless/{ => admtek}/adm8211.h (100%)
- create mode 100644 drivers/net/wireless/atmel/Kconfig
- create mode 100644 drivers/net/wireless/atmel/Makefile
- rename drivers/net/wireless/{ => atmel}/at76c50x-usb.c (100%)
- rename drivers/net/wireless/{ => atmel}/at76c50x-usb.h (100%)
- rename drivers/net/wireless/{ => atmel}/atmel.c (100%)
- rename drivers/net/wireless/{ => atmel}/atmel.h (100%)
- rename drivers/net/wireless/{ => atmel}/atmel_cs.c (100%)
- rename drivers/net/wireless/{ => atmel}/atmel_pci.c (100%)
- create mode 100644 drivers/net/wireless/broadcom/Kconfig
- create mode 100644 drivers/net/wireless/broadcom/Makefile
- rename drivers/net/wireless/{ => broadcom}/b43/Kconfig (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/Makefile (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/b43.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/bus.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/bus.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/debugfs.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/debugfs.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/dma.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/dma.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/leds.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/leds.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/lo.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/lo.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/main.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/main.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_a.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_a.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_ac.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_ac.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_common.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_common.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_g.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_g.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_ht.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_ht.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_lcn.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_lcn.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_lp.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_lp.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_n.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/phy_n.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/pio.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/pio.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/ppr.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/ppr.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2055.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2055.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2056.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2056.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2057.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2057.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2059.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/radio_2059.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/rfkill.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/rfkill.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/sdio.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/sdio.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/sysfs.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/sysfs.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_lpphy.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_lpphy.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_nphy.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_nphy.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_phy_ht.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_phy_ht.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_phy_lcn.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/tables_phy_lcn.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/wa.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/wa.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/xmit.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43/xmit.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/Kconfig (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/Makefile (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/b43legacy.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/debugfs.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/debugfs.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/dma.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/dma.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/ilt.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/ilt.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/leds.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/leds.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/main.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/main.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/phy.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/phy.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/pio.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/pio.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/radio.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/radio.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/rfkill.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/rfkill.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/sysfs.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/sysfs.h (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/xmit.c (100%)
- rename drivers/net/wireless/{ => broadcom}/b43legacy/xmit.h (100%)
- create mode 100644 drivers/net/wireless/cisco/Kconfig
- create mode 100644 drivers/net/wireless/cisco/Makefile
- rename drivers/net/wireless/{ => cisco}/airo.c (100%)
- rename drivers/net/wireless/{ => cisco}/airo.h (100%)
- rename drivers/net/wireless/{ => cisco}/airo_cs.c (100%)
-
--- 
-1.7.9.5
-
+Bjørn
