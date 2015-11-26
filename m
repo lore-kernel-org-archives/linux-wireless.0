@@ -1,31 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39199 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752535AbbKGUvP (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:38306 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726AbbKZJLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2015 15:51:15 -0500
-Date: Sat, 7 Nov 2015 23:51:01 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: punit vara <punitvara@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, Austin Shin <austin.shin@atmel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-Message-ID: <20151107205101.GK18797@mwanda> (sfid-20151107_215129_265716_F0FEAE84)
-References: <1446895909-30052-1-git-send-email-punitvara@gmail.com>
- <20151107135427.GH18797@mwanda>
- <CABXAfNJWe78txO91YixoEZTO1n7q69LqN89UpDanrT8cA-jnyA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABXAfNJWe78txO91YixoEZTO1n7q69LqN89UpDanrT8cA-jnyA@mail.gmail.com>
+	Thu, 26 Nov 2015 04:11:15 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NYF00TN506MIH30@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Thu, 26 Nov 2015 18:11:10 +0900 (KST)
+From: Rahul Jain <rahul.jain@samsung.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Amit Khatri <amit.khatri@samsung.com>,
+	Rahul Jain <rahul.jain@samsung.com>
+Subject: [PATCH 1/2]iw: DEREF_AFTER_NULL: fix
+Date: Thu, 26 Nov 2015 14:40:19 +0530
+Message-id: <1448529019-661-1-git-send-email-rahul.jain@samsung.com> (sfid-20151126_101131_309752_BE67E944)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I haven't looked at it, sorry.  You'll have to figure it out or if you
-complain to the original person who broken the build he can figure it
-out.  You are still missing a Fixes tag.
+From: Amit Khatri <amit.khatri@samsung.com>
 
-regards,
-dan carpenter
+Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
+Signed-off-by: Rahul Jain <rahul.jain@samsung.com>
+---
+ wowlan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/wowlan.c b/wowlan.c
+index 25f260b..ac2c13d 100644
+--- a/wowlan.c
++++ b/wowlan.c
+@@ -194,7 +194,8 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
+ 	err = -ENOBUFS;
+  close:
+ 	fclose(f);
+-	nla_nest_end(msg, tcp);
++	if(tcp)
++		nla_nest_end(msg, tcp);
+ 	return err;
+ }
+ 
+-- 
+1.9.1
+
