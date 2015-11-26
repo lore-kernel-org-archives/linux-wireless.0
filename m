@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:7424 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:14039 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbbKBIte (ORCPT
+	with ESMTP id S1750698AbbKZFBC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2015 03:49:34 -0500
+	Thu, 26 Nov 2015 00:01:02 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/38] staging: wilc1000: rename pstrWFIDrv of function wilc_set_multicast_list
-Date: Mon, 2 Nov 2015 17:50:56 +0900
-Message-ID: <1446454281-22484-13-git-send-email-glen.lee@atmel.com> (sfid-20151102_094937_808827_E34A7F4E)
-In-Reply-To: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
-References: <1446454281-22484-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 5/5] staging: wilc1000: remove unneeded extern variable
+Date: Thu, 26 Nov 2015 14:04:03 +0900
+Message-ID: <1448514243-14181-5-git-send-email-glen.lee@atmel.com> (sfid-20151126_060106_415887_D2916583)
+In-Reply-To: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
+References: <1448514243-14181-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch removes unnedded extern variable WILC_WFI_devs[] which is not used.
 
-This patch renames pstrWFIDrv of function wilc_set_multicast_list to hif_drv
-to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 312e91a..4dffae5 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1294,11 +1294,11 @@ static void wilc_set_multicast_list(struct net_device *dev)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 68a159f..b9961f0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -227,7 +227,6 @@ struct WILC_WFI_mon_priv {
  
- 	struct netdev_hw_addr *ha;
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *hif_drv;
- 	int i = 0;
+ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
  
- 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
--	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
-+	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
- 
- 	if (!dev)
- 		return;
-@@ -1318,14 +1318,14 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	if ((dev->flags & IFF_ALLMULTI) || (dev->mc.count) > WILC_MULTICAST_TABLE_SIZE) {
- 		PRINT_D(INIT_DBG, "Disable multicast filter, retrive all multicast packets\n");
- 		/* get all multicast packets */
--		host_int_setup_multicast_filter(pstrWFIDrv, false, 0);
-+		host_int_setup_multicast_filter(hif_drv, false, 0);
- 		return;
- 	}
- 
- 	/* No multicast?  Just get our own stuff */
- 	if ((dev->mc.count) == 0) {
- 		PRINT_D(INIT_DBG, "Enable multicast filter, retrive directed packets only.\n");
--		host_int_setup_multicast_filter(pstrWFIDrv, true, 0);
-+		host_int_setup_multicast_filter(hif_drv, true, 0);
- 		return;
- 	}
- 
-@@ -1343,7 +1343,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 		i++;
- 	}
- 
--	host_int_setup_multicast_filter(pstrWFIDrv, true, (dev->mc.count));
-+	host_int_setup_multicast_filter(hif_drv, true, (dev->mc.count));
- 
- 	return;
- 
+-extern struct net_device *WILC_WFI_devs[];
+ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void wilc_mac_indicate(struct wilc *wilc, int flag);
+ void wilc_rx_complete(struct wilc *wilc);
 -- 
 1.9.1
 
