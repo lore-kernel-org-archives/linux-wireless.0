@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36217 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030329AbbKEIvb (ORCPT
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:49708 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895AbbKZMP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 03:51:31 -0500
-Received: by lbblt2 with SMTP id lt2so11409120lbb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2015 00:51:29 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 0/4] update ath10k support for QCA9377 chips
-Date: Thu,  5 Nov 2015 09:50:39 +0100
-Message-Id: <1446713443-22542-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20151105_095134_656034_8FE1C7B4)
+	Thu, 26 Nov 2015 07:15:58 -0500
+Date: Thu, 26 Nov 2015 12:15:51 +0000
+From: Mark Brown <broonie@kernel.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: kernel-build-reports@lists.linaro.org,
+	linaro-kernel@lists.linaro.org, linux-next@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Message-ID: <20151126121551.GE1929@sirena.org.uk> (sfid-20151126_131715_207572_5602D4FC)
+References: <E1a1sVV-00079q-My@optimist>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="m4E4Spob7u7JiHeu"
+In-Reply-To: <E1a1sVV-00079q-My@optimist>
+Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Clarifying the naming scheme for QCA9377 targets
-* Adding the dev_id mathod (RFC) as a HW identification helper
-* updating missing hw_params for 1.1 target
 
----
+--m4E4Spob7u7JiHeu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Notes:
-  v2:
-   * rebase
-   * fix the whitespace mess in patch 4/4 [Kalle]
+On Thu, Nov 26, 2015 at 09:06:25AM +0000, Build bot for Mark Brown wrote:
 
-Bartosz Markowski (4):
-  ath10k: fix the currently supported QCA9377 target version name
-  ath10k: update missing hw_params of QCA9377 hw1.1
-  ath10k: introduce dev_id to hw_params
-  ath10k: add QCA9377 hw1.0 support
+Today's -next fails to build an arm64 allmodconfig due to:
 
- drivers/net/wireless/ath/ath10k/core.c | 49 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/hw.h   | 17 ++++++++++--
- drivers/net/wireless/ath/ath10k/pci.c  |  8 ++----
- 4 files changed, 65 insertions(+), 10 deletions(-)
+> 	arm64-allmodconfig
+> ../drivers/net/wireless/ath/ath10k/thermal.c:119:6: error: redefinition of 'ath10k_thermal_event_temperature'
+> ../drivers/net/wireless/ath/ath10k/thermal.c:136:6: error: redefinition of 'ath10k_thermal_set_throttling'
+> ../drivers/net/wireless/ath/ath10k/thermal.c:162:5: error: redefinition of 'ath10k_thermal_register'
+> ../drivers/net/wireless/ath/ath10k/thermal.c:216:6: error: redefinition of 'ath10k_thermal_unregister'
 
--- 
-2.1.2
+This is happening because there are stub functions provided in the
+driver's thermal.h for !THERMAL cases but these are guarded by an #ifdef
+not an #if and so fails to do the right thing if the thermal code is
+built as a module.  It looks like this was somehow triggered as part of
+the reorganisation of the WiFi directory structure.
 
+--m4E4Spob7u7JiHeu
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWVvf2AAoJECTWi3JdVIfQuiYH/23woji0tzwwjNpKGq5bC2ey
+9rl97Fivok7v2kwAx0FvEOgMySjQRhD9YwkYQNeYx/o4C5Tgh94R3kIyDjZD/Aec
+I7iYgjtmbp8zuGA1BQO9nAss+6GInScz08YW3Al6eUOM2dT4/3TeEK/BAiX+MqVZ
+Fnt3d9OMpDJppjgI3cZRF0Px3WYwtVhwRVKm+YpNAgbYodR5S2uRq/6IjQzeuPZI
+0l8X3jhN1KpYth3Yr4aGKQuEbHqkoBYQbMN5iO5AYRcS2QbRGVtTMjxmpBDQAt+D
+lKJavV6kA/1kCf/ba8A3Aduvz45+Ka/H1T3kim/F7rBwQb4t8aSu1J1J6eYKBmQ=
+=bf0c
+-----END PGP SIGNATURE-----
+
+--m4E4Spob7u7JiHeu--
