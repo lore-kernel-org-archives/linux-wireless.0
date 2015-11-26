@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:34315 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125AbbK0Ih3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 03:37:29 -0500
-Received: by lffu14 with SMTP id u14so121541100lff.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:28 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 05/13] ath9k: use u32 when calculate tsf
-Date: Fri, 27 Nov 2015 09:37:10 +0100
-Message-Id: <1448613438-5173-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093748_014735_06BD61BE)
-In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from mx01-fr.bfs.de ([193.174.231.67]:18165 "EHLO mx01-fr.bfs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751106AbbKZMWD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 07:22:03 -0500
+Message-ID: <5656F95C.60107@bfs.de> (sfid-20151126_132208_869280_152C1223)
+Date: Thu, 26 Nov 2015 13:21:48 +0100
+From: walter harms <wharms@bfs.de>
+Reply-To: wharms@bfs.de
+MIME-Version: 1.0
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] rt2x00: type bug in _rt2500usb_register_read()
+References: <20151126115523.GD10556@mwanda>
+In-Reply-To: <20151126115523.GD10556@mwanda>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use u32 while ath9k_hw_gettsf32() and
-ath9k_hw_gen_timer_start() require u32.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 5640e88..28bbbef 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1405,7 +1405,7 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_hw *ah = sc->sc_ah;
--	s32 tsf, target_tsf;
-+	u32 tsf, target_tsf;
- 
- 	if (!avp || !avp->noa.has_next_tsf)
- 		return;
-@@ -1427,7 +1427,7 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
- 		__func__, avp->noa.absent, tsf, target_tsf,
- 		(target_tsf - tsf) / 1000);
- 
--	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, (u32) target_tsf, 1000000);
-+	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, target_tsf, 1000000);
- }
- 
- static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
--- 
-1.9.1
+Am 26.11.2015 12:55, schrieb Dan Carpenter:
+> This code causes a static checker bug.
+> 
+> drivers/net/wireless/ralink/rt2x00/rt2500usb.c:232 _rt2500usb_register_read()
+> warn: passing casted pointer 'value' to 'rt2500usb_register_read()' 32 vs 16.
+> 
+> If the low 16 bits were initialized to zero then this code would only be
+> a problem on big endian systems.  But in this case this is case the low
+> 16 bits are never initialized.  This is called from a function which is
+> created using a macro:
+> 
+> RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
+> 
+> We end up copying uninitialized data to the user which is bogus and an
+> information leak.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Not tested.  Perhaps we should just remove this code since it has never
+> worked.
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> index b50d873..d26018f 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> @@ -229,7 +229,10 @@ static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+>  				     const unsigned int offset,
+>  				     u32 *value)
+>  {
+> -	rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
+> +	u16 tmp;
+> +
+> +	rt2500usb_register_read(rt2x00dev, offset, &tmp);
+> +	*value = tmp;
+>  }
+>  
 
+perhaps, cleaning *value would be sufficient ? Avoiding the need for a tmp var.
+
+*value = 0
+rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
+
+
+re,
+ wh
+
+>  static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
