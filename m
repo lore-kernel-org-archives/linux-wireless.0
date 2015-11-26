@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:59167 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587AbbKSGyg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 01:54:36 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/26] staging: wilc1000: rename bDirectScan in refresh_scan function
-Date: Thu, 19 Nov 2015 15:56:24 +0900
-Message-ID: <1447916195-24851-15-git-send-email-glen.lee@atmel.com> (sfid-20151119_082253_321304_12C60CAA)
-In-Reply-To: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-References: <1447916195-24851-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:36347 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751483AbbKZK5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 05:57:54 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/8] mac80211: fix mgmt-tx abort cookie and leak
+Date: Thu, 26 Nov 2015 11:57:44 +0100
+Message-Id: <1448535468-12237-4-git-send-email-johannes@sipsolutions.net> (sfid-20151126_115830_768708_3A4CF362)
+In-Reply-To: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
+References: <1448535468-12237-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch renames bDirectScan to direct_scan that is
-third argument of refresh_scan function to avoid camelcase.
+If a mgmt-tx operation is aborted before it runs, the wrong
+cookie is reported back to userspace, and the ack_skb gets
+leaked since the frame is freed directly instead of freeing
+it using ieee80211_free_txskb(). Fix that.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Fixes: 3b79af973cf4 ("mac80211: stop using pointers as userspace cookies")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/offchannel.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e987e78..6f79662 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -237,7 +237,7 @@ static u32 get_rssi_avg(tstrNetworkInfo *pstrNetworkInfo)
- 	return rssi_v;
- }
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 04401037140e..0fe9f746cd7e 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -308,11 +308,10 @@ void ieee80211_roc_notify_destroy(struct ieee80211_roc_work *roc, bool free)
  
--static void refresh_scan(void *user_void, u8 all, bool bDirectScan)
-+static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- {
- 	struct wilc_priv *priv;
- 	struct wiphy *wiphy;
-@@ -263,7 +263,8 @@ static void refresh_scan(void *user_void, u8 all, bool bDirectScan)
- 				channel = ieee80211_get_channel(wiphy, s32Freq);
+ 	/* was never transmitted */
+ 	if (roc->frame) {
+-		cfg80211_mgmt_tx_status(&roc->sdata->wdev,
+-					(unsigned long)roc->frame,
++		cfg80211_mgmt_tx_status(&roc->sdata->wdev, roc->mgmt_tx_cookie,
+ 					roc->frame->data, roc->frame->len,
+ 					false, GFP_KERNEL);
+-		kfree_skb(roc->frame);
++		ieee80211_free_txskb(&roc->sdata->local->hw, roc->frame);
+ 	}
  
- 				rssi = get_rssi_avg(pstrNetworkInfo);
--				if (memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7) || bDirectScan)	{
-+				if (memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7) ||
-+				    direct_scan) {
- 					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, pstrNetworkInfo->au8bssid, pstrNetworkInfo->u64Tsf, pstrNetworkInfo->u16CapInfo,
- 								  pstrNetworkInfo->u16BeaconPeriod, (const u8 *)pstrNetworkInfo->pu8IEs,
- 								  (size_t)pstrNetworkInfo->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
+ 	if (!roc->mgmt_tx_cookie)
 -- 
-1.9.1
+2.6.2
 
