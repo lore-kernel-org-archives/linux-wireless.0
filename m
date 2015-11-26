@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36718 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbbKHHuD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2015 02:50:03 -0500
-Received: by pacdm15 with SMTP id dm15so141905650pac.3
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2015 23:50:02 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/32] staging: wilc1000: rename u8KeyLen in host_int_add_ptk
-Date: Sun,  8 Nov 2015 16:49:03 +0900
-Message-Id: <1446968965-8958-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151108_085008_483384_C1481F31)
-In-Reply-To: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1446968965-8958-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37017 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751046AbbKZMvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 07:51:40 -0500
+Message-ID: <1448542297.2167.10.camel@sipsolutions.net> (sfid-20151126_135143_600218_B35D0111)
+Subject: Re: (bug report) iwlwifi: inconsitent NULL checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2015 13:51:37 +0100
+In-Reply-To: <20151126123756.GF7289@mwanda>
+References: <20151126120317.GJ10556@mwanda>
+	 <1448540211.2167.7.camel@sipsolutions.net> <20151126123756.GF7289@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes u8KeyLen to key_len to avoid camelcase.
-It is used as local variable in order to save pkt_key_len that is
-argument of this function.
+On Thu, 2015-11-26 at 15:37 +0300, Dan Carpenter wrote:
+> 
+> Ah.  Thanks for looking at this.  Eventually Smatch will be smart
+> enoughto figure this implication out but not yet.  No need to change 
+> the code because the static checker isn't capable enough...
+> 
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Actually I just had an idea - we should put those two *checks* into an
+inline anyway since they're actually really unlikely and we might not
+want to take the function call every time...
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a959f48..dd7e8ed 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3214,7 +3214,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- {
- 	int result = 0;
- 	struct host_if_msg msg;
--	u8 u8KeyLen = ptk_key_len;
-+	u8 key_len = ptk_key_len;
- 	int i;
- 
- 	if (!hif_drv) {
-@@ -3223,10 +3223,10 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 	}
- 
- 	if (rx_mic)
--		u8KeyLen += RX_MIC_KEY_LEN;
-+		key_len += RX_MIC_KEY_LEN;
- 
- 	if (tx_mic)
--		u8KeyLen += TX_MIC_KEY_LEN;
-+		key_len += TX_MIC_KEY_LEN;
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
-@@ -3257,7 +3257,7 @@ int host_int_add_ptk(struct host_if_drv *hif_drv, const u8 *ptk,
- 		}
- 	}
- 
--	msg.body.key_info.attr.wpa.key_len = u8KeyLen;
-+	msg.body.key_info.attr.wpa.key_len = key_len;
- 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
- 	msg.body.key_info.attr.wpa.mode = cipher_mode;
- 	msg.drv = hif_drv;
--- 
-2.6.3
+So I thought that smatch would then be able to see through it, since
+it's now an inline, but it doesn't seem like it can?
 
+https://p.sipsolutions.net/a162ca550f675800.txt
+
+johannes
