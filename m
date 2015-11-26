@@ -1,80 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26609 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030348AbbKEFep (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:35062 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbbKZAFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:34:45 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 13/38] staging: wilc1000: rename pstrWFIDrv of function wilc_set_multicast_list
-Date: Thu, 5 Nov 2015 14:36:14 +0900
-Message-ID: <1446701799-24870-13-git-send-email-glen.lee@atmel.com> (sfid-20151105_063448_515095_D6E525B7)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+	Wed, 25 Nov 2015 19:05:03 -0500
+Received: by pacej9 with SMTP id ej9so71486151pac.2
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2015 16:05:02 -0800 (PST)
+Subject: Re: [PATCH v2 0/5] wcn36xx: add some new firmware functionalities
+ support
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
+ <564E8196.9050601@linaro.org>
+ <CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com>
+Cc: Andy Green <andy.green@linaro.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <56564CA8.4070603@linaro.org> (sfid-20151126_010507_595504_F5FF5B60)
+Date: Thu, 26 Nov 2015 08:04:56 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Hi Kalle,
 
-This patch renames pstrWFIDrv of function wilc_set_multicast_list to hif_drv
-to avoid CamelCase naming convention.
+On 2015/11/23 4:03, Eugene Krasnikov wrote:
+> All 5 patches looks good to me.
+>
+Is it OK to take these patches? Thanks.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Regards
+Yin, Fengwei
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 75edfa3..6250abb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1290,11 +1290,11 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 
- 	struct netdev_hw_addr *ha;
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *hif_drv;
- 	int i = 0;
- 
- 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
--	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
-+	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
- 
- 	if (!dev)
- 		return;
-@@ -1314,14 +1314,14 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	if ((dev->flags & IFF_ALLMULTI) || (dev->mc.count) > WILC_MULTICAST_TABLE_SIZE) {
- 		PRINT_D(INIT_DBG, "Disable multicast filter, retrive all multicast packets\n");
- 		/* get all multicast packets */
--		host_int_setup_multicast_filter(pstrWFIDrv, false, 0);
-+		host_int_setup_multicast_filter(hif_drv, false, 0);
- 		return;
- 	}
- 
- 	/* No multicast?  Just get our own stuff */
- 	if ((dev->mc.count) == 0) {
- 		PRINT_D(INIT_DBG, "Enable multicast filter, retrive directed packets only.\n");
--		host_int_setup_multicast_filter(pstrWFIDrv, true, 0);
-+		host_int_setup_multicast_filter(hif_drv, true, 0);
- 		return;
- 	}
- 
-@@ -1339,7 +1339,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 		i++;
- 	}
- 
--	host_int_setup_multicast_filter(pstrWFIDrv, true, (dev->mc.count));
-+	host_int_setup_multicast_filter(hif_drv, true, (dev->mc.count));
- 
- 	return;
- 
--- 
-1.9.1
-
+> 2015-11-20 2:12 GMT+00:00 fengwei.yin <fengwei.yin@linaro.org>:
+>> Hi Eugene,
+>>
+>> On 2015/11/10 16:25, Yin, Fengwei wrote:
+>>>
+>>> Hi,
+>>> This patchset are from Andy Green. Which support some functionalities of
+>>> latest wcn36xx firmware.
+>>>
+>>> Changelog since v1
+>>>     - decouple the connection of wcn36xx_smd_rsp_status_check_v2 with 3620.
+>>>       This also fix the build error.
+>>>     - Remove additional "From" introduced in v1.
+>>>
+>>> Andy Green (5):
+>>>     wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
+>>>     wcn36xx: swallow two wcn3620 IND messages
+>>>     wcn36xx: handle new hal response format
+>>>     wcn3620: use new response format for wcn3620 trigger_ba
+>>>     wcn3620: use new response format for wcn3620 remove_bsskey
+>>>
+>>>    drivers/net/wireless/ath/wcn36xx/hal.h |  2 ++
+>>>    drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
+>>>    drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
+>>>    3 files changed, 36 insertions(+), 2 deletions(-)
+>>>
+>>
+>> What do you think about these patches? If they are OK, can you ack them?
+>> Thanks.
+>>
+>>
+>> Regards
+>> Yin, Fengwei
+>
+>
+>
