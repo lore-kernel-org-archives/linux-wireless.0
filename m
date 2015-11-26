@@ -1,98 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35080 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965576AbbKDQWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 11:22:14 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/4] ipv4: add option to drop gratuitous ARP packets
-Date: Wed,  4 Nov 2015 17:22:06 +0100
-Message-Id: <1446654127-26826-3-git-send-email-johannes@sipsolutions.net> (sfid-20151104_172308_493818_1B2EFAB0)
-In-Reply-To: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
-References: <1446654127-26826-1-git-send-email-johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40831 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbbKZME5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 07:04:57 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: brcm80211: Delete an unnecessary check before the function
+ call"release_firmware"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <563C5DA2.3000005@users.sourceforge.net>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Message-Id: <20151126120450.AA72313F2A0@smtp.codeaurora.org> (sfid-20151126_130535_711372_726F8C20)
+Date: Thu, 26 Nov 2015 12:04:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-In certain 802.11 wireless deployments, there will be ARP proxies
-that use knowledge of the network to correctly answer requests.
-To prevent gratuitous ARP frames on the shared medium from being
-a problem, on such deployments wireless needs to drop them.
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 6 Nov 2015 08:48:23 +0100
+> 
+> The release_firmware() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
-Enable this by providing an option called "drop_gratuitous_arp".
+Thanks, applied to wireless-drivers-next.git.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/networking/ip-sysctl.txt | 6 ++++++
- include/uapi/linux/ip.h                | 1 +
- net/ipv4/arp.c                         | 8 ++++++++
- net/ipv4/devinet.c                     | 2 ++
- 4 files changed, 17 insertions(+)
-
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index a2169651254e..428fb48a19fc 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1215,6 +1215,12 @@ drop_unicast_in_l2_multicast - BOOLEAN
- 	1122, but is disabled by default for compatibility reasons.
- 	Default: off (0)
- 
-+drop_gratuitous_arp - BOOLEAN
-+	Drop all gratuitous ARP frames, for example if there's a known
-+	good ARP proxy on the network and such frames need not be used
-+	(or in the case of 802.11, must not be used to prevent attacks.)
-+	Default: off (0)
-+
- 
- tag - INTEGER
- 	Allows you to write a number, which can be used as required.
-diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
-index 584834f7e95c..f291569768dd 100644
---- a/include/uapi/linux/ip.h
-+++ b/include/uapi/linux/ip.h
-@@ -166,6 +166,7 @@ enum
- 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
- 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
- 	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
-+	IPV4_DEVCONF_DROP_GRATUITOUS_ARP,
- 	__IPV4_DEVCONF_MAX
- };
- 
-diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
-index 59b3e0e8fd51..36006a59c7f0 100644
---- a/net/ipv4/arp.c
-+++ b/net/ipv4/arp.c
-@@ -735,6 +735,14 @@ static int arp_process(struct net *net, struct sock *sk, struct sk_buff *skb)
- 	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
- 		goto out;
- 
-+ /*
-+  *	For some 802.11 wireless deployments (and possibly other networks),
-+  *	there will be an ARP proxy and gratuitous ARP frames are attacks
-+  *	and thus should not be accepted.
-+  */
-+	if (IN_DEV_ORCONF(in_dev, DROP_GRATUITOUS_ARP) && sip == tip)
-+		goto out;
-+
- /*
-  *     Special case: We must set Frame Relay source Q.922 address
-  */
-diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
-index dbbab28a52a4..3d835313575e 100644
---- a/net/ipv4/devinet.c
-+++ b/net/ipv4/devinet.c
-@@ -2185,6 +2185,8 @@ static struct devinet_sysctl_table {
- 					"igmpv3_unsolicited_report_interval"),
- 		DEVINET_SYSCTL_RW_ENTRY(IGNORE_ROUTES_WITH_LINKDOWN,
- 					"ignore_routes_with_linkdown"),
-+		DEVINET_SYSCTL_RW_ENTRY(DROP_GRATUITOUS_ARP,
-+					"drop_gratuitous_arp"),
- 
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOXFRM, "disable_xfrm"),
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOPOLICY, "disable_policy"),
--- 
-2.6.2
-
+Kalle Valo
