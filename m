@@ -1,60 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20722 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758AbbKRGJ1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 01:09:27 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/16] staging: wilc1000: add struct wilc to host_if_drv
-Date: Wed, 18 Nov 2015 15:11:32 +0900
-Message-ID: <1447827097-9436-12-git-send-email-glen.lee@atmel.com> (sfid-20151118_070930_893565_C1F08653)
-In-Reply-To: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-References: <1447827097-9436-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38039 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751723AbbKZQow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 11:44:52 -0500
+Message-ID: <1448556286.2167.20.camel@sipsolutions.net> (sfid-20151126_174454_564214_F73EE43A)
+Subject: Re: [PATCH] cfg80211: ocb: Fix null pointer deref if join_ocb is
+ unimplemented
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Date: Thu, 26 Nov 2015 17:44:46 +0100
+In-Reply-To: <1447102929-8906-1-git-send-email-ola1olsson@gmail.com> (sfid-20151109_220218_957818_4A103F31)
+References: <1447102929-8906-1-git-send-email-ola1olsson@gmail.com>
+	 (sfid-20151109_220218_957818_4A103F31)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds struct wilc to host_if_dev and assign wilc to use driver's
-primary structure in host_if_dev.
+Applied, but only to mac80211-next as it's not really relevant - all
+drivers actually advertising OCB mode (should) have the pointer, and
+the iftype is checked here.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 1 +
- drivers/staging/wilc1000/host_interface.h | 2 ++
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2531d20..3609949 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3848,6 +3848,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 		result = -ENOMEM;
- 		goto _fail_;
- 	}
-+	hif_drv->wilc = wilc;
- 	*hif_drv_handler = hif_drv;
- 	err = add_handler_in_list(hif_drv);
- 	if (err) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index efeb9e2..004467c6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -259,7 +259,9 @@ enum p2p_listen_state {
- 	P2P_GRP_FORMATION
- };
- 
-+struct wilc;
- struct host_if_drv {
-+	struct wilc *wilc;
- 	struct user_scan_req usr_scan_req;
- 	struct user_conn_req usr_conn_req;
- 	struct remain_ch remain_on_ch;
--- 
-1.9.1
-
+johannes
