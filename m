@@ -1,71 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:36039 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753982AbbK0Ihf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 03:37:35 -0500
-Received: by lfs39 with SMTP id 39so118585476lfs.3
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:33 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 09/13] ath9k: request NOA update when chanctx active
-Date: Fri, 27 Nov 2015 09:37:14 +0100
-Message-Id: <1448613438-5173-9-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_095252_037432_E4F109F0)
-In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37759 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751367AbbKZPjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 10:39:15 -0500
+Message-ID: <1448552352.2167.14.camel@sipsolutions.net> (sfid-20151126_163919_664516_CC0F7608)
+Subject: pull-request: mac80211 2015-11-26
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 26 Nov 2015 16:39:12 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Request NOA update when chanctx active, also in case
-of STA.
+[resending with correct netdev address, not sure how that ended up in
+my autocompletion address book ... sorry about that!]
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
-This depends on:
-mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
+Hi Dave,
 
- drivers/net/wireless/ath/ath9k/channel.c | 2 +-
- drivers/net/wireless/ath/ath9k/main.c    | 5 ++++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Sorry for being so late. These have been pending for a while (and in
+fact in linux-next too, I asked to be added there recently :) ).
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 5a1ede6..c94d7d9 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1439,7 +1439,7 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	if (!sc->p2p_ps_timer)
- 		return;
- 
--	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
-+	if (vif->type != NL80211_IFTYPE_STATION)
- 		return;
- 
- 	sc->p2p_ps_vif = avp;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d184e68..ab46a4d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -974,7 +974,7 @@ static void ath9k_update_bssid_mask(struct ath_softc *sc,
- 		if (ctx->nvifs_assigned != 1)
- 			continue;
- 
--		if (!avp->vif->p2p || !iter_data->has_hw_macaddr)
-+		if (!iter_data->has_hw_macaddr)
- 			continue;
- 
- 		ether_addr_copy(common->curbssid, avp->bssid);
-@@ -1251,6 +1251,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
- 	sc->cur_chan->nvifs++;
- 
-+	if (vif->type == NL80211_IFTYPE_STATION && ath9k_is_chanctx_enabled())
-+		vif->driver_flags |= IEEE80211_VIF_GET_NOA_UPDATE;
-+
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
--- 
-1.9.1
+Let me know if there's any problem.
 
+Thanks,
+johannes
+
+
+The following changes since commit
+17c790a60dad11c0193127e83ac8e183b4fed1a2:
+
+  Merge branch 'mv88e6060-fixes' (2015-11-15 20:16:26 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+tags/mac80211-for-davem-2015-11-26
+
+for you to fetch changes up to
+5ff3ca2888940533dcd50212cf0be7049fee979c:
+
+  mac80211: don't teardown sdata on sdata stop (2015-11-20 11:40:50
++0100)
+
+----------------------------------------------------------------
+A small set of fixes for 4.4:
+ * remove NL80211_FEATURE_FULL_AP_CLIENT_STATE again, it
+   was broken and needs more work, we'll enable it for 4.5
+ * fix call_rcu() induced use-after-reset/free in mesh
+   (that was suddenly causing issues in certain tests)
+ * always request block-ack window size 64 as we found
+   some APs will otherwise crash (really ...)
+ * fix P2P-Device teardown sequence to avoid restarting
+   with uninitialized data
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: don't teardown sdata on sdata stop
+
+Emmanuel Grumbach (1):
+      mac80211: ensure we don't update tx power on a non-running sdata
+
+Gregory Greenman (1):
+      mac80211: always set the buf_size in AddBA req to 64
+
+Johannes Berg (2):
+      mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE
+      mac80211: mesh: fix call_rcu() usage
+
+ include/net/mac80211.h      | 6 ++++--
+ net/mac80211/agg-tx.c       | 3 ++-
+ net/mac80211/iface.c        | 5 +++--
+ net/mac80211/main.c         | 3 +--
+ net/mac80211/mesh_pathtbl.c | 8 ++++----
+ 5 files changed, 14 insertions(+), 11 deletions(-)
