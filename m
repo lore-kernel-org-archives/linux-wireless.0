@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:49897 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbbKYNiP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 08:38:15 -0500
-Subject: [PATCH 2/6] ath10k: reorganise hardware and firmware info messages
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 25 Nov 2015 15:38:12 +0200
-Message-ID: <20151125133812.25507.45550.stgit@potku.adurom.net> (sfid-20151125_143818_148193_4BE66394)
-In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net>
-References: <20151125133654.25507.10863.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38133 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752494AbbKZRFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 12:05:00 -0500
+Message-ID: <1448557497.2167.24.camel@sipsolutions.net> (sfid-20151126_180504_547174_BF69C011)
+Subject: Re: [PATCH] iwlwifi: mvm: add hwmon device for the temperature
+ sensor
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: Luca Coelho <luca@coelho.fi>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kaufman, Liad" <liad.kaufman@intel.com>
+Date: Thu, 26 Nov 2015 18:04:57 +0100
+In-Reply-To: <874mg8vh2h.fsf@nemi.mork.no>
+References: <541F23D2.90600@gmail.com>
+	 <1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+	 <87ppeoc4s0.fsf@nemi.mork.no>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
+	 <87d2amd24t.fsf@nemi.mork.no>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com>
+	 <1411760678.18773.5.camel@dubbel>
+	 <A66968BA-6B95-4437-8A95-5EBFD6BCF583@mork.no>
+	 <877flbuke9.fsf_-_@nemi.mork.no>
+	 <1448552793.2167.17.camel@sipsolutions.net> <874mg8vh2h.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to make it easier to split them later and also make room for crc32
-checksums.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |   29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+> Ah, right.  I wondered a bit about that, but concluded that you
+> probably
+> didn't want it since you had all your own temp limit handling.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 145c066b5087..4c0e0a1ef0f1 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -136,14 +136,28 @@ void ath10k_print_driver_info(struct ath10k *ar)
- 		scnprintf(boardinfo, sizeof(boardinfo), "sub %04x:%04x",
- 			  ar->id.subsystem_vendor, ar->id.subsystem_device);
- 
--	ath10k_info(ar, "%s (0x%08x, 0x%08x %s) fw %s fwapi %d bdapi %d htt-ver %d.%d wmi-op %d htt-op %d cal %s max-sta %d raw %d hwcrypto %d features %s\n",
-+	ath10k_info(ar, "%s target 0x%08x chip_id 0x%08x %s",
- 		    ar->hw_params.name,
- 		    ar->target_version,
- 		    ar->chip_id,
--		    boardinfo,
-+		    boardinfo);
-+
-+	ath10k_info(ar, "firmware ver %s api %d features %s\n",
- 		    ar->hw->wiphy->fw_version,
- 		    ar->fw_api,
--		    ar->bd_api,
-+		    fw_features);
-+
-+	ath10k_info(ar, "board_file api %d",
-+		    ar->bd_api);
-+
-+	ath10k_info(ar, "kconfig debug %d debugfs %d tracing %d dfs %d testmode %d\n",
-+		    config_enabled(CONFIG_ATH10K_DEBUG),
-+		    config_enabled(CONFIG_ATH10K_DEBUGFS),
-+		    config_enabled(CONFIG_ATH10K_TRACING),
-+		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED),
-+		    config_enabled(CONFIG_NL80211_TESTMODE));
-+
-+	ath10k_info(ar, "htt-ver %d.%d wmi-op %d htt-op %d cal %s max-sta %d raw %d hwcrypto %d\n",
- 		    ar->htt.target_version_major,
- 		    ar->htt.target_version_minor,
- 		    ar->wmi.op_version,
-@@ -151,14 +165,7 @@ void ath10k_print_driver_info(struct ath10k *ar)
- 		    ath10k_cal_mode_str(ar->cal_mode),
- 		    ar->max_num_stations,
- 		    test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags),
--		    !test_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags),
--		    fw_features);
--	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
--		    config_enabled(CONFIG_ATH10K_DEBUG),
--		    config_enabled(CONFIG_ATH10K_DEBUGFS),
--		    config_enabled(CONFIG_ATH10K_TRACING),
--		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED),
--		    config_enabled(CONFIG_NL80211_TESTMODE));
-+		    !test_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags));
- }
- EXPORT_SYMBOL(ath10k_print_driver_info);
- 
+:)
 
+We do, but we're going to have to be able to handle requests from the
+platform to ask the device to do its part to reduce heating.
+
+johannes
