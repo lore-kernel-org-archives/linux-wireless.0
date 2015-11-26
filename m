@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27041 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031027AbbKEFge (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:38063 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752110AbbKZSvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:34 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 32/38] staging: wilc1000: remove goto from wlan_initialize_threads
-Date: Thu, 5 Nov 2015 14:36:33 +0900
-Message-ID: <1446701799-24870-32-git-send-email-glen.lee@atmel.com> (sfid-20151105_063754_279894_9F04A3D5)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
+	Thu, 26 Nov 2015 13:51:08 -0500
+Date: Thu, 26 Nov 2015 20:51:04 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Advertise support for VHT IBSS
+Message-ID: <20151126185104.GA27594@w1.fi> (sfid-20151126_195118_221582_F37C81B7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+VHT can be used with IBSS without needing any additional changes in
+mac80211_hwsim, so start claiming support for this to increase test
+coverage.
 
-This patch remove goto feature from wlan_initialize_threads function.
-Goto feature is 'wilc->close=0' & return result.
-So, remove goto feature and it was replaced with the return value directly,
-as well as removed unused ret variable.
-Also, execute 'wilc->close=0' before return.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Jouni Malinen <j@w1.fi>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index c529a15..3c8155e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -911,7 +911,6 @@ int wlan_initialize_threads(struct net_device *dev)
- {
- 	perInterface_wlan_t *nic;
- 	struct wilc *wilc;
--	int ret = 0;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 551dfff..1c598a5 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2449,6 +2449,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 			       NL80211_FEATURE_STATIC_SMPS |
+ 			       NL80211_FEATURE_DYNAMIC_SMPS |
+ 			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
  
- 	nic = netdev_priv(dev);
- 	wilc = nic->wilc;
-@@ -922,16 +921,12 @@ int wlan_initialize_threads(struct net_device *dev)
- 				     "K_TXQ_TASK");
- 	if (!wilc->txq_thread) {
- 		PRINT_ER("couldn't create TXQ thread\n");
--		ret = -ENOBUFS;
--		goto _fail_2;
-+		wilc->close = 0;
-+		return -ENOBUFS;
- 	}
- 	down(&wilc->txq_thread_started);
- 
- 	return 0;
--
--_fail_2:
--	wilc->close = 0;
--	return ret;
- }
- 
- static void wlan_deinitialize_threads(struct net_device *dev)
+ 	/* ask mac80211 to reserve space for magic */
+ 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
 -- 
 1.9.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
