@@ -1,210 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:33443 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752934AbbKRF7e (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29455 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753011AbbKZI1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 00:59:34 -0500
-Received: by lbbkw15 with SMTP id kw15so18476471lbb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2015 21:59:32 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 3/9] ath10k: remove txmode from skb_cb
-Date: Wed, 18 Nov 2015 06:59:17 +0100
-Message-Id: <1447826363-16818-4-git-send-email-michal.kazior@tieto.com> (sfid-20151118_065938_834875_089FFCB4)
-In-Reply-To: <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
-References: <87mvuj585b.fsf@kamboji.qca.qualcomm.com>
- <1447826363-16818-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 26 Nov 2015 03:27:13 -0500
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
+Date: Thu, 26 Nov 2015 08:27:06 +0000
+Message-ID: <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com> (sfid-20151126_092718_034998_AC0080EB)
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+ <1448018530.3141.25.camel@sipsolutions.net>
+In-Reply-To: <1448018530.3141.25.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was wasteful to keep it in the struct because
-it can be passed as function argument down the tx
-path.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |  1 -
- drivers/net/wireless/ath/ath10k/htt.h    |  4 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  9 +++----
- drivers/net/wireless/ath/ath10k/mac.c    | 40 ++++++++++++++++++++++++--------
- 4 files changed, 38 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index b91f69286a4f..0228000ecf50 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -85,7 +85,6 @@ struct ath10k_skb_cb {
- 	dma_addr_t paddr;
- 	u8 eid;
- 	u8 vdev_id;
--	enum ath10k_hw_txrx_mode txmode;
- 
- 	struct {
- 		u8 tid;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 2b87ed6458db..47ca048feaf0 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1602,7 +1602,9 @@ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
- void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
- int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
--int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *);
-+int ath10k_htt_tx(struct ath10k_htt *htt,
-+		  enum ath10k_hw_txrx_mode txmode,
-+		  struct sk_buff *msdu);
- void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
- 					     struct sk_buff *skb);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index b57335d47c78..f6fb4f131542 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -532,7 +532,8 @@ err:
- 	return res;
- }
- 
--int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
-+int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		  struct sk_buff *msdu)
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
-@@ -584,7 +585,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	} else if (!skb_cb->htt.nohwcrypt &&
--		   skb_cb->txmode == ATH10K_HW_TXRX_RAW &&
-+		   txmode == ATH10K_HW_TXRX_RAW &&
- 		   ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 	}
-@@ -597,7 +598,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		goto err_free_msdu_id;
- 	}
- 
--	switch (skb_cb->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-@@ -626,7 +627,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 
- 			frags_paddr = skb_cb->htt.txbuf_paddr;
- 		}
--		flags0 |= SM(skb_cb->txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
- 		break;
- 	case ATH10K_HW_TXRX_MGMT:
- 		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index be323ad537ad..4d3b8dc8e5de 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3335,24 +3335,24 @@ unlock:
- 	return ret;
- }
- 
--static void ath10k_mac_tx(struct ath10k *ar, struct sk_buff *skb)
-+static void ath10k_mac_tx(struct ath10k *ar, enum ath10k_hw_txrx_mode txmode,
-+			  struct sk_buff *skb)
- {
--	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
- 	struct ath10k_htt *htt = &ar->htt;
- 	int ret = 0;
- 
--	switch (cb->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 	case ATH10K_HW_TXRX_ETHERNET:
--		ret = ath10k_htt_tx(htt, skb);
-+		ret = ath10k_htt_tx(htt, txmode, skb);
- 		break;
- 	case ATH10K_HW_TXRX_MGMT:
- 		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
- 			     ar->fw_features))
- 			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
- 		else if (ar->htt.target_version_major >= 3)
--			ret = ath10k_htt_tx(htt, skb);
-+			ret = ath10k_htt_tx(htt, txmode, skb);
- 		else
- 			ret = ath10k_htt_mgmt_tx(htt, skb);
- 		break;
-@@ -3382,9 +3382,13 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- {
- 	struct ath10k *ar = container_of(work, struct ath10k, offchan_tx_work);
- 	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
- 	struct ieee80211_hdr *hdr;
-+	struct ieee80211_vif *vif;
-+	struct ieee80211_sta *sta;
- 	struct sk_buff *skb;
- 	const u8 *peer_addr;
-+	enum ath10k_hw_txrx_mode txmode;
- 	int vdev_id;
- 	int ret;
- 	unsigned long time_left;
-@@ -3434,7 +3438,22 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		ar->offchan_tx_skb = skb;
- 		spin_unlock_bh(&ar->data_lock);
- 
--		ath10k_mac_tx(ar, skb);
-+		/* It's safe to access vif and sta - conf_mutex guarantees that
-+		 * sta_state() and remove_interface() are locked exclusively
-+		 * out wrt to this offchannel worker.
-+		 */
-+		arvif = ath10k_get_arvif(ar, vdev_id);
-+		if (arvif) {
-+			vif = arvif->vif;
-+			sta = ieee80211_find_sta(vif, peer_addr);
-+		} else {
-+			vif = NULL;
-+			sta = NULL;
-+		}
-+
-+		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-+
-+		ath10k_mac_tx(ar, txmode, skb);
- 
- 		time_left =
- 		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
-@@ -3656,20 +3675,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	enum ath10k_hw_txrx_mode txmode;
- 
- 	/* We should disable CCK RATE due to P2P */
- 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
- 		ath10k_dbg(ar, ATH10K_DBG_MAC, "IEEE80211_TX_CTL_NO_CCK_RATE\n");
- 
-+	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-+
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
--	ATH10K_SKB_CB(skb)->txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta,
--								skb);
- 
--	switch (ATH10K_SKB_CB(skb)->txmode) {
-+	switch (txmode) {
- 	case ATH10K_HW_TXRX_MGMT:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		ath10k_tx_h_nwifi(hw, skb);
-@@ -3706,7 +3726,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	ath10k_mac_tx(ar, skb);
-+	ath10k_mac_tx(ar, txmode, skb);
- }
- 
- /* Must not be called with conf_mutex held as workers can use that also. */
--- 
-2.1.4
-
+PiBPbiBOb3ZlbWJlciAyMCwgMjAxNSA3OjIyIFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiAN
+Cj4gT24gVGh1LCAyMDE1LTExLTEyIGF0IDAzOjUxICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+
+ID4NCj4gPiArc3RhdGljIGludCBwcmludF9tYWNfYWRkcihjaGFyICpwLCB1OCAqbWFjX2FkZHIp
+IHsNCj4gPiArCWludCBpOw0KPiA+ICsJY2hhciAqc3RyID0gcDsNCj4gPiArDQo+ID4gKwlzdHIg
+Kz0gc3ByaW50ZihzdHIsICJtYWMgYWRkcmVzczogJTAyeCIsIG1hY19hZGRyWzBdKTsNCj4gPiAr
+CWZvciAoaSA9IDE7IGkgPCBFVEhfQUxFTjsgaSsrKQ0KPiA+ICsJCXN0ciArPSBzcHJpbnRmKHN0
+ciwgIjolMDJ4IiwgbWFjX2FkZHJbaV0pOw0KPiA+ICsJc3RyICs9IHNwcmludGYoc3RyLCAiXG4i
+KTsNCj4gPiArDQo+ID4gKwlyZXR1cm4gKHN0ciAtIHApOw0KPiA+ICt9DQo+IA0KPiBZb3UgY2Fu
+IHVzZSAlcE0gaGVyZSAoYW5kIHBlcmhhcHMgZ2V0IHJpZCBvZiB0aGUgZnVuY3Rpb24gdGhlbikN
+Cj4gDQoNCkkgd2lsbCBtb2RpZnkgaXQuDQoNCj4gPiArdm9pZCBtd2xfZGVidWdmc19yZW1vdmUo
+c3RydWN0IGllZWU4MDIxMV9odyAqaHcpIHsNCj4gPiArCXN0cnVjdCBtd2xfcHJpdiAqcHJpdiA9
+IGh3LT5wcml2Ow0KPiA+ICsNCj4gPiArCWRlYnVnZnNfcmVtb3ZlKHByaXYtPmRlYnVnZnNfcGh5
+KTsNCj4gDQo+IGRvZXNuJ3QgdGhhdCBoYXZlIHRvIGJlIF9yZWN1cnNpdmUoKT8NCj4gDQo+ID4g
+KyNkZWZpbmUgTVdMX0RSVl9OQU1FwqDCoMKgwqDCoEtCVUlMRF9NT0ROQU1FDQo+ID4gKyNkZWZp
+bmUgTVdMX0RSVl9WRVJTSU9OCcKgIjEwLjMuMC4xNCINCj4gDQo+IHZlcnNpb25zIGxpa2UgdGhh
+dCBhcmUgZ2VuZXJhbGx5IGZhaXJseSB1c2VsZXNzIHNpbmNlIHlvdSBkb24ndCB1cGRhdGUgdGhl
+bSBmb3INCj4gZXZlcnkgY29tbWl0IC4uLg0KPiANCg0KV2Ugc3RpbGwgbmVlZCB2ZXJzaW9uIGlu
+Zm9ybWF0aW9uIGZvciBmb3JtYWwgcmVsZWFzZS4NCg0KPiA+ICtzdHJ1Y3QgbXdsX3R4X2Rlc2Mg
+ew0KPiA+ICsJdTggZGF0YV9yYXRlOw0KPiA+ICsJdTggdHhfcHJpb3JpdHk7DQo+ID4gKwlfX2xl
+MTYgcW9zX2N0cmw7DQo+IFsuLi5dDQo+IA0KPiBJIHN0aWxsIHdvdWxkbid0IG1peCBkZXZpY2Uv
+ZmlybXdhcmUgQVBJIHdpdGggZHJpdmVyLXVzZSBzdHJ1Y3R1cmVzIGluIHRoZSBzYW1lDQo+IGZp
+bGUsIGl0IGdldHMgY29uZnVzaW5nLiBJdCdzIHlvdXIgZHJpdmVyIHRob3VnaCwgc28gaWYgeW91
+IHJlYWxseSB3YW50IHRvIGNvbmZ1c2UNCj4geW91cnNlbHZlcyAuLi4gYXNzdW1pbmcgeW91J3Jl
+IGdvaW5nIHRvIG1haW50YWluIGl0IDopDQo+DQoNClRoZXNlIGZpZWxkcyBhcmUgZmlybXdhcmUg
+QVBJLiBZZXMsIHdlIHdpbGwgbWFpbnRhaW4gaXQuDQoNCj4gPiArc3RydWN0IG13bF9zdGEgew0K
+PiA+ICsJc3RydWN0IGxpc3RfaGVhZCBsaXN0Ow0KPiA+ICsJYm9vbCBpc19tZXNoX25vZGU7DQo+
+ID4gKwlib29sIGlzX2FtcGR1X2FsbG93ZWQ7DQo+ID4gKwlzdHJ1Y3QgbXdsX3R4X2luZm8gdHhf
+c3RhdHNbTVdMX01BWF9USURdOw0KPiA+ICsJYm9vbCBpc19hbXNkdV9hbGxvd2VkOw0KPiA+ICsJ
+c3BpbmxvY2tfdCBhbXNkdV9sb2NrO8KgwqDCoMKgwqDCoC8qIGZvciBhbXNkdQ0KPiA+IGFnZ3Jl
+Z2F0aW9uwqDCoMKgwqDCoMKgwqAqLw0KPiA+ICsJc3RydWN0IG13bF9hbXNkdV9jdHJsIGFtc2R1
+X2N0cmw7DQo+ID4gKwl1MTYgaXYxNjsNCj4gPiArCXUzMiBpdjMyOw0KPiA+ICt9Ow0KPiANCj4g
+SSBzdGlsbCBkb24ndCBzZWUgaG93IHRoaXMgaXYgc3R1ZmYgaW4gdGhlICpzdGF0aW9uKiBjYW4g
+cG9zc2libHkgYmUgcmlnaHQuIEkgdGhpbmsgSQ0KPiBhbHNvIHBvaW50ZWQgb3V0IGVhcmxpZXIg
+dGhhdCB5b3UgY2FuIGp1c3QgbGV0DQo+IG1hYzgwMjExIGFzc2lnbiB0aGUgUE4vSVYuDQo+IA0K
+DQpJIHdpbGwgdHJ5IHRvIG1vZGlmeSB0aGUgY29kZSB0byByZW1vdmUgdGhlbS4NCg0KPiA+ICtz
+dGF0aWMgaW50IG13bF9md2NtZF93YWl0X2NvbXBsZXRlKHN0cnVjdCBtd2xfcHJpdiAqcHJpdiwg
+dW5zaWduZWQNCj4gPiBzaG9ydCBjbWQpDQo+ID4gK3sNCj4gPg0KPiBbLi4uXQ0KPiA+ICsJbWRl
+bGF5KDMpOw0KPiA+ICsNCj4gPiArCXJldHVybiAwOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0
+aWMgaW50IG13bF9md2NtZF9leGVjX2NtZChzdHJ1Y3QgbXdsX3ByaXYgKnByaXYsIHVuc2lnbmVk
+IHNob3J0DQo+ID4gY21kKQ0KPiA+ICt7DQo+IFsuLi5dDQo+ID4gKwkJaWYgKG13bF9md2NtZF93
+YWl0X2NvbXBsZXRlKHByaXYsIDB4ODAwMCB8IGNtZCkpIHsNCj4gWy4uLl0NCj4gPiArfQ0KPiA+
+ICsNCj4gPiArc3RhdGljIGludCBtd2xfZndjbWRfODAyXzExX3JhZGlvX2NvbnRyb2woc3RydWN0
+IG13bF9wcml2ICpwcml2LA0KPiA+ICsJCQkJCcKgwqBib29sIGVuYWJsZSwgYm9vbCBmb3JjZSkN
+Cj4gPiArew0KPiBbLi4uXQ0KPiA+ICsJc3Bpbl9sb2NrX2JoKCZwcml2LT5md2NtZF9sb2NrKTsN
+Cj4gWy4uLl0NCj4gPiArCWlmIChtd2xfZndjbWRfZXhlY19jbWQocHJpdiwNCj4gPiBIT1NUQ01E
+X0NNRF84MDJfMTFfUkFESU9fQ09OVFJPTCkpIHsNCj4gPiArCQlzcGluX3VubG9ja19iaCgmcHJp
+di0+ZndjbWRfbG9jayk7DQo+IA0KPiBUaGlzIHNlZW1zIGxpa2UgYSB0ZXJyaWJsZSBpZGVhLiBT
+cGlubmluZyBmb3IgMyBtaWxsaXNlY29uZHMgKGFuZCBtb3JlKSB3aGlsZQ0KPiBibG9ja2luZyBs
+b2NhbCBzb2Z0LWlycXMgaXMgcmVhbGx5IGJhZCBmb3IgZ2VuZXJhbCBsYXRlbmN5IG9uIHRoZSBz
+eXN0ZW0uIEkgZG9uJ3QNCj4gbGlrZSBpdCBhdCBhbGwuDQo+IA0KPiBBbmQgdGhlcmUgZG9lc24n
+dCByZWFsbHkgc2VlbSB0byBiZSBtdWNoIHJlYXNvbiBmb3IgaXQgZWl0aGVyIGFzIGZhciBhcyBJ
+IGNhbg0KPiB0ZWxsIC0gYWxtb3N0IGFsbCBwbGFjZXMgY2FuIChhcyBJIHBvaW50ZWQgb3V0IGJl
+Zm9yZSkgbGl2ZSB3aXRoIHRoaXMgYmVpbmcgYQ0KPiBtdXRleCwgeW91IGp1c3QgbmVlZCBzcGVj
+aWFsIGhhbmRsaW5nIGluIHZlcnkgZmV3IHBsYWNlcyB0aGF0IHJlYWxseSBkbyB3YW50IHRvDQo+
+IHNlbmQgYSBjb21tYW5kIHdoaWxlIG5vdCBiZWluZyBhYmxlIHRvIHNsZWVwLg0KPiANCg0KSSB3
+aWxsIHRyeSB0byB1c2UgbXV0ZXggaW4gbmV4dCBwYXRjaCBzb29uLg0KDQo+ID4gKysrIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2x3aWZpL2hvc3RjbWQuaA0KPiANCj4gVGhpcyBs
+b29rcyBsaWtlIHlvdSBkbyBoYXZlIGEgZmlsZSBmb3IgY29tbWFuZHMgLSBtYXliZSBtb3ZlIHRo
+YXQgVFggdGhpbmcNCj4gYWJvdmUgaGVyZT8NCj4gDQoNCkl0IGlzIGJldHRlciB0byBrZWVwIGN1
+cnJlbnQgZmlsZSBzdHJ1Y3R1cmUgKGVhc2llciBmb3Igb3VyIGludGVybmFsIG1haW50ZW5hbmNl
+IHN5bmNpbmcgb3RoZXIgZmlsZXMpDQoNCj4gPiArY29uc3Qgc3RydWN0IGllZWU4MDIxMV9vcHMg
+bXdsX21hYzgwMjExX29wcyA9IHsNCj4gPiArCS50eMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqA9IG13bF9tYWM4MDIxMV90eCwNCj4gPiArCS5zdGFydMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqA9IG13bF9tYWM4MDIxMV9zdGFydCwNCj4gPiArCS5zdG9wwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfc3RvcCwNCj4gPiArCS5hZGRfaW50ZXJm
+YWNlwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfYWRkX2ludGVyZmFjZSwNCj4gPiArCS5yZW1v
+dmVfaW50ZXJmYWNlwqDCoMKgPSBtd2xfbWFjODAyMTFfcmVtb3ZlX2ludGVyZmFjZSwNCj4gPiAr
+CS5jb25maWfCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2NvbmZpZywN
+Cj4gPiArCS5ic3NfaW5mb19jaGFuZ2VkwqDCoMKgPSBtd2xfbWFjODAyMTFfYnNzX2luZm9fY2hh
+bmdlZCwNCj4gPiArCS5jb25maWd1cmVfZmlsdGVywqDCoMKgPSBtd2xfbWFjODAyMTFfY29uZmln
+dXJlX2ZpbHRlciwNCj4gPiArCS5zZXRfa2V5wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xf
+bWFjODAyMTFfc2V0X2tleSwNCj4gPiArCS5zZXRfcnRzX3RocmVzaG9sZMKgwqA9IG13bF9tYWM4
+MDIxMV9zZXRfcnRzX3RocmVzaG9sZCwNCj4gPiArCS5zdGFfYWRkwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgPSBtd2xfbWFjODAyMTFfc3RhX2FkZCwNCj4gPiArCS5zdGFfcmVtb3ZlwqDCoMKgwqDC
+oMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfc3RhX3JlbW92ZSwNCj4gPiArCS5jb25mX3R4wqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfY29uZl90eCwNCj4gPiArCS5nZXRfc3Rh
+dHPCoMKgwqDCoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2dldF9zdGF0cywNCj4gPiArCS5n
+ZXRfc3VydmV5wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfZ2V0X3N1cnZleSwNCj4g
+PiArCS5hbXBkdV9hY3Rpb27CoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2FtcGR1X2FjdGlv
+biwgfTsNCj4gDQo+IEFwYXJ0IGZyb20gLnR4IGFuZCAuY29uZmlndXJlX2ZpbHRlciwgYWxsIG9m
+IHRoZXNlIGNhbiBzbGVlcCBJIHRoaW5rLg0KPiANCj4gPiArCXJjID0gbXdsX2luaXRfZmlybXdh
+cmUocHJpdiwgZndfbmFtZSk7DQo+ID4NCj4gU2luY2UgeW91IGRvIHRoaXMgaW4gLnByb2JlLCB5
+b3Ugc2hvdWxkIGNvbnNpZGVyIGxvYWRpbmcgdGhlIGZpcm13YXJlDQo+IGFzeW5jaHJvbm91c2x5
+Lg0KPiANCg0KSSBob3BlIEkgY2FuIHBvc3Rwb25lIHRoaXMgbW9kaWZpY2F0aW9uIGxhdGVyLg0K
+DQo+ID4gKyNpZmRlZiBDT05GSUdfU1VQUE9SVF9NRkcNCj4gDQo+IFRoaXMgS2NvbmZpZyB2YXJp
+YWJsZSBkb2Vzbid0IGV4aXN0Lg0KPiANCg0KVGhlIGNvbXBpbGUgdmFyaWFibGUgaXMgdXNlZCBw
+cml2YXRlbHkgYnkgTWFydmVsbCBhbmQgb3VyIGN1c3RvbWVycyBpbiBwcm9kdWN0aW9uIGxpbmUu
+DQoNCj4gPiArc3RhdGljIGlubGluZSBib29sIG13bF9yeF9wcm9jZXNzX21lc2hfYW1zZHUoc3Ry
+dWN0IG13bF9wcml2ICpwcml2LA0KPiA+ICsJCQkJCcKgwqDCoMKgwqBzdHJ1Y3Qgc2tfYnVmZiAq
+c2tiLA0KPiANCj4gDQo+IA0KPiANCj4gUGxlYXNlIGluc3RlYWQgdGVhY2ggbWFjODAyMTEgdG8g
+ZG8gaXQgcmlnaHQuDQo+IA0KDQpNYWM4MDIxMSBkb2VzIG5vdCBzdXBwb3J0IG1lc2ggQU1TRFUg
+bm93LCB3ZSBpbXBsZW1lbnQgdGhpcyBmdW5jdGlvbiBpbiBtd2x3aWZpIGRyaXZlciBmb3IgdGhl
+IHRpbWUgYmVpbmcuIEV4Y2VwdCBmb3IgbWVzaCBBTVNEVSwgd2Ugc3RpbGwgbGV2ZXJhZ2UgbWFj
+ODAyMTEgdG8gaGFuZGxlIGRhdGEgQU1TRFUuDQoNCj4gPiArCWlmIChpZWVlODAyMTFfaXNfZGF0
+YSh3aC0+ZnJhbWVfY29udHJvbCkpIHsNCj4gPiArCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2Fk
+ZHIod2gtPmFkZHIxKSkgew0KPiA+ICsJCQlpZiAoY2NtcCkgew0KPiA+ICsJCQkJbXdsX3R4X2lu
+c2VydF9jY21wX2hkcihkbWFfZGF0YS0NCj4gPiA+ZGF0YSwNCj4gPiArCQkJCQkJwqDCoMKgwqDC
+oMKgwqBtd2xfdmlmLQ0KPiA+ID5rZXlpZHgsDQo+ID4gKwkJCQkJCcKgwqDCoMKgwqDCoMKgbXds
+X3ZpZi0NCj4gPiA+aXYxNiwNCj4gPiArCQkJCQkJwqDCoMKgwqDCoMKgwqBtd2xfdmlmLQ0KPiA+
+ID5pdjMyKTsNCj4gPiArCQkJCUlOQ1JFQVNFX0lWKG13bF92aWYtPml2MTYsIG13bF92aWYtDQo+
+ID4gPml2MzIpOw0KPiA+ICsJCQl9DQo+IA0KPiBDYW4ndCB5b3UgbGV0IG1hYzgwMjExIGRlYWwg
+d2l0aCB0aGlzPw0KPiANCj4gTm93IEkgYWN0dWFsbHkgYW0gYmVnaW5uaW5nIHRvIHVuZGVyc3Rh
+bmQgLSB5b3UgbmVlZCB0aGlzIGZvciBHVEsgb25seSwgc28gaXQNCj4gbWlnaHQgZXZlbiB3b3Jr
+IGluIHRoZSBzdGF0aW9uIC4uLiBidXQgc3RpbGwsIGRvbid0IGRvIGl0LCBzZXQgdGhlIGZsYWcg
+dG8gbWFrZQ0KPiBtYWM4MDIxMSBkbyBpdCBvbiB0aGUgR1RLLg0KPiANCg0KSSB3aWxsIGNoZWNr
+IG1hYzgwMjExIHRvIHNlZSBpZiBJIGNhbiBsZXQgbWFjODAyMTEgZG8gaXQuDQoNCj4gPiArCWlm
+IChtZ210ZnJhbWUpIHsNCj4gPiArCQl1MTYgY2FwYWI7DQo+ID4gKw0KPiA+ICsJCWlmICh1bmxp
+a2VseShpZWVlODAyMTFfaXNfYWN0aW9uKHdoLT5mcmFtZV9jb250cm9sKQ0KPiA+ICYmDQo+ID4g
+KwkJCcKgwqDCoMKgwqBtZ210LT51LmFjdGlvbi5jYXRlZ29yeSA9PQ0KPiA+IFdMQU5fQ0FURUdP
+UllfQkFDSyAmJg0KPiA+ICsJCQnCoMKgwqDCoMKgbWdtdC0+dS5hY3Rpb24udS5hZGRiYV9yZXEu
+YWN0aW9uX2NvZGUNCj4gPiA9PQ0KPiA+ICsJCQnCoMKgwqDCoMKgV0xBTl9BQ1RJT05fQUREQkFf
+UkVRKSkgew0KPiA+ICsJCQljYXBhYiA9IGxlMTZfdG9fY3B1KG1nbXQtDQo+ID4gPnUuYWN0aW9u
+LnUuYWRkYmFfcmVxLmNhcGFiKTsNCj4gPiArCQkJdGlkID0gKGNhcGFiICYNCj4gPiBJRUVFODAy
+MTFfQUREQkFfUEFSQU1fVElEX01BU0spID4+IDI7DQo+ID4gKwkJCWluZGV4ID0gbXdsX3R4X3Rp
+ZF9xdWV1ZV9tYXBwaW5nKHRpZCk7DQo+ID4gKwkJCWNhcGFiIHw9IDE7DQo+ID4gKwkJCW1nbXQt
+PnUuYWN0aW9uLnUuYWRkYmFfcmVxLmNhcGFiID0NCj4gPiBjcHVfdG9fbGUxNihjYXBhYik7DQo+
+ID4gKwkJfQ0KPiANCj4gV2hhdCdzIGdvaW5nIG9uIGhlcmU/IFdoeSBhcmUgeW91IG1vZGlmeWlu
+ZyB0aGUgYWN0aW9uIGZyYW1lcyBvbiB0aGUgZmx5Pz8hDQo+IA0KDQpEdWUgdG8gbXdsd2lmaSBz
+dXBwb3J0cyBUeC9SeCBBTVNEVSwgdGhlc2UgZnJhbWVzIGFyZSBtb2RpZmllZCB0byBpbmZvcm0g
+Y2xpZW50IHRoYXQgd2Ugc3VwcG9ydCBBTVNEVS4NCkZvciBSeCBBTVNEVSwgbXdsd2lmaSBoYW5k
+bGVkIG1lc2ggQU1TRFUgYW5kIGxldCBtYWM4MDIxMSBoYW5kbGUgZGF0YSBBTVNEVS4NCg0KPiBq
+b2hhbm5lcw0K
