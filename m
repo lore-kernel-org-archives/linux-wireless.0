@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44674 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101AbbK0IZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2015 03:25:11 -0500
-Message-ID: <1448612707.2531.1.camel@sipsolutions.net> (sfid-20151127_092514_336879_1A8A3DBC)
-Subject: Re: [PATCH v2 7/8] cfg80211: Add Kconfig option for ITS-G5 band
- (5.9 GHz)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
-Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
-	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com,
-	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
-Date: Fri, 27 Nov 2015 09:25:07 +0100
-In-Reply-To: <87d1uw31r1.fsf@steelpick.2x.cz>
-References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448303241-27747-8-git-send-email-sojkam1@fel.cvut.cz>
-	 <1448560529.2167.43.camel@sipsolutions.net>
-	 <87d1uw31r1.fsf@steelpick.2x.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:31830 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbbKZMiK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 07:38:10 -0500
+Date: Thu, 26 Nov 2015 15:37:56 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: (bug report) iwlwifi: inconsitent NULL checking
+Message-ID: <20151126123756.GF7289@mwanda> (sfid-20151126_133813_805630_08EDDB5B)
+References: <20151126120317.GJ10556@mwanda>
+ <1448540211.2167.7.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1448540211.2167.7.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-11-26 at 22:10 +0100, Michal Sojka wrote:
->Â 
-> Because in [1] Jouni said that
+On Thu, Nov 26, 2015 at 01:16:51PM +0100, Johannes Berg wrote:
+> On Thu, 2015-11-26 at 15:03 +0300, Dan Carpenter wrote:
+> > 
+> >   2793          if (lq_sta && !lq_sta->pers.drv) {
+> >                     ^^^^^^
+> > Check.
+> > 
+> >   2794                  IWL_DEBUG_RATE(mvm, "Rate scaling not
+> > initialized yet.\n");
+> >   2795                  mvm_sta = NULL;
+> >   2796          }
+> >   2797  
+> >   2798          /* Send management frames and NO_ACK data using
+> > lowest rate. */
+> >   2799          if (rate_control_send_low(sta, mvm_sta, txrc))
+> >   2800                  return;
+> >   2801  
+> >   2802          iwl_mvm_hwrate_to_tx_rate(lq_sta->last_rate_n_flags,
+> >                                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+> > Uchecked dereference.
+> > 
 > 
-> Â Â Â "kernel config option + custom regdb would certainly be much
-> closer to what I'd like to see from the regulatory enforcement view
-> point"
-> 
-> I also like the fact that the help text mentions the relevant
-> regulatory documents. I guess the users would appreciate that.
-> 
+> Yeah, this is a bit tricky. If you look into rate_control_send_low(),
+> I'm sure it'll return true when mvm_sta argument is NULL. Not sure how,
+> if at all, we could make that more explicit here.
 
-Fair enough, but I'm not really convinced that the Kconfig option is
-needed for what Jouni really required.
+Ah.  Thanks for looking at this.  Eventually Smatch will be smart enough
+to figure this implication out but not yet.  No need to change the code
+because the static checker isn't capable enough...
 
-In any case, I spoke with him yesterday and we don't think that your
-patches are going to work as is - we'll need to change the regulatory
-flags it seems. I'll comment more specifically on the patches.
+regards,
+dan carpenter
 
-johannes
