@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39028 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35758 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066AbbKJHns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 02:43:48 -0500
-Message-ID: <1447141424.2421.1.camel@sipsolutions.net> (sfid-20151110_084352_064721_F60B616F)
-Subject: Re: [RFC 0/4] mac80211: jump labels for hw flags
+	id S1752632AbbKZJkI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 04:40:08 -0500
+Message-ID: <1448530804.2167.4.camel@sipsolutions.net> (sfid-20151126_104013_459733_939A714B)
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-wireless@vger.kernel.org, Jason Baron <jbaron@akamai.com>,
-	Steven Rostedt <rostedt@goodmis.org>
-Date: Tue, 10 Nov 2015 08:43:44 +0100
-In-Reply-To: <20151109224259.GP17308@twins.programming.kicks-ass.net>
-References: <1447106557-17684-1-git-send-email-johannes@sipsolutions.net>
-	 <20151109224259.GP17308@twins.programming.kicks-ass.net>
+To: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Date: Thu, 26 Nov 2015 10:40:04 +0100
+In-Reply-To: <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com>
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	 <1448018530.3141.25.camel@sipsolutions.net>
+	 <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-09 at 23:42 +0100, Peter Zijlstra wrote:
-> On Mon, Nov 09, 2015 at 11:02:33PM +0100, Johannes Berg wrote:
-> > As far as the code is concerned, there are two really ugly things:
-> >  1) I still use struct static_key - couldn't quite figure it out
-> >     with static_key_false. I think I can replace it easily though.
+On Thu, 2015-11-26 at 08:27 +0000, David Lin wrote:
+
+> > Since you do this in .probe, you should consider loading the
+> > firmware asynchronously.
+> > 
 > 
-> Yeah, didn't see anything that would avoid using struct
-> static_key_false. Was there anything specific that was difficult?
+> I hope I can postpone this modification later.
 
-No, I think I just needed to wrap my head around the _ON and _OFF
-semantics. I had originally thought I needed both _true and _false
-static keys.
+I don't feel strongly about this one - otoh it's not really
+complicated.
 
-> >  2) There are a lot of boilerplate ifdefs/macros.
+> > > +#ifdef CONFIG_SUPPORT_MFG
+> > 
+> > This Kconfig variable doesn't exist.
+> > 
 > 
-> I'm sure we can reduce that a lot with some CPP trickery, lots of
-> that looked like endless repetition of the same pattern.
+> The compile variable is used privately by Marvell and our customers
+> in production line.
 
-Oh, it is, and I even generated it that way. I just haven't quite
-figured out how to do that since you can't put an #if into a macro
-expansion. Perhaps some tricks with the optimiser "if (0 && ..." or so.
-I'll play with it.
+Yeah, still. Make it a proper Kconfig variable, defaulting to off and
+hidden under something, or remove it. It's extremely misleading to have
+something called CONFIG_* when it's not a Kconfig variable.
 
-For now though I think we need to figure out if we want this at all :)
+> Mac80211 does not support mesh AMSDU now, we implement this function
+> in mwlwifi driver for the time being. Except for mesh AMSDU, we still
+> leverage mac80211 to handle data AMSDU.
+
+You're allowed to modify mac80211.
+
+> > What's going on here? Why are you modifying the action frames on
+> > the fly??!
+> > 
+> 
+> Due to mwlwifi supports Tx/Rx AMSDU, these frames are modified to
+> inform client that we support AMSDU.
+> 
+
+Ditto - you're allowed to modify mac80211. We actually have a patch
+like this already:
+https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-
+next.git/commit/?id=99e7ca44bb910f0cbfda5d9008e8517df0ebc939
 
 johannes
