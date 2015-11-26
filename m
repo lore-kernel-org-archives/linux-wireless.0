@@ -1,181 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34817 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932273AbbKROq1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:27 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 01/27] adm80211: move under admtek vendor directory
-Date: Wed, 18 Nov 2015 16:45:40 +0200
-Message-Id: <1447857966-19560-2-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155933_120225_1A091D05)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38391 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752442AbbKZRzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 12:55:33 -0500
+Message-ID: <1448560529.2167.43.camel@sipsolutions.net> (sfid-20151126_185539_481123_7F4759BB)
+Subject: Re: [PATCH v2 7/8] cfg80211: Add Kconfig option for ITS-G5 band
+ (5.9 GHz)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
+Date: Thu, 26 Nov 2015 18:55:29 +0100
+In-Reply-To: <1448303241-27747-8-git-send-email-sojkam1@fel.cvut.cz> (sfid-20151123_192812_681832_AF626F8A)
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+	 <1448303241-27747-8-git-send-email-sojkam1@fel.cvut.cz>
+	 (sfid-20151123_192812_681832_AF626F8A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
+On Mon, 2015-11-23 at 19:27 +0100, Michal Sojka wrote:
+> This option is meant for use by drivers and other subsystems to
+> enable
+> support for the Intelligent Transportation System (ITS-G5) band. The
+> option depends on CFG80211_CERTIFICATION_ONUS as the use of this band
+> is
+> restricted. EU allows using it only for certain applications, USA
+> require certification.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- MAINTAINERS                                 |    2 +-
- drivers/net/wireless/Kconfig                |   29 ++-----------------
- drivers/net/wireless/Makefile               |    4 +--
- drivers/net/wireless/admtek/Kconfig         |   41 +++++++++++++++++++++++++++
- drivers/net/wireless/admtek/Makefile        |    1 +
- drivers/net/wireless/{ => admtek}/adm8211.c |    0
- drivers/net/wireless/{ => admtek}/adm8211.h |    0
- 7 files changed, 47 insertions(+), 30 deletions(-)
- create mode 100644 drivers/net/wireless/admtek/Kconfig
- create mode 100644 drivers/net/wireless/admtek/Makefile
- rename drivers/net/wireless/{ => admtek}/adm8211.c (100%)
- rename drivers/net/wireless/{ => admtek}/adm8211.h (100%)
+Hm. Why do we need this now? I see that you're checking it in ath9k, to
+enable the "ITSG5" channels, but why wouldn't you always do that, now
+that you have the extra checks with the user regdb being required and
+all?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 35fe7ae0492e..f1adb66094f1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -388,7 +388,7 @@ ADM8211 WIRELESS DRIVER
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/
- S:	Orphan
--F:	drivers/net/wireless/adm8211.*
-+F:	drivers/net/wireless/admtek/adm8211.*
- 
- ADP1653 FLASH CONTROLLER DRIVER
- M:	Sakari Ailus <sakari.ailus@iki.fi>
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f9f94229bf1b..7d8f47117c4d 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -17,6 +17,8 @@ menuconfig WLAN
- 
- if WLAN
- 
-+source "drivers/net/wireless/admtek/Kconfig"
-+
- config PCMCIA_RAYCS
- 	tristate "Aviator/Raytheon 2.4GHz wireless support"
- 	depends on PCMCIA
-@@ -214,33 +216,6 @@ config USB_NET_RNDIS_WLAN
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
--config ADM8211
--	tristate "ADMtek ADM8211 support"
--	depends on MAC80211 && PCI
--	select CRC32
--	select EEPROM_93CX6
--	---help---
--	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
--	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
--
--	  Xterasys Cardbus XN-2411b
--	  Blitz NetWave Point PC
--	  TrendNet 221pc
--	  Belkin F5D6001
--	  SMC 2635W
--	  Linksys WPC11 v1
--	  Fiberline FL-WL-200X
--	  3com Office Connect (3CRSHPW796)
--	  Corega WLPCIB-11
--	  SMC 2602W V2 EU
--	  D-Link DWL-520 Revision C
--
--	  However, some of these cards have been replaced with other chips
--	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
--	  the Ralink RT2400 (SMC2635W) without a model number change.
--
--	  Thanks to Infineon-ADMtek for their support of this driver.
--
- source "drivers/net/wireless/realtek/rtl818x/Kconfig"
- 
- config MAC80211_HWSIM
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 740fdd353c5d..be215f43ec1d 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -2,6 +2,8 @@
- # Makefile for the Linux Wireless network device drivers.
- #
- 
-+obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/
-+
- obj-$(CONFIG_IPW2100) += ipw2x00/
- obj-$(CONFIG_IPW2200) += ipw2x00/
- 
-@@ -35,8 +37,6 @@ obj-$(CONFIG_LIBERTAS)		+= libertas/
- 
- obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
- 
--obj-$(CONFIG_ADM8211)	+= adm8211.o
--
- obj-$(CONFIG_MWL8K)	+= mwl8k.o
- 
- obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
-diff --git a/drivers/net/wireless/admtek/Kconfig b/drivers/net/wireless/admtek/Kconfig
-new file mode 100644
-index 000000000000..d5a2dc728078
---- /dev/null
-+++ b/drivers/net/wireless/admtek/Kconfig
-@@ -0,0 +1,41 @@
-+config WLAN_VENDOR_ADMTEK
-+	bool "ADMtek devices"
-+	default y
-+	---help---
-+	  If you have a wireless card belonging to this class, say Y.
-+
-+	  Note that the answer to this question doesn't directly affect the
-+	  kernel: saying N will just cause the configurator to skip all
-+	  the questions about  cards. If you say Y, you will be asked for
-+	  your specific card in the following questions.
-+
-+if WLAN_VENDOR_ADMTEK
-+
-+config ADM8211
-+	tristate "ADMtek ADM8211 support"
-+	depends on MAC80211 && PCI
-+	select CRC32
-+	select EEPROM_93CX6
-+	---help---
-+	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
-+	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
-+
-+	  Xterasys Cardbus XN-2411b
-+	  Blitz NetWave Point PC
-+	  TrendNet 221pc
-+	  Belkin F5D6001
-+	  SMC 2635W
-+	  Linksys WPC11 v1
-+	  Fiberline FL-WL-200X
-+	  3com Office Connect (3CRSHPW796)
-+	  Corega WLPCIB-11
-+	  SMC 2602W V2 EU
-+	  D-Link DWL-520 Revision C
-+
-+	  However, some of these cards have been replaced with other chips
-+	  like the RTL8180L (Xterasys Cardbus XN-2411b, Belkin F5D6001) or
-+	  the Ralink RT2400 (SMC2635W) without a model number change.
-+
-+	  Thanks to Infineon-ADMtek for their support of this driver.
-+
-+endif # WLAN_VENDOR_ADMTEK
-diff --git a/drivers/net/wireless/admtek/Makefile b/drivers/net/wireless/admtek/Makefile
-new file mode 100644
-index 000000000000..9cca7e571cdd
---- /dev/null
-+++ b/drivers/net/wireless/admtek/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_ADM8211)	+= adm8211.o
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
-similarity index 100%
-rename from drivers/net/wireless/adm8211.c
-rename to drivers/net/wireless/admtek/adm8211.c
-diff --git a/drivers/net/wireless/adm8211.h b/drivers/net/wireless/admtek/adm8211.h
-similarity index 100%
-rename from drivers/net/wireless/adm8211.h
-rename to drivers/net/wireless/admtek/adm8211.h
--- 
-1.7.9.5
-
+johannes
