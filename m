@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:10271 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277AbbKYC5U (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61245 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbbKZQ6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2015 21:57:20 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/10] staging: wilc1000: Handle_SetMulticastFilter(): fixes right shifting more than type allows
-Date: Wed, 25 Nov 2015 11:59:49 +0900
-Message-ID: <1448420389-4192-10-git-send-email-glen.lee@atmel.com> (sfid-20151125_035724_699961_1037ACB0)
-In-Reply-To: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
-References: <1448420389-4192-1-git-send-email-glen.lee@atmel.com>
+	Thu, 26 Nov 2015 11:58:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mark Brown <broonie@kernel.org>
+CC: <linaro-kernel@lists.linaro.org>,
+	<kernel-build-reports@lists.linaro.org>, <netdev@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	<linux-next@vger.kernel.org>
+Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
+References: <E1a1sVV-00079q-My@optimist> <20151126121551.GE1929@sirena.org.uk>
+	<87y4dllysz.fsf@kamboji.qca.qualcomm.com>
+	<20151126132228.GG1929@sirena.org.uk>
+Date: Thu, 26 Nov 2015 18:58:32 +0200
+In-Reply-To: <20151126132228.GG1929@sirena.org.uk> (Mark Brown's message of
+	"Thu, 26 Nov 2015 13:22:28 +0000")
+Message-ID: <87lh9kn1dz.fsf@kamboji.qca.qualcomm.com> (sfid-20151126_175901_103560_9C69FF9C)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Mark Brown <broonie@kernel.org> writes:
 
-This patch fixes the warning reported by smatch.
- - Handle_SetMulticastFilter() warn: right shifting more than type allows
+> On Thu, Nov 26, 2015 at 02:39:40PM +0200, Kalle Valo wrote:
+>> Mark Brown <broonie@kernel.org> writes:
+>
+>> > It looks like this was somehow triggered as part of the reorganisation
+>> > of the WiFi directory structure.
+>
+>> This is surprising and also worrying, any ideas why? It would be good to
+>> understand the root cause in case there's a bug in wireless drivers
+>> directory reorganisation.
+>
+> No, I didn't make much effort to check though since the use of ifdef was
+> clearly a bug waiting to happen anyway, I was more surprised it worked
+> at all than anything.
 
-That is unnecessary action of boolean type. just assign 0.
+Michal Marek explains[1] that this is due to commit cf4f21938e13
+("kbuild: Allow to specify composite modules with modname-m") and has
+nothing to do with the wireless drivers reorganisation. I'll drop this
+patch as Michal will apply his fix to the kbuild tree.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+[1] https://patchwork.kernel.org/patch/7707801/
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c309deb..3b986cb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2713,9 +2713,9 @@ static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
- 
- 	pu8CurrByte = wid.val;
- 	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-+	*pu8CurrByte++ = 0;
-+	*pu8CurrByte++ = 0;
-+	*pu8CurrByte++ = 0;
- 
- 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
 -- 
-1.9.1
-
+Kalle Valo
