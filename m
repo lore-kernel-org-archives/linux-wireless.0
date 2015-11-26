@@ -1,28 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37889 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbbK3M7u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 07:59:50 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v2,1/1] wireless: airo: re-use mac_pton()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1448641771-140820-1-git-send-email-andriy.shevchenko@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38141 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752056AbbKZRFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 12:05:37 -0500
+Message-ID: <1448557534.2167.25.camel@sipsolutions.net> (sfid-20151126_180545_722354_36D9F628)
+Subject: Re: [PATCH v3] mac80211: do not actively scan DFS channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@meshcoding.com>
 Cc: linux-wireless@vger.kernel.org,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Message-Id: <20151130125950.0AF0C1409E0@smtp.codeaurora.org> (sfid-20151130_135952_981178_F0F453B7)
-Date: Mon, 30 Nov 2015 12:59:49 +0000 (UTC)
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Thu, 26 Nov 2015 18:05:34 +0100
+In-Reply-To: <1448100820-22567-1-git-send-email-antonio@meshcoding.com>
+References: <1448100820-22567-1-git-send-email-antonio@meshcoding.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> mac_pton() converts 6-byte MAC / BSSID to binary format. Change an open coded
-> variant by the generic one.
+On Sat, 2015-11-21 at 18:13 +0800, Antonio Quartulli wrote:
+> DFS channels should not be actively scanned as we can't be sure
+> if we are allowed or not.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> If the current channel is in the DFS band, active scan might be
+> performed after CSA, but we have no guarantee about other channels,
+> therefore it is safer to prevent active scanning at all.
+> 
+Applied to mac80211.git, also added cc stable. I modified the code a
+bit to be shorter :)
 
-Thanks, applied to wireless-drivers-next.git.
-
-Kalle Valo
+johannes
