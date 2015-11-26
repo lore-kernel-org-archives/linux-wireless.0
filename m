@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:33908 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754937AbbKCRnE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7206 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbbKZMj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 12:43:04 -0500
-Received: by oies66 with SMTP id s66so13136200oie.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 09:43:02 -0800 (PST)
+	Thu, 26 Nov 2015 07:39:58 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mark Brown <broonie@kernel.org>
+CC: <kernel-build-reports@lists.linaro.org>,
+	<linaro-kernel@lists.linaro.org>, <linux-next@vger.kernel.org>,
+	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>
+Subject: Re: next-20151126 build: 3 failures 15 warnings (next-20151126)
+References: <E1a1sVV-00079q-My@optimist> <20151126121551.GE1929@sirena.org.uk>
+Date: Thu, 26 Nov 2015 14:39:40 +0200
+In-Reply-To: <20151126121551.GE1929@sirena.org.uk> (Mark Brown's message of
+	"Thu, 26 Nov 2015 12:15:51 +0000")
+Message-ID: <87y4dllysz.fsf@kamboji.qca.qualcomm.com> (sfid-20151126_134007_712760_D4BBD07F)
 MIME-Version: 1.0
-In-Reply-To: <1446568044.29010.25.camel@sipsolutions.net>
-References: <CAD1M061nR5s6MFLHtoYDk05Ewz_3SHevB6s7qTB59qz681NLUg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E8B86B4@hasmsx107.ger.corp.intel.com>
-	<CAJ+vNU3u_KCOjRi1HR_f9hCi-aYYMDciR7C0+nCwJh3N6GAETQ@mail.gmail.com>
-	<1446568044.29010.25.camel@sipsolutions.net>
-Date: Tue, 3 Nov 2015 09:43:02 -0800
-Message-ID: <CAJ+vNU1d8=Z=0j_1jaqh__830-K56MnnM=5w550+e15NveqeOg@mail.gmail.com> (sfid-20151103_184308_977053_BFA08E2D)
-Subject: Re: Intel 7260 - limited in 5GHz spectrum
-From: Tim Harvey <tharvey@gateworks.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Pushpal Sidhu <psidhu@gateworks.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 3, 2015 at 8:27 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2015-11-03 at 08:08 -0800, Tim Harvey wrote:
->>
->> Out of curiosity, can you explain what you mean about 'regulatory
->> concerns'? There are channels in the 5GHz band that can be used in
->> FCC
->> with and without DFS. Is it that certification in the 5GHz band is
->> optional and Intel didn't want to do the certification?
->>
+Mark Brown <broonie@kernel.org> writes:
+
+> On Thu, Nov 26, 2015 at 09:06:25AM +0000, Build bot for Mark Brown wrote:
 >
-> I believe the reason is that the device is sold in countries other than
-> the US. Surprise! ;-)
+> Today's -next fails to build an arm64 allmodconfig due to:
 >
-> johannes
+>> 	arm64-allmodconfig
+>> ../drivers/net/wireless/ath/ath10k/thermal.c:119:6: error: redefinition of 'ath10k_thermal_event_temperature'
+>> ../drivers/net/wireless/ath/ath10k/thermal.c:136:6: error: redefinition of 'ath10k_thermal_set_throttling'
+>> ../drivers/net/wireless/ath/ath10k/thermal.c:162:5: error: redefinition of 'ath10k_thermal_register'
+>> ../drivers/net/wireless/ath/ath10k/thermal.c:216:6: error: redefinition of 'ath10k_thermal_unregister'
+>
+> This is happening because there are stub functions provided in the
+> driver's thermal.h for !THERMAL cases but these are guarded by an #ifdef
+> not an #if and so fails to do the right thing if the thermal code is
+> built as a module.
 
-Johannes,
+Thanks, I'll apply the fix soon. Just wait for comments from others
+first.
 
-No surprise that its sold outside the US, but why should that mean it
-should exclude 5GHz support? They all have their regulatory domains
-and my understanding is that the intersection of the reg domain rules
-and card capabilities should dictate if they can operate as an AP per
-5GHz channel. So I'm trying to understand why this card is dropping
-that capability.
+> It looks like this was somehow triggered as part of the reorganisation
+> of the WiFi directory structure.
 
-Thanks,
+This is surprising and also worrying, any ideas why? It would be good to
+understand the root cause in case there's a bug in wireless drivers
+directory reorganisation.
 
-Tim
+-- 
+Kalle Valo
