@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:27072 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030350AbbKEFgk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 00:36:40 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 33/38] staging: wilc1000: remove goto from mac_open
-Date: Thu, 5 Nov 2015 14:36:34 +0900
-Message-ID: <1446701799-24870-33-git-send-email-glen.lee@atmel.com> (sfid-20151105_063647_973810_6BF5E795)
-In-Reply-To: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-References: <1446701799-24870-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:44674 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101AbbK0IZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2015 03:25:11 -0500
+Message-ID: <1448612707.2531.1.camel@sipsolutions.net> (sfid-20151127_092514_336879_1A8A3DBC)
+Subject: Re: [PATCH v2 7/8] cfg80211: Add Kconfig option for ITS-G5 band
+ (5.9 GHz)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Sojka <sojkam1@fel.cvut.cz>, linux-wireless@vger.kernel.org
+Cc: bernd.lehmann@volkswagen.de, s.sander@nordsys.de,
+	wireless-regdb@lists.infradead.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com,
+	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>
+Date: Fri, 27 Nov 2015 09:25:07 +0100
+In-Reply-To: <87d1uw31r1.fsf@steelpick.2x.cz>
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+	 <1448303241-27747-8-git-send-email-sojkam1@fel.cvut.cz>
+	 <1448560529.2167.43.camel@sipsolutions.net>
+	 <87d1uw31r1.fsf@steelpick.2x.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Thu, 2015-11-26 at 22:10 +0100, Michal Sojka wrote:
+> 
+> Because in [1] Jouni said that
+> 
+>    "kernel config option + custom regdb would certainly be much
+> closer to what I'd like to see from the regulatory enforcement view
+> point"
+> 
+> I also like the fact that the help text mentions the relevant
+> regulatory documents. I guess the users would appreciate that.
+> 
 
-This patch removes goto from mac_open function. If address is invalid, goto
-handles deinit process and return result.
-So, just call deinit process and return the error value directly instead of
-goto statement.
+Fair enough, but I'm not really convinced that the Kconfig option is
+needed for what Jouni really required.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+In any case, I spoke with him yesterday and we don't think that your
+patches are going to work as is - we'll need to change the regulatory
+flags it seems. I'll comment more specifically on the patches.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3c8155e..6492103 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1124,8 +1124,9 @@ int mac_open(struct net_device *ndev)
- 
- 	if (!is_valid_ether_addr(ndev->dev_addr)) {
- 		PRINT_ER("Error: Wrong MAC address\n");
--		ret = -EINVAL;
--		goto _err_;
-+		wilc_deinit_host_int(ndev);
-+		wilc1000_wlan_deinit(ndev);
-+		return -EINVAL;
- 	}
- 
- 	wilc_mgmt_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy,
-@@ -1140,11 +1141,6 @@ int mac_open(struct net_device *ndev)
- 	wl->open_ifcs++;
- 	nic->mac_opened = 1;
- 	return 0;
--
--_err_:
--	wilc_deinit_host_int(ndev);
--	wilc1000_wlan_deinit(ndev);
--	return ret;
- }
- 
- struct net_device_stats *mac_stats(struct net_device *dev)
--- 
-1.9.1
-
+johannes
