@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35062 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbbKZAFD (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:33230 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504AbbK0Ih0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 19:05:03 -0500
-Received: by pacej9 with SMTP id ej9so71486151pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2015 16:05:02 -0800 (PST)
-Subject: Re: [PATCH v2 0/5] wcn36xx: add some new firmware functionalities
- support
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1447143955-10304-1-git-send-email-fengwei.yin@linaro.org>
- <564E8196.9050601@linaro.org>
- <CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com>
-Cc: Andy Green <andy.green@linaro.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-From: "fengwei.yin" <fengwei.yin@linaro.org>
-Message-ID: <56564CA8.4070603@linaro.org> (sfid-20151126_010507_595504_F5FF5B60)
-Date: Thu, 26 Nov 2015 08:04:56 +0800
-MIME-Version: 1.0
-In-Reply-To: <CAFSJ42bMU=3KMLn++kOPKLsFA4_6-agD-J_adN3uUiXodOkvKA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Fri, 27 Nov 2015 03:37:26 -0500
+Received: by lfaz4 with SMTP id z4so121313988lfa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:25 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 02/13] ath9k: print real timer value
+Date: Fri, 27 Nov 2015 09:37:07 +0100
+Message-Id: <1448613438-5173-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093733_069365_4707F8B8)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+In case of low HZ before this patch we saw wrong
+values in debug message. Print real timeout value.
 
-On 2015/11/23 4:03, Eugene Krasnikov wrote:
-> All 5 patches looks good to me.
->
-Is it OK to take these patches? Thanks.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Regards
-Yin, Fengwei
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 35802c9..dddaaea 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -356,14 +356,16 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_hw *ah = sc->sc_ah;
++	unsigned long timeout;
+ 
+ 	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, tsf_time, 1000000);
+ 	tsf_time -= ath9k_hw_gettsf32(ah);
+-	tsf_time = msecs_to_jiffies(tsf_time / 1000) + 1;
+-	mod_timer(&sc->sched.timer, jiffies + tsf_time);
++	timeout = msecs_to_jiffies(tsf_time / 1000) + 1;
++	mod_timer(&sc->sched.timer, jiffies + timeout);
+ 
+ 	ath_dbg(common, CHAN_CTX,
+-		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
++		"Setup chanctx timer with timeout: %d (%d) ms\n",
++		tsf_time / 1000, jiffies_to_msecs(timeout));
+ }
+ 
+ static void ath_chanctx_handle_bmiss(struct ath_softc *sc,
+-- 
+1.9.1
 
-> 2015-11-20 2:12 GMT+00:00 fengwei.yin <fengwei.yin@linaro.org>:
->> Hi Eugene,
->>
->> On 2015/11/10 16:25, Yin, Fengwei wrote:
->>>
->>> Hi,
->>> This patchset are from Andy Green. Which support some functionalities of
->>> latest wcn36xx firmware.
->>>
->>> Changelog since v1
->>>     - decouple the connection of wcn36xx_smd_rsp_status_check_v2 with 3620.
->>>       This also fix the build error.
->>>     - Remove additional "From" introduced in v1.
->>>
->>> Andy Green (5):
->>>     wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
->>>     wcn36xx: swallow two wcn3620 IND messages
->>>     wcn36xx: handle new hal response format
->>>     wcn3620: use new response format for wcn3620 trigger_ba
->>>     wcn3620: use new response format for wcn3620 remove_bsskey
->>>
->>>    drivers/net/wireless/ath/wcn36xx/hal.h |  2 ++
->>>    drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
->>>    drivers/net/wireless/ath/wcn36xx/smd.h |  9 +++++++++
->>>    3 files changed, 36 insertions(+), 2 deletions(-)
->>>
->>
->> What do you think about these patches? If they are OK, can you ack them?
->> Thanks.
->>
->>
->> Regards
->> Yin, Fengwei
->
->
->
