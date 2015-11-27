@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:37096 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031099AbbKFCOL (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:36105 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754150AbbK0Ihj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2015 21:14:11 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 37/73] staging: wilc1000: rename is_TCP_ACK_Filter_Enabled function
-Date: Fri, 6 Nov 2015 11:12:58 +0900
-Message-ID: <1446776014-28094-37-git-send-email-glen.lee@atmel.com> (sfid-20151106_033756_058960_213A180B)
-In-Reply-To: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-References: <1446776014-28094-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 27 Nov 2015 03:37:39 -0500
+Received: by lfs39 with SMTP id 39so118587584lfs.3
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:38 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 12/13] ath9k: MCC, print time elapsed between events
+Date: Fri, 27 Nov 2015 09:37:17 +0100
+Message-Id: <1448613438-5173-12-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_095251_759658_A7B00402)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This is useful for MCC debugging and bug fixing.
 
-This patch rename the is_TCP_ACK_Filter_Enabled function to
-is_tcp_ack_filter_enabled to avoid CamelCase naming convention.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 19 +++++++++++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 53c5804..78a4359 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -396,7 +396,7 @@ void enable_tcp_ack_filter(bool value)
- 	enabled = value;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4616229..952a467 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -983,6 +983,7 @@ struct ath_softc {
+ 	struct ath_offchannel offchannel;
+ 	struct ath_chanctx *next_chan;
+ 	struct completion go_beacon;
++	struct timespec last_event_time;
+ #endif
+ 
+ 	unsigned long driver_data;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 8ab856c..65ad7be 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -226,6 +226,20 @@ static const char *chanctx_state_string(enum ath_chanctx_state state)
+ 	}
  }
  
--bool is_TCP_ACK_Filter_Enabled(void)
-+bool is_tcp_ack_filter_enabled(void)
++static const u32 chanctx_event_delta(struct ath_softc *sc)
++{
++	u64 ms;
++	struct timespec ts, *old;
++
++	getrawmonotonic(&ts);
++	old = &sc->last_event_time;
++	ms = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
++	ms -= old->tv_sec * 1000 + old->tv_nsec / 1000000;
++	sc->last_event_time = ts;
++
++	return (u32)ms;
++}
++
+ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
  {
- 	return enabled;
- }
-@@ -456,7 +456,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
- #ifdef TCP_ACK_FILTER
- 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
--	if (is_TCP_ACK_Filter_Enabled())
-+	if (is_tcp_ack_filter_enabled())
- 		tcp_process(dev, tqe);
- #endif
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -507,10 +521,11 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+ 
+-	ath_dbg(common, CHAN_CTX, "cur_chan: %d MHz, event: %s, state: %s\n",
++	ath_dbg(common, CHAN_CTX, "cur_chan: %d MHz, event: %s, state: %s, delta: %u ms\n",
+ 		sc->cur_chan->chandef.center_freq1,
+ 		chanctx_event_string(ev),
+-		chanctx_state_string(sc->sched.state));
++		chanctx_state_string(sc->sched.state),
++		chanctx_event_delta(sc));
+ 
+ 	switch (ev) {
+ 	case ATH_CHANCTX_EVENT_BEACON_PREPARE:
 -- 
 1.9.1
 
