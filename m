@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18230 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbbKZRCA convert rfc822-to-8bit (ORCPT
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:34301 "EHLO
+	mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbbK0Ih2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 12:02:00 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Marek <mmarek@suse.com>
-CC: <linux-kbuild@vger.kernel.org>, <fengguang.wu@intel.com>,
-	<kbuild-all@01.org>, <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10: Fix build with CONFIG_THERMAL=m
-References: <201511260039.iQbaOe1h%fengguang.wu@intel.com>
-	<1448552198-26911-1-git-send-email-mmarek@suse.com>
-Date: Thu, 26 Nov 2015 19:01:42 +0200
-In-Reply-To: <1448552198-26911-1-git-send-email-mmarek@suse.com> (Michal
-	Marek's message of "Thu, 26 Nov 2015 16:36:38 +0100")
-Message-ID: <87h9k8n18p.fsf@kamboji.qca.qualcomm.com> (sfid-20151126_180205_316054_AD7A6D89)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 27 Nov 2015 03:37:28 -0500
+Received: by lffu14 with SMTP id u14so121540494lff.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:26 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 04/13] ath9k: P2P_CLIENT, send frames after 1ms AP/GO will aprear
+Date: Fri, 27 Nov 2015 09:37:09 +0100
+Message-Id: <1448613438-5173-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093734_921581_8E83D818)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ linux-wireless
+AP/GO will aprear after NOA, wait 1ms to be sure AP
+could receive/answer this frames.
 
-Michal Marek <mmarek@suse.com> writes:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> After commit cf4f21938e13 ("kbuild: Allow to specify composite modules
-> with modname-m"), thermal.c gets included in the driver and the build
-> fails with
->
-> drivers/net/wireless/ath/ath10k/thermal.c:119:6: error: redefinition of ‘ath10k_thermal_event_temperature’
-> drivers/net/wireless/ath/ath10k/thermal.h:54:20: note: previous definition of ‘ath10k_thermal_event_temperature’ was here
-> drivers/net/wireless/ath/ath10k/thermal.c:136:6: error: redefinition of ‘ath10k_thermal_set_throttling’
-> drivers/net/wireless/ath/ath10k/thermal.h:59:20: note: previous definition of ‘ath10k_thermal_set_throttling’ was here
-> drivers/net/wireless/ath/ath10k/thermal.c:162:5: error: redefinition of ‘ath10k_thermal_register’
-> drivers/net/wireless/ath/ath10k/thermal.h:45:19: note: previous definition of ‘ath10k_thermal_register’ was here
-> drivers/net/wireless/ath/ath10k/thermal.c:216:6: error: redefinition of ‘ath10k_thermal_unregister’
-> drivers/net/wireless/ath/ath10k/thermal.h:50:20: note: previous definition of ‘ath10k_thermal_unregister’ was here
->
-> Change the #ifdef to reflect the new kbuild behavior.
->
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Michal Marek <mmarek@suse.com>
-
-Please fix the subject prefix to "ath10k: ", otherwise looks good. Feel
-free to apply this to the kbuild tree.
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index dddaaea..5640e88 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1417,6 +1417,8 @@ static void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
+ 	target_tsf = avp->noa.next_tsf;
+ 	if (!avp->noa.absent)
+ 		target_tsf -= ATH_P2P_PS_STOP_TIME;
++	else
++		target_tsf += ATH_P2P_PS_STOP_TIME;
+ 
+ 	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
+ 		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
+@@ -1543,6 +1545,8 @@ void ath9k_p2p_ps_timer(void *priv)
+ 	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+ 	if (!avp->noa.absent)
+ 		tsf += ATH_P2P_PS_STOP_TIME;
++	else
++		tsf -= ATH_P2P_PS_STOP_TIME;
+ 
+ 	if (!avp->noa.has_next_tsf ||
+ 	    avp->noa.next_tsf - tsf > BIT(31))
 -- 
-Kalle Valo
+1.9.1
+
