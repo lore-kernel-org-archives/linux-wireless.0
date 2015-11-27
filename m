@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47213 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752098AbbKKPGB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2015 10:06:01 -0500
-Message-ID: <1447254355.2276.20.camel@sipsolutions.net> (sfid-20151111_160624_955242_0EA4A748)
-Subject: Re: [RFC v2 3/4] mac80211: use static keys for hw flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-	Jason Baron <jbaron@akamai.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Date: Wed, 11 Nov 2015 16:05:55 +0100
-In-Reply-To: <20151111094516.07d5d1d5@gandalf.local.home>
-References: <1447145549-27376-1-git-send-email-johannes@sipsolutions.net>
-	 <1447145549-27376-4-git-send-email-johannes@sipsolutions.net>
-	 <1447201345.2475.15.camel@coelho.fi>
-	 <1447227472.2276.7.camel@sipsolutions.net>
-	 <20151111083430.1e77c329@gandalf.local.home>
-	 <1447249156.2276.17.camel@sipsolutions.net>
-	 <20151111091859.55f6a4fd@gandalf.local.home>
-	 <1447252142.2276.19.camel@sipsolutions.net>
-	 <20151111094516.07d5d1d5@gandalf.local.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16607 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753665AbbK0CAI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2015 21:00:08 -0500
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
+Date: Fri, 27 Nov 2015 02:00:00 +0000
+Message-ID: <9d111cc7d61047b5890b7c5d53d71bbd@SC-EXCH02.marvell.com> (sfid-20151127_030024_455862_84D9AF4B)
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	 <1448018530.3141.25.camel@sipsolutions.net>
+	 <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com>
+ <1448530804.2167.4.camel@sipsolutions.net>
+In-Reply-To: <1448530804.2167.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-11-11 at 09:45 -0500, Steven Rostedt wrote:
-> 
-> config FLAG_ALL_SET
->   default y
->   depends on MY_DRIVER_1 && !MY_DRIVER_2 && ... && MY_DRIVER_N
-
-Right. But then I have to list all the drivers, which is rather
-annoying. I'd have to add more magic so that you somehow can't build
-without adding the driver to the list or so.
-
-I think adding this "counter" thing wouldn't actually be too hard, I'm
-not sure it's *worth* changing Kconfig for it, but I'll try later.
-
-johannes
+PiBPbiBOb3ZlbWJlciAyNiwgMjAxNSA1OjQwIFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiAN
+Cj4gT24gVGh1LCAyMDE1LTExLTI2IGF0IDA4OjI3ICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+
+IA0KPiA+ID4gU2luY2UgeW91IGRvIHRoaXMgaW4gLnByb2JlLCB5b3Ugc2hvdWxkIGNvbnNpZGVy
+IGxvYWRpbmcgdGhlDQo+ID4gPiBmaXJtd2FyZSBhc3luY2hyb25vdXNseS4NCj4gPiA+DQo+ID4N
+Cj4gPiBJIGhvcGUgSSBjYW4gcG9zdHBvbmUgdGhpcyBtb2RpZmljYXRpb24gbGF0ZXIuDQo+IA0K
+PiBJIGRvbid0IGZlZWwgc3Ryb25nbHkgYWJvdXQgdGhpcyBvbmUgLSBvdG9oIGl0J3Mgbm90IHJl
+YWxseSBjb21wbGljYXRlZC4NCj4gDQoNClRoYW5rcy4NCg0KPiA+ID4gPiArI2lmZGVmIENPTkZJ
+R19TVVBQT1JUX01GRw0KPiA+ID4NCj4gPiA+IFRoaXMgS2NvbmZpZyB2YXJpYWJsZSBkb2Vzbid0
+IGV4aXN0Lg0KPiA+ID4NCj4gPg0KPiA+IFRoZSBjb21waWxlIHZhcmlhYmxlIGlzIHVzZWQgcHJp
+dmF0ZWx5IGJ5IE1hcnZlbGwgYW5kIG91ciBjdXN0b21lcnMgaW4NCj4gPiBwcm9kdWN0aW9uIGxp
+bmUuDQo+IA0KPiBZZWFoLCBzdGlsbC4gTWFrZSBpdCBhIHByb3BlciBLY29uZmlnIHZhcmlhYmxl
+LCBkZWZhdWx0aW5nIHRvIG9mZiBhbmQgaGlkZGVuDQo+IHVuZGVyIHNvbWV0aGluZywgb3IgcmVt
+b3ZlIGl0LiBJdCdzIGV4dHJlbWVseSBtaXNsZWFkaW5nIHRvIGhhdmUgc29tZXRoaW5nDQo+IGNh
+bGxlZCBDT05GSUdfKiB3aGVuIGl0J3Mgbm90IGEgS2NvbmZpZyB2YXJpYWJsZS4NCj4gDQoNCkkg
+d2lsbCBjaGFuZ2UgdGhpcyBjb21waWxlIHZhcmlhYmxlIGZyb20gIkNPTkZJR19TVVBQT1JUX01G
+RyIgdG8gIlNVUFBPUlRfTUZHIi4NCg0KPiA+IE1hYzgwMjExIGRvZXMgbm90IHN1cHBvcnQgbWVz
+aCBBTVNEVSBub3csIHdlIGltcGxlbWVudCB0aGlzIGZ1bmN0aW9uDQo+ID4gaW4gbXdsd2lmaSBk
+cml2ZXIgZm9yIHRoZSB0aW1lIGJlaW5nLiBFeGNlcHQgZm9yIG1lc2ggQU1TRFUsIHdlIHN0aWxs
+DQo+ID4gbGV2ZXJhZ2UgbWFjODAyMTEgdG8gaGFuZGxlIGRhdGEgQU1TRFUuDQo+IA0KPiBZb3Un
+cmUgYWxsb3dlZCB0byBtb2RpZnkgbWFjODAyMTEuDQo+IA0KPiA+ID4gV2hhdCdzIGdvaW5nIG9u
+IGhlcmU/IFdoeSBhcmUgeW91IG1vZGlmeWluZyB0aGUgYWN0aW9uIGZyYW1lcyBvbiB0aGUNCj4g
+PiA+IGZseT8/IQ0KPiA+ID4NCj4gPg0KPiA+IER1ZSB0byBtd2x3aWZpIHN1cHBvcnRzIFR4L1J4
+IEFNU0RVLCB0aGVzZSBmcmFtZXMgYXJlIG1vZGlmaWVkIHRvDQo+ID4gaW5mb3JtIGNsaWVudCB0
+aGF0IHdlIHN1cHBvcnQgQU1TRFUuDQo+ID4NCj4gDQo+IERpdHRvIC0geW91J3JlIGFsbG93ZWQg
+dG8gbW9kaWZ5IG1hYzgwMjExLiBXZSBhY3R1YWxseSBoYXZlIGEgcGF0Y2ggbGlrZSB0aGlzDQo+
+IGFscmVhZHk6DQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0
+L2piZXJnL21hYzgwMjExLQ0KPiBuZXh0LmdpdC9jb21taXQvP2lkPTk5ZTdjYTQ0YmI5MTBmMGNi
+ZmRhNWQ5MDA4ZTg1MTdkZjBlYmM5MzkNCj4gDQoNCk9uY2UgaWYgdGhpcyBwYXRjaCBpcyByZWFk
+eSwgSSB3aWxsIG1vZGlmeSBtd2x3aWZpIHRvIHVzZSBpdC4gVGhhbmtzLg0KDQo+IGpvaGFubmVz
+DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
+bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4gdGhlDQo+IGJvZHkgb2YgYSBtZXNzYWdlIHRv
+IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdA0KPiBodHRw
+Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
