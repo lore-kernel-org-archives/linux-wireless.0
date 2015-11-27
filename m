@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47417 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1033054AbbKFJiw (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:35407 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754017AbbK0Ihb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:38:52 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 16/26] staging: wilc1000: remove function pointer spi_trx
-Date: Fri, 6 Nov 2015 18:40:13 +0900
-Message-ID: <1446802823-22598-17-git-send-email-glen.lee@atmel.com> (sfid-20151106_103858_625601_6681CE5C)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 27 Nov 2015 03:37:31 -0500
+Received: by lfdl133 with SMTP id l133so120689667lfd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:30 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 07/13] ath9k: MCC enable Opportunistic Power Save
+Date: Fri, 27 Nov 2015 09:37:12 +0100
+Message-Id: <1448613438-5173-7-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093739_780527_C4D35B82)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes function pointer spi_trx and call linux_spi_write_read
-directly.
+When adding NOA attr enable Opportunistic Power Save.
+Before we calculate ctwindow but didn't enable oppps.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_spi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/channel.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index f584d7e..789635b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -14,7 +14,6 @@
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2afb8da..31b4d0e 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1505,6 +1505,8 @@ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
  
- typedef struct {
- 	void *os_context;
--	int (*spi_trx)(u8 *, u8 *, u32);
- 	int (*spi_max_speed)(void);
- 	wilc_debug_func dPrint;
- 	int crc_off;
-@@ -408,7 +407,7 @@ static int spi_cmd_complete(u8 cmd, u32 adr, u8 *b, u32 sz, u8 clockless)
- 	}
- 	rix = len;
+ 	noa->index = avp->noa_index;
+ 	noa->oppps_ctwindow = ath9k_get_ctwin(sc, avp);
++	if (noa->oppps_ctwindow)
++		noa->oppps_ctwindow |= BIT(7);
  
--	if (!g_spi.spi_trx(wb, rb, len2)) {
-+	if (!linux_spi_write_read(wb, rb, len2)) {
- 		PRINT_ER("[wilc spi]: Failed cmd write, bus error...\n");
- 		result = N_FAIL;
- 		return result;
-@@ -976,7 +975,6 @@ static int wilc_spi_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	} else {
- 		return 0;
- 	}
--	g_spi.spi_trx = inp->io_func.u.spi.spi_trx;
- 	g_spi.spi_max_speed = inp->io_func.u.spi.spi_max_speed;
- 
- 	/**
+ 	if (avp->noa_duration) {
+ 		if (avp->periodic_noa) {
 -- 
 1.9.1
 
