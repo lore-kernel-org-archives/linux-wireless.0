@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:35670 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759152AbbKTBwm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2015 20:52:42 -0500
-Received: by ioc74 with SMTP id 74so109234021ioc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2015 17:52:42 -0800 (PST)
-Date: Thu, 19 Nov 2015 20:52:38 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "fengwei.yin" <fengwei.yin@linaro.org>
-Cc: andy.green@linaro.org, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-Subject: Re: [PATCH 4/5] wcn3620: use new response format for wcn3620
- trigger_ba
-Message-ID: <20151120015238.GC12931@localhost> (sfid-20151120_025246_089861_F87C2191)
-References: <1447063362-27322-1-git-send-email-fengwei.yin@linaro.org>
- <1447063362-27322-5-git-send-email-fengwei.yin@linaro.org>
- <20151109154040.GD5395@localhost>
- <56419805.4090902@linaro.org>
- <20151110141336.GF5395@localhost>
- <564D3FEE.1000208@linaro.org>
- <20151119174107.GB12931@localhost>
- <564E7A0E.5090105@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564E7A0E.5090105@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48375 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755313AbbK0VKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2015 16:10:49 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix off-channel mgmt-tx unintialized variable usage
+Date: Fri, 27 Nov 2015 22:10:46 +0100
+Message-Id: <1448658646-30499-1-git-send-email-johannes@sipsolutions.net> (sfid-20151127_221055_959510_7EAF0E8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2015 at 09:40:30AM +0800, fengwei.yin wrote:
-> Actually, this patch was using the v1 and DragonBoard needs v2 for trigger_ba.
-> And I want to know whether the change from Andy could work on the platform
-> which is using v1.
-> 
-> Can you try this change on your platform? Thanks.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm not sure I understand -- if you look at the right side of the diff
-for the patch "wcn36xx: Parse trigger_ba response properly", it is changing
-wcn36xx_smd_rsp_status_check() to wcn36xx_smd_trigger_ba_rsp(), whose
-definition is the same as wcn36xx_smd_rsp_station_check_v2() as far as I can
-tell.  Or am I missing something?
+In the previous commit, I neglected to update the cookie in one code
+path: when a mgmt-tx has no real cookie sent to userspace as it doesn't
+wait for a response, but is off-channel. The original code used the SKB
+pointer as the cookie and always assigned the cookie to the TX SKB in
+ieee80211_start_roc_work(), but my change turned this around and made
+the code rely on a valid cookie being passed in.
 
+Unfortunately, the off-channel no-wait TX path wasn't assigning one at
+all, resulting in an uninitialized stack value being used. This wasn't
+handed back to userspace as a cookie (since in the no-wait case there
+isn't a cookie), but it was tested for non-zero to distinguish between
+mgmt-tx and off-channel.
+
+Fix this by assigning a dummy non-zero cookie unconditionally, and get
+rid of a misleading comment and some dead code while at it. I'll clean
+up the ACK SKB handling separately later.
+
+Fixes: 3b79af973cf4 ("mac80211: stop using pointers as userspace cookies")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c2bd1b6a6922..df7550bf196e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3454,8 +3454,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			goto out_unlock;
+ 		}
+ 	} else {
+-		/* for cookie below */
+-		ack_skb = skb;
++		/* assign a dummy non-zero cookie, it's not sent to
++		 * userspace in this case but we rely on its value
++		 * internally in the need_offchan case to distinguish
++		 * mgmt-tx from remain-on-channel;
++		 */
++		*cookie = 0xffffffff;
+ 	}
+ 
+ 	if (!need_offchan) {
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.6.2
+
