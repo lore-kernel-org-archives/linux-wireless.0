@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47102 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031997AbbKFJhq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 04:37:46 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/26] staging: wilc1000: remove sdio_cmd53 of wilc_wlan_io_func_t
-Date: Fri, 6 Nov 2015 18:40:02 +0900
-Message-ID: <1446802823-22598-6-git-send-email-glen.lee@atmel.com> (sfid-20151106_103754_392970_D3493C79)
-In-Reply-To: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:44723 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751504AbbK0I10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2015 03:27:26 -0500
+Message-ID: <1448612842.2531.5.camel@sipsolutions.net> (sfid-20151127_092729_088251_277D9D6C)
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Date: Fri, 27 Nov 2015 09:27:22 +0100
+In-Reply-To: <9d111cc7d61047b5890b7c5d53d71bbd@SC-EXCH02.marvell.com>
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	 <1448018530.3141.25.camel@sipsolutions.net>
+	 <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com>
+	 <1448530804.2167.4.camel@sipsolutions.net>
+	 <9d111cc7d61047b5890b7c5d53d71bbd@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes sdio_cmd53 of wilc_wlan_io_func_t which is not used.
+On Fri, 2015-11-27 at 02:00 +0000, David Lin wrote:
+> > Ditto - you're allowed to modify mac80211. We actually have a patch
+> > like this
+> > already:
+> > https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-
+> > next.git/commit/?id=99e7ca44bb910f0cbfda5d9008e8517df0ebc939
+> > 
+> 
+> Once if this patch is ready, I will modify mwlwifi to use it. Thanks.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c   | 1 -
- drivers/staging/wilc1000/wilc_wlan_if.h | 1 -
- 2 files changed, 2 deletions(-)
+The patch is ready now and in the tree, but that wasn't my point. My
+point is that you shouldn't try to hack around mac80211 like with the
+action frame interception and the mesh-amsdu-reimplementation, but
+actually go fix it.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index ce5463e..7258313 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -894,7 +894,6 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, struct wilc *nic)
- 	nwi->io_func.io_type = HIF_SDIO;
- 	nwi->io_func.io_init = linux_sdio_init;
- 	nwi->io_func.io_deinit = linux_sdio_deinit;
--	nwi->io_func.u.sdio.sdio_cmd53 = linux_sdio_cmd53;
- 	nwi->io_func.u.sdio.sdio_set_max_speed = linux_sdio_set_max_speed;
- 	nwi->io_func.u.sdio.sdio_set_default_speed = linux_sdio_set_default_speed;
- #else
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index cd83098..92cee45 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -78,7 +78,6 @@ typedef struct {
- 	void (*io_deinit)(void *);
- 	union {
- 		struct {
--			int (*sdio_cmd53)(sdio_cmd53_t *);
- 			int (*sdio_set_max_speed)(void);
- 			int (*sdio_set_default_speed)(void);
- 		} sdio;
--- 
-1.9.1
+If you have issues with mac80211 like this you can ask how to fix them,
+or just fix them and suggest changes/patches, but just working around
+it in the driver isn't the right approach.
 
+johannes
