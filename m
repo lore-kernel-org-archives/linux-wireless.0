@@ -1,78 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37759 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367AbbKZPjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 10:39:15 -0500
-Message-ID: <1448552352.2167.14.camel@sipsolutions.net> (sfid-20151126_163919_664516_CC0F7608)
-Subject: pull-request: mac80211 2015-11-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Nov 2015 16:39:12 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:34470 "EHLO
+	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754177AbbK0Ihl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2015 03:37:41 -0500
+Received: by lffu14 with SMTP id u14so121546153lff.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:39 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 13/13] ath9k: remove ath9k_mod_tsf64_tu
+Date: Fri, 27 Nov 2015 09:37:18 +0100
+Message-Id: <1448613438-5173-13-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093745_465865_6E369DE5)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending with correct netdev address, not sure how that ended up in
-my autocompletion address book ... sorry about that!]
+Remove ath9k_mod_tsf64_tu() function while we could
+use div_u64_rem() function.
 
-Hi Dave,
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/common-beacon.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-Sorry for being so late. These have been pending for a while (and in
-fact in linux-next too, I asked to be added there recently :) ).
+diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.c b/drivers/net/wireless/ath/ath9k/common-beacon.c
+index 6ad4447..01d6d32 100644
+--- a/drivers/net/wireless/ath/ath9k/common-beacon.c
++++ b/drivers/net/wireless/ath/ath9k/common-beacon.c
+@@ -18,30 +18,16 @@
+ 
+ #define FUDGE 2
+ 
+-/* Calculate the modulo of a 64 bit TSF snapshot with a TU divisor */
+-static u32 ath9k_mod_tsf64_tu(u64 tsf, u32 div_tu)
+-{
+-	u32 tsf_mod, tsf_hi, tsf_lo, mod_hi, mod_lo;
+-
+-	tsf_mod = tsf & (BIT(10) - 1);
+-	tsf_hi = tsf >> 32;
+-	tsf_lo = ((u32) tsf) >> 10;
+-
+-	mod_hi = tsf_hi % div_tu;
+-	mod_lo = ((mod_hi << 22) + tsf_lo) % div_tu;
+-
+-	return (mod_lo << 10) | tsf_mod;
+-}
+-
+ static u32 ath9k_get_next_tbtt(struct ath_hw *ah, u64 tsf,
+ 			       unsigned int interval)
+ {
+-	unsigned int offset;
++	unsigned int offset, divisor;
+ 
+ 	tsf += TU_TO_USEC(FUDGE + ah->config.sw_beacon_response_time);
+-	offset = ath9k_mod_tsf64_tu(tsf, interval);
++	divisor = TU_TO_USEC(interval);
++	div_u64_rem(tsf, divisor, &offset);
+ 
+-	return (u32) tsf + TU_TO_USEC(interval) - offset;
++	return (u32) tsf + divisor - offset;
+ }
+ 
+ /*
+-- 
+1.9.1
 
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-The following changes since commit
-17c790a60dad11c0193127e83ac8e183b4fed1a2:
-
-  Merge branch 'mv88e6060-fixes' (2015-11-15 20:16:26 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-tags/mac80211-for-davem-2015-11-26
-
-for you to fetch changes up to
-5ff3ca2888940533dcd50212cf0be7049fee979c:
-
-  mac80211: don't teardown sdata on sdata stop (2015-11-20 11:40:50
-+0100)
-
-----------------------------------------------------------------
-A small set of fixes for 4.4:
- * remove NL80211_FEATURE_FULL_AP_CLIENT_STATE again, it
-   was broken and needs more work, we'll enable it for 4.5
- * fix call_rcu() induced use-after-reset/free in mesh
-   (that was suddenly causing issues in certain tests)
- * always request block-ack window size 64 as we found
-   some APs will otherwise crash (really ...)
- * fix P2P-Device teardown sequence to avoid restarting
-   with uninitialized data
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      mac80211: don't teardown sdata on sdata stop
-
-Emmanuel Grumbach (1):
-      mac80211: ensure we don't update tx power on a non-running sdata
-
-Gregory Greenman (1):
-      mac80211: always set the buf_size in AddBA req to 64
-
-Johannes Berg (2):
-      mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE
-      mac80211: mesh: fix call_rcu() usage
-
- include/net/mac80211.h      | 6 ++++--
- net/mac80211/agg-tx.c       | 3 ++-
- net/mac80211/iface.c        | 5 +++--
- net/mac80211/main.c         | 3 +--
- net/mac80211/mesh_pathtbl.c | 8 ++++----
- 5 files changed, 14 insertions(+), 11 deletions(-)
