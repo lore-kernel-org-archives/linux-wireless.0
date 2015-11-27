@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18285 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558AbbKCGV4 (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33367 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125AbbK0Ihh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 01:21:56 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] ath10k: fix invalid NSS for 4x4 devices
-Date: Tue, 3 Nov 2015 11:51:33 +0530
-Message-ID: <1446531693-23453-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151103_072256_348034_BE949E37)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 27 Nov 2015 03:37:37 -0500
+Received: by lfaz4 with SMTP id z4so121318728lfa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:35 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 10/13] ath9k: MCC, add NOA also in case of an AP
+Date: Fri, 27 Nov 2015 09:37:15 +0100
+Message-Id: <1448613438-5173-10-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_093742_706246_C1FE9627)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of spatial streams that are derived from chain mask
-for 4x4 devices is using wrong bitmask and conditional check.
-This is affecting downlink throughput for QCA99x0 devices. Earlier
-cfg_tx_chainmask is not filled by default until user configured it
-and so get_nss_from_chainmask never be called. This issue is exposed
-by recent commit 166de3f1895d ("ath10k: remove supported chain mask").
-By default maximum supported chain mask is filled in cfg_tx_chainmask.
+In case of MCC and AP interface, add also NOA attr
+that will inform stations about absence of an AP.
+There is a chance that some stations will handle
+this NOA attr correctly and will know exactly when
+AP is present/absent.
 
-Cc: stable@vger.kernel.org
-Fixes: 5572a95b4b ("ath10k: apply chainmask settings to vdev on
-creation")
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/beacon.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a7411fe..95a55405 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4225,7 +4225,7 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index f50a6bc..5cf0cd7 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -148,7 +148,8 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
  
- static u32 get_nss_from_chainmask(u16 chain_mask)
- {
--	if ((chain_mask & 0x15) == 0x15)
-+	if ((chain_mask & 0xf) == 0xf)
- 		return 4;
- 	else if ((chain_mask & 0x7) == 0x7)
- 		return 3;
+ 	ath_assign_seq(common, skb);
+ 
+-	if (vif->p2p)
++	/* Always assign NOA attr when MCC enabled */
++	if (ath9k_is_chanctx_enabled())
+ 		ath9k_beacon_add_noa(sc, avp, skb);
+ 
+ 	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
 -- 
-2.6.2
+1.9.1
 
