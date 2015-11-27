@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24858 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbbKZLzi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 06:55:38 -0500
-Date: Thu, 26 Nov 2015 14:55:23 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] rt2x00: type bug in _rt2500usb_register_read()
-Message-ID: <20151126115523.GD10556@mwanda> (sfid-20151126_125602_648789_FE200A98)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:36832 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755019AbbK0Q3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2015 11:29:34 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/1] wireless: airo: re-use mac_pton()
+Date: Fri, 27 Nov 2015 18:29:31 +0200
+Message-Id: <1448641771-140820-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20151127_172940_488277_500FCA7E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code causes a static checker bug.
+mac_pton() converts 6-byte MAC / BSSID to binary format. Change an open coded
+variant by the generic one.
 
-drivers/net/wireless/ralink/rt2x00/rt2500usb.c:232 _rt2500usb_register_read()
-warn: passing casted pointer 'value' to 'rt2500usb_register_read()' 32 vs 16.
-
-If the low 16 bits were initialized to zero then this code would only be
-a problem on big endian systems.  But in this case this is case the low
-16 bits are never initialized.  This is called from a function which is
-created using a macro:
-
-RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
-
-We end up copying uninitialized data to the user which is bogus and an
-information leak.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
-Not tested.  Perhaps we should just remove this code since it has never
-worked.
+ drivers/net/wireless/cisco/airo.c | 18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index b50d873..d26018f 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -229,7 +229,10 @@ static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
- 				     const unsigned int offset,
- 				     u32 *value)
- {
--	rt2500usb_register_read(rt2x00dev, offset, (u16 *)value);
-+	u16 tmp;
-+
-+	rt2500usb_register_read(rt2x00dev, offset, &tmp);
-+	*value = tmp;
- }
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 17c40f0..d2353f6 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -5137,21 +5137,9 @@ static void proc_APList_on_close( struct inode *inode, struct file *file ) {
+ 	memset(APList_rid, 0, sizeof(*APList_rid));
+ 	APList_rid->len = cpu_to_le16(sizeof(*APList_rid));
  
- static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+-	for( i = 0; i < 4 && data->writelen >= (i+1)*6*3; i++ ) {
+-		int j;
+-		for( j = 0; j < 6*3 && data->wbuffer[j+i*6*3]; j++ ) {
+-			switch(j%3) {
+-			case 0:
+-				APList_rid->ap[i][j/3]=
+-					hex_to_bin(data->wbuffer[j+i*6*3])<<4;
+-				break;
+-			case 1:
+-				APList_rid->ap[i][j/3]|=
+-					hex_to_bin(data->wbuffer[j+i*6*3]);
+-				break;
+-			}
+-		}
+-	}
++	for (i = 0; i < 4 && data->writelen >= (i + 1) * 6 * 3; i++)
++		mac_pton(data->wbuffer + i * 6 * 3, APList_rid->ap[i]);
++
+ 	disable_MAC(ai, 1);
+ 	writeAPListRid(ai, APList_rid, 1);
+ 	enable_MAC(ai, 1);
+-- 
+2.6.2
+
