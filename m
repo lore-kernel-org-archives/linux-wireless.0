@@ -1,208 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56957 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbbKJXnB (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:36039 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982AbbK0Ihf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2015 18:43:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 18/20] staging/wilc1000: split out bus specific modules
-Date: Wed, 11 Nov 2015 00:42:38 +0100
-Message-Id: <1447198960-2760143-19-git-send-email-arnd@arndb.de> (sfid-20151111_004704_390973_075A94CE)
-In-Reply-To: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
-References: <1447198960-2760143-1-git-send-email-arnd@arndb.de>
+	Fri, 27 Nov 2015 03:37:35 -0500
+Received: by lfs39 with SMTP id 39so118585476lfs.3
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2015 00:37:33 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 09/13] ath9k: request NOA update when chanctx active
+Date: Fri, 27 Nov 2015 09:37:14 +0100
+Message-Id: <1448613438-5173-9-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151127_095252_037432_E4F109F0)
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SPI and SDIO specific code is now separate enough that
-we just need to restructure the Makefile and Kconfig logic
-a bit and export a couple of symbols from the common module
-to have separate bus glue drivers.
+Request NOA update when chanctx active, also in case
+of STA.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/staging/wilc1000/Kconfig        | 66 ++++++++++++++-------------------
- drivers/staging/wilc1000/Makefile       |  7 +++-
- drivers/staging/wilc1000/linux_wlan.c   |  4 ++
- drivers/staging/wilc1000/wilc_debugfs.c |  2 +
- drivers/staging/wilc1000/wilc_wlan.c    |  1 +
- 5 files changed, 40 insertions(+), 40 deletions(-)
+This depends on:
+mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-index ee51b4278088..2923122346ef 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -1,41 +1,12 @@
--config WILC1000_DRIVER
--	bool "WILC1000 support (WiFi only)"
--	depends on CFG80211 && WEXT_CORE && INET
--	---help---
--	  This module only support IEEE 802.11n WiFi.
--
--if WILC1000_DRIVER
--
- config WILC1000
- 	tristate
--
--choice
--        prompt "Memory Allocation"
--        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
--
--config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
--	bool "Preallocate memory at loading driver"
-+	select WIRELESS_EXT
- 	---help---
--	  This choice supports static allocation of the memory
--	  for the receive buffer. The driver will allocate the RX buffer
--	  during initial time. The driver will also free the buffer
--	  by calling network device stop.
--
--config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
--        bool "Dynamically allocate memory in real time"
--        ---help---
--	  This choice supports dynamic allocation of the memory
--	  for the receive buffer. The driver will allocate the RX buffer
--	  when it is required.
--endchoice
--
--choice
--	prompt "Bus Type"
--	default WILC1000_SDIO
-+	  This module only support IEEE 802.11n WiFi.
+ drivers/net/wireless/ath/ath9k/channel.c | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c    | 5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 5a1ede6..c94d7d9 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1439,7 +1439,7 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	if (!sc->p2p_ps_timer)
+ 		return;
  
- config WILC1000_SDIO
--	bool "SDIO support"
--	depends on MMC
-+	tristate "Atmel WILC1000 SDIO (WiFi only)"
-+	depends on CFG80211 && INET && MMC
- 	select WILC1000
- 	---help---
- 	  This module adds support for the SDIO interface of adapters using
-@@ -48,9 +19,9 @@ config WILC1000_SDIO
- 	  this if your platform is using the SDIO bus.
+-	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
++	if (vif->type != NL80211_IFTYPE_STATION)
+ 		return;
  
- config WILC1000_SPI
--	depends on SPI
-+	tristate "Atmel WILC1000 SPI (WiFi only)"
-+	depends on CFG80211 && INET && SPI
- 	select WILC1000
--	bool "SPI support"
- 	---help---
- 	  This module adds support for the SPI interface of adapters using
- 	  WILC1000 chipset. The Atmel WILC1000 has a Serial Peripheral
-@@ -59,10 +30,31 @@ config WILC1000_SPI
- 	  full-duplex slave synchronous serial interface that is available
- 	  immediately following reset when pin 9 (SDIO_SPI_CFG) is tied to
- 	  VDDIO. Select this if your platform is using the SPI bus.
+ 	sc->p2p_ps_vif = avp;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d184e68..ab46a4d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -974,7 +974,7 @@ static void ath9k_update_bssid_mask(struct ath_softc *sc,
+ 		if (ctx->nvifs_assigned != 1)
+ 			continue;
+ 
+-		if (!avp->vif->p2p || !iter_data->has_hw_macaddr)
++		if (!iter_data->has_hw_macaddr)
+ 			continue;
+ 
+ 		ether_addr_copy(common->curbssid, avp->bssid);
+@@ -1251,6 +1251,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
+ 	sc->cur_chan->nvifs++;
+ 
++	if (vif->type == NL80211_IFTYPE_STATION && ath9k_is_chanctx_enabled())
++		vif->driver_flags |= IEEE80211_VIF_GET_NOA_UPDATE;
 +
-+choice
-+        prompt "WILC1000 Memory Allocation"
-+        depends on WILC1000
-+        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-+
-+config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-+	bool "Preallocate memory at loading driver"
-+	---help---
-+	  This choice supports static allocation of the memory
-+	  for the receive buffer. The driver will allocate the RX buffer
-+	  during initial time. The driver will also free the buffer
-+	  by calling network device stop.
-+
-+config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
-+        bool "Dynamically allocate memory in real time"
-+        ---help---
-+	  This choice supports dynamic allocation of the memory
-+	  for the receive buffer. The driver will allocate the RX buffer
-+	  when it is required.
- endchoice
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
  
-+
- config WILC1000_HW_OOB_INTR
--	bool "Use out of band interrupt"
-+	bool "WILC1000 out of band interrupt"
- 	depends on WILC1000_SDIO
- 	default n
- 	---help---
-@@ -71,5 +63,3 @@ config WILC1000_HW_OOB_INTR
- 	  mechanism for SDIO host controllers that don't support SDIO interrupt.
- 	  Select this option If the SDIO host controller in your platform
- 	  doesn't support SDIO time devision interrupt.
--
--endif
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index dcba27bd3bce..198d536da57c 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -21,5 +21,8 @@ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			wilc_wlan_cfg.o wilc_debugfs.o \
- 			wilc_wlan.o
- 
--wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o wilc_sdio.o
--wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o wilc_spi.o
-+obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
-+wilc1000-sdio-objs += linux_wlan_sdio.o wilc_sdio.o
-+
-+obj-$(CONFIG_WILC1000_SPI) += wilc1000-spi.o
-+wilc1000-spi-objs += linux_wlan_spi.o wilc_spi.o
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 1b6e1eec2446..0d6c22ca7920 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -44,6 +44,8 @@ static struct net_device_stats *mac_stats(struct net_device *dev);
- static int  mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd);
- static void wilc_set_multicast_list(struct net_device *dev);
- struct wilc *wilc_dev;
-+EXPORT_SYMBOL_GPL(wilc_dev);
-+
- bool wilc_enable_ps = true;
- 
- static const struct net_device_ops wilc_netdev_ops = {
-@@ -1411,6 +1413,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
- 	wilc_debugfs_remove();
- #endif
- }
-+EXPORT_SYMBOL_GPL(wilc_netdev_cleanup);
- 
- int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		     int gpio, const struct wilc_hif_func *ops)
-@@ -1487,3 +1490,4 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(wilc_netdev_init);
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index d70f96f475b8..158a1df17195 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -27,7 +27,9 @@ static struct dentry *wilc_dir;
- #define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG | CORECONFIG_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
-+EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
-+EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
- 
- /*
-  * --------------------------------------------------------------------------------
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f72f976906cc..a71901c22653 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1181,6 +1181,7 @@ void wilc_handle_isr(void *wilc)
- 	}
- 	release_bus(RELEASE_ALLOW_SLEEP);
- }
-+EXPORT_SYMBOL_GPL(wilc_handle_isr);
- 
- int wilc_wlan_firmware_download(const u8 *buffer, u32 buffer_size)
- {
 -- 
-2.1.0.rc2
+1.9.1
 
