@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35466 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbbKWNlD (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:35357 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714AbbK2Fvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 08:41:03 -0500
-Received: by pacej9 with SMTP id ej9so191560082pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2015 05:41:01 -0800 (PST)
-From: Masanari Iida <standby24x7@gmail.com>
-To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rdunlap@infradead.org, chris.park@atmel.com, austin.shin@atmel.com,
-	johnny.kim@atmel.com, linux-wireless@vger.kernel.org
-Cc: Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH 1/4] staging: wilc1000: Fix typo in wilc_msgqueue.h
-Date: Mon, 23 Nov 2015 22:41:17 +0900
-Message-Id: <1448286080-14787-1-git-send-email-standby24x7@gmail.com> (sfid-20151123_144112_024889_AC2B716F)
+	Sun, 29 Nov 2015 00:51:33 -0500
+From: Brent Taylor <motobud@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ath6kl@lists.infradead.org,
+	Brent Taylor <motobud@gmail.com>
+Subject: [PATCH v3] ath6kl: Use vmalloc for loading firmware using api1 method and use kvfree
+Date: Sat, 28 Nov 2015 23:51:23 -0600
+Message-Id: <1448776283-28383-1-git-send-email-motobud@gmail.com> (sfid-20151129_065226_786677_EC7ED60B)
+In-Reply-To: <1448774038-26984-1-git-send-email-motobud@gmail.com>
+References: <1448774038-26984-1-git-send-email-motobud@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix some spelling typo in wilc_msgqueue.h
+Signed-off-by: Brent Taylor <motobud@gmail.com>
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+ath6kl: Use vmalloc for loading firmware using api1 method and free using kvfree
+
+ath6kl: fix kmalloc build error
 ---
- drivers/staging/wilc1000/wilc_msgqueue.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Changes v2 -> v3:
+   - fix kmalloc build error
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index d231c33..d7e0328 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -35,7 +35,7 @@ typedef struct __MessageQueue_struct {
-  *                              any other message queue having the same name in the system
-  *  @param[in,out]	pHandle handle to the message queue object
-  *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating sucess/failure
-+ *  @return		Error code indicating success/failure
-  *  @author		syounan
-  *  @date		30 Aug 2010
-  *  @version		1.0
-@@ -44,7 +44,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle);
+Changes v1 -> v2:
+   - simplify memory allocation
+   - use kvfree
+
+ drivers/net/wireless/ath/ath6kl/core.c | 2 +-
+ drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 4ec02ce..052e58b 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -343,7 +343,7 @@ void ath6kl_core_cleanup(struct ath6kl *ar)
  
- /*!
-  *  @brief		Sends a message
-- *  @details		Sends a message, this API will block unil the message is
-+ *  @details		Sends a message, this API will block until the message is
-  *                              actually sent or until it is timedout (as long as the feature
-  *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-  *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-@@ -52,7 +52,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle);
-  *  @param[in]	pvSendBuffer pointer to the data to send
-  *  @param[in]	u32SendBufferSize the size of the data to send
-  *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating sucess/failure
-+ *  @return		Error code indicating success/failure
-  *  @author		syounan
-  *  @date		30 Aug 2010
-  *  @version		1.0
-@@ -62,7 +62,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 	kfree(ar->fw_board);
+ 	kfree(ar->fw_otp);
+-	vfree(ar->fw);
++	kvfree(ar->fw);
+ 	kfree(ar->fw_patch);
+ 	kfree(ar->fw_testscript);
  
- /*!
-  *  @brief		Receives a message
-- *  @details		Receives a message, this API will block unil a message is
-+ *  @details		Receives a message, this API will block until a message is
-  *                              received or until it is timedout (as long as the feature
-  *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-  *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-@@ -71,7 +71,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
-  *  @param[in]	u32RecvBufferSize the size of the receive buffer
-  *  @param[out]	pu32ReceivedLength the length of received data
-  *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating sucess/failure
-+ *  @return		Error code indicating success/failure
-  *  @author		syounan
-  *  @date		30 Aug 2010
-  *  @version		1.0
-@@ -84,7 +84,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
-  *  @brief		Destroys an existing  Message queue
-  *  @param[in]	pHandle handle to the message queue object
-  *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating sucess/failure
-+ *  @return		Error code indicating success/failure
-  *  @author		syounan
-  *  @date		30 Aug 2010
-  *  @version		1.0
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 6e473fa..19535dc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+ 		return ret;
+ 
+ 	*fw_len = fw_entry->size;
+-	*fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
++	if (&ar->fw == fw)
++		*fw = vmalloc(fw_entry->size);
++	else
++		*fw = kmalloc(fw_entry->size, GFP_KERNEL);
+ 
+ 	if (*fw == NULL)
+ 		ret = -ENOMEM;
++	else
++		memcpy(*fw, fw_entry->data, fw_entry->size);
+ 
+ 	release_firmware(fw_entry);
+ 
 -- 
-2.6.3.379.g0c83680
+2.6.3
 
