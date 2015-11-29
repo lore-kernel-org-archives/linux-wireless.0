@@ -1,111 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34889 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933224AbbKROqn (ORCPT
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:35275 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbbK2Axe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 09:46:43 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 14/27] mwl8k: move under marvell vendor directory
-Date: Wed, 18 Nov 2015 16:45:53 +0200
-Message-Id: <1447857966-19560-15-git-send-email-kvalo@codeaurora.org> (sfid-20151118_155327_920856_B059FA15)
-In-Reply-To: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
+	Sat, 28 Nov 2015 19:53:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAP+RiCA6wasaiMCYEJ-8gaiVMi5JP2JT6A1bGm9nHJ9CA+Ow5g@mail.gmail.com>
+References: <1444972259-24260-1-git-send-email-motobud@gmail.com>
+	<CAP+RiCA6wasaiMCYEJ-8gaiVMi5JP2JT6A1bGm9nHJ9CA+Ow5g@mail.gmail.com>
+Date: Sun, 29 Nov 2015 02:53:34 +0200
+Message-ID: <CAHp75VcVdMNrxvedCB_OmJw7upTPJq8T8tKxfBn_moYGj6S19g@mail.gmail.com> (sfid-20151129_015426_710436_B54DFE07)
+Subject: Re: [PATCH] ath6kl: Use vmalloc for loading firmware using api1 method
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Brent Taylor <motobud@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath6kl@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of reorganising wireless drivers directory and Kconfig.
+On Sat, Nov 28, 2015 at 8:58 PM, Brent Taylor <motobud@gmail.com> wrote:
+> Sorry, the first e-mail was sent via gmail and I forgot about sending
+> it in plain text mode.
+>
+> Whats the status on this patch?  I don't see it on patchwork anymore
+> nor is it in any of the git trees I checked.
+>
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- MAINTAINERS                                |    2 +-
- drivers/net/wireless/Kconfig               |    9 ---------
- drivers/net/wireless/Makefile              |    2 --
- drivers/net/wireless/marvell/Kconfig       |    9 +++++++++
- drivers/net/wireless/marvell/Makefile      |    2 ++
- drivers/net/wireless/{ => marvell}/mwl8k.c |    0
- 6 files changed, 12 insertions(+), 12 deletions(-)
- rename drivers/net/wireless/{ => marvell}/mwl8k.c (100%)
+You forget to use kvfree() instead of kfree() in core.c.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 5b889f6972c0..e622877aaab4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6734,7 +6734,7 @@ MARVELL MWL8K WIRELESS DRIVER
- M:	Lennert Buytenhek <buytenh@wantstofly.org>
- L:	linux-wireless@vger.kernel.org
- S:	Odd Fixes
--F:	drivers/net/wireless/mwl8k.c
-+F:	drivers/net/wireless/marvell/mwl8k.c
- 
- MARVELL SOC MMC/SD/SDIO CONTROLLER DRIVER
- M:	Nicolas Pitre <nico@fluxnic.net>
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 465665237308..315982a5ee73 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -133,15 +133,6 @@ config MAC80211_HWSIM
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called mac80211_hwsim.  If unsure, say N.
- 
--config MWL8K
--	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
--	depends on MAC80211 && PCI
--	---help---
--	  This driver supports Marvell TOPDOG 802.11 wireless cards.
--
--	  To compile this driver as a module, choose M here: the module
--	  will be called mwl8k.  If unsure, say N.
--
- source "drivers/net/wireless/ath/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 7a95b58a5c76..9498753f596b 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -26,8 +26,6 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- 
- obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
- 
--obj-$(CONFIG_MWL8K)	+= mwl8k.o
--
- obj-$(CONFIG_RT2X00)	+= rt2x00/
- 
- obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
-diff --git a/drivers/net/wireless/marvell/Kconfig b/drivers/net/wireless/marvell/Kconfig
-index bbdbac9a2a45..4938c7ec0009 100644
---- a/drivers/net/wireless/marvell/Kconfig
-+++ b/drivers/net/wireless/marvell/Kconfig
-@@ -15,4 +15,13 @@ source "drivers/net/wireless/marvell/libertas/Kconfig"
- source "drivers/net/wireless/marvell/libertas_tf/Kconfig"
- source "drivers/net/wireless/marvell/mwifiex/Kconfig"
- 
-+config MWL8K
-+	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
-+	depends on MAC80211 && PCI
-+	---help---
-+	  This driver supports Marvell TOPDOG 802.11 wireless cards.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called mwl8k.  If unsure, say N.
-+
- endif # WLAN_VENDOR_MARVELL
-diff --git a/drivers/net/wireless/marvell/Makefile b/drivers/net/wireless/marvell/Makefile
-index f4ab48aaff3c..1b0a7d2bc8e6 100644
---- a/drivers/net/wireless/marvell/Makefile
-+++ b/drivers/net/wireless/marvell/Makefile
-@@ -2,3 +2,5 @@ obj-$(CONFIG_LIBERTAS)		+= libertas/
- 
- obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
- obj-$(CONFIG_MWIFIEX)	+= mwifiex/
-+
-+obj-$(CONFIG_MWL8K)	+= mwl8k.o
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-similarity index 100%
-rename from drivers/net/wireless/mwl8k.c
-rename to drivers/net/wireless/marvell/mwl8k.c
+> Thanks,
+> Brent
+>
+> On Fri, Oct 16, 2015 at 12:10 AM, Brent Taylor <motobud@gmail.com> wrote:
+>> Signed-off-by: Brent Taylor <motobud@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath6kl/init.c | 15 +++++++++++----
+>>  1 file changed, 11 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+>> index 6e473fa..2155739 100644
+>> --- a/drivers/net/wireless/ath/ath6kl/init.c
+>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+>> @@ -673,10 +673,17 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>>                 return ret;
+>>
+>>         *fw_len = fw_entry->size;
+>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+>> -
+>> -       if (*fw == NULL)
+>> -               ret = -ENOMEM;
+>> +       if (&ar->fw == fw) {
+>> +               *fw = vmalloc(fw_entry->size);
+>> +               if (*fw == NULL)
+>> +                       ret = -ENOMEM;
+>> +               else
+>> +                       memcpy(*fw, fw_entry->data, fw_entry->size);
+>> +       } else {
+>> +               *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+>> +               if (*fw == NULL)
+>> +                       ret = -ENOMEM;
+>> +       }
+>>
+>>         release_firmware(fw_entry);
+>>
+>> --
+>> 2.6.1
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
 -- 
-1.7.9.5
-
+With Best Regards,
+Andy Shevchenko
