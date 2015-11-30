@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:38131 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755655AbbKRTTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2015 14:19:11 -0500
-Subject: Re: [PATCH v2 06/27] brcm80211: move under broadcom vendor directory
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-References: <1447857966-19560-1-git-send-email-kvalo@codeaurora.org>
- <1447857966-19560-7-git-send-email-kvalo@codeaurora.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <564CCF2A.4030203@hauke-m.de> (sfid-20151118_201939_252960_2E12FCE8)
-Date: Wed, 18 Nov 2015 20:19:06 +0100
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52927 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbbK3RAG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2015 12:00:06 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Remove unnecessary amsdu/ampdu assignment in debugfs
+Date: Mon, 30 Nov 2015 22:29:39 +0530
+Message-ID: <1448902779-3582-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20151130_180011_875022_C4A2126F)
 MIME-Version: 1.0
-In-Reply-To: <1447857966-19560-7-git-send-email-kvalo@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2015 03:45 PM, Kalle Valo wrote:
-> Part of reorganising wireless drivers directory and Kconfig. Note that I had to
-> edit Makefiles from subdirectories to use the new location.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> ---
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-I would prefer to remove the brcm80211 directory in this process and create:
-drivers/net/wireless/broadcom/brcmfmac
-drivers/net/wireless/broadcom/brcmsmac
-drivers/net/wireless/broadcom/brcmutil
-drivers/net/wireless/broadcom/include
+The default values of max_num_amsdu / max_num_amdpu is assigned a
+default value as part of 'ath10k_core_init_firmware_features'
 
-This way we have one directory less.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hauke
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index b502b7f..f635972f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1114,7 +1114,7 @@ static ssize_t ath10k_read_htt_max_amsdu_ampdu(struct file *file,
+ {
+ 	struct ath10k *ar = file->private_data;
+ 	char buf[64];
+-	u8 amsdu = 3, ampdu = 64;
++	u8 amsdu, ampdu;
+ 	unsigned int len;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+-- 
+1.7.9.5
+
