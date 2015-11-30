@@ -1,145 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33378 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbbKVJIM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2015 04:08:12 -0500
-Received: by wmec201 with SMTP id c201so123235576wme.0
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2015 01:08:11 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/8] staging: vt6655: power.c replace pDevice with priv
-Date: Sun, 22 Nov 2015 09:07:19 +0000
-Message-Id: <1448183242-3397-5-git-send-email-tvboxspy@gmail.com> (sfid-20151122_100833_183750_DEA3F92B)
-In-Reply-To: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
-References: <1448183242-3397-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38190 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751598AbbK3KbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2015 05:31:03 -0500
+Message-ID: <1448879458.3957.1.camel@sipsolutions.net> (sfid-20151130_113106_856503_80852316)
+Subject: Re: [PATCH v2 4/8] cfg80211: reg: Properly handle rules for 5 and
+ 10 MHz channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>, Michal Sojka <sojkam1@fel.cvut.cz>
+Cc: linux-wireless@vger.kernel.org, bernd.lehmann@volkswagen.de,
+	s.sander@nordsys.de, wireless-regdb@lists.infradead.org,
+	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com,
+	Jan =?ISO-8859-1?Q?Kaisrl=EDk?= <kaisrja1@fel.cvut.cz>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Mon, 30 Nov 2015 11:30:58 +0100
+In-Reply-To: <20151130095652.GA7054@w1.fi> (sfid-20151130_105700_562689_2529B730)
+References: <1448303241-27747-1-git-send-email-sojkam1@fel.cvut.cz>
+	 <1448303241-27747-5-git-send-email-sojkam1@fel.cvut.cz>
+	 <20151130095652.GA7054@w1.fi> (sfid-20151130_105700_562689_2529B730)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case.
+On Mon, 2015-11-30 at 11:56 +0200, Jouni Malinen wrote:
+> On Mon, Nov 23, 2015 at 07:27:17PM +0100, Michal Sojka wrote:
+> > Regulatory rules are applied to channels as if the channel is at
+> > least
+> > 20 MHz wide. This is a problem when dealing with 5 and 10 MHz
+> > channels
+> > because side channels of a regulatory rule get disabled even when
+> > they
+> > fall into rule's frequency range.
+> > 
+> > This problem was already fixed in commit
+> > 4edd56981c8fbb349b1529a2feaf772636eb1c83, but only for custom
+> > regulatory
+> > domains provided by drivers. Here we fix it also for all other
+> > (e.g.
+> > user-supplied) regulatory domains.
+> > 
+> > Before that, similar commit was
+> > reverted (e33e2241e272eddc38339692500bd1c7d8753a77) due to it
+> > allowing
+> > running AP on channel 12 in the US regulatory domain.
+> 
+> I'm afraid this new patch needs to be reverted as well since it
+> allows active scanning on channel 12 in the US regulatory domain.
+> I.e., every full scan with this commit included results in a Probe
+> Request frame being sent on channel 12..
+> 
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/power.c | 56 +++++++++++++++++++++---------------------
- 1 file changed, 28 insertions(+), 28 deletions(-)
+I've dropped it from my tree.
 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index 06e6b9d..e58afbd 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -68,40 +68,40 @@ PSvEnablePowerSaving(
- 	unsigned short wListenInterval
- )
- {
--	struct vnt_private *pDevice = hDeviceContext;
--	u16 wAID = pDevice->current_aid | BIT(14) | BIT(15);
-+	struct vnt_private *priv = hDeviceContext;
-+	u16 wAID = priv->current_aid | BIT(14) | BIT(15);
- 
- 	/* set period of power up before TBTT */
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_PWBT, C_PWBT);
--	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
-+	VNSvOutPortW(priv->PortOffset + MAC_REG_PWBT, C_PWBT);
-+	if (priv->op_mode != NL80211_IFTYPE_ADHOC) {
- 		/* set AID */
--		VNSvOutPortW(pDevice->PortOffset + MAC_REG_AIDATIM, wAID);
-+		VNSvOutPortW(priv->PortOffset + MAC_REG_AIDATIM, wAID);
- 	} else {
- 		/* set ATIM Window */
- #if 0 /* TODO atim window */
--		MACvWriteATIMW(pDevice->PortOffset, pMgmt->wCurrATIMWindow);
-+		MACvWriteATIMW(priv->PortOffset, pMgmt->wCurrATIMWindow);
- #endif
- 	}
- 	/* Set AutoSleep */
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
-+	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
- 	/* Set HWUTSF */
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
-+	MACvRegBitsOn(priv->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
- 
- 	if (wListenInterval >= 2) {
- 		/* clear always listen beacon */
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
-+		MACvRegBitsOff(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
- 		/* first time set listen next beacon */
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
-+		MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
- 	} else {
- 		/* always listen beacon */
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
-+		MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
- 	}
- 
- 	/* enable power saving hw function */
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
--	pDevice->bEnablePSMode = true;
-+	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
-+	priv->bEnablePSMode = true;
- 
--	pDevice->bPWBitOn = true;
-+	priv->bPWBitOn = true;
- 	pr_debug("PS:Power Saving Mode Enable...\n");
- }
- 
-@@ -120,20 +120,20 @@ PSvDisablePowerSaving(
- 	void *hDeviceContext
- )
- {
--	struct vnt_private *pDevice = hDeviceContext;
-+	struct vnt_private *priv = hDeviceContext;
- 
- 	/* disable power saving hw function */
--	MACbPSWakeup(pDevice->PortOffset);
-+	MACbPSWakeup(priv->PortOffset);
- 	/* clear AutoSleep */
--	MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
-+	MACvRegBitsOff(priv->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
- 	/* clear HWUTSF */
--	MACvRegBitsOff(pDevice->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
-+	MACvRegBitsOff(priv->PortOffset, MAC_REG_TFTCTL, TFTCTL_HWUTSF);
- 	/* set always listen beacon */
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
-+	MACvRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
- 
--	pDevice->bEnablePSMode = false;
-+	priv->bEnablePSMode = false;
- 
--	pDevice->bPWBitOn = false;
-+	priv->bPWBitOn = false;
- }
- 
- 
-@@ -152,20 +152,20 @@ PSbIsNextTBTTWakeUp(
- 	void *hDeviceContext
- )
- {
--	struct vnt_private *pDevice = hDeviceContext;
--	struct ieee80211_hw *hw = pDevice->hw;
-+	struct vnt_private *priv = hDeviceContext;
-+	struct ieee80211_hw *hw = priv->hw;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	bool bWakeUp = false;
- 
- 	if (conf->listen_interval > 1) {
--		if (!pDevice->wake_up_count)
--			pDevice->wake_up_count = conf->listen_interval;
-+		if (!priv->wake_up_count)
-+			priv->wake_up_count = conf->listen_interval;
- 
--		--pDevice->wake_up_count;
-+		--priv->wake_up_count;
- 
--		if (pDevice->wake_up_count == 1) {
-+		if (priv->wake_up_count == 1) {
- 			/* Turn on wake up to listen next beacon */
--			MACvRegBitsOn(pDevice->PortOffset,
-+			MACvRegBitsOn(priv->PortOffset,
- 				      MAC_REG_PSCTL, PSCTL_LNBCN);
- 			bWakeUp = true;
- 		}
--- 
-2.6.2
-
+johannes
