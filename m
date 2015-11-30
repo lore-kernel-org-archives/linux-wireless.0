@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51139 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbbKFWpX (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:36175 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbbK3HSB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 17:45:23 -0500
-Date: Fri, 6 Nov 2015 14:45:22 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 01/26] staging: wilc1000: separate hif_sdio and hif_spi
- into different module
-Message-ID: <20151106224522.GA22199@kroah.com> (sfid-20151106_234526_860569_45F719CF)
-References: <1446802823-22598-1-git-send-email-glen.lee@atmel.com>
- <1446802823-22598-2-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446802823-22598-2-git-send-email-glen.lee@atmel.com>
+	Mon, 30 Nov 2015 02:18:01 -0500
+From: Rahul Jain <rahul.jain@samsung.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Amit Khatri <amit.khatri@samsung.com>,
+	Rahul Jain <rahul.jain@samsung.com>
+Subject: [PATCH] mac80211_hwsim: missing NULL check
+Date: Mon, 30 Nov 2015 12:46:52 +0530
+Message-id: <1448867812-11089-1-git-send-email-rahul.jain@samsung.com> (sfid-20151130_081822_747132_014FEC1F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 06:39:58PM +0900, Glen Lee wrote:
-> hif_sdio and hif_spi objects are compiled all the time even though one of SPI
-> or SDIO is selected. This patch separates hif_sdio and hif_spi into different
-> modules using ifdef define.
-> After rework SPI and SDIO modules with only one hif interface, the define
-> WILC_SDIO will be removed. This is first path of this series.
-> 
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/Makefile    |  6 +++---
->  drivers/staging/wilc1000/wilc_wlan.c | 36 +++++++++++++++++-------------------
->  2 files changed, 20 insertions(+), 22 deletions(-)
+From: Amit Khatri <amit.khatri@samsung.com>
 
-This patch doesn't apply at all, I think we are out of sync now.  Please
-refresh and redo this series against my staging-testing branch and
-resend.
+txrate variable might be NULL and passing inside function
+without NULL check.
 
-thanks,
+Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
+Signed-off-by: Rahul Jain <rahul.jain@samsung.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-greg k-h
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 194264c..72e4931 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -814,6 +814,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
+ 	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
+ 
++	if (!txrate)
++		return;
++
+ 	if (!netif_running(hwsim_mon))
+ 		return;
+ 
+-- 
+1.9.1
+
