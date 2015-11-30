@@ -1,47 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20307 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbbKYKcx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37859 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbbK3M6a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2015 05:32:53 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 11/11] brcmfmac: Fix double free on exception at module load.
-Date: Wed, 25 Nov 2015 11:32:47 +0100
-Message-ID: <1448447567-12189-12-git-send-email-arend@broadcom.com> (sfid-20151125_113303_311316_0D614143)
-In-Reply-To: <1448447567-12189-1-git-send-email-arend@broadcom.com>
-References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+	Mon, 30 Nov 2015 07:58:30 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: libertas: cleanup a variable name
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20151126120449.GK10556@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Message-Id: <20151130125830.29FEA1409D5@smtp.codeaurora.org> (sfid-20151130_135834_464514_49160BDE)
+Date: Mon, 30 Nov 2015 12:58:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 ++
- 1 file changed, 2 insertions(+)
+> "&card->priv->driver_lock" and "&priv->driver_lock" are the same and
+> it's nicer to use the shorter one consistently.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 9038932..3a39192 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1083,6 +1083,8 @@ fail:
- 			brcmf_net_detach(ifp->ndev);
- 		if (p2p_ifp)
- 			brcmf_net_detach(p2p_ifp->ndev);
-+		drvr->iflist[0] = NULL;
-+		drvr->iflist[1] = NULL;
- 		return ret;
- 	}
- 	return 0;
--- 
-1.9.1
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
