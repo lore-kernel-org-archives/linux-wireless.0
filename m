@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45423 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031997AbbKFLe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2015 06:34:27 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: remove string from unaligned packet warning
-Date: Fri,  6 Nov 2015 12:34:24 +0100
-Message-Id: <1446809664-25909-1-git-send-email-johannes@sipsolutions.net> (sfid-20151106_123431_227515_841DF4E1)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10762 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165AbbK3PFz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2015 10:05:55 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix board data fetch error message
+References: <1448040794-1139-1-git-send-email-poh@qca.qualcomm.com>
+Date: Mon, 30 Nov 2015 17:05:40 +0200
+In-Reply-To: <1448040794-1139-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Fri, 20 Nov 2015 09:33:14 -0800")
+Message-ID: <8737vnjznf.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_160558_414240_7FEDFAB3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-This really should never happen except very early in the process
-of bringing up a new driver, at which point you'll have to add
-more debugging in the driver and this string isn't useful. Remove
-it and save some size (when it's even compiled in.)
+> The error message order of board data fetch is board info,
+> directory, and then file name, hence place print arguments
+> in the order.
+>
+> Fixes: 0a51b343abfe ("ath10k: add board 2 API support")
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Applied, thanks.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8bae5de0dc44..1f827539d828 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -661,8 +661,7 @@ static void ieee80211_parse_qos(struct ieee80211_rx_data *rx)
- static void ieee80211_verify_alignment(struct ieee80211_rx_data *rx)
- {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--	WARN_ONCE((unsigned long)rx->skb->data & 1,
--		  "unaligned packet at 0x%p\n", rx->skb->data);
-+	WARN_ON_ONCE((unsigned long)rx->skb->data & 1);
- #endif
- }
- 
 -- 
-2.6.2
-
+Kalle Valo
