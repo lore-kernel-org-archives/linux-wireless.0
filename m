@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45088 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751847AbbKWPPP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2015 10:15:15 -0500
-Message-ID: <1448291710.5792.10.camel@sipsolutions.net> (sfid-20151123_161519_552768_7EC89FA8)
-Subject: Re: [RFC v5 4/5] mac80211: use Kconfig counters to elide
- unnecessary code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Marek <mmarek@suse.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 23 Nov 2015 16:15:10 +0100
-In-Reply-To: <56532B67.5080508@suse.com>
-References: <1447365652-23716-1-git-send-email-johannes@sipsolutions.net>
-	 <1447365652-23716-5-git-send-email-johannes@sipsolutions.net>
-	 <5653283C.8050207@suse.com> <1448290682.5792.6.camel@sipsolutions.net>
-	 <56532B67.5080508@suse.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25904 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606AbbK3PGv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2015 10:06:51 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <poh@codeaurora.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: stop abusing GFP_DMA
+References: <1448361412-22589-1-git-send-email-nbd@openwrt.org>
+Date: Mon, 30 Nov 2015 17:06:38 +0200
+In-Reply-To: <1448361412-22589-1-git-send-email-nbd@openwrt.org> (Felix
+	Fietkau's message of "Tue, 24 Nov 2015 11:36:52 +0100")
+Message-ID: <87two3il1d.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_160653_989466_ADA6EC57)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-23 at 16:06 +0100, Michal Marek wrote:
-> 
-> > Indeed, the runtime check will catch both of these.
-> 
-> Will it catch the former case? The driver built out of has not way to
-> select or increment any of the CONFIG_MAC80211_* options.
+Felix Fietkau <nbd@openwrt.org> writes:
 
-Correct, but ieee80211_hwflags_check() will verify that the flags are
-compatible with the compilation settings, regardless of the respective
-source. Note that our preferred way of working out-of-tree is backports
-anyway and that ships with mac80211 and cfg80211 due to the relatively
-tight coupling between all the pieces.
+> Allocations from the DMA zone were originally added for legacy ISA
+> stuff, or PCI devices that have specific limitations in their DMA
+> addressing capabilities. It has no place in ath10k, which can do
+> full 32-bit DMA.
+>
+> Fixes memory allocation errors on some platforms.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-In any case - consider first compiling mac80211 with a driver that does
-"count CONFIG_HWFLAG_XYZ", and no other drivers. This means
-that hwflags_state[XYZ] will end up as 1. So once the other (out-of-
-tree) driver is registered, it'll pass hw->flags with the bit of XYZ
-not set. This would cause a warning and refusal to register
-in ieee80211_hwflags_check().
+Applied, thanks.
 
-johannes
+-- 
+Kalle Valo
