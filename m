@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:35853 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbbKCJhq convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57528 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172AbbK3PIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2015 04:37:46 -0500
-Received: by wmec75 with SMTP id c75so81089879wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2015 01:37:45 -0800 (PST)
+	Mon, 30 Nov 2015 10:08:05 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] ath10k: introduce Mesh support in native WiFi mode for QCA988X
+References: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com>
+Date: Mon, 30 Nov 2015 17:07:52 +0200
+In-Reply-To: <1448386655-13936-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Tue, 24 Nov 2015 09:37:32 -0800")
+Message-ID: <87lh9fikzb.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_160809_528315_D4D2782D)
 MIME-Version: 1.0
-In-Reply-To: <1446472988-2603-8-git-send-email-michal.kazior@tieto.com>
-References: <1446472988-2603-1-git-send-email-michal.kazior@tieto.com>
-	<1446472988-2603-8-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 3 Nov 2015 10:37:45 +0100
-Message-ID: <CA+BoTQmqyTnGU9_cp_GKkXXm5FVbWLN1rAPZBioEk030UyL-tg@mail.gmail.com> (sfid-20151103_104116_036425_54AEF66A)
-Subject: Re: [PATCH 7/8] ath10k: replace vdev_id and tid in skb cb
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 November 2015 at 15:03, Michal Kazior <michal.kazior@tieto.com> wrote:
-> This prepares the driver for future ieee80211_txq
-> and wake_tx_queue() support.
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-I think I've found a regression and bisect blames this patch. Do not
-apply this yet, please.
+> QCA988X firmware has started supporting Mesh frame in native Wi-Fi mode
+> by adding its subtype since 10.2.4.70.12-2.
+> Hence update its WMI service map and vdev subtypes to be used for Mesh in
+> native Wi-Fi mode.
+>
+> Peter Oh (3):
+>   ath10k: update WMI 10.x service map
+>   ath10k: introduce new subtypes for proxy STA and Mesh
+>   ath10k: apply Mesh subtype when Mesh interface created.
 
+All three applied, thanks.
 
-Michał
+-- 
+Kalle Valo
