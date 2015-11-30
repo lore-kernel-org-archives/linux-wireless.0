@@ -1,144 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29455 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753011AbbKZI1N (ORCPT
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:35118 "EHLO
+	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462AbbK3M5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2015 03:27:13 -0500
-From: David Lin <dlin@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
-Date: Thu, 26 Nov 2015 08:27:06 +0000
-Message-ID: <097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com> (sfid-20151126_092718_034998_AC0080EB)
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
- <1448018530.3141.25.camel@sipsolutions.net>
-In-Reply-To: <1448018530.3141.25.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 30 Nov 2015 07:57:11 -0500
+Received: by lfdl133 with SMTP id l133so194307165lfd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2015 04:57:09 -0800 (PST)
+From: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+Subject: [PATCH] ath10k: deliver mgmt frames from htt to monitor vifs only
+Date: Mon, 30 Nov 2015 13:56:59 +0100
+Message-Id: <1448888219-2798-1-git-send-email-grzegorz.bajorski@tieto.com> (sfid-20151130_135715_260698_A0D39BEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBOb3ZlbWJlciAyMCwgMjAxNSA3OjIyIFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiAN
-Cj4gT24gVGh1LCAyMDE1LTExLTEyIGF0IDAzOjUxICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+
-ID4NCj4gPiArc3RhdGljIGludCBwcmludF9tYWNfYWRkcihjaGFyICpwLCB1OCAqbWFjX2FkZHIp
-IHsNCj4gPiArCWludCBpOw0KPiA+ICsJY2hhciAqc3RyID0gcDsNCj4gPiArDQo+ID4gKwlzdHIg
-Kz0gc3ByaW50ZihzdHIsICJtYWMgYWRkcmVzczogJTAyeCIsIG1hY19hZGRyWzBdKTsNCj4gPiAr
-CWZvciAoaSA9IDE7IGkgPCBFVEhfQUxFTjsgaSsrKQ0KPiA+ICsJCXN0ciArPSBzcHJpbnRmKHN0
-ciwgIjolMDJ4IiwgbWFjX2FkZHJbaV0pOw0KPiA+ICsJc3RyICs9IHNwcmludGYoc3RyLCAiXG4i
-KTsNCj4gPiArDQo+ID4gKwlyZXR1cm4gKHN0ciAtIHApOw0KPiA+ICt9DQo+IA0KPiBZb3UgY2Fu
-IHVzZSAlcE0gaGVyZSAoYW5kIHBlcmhhcHMgZ2V0IHJpZCBvZiB0aGUgZnVuY3Rpb24gdGhlbikN
-Cj4gDQoNCkkgd2lsbCBtb2RpZnkgaXQuDQoNCj4gPiArdm9pZCBtd2xfZGVidWdmc19yZW1vdmUo
-c3RydWN0IGllZWU4MDIxMV9odyAqaHcpIHsNCj4gPiArCXN0cnVjdCBtd2xfcHJpdiAqcHJpdiA9
-IGh3LT5wcml2Ow0KPiA+ICsNCj4gPiArCWRlYnVnZnNfcmVtb3ZlKHByaXYtPmRlYnVnZnNfcGh5
-KTsNCj4gDQo+IGRvZXNuJ3QgdGhhdCBoYXZlIHRvIGJlIF9yZWN1cnNpdmUoKT8NCj4gDQo+ID4g
-KyNkZWZpbmUgTVdMX0RSVl9OQU1FwqDCoMKgwqDCoEtCVUlMRF9NT0ROQU1FDQo+ID4gKyNkZWZp
-bmUgTVdMX0RSVl9WRVJTSU9OCcKgIjEwLjMuMC4xNCINCj4gDQo+IHZlcnNpb25zIGxpa2UgdGhh
-dCBhcmUgZ2VuZXJhbGx5IGZhaXJseSB1c2VsZXNzIHNpbmNlIHlvdSBkb24ndCB1cGRhdGUgdGhl
-bSBmb3INCj4gZXZlcnkgY29tbWl0IC4uLg0KPiANCg0KV2Ugc3RpbGwgbmVlZCB2ZXJzaW9uIGlu
-Zm9ybWF0aW9uIGZvciBmb3JtYWwgcmVsZWFzZS4NCg0KPiA+ICtzdHJ1Y3QgbXdsX3R4X2Rlc2Mg
-ew0KPiA+ICsJdTggZGF0YV9yYXRlOw0KPiA+ICsJdTggdHhfcHJpb3JpdHk7DQo+ID4gKwlfX2xl
-MTYgcW9zX2N0cmw7DQo+IFsuLi5dDQo+IA0KPiBJIHN0aWxsIHdvdWxkbid0IG1peCBkZXZpY2Uv
-ZmlybXdhcmUgQVBJIHdpdGggZHJpdmVyLXVzZSBzdHJ1Y3R1cmVzIGluIHRoZSBzYW1lDQo+IGZp
-bGUsIGl0IGdldHMgY29uZnVzaW5nLiBJdCdzIHlvdXIgZHJpdmVyIHRob3VnaCwgc28gaWYgeW91
-IHJlYWxseSB3YW50IHRvIGNvbmZ1c2UNCj4geW91cnNlbHZlcyAuLi4gYXNzdW1pbmcgeW91J3Jl
-IGdvaW5nIHRvIG1haW50YWluIGl0IDopDQo+DQoNClRoZXNlIGZpZWxkcyBhcmUgZmlybXdhcmUg
-QVBJLiBZZXMsIHdlIHdpbGwgbWFpbnRhaW4gaXQuDQoNCj4gPiArc3RydWN0IG13bF9zdGEgew0K
-PiA+ICsJc3RydWN0IGxpc3RfaGVhZCBsaXN0Ow0KPiA+ICsJYm9vbCBpc19tZXNoX25vZGU7DQo+
-ID4gKwlib29sIGlzX2FtcGR1X2FsbG93ZWQ7DQo+ID4gKwlzdHJ1Y3QgbXdsX3R4X2luZm8gdHhf
-c3RhdHNbTVdMX01BWF9USURdOw0KPiA+ICsJYm9vbCBpc19hbXNkdV9hbGxvd2VkOw0KPiA+ICsJ
-c3BpbmxvY2tfdCBhbXNkdV9sb2NrO8KgwqDCoMKgwqDCoC8qIGZvciBhbXNkdQ0KPiA+IGFnZ3Jl
-Z2F0aW9uwqDCoMKgwqDCoMKgwqAqLw0KPiA+ICsJc3RydWN0IG13bF9hbXNkdV9jdHJsIGFtc2R1
-X2N0cmw7DQo+ID4gKwl1MTYgaXYxNjsNCj4gPiArCXUzMiBpdjMyOw0KPiA+ICt9Ow0KPiANCj4g
-SSBzdGlsbCBkb24ndCBzZWUgaG93IHRoaXMgaXYgc3R1ZmYgaW4gdGhlICpzdGF0aW9uKiBjYW4g
-cG9zc2libHkgYmUgcmlnaHQuIEkgdGhpbmsgSQ0KPiBhbHNvIHBvaW50ZWQgb3V0IGVhcmxpZXIg
-dGhhdCB5b3UgY2FuIGp1c3QgbGV0DQo+IG1hYzgwMjExIGFzc2lnbiB0aGUgUE4vSVYuDQo+IA0K
-DQpJIHdpbGwgdHJ5IHRvIG1vZGlmeSB0aGUgY29kZSB0byByZW1vdmUgdGhlbS4NCg0KPiA+ICtz
-dGF0aWMgaW50IG13bF9md2NtZF93YWl0X2NvbXBsZXRlKHN0cnVjdCBtd2xfcHJpdiAqcHJpdiwg
-dW5zaWduZWQNCj4gPiBzaG9ydCBjbWQpDQo+ID4gK3sNCj4gPg0KPiBbLi4uXQ0KPiA+ICsJbWRl
-bGF5KDMpOw0KPiA+ICsNCj4gPiArCXJldHVybiAwOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0
-aWMgaW50IG13bF9md2NtZF9leGVjX2NtZChzdHJ1Y3QgbXdsX3ByaXYgKnByaXYsIHVuc2lnbmVk
-IHNob3J0DQo+ID4gY21kKQ0KPiA+ICt7DQo+IFsuLi5dDQo+ID4gKwkJaWYgKG13bF9md2NtZF93
-YWl0X2NvbXBsZXRlKHByaXYsIDB4ODAwMCB8IGNtZCkpIHsNCj4gWy4uLl0NCj4gPiArfQ0KPiA+
-ICsNCj4gPiArc3RhdGljIGludCBtd2xfZndjbWRfODAyXzExX3JhZGlvX2NvbnRyb2woc3RydWN0
-IG13bF9wcml2ICpwcml2LA0KPiA+ICsJCQkJCcKgwqBib29sIGVuYWJsZSwgYm9vbCBmb3JjZSkN
-Cj4gPiArew0KPiBbLi4uXQ0KPiA+ICsJc3Bpbl9sb2NrX2JoKCZwcml2LT5md2NtZF9sb2NrKTsN
-Cj4gWy4uLl0NCj4gPiArCWlmIChtd2xfZndjbWRfZXhlY19jbWQocHJpdiwNCj4gPiBIT1NUQ01E
-X0NNRF84MDJfMTFfUkFESU9fQ09OVFJPTCkpIHsNCj4gPiArCQlzcGluX3VubG9ja19iaCgmcHJp
-di0+ZndjbWRfbG9jayk7DQo+IA0KPiBUaGlzIHNlZW1zIGxpa2UgYSB0ZXJyaWJsZSBpZGVhLiBT
-cGlubmluZyBmb3IgMyBtaWxsaXNlY29uZHMgKGFuZCBtb3JlKSB3aGlsZQ0KPiBibG9ja2luZyBs
-b2NhbCBzb2Z0LWlycXMgaXMgcmVhbGx5IGJhZCBmb3IgZ2VuZXJhbCBsYXRlbmN5IG9uIHRoZSBz
-eXN0ZW0uIEkgZG9uJ3QNCj4gbGlrZSBpdCBhdCBhbGwuDQo+IA0KPiBBbmQgdGhlcmUgZG9lc24n
-dCByZWFsbHkgc2VlbSB0byBiZSBtdWNoIHJlYXNvbiBmb3IgaXQgZWl0aGVyIGFzIGZhciBhcyBJ
-IGNhbg0KPiB0ZWxsIC0gYWxtb3N0IGFsbCBwbGFjZXMgY2FuIChhcyBJIHBvaW50ZWQgb3V0IGJl
-Zm9yZSkgbGl2ZSB3aXRoIHRoaXMgYmVpbmcgYQ0KPiBtdXRleCwgeW91IGp1c3QgbmVlZCBzcGVj
-aWFsIGhhbmRsaW5nIGluIHZlcnkgZmV3IHBsYWNlcyB0aGF0IHJlYWxseSBkbyB3YW50IHRvDQo+
-IHNlbmQgYSBjb21tYW5kIHdoaWxlIG5vdCBiZWluZyBhYmxlIHRvIHNsZWVwLg0KPiANCg0KSSB3
-aWxsIHRyeSB0byB1c2UgbXV0ZXggaW4gbmV4dCBwYXRjaCBzb29uLg0KDQo+ID4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2x3aWZpL2hvc3RjbWQuaA0KPiANCj4gVGhpcyBs
-b29rcyBsaWtlIHlvdSBkbyBoYXZlIGEgZmlsZSBmb3IgY29tbWFuZHMgLSBtYXliZSBtb3ZlIHRo
-YXQgVFggdGhpbmcNCj4gYWJvdmUgaGVyZT8NCj4gDQoNCkl0IGlzIGJldHRlciB0byBrZWVwIGN1
-cnJlbnQgZmlsZSBzdHJ1Y3R1cmUgKGVhc2llciBmb3Igb3VyIGludGVybmFsIG1haW50ZW5hbmNl
-IHN5bmNpbmcgb3RoZXIgZmlsZXMpDQoNCj4gPiArY29uc3Qgc3RydWN0IGllZWU4MDIxMV9vcHMg
-bXdsX21hYzgwMjExX29wcyA9IHsNCj4gPiArCS50eMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqA9IG13bF9tYWM4MDIxMV90eCwNCj4gPiArCS5zdGFydMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqA9IG13bF9tYWM4MDIxMV9zdGFydCwNCj4gPiArCS5zdG9wwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfc3RvcCwNCj4gPiArCS5hZGRfaW50ZXJm
-YWNlwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfYWRkX2ludGVyZmFjZSwNCj4gPiArCS5yZW1v
-dmVfaW50ZXJmYWNlwqDCoMKgPSBtd2xfbWFjODAyMTFfcmVtb3ZlX2ludGVyZmFjZSwNCj4gPiAr
-CS5jb25maWfCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2NvbmZpZywN
-Cj4gPiArCS5ic3NfaW5mb19jaGFuZ2VkwqDCoMKgPSBtd2xfbWFjODAyMTFfYnNzX2luZm9fY2hh
-bmdlZCwNCj4gPiArCS5jb25maWd1cmVfZmlsdGVywqDCoMKgPSBtd2xfbWFjODAyMTFfY29uZmln
-dXJlX2ZpbHRlciwNCj4gPiArCS5zZXRfa2V5wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xf
-bWFjODAyMTFfc2V0X2tleSwNCj4gPiArCS5zZXRfcnRzX3RocmVzaG9sZMKgwqA9IG13bF9tYWM4
-MDIxMV9zZXRfcnRzX3RocmVzaG9sZCwNCj4gPiArCS5zdGFfYWRkwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgPSBtd2xfbWFjODAyMTFfc3RhX2FkZCwNCj4gPiArCS5zdGFfcmVtb3ZlwqDCoMKgwqDC
-oMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfc3RhX3JlbW92ZSwNCj4gPiArCS5jb25mX3R4wqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfY29uZl90eCwNCj4gPiArCS5nZXRfc3Rh
-dHPCoMKgwqDCoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2dldF9zdGF0cywNCj4gPiArCS5n
-ZXRfc3VydmV5wqDCoMKgwqDCoMKgwqDCoMKgPSBtd2xfbWFjODAyMTFfZ2V0X3N1cnZleSwNCj4g
-PiArCS5hbXBkdV9hY3Rpb27CoMKgwqDCoMKgwqDCoD0gbXdsX21hYzgwMjExX2FtcGR1X2FjdGlv
-biwgfTsNCj4gDQo+IEFwYXJ0IGZyb20gLnR4IGFuZCAuY29uZmlndXJlX2ZpbHRlciwgYWxsIG9m
-IHRoZXNlIGNhbiBzbGVlcCBJIHRoaW5rLg0KPiANCj4gPiArCXJjID0gbXdsX2luaXRfZmlybXdh
-cmUocHJpdiwgZndfbmFtZSk7DQo+ID4NCj4gU2luY2UgeW91IGRvIHRoaXMgaW4gLnByb2JlLCB5
-b3Ugc2hvdWxkIGNvbnNpZGVyIGxvYWRpbmcgdGhlIGZpcm13YXJlDQo+IGFzeW5jaHJvbm91c2x5
-Lg0KPiANCg0KSSBob3BlIEkgY2FuIHBvc3Rwb25lIHRoaXMgbW9kaWZpY2F0aW9uIGxhdGVyLg0K
-DQo+ID4gKyNpZmRlZiBDT05GSUdfU1VQUE9SVF9NRkcNCj4gDQo+IFRoaXMgS2NvbmZpZyB2YXJp
-YWJsZSBkb2Vzbid0IGV4aXN0Lg0KPiANCg0KVGhlIGNvbXBpbGUgdmFyaWFibGUgaXMgdXNlZCBw
-cml2YXRlbHkgYnkgTWFydmVsbCBhbmQgb3VyIGN1c3RvbWVycyBpbiBwcm9kdWN0aW9uIGxpbmUu
-DQoNCj4gPiArc3RhdGljIGlubGluZSBib29sIG13bF9yeF9wcm9jZXNzX21lc2hfYW1zZHUoc3Ry
-dWN0IG13bF9wcml2ICpwcml2LA0KPiA+ICsJCQkJCcKgwqDCoMKgwqBzdHJ1Y3Qgc2tfYnVmZiAq
-c2tiLA0KPiANCj4gDQo+IA0KPiANCj4gUGxlYXNlIGluc3RlYWQgdGVhY2ggbWFjODAyMTEgdG8g
-ZG8gaXQgcmlnaHQuDQo+IA0KDQpNYWM4MDIxMSBkb2VzIG5vdCBzdXBwb3J0IG1lc2ggQU1TRFUg
-bm93LCB3ZSBpbXBsZW1lbnQgdGhpcyBmdW5jdGlvbiBpbiBtd2x3aWZpIGRyaXZlciBmb3IgdGhl
-IHRpbWUgYmVpbmcuIEV4Y2VwdCBmb3IgbWVzaCBBTVNEVSwgd2Ugc3RpbGwgbGV2ZXJhZ2UgbWFj
-ODAyMTEgdG8gaGFuZGxlIGRhdGEgQU1TRFUuDQoNCj4gPiArCWlmIChpZWVlODAyMTFfaXNfZGF0
-YSh3aC0+ZnJhbWVfY29udHJvbCkpIHsNCj4gPiArCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2Fk
-ZHIod2gtPmFkZHIxKSkgew0KPiA+ICsJCQlpZiAoY2NtcCkgew0KPiA+ICsJCQkJbXdsX3R4X2lu
-c2VydF9jY21wX2hkcihkbWFfZGF0YS0NCj4gPiA+ZGF0YSwNCj4gPiArCQkJCQkJwqDCoMKgwqDC
-oMKgwqBtd2xfdmlmLQ0KPiA+ID5rZXlpZHgsDQo+ID4gKwkJCQkJCcKgwqDCoMKgwqDCoMKgbXds
-X3ZpZi0NCj4gPiA+aXYxNiwNCj4gPiArCQkJCQkJwqDCoMKgwqDCoMKgwqBtd2xfdmlmLQ0KPiA+
-ID5pdjMyKTsNCj4gPiArCQkJCUlOQ1JFQVNFX0lWKG13bF92aWYtPml2MTYsIG13bF92aWYtDQo+
-ID4gPml2MzIpOw0KPiA+ICsJCQl9DQo+IA0KPiBDYW4ndCB5b3UgbGV0IG1hYzgwMjExIGRlYWwg
-d2l0aCB0aGlzPw0KPiANCj4gTm93IEkgYWN0dWFsbHkgYW0gYmVnaW5uaW5nIHRvIHVuZGVyc3Rh
-bmQgLSB5b3UgbmVlZCB0aGlzIGZvciBHVEsgb25seSwgc28gaXQNCj4gbWlnaHQgZXZlbiB3b3Jr
-IGluIHRoZSBzdGF0aW9uIC4uLiBidXQgc3RpbGwsIGRvbid0IGRvIGl0LCBzZXQgdGhlIGZsYWcg
-dG8gbWFrZQ0KPiBtYWM4MDIxMSBkbyBpdCBvbiB0aGUgR1RLLg0KPiANCg0KSSB3aWxsIGNoZWNr
-IG1hYzgwMjExIHRvIHNlZSBpZiBJIGNhbiBsZXQgbWFjODAyMTEgZG8gaXQuDQoNCj4gPiArCWlm
-IChtZ210ZnJhbWUpIHsNCj4gPiArCQl1MTYgY2FwYWI7DQo+ID4gKw0KPiA+ICsJCWlmICh1bmxp
-a2VseShpZWVlODAyMTFfaXNfYWN0aW9uKHdoLT5mcmFtZV9jb250cm9sKQ0KPiA+ICYmDQo+ID4g
-KwkJCcKgwqDCoMKgwqBtZ210LT51LmFjdGlvbi5jYXRlZ29yeSA9PQ0KPiA+IFdMQU5fQ0FURUdP
-UllfQkFDSyAmJg0KPiA+ICsJCQnCoMKgwqDCoMKgbWdtdC0+dS5hY3Rpb24udS5hZGRiYV9yZXEu
-YWN0aW9uX2NvZGUNCj4gPiA9PQ0KPiA+ICsJCQnCoMKgwqDCoMKgV0xBTl9BQ1RJT05fQUREQkFf
-UkVRKSkgew0KPiA+ICsJCQljYXBhYiA9IGxlMTZfdG9fY3B1KG1nbXQtDQo+ID4gPnUuYWN0aW9u
-LnUuYWRkYmFfcmVxLmNhcGFiKTsNCj4gPiArCQkJdGlkID0gKGNhcGFiICYNCj4gPiBJRUVFODAy
-MTFfQUREQkFfUEFSQU1fVElEX01BU0spID4+IDI7DQo+ID4gKwkJCWluZGV4ID0gbXdsX3R4X3Rp
-ZF9xdWV1ZV9tYXBwaW5nKHRpZCk7DQo+ID4gKwkJCWNhcGFiIHw9IDE7DQo+ID4gKwkJCW1nbXQt
-PnUuYWN0aW9uLnUuYWRkYmFfcmVxLmNhcGFiID0NCj4gPiBjcHVfdG9fbGUxNihjYXBhYik7DQo+
-ID4gKwkJfQ0KPiANCj4gV2hhdCdzIGdvaW5nIG9uIGhlcmU/IFdoeSBhcmUgeW91IG1vZGlmeWlu
-ZyB0aGUgYWN0aW9uIGZyYW1lcyBvbiB0aGUgZmx5Pz8hDQo+IA0KDQpEdWUgdG8gbXdsd2lmaSBz
-dXBwb3J0cyBUeC9SeCBBTVNEVSwgdGhlc2UgZnJhbWVzIGFyZSBtb2RpZmllZCB0byBpbmZvcm0g
-Y2xpZW50IHRoYXQgd2Ugc3VwcG9ydCBBTVNEVS4NCkZvciBSeCBBTVNEVSwgbXdsd2lmaSBoYW5k
-bGVkIG1lc2ggQU1TRFUgYW5kIGxldCBtYWM4MDIxMSBoYW5kbGUgZGF0YSBBTVNEVS4NCg0KPiBq
-b2hhbm5lcw0K
+Until now only WMI originating mgmt frames were
+reported to mac80211. Management frames on HTT
+were basically dropped (except frames which looked
+like management but had FCS error).
+
+To allow sniffing all frames (including offloaded
+frames) without interfering with mac80211
+operation and states a new rx_flag was introduced
+and is not being used to distinguish frames and
+classify them for mac80211.
+
+Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+---
+depends on:
+mac80211: allow drivers to report (non-)monitor frames
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 70 ++++++++++++++++----------------
+ drivers/net/wireless/ath/ath10k/wmi.c    |  6 +++
+ 2 files changed, 40 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 396645b..898eff0 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1076,20 +1076,25 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 	hdr = (void *)msdu->data;
+ 
+ 	/* Tail */
+-	skb_trim(msdu, msdu->len - ath10k_htt_rx_crypto_tail_len(ar, enctype));
++	if (status->flag & RX_FLAG_IV_STRIPPED)
++		skb_trim(msdu, msdu->len -
++			 ath10k_htt_rx_crypto_tail_len(ar, enctype));
+ 
+ 	/* MMIC */
+-	if (!ieee80211_has_morefrags(hdr->frame_control) &&
++	if ((status->flag & RX_FLAG_MMIC_STRIPPED) &&
++	    !ieee80211_has_morefrags(hdr->frame_control) &&
+ 	    enctype == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
+ 		skb_trim(msdu, msdu->len - 8);
+ 
+ 	/* Head */
+-	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+-	crypto_len = ath10k_htt_rx_crypto_param_len(ar, enctype);
++	if (status->flag & RX_FLAG_IV_STRIPPED) {
++		hdr_len = ieee80211_hdrlen(hdr->frame_control);
++		crypto_len = ath10k_htt_rx_crypto_param_len(ar, enctype);
+ 
+-	memmove((void *)msdu->data + crypto_len,
+-		(void *)msdu->data, hdr_len);
+-	skb_pull(msdu, crypto_len);
++		memmove((void *)msdu->data + crypto_len,
++			(void *)msdu->data, hdr_len);
++		skb_pull(msdu, crypto_len);
++	}
+ }
+ 
+ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+@@ -1330,6 +1335,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	bool has_tkip_err;
+ 	bool has_peer_idx_invalid;
+ 	bool is_decrypted;
++	bool is_mgmt;
+ 	u32 attention;
+ 
+ 	if (skb_queue_empty(amsdu))
+@@ -1338,6 +1344,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	first = skb_peek(amsdu);
+ 	rxd = (void *)first->data - sizeof(*rxd);
+ 
++	is_mgmt = !!(rxd->attention.flags &
++		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
++
+ 	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
+ 		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
+ 
+@@ -1379,6 +1388,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 			  RX_FLAG_MMIC_ERROR |
+ 			  RX_FLAG_DECRYPTED |
+ 			  RX_FLAG_IV_STRIPPED |
++			  RX_FLAG_ONLY_MONITOR |
+ 			  RX_FLAG_MMIC_STRIPPED);
+ 
+ 	if (has_fcs_err)
+@@ -1387,10 +1397,21 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	if (has_tkip_err)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
+-	if (is_decrypted)
+-		status->flag |= RX_FLAG_DECRYPTED |
+-				RX_FLAG_IV_STRIPPED |
+-				RX_FLAG_MMIC_STRIPPED;
++	/* Firmware reports all necessary management frames via WMI already.
++	 * They are not reported to monitor interfaces at all so pass the ones
++	 * coming via HTT to monitor interfaces instead. This simplifies
++	 * matters a lot.
++	 */
++	if (is_mgmt)
++		status->flag |= RX_FLAG_ONLY_MONITOR;
++
++	if (is_decrypted) {
++		status->flag |= RX_FLAG_DECRYPTED;
++
++		if (likely(!is_mgmt))
++			status->flag |= RX_FLAG_IV_STRIPPED |
++					RX_FLAG_MMIC_STRIPPED;
++}
+ 
+ 	skb_queue_walk(amsdu, msdu) {
+ 		ath10k_htt_rx_h_csum_offload(msdu);
+@@ -1403,6 +1424,8 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 		 */
+ 		if (!is_decrypted)
+ 			continue;
++		if (is_mgmt)
++			continue;
+ 
+ 		hdr = (void *)msdu->data;
+ 		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+@@ -1503,14 +1526,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+ 					struct sk_buff_head *amsdu,
+ 					struct ieee80211_rx_status *rx_status)
+ {
+-	struct sk_buff *msdu;
+-	struct htt_rx_desc *rxd;
+-	bool is_mgmt;
+-	bool has_fcs_err;
+-
+-	msdu = skb_peek(amsdu);
+-	rxd = (void *)msdu->data - sizeof(*rxd);
+-
+ 	/* FIXME: It might be a good idea to do some fuzzy-testing to drop
+ 	 * invalid/dangerous frames.
+ 	 */
+@@ -1520,23 +1535,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+ 		return false;
+ 	}
+ 
+-	is_mgmt = !!(rxd->attention.flags &
+-		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
+-	has_fcs_err = !!(rxd->attention.flags &
+-			 __cpu_to_le32(RX_ATTENTION_FLAGS_FCS_ERR));
+-
+-	/* Management frames are handled via WMI events. The pros of such
+-	 * approach is that channel is explicitly provided in WMI events
+-	 * whereas HTT doesn't provide channel information for Rxed frames.
+-	 *
+-	 * However some firmware revisions don't report corrupted frames via
+-	 * WMI so don't drop them.
+-	 */
+-	if (is_mgmt && !has_fcs_err) {
+-		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
+-		return false;
+-	}
+-
+ 	if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags)) {
+ 		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx cac running\n");
+ 		return false;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 9021079..847f91a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2298,6 +2298,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
++	/* Firmware is guaranteed to report all essential management frames via
++	 * WMI while it can deliver some extra via HTT. Since there can be
++	 * duplicates split the reporting wrt monitor/sniffing.
++	 */
++	status->flag |= RX_FLAG_SKIP_MONITOR;
++
+ 	ath10k_wmi_handle_wep_reauth(ar, skb, status);
+ 
+ 	/* FW delivers WEP Shared Auth frame with Protected Bit set and
+-- 
+2.3.7
+
