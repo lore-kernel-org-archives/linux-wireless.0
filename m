@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23717 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbbKDNhz (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25518 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754341AbbK3PPy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2015 08:37:55 -0500
-Date: Wed, 4 Nov 2015 16:37:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Robert Dolca <robert.dolca@intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Julien Lefrique <lefrique@marvell.com>,
-	Robert Baldyga <r.baldyga@samsung.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] NFC: nci: memory leak in nci_core_conn_create()
-Message-ID: <20151104133728.GG20966@mwanda> (sfid-20151104_143800_342492_B4104C65)
+	Mon, 30 Nov 2015 10:15:54 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] ath10k: print crc32 checksum
+References: <20151125133654.25507.10863.stgit@potku.adurom.net>
+Date: Mon, 30 Nov 2015 17:15:40 +0200
+In-Reply-To: <20151125133654.25507.10863.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Wed, 25 Nov 2015 15:37:56 +0200")
+Message-ID: <87h9k3ikmb.fsf@kamboji.qca.qualcomm.com> (sfid-20151130_161559_600430_9ADE0BFF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've moved the check for "number_destination_params" forward a few lines
-to avoid leaking "cmd".
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Fixes: caa575a86ec1 ('NFC: nci: fix possible crash in nci_core_conn_create')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Print crc32 checksum for firmware and board files. Also some improvements how
+> we print info messages during boot.
+>
+> ---
+>
+> Kalle Valo (6):
+>       ath10k: fix otp board id error message
+>       ath10k: reorganise hardware and firmware info messages
+>       ath10k: always show bmi chip ids and subdevice ids
+>       ath10k: split driver info messages during device initialisation
+>       ath10k: print crc32 checksums for firmware and board files
+>       ath10k: implement fw_checksums debugfs file
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 10c99a5..fbb7a2b 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -610,14 +610,14 @@ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
- 	struct nci_core_conn_create_cmd *cmd;
- 	struct core_conn_create_data data;
- 
-+	if (!number_destination_params)
-+		return -EINVAL;
-+
- 	data.length = params_len + sizeof(struct nci_core_conn_create_cmd);
- 	cmd = kzalloc(data.length, GFP_KERNEL);
- 	if (!cmd)
- 		return -ENOMEM;
- 
--	if (!number_destination_params)
--		return -EINVAL;
--
- 	cmd->destination_type = destination_type;
- 	cmd->number_destination_params = number_destination_params;
- 	memcpy(cmd->params, params, params_len);
+All six applied.
+
+-- 
+Kalle Valo
