@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35364 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682AbbL3MQ0 (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:33281 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755565AbbLAJnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:26 -0500
-Received: by mail-pa0-f45.google.com with SMTP id do7so4199769pab.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:26 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 12/20] staging: wilc1000: rename u32count in wilc_setup_multicast_filter
-Date: Wed, 30 Dec 2015 21:15:36 +0900
-Message-Id: <1451477744-11975-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132247_663583_079FEAAC)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 1 Dec 2015 04:43:19 -0500
+Received: by ykdv3 with SMTP id v3so612492ykd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 01:43:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
+References: <loom.20151201T071931-353@post.gmane.org>
+	<CALhHN=o4xAhy9oz0Q7sy-Ubji-nBf6pdJ7OSj8xLU0mn86n1qQ@mail.gmail.com>
+	<CADaZW1E42rnjaxjnjskW_j83m=moauNBttZ-M=oyWoiXXS2ZiQ@mail.gmail.com>
+	<CA+BoTQ=k9NHd6KHt2qzgjs5g3B6Q58fX=hTRB-BvxcvjejmWog@mail.gmail.com>
+	<CADaZW1Eww2TNimciP5JxVam0y+-V4Ez2VfFXdT=_jh14TgOp0g@mail.gmail.com>
+	<CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
+Date: Tue, 1 Dec 2015 10:43:18 +0100
+Message-ID: <CACKGw+GPjr1fQ_u5yHfsAa=GBJmk7vRfcTUS3nt1N+id7UoPzg@mail.gmail.com> (sfid-20151201_104330_137966_13B8E4FC)
+Subject: Re: ath10k: device has crashed during init - qca6174 chipset
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32count to count to remove u32 prefix.
-There is no need to use this prefix to show data type of this argument.
+On 1 December 2015 at 09:42, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 1 December 2015 at 09:38, Bartlomiej Grzeskowiak
+> <bartlomiej.grzeskowiak@gmail.com> wrote:
+>> Hi,
+>>
+>> I have already tried with backports 4.2.6 and different combinations
+>> of firmware.bin / board.bin. With differnt results, but none of them
+>> works. I will redo the tests and summarize them.
+>>
+>> Loading with irq_mode=1 gives me following result:
+>> [55416.824364] ath10k_pci 0000:01:00.0: limiting irq mode to: 1
+>> [55416.830102] ath10k_pci 0000:01:00.0: pci irq legacy interrupts 0
+>> irq_mode 1 reset_mode 0
+>> [55417.212048] ath10k_pci 0000:01:00.0: could not fetch firmware file
+>> 'ath10k/QCA6174/hw3.0/firmware-5.bin': -2
+>> [55424.394422] ath10k_pci 0000:01:00.0: wmi unified ready event not received
+>> [55424.436023] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
+>> e082ac60-7c2d-4d14-9c49-fd5b0591c95c)
+>> [55424.445008] ath10k_pci 0000:01:00.0: qca6174 hw3.2 (0x05030000,
+>
+> Oh, wait.
+>
+> You have hw3.2? I haven't noticed that earlier.
+>
+> If memory serves right it needs a different board.bin (compared to
+> e.g. hw3.0). I'm not sure if it's available in Kalle's repository.
+> Wrong board.bin can cause firmware to hang or crash during init.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Could you give a try to the board-2.bin file, which is sort of a
+container for the board bins, ath10k shall support.. and say if it
+solves your card problem?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a32e930..489ab29 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4424,7 +4424,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
- }
- 
- int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
--				u32 u32count)
-+				u32 count)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4444,7 +4444,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 	msg.vif = vif;
- 
- 	pstrMulticastFilterParam->enabled = enabled;
--	pstrMulticastFilterParam->cnt = u32count;
-+	pstrMulticastFilterParam->cnt = count;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9abdd3f..5c271b1 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -353,7 +353,7 @@ s32 wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams);
- int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
- int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
--				u32 u32count);
-+				u32 count);
- s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
- s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
- s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
+*) https://github.com/kvalo/ath10k-firmware/blob/master/QCA6174/hw3.0/board-2.bin
+
 -- 
-2.6.4
-
+Bartosz
