@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:32808 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754573AbbL3MQN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:13 -0500
-Received: by mail-pf0-f176.google.com with SMTP id q63so105579686pfb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:13 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/20] staging: wilc1000: rename u32Timeout in wilc_set_power_mgmt
-Date: Wed, 30 Dec 2015 21:15:32 +0900
-Message-Id: <1451477744-11975-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131629_284053_F509F1B8)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756020AbbLAJ7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:43 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/41] iwlwifi: mvm: remove unnecessary check in iwl_mvm_is_d0i3_supported()
+Date: Tue,  1 Dec 2015 11:58:49 +0200
+Message-Id: <1448963947-24302-23-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105953_438136_D7800161)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32Timeout to timeout to avoid camelcase.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The d0i3_mode element is never set to IWL_D0I3_OFF, so it's not
+necessary to check it in iwl_mvm_is_d0i3_supported().
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3ed8275..dc1773d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4393,7 +4393,7 @@ s32 wilc_edit_station(struct wilc_vif *vif,
- 	return result;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 91c7480..013b379 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -913,8 +913,7 @@ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
  
--int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 u32Timeout)
-+int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
  {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4415,7 +4415,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 u32Timeout)
- 	msg.vif = vif;
- 
- 	pstrPowerMgmtParam->enabled = enabled;
--	pstrPowerMgmtParam->timeout = u32Timeout;
-+	pstrPowerMgmtParam->timeout = timeout;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 89765b8..7b12425 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -351,7 +351,7 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
- int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
- s32 wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams);
--int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 u32Timeout);
-+int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
- s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
- 				u32 u32count);
- s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
+-	return mvm->trans->d0i3_mode != IWL_D0I3_MODE_OFF &&
+-		!iwlwifi_mod_params.d0i3_disable &&
++	return !iwlwifi_mod_params.d0i3_disable &&
+ 		fw_has_capa(&mvm->fw->ucode_capa,
+ 			    IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
+ }
 -- 
-2.6.4
+2.5.0
 
