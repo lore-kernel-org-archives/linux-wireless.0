@@ -1,98 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:34599 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbbLUSx2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 13:53:28 -0500
-Received: by mail-io0-f179.google.com with SMTP id e126so163664198ioa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 10:53:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1450344029-5296-2-git-send-email-janusz.dziedzic@tieto.com>
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1450344029-5296-2-git-send-email-janusz.dziedzic@tieto.com>
-Date: Tue, 22 Dec 2015 00:23:27 +0530
-Message-ID: <CAFqt6zY_aQKmHi=ai+4MUVKcy7oDSNsERG0NiDYAAi4HYq+V8w@mail.gmail.com> (sfid-20151221_195331_339312_6B04C054)
-Subject: Re: [RFC/RFT 2/2] ath9k: request aligned skb
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755969AbbLAJ7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:18 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/41] iwlwifi: mvm: Enable MPLUT only on supported hw
+Date: Tue,  1 Dec 2015 11:58:33 +0200
+Message-Id: <1448963947-24302-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105926_523979_070DB89F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 2:50 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
->
-> Set NEEDS_ALIGNED4_SKB hw flag.
-> This allow driver to save CPU and remove two memmove
-> from tx path.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c |  1 +
->  drivers/net/wireless/ath/ath9k/xmit.c | 15 ++++++++++-----
->  2 files changed, 11 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 6abace6..d578a00 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -831,6 +831,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
->         ieee80211_hw_set(hw, RX_INCLUDES_FCS);
->         ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
->         ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
-> +       ieee80211_hw_set(hw, NEEDS_ALIGNED4_SKBS);
->
->         if (ath9k_ps_enable)
->                 ieee80211_hw_set(hw, SUPPORTS_PS);
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 82fc76f..c3bd1b1 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -2267,11 +2267,15 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
->         padpos = ieee80211_hdrlen(hdr->frame_control);
->         padsize = padpos & 3;
->         if (padsize && skb->len > padpos) {
-> -               if (skb_headroom(skb) < padsize)
-> -                       return -ENOMEM;
-> +               if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS)) {
-> +                       frmlen -= padsize;
-> +               } else {
-> +                       if (skb_headroom(skb) < padsize)
-> +                               return -ENOMEM;
->
-> -               skb_push(skb, padsize);
-> -               memmove(skb->data, skb->data + padsize, padpos);
+From: Avri Altman <avri.altman@intel.com>
 
-                  why the same lines has been removed and added again ?
-> +                       skb_push(skb, padsize);
-> +                       memmove(skb->data, skb->data + padsize, padpos);
-> +               }
->         }
+When there's a bt-wifi contention that requires arbitration,
+we use a priority-based mechanism to decide which comm wins.
+Over time, use cases become more and more complex, with multiple
+concurrent active links with different traffic types and different QoS
+requirements, on both WiFi and BT sides.
+This, in turn, requires us to elaborate our prioritization mechanism.
+However, our legacy products included hw that does not supports this,
+so selectively enable this on specific hw - as signaled by the firmware.
 
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 5 +----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 7 +++++++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 08303db..6aeeceb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -308,6 +308,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
+  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
+  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
++ * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+  */
+@@ -334,6 +335,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
++	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
+ 
+ 	NUM_IWL_UCODE_TLV_CAPA
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index e290ac6..808f234 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -443,11 +443,8 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 	if (iwl_mvm_bt_is_plcr_supported(mvm))
+ 		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_CORUN_ENABLED);
+ 
+-	if (IWL_MVM_BT_COEX_MPLUT) {
++	if (iwl_mvm_is_mplut_supported(mvm))
+ 		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_MPLUT_ENABLED);
+-		bt_cmd.enabled_modules |=
+-			cpu_to_le32(BT_COEX_MPLUT_BOOST_ENABLED);
+-	}
+ 
+ 	bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_HIGH_BAND_RET);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 419afa4..aff71d3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -976,6 +976,13 @@ static inline bool iwl_mvm_is_csum_supported(struct iwl_mvm *mvm)
+ 			   IWL_UCODE_TLV_CAPA_CSUM_SUPPORT);
+ }
+ 
++static inline bool iwl_mvm_is_mplut_supported(struct iwl_mvm *mvm)
++{
++	return fw_has_capa(&mvm->fw->ucode_capa,
++			   IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT) &&
++		IWL_MVM_BT_COEX_MPLUT;
++}
++
+ static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
+ {
+ 	/* firmware flag isn't defined yet */
+-- 
+2.5.0
 
->
->
->         setup_frame_info(hw, sta, skb, frmlen);
-> @@ -2494,7 +2498,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
->
->         padpos = ieee80211_hdrlen(hdr->frame_control);
->         padsize = padpos & 3;
-> -       if (padsize && skb->len>padpos+padsize) {
-> +       if (padsize && skb->len > padpos + padsize &&
-> +           !ieee80211_hw_check(sc->hw, NEEDS_ALIGNED4_SKBS)) {
->                 /*
->                  * Remove MAC header padding before giving the frame back to
->                  * mac80211.
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Regards
-Souptick
