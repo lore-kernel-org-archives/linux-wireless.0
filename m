@@ -1,108 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:46384 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932544AbbLNNj7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 08:39:59 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 7/7] brcmfmac: introduce module parameter to force successful probe
-Date: Mon, 14 Dec 2015 14:39:54 +0100
-Message-ID: <1450100394-17414-8-git-send-email-arend@broadcom.com> (sfid-20151214_144010_107526_37F2B1B8)
-In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:48342 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756268AbbLAWFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 17:05:42 -0500
+Message-ID: <1449007539.2977.11.camel@sipsolutions.net> (sfid-20151201_230545_767575_B7213B65)
+Subject: Re: MAC address randomization support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Anatol Pomozov <anatol.pomozov@gmail.com>,
+	"Greenman, Gregory" <gregory.greenman@intel.com>,
+	linux-wireless@vger.kernel.org,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Tue, 01 Dec 2015 23:05:39 +0100
+In-Reply-To: <CAOMFOmV-TdX2h2patazVuffZmy=MAqHfnLso90kQn5+d=ODU9w@mail.gmail.com> (sfid-20151201_225959_079001_7630D8E2)
+References: <CAOMFOmV-TdX2h2patazVuffZmy=MAqHfnLso90kQn5+d=ODU9w@mail.gmail.com>
+	 (sfid-20151201_225959_079001_7630D8E2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The module parameter can be used to ensure the probe succeeds thus
-claiming the device and allowing post-mortem debugging in case of
-firmware crash. It is only available when select CONFIG_BRCMDBG.
+Hi Anatol,
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 11 ++++++++++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h | 13 +++++++++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   |  2 ++
- 3 files changed, 25 insertions(+), 1 deletion(-)
+> This feature is supported in Android and a few products use it
+> already for Preferred Network Offload scan. There is a HAL method
+> that allows to set MAC OUI [1] that makes 3 first octets predefined
+> and the rest of MAC address is randomized. Kernel passes this OUI
+> value to firmware where the randomization is implemented.
+> 
+> I checked current upstream kernel and did not find any API for
+> enabling/dealing with MAC address randomization. If a firmware devs
+> want to add the feature easily then there should be some standard API
+> for enabling/configuring MAC randomization.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index bb9e2b3..4265b50 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -67,6 +67,13 @@ static int brcmf_roamoff;
- module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
- MODULE_PARM_DESC(roamoff, "Do not use internal roaming engine");
- 
-+#ifdef DEBUG
-+/* always succeed brcmf_bus_start() */
-+static int brcmf_ignore_probe_fail;
-+module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
-+MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
-+#endif
-+
- struct brcmf_mp_global_t brcmf_mp_global;
- 
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
-@@ -232,7 +239,9 @@ int brcmf_mp_device_attach(struct brcmf_pub *drvr)
- 	drvr->settings->feature_disable = brcmf_feature_disable;
- 	drvr->settings->fcmode = brcmf_fcmode;
- 	drvr->settings->roamoff = !!brcmf_roamoff;
--
-+#ifdef DEBUG
-+	drvr->settings->ignore_probe_fail = !!brcmf_ignore_probe_fail;
-+#endif
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index abe3764..3b0a63b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -55,11 +55,24 @@ struct brcmf_mp_device {
- 	int	feature_disable;
- 	int	fcmode;
- 	bool	roamoff;
-+	bool	ignore_probe_fail;
- };
- 
- void brcmf_mp_attach(void);
- int brcmf_mp_device_attach(struct brcmf_pub *drvr);
- void brcmf_mp_device_detach(struct brcmf_pub *drvr);
-+#ifdef DEBUG
-+static inline bool brcmf_ignoring_probe_fail(struct brcmf_pub *drvr)
-+{
-+	return drvr->settings->ignore_probe_fail;
-+}
-+#else
-+static inline bool brcmf_ignoring_probe_fail(struct brcmf_pub *drvr)
-+{
-+	return false;
-+}
-+#endif
-+
- /* Sets dongle media info (drv_version, mac address). */
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3fa7bc5..7c75b1a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1183,6 +1183,8 @@ fail:
- 			brcmf_net_detach(p2p_ifp->ndev);
- 		drvr->iflist[0] = NULL;
- 		drvr->iflist[1] = NULL;
-+		if (brcmf_ignoring_probe_fail(drvr))
-+			ret = 0;
- 		return ret;
- 	}
- 	return 0;
--- 
-1.9.1
+Well, we are treating it on a per-feature basis. The upstream kernel
+does, in fact, and I believe we also submitted it into ChromeOS,
+support randomized MAC addresses for scan and scheduled scan.
+
+> In fact there is one mention of the feature in upstream source tree -
+> macaddr_* fields in "struct iwl_tof_range_req_cmd" of iwlwifi driver.
+> It allows to enable/disable randomization for 11MC measurement.
+
+If you're talking about fine timing measurement, however, we haven't
+yet submitted that API for that upstream. I sent you a draft of that
+API and it does in fact contain MAC address randomization support from
+the start :)
+
+> The MAC randomization could be used by other drivers for many
+> use-cases and I think it worth making it a part of standard cfg80211
+> API. Is it something maintainers are interested in? Does anybody work
+> on it already?
+
+Yes and yes, obviously, but I think what I said at the beginning - that
+it's per feature rather than global - is just not what you were looking
+for or had expected?
+
+I still think it makes sense btw, scan for example can be randomized in
+software in certain cases, scheduled scan might not be able to, etc.
+
+johannes
 
