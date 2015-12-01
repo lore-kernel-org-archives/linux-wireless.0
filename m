@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34850 "EHLO
-	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681AbbLVAtc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:32994 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837AbbLAT3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 19:49:32 -0500
-Received: by mail-pf0-f178.google.com with SMTP id 78so23899974pfw.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:32 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/13] staging: wilc1000: remove wilc_set_start_scan_req declaration
-Date: Tue, 22 Dec 2015 09:49:02 +0900
-Message-Id: <1450745349-16811-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014935_455172_3D7E1232)
-In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 1 Dec 2015 14:29:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ben Ami\, Golan" <golan.ben.ami@intel.com>
+Subject: Re: [PATCH 24/41] iwlwifi: mvm: move fw-dbg code to separate file
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+	<1448963947-24302-24-git-send-email-emmanuel.grumbach@intel.com>
+	<87r3j6gfws.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E90714D@hasmsx107.ger.corp.intel.com>
+	<CANUX_P0Y5nDACtND_WaQfXBQq2AyLbxxdOX-S5NfQODzdiaK3g@mail.gmail.com>
+Date: Tue, 01 Dec 2015 21:29:03 +0200
+In-Reply-To: <CANUX_P0Y5nDACtND_WaQfXBQq2AyLbxxdOX-S5NfQODzdiaK3g@mail.gmail.com>
+	(Emmanuel Grumbach's message of "Tue, 1 Dec 2015 21:26:20 +0200")
+Message-ID: <87mvtuge80.fsf@kamboji.qca.qualcomm.com> (sfid-20151201_202912_157694_0BE383A6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch deletes wilc_set_start_scan_req declaration. It is not find
-wilc_set_start_scan_req definition in this driver.
+Emmanuel Grumbach <egrumbach@gmail.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.h | 1 -
- 1 file changed, 1 deletion(-)
+> On Tue, Dec 1, 2015 at 9:14 PM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+>>
+>>
+>> On 12/01/2015 08:53 PM, Kalle Valo wrote:
+>>> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+>>>
+>>>> From: Golan Ben-Ami <golan.ben.ami@intel.com>
+>>>>
+>>>> The fw debug functionality is big enough to warrant
+>>>> a separate file. Move existing related functions to the new file.
+>>>>
+>>>> Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+>>>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>>> [...]
+>>>
+>>>>  intc-scripts/publishable-files                     | 203 ++++++
+>>> Added by accident?
+>>>
+>
+> Somehow this file didn't appear in the pull request message. I would
+> have caught there I believe.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index a21ca37..1e3f389 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -326,7 +326,6 @@ s32 wilc_set_pmkid_info(struct wilc_vif *vif,
- s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
- s32 wilc_set_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
- int wilc_wait_msg_queue_idle(void);
--s32 wilc_set_start_scan_req(struct host_if_drv *hWFIDrv, u8 scanSource);
- s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
- 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+It wasn't visible in the pull request as a later patch removed the same
+file.
+
 -- 
-2.6.4
-
+Kalle Valo
