@@ -1,124 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:48117 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617AbbLIKXA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:23:00 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kosuke Tatsukawa <tatsu@ab.jp.nec.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/13] brcmfmac: fix waitqueue_active without memory barrier in brcmfmac driver
-Date: Wed, 9 Dec 2015 11:22:48 +0100
-Message-ID: <1449656572-16158-10-git-send-email-arend@broadcom.com> (sfid-20151209_112353_387012_2CF70484)
-In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755973AbbLAJ7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:24 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/41] iwlwifi: generalize d0i3_entry_timeout module parameter
+Date: Tue,  1 Dec 2015 11:58:37 +0200
+Message-Id: <1448963947-24302-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105932_179829_6BD65B48)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-brcmf_msgbuf_ioctl_resp_wake() seems to be missing a memory barrier
-which might cause the waker to not notice the waiter and miss sending a
-wake_up as in the following figure.
+The PCIe transport will also need a d0i3_entry_timeout_ms parameter,
+so move the existing one from the slave transports to iwlwifi, so it
+can be reused.  While at it, rename the parameter to something
+shorter, namely d0i3_entry_delay.
 
-  brcmf_msgbuf_ioctl_resp_wake		    brcmf_msgbuf_ioctl_resp_wait
-------------------------------------------------------------------------
-if (waitqueue_active(&msgbuf->ioctl_resp_wait))
-/* The CPU might reorder the test for
-   the waitqueue up here, before
-   prior writes complete */
-   	   	     	 	       /* wait_event_timeout */
-				        /* __wait_event_timeout */
-					 /* ___wait_event */
-					 prepare_to_wait_event(&wq, &__wait,
-					   state);
-					 if (msgbuf->ctl_completed)
-					 ...
-msgbuf->ctl_completed = true;
-					 schedule_timeout(__ret))
-------------------------------------------------------------------------
-
-There are three other place in drivers/net/wireless/brcm80211/brcmfmac/
-which have similar code.  The attached patch removes the call to
-waitqueue_active() leaving just wake_up() behind.  This fixes the
-problem because the call to spin_lock_irqsave() in wake_up() will be an
-ACQUIRE operation.
-
-I found this issue when I was looking through the linux source code
-for places calling waitqueue_active() before wake_up*(), but without
-preceding memory barriers, after sending a patch to fix a similar
-issue in drivers/tty/n_tty.c  (Details about the original issue can be
-found here: https://lkml.org/lkml/2015/9/28/849).
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Kosuke Tatsukawa <tatsu@ab.jp.nec.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Change-Id: I221a3affb9c2775103ad0a73983168dbfc1465a5
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/4975
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 3 +--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 6 ++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c    | 3 +--
- 3 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 5 +++++
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h | 3 +++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 44e618f..5df9138 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -473,8 +473,7 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
- static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
- {
- 	msgbuf->ctl_completed = true;
--	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
--		wake_up(&msgbuf->ioctl_resp_wait);
-+	wake_up(&msgbuf->ioctl_resp_wait);
- }
- 
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 9fa3a3a..ceb2a75 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1678,8 +1678,7 @@ static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
- 
- static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
- {
--	if (waitqueue_active(&bus->dcmd_resp_wait))
--		wake_up_interruptible(&bus->dcmd_resp_wait);
-+	wake_up_interruptible(&bus->dcmd_resp_wait);
- 
- 	return 0;
- }
-@@ -2003,8 +2002,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- static void
- brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
- {
--	if (waitqueue_active(&bus->ctrl_wait))
--		wake_up_interruptible(&bus->ctrl_wait);
-+	wake_up_interruptible(&bus->ctrl_wait);
- 	return;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index ccde559..23eaf0f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -196,8 +196,7 @@ static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
- 
- static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
- {
--	if (waitqueue_active(&devinfo->ioctl_resp_wait))
--		wake_up(&devinfo->ioctl_resp_wait);
-+	wake_up(&devinfo->ioctl_resp_wait);
- }
- 
- static void
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 48f090a..eedd0d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1539,6 +1539,7 @@ struct iwl_mod_params iwlwifi_mod_params = {
+ 	.bt_coex_active = true,
+ 	.power_level = IWL_POWER_INDEX_1,
+ 	.d0i3_disable = true,
++	.d0i3_entry_delay = 1000,
+ #ifndef CONFIG_IWLWIFI_UAPSD
+ 	.uapsd_disable = true,
+ #endif /* CONFIG_IWLWIFI_UAPSD */
+@@ -1704,3 +1705,7 @@ MODULE_PARM_DESC(power_level,
+ module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, S_IRUGO);
+ MODULE_PARM_DESC(fw_monitor,
+ 		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
++
++module_param_named(d0i3_timeout, iwlwifi_mod_params.d0i3_entry_delay,
++		   uint, S_IRUGO);
++MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index 3436c00..9baf9ef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -109,6 +109,8 @@ enum iwl_amsdu_size {
+  * @debug_level: levels are IWL_DL_*
+  * @ant_coupling: antenna coupling in dB, default = 0
+  * @d0i3_disable: disable d0i3, default = 1,
++ * @d0i3_entry_delay: time to wait after no refs are taken before
++ *	entering D0i3 (in msecs)
+  * @lar_disable: disable LAR (regulatory), default = 0
+  * @fw_monitor: allow to use firmware monitor
+  */
+@@ -128,6 +130,7 @@ struct iwl_mod_params {
+ 	char *nvm_file;
+ 	bool uapsd_disable;
+ 	bool d0i3_disable;
++	unsigned int d0i3_entry_delay;
+ 	bool lar_disable;
+ 	bool fw_monitor;
+ };
 -- 
-1.9.1
+2.5.0
 
