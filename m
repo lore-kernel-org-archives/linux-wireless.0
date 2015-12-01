@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:38414 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315AbbLNNPp (ORCPT
+Received: from plainfield.sei.cmu.edu ([192.58.107.45]:45363 "EHLO
+	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756244AbbLAWOB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 08:15:45 -0500
-Received: by igbxm8 with SMTP id xm8so83014137igb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 05:15:44 -0800 (PST)
-Date: Mon, 14 Dec 2015 07:13:47 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>, j@w1.fi,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [wireless-regdb] [PATCH] regulatory: fix world regdomain
-Message-ID: <20151214131347.GA146390@ubuntu-hedt> (sfid-20151214_141548_888983_CFDEB733)
-References: <1449852319-27189-1-git-send-email-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449852319-27189-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 1 Dec 2015 17:14:01 -0500
+From: arwelle@cert.org
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mac80211_hwsim: check ATTR_FREQ for wmediumd (netlink) packets
+Date: Tue,  1 Dec 2015 17:13:52 -0500
+Message-Id: <1449008032-6541-1-git-send-email-arwelle@cert.org> (sfid-20151201_231405_693894_A70D1EA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 11, 2015 at 05:45:19PM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Back in 2012, in commit 6d87df6f9657 ("regdb: allow 40 MHz on world
-> roaming channels 12/13") I evidently broke the world regulatory data
-> to the point where it was always discarded by the kernel because the
-> 40 MHz bandwidth doesn't fit into the rule range.
-> 
-> Around the same time, I updated the in-kernel regulatory domain with
-> the same mistake, but unlike the userspace data, the in-kernel data
-> isn't actually checked for validity.
-> 
-> The end result was that the (inconsequentially invalid) data in the
-> kernel was always used because the userspace data was rejected.
-> 
-> Fix this by changing the rule to 20 MHz and adding the AUTO-BW flag.
-> It seems that Janusz had made a similar change in commit 5cfc8073ce35
-> ("wireless-regdb: set AUTO bandwidth for world regulatory"), but it
-> was reverted for unknown reasons a little less than half a year later
-> (commit cfa3734b11b2).
-> 
-> The kernel uses very similar invalid rules, but it never checks them
-> for validity and just uses them, so HT40- ends up getting enabled on
-> these channels. Thus, when the kernel requests the world regdomain
-> from userspace, gets the invalid data and rejects it, it falls back
-> to using the built-in data which is very similar and not validated.
-> 
-> I've tested this now, and the ruleset is now accepted by the kernel
-> and results in the correct data.
-> 
-> This also means that Jouni's 160 MHz fixes were inconsequentialy and
-> only the corresponding kernel changes could have been used.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+From: Adam Welle <arwelle@cert.org>
 
-Applied, thanks.
+If a packet is received from netlink with the frequency value set it is
+checked against the current radio's frequency and discarded if different.
+The frequency is also checked against data2->tmp_chan if non-zero to support
+the off-channel/scan case.
+
+Signed-off-by: Adam Welle <arwelle@cert.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 194264c..94c30cb 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2876,10 +2876,19 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 
+ 	/* A frame is received from user space */
+ 	memset(&rx_status, 0, sizeof(rx_status));
+-	/* TODO: Check ATTR_FREQ if it exists, and maybe throw away off-channel
+-	 * packets?
+-	 */
+-	rx_status.freq = data2->channel->center_freq;
++	/* Check ATTR_FREQ if it exists, and throw away off-channel packets */
++	if (info->attrs[HWSIM_ATTR_FREQ]) {
++		rx_status.freq = nla_get_u32(info->attrs[HWSIM_ATTR_FREQ]);
++		if (data2->tmp_chan) {
++			if (rx_status.freq != data2->tmp_chan->center_freq)
++				goto out;
++		}
++		if (rx_status.freq != data2->channel->center_freq)
++			goto out;
++	} else {
++			rx_status.freq = data2->channel->center_freq;
++	}
++
+ 	rx_status.band = data2->channel->band;
+ 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
+ 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+-- 
+2.1.4
+
