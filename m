@@ -1,61 +1,359 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:52881 "EHLO hauke-m.de"
+Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294AbbLVMJL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2015 07:09:11 -0500
-Subject: Re: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
-To: Linus Walleij <linus.walleij@linaro.org>
-References: <1439504505-20314-1-git-send-email-hauke@hauke-m.de>
- <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
- <567449F4.9010400@hauke-m.de>
- <CACRpkdY2mHou_Qx5Jn0Y6m-8FwgCjKKpioH=ADS=ARAdWgAtNQ@mail.gmail.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <56793D61.7090305@hauke-m.de> (sfid-20151222_130916_279947_7A098F83)
-Date: Tue, 22 Dec 2015 13:09:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <CACRpkdY2mHou_Qx5Jn0Y6m-8FwgCjKKpioH=ADS=ARAdWgAtNQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	id S1755807AbbLAJ7y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:54 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 30/41] iwlwifi: mvm: refactor d3 key update functions
+Date: Tue,  1 Dec 2015 11:58:56 +0200
+Message-Id: <1448963947-24302-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110256_159507_1C98FFA6)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/2015 10:01 AM, Linus Walleij wrote:
-> On Fri, Dec 18, 2015 at 7:01 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> On 12/18/2015 07:27 AM, Rafał Miłecki wrote:
->>> I'm afraid it wasn't tested on BCM47XX (MIPS) :(
->>
->> Yes, you are probably right.
->>
->>> On 14 August 2015 at 00:21, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>>> @@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
->>>>         chip->set               = bcma_gpio_set_value;
->>>>         chip->direction_input   = bcma_gpio_direction_input;
->>>>         chip->direction_output  = bcma_gpio_direction_output;
->>>> -#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
->>>> -       chip->to_irq            = bcma_gpio_to_irq;
->>>> -#endif
->>>> +       chip->owner             = THIS_MODULE;
->>>> +       chip->dev               = bcma_bus_get_host_dev(bus);
->>>
->>> This assigns &bus->host_pdev->dev which is NULL.
->>
->> hmm, how do we fix this, as long as bcma does not have a device on mips
->> this is a problem. Should we create a new device for mips?
-> 
-> Yes I think MIPS should just create a host device. That
-> makes things simple and nice. Is it complex to do so?
-> 
-> Yours,
-> Linus Walleij
-> 
-Currently the documentation says this for the parent member on struct
-gpio_chip:
+From: Eliad Peller <eliad@wizery.com>
 
- * @parent: optional parent device providing the GPIOs
+We need to reuse the key update logic for d0i3
+as well.
 
-I assume the optional is wrong here.
+Add some parameters to deal with the constraints
+implied by the d0i3 flow (specifically, support
+non-SYNC commands, and don't take mutexes that
+might deadlock).
 
-Hauke
+Change some commands to be ASYNC, in order
+to simplify locking a bit.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c  | 212 +++++++++++++++------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |   4 +
+ 2 files changed, 120 insertions(+), 96 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 7bb5496..478cf82 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -136,7 +136,7 @@ static void iwl_mvm_convert_p1k(u16 *p1k, __le16 *out)
+ struct wowlan_key_data {
+ 	struct iwl_wowlan_rsc_tsc_params_cmd *rsc_tsc;
+ 	struct iwl_wowlan_tkip_params_cmd *tkip;
+-	bool error, use_rsc_tsc, use_tkip;
++	bool error, use_rsc_tsc, use_tkip, configure_keys;
+ 	int wep_key_idx;
+ };
+ 
+@@ -158,8 +158,6 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 	u16 p1k[IWL_P1K_SIZE];
+ 	int ret, i;
+ 
+-	mutex_lock(&mvm->mutex);
+-
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104: { /* hack it for now */
+@@ -195,20 +193,25 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 			wkc.wep_key.key_offset = data->wep_key_idx;
+ 		}
+ 
+-		ret = iwl_mvm_send_cmd_pdu(mvm, WEP_KEY, 0, sizeof(wkc), &wkc);
+-		data->error = ret != 0;
+-
+-		mvm->ptk_ivlen = key->iv_len;
+-		mvm->ptk_icvlen = key->icv_len;
+-		mvm->gtk_ivlen = key->iv_len;
+-		mvm->gtk_icvlen = key->icv_len;
++		if (data->configure_keys) {
++			mutex_lock(&mvm->mutex);
++			ret = iwl_mvm_send_cmd_pdu(mvm, WEP_KEY, 0,
++						   sizeof(wkc), &wkc);
++			data->error = ret != 0;
++
++			mvm->ptk_ivlen = key->iv_len;
++			mvm->ptk_icvlen = key->icv_len;
++			mvm->gtk_ivlen = key->iv_len;
++			mvm->gtk_icvlen = key->icv_len;
++			mutex_unlock(&mvm->mutex);
++		}
+ 
+ 		/* don't upload key again */
+-		goto out_unlock;
++		return;
+ 	}
+ 	default:
+ 		data->error = true;
+-		goto out_unlock;
++		return;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		/*
+ 		 * Ignore CMAC keys -- the WoWLAN firmware doesn't support them
+@@ -217,7 +220,7 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 		 * IGTK for anything. This means we could spuriously wake up or
+ 		 * be deauthenticated, but that was considered acceptable.
+ 		 */
+-		goto out_unlock;
++		return;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		if (sta) {
+ 			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.unicast_rsc;
+@@ -304,29 +307,30 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 		break;
+ 	}
+ 
+-	/*
+-	 * The D3 firmware hardcodes the key offset 0 as the key it uses
+-	 * to transmit packets to the AP, i.e. the PTK.
+-	 */
+-	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
+-		mvm->ptk_ivlen = key->iv_len;
+-		mvm->ptk_icvlen = key->icv_len;
+-		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 0);
+-	} else {
++	if (data->configure_keys) {
++		mutex_lock(&mvm->mutex);
+ 		/*
+-		 * firmware only supports TSC/RSC for a single key,
+-		 * so if there are multiple keep overwriting them
+-		 * with new ones -- this relies on mac80211 doing
+-		 * list_add_tail().
++		 * The D3 firmware hardcodes the key offset 0 as the key it
++		 * uses to transmit packets to the AP, i.e. the PTK.
+ 		 */
+-		mvm->gtk_ivlen = key->iv_len;
+-		mvm->gtk_icvlen = key->icv_len;
+-		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 1);
++		if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
++			mvm->ptk_ivlen = key->iv_len;
++			mvm->ptk_icvlen = key->icv_len;
++			ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 0);
++		} else {
++			/*
++			 * firmware only supports TSC/RSC for a single key,
++			 * so if there are multiple keep overwriting them
++			 * with new ones -- this relies on mac80211 doing
++			 * list_add_tail().
++			 */
++			mvm->gtk_ivlen = key->iv_len;
++			mvm->gtk_icvlen = key->icv_len;
++			ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, 1);
++		}
++		mutex_unlock(&mvm->mutex);
++		data->error = ret != 0;
+ 	}
+-
+-	data->error = ret != 0;
+-out_unlock:
+-	mutex_unlock(&mvm->mutex);
+ }
+ 
+ static int iwl_mvm_send_patterns(struct iwl_mvm *mvm,
+@@ -842,20 +846,89 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 	return 0;
+ }
+ 
+-static int
+-iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+-		      struct cfg80211_wowlan *wowlan,
+-		      struct iwl_wowlan_config_cmd *wowlan_config_cmd,
+-		      struct ieee80211_vif *vif, struct iwl_mvm_vif *mvmvif,
+-		      struct ieee80211_sta *ap_sta)
++int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
++				     struct ieee80211_vif *vif,
++				     bool configure_keys,
++				     u32 cmd_flags)
+ {
+ 	struct iwl_wowlan_kek_kck_material_cmd kek_kck_cmd = {};
+ 	struct iwl_wowlan_tkip_params_cmd tkip_cmd = {};
+ 	struct wowlan_key_data key_data = {
++		.configure_keys = configure_keys,
+ 		.use_rsc_tsc = false,
+ 		.tkip = &tkip_cmd,
+ 		.use_tkip = false,
+ 	};
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	int ret;
++
++	key_data.rsc_tsc = kzalloc(sizeof(*key_data.rsc_tsc), GFP_KERNEL);
++	if (!key_data.rsc_tsc)
++		return -ENOMEM;
++
++	/*
++	 * Note that currently we don't propagate cmd_flags
++	 * to the iterator. In case of key_data.configure_keys,
++	 * all the configured commands are SYNC, and
++	 * iwl_mvm_wowlan_program_keys() will take care of
++	 * locking/unlocking mvm->mutex.
++	 */
++	ieee80211_iter_keys(mvm->hw, vif,
++			    iwl_mvm_wowlan_program_keys,
++			    &key_data);
++
++	if (key_data.error) {
++		ret = -EIO;
++		goto out;
++	}
++
++	if (key_data.use_rsc_tsc) {
++		ret = iwl_mvm_send_cmd_pdu(mvm,
++					   WOWLAN_TSC_RSC_PARAM, cmd_flags,
++					   sizeof(*key_data.rsc_tsc),
++					   key_data.rsc_tsc);
++		if (ret)
++			goto out;
++	}
++
++	if (key_data.use_tkip) {
++		ret = iwl_mvm_send_cmd_pdu(mvm,
++					   WOWLAN_TKIP_PARAM,
++					   cmd_flags, sizeof(tkip_cmd),
++					   &tkip_cmd);
++		if (ret)
++			goto out;
++	}
++
++	if (mvmvif->rekey_data.valid) {
++		memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
++		memcpy(kek_kck_cmd.kck, mvmvif->rekey_data.kck,
++		       NL80211_KCK_LEN);
++		kek_kck_cmd.kck_len = cpu_to_le16(NL80211_KCK_LEN);
++		memcpy(kek_kck_cmd.kek, mvmvif->rekey_data.kek,
++		       NL80211_KEK_LEN);
++		kek_kck_cmd.kek_len = cpu_to_le16(NL80211_KEK_LEN);
++		kek_kck_cmd.replay_ctr = mvmvif->rekey_data.replay_ctr;
++
++		ret = iwl_mvm_send_cmd_pdu(mvm,
++					   WOWLAN_KEK_KCK_MATERIAL, cmd_flags,
++					   sizeof(kek_kck_cmd),
++					   &kek_kck_cmd);
++		if (ret)
++			goto out;
++	}
++out:
++	kfree(key_data.rsc_tsc);
++	return ret;
++}
++
++static int
++iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
++		      struct cfg80211_wowlan *wowlan,
++		      struct iwl_wowlan_config_cmd *wowlan_config_cmd,
++		      struct ieee80211_vif *vif, struct iwl_mvm_vif *mvmvif,
++		      struct ieee80211_sta *ap_sta)
++{
+ 	int ret;
+ 
+ 	ret = iwl_mvm_switch_to_d3(mvm);
+@@ -866,10 +939,6 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 	if (ret)
+ 		return ret;
+ 
+-	key_data.rsc_tsc = kzalloc(sizeof(*key_data.rsc_tsc), GFP_KERNEL);
+-	if (!key_data.rsc_tsc)
+-		return -ENOMEM;
+-
+ 	if (!iwlwifi_mod_params.sw_crypto) {
+ 		/*
+ 		 * This needs to be unlocked due to lock ordering
+@@ -877,74 +946,25 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 		 * that isn't really a problem though.
+ 		 */
+ 		mutex_unlock(&mvm->mutex);
+-		ieee80211_iter_keys(mvm->hw, vif,
+-				    iwl_mvm_wowlan_program_keys,
+-				    &key_data);
++		iwl_mvm_wowlan_config_key_params(mvm, vif, true, CMD_ASYNC);
+ 		mutex_lock(&mvm->mutex);
+-		if (key_data.error) {
+-			ret = -EIO;
+-			goto out;
+-		}
+-
+-		if (key_data.use_rsc_tsc) {
+-			struct iwl_host_cmd rsc_tsc_cmd = {
+-				.id = WOWLAN_TSC_RSC_PARAM,
+-				.data[0] = key_data.rsc_tsc,
+-				.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
+-				.len[0] = sizeof(*key_data.rsc_tsc),
+-			};
+-
+-			ret = iwl_mvm_send_cmd(mvm, &rsc_tsc_cmd);
+-			if (ret)
+-				goto out;
+-		}
+-
+-		if (key_data.use_tkip) {
+-			ret = iwl_mvm_send_cmd_pdu(mvm,
+-						   WOWLAN_TKIP_PARAM,
+-						   0, sizeof(tkip_cmd),
+-						   &tkip_cmd);
+-			if (ret)
+-				goto out;
+-		}
+-
+-		if (mvmvif->rekey_data.valid) {
+-			memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
+-			memcpy(kek_kck_cmd.kck, mvmvif->rekey_data.kck,
+-			       NL80211_KCK_LEN);
+-			kek_kck_cmd.kck_len = cpu_to_le16(NL80211_KCK_LEN);
+-			memcpy(kek_kck_cmd.kek, mvmvif->rekey_data.kek,
+-			       NL80211_KEK_LEN);
+-			kek_kck_cmd.kek_len = cpu_to_le16(NL80211_KEK_LEN);
+-			kek_kck_cmd.replay_ctr = mvmvif->rekey_data.replay_ctr;
+-
+-			ret = iwl_mvm_send_cmd_pdu(mvm,
+-						   WOWLAN_KEK_KCK_MATERIAL, 0,
+-						   sizeof(kek_kck_cmd),
+-						   &kek_kck_cmd);
+-			if (ret)
+-				goto out;
+-		}
+ 	}
+ 
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
+ 				   sizeof(*wowlan_config_cmd),
+ 				   wowlan_config_cmd);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = iwl_mvm_send_patterns(mvm, wowlan);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = iwl_mvm_send_proto_offload(mvm, vif, false, 0);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = iwl_mvm_send_remote_wake_cfg(mvm, vif, wowlan->tcp);
+-
+-out:
+-	kfree(key_data.rsc_tsc);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 5692856..7dc3af6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1249,6 +1249,10 @@ static inline void iwl_mvm_leds_exit(struct iwl_mvm *mvm)
+ /* D3 (WoWLAN, NetDetect) */
+ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
+ int iwl_mvm_resume(struct ieee80211_hw *hw);
++int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
++				     struct ieee80211_vif *vif,
++				     bool configure_keys,
++				     u32 cmd_flags);
+ void iwl_mvm_set_wakeup(struct ieee80211_hw *hw, bool enabled);
+ void iwl_mvm_set_rekey_data(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+-- 
+2.5.0
+
