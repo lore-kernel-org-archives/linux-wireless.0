@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37566 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752779AbbLHO6e (ORCPT
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:36591 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755354AbbLAIHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:58:34 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH] wil6210: prevent external wmi commands during suspend flow
-References: <1448350215-4202-1-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Tue, 08 Dec 2015 16:58:28 +0200
-In-Reply-To: <1448350215-4202-1-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Tue, 24 Nov 2015 09:30:15 +0200")
-Message-ID: <87bna19ecr.fsf@kamboji.qca.qualcomm.com> (sfid-20151208_155837_130086_674E4FD8)
+	Tue, 1 Dec 2015 03:07:34 -0500
+Received: by ykdr82 with SMTP id r82so214852737ykd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 00:07:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448889271.3957.2.camel@sipsolutions.net>
+References: <1448888094-2707-1-git-send-email-grzegorz.bajorski@tieto.com>
+	<1448889271.3957.2.camel@sipsolutions.net>
+Date: Tue, 1 Dec 2015 09:07:33 +0100
+Message-ID: <CAPGg_YBwPP0n23gJ1o+_jV98MKrCd5MGYShrbyRt0-56Y5Q-8g@mail.gmail.com> (sfid-20151201_090804_528868_2BB53023)
+Subject: Re: [PATCH] mac80211: allow drivers to report (non-)monitor frames
+From: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+already sent in [PATCH] ath10k: deliver mgmt frames from htt to
+monitor vifs only.
 
-> In __wmi_send we check if fw is ready at the beginning of the function.
-> While we wait for the completion of the previous command, system suspend
-> can be invoked and reset the HW, causing __wmi_send to read from HW
-> registers while it is not ready.
-> Taking the wmi_mutex in the reset flow when setting the FW ready bit
-> to zero will prevent the above race condition.
+2015-11-30 14:14 GMT+01:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Mon, 2015-11-30 at 13:54 +0100, Grzegorz Bajorski wrote:
+>> This allows drivers to tell mac80211 whether given
+>> frame is to be processed regularly but skip
+>> monitor interface delivery or vice versa.
+>>
+> Can you give an example, and perhaps a corresponding driver patch?
 >
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> johannes
 
-Applied, thanks.
+
 
 -- 
-Kalle Valo
+Pozdrawiam / Best Regards
+Grzegorz Bajorski
