@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sig21.net ([80.244.240.74]:41998 "EHLO mail.sig21.net"
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932139AbbLQU26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 15:28:58 -0500
-Date: Thu, 17 Dec 2015 21:28:50 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
-	Tuomas =?iso-8859-1?Q?R=E4s=E4nen?= <tuomasjjrasanen@tjjr.fi>,
-	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
-	Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: About adding support for MT76x2U to Linux kernel
-Message-ID: <20151217202850.GA13878@sig21.net> (sfid-20151217_212906_460721_C715CB2E)
-References: <20150814081526.GC20192@hackpad.Elisa>
- <20150814143229.61440072@north>
- <5671B310.2080200@openwrt.org>
- <20151216212425.GA25906@sig21.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151216212425.GA25906@sig21.net>
+	id S1755924AbbLAJ7e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:34 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/41] iwlwifi: mvm: remove stray nd_config element
+Date: Tue,  1 Dec 2015 11:58:44 +0200
+Message-Id: <1448963947-24302-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110313_817621_3BD5E3BD)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix and Jakub,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-On Wed, Dec 16, 2015 at 10:24:25PM +0100, Johannes Stezenbach wrote:
-> On Wed, Dec 16, 2015 at 07:53:04PM +0100, Felix Fietkau wrote:
-> > Once I'm done with mt7603 bringup (monitor mode rx already works), I
-> > plan on submitting mt76 upstream, and then we can see about adding
-> > support for 76x2u, or even merging the hardware support for mt7601u.
-> > 
-> > You can check out my work in the mt7603 branch here:
-> > https://github.com/openwrt/mt76/tree/mt7603
-> 
-> let me chime in to say that I'm interested to work on
-> support for mt7610u (TP-LINK Archer T2U/T2UH).
-> https://wikidevi.com/wiki/TP-LINK_Archer_T2U
-> 
-> I'm facing the same question as Tuomas about using
-> mt76 or mt7601u as the base?
+When the netdetect debugfs entry was removed, the nd_config element
+was accidentally left in the iwl_mvm structure.  Remove it.
 
-It's not like I didn't get from your earlier mail that
-you'd rather have us wait for mt76 to be upstream, but
-I guess that'll take half a year at least, right?
-Probably it would take me months to get something working
-anyway as I have a lot to learn and I'm doing it in my
-spare time.  I have no problem to rewrite the code multiple
-times as needed when upstream changes.
-But I'd love to get your recommendation how to get started soon,
-and especially if you know if the mt7610u chipset is
-closer to mt7601u or mt76x[23][eu]?
+Fixes: dbb04b0d29f8 ("iwlwifi: mvm: remove netdetect debugfs entry")
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c  | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 6 ------
+ 3 files changed, 2 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 76c2002..7bb5496 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1057,13 +1057,13 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 
+ 	if (mvmvif->ap_sta_id == IWL_MVM_STATION_COUNT) {
+ 		/* if we're not associated, this must be netdetect */
+-		if (!wowlan->nd_config && !mvm->nd_config) {
++		if (!wowlan->nd_config) {
+ 			ret = 1;
+ 			goto out_noreset;
+ 		}
+ 
+ 		ret = iwl_mvm_netdetect_config(
+-			mvm, wowlan, wowlan->nd_config ?: mvm->nd_config, vif);
++			mvm, wowlan, wowlan->nd_config, vif);
+ 		if (ret)
+ 			goto out;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 897d06f..ff32f36 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -732,7 +732,6 @@ struct iwl_mvm {
+ 	int gtk_ivlen, gtk_icvlen, ptk_ivlen, ptk_icvlen;
+ 
+ 	/* sched scan settings for net detect */
+-	struct cfg80211_sched_scan_request *nd_config;
+ 	struct ieee80211_scan_ies nd_ies;
+ 	struct cfg80211_match_set *nd_match_sets;
+ 	int n_nd_match_sets;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 1646cdd..9264928 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -642,12 +642,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 
+ #if defined(CONFIG_PM_SLEEP) && defined(CONFIG_IWLWIFI_DEBUGFS)
+ 	kfree(mvm->d3_resume_sram);
+-	if (mvm->nd_config) {
+-		kfree(mvm->nd_config->match_sets);
+-		kfree(mvm->nd_config->scan_plans);
+-		kfree(mvm->nd_config);
+-		mvm->nd_config = NULL;
+-	}
+ #endif
+ 
+ 	iwl_trans_op_mode_leave(mvm->trans);
+-- 
+2.5.0
 
-Thanks,
-Johannes
