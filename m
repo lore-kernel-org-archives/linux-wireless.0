@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34109 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752685AbbLKQn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 11:43:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] regulatory: fix world regulatory domain data
-Date: Fri, 11 Dec 2015 17:43:56 +0100
-Message-Id: <1449852236-27022-1-git-send-email-johannes@sipsolutions.net> (sfid-20151211_174402_255168_7C034B6A)
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:36247 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbbLAT0W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 14:26:22 -0500
+Received: by lfs39 with SMTP id 39so20063642lfs.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 11:26:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E90714D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+	<1448963947-24302-24-git-send-email-emmanuel.grumbach@intel.com>
+	<87r3j6gfws.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E90714D@hasmsx107.ger.corp.intel.com>
+Date: Tue, 1 Dec 2015 21:26:20 +0200
+Message-ID: <CANUX_P0Y5nDACtND_WaQfXBQq2AyLbxxdOX-S5NfQODzdiaK3g@mail.gmail.com> (sfid-20151201_202625_413035_D08BA4A6)
+Subject: Re: [PATCH 24/41] iwlwifi: mvm: move fw-dbg code to separate file
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ben Ami, Golan" <golan.ben.ami@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Dec 1, 2015 at 9:14 PM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>
+>
+> On 12/01/2015 08:53 PM, Kalle Valo wrote:
+>> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+>>
+>>> From: Golan Ben-Ami <golan.ben.ami@intel.com>
+>>>
+>>> The fw debug functionality is big enough to warrant
+>>> a separate file. Move existing related functions to the new file.
+>>>
+>>> Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+>>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> [...]
+>>
+>>>  intc-scripts/publishable-files                     | 203 ++++++
+>> Added by accident?
+>>
+Somehow this file didn't appear in the pull request message. I would
+have caught there I believe.
 
-The rule definitions here aren't really valid, they would
-be rejected if it came from userspace due to the bandwidth
-specified being bigger than the rule's width.
+> Indeed... Thanks for catching this...
+> Will re-spin...
 
-This is fairly much inconsequential since the other rules
-around them do enable the bandwidth, but express that better
-using the NL80211_RRF_AUTO_BW flag.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d53ef141055b..6474d42b40a9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -222,20 +222,22 @@ static const struct ieee80211_regdomain world_regdom = {
- 		/* IEEE 802.11b/g, channels 1..11 */
- 		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
- 		/* IEEE 802.11b/g, channels 12..13. */
--		REG_RULE(2467-10, 2472+10, 40, 6, 20,
--			NL80211_RRF_NO_IR),
-+		REG_RULE(2467-10, 2472+10, 20, 6, 20,
-+			NL80211_RRF_NO_IR | NL80211_RRF_AUTO_BW),
- 		/* IEEE 802.11 channel 14 - Only JP enables
- 		 * this and for 802.11b only */
- 		REG_RULE(2484-10, 2484+10, 20, 6, 20,
- 			NL80211_RRF_NO_IR |
- 			NL80211_RRF_NO_OFDM),
- 		/* IEEE 802.11a, channel 36..48 */
--		REG_RULE(5180-10, 5240+10, 160, 6, 20,
--                        NL80211_RRF_NO_IR),
-+		REG_RULE(5180-10, 5240+10, 80, 6, 20,
-+                        NL80211_RRF_NO_IR |
-+                        NL80211_RRF_AUTO_BW),
- 
- 		/* IEEE 802.11a, channel 52..64 - DFS required */
--		REG_RULE(5260-10, 5320+10, 160, 6, 20,
-+		REG_RULE(5260-10, 5320+10, 80, 6, 20,
- 			NL80211_RRF_NO_IR |
-+			NL80211_RRF_AUTO_BW |
- 			NL80211_RRF_DFS),
- 
- 		/* IEEE 802.11a, channel 100..144 - DFS required */
--- 
-2.6.2
-
+ I pushed -f the tree with the same tag. Should be fine now. Thanks again.
