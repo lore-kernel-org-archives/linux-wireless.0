@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35739 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbbLTTMH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 14:12:07 -0500
-Received: by mail-io0-f194.google.com with SMTP id o67so12283896iof.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 11:12:06 -0800 (PST)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46053 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752242AbbLAKqv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 05:46:51 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>
+CC: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Jeff CF Chen <jeffc@marvell.com>
+Subject: RE: mwifiex problem: incompatible network settings
+Date: Tue, 1 Dec 2015 10:36:45 +0000
+Message-ID: <57f5c2cc884d475595728527adc650bd@SC-EXCH04.marvell.com> (sfid-20151201_114654_966437_F7C92C25)
+References: <87wpu9632c.fsf@free.fr> <1445875814.31216.18.camel@redhat.com>
+	<87twpd8fk4.fsf@free.fr> <1445972115005.99995@marvell.com>
+	<87a8r4ugth.fsf@free.fr> <1446043853.24757.51.camel@redhat.com>
+	<87vb9qsmg1.fsf@free.fr>
+	<b2db7a93638f44b683aef052ca442c5c@SC-EXCH04.marvell.com>
+	<87r3k5h161.fsf@free.fr>
+	<cffeead80528479fbe6883776d115208@SC-EXCH04.marvell.com>
+	<878u6aqmxh.fsf@free.fr>
+	<c7d87577cb0c4c55921763b968ad78cc@SC-EXCH04.marvell.com>
+ <87mvtuo3rm.fsf@free.fr>
+In-Reply-To: <87mvtuo3rm.fsf@free.fr>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Date: Sun, 20 Dec 2015 14:12:06 -0500
-Message-ID: <CALGY4ftVUReiT-USxFWK3TKt5iLtTf7eWovEy=wvs_nYQWe9xQ@mail.gmail.com> (sfid-20151220_201235_072635_E16A7AA7)
-Subject: QCA9377 constantly deauthenticating from 802.11ac access point
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Hi Julien,
 
-  I've got lenovo laptop with QCA9377 (chip_id: 0x003820ff). It
-connects to TP-Link Archer C7 v2 AP (QCA9558), running OpenWRT.
+> From: Julien Cubizolles [mailto:j.cubizolles@free.fr]
+> Sent: Tuesday, December 01, 2015 4:05 PM
+> To: Amitkumar Karwar
+> Cc: Dan Williams; linux-wireless@vger.kernel.org; Nishant Sarmukadam;
+> Jeff CF Chen
+> Subject: Re: mwifiex problem: incompatible network settings
+> 
+> Amitkumar Karwar <akarwar@marvell.com> writes:
+> 
+> 
+> > Could you check if attached patch fixes your connection problem with
+> WPA AP?
+> 
+> It seems ok so far. I have set my home router back from WPA2 to WPA and
+> I can successfully connect. I'll let you know if I experience some
+> problems with it.
+> 
 
-On client I run Ubuntu 14.04 with 4.2.0 kernel and latest backports.
-It connect just fine, but disconnects after about 1 minute with this message:
+Thanks for confirmation.
 
-Dec 20 01:10:13 wpa_supplicant[7245]: nl80211: Ignored event (cmd=20)
-for foreign interface (ifindex 4 wdev 0x0)
-Dec 20 01:10:13 wpa_supplicant[7245]: nl80211: Drv Event 20
-(NL80211_CMD_DEL_STATION) received for wlan0
-Dec 20 01:10:13 wpa_supplicant[7245]: nl80211: Delete station xx:xx:xx:xx:xx:xx
-Dec 20 01:10:13 kernel: [ 7107.316037] wlan0: deauthenticating from
-xx:xx:xx:xx:xx:xx by local choice (Reason: 3=DEAUTH_LEAVING)
-
-And then it keeps connecting and disconnecting. While it is connected
-bandwidth is quite good and no errors seem to be happening, but then
-connection drops for no obvious reason.
-
-It looks like it doesn't do this when I switch AP to 802.11n mode.
-
-Is this a known issue?
-If not, what would be the best way to debug this? Is there any way to
-get more information on why it decided to delete this station?
-
-Thanks.
-
--- 
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+Regards,
+Amitkumar
