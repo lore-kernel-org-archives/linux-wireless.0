@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38921 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbbLTUeA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35693 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755696AbbLAJsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 15:34:00 -0500
-Date: Sun, 20 Dec 2015 23:33:36 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Joe Perches <joe@perches.com>
-Cc: Julia Lawall <julia.lawall@lip6.fr>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch -next] ath9k: fix ath9k_hw_nvram_check_version()
-Message-ID: <20151220203335.GX5284@mwanda> (sfid-20151220_213406_774523_39E1D37C)
-References: <20151219105919.GB3749@mwanda>
- <1450637228.3430.30.camel@perches.com>
- <alpine.DEB.2.02.1512201959090.2055@localhost6.localdomain6>
- <1450638355.3430.34.camel@perches.com>
+	Tue, 1 Dec 2015 04:48:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+	<1448447567-12189-9-git-send-email-arend@broadcom.com>
+	<87si3nkb2l.fsf@kamboji.qca.qualcomm.com>
+	<565D5B77.7050501@broadcom.com>
+Date: Tue, 01 Dec 2015 11:48:32 +0200
+In-Reply-To: <565D5B77.7050501@broadcom.com> (Arend van Spriel's message of
+	"Tue, 1 Dec 2015 09:33:59 +0100")
+Message-ID: <87d1uqijnz.fsf@kamboji.qca.qualcomm.com> (sfid-20151201_104851_777160_94A1EA9B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1450638355.3430.34.camel@perches.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 20, 2015 at 11:05:55AM -0800, Joe Perches wrote:
-> On Sun, 2015-12-20 at 20:00 +0100, Julia Lawall wrote:
-> > On Sun, 20 Dec 2015, Joe Perches wrote:
-> > 
-> > > On Sat, 2015-12-19 at 13:59 +0300, Dan Carpenter wrote:
-> > > > There is a type bug so it always returns success.
-> > > 
-> > > How many false positives do you have to sift
-> > > through to find this sort of error?
-> > 
-> > The return type is thoughtfully bool, so it should be easy in this case.  
-> > The function has a return -EINVAL and a return true, so even without the 
-> > return type it would be locally apparent that there is an inconsistency.
-> 
-> True, -EINVAL is a non-bool constant, but
-> bool returns can be a variable int.
-> 
-> Dan, was the check any constant non-bool?
+Arend van Spriel <arend@broadcom.com> writes:
 
-This warning is for returning negative with unsigned types smaller than
-int.  It's doing cross function flow analysis so it could warning about
-other things besides constants, but it's 90% constants.  It warns
-about ds2482_w1_triplet() for example.
+> On 11/30/2015 11:58 AM, Kalle Valo wrote:
+>> Arend van Spriel <arend@broadcom.com> writes:
+>>
+>>> From: Hante Meuleman <meuleman@broadcom.com>
+>>>
+>>> By default the 5G band has an advantage of 8 dBm on the RSSI when
+>>> it comes to selection during join and roam. This patch adds a
+>>> module param to make this value configurable. Using the value 99
+>>> results in configuration that 5G has always preference over 2.4G.
+>>>
+>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>
+>> [...]
+>>
+>>> +/* Module param joinboost_5g used for preferred join selection.
+>>> + * Use value 99 to configure preferred join to choose 5G always over 2.4G, any
+>>> + * other value configures the advantage of 5G signal strength over 2.4G signal
+>>> + * strength.
+>>> + */
+>>> +static int brcmf_joinboost_5g_rssi = BRCMF_JOIN_PREF_RSSI_BOOST;
+>>> +module_param_named(joinboost_5g, brcmf_joinboost_5g_rssi, int, 0);
+>>> +MODULE_PARM_DESC(joinboost_5g, "Join preference 5G RSSI boost");
+>>
+>> I'm not sure here, is a module parameter really the right way to
+>> configure something like this?
+>
+> Define "right way".
 
-There aren't many false positives.
+Something which can be generic for all drivers/hw with similar design.
+It's not good if a user is forced to configure this differently for each
+driver. I have understood that this is a common problem anyway.
 
-regards,
-dan carpenter
+> It solves a problem for us, but admittedly it is not something that is
+> very usable by user-space apps. So I guess what you are suggesting
+> here is to come up with a nl80211 api for this. On the mailing list
+> (or hostap list) the topic pops up from time to time so there are
+> people who would like to have such a knob to play with. Still would
+> like to keep the module parameter although its use may change when
+> nl80211 api is added.
 
+I don't know what is the best approach, that's why I would like to hear
+opinions from others. Personally I don't like the idea of adding 802.11
+level configuration options to module parameters, but on the other hand
+I don't have any strong opinions about this.
+
+I guess we have two different designs, one where the roaming logic is in
+firmware and other where wpasupplicant is responsible for this. (And I
+assume that brcfmac belongs to the former group.) Ideally it would be
+nice that we would have a same configuration knob for both but I don't
+know if that's really feasible.
+
+-- 
+Kalle Valo
