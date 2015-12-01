@@ -1,50 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58562 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751479AbbLWJhA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 04:37:00 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: Frank Huang <frankh@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull-request mwifiex-firmware 2015-12-23
-Date: Wed, 23 Dec 2015 09:36:58 +0000
-Message-ID: <2b4ceab04f0e4bcf9b5b94a0d259b9d3@SC-EXCH04.marvell.com> (sfid-20151223_103709_092288_85B07100)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:19098 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756055AbbLAJ7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:48 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/41] iwlwifi: clean up transport debugfs handling
+Date: Tue,  1 Dec 2015 11:58:52 +0200
+Message-Id: <1448963947-24302-26-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110302_509786_DE6A859E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 7f02df82736a85606cd9f33cb709545d9fc5326e:
+From: Johannes Berg <johannes.berg@intel.com>
 
-  linux-firmware: update Marvell 8897-B0 firmware images to p112 (2015-01-27 16:02:53 +0530)
+Transport code currently calls itself through the transport ops,
+which is quite pointless. Clean up all of this. While at it,
+remove the unnecessary dir argument and the redundant IDI code.
 
-are available in the git repository at:
+In slave transports, call both the common slave debugfs and the
+transport's own. SDIO has no files, so remove it all there.
 
-  git://git.marvell.com/mwifiex-firmware.git master
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  9 ---------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 18 ++++--------------
+ 4 files changed, 14 insertions(+), 24 deletions(-)
 
-for you to fetch changes up to e92f8b3f65443764297b947b1843955d9a65dde7:
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 607f4f7..3d089ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -542,8 +542,6 @@ struct iwl_trans_txq_scd_cfg {
+  * @wait_tx_queue_empty: wait until tx queues are empty. May sleep.
+  * @freeze_txq_timer: prevents the timer of the queue from firing until the
+  *	queue is set to awake. Must be atomic.
+- * @dbgfs_register: add the dbgfs files under this directory. Files will be
+- *	automatically deleted.
+  * @write8: write a u8 to a register at offset ofs from the BAR
+  * @write32: write a u32 to a register at offset ofs from the BAR
+  * @read32: read a u32 register at offset ofs from the BAR
+@@ -599,7 +597,6 @@ struct iwl_trans_ops {
+ 	void (*txq_disable)(struct iwl_trans *trans, int queue,
+ 			    bool configure_scd);
+ 
+-	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+ 	int (*wait_tx_queue_empty)(struct iwl_trans *trans, u32 txq_bm);
+ 	void (*freeze_txq_timer)(struct iwl_trans *trans, unsigned long txqs,
+ 				 bool freeze);
+@@ -1022,12 +1019,6 @@ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
+ 	return trans->ops->wait_tx_queue_empty(trans, txqs);
+ }
+ 
+-static inline int iwl_trans_dbgfs_register(struct iwl_trans *trans,
+-					   struct dentry *dir)
+-{
+-	return trans->ops->dbgfs_register(trans, dir);
+-}
+-
+ static inline void iwl_trans_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+ {
+ 	trans->ops->write8(trans, ofs, val);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 639761f..a52710f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -598,7 +598,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	set_dflt_pwr_limit(iwl_trans, pdev);
+ 
+ 	/* register transport layer debugfs here */
+-	ret = iwl_trans_dbgfs_register(iwl_trans, iwl_trans->dbgfs_dir);
++	ret = iwl_trans_pcie_dbgfs_register(iwl_trans);
+ 	if (ret)
+ 		goto out_free_drv;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index bf41543..44dc09d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -569,4 +569,13 @@ static inline void __iwl_trans_pcie_set_bit(struct iwl_trans *trans,
+ 
+ void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
+ 
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
++#else
++static inline int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
++{
++	return 0;
++}
++#endif
++
+ #endif /* __iwl_trans_int_pcie_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 50614e4d..efef487 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2107,13 +2107,11 @@ DEBUGFS_READ_FILE_OPS(rx_queue);
+ DEBUGFS_READ_FILE_OPS(tx_queue);
+ DEBUGFS_WRITE_FILE_OPS(csr);
+ 
+-/*
+- * Create the debugfs files and directories
+- *
+- */
+-static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
+-					 struct dentry *dir)
++/* Create the debugfs files and directories */
++int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
+ {
++	struct dentry *dir = trans->dbgfs_dir;
++
+ 	DEBUGFS_ADD_FILE(rx_queue, dir, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(tx_queue, dir, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(interrupt, dir, S_IWUSR | S_IRUSR);
+@@ -2125,12 +2123,6 @@ err:
+ 	IWL_ERR(trans, "failed to create the trans debugfs entry\n");
+ 	return -ENOMEM;
+ }
+-#else
+-static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
+-					 struct dentry *dir)
+-{
+-	return 0;
+-}
+ #endif /*CONFIG_IWLWIFI_DEBUGFS */
+ 
+ static u32 iwl_trans_pcie_get_cmdlen(struct iwl_tfd *tfd)
+@@ -2473,8 +2465,6 @@ static const struct iwl_trans_ops trans_ops_pcie = {
+ 	.txq_disable = iwl_trans_pcie_txq_disable,
+ 	.txq_enable = iwl_trans_pcie_txq_enable,
+ 
+-	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
+-
+ 	.wait_tx_queue_empty = iwl_trans_pcie_wait_txq_empty,
+ 	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
+ 
+-- 
+2.5.0
 
-  linux-firmware: update Marvell USB8797-B0 firmware image (2015-11-02 06:25:05 -0500)
-
-----------------------------------------------------------------
-Amitkumar Karwar (3):
-      linux-firmware: update Marvell 8897-B0 firmware images to 7.p18
-      linux-firmware: update Marvell 8897-B0 firmware images to 7.p53
-      linux-firmware: update Marvell USB8797-B0 firmware image
-
-Avinash Patil (1):
-      linux-firmware: add Marvell SD/USB8801 B0 firmware images
-
- WHENCE                   |  12 +++++++++---
- mrvl/pcie8897_uapsta.bin | Bin 759128 -> 803884 bytes
- mrvl/sd8801_uapsta.bin   | Bin 0 -> 258680 bytes
- mrvl/sd8897_uapsta.bin   | Bin 734612 -> 780760 bytes
- mrvl/usb8797_uapsta.bin  | Bin 551720 -> 553456 bytes
- mrvl/usb8801_uapsta.bin  | Bin 0 -> 255948 bytes
- 6 files changed, 9 insertions(+), 3 deletions(-)
- create mode 100755 mrvl/sd8801_uapsta.bin
- create mode 100755 mrvl/usb8801_uapsta.bin
