@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49081 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755207AbbLQKpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 05:45:24 -0500
-Message-ID: <1450349121.8247.26.camel@sipsolutions.net> (sfid-20151217_114527_950182_FA677E0D)
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 17 Dec 2015 11:45:21 +0100
-In-Reply-To: <56728FE7.4090006@openwrt.org>
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1450348183.8247.24.camel@sipsolutions.net> <56728FE7.4090006@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f179.google.com ([209.85.223.179]:33036 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756450AbbLAV74 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 16:59:56 -0500
+Received: by iouu10 with SMTP id u10so25875805iou.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 13:59:55 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 1 Dec 2015 13:59:55 -0800
+Message-ID: <CAOMFOmV-TdX2h2patazVuffZmy=MAqHfnLso90kQn5+d=ODU9w@mail.gmail.com> (sfid-20151201_225959_079001_7630D8E2)
+Subject: MAC address randomization support
+From: Anatol Pomozov <anatol.pomozov@gmail.com>
+To: "Greenman, Gregory" <gregory.greenman@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-17 at 11:35 +0100, Felix Fietkau wrote:
-> 
-> On many devices that I'm using, the data path is definitely too
-> bloated
-> for the packet to still be in cache, so I do think this will help.
-> Remember, having only 32 KiB Dcache (no L2) is not uncommon on
-> devices
-> running ath9k.
+Hi
 
-Hm, ok :)
+At ChromeOS we are looking at utilizing MAC address randomization.
+There are some ChromeOS use-cases where it can be useful. I checked
+upstream kernel and Android source code to understand the current
+state of this feature.
 
-> > And on status it will be pulled into the cache
-> > anyway, and you don't even need the write to happen before you can
-> > continue.
-> This doesn't make sense to me. The write needs to happen before the
-> device can do DMA...
-> 
+This feature is supported in Android and a few products use it already
+for Preferred Network Offload scan. There is a HAL method that allows
+to set MAC OUI [1] that makes 3 first octets predefined and the rest
+of MAC address is randomized. Kernel passes this OUI value to firmware
+where the randomization is implemented.
 
-On *status* :)
+I checked current upstream kernel and did not find any API for
+enabling/dealing with MAC address randomization. If a firmware devs
+want to add the feature easily then there should be some standard API
+for enabling/configuring MAC randomization.
 
-johannes
+In fact there is one mention of the feature in upstream source tree -
+macaddr_* fields in "struct iwl_tof_range_req_cmd" of iwlwifi driver.
+It allows to enable/disable randomization for 11MC measurement.
+
+The MAC randomization could be used by other drivers for many
+use-cases and I think it worth making it a part of standard cfg80211
+API. Is it something maintainers are interested in? Does anybody work
+on it already?
+
+[1] https://android.googlesource.com/platform/hardware/libhardware_legacy/+/master/include/hardware_legacy/wifi_hal.h
