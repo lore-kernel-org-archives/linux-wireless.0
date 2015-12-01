@@ -1,90 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:39963 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430AbbLXDCq (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:36423 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756413AbbLANId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 22:02:46 -0500
-Message-ID: <567B6140.1090907@atmel.com> (sfid-20151224_040319_957609_2FA68981)
-Date: Thu, 24 Dec 2015 12:06:40 +0900
-From: glen lee <glen.lee@atmel.com>
+	Tue, 1 Dec 2015 08:08:33 -0500
+Received: by lfs39 with SMTP id 39so6912830lfs.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 05:08:31 -0800 (PST)
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+To: Brent Taylor <motobud@gmail.com>, kvalo@qca.qualcomm.com
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ath6kl@lists.infradead.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <565D9BCD.6020105@cogentembedded.com> (sfid-20151201_141500_347604_545B1E0E)
+Date: Tue, 1 Dec 2015 16:08:29 +0300
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tony Cho <tony.cho@atmel.com>, <leo.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
-References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com> <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com>
-In-Reply-To: <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello.
 
+On 12/1/2015 8:41 AM, Brent Taylor wrote:
 
-On 2015년 12월 24일 11:39, Julian Calaby wrote:
-> Hi Glen,
->
-> On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
->> wilc_sdio_init return always 1. It is needless, so just remove it and it's
->> related codes also.
->>
->> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->> ---
->>   drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
->>   1 file changed, 12 deletions(-)
->>
->> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
->> index e961b50..caad876 100644
->> --- a/drivers/staging/wilc1000/wilc_sdio.c
->> +++ b/drivers/staging/wilc1000/wilc_sdio.c
->> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
->>          dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
->>   }
->>
->> -static int wilc_sdio_init(void)
->> -{
->> -       return 1;
->> -}
->> -
->>   /********************************************
->>    *
->>    *      Function 0
->> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
->>
->>          g_sdio.irq_gpio = (wilc->dev_irq_num);
->>
->> -       if (!wilc_sdio_init()) {
->> -               dev_err(&func->dev, "Failed io init bus...\n");
->> -               return 0;
->> -       } else {
->> -               return 0;
->> -       }
->> -
-> This isn't equivalent code as both arms of the if statement eventually
-> call return 0.
+> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7,
 
-Hi julian,
+    The scripts/checkpatch.pl now enforces certain format of the commit citing.
 
-Yes, you are correct.
-Actually, The original code was like this before It is patched wrongly.
--       if (!wilc_sdio_init()) {
--               dev_err(&func->dev, "Failed io init bus...\n");
--               return 0;
--       }
-I could fix this first and then remove wilc_sdio_init().
-But I thought that this can be fixed by removing wilc_sdio_init which also fixes always return 0 error.
+> ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
 
-Do you think I should fix "always return 0 error" first and then remove wilc_sdio_init()?
-Or update change log about the error which cause this?
+    This script also checks for unwrapped changelogs. Please run your patches 
+thru it before posting.
 
-regards,
-glen lee.
+> Signed-off-by: Brent Taylor <motobud@gmail.com>
+[...]
 
->
-> Thanks,
->
+MBR, Sergei
 
