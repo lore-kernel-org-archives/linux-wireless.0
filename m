@@ -1,188 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26620 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933968AbbLPKOh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 05:14:37 -0500
-Date: Wed, 16 Dec 2015 13:14:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: akarwar@marvell.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mwifiex: add support for Marvell USB8797 chipset
-Message-ID: <20151216101428.GA12056@mwanda> (sfid-20151216_111443_035083_E3EE5E7D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754883AbbLAKAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 05:00:00 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/41] iwlwifi: mvm: Align bt-coex priority with requirements
+Date: Tue,  1 Dec 2015 11:59:00 +0200
+Message-Id: <1448963947-24302-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110010_467857_F3A09D5B)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Amitkumar Karwar,
+From: Avri Altman <avri.altman@intel.com>
 
-The patch 4daffe354366: "mwifiex: add support for Marvell USB8797
-chipset" from Apr 18, 2012, leads to the following static checker
-warning:
+Fix the gaps between the system requirements and our code.
 
-	drivers/net/wireless/marvell/mwifiex/usb.c:1108 mwifiex_prog_fw_w_helper()
-	warn: should this be 'retries == -1'
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 36 ++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 15 deletions(-)
 
-drivers/net/wireless/marvell/mwifiex/usb.c
-   993  static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
-   994                                      struct mwifiex_fw_image *fw)
-   995  {
-   996          int ret = 0;
-   997          u8 *firmware = fw->fw_buf, *recv_buff;
-   998          u32 retries = USB8XXX_FW_MAX_RETRY, dlen;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-retries starts set to 3.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index 808f234..c9ca029 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -901,6 +901,7 @@ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			   struct ieee80211_tx_info *info, u8 ac)
+ {
+ 	__le16 fc = hdr->frame_control;
++	bool mplut_enabled = iwl_mvm_is_mplut_supported(mvm);
+ 
+ 	if (info->band != IEEE80211_BAND_2GHZ)
+ 		return 0;
+@@ -908,22 +909,27 @@ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 	if (unlikely(mvm->bt_tx_prio))
+ 		return mvm->bt_tx_prio - 1;
+ 
+-	/* High prio packet (wrt. BT coex) if it is EAPOL, MCAST or MGMT */
+-	if (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO ||
+-	     is_multicast_ether_addr(hdr->addr1) ||
+-	     ieee80211_is_ctl(fc) || ieee80211_is_mgmt(fc) ||
+-	     ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc))
++	if (likely(ieee80211_is_data(fc))) {
++		if (likely(ieee80211_is_data_qos(fc))) {
++			switch (ac) {
++			case IEEE80211_AC_BE:
++				return mplut_enabled ? 1 : 0;
++			case IEEE80211_AC_VI:
++				return mplut_enabled ? 2 : 3;
++			case IEEE80211_AC_VO:
++				return 3;
++			default:
++				return 0;
++			}
++		} else if (is_multicast_ether_addr(hdr->addr1)) {
++			return 3;
++		} else
++			return 0;
++	} else if (ieee80211_is_mgmt(fc)) {
++		return ieee80211_is_disassoc(fc) ? 0 : 3;
++	} else if (ieee80211_is_ctl(fc)) {
++		/* ignore cfend and cfendack frames as we never send those */
+ 		return 3;
+-
+-	switch (ac) {
+-	case IEEE80211_AC_BE:
+-		return 1;
+-	case IEEE80211_AC_VO:
+-		return 3;
+-	case IEEE80211_AC_VI:
+-		return 2;
+-	default:
+-		break;
+ 	}
+ 
+ 	return 0;
+-- 
+2.5.0
 
-   999          u32 fw_seqnum = 0, tlen = 0, dnld_cmd = 0;
-  1000          struct fw_data *fwdata;
-  1001          struct fw_sync_header sync_fw;
-  1002          u8 check_winner = 1;
-  1003  
-  1004          if (!firmware) {
-  1005                  mwifiex_dbg(adapter, ERROR,
-  1006                              "No firmware image found! Terminating download\n");
-  1007                  ret = -1;
-  1008                  goto fw_exit;
-  1009          }
-  1010  
-  1011          /* Allocate memory for transmit */
-  1012          fwdata = kzalloc(FW_DNLD_TX_BUF_SIZE, GFP_KERNEL);
-  1013          if (!fwdata) {
-  1014                  ret = -ENOMEM;
-  1015                  goto fw_exit;
-  1016          }
-  1017  
-  1018          /* Allocate memory for receive */
-  1019          recv_buff = kzalloc(FW_DNLD_RX_BUF_SIZE, GFP_KERNEL);
-  1020          if (!recv_buff)
-  1021                  goto cleanup;
-  1022  
-  1023          do {
-  1024                  /* Send pseudo data to check winner status first */
-  1025                  if (check_winner) {
-  1026                          memset(&fwdata->fw_hdr, 0, sizeof(struct fw_header));
-  1027                          dlen = 0;
-  1028                  } else {
-  1029                          /* copy the header of the fw_data to get the length */
-  1030                          memcpy(&fwdata->fw_hdr, &firmware[tlen],
-  1031                                 sizeof(struct fw_header));
-  1032  
-  1033                          dlen = le32_to_cpu(fwdata->fw_hdr.data_len);
-  1034                          dnld_cmd = le32_to_cpu(fwdata->fw_hdr.dnld_cmd);
-  1035                          tlen += sizeof(struct fw_header);
-  1036  
-  1037                          memcpy(fwdata->data, &firmware[tlen], dlen);
-  1038  
-  1039                          fwdata->seq_num = cpu_to_le32(fw_seqnum);
-  1040                          tlen += dlen;
-  1041                  }
-  1042  
-  1043                  /* If the send/receive fails or CRC occurs then retry */
-  1044                  while (retries--) {
-
-Because this is a postop the loop ends when retries is UINT_MAX.
-
-  1045                          u8 *buf = (u8 *)fwdata;
-  1046                          u32 len = FW_DATA_XMIT_SIZE;
-  1047  
-  1048                          /* send the firmware block */
-  1049                          ret = mwifiex_write_data_sync(adapter, buf, &len,
-  1050                                                  MWIFIEX_USB_EP_CMD_EVENT,
-  1051                                                  MWIFIEX_USB_TIMEOUT);
-  1052                          if (ret) {
-  1053                                  mwifiex_dbg(adapter, ERROR,
-  1054                                              "write_data_sync: failed: %d\n",
-  1055                                              ret);
-  1056                                  continue;
-
-If this fails 3 times for example.
-
-  1057                          }
-  1058  
-  1059                          buf = recv_buff;
-  1060                          len = FW_DNLD_RX_BUF_SIZE;
-  1061  
-  1062                          /* Receive the firmware block response */
-  1063                          ret = mwifiex_read_data_sync(adapter, buf, &len,
-  1064                                                  MWIFIEX_USB_EP_CMD_EVENT,
-  1065                                                  MWIFIEX_USB_TIMEOUT);
-  1066                          if (ret) {
-  1067                                  mwifiex_dbg(adapter, ERROR,
-  1068                                              "read_data_sync: failed: %d\n",
-  1069                                              ret);
-  1070                                  continue;
-
-Or this.
-
-
-  1071                          }
-  1072  
-  1073                          memcpy(&sync_fw, recv_buff,
-  1074                                 sizeof(struct fw_sync_header));
-  1075  
-  1076                          /* check 1st firmware block resp for highest bit set */
-  1077                          if (check_winner) {
-  1078                                  if (le32_to_cpu(sync_fw.cmd) & 0x80000000) {
-  1079                                          mwifiex_dbg(adapter, WARN,
-  1080                                                      "USB is not the winner %#x\n",
-  1081                                                      sync_fw.cmd);
-  1082  
-  1083                                          /* returning success */
-  1084                                          ret = 0;
-  1085                                          goto cleanup;
-  1086                                  }
-  1087  
-  1088                                  mwifiex_dbg(adapter, MSG,
-  1089                                              "start to download FW...\n");
-  1090  
-  1091                                  check_winner = 0;
-  1092                                  break;
-
-If we break here then it's possible for retries to be zero.
-
-  1093                          }
-  1094  
-  1095                          /* check the firmware block response for CRC errors */
-  1096                          if (sync_fw.cmd) {
-  1097                                  mwifiex_dbg(adapter, ERROR,
-  1098                                              "FW received block with CRC %#x\n",
-  1099                                              sync_fw.cmd);
-  1100                                  ret = -1;
-  1101                                  continue;
-  1102                          }
-  1103  
-  1104                          retries = USB8XXX_FW_MAX_RETRY;
-  1105                          break;
-  1106                  }
-  1107                  fw_seqnum++;
-  1108          } while ((dnld_cmd != FW_HAS_LAST_BLOCK) && retries);
-                                                            ^^^^^^^
-This test is wrong.  I guess we could change retries to int and change
-this test to retries >= 0?  But then in the last iteration through the
-big outside loop we wouldn't go into the smaller inside loop.  We would
-just update dlen, tlen and fw_seqnum and then exit.
-
-  1109  
-  1110  cleanup:
-  1111          mwifiex_dbg(adapter, MSG,
-  1112                      "info: FW download over, size %d bytes\n", tlen);
-  1113  
-  1114          kfree(recv_buff);
-  1115          kfree(fwdata);
-  1116  
-  1117          if (retries)
-  1118                  ret = 0;
-
-And this as well.
-
-	if (retries >= 0)
-		ret = 0;
-
-
-  1119  fw_exit:
-  1120          return ret;
-  1121  }
-
-eegards,
-dan carpenter
