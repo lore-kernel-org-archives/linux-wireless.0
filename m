@@ -1,84 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44837 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754592AbbLIKXA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:23:00 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 10/13] brcmfmac: add 43242 device id for LG dongle
-Date: Wed, 9 Dec 2015 11:22:49 +0100
-Message-ID: <1449656572-16158-11-git-send-email-arend@broadcom.com> (sfid-20151209_112313_557655_A711C484)
-In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756043AbbLAJ7r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:47 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Golan Ben Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/41] iwlwifi: mvm: Support setting continuous recording debug mode
+Date: Tue,  1 Dec 2015 11:58:51 +0200
+Message-Id: <1448963947-24302-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110300_963206_6569A662)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Got a hint on IRC that a 43242 dongle for LG smart TV's works with
-brcmfmac:
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-> Hello - I recently got a LG AN-WF500 wireless dongle for LG's SmartTVs.
-> From the information I gathered it uses a Broadcom chipset BCM43242.
-> The device should have been supported by brcmfmac kernel driver if it used
-> USB IDs 0a5c:bd1f.
-> My device however identifies itself as "ID 043e:3101 LG Electronics USA, Inc.".
-> I then tried adding the USB ID to the driver with
-> "echo "043e 3101" > /sys/bus/usb/drivers/brcmfmac/new_id" and it just works.
-> The kernel provides the following information.
-> [15958.851291] usb 3-1.1.3: new high-speed USB device number 53 using ehci-pci
-> [15958.946723] usb 3-1.1.3: New USB device found, idVendor=043e, idProduct=3101
-> [15958.946728] usb 3-1.1.3: New USB device strings: Mfr=1, Product=4, SerialNumber=3
-> [15958.946731] usb 3-1.1.3: Product: Composite Wireless Adapter
-> [15958.946733] usb 3-1.1.3: Manufacturer: Broadcom
-> [15958.946735] usb 3-1.1.3: SerialNumber: 28458
+Add ability to set the continuous recording mode of the FW, while
+the FW debug data is configured to be stored on the NIC.
+This could be useful for storing large segments of FW usniffer
+debug data on the host, while having small store space on the NIC.
+The host receives the usniffer data through the regular RX path, and
+the data can get extracted using trace-cmd.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Change-Id: Ifa1879a476bd1094bdf727c89569ea5eed5b65a8
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5561
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 1 +
- drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
- 2 files changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 40 ++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h  | 21 +++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c     |  1 +
+ 3 files changed, 62 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 23eaf0f..66c26a9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1452,6 +1452,7 @@ static struct usb_device_id brcmf_usb_devid_table[] = {
- 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
-+	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
- 	/* special entry for device with firmware loaded and running */
- 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
- 	{ /* end: all zeroes */ }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index 4092d27..699f2c2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -21,6 +21,7 @@
- #include <linux/mmc/sdio_ids.h>
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 3f7682d..7e2a814 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -961,6 +961,44 @@ static ssize_t iwl_dbgfs_fw_dbg_conf_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
  
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
-+#define BRCM_USB_VENDOR_ID_LG		0x043e
- #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
++/*
++ * Enable / Disable continuous recording.
++ * Cause the FW to start continuous recording, by sending the relevant hcmd.
++ * Enable: input of every integer larger than 0, ENABLE_CONT_RECORDING.
++ * Disable: for 0 as input, DISABLE_CONT_RECORDING.
++ */
++static ssize_t iwl_dbgfs_cont_recording_write(struct iwl_mvm *mvm,
++					      char *buf, size_t count,
++					      loff_t *ppos)
++{
++	struct iwl_trans *trans = mvm->trans;
++	const struct iwl_fw_dbg_dest_tlv *dest = trans->dbg_dest_tlv;
++	struct iwl_continuous_record_cmd cont_rec = {};
++	int ret, rec_mode;
++
++	if (!dest)
++		return -EOPNOTSUPP;
++
++	if (dest->monitor_mode != SMEM_MODE ||
++	    trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
++		return -EOPNOTSUPP;
++
++	ret = kstrtouint(buf, 0, &rec_mode);
++	if (ret)
++		return ret;
++
++	cont_rec.record_mode.enable_recording = rec_mode ?
++		cpu_to_le16(ENABLE_CONT_RECORDING) :
++		cpu_to_le16(DISABLE_CONT_RECORDING);
++
++	mutex_lock(&mvm->mutex);
++	ret = iwl_mvm_send_cmd_pdu(mvm, LDBG_CONFIG_CMD, 0,
++				   sizeof(cont_rec), &cont_rec);
++	mutex_unlock(&mvm->mutex);
++
++	return ret ?: count;
++}
++
+ static ssize_t iwl_dbgfs_fw_dbg_conf_write(struct iwl_mvm *mvm,
+ 					   char *buf, size_t count,
+ 					   loff_t *ppos)
+@@ -1413,6 +1451,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
+ MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
++MVM_DEBUGFS_WRITE_FILE_OPS(cont_recording, 8);
  
- /* Chipcommon Core Chip IDs */
-@@ -57,6 +58,7 @@
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
- #define BRCM_USB_43236_DEVICE_ID	0xbd17
- #define BRCM_USB_43242_DEVICE_ID	0xbd1f
-+#define BRCM_USB_43242_LG_DEVICE_ID	0x3101
- #define BRCM_USB_43569_DEVICE_ID	0xbd27
- #define BRCM_USB_BCMFW_DEVICE_ID	0x0bdc
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
+@@ -1456,6 +1495,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(fw_dbg_conf, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(fw_dbg_collect, mvm->debugfs_dir, S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(send_echo_cmd, mvm->debugfs_dir, S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(cont_recording, mvm->debugfs_dir, S_IWUSR);
+ 	if (!debugfs_create_bool("enable_scan_iteration_notif",
+ 				 S_IRUSR | S_IWUSR,
+ 				 mvm->debugfs_dir,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 181590f..68dfa28 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -239,6 +239,7 @@ enum {
+ 	DTS_MEASUREMENT_NOTIFICATION = 0xdd,
+ 
+ 	REPLY_DEBUG_CMD = 0xf0,
++	LDBG_CONFIG_CMD = 0xf6,
+ 	DEBUG_LOG_MSG = 0xf7,
+ 
+ 	BCAST_FILTER_CMD = 0xcf,
+@@ -426,6 +427,26 @@ struct iwl_fw_get_item_cmd {
+ 	__le32 item_id;
+ } __packed; /* FW_GET_ITEM_CMD_API_S_VER_1 */
+ 
++#define CONT_REC_COMMAND_SIZE	80
++#define ENABLE_CONT_RECORDING	0x15
++#define DISABLE_CONT_RECORDING	0x16
++
++/*
++ * struct iwl_continuous_record_mode - recording mode
++ */
++struct iwl_continuous_record_mode {
++	__le16 enable_recording;
++} __packed;
++
++/*
++ * struct iwl_continuous_record_cmd - enable/disable continuous recording
++ */
++struct iwl_continuous_record_cmd {
++	struct iwl_continuous_record_mode record_mode;
++	u8 pad[CONT_REC_COMMAND_SIZE -
++		sizeof(struct iwl_continuous_record_mode)];
++} __packed;
++
+ struct iwl_fw_get_item_resp {
+ 	__le32 item_id;
+ 	__le32 item_byte_cnt;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index f96ed55..fa849a2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -363,6 +363,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX + 1] = {
+ 	CMD(TDLS_CONFIG_CMD),
+ 	CMD(MCC_UPDATE_CMD),
+ 	CMD(SCAN_ITERATION_COMPLETE_UMAC),
++	CMD(LDBG_CONFIG_CMD),
+ };
+ #undef CMD
  
 -- 
-1.9.1
+2.5.0
 
