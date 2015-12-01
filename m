@@ -1,196 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:50093 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754721AbbLJMnW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 07:43:22 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 13/13] brcmfmac: add arp offload ip address table configuration support
-Date: Thu, 10 Dec 2015 13:43:12 +0100
-Message-ID: <1449751392-32569-14-git-send-email-arend@broadcom.com> (sfid-20151210_134343_818564_92159269)
-In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756020AbbLAJ7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:36 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/41] iwlwifi: mvm: drop low_latency_agg_frame_cnt_limit
+Date: Tue,  1 Dec 2015 11:58:45 +0200
+Message-Id: <1448963947-24302-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105947_608820_7AB1F7D7)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Eyal Shapira <eyal@wizery.com>
 
-Obtain ipv4 address through inetaddr notification for ARP offload host
-ip table configuration.
+This was an old workaround for solving latency issues with
+certain Miracast adapters like ActionTec. However this isn't
+needed anymore and furthermore it hurts throughput in other
+use cases.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 +++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
- 2 files changed, 110 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 4 ----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c     | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c      | 8 +-------
+ 4 files changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3a39192..2631f6f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -17,6 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <linux/module.h>
-+#include <linux/inetdevice.h>
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
- #include <brcmu_utils.h>
-@@ -620,6 +621,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
- 
- 	brcmf_cfg80211_down(ndev);
- 
-+	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
-+
- 	brcmf_net_setcarrier(ifp, false);
- 
- 	return 0;
-@@ -940,6 +943,98 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
- 	return available ? bsscfgidx : -ENOMEM;
- }
- 
-+#ifdef CONFIG_INET
-+#define ARPOL_MAX_ENTRIES	8
-+static int brcmf_inetaddr_changed(struct notifier_block *nb,
-+				  unsigned long action, void *data)
-+{
-+	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
-+					      inetaddr_notifier);
-+	struct in_ifaddr *ifa = data;
-+	struct net_device *ndev = ifa->ifa_dev->dev;
-+	struct brcmf_if *ifp;
-+	int idx, i, ret;
-+	u32 val;
-+	u32 addr_table[ARPOL_MAX_ENTRIES] = {0};
-+
-+	/* Find out if the notification is meant for us */
-+	for (idx = 0; idx < BRCMF_MAX_IFS; idx++) {
-+		ifp = drvr->iflist[idx];
-+		if (ifp && ifp->ndev == ndev)
-+			break;
-+		if (idx == BRCMF_MAX_IFS - 1)
-+			return NOTIFY_DONE;
-+	}
-+
-+	/* check if arp offload is supported */
-+	ret = brcmf_fil_iovar_int_get(ifp, "arpoe", &val);
-+	if (ret)
-+		return NOTIFY_OK;
-+
-+	/* old version only support primary index */
-+	ret = brcmf_fil_iovar_int_get(ifp, "arp_version", &val);
-+	if (ret)
-+		val = 1;
-+	if (val == 1)
-+		ifp = drvr->iflist[0];
-+
-+	/* retrieve the table from firmware */
-+	ret = brcmf_fil_iovar_data_get(ifp, "arp_hostip", addr_table,
-+				       sizeof(addr_table));
-+	if (ret) {
-+		brcmf_err("fail to get arp ip table err:%d\n", ret);
-+		return NOTIFY_OK;
-+	}
-+
-+	for (i = 0; i < ARPOL_MAX_ENTRIES; i++)
-+		if (ifa->ifa_address == addr_table[i])
-+			break;
-+
-+	switch (action) {
-+	case NETDEV_UP:
-+		if (i == ARPOL_MAX_ENTRIES) {
-+			brcmf_dbg(TRACE, "add %pI4 to arp table\n",
-+				  &ifa->ifa_address);
-+			/* set it directly */
-+			ret = brcmf_fil_iovar_int_set(ifp, "arp_hostip",
-+						      ifa->ifa_address);
-+			if (ret)
-+				brcmf_err("add arp ip err %d\n", ret);
-+		}
-+		break;
-+	case NETDEV_DOWN:
-+		if (i < ARPOL_MAX_ENTRIES) {
-+			addr_table[i] = 0;
-+			brcmf_dbg(TRACE, "remove %pI4 from arp table\n",
-+				  &ifa->ifa_address);
-+			/* clear the table in firmware */
-+			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear",
-+						       NULL, 0);
-+			if (ret) {
-+				brcmf_err("fail to clear arp ip table err:%d\n",
-+					  ret);
-+				return NOTIFY_OK;
-+			}
-+			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
-+				if (addr_table[i] != 0) {
-+					brcmf_fil_iovar_int_set(ifp,
-+								"arp_hostip",
-+								addr_table[i]);
-+					if (ret)
-+						brcmf_err("add arp ip err %d\n",
-+							  ret);
-+				}
-+			}
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+#endif
-+
- int brcmf_attach(struct device *dev)
- {
- 	struct brcmf_pub *drvr = NULL;
-@@ -1068,6 +1163,15 @@ int brcmf_bus_start(struct device *dev)
- 		if (p2p_ifp)
- 			ret = brcmf_net_p2p_attach(p2p_ifp);
- 	}
-+
-+	if (ret)
-+		goto fail;
-+
-+#ifdef CONFIG_INET
-+	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
-+	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
-+#endif
-+
- fail:
- 	if (ret < 0) {
- 		brcmf_err("failed: %d\n", ret);
-@@ -1133,6 +1237,10 @@ void brcmf_detach(struct device *dev)
- 	if (drvr == NULL)
- 		return;
- 
-+#ifdef CONFIG_INET
-+	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
-+#endif
-+
- 	/* stop firmware event handling */
- 	brcmf_fweh_detach(drvr);
- 	if (drvr->config)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 77d8239..6018af7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -141,6 +141,8 @@ struct brcmf_pub {
- #ifdef DEBUG
- 	struct dentry *dbgfs_dir;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 82a61f6..48d5ee1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1491,10 +1491,6 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 		goto err;
  #endif
-+
-+	struct notifier_block inetaddr_notifier;
- };
  
- /* forward declarations */
+-	if (!debugfs_create_u8("low_latency_agg_frame_limit", S_IRUSR | S_IWUSR,
+-			       mvm->debugfs_dir,
+-			       &mvm->low_latency_agg_frame_limit))
+-		goto err;
+ 	if (!debugfs_create_u8("ps_disabled", S_IRUSR,
+ 			       mvm->debugfs_dir, &mvm->ps_disabled))
+ 		goto err;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index ff32f36..f28e050 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -813,8 +813,6 @@ struct iwl_mvm {
+ 	bool lar_regdom_set;
+ 	enum iwl_mcc_source mcc_src;
+ 
+-	u8 low_latency_agg_frame_limit;
+-
+ 	/* TDLS channel switch data */
+ 	struct {
+ 		struct delayed_work dwork;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 9264928..e9b400c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -452,7 +452,6 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		mvm->first_agg_queue = 12;
+ 	}
+ 	mvm->sf_state = SF_UNINIT;
+-	mvm->low_latency_agg_frame_limit = 6;
+ 	mvm->cur_ucode = IWL_UCODE_INIT;
+ 
+ 	mutex_init(&mvm->mutex);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index d1ad103..37c2db1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3454,15 +3454,9 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
+ 	 * Tx Fifo so that it can start a transaction in the same TxOP. This
+ 	 * basically allows the firmware to send bursts.
+ 	 */
+-	if (iwl_mvm_vif_low_latency(mvmvif)) {
++	if (iwl_mvm_vif_low_latency(mvmvif))
+ 		lq_cmd->agg_frame_cnt_limit--;
+ 
+-		if (mvm->low_latency_agg_frame_limit)
+-			lq_cmd->agg_frame_cnt_limit =
+-				min(lq_cmd->agg_frame_cnt_limit,
+-				    mvm->low_latency_agg_frame_limit);
+-	}
+-
+ 	if (mvmsta->vif->p2p)
+ 		lq_cmd->flags |= LQ_FLAG_USE_RTS_MSK;
+ 
 -- 
-1.9.1
+2.5.0
 
