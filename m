@@ -1,205 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37979 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752405AbbLNMRK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:10 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECH9YL027538
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:09 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng01e-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:09 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 02/14] mwifiex: multiple bss support
-Date: Mon, 14 Dec 2015 04:15:03 -0800
-Message-ID: <1450095315-19927-3-git-send-email-akarwar@marvell.com> (sfid-20151214_131713_350844_E22F226C)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:60223 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750918AbbLAGUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 01:20:46 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1a3eIq-00057l-8x
+	for linux-wireless@vger.kernel.org; Tue, 01 Dec 2015 07:20:40 +0100
+Received: from 77-56-0-32.dclient.hispeed.ch ([77.56.0.32])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 07:20:40 +0100
+Received: from bartlomiej.grzeskowiak by 77-56-0-32.dclient.hispeed.ch with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 07:20:40 +0100
+To: linux-wireless@vger.kernel.org
+From: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
+Subject: ath10k: device has crashed during init - qca6174 chipset
+Date: Tue, 1 Dec 2015 06:20:20 +0000 (UTC)
+Message-ID: <loom.20151201T071931-353@post.gmane.org> (sfid-20151201_072049_439836_7BB73FF3)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+Hi, 
 
-This patch fixes issues observed while starting 3 different
-bss simultaneously, eg, 2 AP + 1 STA or 3 AP
+I am trying to use ath10k driver from the latest backports-4.4-rc.2-1 with 
+kernel 3.10.65 and qca6174 based wlan module. Could you give me some hints 
+about possible problem.
+ath10k_core.ko module loaded with skip_otp=y and debug_mask=0xffffffff.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 20 ++++++++----
- drivers/net/wireless/marvell/mwifiex/decl.h     |  6 ++--
- drivers/net/wireless/marvell/mwifiex/main.h     | 42 ++++++++++++++++++++-----
- 3 files changed, 51 insertions(+), 17 deletions(-)
+I get following error message:
+[ 5301.614749] ath10k_pci 0000:01:00.0: wmi unified ready event not 
+received
+[ 5301.614749] ath10k_pci 0000:01:00.0: device has crashed during init
+[ 5301.644767] ath10k_pci 0000:01:00.0: device has crashed during init
+[ 5301.651025] ath10k_pci 0000:01:00.0: failed to wait for target init: -70
+[ 5301.661134] ath10k_pci 0000:01:00.0: could not init core (-110)
+[ 5301.667310] ath10k_pci 0000:01:00.0: could not probe fw (-110)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 47d8afd..ab0ba6a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -825,18 +825,26 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
-+		priv->bss_num = mwifiex_get_unused_bss_num(adapter,
-+			 MWIFIEX_BSS_TYPE_STA);
- 		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
-+		priv->bss_num = mwifiex_get_unused_bss_num(adapter,
-+			 MWIFIEX_BSS_TYPE_P2P);
- 		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
-+		priv->bss_num = mwifiex_get_unused_bss_num(adapter,
-+			 MWIFIEX_BSS_TYPE_P2P);
- 		priv->bss_role =  MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
- 		break;
- 	case NL80211_IFTYPE_AP:
-+		priv->bss_num = mwifiex_get_unused_bss_num(adapter,
-+			 MWIFIEX_BSS_TYPE_UAP);
- 		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		break;
-@@ -2606,7 +2614,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EINVAL);
- 		}
- 
--		priv = mwifiex_get_unused_priv(adapter);
-+		priv = mwifiex_get_unused_priv_by_bss_type(
-+						adapter, MWIFIEX_BSS_TYPE_STA);
- 		if (!priv) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "could not get free private struct\n");
-@@ -2625,7 +2634,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_num = adapter->curr_iface_comb.sta_intf;
- 
- 		break;
- 	case NL80211_IFTYPE_AP:
-@@ -2636,7 +2644,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EINVAL);
- 		}
- 
--		priv = mwifiex_get_unused_priv(adapter);
-+		priv = mwifiex_get_unused_priv_by_bss_type(
-+						adapter, MWIFIEX_BSS_TYPE_UAP);
- 		if (!priv) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "could not get free private struct\n");
-@@ -2651,7 +2660,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_started = 0;
--		priv->bss_num = adapter->curr_iface_comb.uap_intf;
- 		priv->bss_mode = type;
- 
- 		break;
-@@ -2663,7 +2671,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EINVAL);
- 		}
- 
--		priv = mwifiex_get_unused_priv(adapter);
-+		priv = mwifiex_get_unused_priv_by_bss_type(
-+						adapter, MWIFIEX_BSS_TYPE_P2P);
- 		if (!priv) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "could not get free private struct\n");
-@@ -2687,7 +2696,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_started = 0;
--		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
- 
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
-diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
-index 098e1f1..d9c15cd 100644
---- a/drivers/net/wireless/marvell/mwifiex/decl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-@@ -111,9 +111,9 @@
- /* Rate index for OFDM 0 */
- #define MWIFIEX_RATE_INDEX_OFDM0   4
- 
--#define MWIFIEX_MAX_STA_NUM		1
--#define MWIFIEX_MAX_UAP_NUM		1
--#define MWIFIEX_MAX_P2P_NUM		1
-+#define MWIFIEX_MAX_STA_NUM		3
-+#define MWIFIEX_MAX_UAP_NUM		3
-+#define MWIFIEX_MAX_P2P_NUM		3
- 
- #define MWIFIEX_A_BAND_START_FREQ	5000
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index a86e2ae..10e614e 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1273,20 +1273,46 @@ mwifiex_get_priv(struct mwifiex_adapter *adapter,
- }
- 
- /*
-+ * This function checks available bss_num when adding new interface or
-+ * changing interface type.
-+ */
-+static inline u8
-+mwifiex_get_unused_bss_num(struct mwifiex_adapter *adapter, u8 bss_type)
-+{
-+	u8 i, j;
-+	int index[MWIFIEX_MAX_BSS_NUM];
-+
-+	memset(index, 0, sizeof(index));
-+	for (i = 0; i < adapter->priv_num; i++)
-+		if (adapter->priv[i]) {
-+			if (adapter->priv[i]->bss_type == bss_type &&
-+			    !(adapter->priv[i]->bss_mode ==
-+			      NL80211_IFTYPE_UNSPECIFIED)) {
-+				index[adapter->priv[i]->bss_num] = 1;
-+			}
-+		}
-+	for (j = 0; j < MWIFIEX_MAX_BSS_NUM; j++)
-+		if (!index[j])
-+			return j;
-+	return -1;
-+}
-+
-+/*
-  * This function returns the first available unused private structure pointer.
-  */
- static inline struct mwifiex_private *
--mwifiex_get_unused_priv(struct mwifiex_adapter *adapter)
-+mwifiex_get_unused_priv_by_bss_type(struct mwifiex_adapter *adapter,
-+				    u8 bss_type)
- {
--	int i;
-+	u8 i;
- 
--	for (i = 0; i < adapter->priv_num; i++) {
--		if (adapter->priv[i]) {
--			if (adapter->priv[i]->bss_mode ==
--			    NL80211_IFTYPE_UNSPECIFIED)
--				break;
-+	for (i = 0; i < adapter->priv_num; i++)
-+		if (adapter->priv[i]->bss_mode ==
-+		   NL80211_IFTYPE_UNSPECIFIED) {
-+			adapter->priv[i]->bss_num =
-+			mwifiex_get_unused_bss_num(adapter, bss_type);
-+			break;
- 		}
--	}
- 
- 	return ((i < adapter->priv_num) ? adapter->priv[i] : NULL);
- }
--- 
-1.8.1.4
+Some other important debug messages (I can also provide the whole log if 
+needed):
+ath10k_pci 0000:01:00.0: found fw version WLAN.RM.2.0-00180-QCARMSWPZ-1
+[...]
+ath10k_pci 0000:01:00.0: boot get otp board id result 0x00000001 board_id 0 
+chip_id 0
+ath10k_pci 0000:01:00.0: boot using board name 
+'bus=pci,vendor=168c,device=003e,subsystem-vendor=0000,subsystem-
+device=0000'
+[...]
+ath10k_pci 0000:01:00.0: Target ready! transmit resources: 2 size:1792
+[...]
+ath10k_pci 0000:01:00.0: HTC Service HTT Data connect response: status: 
+0x0, assigned ep: 0x1
+[...]
+ath10k_pci 0000:01:00.0: HTC Service WMI connect response: status: 0x0, 
+assigned ep: 0x2
+[...]
+ath10k_pci 0000:01:00.0: wmi event service ready min_tx_power 0x0000003f 
+max_tx_power 0x0000003f ht_cap 0x0000085b vht_cap 0x339011b2 sw_ver0 
+0x01000000 sw_ver1 0x0000008f fw_build 0x200700b4 phy_capab 0x00000003 
+num_rf_chains 0x00000002 eeprom_rd 0x00000000 num_mem_reqs 0x00000000
+ath10k_pci 0000:01:00.0: firmware WLAN.RM.2.0-00180-QCARMSWPZ-1 booted
+[...]
+ath10k_pci 0000:01:00.0: ath10k_htc_notify_tx_completion: ep 2 skb 8cc3b6c0
+ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
+ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
+ath10k_pci 0000:01:00.0: wmi unified ready event not received
+ath10k_pci 0000:01:00.0: boot hif stop
+[...]
+ath10k_pci 0000:01:00.0: boot init ce src ring id 0 entries 16 base_addr 
+8e053000
+ath10k_pci 0000:01:00.0: boot ce dest ring id 1 entries 512 base_addr 
+8e054000
+ath10k_pci 0000:01:00.0: boot ce dest ring id 2 entries 128 base_addr 
+8e056000
+ath10k_pci 0000:01:00.0: boot init ce src ring id 3 entries 32 base_addr 
+8e057000
+ath10k_pci 0000:01:00.0: boot init ce src ring id 4 entries 4096 base_addr 
+8e060000
+ath10k_pci 0000:01:00.0: boot ce dest ring id 5 entries 512 base_addr 
+8e058000
+ath10k_pci 0000:01:00.0: boot init ce src ring id 7 entries 2 base_addr 
+8e05a000
+ath10k_pci 0000:01:00.0: boot ce dest ring id 7 entries 2 base_addr 
+8e05b000
+ath10k_pci 0000:01:00.0: boot waiting target to initialise
+ath10k_pci 0000:01:00.0: boot target indicator 0
+ath10k_pci 0000:01:00.0: boot target indicator 1
+ath10k_pci 0000:01:00.0: device has crashed during init
+ath10k_pci 0000:01:00.0: failed to wait for target init: -70
+ath10k_pci 0000:01:00.0: could not init core (-110)
+ath10k_pci 0000:01:00.0: boot hif power down
+ath10k_pci 0000:01:00.0: could not probe fw (-110)
+ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
+ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
+
+Thank you
+Bartek
 
