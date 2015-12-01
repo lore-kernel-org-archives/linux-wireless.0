@@ -1,101 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43676 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbbLKLyt (ORCPT
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:35959 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754418AbbLAAJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 06:54:49 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v2] wlcore/wl12xx: spi: fix oops on firmware load
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1449753176-5851-1-git-send-email-uri.mashiach@compulab.co.il>
-To: Uri Mashiach <uri.mashiach@compulab.co.il>
-Cc: Luciano Coelho <luca@coelho.fi>, Eliad Peller <eliad@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	igor.grinberg@compulab.co.il,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Message-Id: <20151211115448.B7572141DDC@smtp.codeaurora.org> (sfid-20151211_125457_220001_0E72F1E0)
-Date: Fri, 11 Dec 2015 11:54:48 +0000 (UTC)
+	Mon, 30 Nov 2015 19:09:09 -0500
+Received: by qgcc31 with SMTP id c31so15227889qgc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2015 16:09:09 -0800 (PST)
+From: "Mario J. Rugiero" <mrugiero@gmail.com>
+To: devel@driverdev.osuosl.org
+Cc: mrugiero@gmail.com, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com
+Subject: [PATCH 1/1] staging: cleanup: Fix incompatible type comparison in wilc1000/host_interface.c
+Date: Mon, 30 Nov 2015 21:09:04 -0300
+Message-Id: <1448928544-3534-1-git-send-email-mrugiero@gmail.com> (sfid-20151201_010914_426611_27E8F8C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces an "if (ptr > 0)" comparison that seems to be a
+confusing way to check for null by a simpler "if (ptr)" check.
 
-> The maximum chunks used by the function is
-> (SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE + 1).
-> The original commands array had space for
-> (SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) commands.
-> When the last chunk is used (len > 4 * WSPI_MAX_CHUNK_SIZE), the last
-> command is stored outside the bounds of the commands array.
-> 
-> Oops 5 (page fault) is generated during current wl1271 firmware load
-> attempt:
-> 
-> root@debian-armhf:~# ifconfig wlan0 up
-> [  294.312399] Unable to handle kernel paging request at virtual address
-> 00203fc4
-> [  294.320173] pgd = de528000
-> [  294.323028] [00203fc4] *pgd=00000000
-> [  294.326916] Internal error: Oops: 5 [#1] SMP ARM
-> [  294.331789] Modules linked in: bnep rfcomm bluetooth ipv6 arc4 wl12xx
-> wlcore mac80211 musb_dsps cfg80211 musb_hdrc usbcore usb_common
-> wlcore_spi omap_rng rng_core musb_am335x omap_wdt cpufreq_dt thermal_sys
-> hwmon
-> [  294.351838] CPU: 0 PID: 1827 Comm: ifconfig Not tainted
-> 4.2.0-00002-g3e9ad27-dirty #78
-> [  294.360154] Hardware name: Generic AM33XX (Flattened Device Tree)
-> [  294.366557] task: dc9d6d40 ti: de550000 task.ti: de550000
-> [  294.372236] PC is at __spi_validate+0xa8/0x2ac
-> [  294.376902] LR is at __spi_sync+0x78/0x210
-> [  294.381200] pc : [<c049c760>]    lr : [<c049ebe0>]    psr: 60000013
-> [  294.381200] sp : de551998  ip : de5519d8  fp : 00200000
-> [  294.393242] r10: de551c8c  r9 : de5519d8  r8 : de3a9000
-> [  294.398730] r7 : de3a9258  r6 : de3a9400  r5 : de551a48  r4 :
-> 00203fbc
-> [  294.405577] r3 : 00000000  r2 : 00000000  r1 : 00000000  r0 :
-> de3a9000
-> [  294.412420] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM
-> Segment user
-> [  294.419918] Control: 10c5387d  Table: 9e528019  DAC: 00000015
-> [  294.425954] Process ifconfig (pid: 1827, stack limit = 0xde550218)
-> [  294.432437] Stack: (0xde551998 to 0xde552000)
-> 
-> ...
-> 
-> [  294.883613] [<c049c760>] (__spi_validate) from [<c049ebe0>]
-> (__spi_sync+0x78/0x210)
-> [  294.891670] [<c049ebe0>] (__spi_sync) from [<bf036598>]
-> (wl12xx_spi_raw_write+0xfc/0x148 [wlcore_spi])
-> [  294.901661] [<bf036598>] (wl12xx_spi_raw_write [wlcore_spi]) from
-> [<bf21c694>] (wlcore_boot_upload_firmware+0x1ec/0x458 [wlcore])
-> [  294.914038] [<bf21c694>] (wlcore_boot_upload_firmware [wlcore]) from
-> [<bf24532c>] (wl12xx_boot+0xc10/0xfac [wl12xx])
-> [  294.925161] [<bf24532c>] (wl12xx_boot [wl12xx]) from [<bf20d5cc>]
-> (wl1271_op_add_interface+0x5b0/0x910 [wlcore])
-> [  294.936364] [<bf20d5cc>] (wl1271_op_add_interface [wlcore]) from
-> [<bf15c4ac>] (ieee80211_do_open+0x44c/0xf7c [mac80211])
-> [  294.947963] [<bf15c4ac>] (ieee80211_do_open [mac80211]) from
-> [<c0537978>] (__dev_open+0xa8/0x110)
-> [  294.957307] [<c0537978>] (__dev_open) from [<c0537bf8>]
-> (__dev_change_flags+0x88/0x148)
-> [  294.965713] [<c0537bf8>] (__dev_change_flags) from [<c0537cd0>]
-> (dev_change_flags+0x18/0x48)
-> [  294.974576] [<c0537cd0>] (dev_change_flags) from [<c05a55a0>]
-> (devinet_ioctl+0x6b4/0x7d0)
-> [  294.983191] [<c05a55a0>] (devinet_ioctl) from [<c0517040>]
-> (sock_ioctl+0x1e4/0x2bc)
-> [  294.991244] [<c0517040>] (sock_ioctl) from [<c017d378>]
-> (do_vfs_ioctl+0x420/0x6b0)
-> [  294.999208] [<c017d378>] (do_vfs_ioctl) from [<c017d674>]
-> (SyS_ioctl+0x6c/0x7c)
-> [  295.006880] [<c017d674>] (SyS_ioctl) from [<c000f4c0>]
-> (ret_fast_syscall+0x0/0x54)
-> [  295.014835] Code: e1550004 e2444034 0a00007d e5953018 (e5942008)
-> [  295.021544] ---[ end trace 66ed188198f4e24e ]---
-> 
-> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
-> Cc: stable@vger.kernel.org
+Signed-off-by: Mario J. Rugiero <mrugiero@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, applied to wireless-drivers-next.git.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d5b7725..0c87f6c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2270,7 +2270,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+ 
+-	if (pstrSetBeaconParam->tail > 0)
++	if (pstrSetBeaconParam->tail)
+ 		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
+ 	pu8CurrByte += pstrSetBeaconParam->tail_len;
+ 
+-- 
+2.6.2
 
-Kalle Valo
