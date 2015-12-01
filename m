@@ -1,42 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0246.hostedemail.com ([216.40.44.246]:59862 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932169AbbLQFTX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 00:19:23 -0500
-Message-ID: <1450329559.5661.5.camel@perches.com> (sfid-20151217_061927_278308_FC11BCF1)
-Subject: Re: [PATCH] Print warnings for missing cfg80211_ops implementations
-From: Joe Perches <joe@perches.com>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: "ola. olsson" <ola.olsson@sonymobile.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	johannes@sipsolutions.net
-Date: Wed, 16 Dec 2015 21:19:19 -0800
-In-Reply-To: <CABAco3BSaB9R6-nZQsmOnfXXy2ra-un0jjeBkyq4inzCybD5dw@mail.gmail.com>
-References: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
-	 <1450314972.5661.2.camel@perches.com>
-	 <CABAco3BSaB9R6-nZQsmOnfXXy2ra-un0jjeBkyq4inzCybD5dw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755565AbbLAJ74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:56 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+	Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/41] iwlwifi: Add new PCI IDs for 9260 and 5165 series
+Date: Tue,  1 Dec 2015 11:58:57 +0200
+Message-Id: <1448963947-24302-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110006_434626_959A11DC)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-17 at 05:19 +0100, Ola Olsson wrote:
-> Hi Joe,
-> 
-> > maybe all of these should be a nand b?
-> 
-> You're right but i don't understand where the problem is. Please help
-> me.
-> 
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
 
-The code is currently like:
+Add 9000-family configuration to iwl_cfg struct
+Add a new struct to define the 5165 series.
+Rename the struct that defines the 9000 series to 9260.
+Add some new sub-system IDs for the 9260 and 5165 series.
+For 9260:
+0x0A10, 0x0000, 0x0510, 0x0710, 0x0410, 0x0610.
+For 5165:
+0x2A10, 0x2010, 0x0310, 0x0210.
 
-       WARN_ON(ops->add_station && !ops->del_station);
- 
-but maybe it should be
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Makefile     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 163 ++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |   3 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  13 ++
+ 4 files changed, 180 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-9000.c
 
-	WARN_ON((ops->add_station && !ops->del_station) ||
-		(!opt->add_station && ops->del_station))
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index dbfc5b1..05828c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -8,7 +8,7 @@ iwlwifi-objs		+= iwl-eeprom-read.o iwl-eeprom-parse.o
+ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+ iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
+-iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o
++iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o iwl-9000.o
+ iwlwifi-objs		+= iwl-trans.o
+ 
+ iwlwifi-objs += $(iwlwifi-m)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+new file mode 100644
+index 0000000..a784bb6
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -0,0 +1,163 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2015 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2015 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++
++#include <linux/module.h>
++#include <linux/stringify.h>
++#include "iwl-config.h"
++#include "iwl-agn-hw.h"
++
++/* Highest firmware API version supported */
++#define IWL9000_UCODE_API_MAX	16
++
++/* Oldest version we won't warn about */
++#define IWL9000_UCODE_API_OK	13
++
++/* Lowest firmware API version supported */
++#define IWL9000_UCODE_API_MIN	13
++
++/* NVM versions */
++#define IWL9000_NVM_VERSION		0x0a1d
++#define IWL9000_TX_POWER_VERSION	0xffff /* meaningless */
++
++/* Memory offsets and lengths */
++#define IWL9000_DCCM_OFFSET		0x800000
++#define IWL9000_DCCM_LEN		0x18000
++#define IWL9000_DCCM2_OFFSET		0x880000
++#define IWL9000_DCCM2_LEN		0x8000
++#define IWL9000_SMEM_OFFSET		0x400000
++#define IWL9000_SMEM_LEN		0x68000
++
++#define  IWL9000_FW_PRE "iwlwifi-9000-"
++#define IWL9000_MODULE_FIRMWARE(api) \
++	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
++
++#define NVM_HW_SECTION_NUM_FAMILY_9000		10
++
++static const struct iwl_base_params iwl9000_base_params = {
++	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_9000,
++	.num_of_queues = IWLAGN_NUM_QUEUES,
++	.pll_cfg_val = 0,
++	.shadow_ram_support = true,
++	.led_compensation = 57,
++	.wd_timeout = IWL_LONG_WD_TIMEOUT,
++	.max_event_log_size = 512,
++	.shadow_reg_enable = true,
++	.pcie_l1_allowed = true,
++};
++
++static const struct iwl_ht_params iwl9000_ht_params = {
++	.stbc = true,
++	.ldpc = true,
++	.ht40_bands = BIT(IEEE80211_BAND_2GHZ) | BIT(IEEE80211_BAND_5GHZ),
++};
++
++static const struct iwl_tt_params iwl9000_tt_params = {
++	.ct_kill_entry = 115,
++	.ct_kill_exit = 93,
++	.ct_kill_duration = 5,
++	.dynamic_smps_entry = 111,
++	.dynamic_smps_exit = 107,
++	.tx_protection_entry = 112,
++	.tx_protection_exit = 105,
++	.tx_backoff = {
++		{.temperature = 110, .backoff = 200},
++		{.temperature = 111, .backoff = 600},
++		{.temperature = 112, .backoff = 1200},
++		{.temperature = 113, .backoff = 2000},
++		{.temperature = 114, .backoff = 4000},
++	},
++	.support_ct_kill = true,
++	.support_dynamic_smps = true,
++	.support_tx_protection = true,
++	.support_tx_backoff = true,
++};
++
++#define IWL_DEVICE_9000							\
++	.ucode_api_max = IWL9000_UCODE_API_MAX,				\
++	.ucode_api_ok = IWL9000_UCODE_API_OK,				\
++	.ucode_api_min = IWL9000_UCODE_API_MIN,				\
++	.device_family = IWL_DEVICE_FAMILY_8000,			\
++	.max_inst_size = IWL60_RTC_INST_SIZE,				\
++	.max_data_size = IWL60_RTC_DATA_SIZE,				\
++	.base_params = &iwl9000_base_params,				\
++	.led_mode = IWL_LED_RF_STATE,					\
++	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_9000,		\
++	.non_shared_ant = ANT_A,					\
++	.dccm_offset = IWL9000_DCCM_OFFSET,				\
++	.dccm_len = IWL9000_DCCM_LEN,					\
++	.dccm2_offset = IWL9000_DCCM2_OFFSET,				\
++	.dccm2_len = IWL9000_DCCM2_LEN,					\
++	.smem_offset = IWL9000_SMEM_OFFSET,				\
++	.smem_len = IWL9000_SMEM_LEN,					\
++	.thermal_params = &iwl9000_tt_params,				\
++	.apmg_not_supported = true
++
++const struct iwl_cfg iwl9260_2ac_cfg = {
++		.name = "Intel(R) Dual Band Wireless AC 9260",
++		.fw_name_pre = IWL9000_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl5165_2ac_cfg = {
++		.name = "Intel(R) Dual Band Wireless AC 5165",
++		.fw_name_pre = IWL9000_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_OK));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 652cdfe..c9bf9ac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -254,6 +254,7 @@ struct iwl_tt_params {
+ #define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_7000	(16 * 512 * sizeof(u16)) /* 16 KB */
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_8000	(32 * 512 * sizeof(u16)) /* 32 KB */
++#define OTP_LOW_IMAGE_SIZE_FAMILY_9000	OTP_LOW_IMAGE_SIZE_FAMILY_8000
+ 
+ struct iwl_eeprom_params {
+ 	const u8 regulatory_bands[7];
+@@ -430,6 +431,8 @@ extern const struct iwl_cfg iwl8260_2ac_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
++extern const struct iwl_cfg iwl9260_2ac_cfg;
++extern const struct iwl_cfg iwl5165_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index a52710f..37cf81b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -467,6 +467,19 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0850, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0950, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
++
++/* 9000 Series */
++	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl5165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl5165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl5165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9260_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+-- 
+2.5.0
 
-etc...
