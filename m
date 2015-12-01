@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34791 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751450AbbLGVFD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 16:05:03 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	id S1756056AbbLAJ7u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:50 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Beni Lev <beni.lev@intel.com>,
-	Anatol Pomozov <anatol.pomozov@gmail.com>
-Subject: [PATCH 1/4] nl80211: Use specific attributes in nl80211_parse_random_mac
-Date: Mon,  7 Dec 2015 22:04:50 +0100
-Message-Id: <1449522293-13710-2-git-send-email-johannes@sipsolutions.net> (sfid-20151207_220510_625372_A84DF51F)
-In-Reply-To: <1449522293-13710-1-git-send-email-johannes@sipsolutions.net>
-References: <1449522293-13710-1-git-send-email-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/41] iwlwifi: pcie: remove pointer from debug message
+Date: Tue,  1 Dec 2015 11:58:53 +0200
+Message-Id: <1448963947-24302-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110304_808009_E69ACABF)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Beni Lev <beni.lev@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Instead of passing the whole attributes array, pass specific attributes
-for the mac address and the mask.
+Since this pointer is not shown anywhere else, it's useless.
+Remove it, just keeping the indexes.
 
-Signed-off-by: Beni Lev <beni.lev@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/wireless/nl80211.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 72de6989dd12..243c6cbc99ab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5753,12 +5753,13 @@ static int validate_scan_freqs(struct nlattr *freqs)
- 	return n_channels;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 2b5d3e1..3db82bf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -996,8 +996,7 @@ restart:
+ 		rxb = rxq->queue[i];
+ 		rxq->queue[i] = NULL;
  
--static int nl80211_parse_random_mac(struct nlattr **attrs,
-+static int nl80211_parse_random_mac(struct nlattr *mac_attr,
-+				    struct nlattr *mac_mask_attr,
- 				    u8 *mac_addr, u8 *mac_addr_mask)
- {
- 	int i;
+-		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d (%p)\n",
+-			     r, i, rxb);
++		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d\n", r, i);
+ 		iwl_pcie_rx_handle_rb(trans, rxb, emergency);
  
--	if (!attrs[NL80211_ATTR_MAC] && !attrs[NL80211_ATTR_MAC_MASK]) {
-+	if (!mac_attr && !mac_mask_attr) {
- 		eth_zero_addr(mac_addr);
- 		eth_zero_addr(mac_addr_mask);
- 		mac_addr[0] = 0x2;
-@@ -5768,11 +5769,11 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
- 	}
- 
- 	/* need both or none */
--	if (!attrs[NL80211_ATTR_MAC] || !attrs[NL80211_ATTR_MAC_MASK])
-+	if (!mac_attr || !mac_mask_attr)
- 		return -EINVAL;
- 
--	memcpy(mac_addr, nla_data(attrs[NL80211_ATTR_MAC]), ETH_ALEN);
--	memcpy(mac_addr_mask, nla_data(attrs[NL80211_ATTR_MAC_MASK]), ETH_ALEN);
-+	memcpy(mac_addr, nla_data(mac_attr), ETH_ALEN);
-+	memcpy(mac_addr_mask, nla_data(mac_mask_attr), ETH_ALEN);
- 
- 	/* don't allow or configure an mcast address */
- 	if (!is_multicast_ether_addr(mac_addr_mask) ||
-@@ -5980,9 +5981,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 				goto out_free;
- 			}
- 
--			err = nl80211_parse_random_mac(info->attrs,
--						       request->mac_addr,
--						       request->mac_addr_mask);
-+			err = nl80211_parse_random_mac(
-+				info->attrs[NL80211_ATTR_MAC],
-+				info->attrs[NL80211_ATTR_MAC_MASK],
-+				request->mac_addr, request->mac_addr_mask);
- 			if (err)
- 				goto out_free;
- 		}
-@@ -6416,8 +6418,9 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 				goto out_free;
- 			}
- 
--			err = nl80211_parse_random_mac(attrs, request->mac_addr,
--						       request->mac_addr_mask);
-+			err = nl80211_parse_random_mac(attrs[NL80211_ATTR_MAC],
-+				attrs[NL80211_ATTR_MAC_MASK], request->mac_addr,
-+				request->mac_addr_mask);
- 			if (err)
- 				goto out_free;
- 		}
+ 		i = (i + 1) & RX_QUEUE_MASK;
 -- 
-2.6.2
+2.5.0
 
