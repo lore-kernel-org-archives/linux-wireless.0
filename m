@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:56239 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044AbbLJJlb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 04:41:31 -0500
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out06.msg.oleane.net with ESMTP id tBA9fThB001128
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 10:41:29 +0100
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp04.msg.oleane.net (MTA) with ESMTP id tBA9LJvr010200
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 10:21:19 +0100
-Subject: Mac80211 driver crash in monitor mode
-Date: Thu, 10 Dec 2015 10:21:19 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5B2F9@sbs2003.acksys.local> (sfid-20151210_104136_918063_D0BC614D)
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756043AbbLAJ7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:59:41 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/41] iwlwifi: mvm: flush all used TX queues before suspending
+Date: Tue,  1 Dec 2015 11:58:48 +0200
+Message-Id: <1448963947-24302-22-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105951_435576_80E16313)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi, 
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I'm using mac80211/ATH9K driver in monitor mode to inject some packets.
+There is a potential race condition when entering suspend with d0i3 in
+PCIe.  If there is a frame queued just before we suspend, it won't
+complete and we will never clear the queue stuck timer.  To solve
+this, call TX_PATH_FLUSH to flush all queues (except the command
+queue) as part of the d0i3 entry process.  Add a new function that
+returns all the flushable queues.
 
-With the latest driver version my packet injector software generated a
-kernel panic.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 5 +++++
+ 2 files changed, 14 insertions(+)
 
-The reason of this crash is:
-In mac80211/tx.c, function __ieee80211_tx:
-
-	case NL80211_IFTYPE_MONITOR:
-		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-			vif = &sdata->vif;
-			break;
-		}
-		sdata = rcu_dereference(local->monitor_sdata);
-		if (sdata) {
-			vif = &sdata->vif;
-			info->hw_queue =
-	
-vif->hw_queue[skb_get_queue_mapping(skb)];
-		} else if (ieee80211_hw_check(&local->hw,
-QUEUE_CONTROL)) {
-			ieee80211_purge_tx_queue(&local->hw, skbs);
-			return true;
-		} else
-			vif = NULL;
-		break; 
-
-If I don't enable the MONITOR_FLAG_ACTIVE I'm going to the line vif =
-null, this function will continue and will call ieee80211_tx_frags and
-this function will call ieee80211_drv_tx.
-
-In ieee80211_drv_tx function:
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index f28e050..91c7480 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1380,6 +1380,15 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			 u8 tid, u8 flags);
+ int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 minq, u8 maxq);
  
-	if (pubsta) {
-		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++/* Return a bitmask with all the hw supported queues, except for the
++ * command queue, which can't be flushed.
++ */
++static inline u32 iwl_mvm_flushable_queues(struct iwl_mvm *mvm)
++{
++	return ((BIT(mvm->cfg->base_params->num_of_queues) - 1) &
++		~BIT(IWL_MVM_CMD_QUEUE));
++}
++
+ static inline
+ void iwl_mvm_enable_ac_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			   u8 fifo, u16 ssn, unsigned int wdg_timeout)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index e9b400c..f002e558 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1203,6 +1203,11 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
+ 	/* make sure we have no running tx while configuring the seqno */
+ 	synchronize_net();
+ 
++	/* Flush the hw queues, in case something got queued during entry */
++	ret = iwl_mvm_flush_tx_path(mvm, iwl_mvm_flushable_queues(mvm), flags);
++	if (ret)
++		return ret;
++
+ 	/* configure wowlan configuration only if needed */
+ 	if (mvm->d0i3_ap_sta_id != IWL_MVM_STATION_COUNT) {
+ 		iwl_mvm_set_wowlan_data(mvm, &wowlan_config_cmd,
+-- 
+2.5.0
 
-		txq = pubsta->txq[tid];
-	} else if (vif) {
-		txq = vif->txq;
-	} 
-
-In my case pubsta == null so I'm going to else statement. The line
-vif->txq generate kernel pannic because the VIF pointer have been
-initialized to null in __ieee80211_tx function.
-
-Do you have any suggestion to fix this crash?
-
-Cedric Voncken.
