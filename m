@@ -1,80 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11648 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbbLUFSE (ORCPT
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:35114 "EHLO
+	mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933044AbbLBSA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:18:04 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 30/46] staging: wilc1000: remove unused files
-Date: Mon, 21 Dec 2015 14:18:34 +0900
-Message-ID: <1450675130-17866-31-git-send-email-glen.lee@atmel.com> (sfid-20151221_063102_868495_B3E9F210)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Wed, 2 Dec 2015 13:00:29 -0500
+Received: by vkha189 with SMTP id a189so29693359vkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 10:00:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1449074331.21648.2.camel@redhat.com>
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com>
+	<1448447567-12189-9-git-send-email-arend@broadcom.com>
+	<87si3nkb2l.fsf@kamboji.qca.qualcomm.com>
+	<565D5B77.7050501@broadcom.com>
+	<87d1uqijnz.fsf@kamboji.qca.qualcomm.com>
+	<20151201110827.GA4362@w1.fi>
+	<565EF307.90002@broadcom.com>
+	<1449074331.21648.2.camel@redhat.com>
+Date: Wed, 2 Dec 2015 10:00:27 -0800
+Message-ID: <CAMcMvshxsVZ=W6Dc=8tyHQKJGp8E=OmeQg+nJFTJyqRwHCogLQ@mail.gmail.com> (sfid-20151202_190039_755084_2F3E9FB0)
+Subject: Re: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
+From: Paul Stewart <pstew@chromium.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes linux_wlan_spi.[ch] which are not used anymore.
+>From my perspective it is useful to have the driver express whether
+or not it supports this parameter.  It may not change how the system
+operates, but it will be useful in testing to determine whether it
+is expected that a (given version of a) driver is expected to act
+with respect to this property so we can flag issues with the
+implementation.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/Makefile         |  2 +-
- drivers/staging/wilc1000/linux_wlan_spi.c | 16 ----------------
- drivers/staging/wilc1000/linux_wlan_spi.h |  6 ------
- 3 files changed, 1 insertion(+), 23 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
-
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index 09f0ddb..20a5cb9 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -17,4 +17,4 @@ obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
- wilc1000-sdio-objs += wilc_sdio.o
- 
- obj-$(CONFIG_WILC1000_SPI) += wilc1000-spi.o
--wilc1000-spi-objs += linux_wlan_spi.o wilc_spi.o
-+wilc1000-spi-objs += wilc_spi.o
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-deleted file mode 100644
-index c4315f5..0000000
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ /dev/null
-@@ -1,16 +0,0 @@
--#include <linux/module.h>
--#include <linux/init.h>
--#include <linux/kernel.h>
--#include <linux/fs.h>
--#include <linux/slab.h>
--#include <linux/types.h>
--#include <linux/cdev.h>
--#include <linux/uaccess.h>
--#include <linux/device.h>
--#include <linux/spi/spi.h>
--#include <linux/of_gpio.h>
--
--#include "linux_wlan_spi.h"
--#include "wilc_wfi_netdevice.h"
--#include "linux_wlan_common.h"
--#include "wilc_wlan_if.h"
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-deleted file mode 100644
-index 32e3926..0000000
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ /dev/null
-@@ -1,6 +0,0 @@
--#ifndef LINUX_WLAN_SPI_H
--#define LINUX_WLAN_SPI_H
--
--#include <linux/spi/spi.h>
--#include "wilc_wfi_netdevice.h"
--#endif
--- 
-1.9.1
-
+On Wed, Dec 2, 2015 at 8:38 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2015-12-02 at 14:32 +0100, Arend van Spriel wrote:
+>> On 12/01/2015 12:08 PM, Jouni Malinen wrote:
+>> > On Tue, Dec 01, 2015 at 11:48:32AM +0200, Kalle Valo wrote:
+>> > > Arend van Spriel <arend@broadcom.com> writes:
+>> > > > It solves a problem for us, but admittedly it is not something
+>> > > > that is
+>> > > > very usable by user-space apps. So I guess what you are
+>> > > > suggesting
+>> > > > here is to come up with a nl80211 api for this. On the mailing
+>> > > > list
+>> > > > (or hostap list) the topic pops up from time to time so there
+>> > > > are
+>> > > > people who would like to have such a knob to play with. Still
+>> > > > would
+>> > > > like to keep the module parameter although its use may change
+>> > > > when
+>> > > > nl80211 api is added.
+>> > >
+>> > > I don't know what is the best approach, that's why I would like
+>> > > to hear
+>> > > opinions from others. Personally I don't like the idea of adding
+>> > > 802.11
+>> > > level configuration options to module parameters, but on the
+>> > > other hand
+>> > > I don't have any strong opinions about this.
+>> >
+>> > I would like to see this as a new attribute to NL80211_CMD_CONNECT
+>> > to
+>> > provide parameters for offloaded (driver and/or firmware) BSS
+>> > selection
+>> > and roaming. If there is a driver that uses roaming offload with
+>> > NL80211_CMD_ASSOCIATE, the same attribute could be used there (but
+>> > I'm
+>> > not sure how exact such offloading would work in practice since I'd
+>> > expect both authentication and (re)association to be offloaded).
+>>
+>> Sounds reasonable. Just would like to explore the use-case a bit
+>> more.
+>> Looking at tools like NetworkManager and android network list, the
+>> user
+>> is always presented with just SSID listed once. For NetworkManager
+>>
+> While NM has band locking properties, there is currently no "prefer
+> 5ghz" since as Jouni said, the supplicant should probably just prefer
+> 5ghz right now.  In any case, the best path from an NM perspective
+> would be a supplicant per-network property that would then be sent for
+> CONNECT-capable drivers, or which the supplicant would manually handle
+> for softmac drivers through its existing AP selection code.
+>
+> Dan
+>
+>> details can be configured for a connection and the bss selection
+>> parameters could be one of those. What level of detail would be
+>> needed
+>> there. Not saying we can not have more detail in the nl80211 API.
+>>
+>> > > I guess we have two different designs, one where the roaming
+>> > > logic is in
+>> > > firmware and other where wpasupplicant is responsible for this.
+>> > > (And I
+>> > > assume that brcfmac belongs to the former group.) Ideally it
+>> > > would be
+>> > > nice that we would have a same configuration knob for both but I
+>> > > don't
+>> > > know if that's really feasible.
+>> >
+>> > Both of these would work as long as wpa_supplicant has means for
+>> > providing such configuration to the driver in a generic manner.
+>> > That
+>> > NL80211_CMD_CONNECT extension with a new optional attribute would
+>> > be
+>> > such a generic design.
+>>
+>> So does the driver need to advertise support for bss selection
+>> parameters or can it simply ignore the parameters. Assuming the
+>> latter
+>> for now.
+>>
+>> Regards,
+>> Arend
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux
+>> -wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
