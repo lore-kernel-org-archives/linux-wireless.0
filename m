@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:36122 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756AbbLLAGj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 19:06:39 -0500
-Date: Sat, 12 Dec 2015 09:05:01 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [linux-next] iwl_mvm_get_key_sta_id() suspicious RCU usage
-Message-ID: <20151212000501.GA579@swordfish> (sfid-20151212_010643_523773_799D8F40)
-References: <20151211134418.GA29351@swordfish>
- <1449841741.2324.2.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449841741.2324.2.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51981 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753506AbbLBJwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2015 04:52:02 -0500
+Message-ID: <1449049918.2449.6.camel@sipsolutions.net> (sfid-20151202_105234_793578_BABB20D8)
+Subject: Re: [PATCH] mac80211_hwsim: missing NULL check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rahul Jain <rahul.jain@samsung.com>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Amit Khatri <amit.khatri@samsung.com>
+Date: Wed, 02 Dec 2015 10:51:58 +0100
+In-Reply-To: <1448867812-11089-1-git-send-email-rahul.jain@samsung.com> (sfid-20151130_081822_747132_014FEC1F)
+References: <1448867812-11089-1-git-send-email-rahul.jain@samsung.com>
+	 (sfid-20151130_081822_747132_014FEC1F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (12/11/15 14:49), Johannes Berg wrote:
-> On Fri, 2015-12-11 at 22:44 +0900, Sergey Senozhatsky wrote:
+On Mon, 2015-11-30 at 12:46 +0530, Rahul Jain wrote:
+> From: Amit Khatri <amit.khatri@samsung.com>
 > 
-> > [ 6385.246300] drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1226
-> > suspicious rcu_dereference_protected() usage!
-> > 
-> 
-> Funny, Laura Abbott also reported this bug earlier today :)
-> 
-> I've sent out a fix, you can see it here:
-> https://patchwork.ozlabs.org/patch/555587/
-> 
+> txrate variable might be NULL and passing inside function
+> without NULL check.
 
-Great, thanks!
+Applied. However, this comes with a big BUT.
 
-	-ss
+I seems to always be rewriting your static checker patches, or asking
+for clarification, rewording, etc.
+
+Please: review what I did to this commit, and in the future please
+submit patches that actually describe what's going on, what you're
+doing, and why you're doing it.
+
+IOW, analyse the code and don't just do the minimum necessary to shut
+up the static checker. Doing that is fairly much useless, especially in
+really obscure cases like this.
+
+I'm going to drop further patches like this one without warning.
+
+johannes
