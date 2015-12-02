@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:35676 "EHLO
-	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbbLNWfB (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:23230 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbbLBNc7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:35:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 5/8] rtlwifi: rtl8192de: Fix incorrect module parameter descriptions
-Date: Mon, 14 Dec 2015 16:34:35 -0600
-Message-Id: <1450132478-2386-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233509_181895_806C00FE)
-In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 2 Dec 2015 08:32:59 -0500
+Message-ID: <565EF307.90002@broadcom.com> (sfid-20151202_143304_117052_53D8F3D9)
+Date: Wed, 2 Dec 2015 14:32:55 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
+References: <1448447567-12189-1-git-send-email-arend@broadcom.com> <1448447567-12189-9-git-send-email-arend@broadcom.com> <87si3nkb2l.fsf@kamboji.qca.qualcomm.com> <565D5B77.7050501@broadcom.com> <87d1uqijnz.fsf@kamboji.qca.qualcomm.com> <20151201110827.GA4362@w1.fi>
+In-Reply-To: <20151201110827.GA4362@w1.fi>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two of the module parameters are listed with incorrect default values.
+On 12/01/2015 12:08 PM, Jouni Malinen wrote:
+> On Tue, Dec 01, 2015 at 11:48:32AM +0200, Kalle Valo wrote:
+>> Arend van Spriel <arend@broadcom.com> writes:
+>>> It solves a problem for us, but admittedly it is not something that is
+>>> very usable by user-space apps. So I guess what you are suggesting
+>>> here is to come up with a nl80211 api for this. On the mailing list
+>>> (or hostap list) the topic pops up from time to time so there are
+>>> people who would like to have such a knob to play with. Still would
+>>> like to keep the module parameter although its use may change when
+>>> nl80211 api is added.
+>>
+>> I don't know what is the best approach, that's why I would like to hear
+>> opinions from others. Personally I don't like the idea of adding 802.11
+>> level configuration options to module parameters, but on the other hand
+>> I don't have any strong opinions about this.
+>
+> I would like to see this as a new attribute to NL80211_CMD_CONNECT to
+> provide parameters for offloaded (driver and/or firmware) BSS selection
+> and roaming. If there is a driver that uses roaming offload with
+> NL80211_CMD_ASSOCIATE, the same attribute could be used there (but I'm
+> not sure how exact such offloading would work in practice since I'd
+> expect both authentication and (re)association to be offloaded).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Sounds reasonable. Just would like to explore the use-case a bit more. 
+Looking at tools like NetworkManager and android network list, the user 
+is always presented with just SSID listed once. For NetworkManager 
+details can be configured for a connection and the bss selection 
+parameters could be one of those. What level of detail would be needed 
+there. Not saying we can not have more detail in the nl80211 API.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index b19d039..c6e09a1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -376,8 +376,8 @@ module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
--MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
--MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
- 
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
--- 
-2.1.4
+>> I guess we have two different designs, one where the roaming logic is in
+>> firmware and other where wpasupplicant is responsible for this. (And I
+>> assume that brcfmac belongs to the former group.) Ideally it would be
+>> nice that we would have a same configuration knob for both but I don't
+>> know if that's really feasible.
+>
+> Both of these would work as long as wpa_supplicant has means for
+> providing such configuration to the driver in a generic manner. That
+> NL80211_CMD_CONNECT extension with a new optional attribute would be
+> such a generic design.
 
+So does the driver need to advertise support for bss selection 
+parameters or can it simply ignore the parameters. Assuming the latter 
+for now.
+
+Regards,
+Arend
