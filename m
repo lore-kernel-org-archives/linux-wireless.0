@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:50235 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042AbbLWC32 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:51668 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbbLBN3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2015 21:29:28 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH] staging: wilc1000: remove wilc_sdio_init
-Date: Wed, 23 Dec 2015 11:33:23 +0900
-Message-ID: <1450838003-24379-1-git-send-email-glen.lee@atmel.com> (sfid-20151223_032946_933700_7040D7D2)
+	Wed, 2 Dec 2015 08:29:38 -0500
+Date: Wed, 2 Dec 2015 16:29:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "Mario J. Rugiero" <mrugiero@gmail.com>
+Cc: devel@driverdev.osuosl.org, chris.park@atmel.com,
+	austin.shin@atmel.com, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 1/1] staging: cleanup: Fix incompatible type comparison
+ in wilc1000/host_interface.c
+Message-ID: <20151202132923.GV18797@mwanda> (sfid-20151202_142941_470198_50658956)
+References: <1448928544-3534-1-git-send-email-mrugiero@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448928544-3534-1-git-send-email-mrugiero@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_sdio_init return always 1. It is needless, so just remove it and it's
-related codes also.
+Put v2 in the subject.  Also the subsystem prefix is:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
- 1 file changed, 12 deletions(-)
+[PATCH v3] staging: wilc1000: ...
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index e961b50..caad876 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
- 	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
- }
- 
--static int wilc_sdio_init(void)
--{
--	return 1;
--}
--
- /********************************************
-  *
-  *      Function 0
-@@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
- 
- 	g_sdio.irq_gpio = (wilc->dev_irq_num);
- 
--	if (!wilc_sdio_init()) {
--		dev_err(&func->dev, "Failed io init bus...\n");
--		return 0;
--	} else {
--		return 0;
--	}
--
- 	/**
- 	 *      function 0 csa enable
- 	 **/
--- 
-1.9.1
+On Mon, Nov 30, 2015 at 09:09:04PM -0300, Mario J. Rugiero wrote:
+> This patch replaces an "if (ptr > 0)" comparison that seems to be a
+> confusing way to check for null by a simpler "if (ptr)" check.
+> 
+> Signed-off-by: Mario J. Rugiero <mrugiero@gmail.com>
+> ---
+v2: Remove the != NULL because checkpatch complains.
+
+>  drivers/staging/wilc1000/host_interface.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index d5b7725..0c87f6c 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2270,7 +2270,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
+>  	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
+>  	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+>  
+> -	if (pstrSetBeaconParam->tail > 0)
+> +	if (pstrSetBeaconParam->tail)
+
+Probably the intention was to check if "pstrSetBeaconParam->tail_len > 0"
+but I'm not sure.  The wilc1000 maintainers are very responsive though
+so maybe they will know for sure.
+
+regards,
+dan carpenter
+
 
