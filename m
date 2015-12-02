@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38702 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbbLPVno (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 16:43:44 -0500
-Received: by mail-wm0-f53.google.com with SMTP id l126so57584366wml.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 13:43:43 -0800 (PST)
-From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] Print warnings for missing cfg80211_ops implementations
-Date: Wed, 16 Dec 2015 22:43:35 +0100
-Message-Id: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com> (sfid-20151216_224347_439904_45A880BF)
+Received: from s3.sipsolutions.net ([5.9.151.49]:55641 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751078AbbLBVmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2015 16:42:16 -0500
+Message-ID: <1449092530.2449.12.camel@sipsolutions.net> (sfid-20151202_224224_252613_95F93D27)
+Subject: pull-request: mac80211 2015-12-02
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 02 Dec 2015 22:42:10 +0100
+In-Reply-To: <20151202.154349.931361692047925552.davem@davemloft.net>
+References: <1448552352.2167.14.camel@sipsolutions.net>
+	 <1449049610.2449.3.camel@sipsolutions.net>
+	 <20151202.154349.931361692047925552.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print a warning whenever an expected callback function
-lacks implementation.
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
----
- net/wireless/core.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+> Please add them and send a new pull request, I'll just skip over your
+> existing one.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index b091551..3a9c41b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -352,6 +352,16 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	WARN_ON(ops->add_station && !ops->del_station);
- 	WARN_ON(ops->add_mpath && !ops->del_mpath);
- 	WARN_ON(ops->join_mesh && !ops->leave_mesh);
-+	WARN_ON(ops->start_p2p_device && !ops->stop_p2p_device);
-+	WARN_ON(ops->start_ap && !ops->stop_ap);
-+	WARN_ON(ops->join_ocb && !ops->leave_ocb);
-+	WARN_ON(ops->suspend && !ops->resume);
-+	WARN_ON(ops->sched_scan_start && !ops->sched_scan_stop);
-+	WARN_ON(ops->remain_on_channel && !ops->cancel_remain_on_channel);
-+	WARN_ON(ops->tdls_channel_switch && !ops->tdls_cancel_channel_switch);
-+	WARN_ON(ops->add_tx_ts && !ops->del_tx_ts);
-+	WARN_ON(ops->set_tx_power && !ops->get_tx_power);
-+	WARN_ON(ops->set_antenna && !ops->get_antenna);
- 
- 	alloc_size = sizeof(*rdev) + sizeof_priv;
- 
--- 
-1.7.9.5
+Ok, here we go, below a new pull request.
 
+I've added the two commits I spoke about, fixing scanning and an
+uninitialized cookie variable that lead to problems if the value
+happened to be 0.
+
+Let me know if there's any problem!
+
+Thanks,
+johannes
+
+
+The following changes since commit 17c790a60dad11c0193127e83ac8e183b4fed1a2:
+
+  Merge branch 'mv88e6060-fixes' (2015-11-15 20:16:26 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-12-02
+
+for you to fetch changes up to c1df932c0574c13ab3ce72e969c9647ff3aaad68:
+
+  mac80211: fix off-channel mgmt-tx uninitialized variable usage (2015-12-02 22:27:53 +0100)
+
+----------------------------------------------------------------
+A small set of fixes for 4.4:
+ * fix scanning in mac80211 to not actively scan radar
+   channels (from Antonio)
+ * fix uninitialized variable in remain-on-channel that
+   could lead to treating frame TX as remain-on-channel
+   and not sending the frame at all
+ * remove NL80211_FEATURE_FULL_AP_CLIENT_STATE again, it
+   was broken and needs more work, we'll enable it later
+ * fix call_rcu() induced use-after-reset/free in mesh
+   (that was suddenly causing issues in certain tests)
+ * always request block-ack window size 64 as we found
+   some APs will otherwise crash (really ...)
+ * fix P2P-Device teardown sequence to avoid restarting
+   with uninitialized data
+
+----------------------------------------------------------------
+Antonio Quartulli (1):
+      mac80211: do not actively scan DFS channels
+
+Eliad Peller (1):
+      mac80211: don't teardown sdata on sdata stop
+
+Emmanuel Grumbach (1):
+      mac80211: ensure we don't update tx power on a non-running sdata
+
+Gregory Greenman (1):
+      mac80211: always set the buf_size in AddBA req to 64
+
+Johannes Berg (3):
+      mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE
+      mac80211: mesh: fix call_rcu() usage
+      mac80211: fix off-channel mgmt-tx uninitialized variable usage
+
+ include/net/mac80211.h      | 6 ++++--
+ net/mac80211/agg-tx.c       | 3 ++-
+ net/mac80211/cfg.c          | 8 ++++++--
+ net/mac80211/iface.c        | 5 +++--
+ net/mac80211/main.c         | 3 +--
+ net/mac80211/mesh_pathtbl.c | 8 ++++----
+ net/mac80211/scan.c         | 9 +++++----
+ 7 files changed, 25 insertions(+), 17 deletions(-)
