@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:52181 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755992AbbLAJ70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:26 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/41] iwlwifi: mvm: change name of iwl_mvm_d3_update_gtk
-Date: Tue,  1 Dec 2015 11:58:38 +0200
-Message-Id: <1448963947-24302-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110339_820902_D371E0C9)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+	id S1753276AbbLBUf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2015 15:35:29 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 7E22120524
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Dec 2015 20:35:28 +0000 (UTC)
+Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com [209.85.218.49])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id CACAC2051D
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Dec 2015 20:35:27 +0000 (UTC)
+Received: by oies6 with SMTP id s6so33273271oie.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 12:35:27 -0800 (PST)
+MIME-Version: 1.0
+From: Andy Lutomirski <luto@kernel.org>
+Date: Wed, 2 Dec 2015 12:35:07 -0800
+Message-ID: <CALCETrWP=cv_3Q6BheFm=edFfSJ6Vs5NdeMtRJrBBk6bFQuoTQ@mail.gmail.com> (sfid-20151202_213536_551578_ED371454)
+Subject: Invalid SPLX
+To: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function updates the pairwise keys as well.
+Hi-
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+My laptop has SPLC implemented like this:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 29ae58e..76c2002 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1406,7 +1406,7 @@ struct iwl_mvm_d3_gtk_iter_data {
- 	int num_keys;
- };
- 
--static void iwl_mvm_d3_update_gtks(struct ieee80211_hw *hw,
-+static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_sta *sta,
- 				   struct ieee80211_key_conf *key,
-@@ -1494,7 +1494,7 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 	/* find last GTK that we used initially, if any */
- 	gtkdata.find_phase = true;
- 	ieee80211_iter_keys(mvm->hw, vif,
--			    iwl_mvm_d3_update_gtks, &gtkdata);
-+			    iwl_mvm_d3_update_keys, &gtkdata);
- 	/* not trying to keep connections with MFP/unhandled ciphers */
- 	if (gtkdata.unhandled_cipher)
- 		return false;
-@@ -1509,7 +1509,7 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 	 */
- 	gtkdata.find_phase = false;
- 	ieee80211_iter_keys(mvm->hw, vif,
--			    iwl_mvm_d3_update_gtks, &gtkdata);
-+			    iwl_mvm_d3_update_keys, &gtkdata);
- 
- 	if (status->num_of_gtk_rekeys) {
- 		struct ieee80211_key_conf *key;
--- 
-2.5.0
+        Name (SPLX, Package (0x04)
+        {
+            Zero,
+            Package (0x03)
+            {
+                0x80000000,
+                0x80000000,
+                0x80000000
+            },
 
+            Package (0x03)
+            {
+                0x80000000,
+                0x80000000,
+                0x80000000
+            },
+
+            Package (0x03)
+            {
+                0x80000000,
+                0x80000000,
+                0x80000000
+            }
+        })
+        Method (SPLC, 0, Serialized)
+        {
+            Index (DerefOf (Index (SPLX, One)), Zero) = DOM1 /* \DOM1 */
+            Index (DerefOf (Index (SPLX, One)), One) = LIM1 /* \LIM1 */
+            Index (DerefOf (Index (SPLX, One)), 0x02) = TIM1 /* \TIM1 */
+            Index (DerefOf (Index (SPLX, 0x02)), Zero) = DOM2 /* \DOM2 */
+            Index (DerefOf (Index (SPLX, 0x02)), One) = LIM2 /* \LIM2 */
+            Index (DerefOf (Index (SPLX, 0x02)), 0x02) = TIM2 /* \TIM2 */
+            Index (DerefOf (Index (SPLX, 0x03)), Zero) = DOM3 /* \DOM3 */
+            Index (DerefOf (Index (SPLX, 0x03)), One) = LIM3 /* \LIM3 */
+            Index (DerefOf (Index (SPLX, 0x03)), 0x02) = TIM3 /* \TIM3 */
+            Return (SPLX) /* \_SB_.PCI0.RP14.PXSX.SPLX */
+        }
+
+splx_get_power_limit rejects this because it has more than one entry.
+I don't see a spec for SPLC, but I'd guess that splx_get_power_limit
+should iterate all the entries to find one that indicates wifi.
+
+Also, should this be in common code instead of just in iwleifi?
+
+--Andy
