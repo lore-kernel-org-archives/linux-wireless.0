@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40853 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbbL3PcP (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41028 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757893AbbLBLpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 10:32:15 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/4] mwifiex: fix potential integer truncation
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1450268505-2682-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20151230153214.ADD3260345@smtp.codeaurora.org> (sfid-20151230_163218_437630_ECC51AE8)
-Date: Wed, 30 Dec 2015 15:32:14 +0000 (UTC)
+	Wed, 2 Dec 2015 06:45:18 -0500
+From: Colin King <colin.king@canonical.com>
+To: kernel-tram@lists.ubuntu.com, Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: only lock and unlock fws if fws is not null
+Date: Wed,  2 Dec 2015 11:45:10 +0000
+Message-Id: <1449056710-9776-1-git-send-email-colin.king@canonical.com> (sfid-20151202_124546_206692_A6EA055E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Colin Ian King <colin.king@canonical.com>
 
-> From: chunfan chen <jeffc@marvell.com>
-> 
-> At some places, ie length is truncated from u16 to u8 while
-> storing it to driver's internal variable. This patch fixes
-> the problem.
-> 
-> Signed-off-by: chunfan chen <jeffc@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+There is a null ptr check for fws to set bcmc_credit_check, however,
+there a lock and unlock on fws should only performed if fwts is
+also not null to also avoid a potential null pointer deference.
 
-Thanks, 4 patches applied to wireless-drivers-next.git:
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-1d8f5c138540 mwifiex: fix potential integer truncation
-ce0c58d99841 mwifiex: fix PCIe register information for 8997 chipset
-f3b35f280968 mwifiex: add missing check for PCIe8997 chipset
-7be0f5b5e169 mwifiex: enable MSI interrupt support in pcie
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 086cac3..092f33f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1609,10 +1609,11 @@ static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
+ {
+ 	struct brcmf_fws_info *fws = ifp->drvr->fws;
+ 
+-	brcmf_fws_lock(fws);
+-	if (fws)
++	if (fws) {
++		brcmf_fws_lock(fws);
+ 		fws->bcmc_credit_check = true;
+-	brcmf_fws_unlock(fws);
++		brcmf_fws_unlock(fws);
++	}
+ 	return 0;
+ }
+ 
+-- 
+2.6.2
 
-Kalle Valo
