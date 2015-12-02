@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44021 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932194AbbLNVfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 16:35:08 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1a8als-0004NL-Ip
-	for linux-wireless@vger.kernel.org; Mon, 14 Dec 2015 22:35:04 +0100
-Received: from 216.239.45.89 ([216.239.45.89])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 22:35:04 +0100
-Received: from kyan by 216.239.45.89 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 22:35:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Kan Yan <kyan@chromium.org>
-Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
-Date: Mon, 14 Dec 2015 21:32:03 +0000 (UTC)
-Message-ID: <loom.20151214T222202-611@post.gmane.org> (sfid-20151214_223513_145601_0F1D8264)
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
-Mime-Version: 1.0
+Received: from mail-io0-f180.google.com ([209.85.223.180]:36664 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755513AbbLBP52 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2015 10:57:28 -0500
+Received: by iofh3 with SMTP id h3so50079913iof.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 07:57:27 -0800 (PST)
+Date: Wed, 2 Dec 2015 09:57:26 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Anssi Hannula <anssi.hannula@iki.fi>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Finland (FI)
+Message-ID: <20151202155726.GA22529@ubuntu-xps13> (sfid-20151202_165732_094174_DB0D9084)
+References: <1448479288-27002-1-git-send-email-anssi.hannula@iki.fi>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448479288-27002-1-git-send-email-anssi.hannula@iki.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Lin <dlin@...> writes:
+On Wed, Nov 25, 2015 at 09:21:28PM +0200, Anssi Hannula wrote:
+> Bands in 5150-5350 MHz are limited to indoor use, and band 5150-5250 MHz
+> has an increased power limit. The ranges are also slightly expanded to
+> match the regulation.
+> 
+> Regulatory source (6 Feb 2015), Section 13:
+> https://www.viestintavirasto.fi/attachments/maaraykset/Viestintavirasto15AH2015_en.pdf
+> 
+> Verified also from the authoritative Finnish version:
+> https://www.viestintavirasto.fi/attachments/maaraykset/Viestintavirasto15AH2015M.pdf
+> 
+> Signed-off-by: Anssi Hannula <anssi.hannula@iki.fi>
 
-> +static inline struct sk_buff *mwl_tx_do_amsdu(struct mwl_priv *priv,
-> +					      int desc_num,
-> ...
-> +		amsdu_pkts = (struct sk_buff_head *)
-> +			kmalloc(sizeof(*amsdu_pkts), GFP_KERNEL);
-> +		if (!amsdu_pkts) {
-
-Should GFP_ATOMIC be used here instead of GFP_KERNEL? This function could be
-called in interrupt context.
-
+Applied, thanks.
