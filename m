@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59459 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932069AbbLXF6z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 00:58:55 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 1/2] staging: wilc1000: fix always return 0 error
-Date: Thu, 24 Dec 2015 15:02:51 +0900
-Message-ID: <1450936972-5773-1-git-send-email-glen.lee@atmel.com> (sfid-20151224_065858_627009_E2DB33BD)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:34159 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753426AbbLCUVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2015 15:21:33 -0500
+Message-ID: <1449174081.31265.3.camel@sipsolutions.net> (sfid-20151203_212138_334045_9AA12B0C)
+Subject: Re: Can we increase IEEE80211_MAX_QUEUES
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 03 Dec 2015 21:21:21 +0100
+In-Reply-To: <5660A31E.3010507@candelatech.com> (sfid-20151203_211637_306021_AF98F120)
+References: <5660A31E.3010507@candelatech.com>
+	 (sfid-20151203_211637_306021_AF98F120)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug that return always 0 so it fails every time.
+On Thu, 2015-12-03 at 12:16 -0800, Ben Greear wrote:
+> ath10k wants to use vdev-id as a queue-id, and I want to support up
+> to
+> 64 vdevs.  In the 4.2 kernel, this is causing splats when using lots
+> of
+> vdevs because then queue is out of range.
+> 
+> Can we just increase IEEE80211_MAX_QUEUES to 64?
+> 
 
-Fixes: c1af9db78950 ("staging: wilc1000: call linux_sdio_init instead of io_init")
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
-Changes in v2: separate v1 patch into two patches.
----
- drivers/staging/wilc1000/wilc_sdio.c | 2 --
- 1 file changed, 2 deletions(-)
+I think not, that would likely cause a lot of data structures to grow
+too much. We'd have to do more dynamic things in that case, I suppose.
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index e961b50..464d27d 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -614,8 +614,6 @@ static int sdio_init(struct wilc *wilc)
- 	if (!wilc_sdio_init()) {
- 		dev_err(&func->dev, "Failed io init bus...\n");
- 		return 0;
--	} else {
--		return 0;
- 	}
- 
- 	/**
--- 
-1.9.1
+Does the original premise even make sense though? A single queue for
+each vdev seems a bit strange.
 
+johannes
