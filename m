@@ -1,88 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11306 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:4651 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbbLUFQF (ORCPT
+	with ESMTP id S1758642AbbLCIUs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:16:05 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 10/46] staging: wilc1000: remove wilc_debug_func of hif_init
-Date: Mon, 21 Dec 2015 14:18:14 +0900
-Message-ID: <1450675130-17866-11-git-send-email-glen.lee@atmel.com> (sfid-20151221_063100_226927_75C7AA53)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Thu, 3 Dec 2015 03:20:48 -0500
+Message-ID: <565FFC30.10801@atmel.com> (sfid-20151203_092132_778325_4CA74E51)
+Date: Thu, 3 Dec 2015 17:24:16 +0900
+From: glen lee <glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Mario J. Rugiero" <mrugiero@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+CC: <devel@driverdev.osuosl.org>, <chris.park@atmel.com>,
+	<austin.shin@atmel.com>, <gregkh@linuxfoundation.org>,
+	<linux-wireless@vger.kernel.org>, <johnny.kim@atmel.com>,
+	<tony.cho@atmel.com>, <leo.kim@atmel.com>
+Subject: Re: [PATCH 1/1] staging: cleanup: Fix incompatible type comparison
+ in wilc1000/host_interface.c
+References: <1448928544-3534-1-git-send-email-mrugiero@gmail.com> <20151202132923.GV18797@mwanda> <565F0A79.90100@gmail.com>
+In-Reply-To: <565F0A79.90100@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes wilc_debug_func of hif_init and remove it's related
-functions as well because it is not used anymore.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 2 +-
- drivers/staging/wilc1000/wilc_spi.c  | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.h | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index dfa3d3a..efa3379 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -512,7 +512,7 @@ static int sdio_sync(struct wilc *wilc)
- 	return 1;
- }
- 
--static int sdio_init(struct wilc *wilc, wilc_debug_func debug_func)
-+static int sdio_init(struct wilc *wilc)
- {
- 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
- 	sdio_cmd52_t cmd;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 8060125..478a356 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -734,7 +734,7 @@ static int wilc_spi_sync(struct wilc *wilc)
- 	return 1;
- }
- 
--static int _wilc_spi_init(struct wilc *wilc, wilc_debug_func func)
-+static int _wilc_spi_init(struct wilc *wilc)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
- 	u32 reg;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 0427349..32ecc2d 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1587,7 +1587,7 @@ int wilc_wlan_init(struct net_device *dev)
- 
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
--	if (!wilc->hif_func->hif_init(wilc, wilc_debug)) {
-+	if (!wilc->hif_func->hif_init(wilc)) {
- 		ret = -EIO;
- 		goto _fail_;
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 3666453..580e1d6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -226,7 +226,7 @@ struct rxq_entry_t {
-  ********************************************/
- struct wilc;
- struct wilc_hif_func {
--	int (*hif_init)(struct wilc *, wilc_debug_func);
-+	int (*hif_init)(struct wilc *);
- 	int (*hif_deinit)(struct wilc *);
- 	int (*hif_read_reg)(struct wilc *, u32, u32 *);
- 	int (*hif_write_reg)(struct wilc *, u32, u32);
--- 
-1.9.1
+On 2015년 12월 03일 00:12, Mario J. Rugiero wrote:
+> OK. Since the maintainers are CC'd, I guess I should wait for a 
+> clarification about this?
+
+Hi Mario,
+
+The purpose of that is to check if tail is null or not. if it is not null, there is tail
+to send, so copy to buff.
+
+regards,
+glen lee.
+
+>
+> El 02/12/15 a las 10:29, Dan Carpenter escribió:
+>> Put v2 in the subject.  Also the subsystem prefix is:
+>>
+>> [PATCH v3] staging: wilc1000: ...
+>>
+>> On Mon, Nov 30, 2015 at 09:09:04PM -0300, Mario J. Rugiero wrote:
+>>> This patch replaces an "if (ptr > 0)" comparison that seems to be a
+>>> confusing way to check for null by a simpler "if (ptr)" check.
+>>>
+>>> Signed-off-by: Mario J. Rugiero <mrugiero@gmail.com>
+>>> ---
+>> v2: Remove the != NULL because checkpatch complains.
+>>
+>>> drivers/staging/wilc1000/host_interface.c | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/staging/wilc1000/host_interface.c 
+>>> b/drivers/staging/wilc1000/host_interface.c
+>>> index d5b7725..0c87f6c 100644
+>>> --- a/drivers/staging/wilc1000/host_interface.c
+>>> +++ b/drivers/staging/wilc1000/host_interface.c
+>>> @@ -2270,7 +2270,7 @@ static void Handle_AddBeacon(struct 
+>>> host_if_drv *hif_drv,
+>>>       *pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
+>>>       *pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+>>>   -    if (pstrSetBeaconParam->tail > 0)
+>>> +    if (pstrSetBeaconParam->tail)
+>> Probably the intention was to check if "pstrSetBeaconParam->tail_len 
+>> > 0"
+>> but I'm not sure.  The wilc1000 maintainers are very responsive though
+>> so maybe they will know for sure.
+>>
+>> regards,
+>> dan carpenter
+>>
+>>
+>
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
 
