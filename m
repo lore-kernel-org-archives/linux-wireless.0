@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:36615 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752868AbbL2OTb (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35667 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbbLCTSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 09:19:31 -0500
-Received: by mail-lb0-f172.google.com with SMTP id oh2so104075313lbb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 06:19:31 -0800 (PST)
+	Thu, 3 Dec 2015 14:18:08 -0500
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>
-Date: Tue, 29 Dec 2015 16:19:30 +0200
-Message-ID: <CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com> (sfid-20151229_151934_874371_AB02648C)
-Subject: Re: Mac80211 : Wpa rekeying issue
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1449162322.31265.2.camel@sipsolutions.net>
+References: <1449157807-20298-1-git-send-email-aryabinin@virtuozzo.com>
+	<1449157807-20298-3-git-send-email-aryabinin@virtuozzo.com>
+	<1449162322.31265.2.camel@sipsolutions.net>
+Date: Thu, 3 Dec 2015 22:18:05 +0300
+Message-ID: <CAPAsAGyXcsGrneze--o+F=tJpV4cmdgfB-MxZ5S3yB10nG+v3A@mail.gmail.com> (sfid-20151203_201825_735756_EFF31DBC)
+Subject: Re: [PATCH v4 2/3] mac80211: Prevent build failure with CONFIG_UBSAN=y
+From: Andrey Ryabinin <ryabinin.a.a@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Michal Marek <mmarek@suse.cz>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Yury Gribov <y.gribov@samsung.com>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	Konstantin Khlebnikov <koct9i@gmail.com>,
+	Kostya Serebryany <kcc@google.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+	"open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 29, 2015 at 3:01 PM, Cedric VONCKEN
-<cedric.voncken@acksys.fr> wrote:
-> Hi,
->
-> My test plateform is:
-> 2 equipements
-> Both equipment used compat version 2015-07-21 from openwrt.
-> Both equipment used security WPA2
->
-> The equipment #1 is an AP.
->         The Group rekey interval is set to 3601s
->         The Pair rekey interval set to 50s (I reduced this value to show
-> the issue often)
->         The Master rekey interval is set to 86400 s.
->
-> The equipment #2 is a sta+wds
->
-> I used a 5GHz channel to have a free channel (without other AP)
-> I connected a computer on each equipment.
->
-> To reproduce the issue:
->         I ran iperf udp@50Mbps from computer connected to the AP to the
-> computer connected to the sta. After several WPA2 rekeying, iperf server
-> side didn't received any frame.
->
-> I investigated in the driver. All packets are dropped in sta side,
-> because the function ieee80211_crypto_ccmp_decrypt return
-> Rx_DROP_UNUSABLE. This function return this code because the test
-> if(memcmp(pn,key->u.ccmp.rx_pn[queue],IEEE8021_CCMP_PN_LEN) <=0) return
-> true.
->
-> Have you any idea to fix this issue?
+2015-12-03 20:05 GMT+03:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2015-12-03 at 18:50 +0300, Andrey Ryabinin wrote:
+>> With upcoming CONFIG_UBSAN the following BUILD_BUG_ON in
+>> net/mac80211/debugfs.c starts to trigger:
+>>       BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void
+>> *)0x1);
+>>
+>> It seems, that compiler instrumentation causes some code
+>> deoptimizations.
+>> Because of that GCC is not being able to resolve condition in
+>> BUILD_BUG_ON()
+>> at compile time.
+>>
+>> We could make size of hw_flag_names array unspecified and replace the
+>> condition in BUILD_BUG_ON() with following:
+>>       ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS
+>>
+>> That will have the same effect as before (adding new flag without
+>> updating
+>> array will trigger build failure) except it doesn't fail with
+>> CONFIG_UBSAN.
+>> As a bonus this patch slightly decreases size of hw_flag_names array.
+>>
+> Seems fine, would you want to take it through some other tree together
+> with UBSAN, or do you expect that to still take long enough to allow
+> this to trickle through our trees?
 >
 
-I don't remember exactly what we had, but you may look at
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/137742
+I expect that Andrew will take it with UBSAN for 4.5
