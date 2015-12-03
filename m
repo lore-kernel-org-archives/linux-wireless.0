@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33971 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754566AbbL3MQK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:10 -0500
-Received: by mail-pa0-f51.google.com with SMTP id uo6so116319729pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:10 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/20] staging: wilc1000: rename bIsEnabled in wilc_set_power_mgmt
-Date: Wed, 30 Dec 2015 21:15:31 +0900
-Message-Id: <1451477744-11975-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131627_348003_9CC100F6)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33513 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751821AbbLCRGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2015 12:06:30 -0500
+Message-ID: <1449162322.31265.2.camel@sipsolutions.net> (sfid-20151203_180710_783813_BD61CA21)
+Subject: Re: [PATCH v4 2/3] mac80211: Prevent build failure with
+ CONFIG_UBSAN=y
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+	linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Michal Marek <mmarek@suse.cz>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Yury Gribov <y.gribov@samsung.com>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	Konstantin Khlebnikov <koct9i@gmail.com>,
+	Kostya Serebryany <kcc@google.com>, x86@kernel.org,
+	linux-doc@vger.kernel.org, linux-kbuild@vger.kernel.org
+Date: Thu, 03 Dec 2015 18:05:22 +0100
+In-Reply-To: <1449157807-20298-3-git-send-email-aryabinin@virtuozzo.com>
+References: <1449157807-20298-1-git-send-email-aryabinin@virtuozzo.com>
+	 <1449157807-20298-3-git-send-email-aryabinin@virtuozzo.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames bIsEnabled to enabled to avoid camelcase.
+On Thu, 2015-12-03 at 18:50 +0300, Andrey Ryabinin wrote:
+> With upcoming CONFIG_UBSAN the following BUILD_BUG_ON in
+> net/mac80211/debugfs.c starts to trigger:
+> 	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void
+> *)0x1);
+> 
+> It seems, that compiler instrumentation causes some code
+> deoptimizations.
+> Because of that GCC is not being able to resolve condition in
+> BUILD_BUG_ON()
+> at compile time.
+> 
+> We could make size of hw_flag_names array unspecified and replace the
+> condition in BUILD_BUG_ON() with following:
+> 	ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS
+> 
+> That will have the same effect as before (adding new flag without
+> updating
+> array will trigger build failure) except it doesn't fail with
+> CONFIG_UBSAN.
+> As a bonus this patch slightly decreases size of hw_flag_names array.
+> 
+Seems fine, would you want to take it through some other tree together
+with UBSAN, or do you expect that to still take long enough to allow
+this to trickle through our trees?
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8b1e535..3ed8275 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4393,14 +4393,14 @@ s32 wilc_edit_station(struct wilc_vif *vif,
- 	return result;
- }
- 
--int wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout)
-+int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 u32Timeout)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.pwr_mgmt_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
--	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", bIsEnabled);
-+	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", enabled);
- 
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -4414,7 +4414,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout)
- 	msg.id = HOST_IF_MSG_POWER_MGMT;
- 	msg.vif = vif;
- 
--	pstrPowerMgmtParam->enabled = bIsEnabled;
-+	pstrPowerMgmtParam->enabled = enabled;
- 	pstrPowerMgmtParam->timeout = u32Timeout;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index fb9c0ea..89765b8 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -351,7 +351,7 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
- int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
- s32 wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams);
--int wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout);
-+int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 u32Timeout);
- s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
- 				u32 u32count);
- s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
--- 
-2.6.4
-
+johannes
