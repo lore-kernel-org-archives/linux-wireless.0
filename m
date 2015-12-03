@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:34235 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587AbbL3P6y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 10:58:54 -0500
-From: Insu Yun <wuninsu@gmail.com>
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu,
-	changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
-Subject: [PATCH v2] mwifiex: correctly handling kzalloc
-Date: Wed, 30 Dec 2015 11:01:44 -0500
-Message-Id: <1451491304-35251-1-git-send-email-wuninsu@gmail.com> (sfid-20151230_165914_129169_1754A22D)
+Received: from s3.sipsolutions.net ([5.9.151.49]:59056 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751255AbbLCHur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2015 02:50:47 -0500
+Message-ID: <1449129039.2181.0.camel@sipsolutions.net> (sfid-20151203_085051_053962_5EA3298E)
+Subject: Re: wireless-testing regression: Could not configure driver mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 03 Dec 2015 08:50:39 +0100
+In-Reply-To: <87fuzkf2ef.fsf@kamboji.qca.qualcomm.com> (sfid-20151203_075426_533282_0EE08AA8)
+References: <87fuzkf2ef.fsf@kamboji.qca.qualcomm.com>
+	 (sfid-20151203_075426_533282_0EE08AA8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since kzalloc can be failed in memory pressure,
-it needs to be handled, otherwise NULL dereference could be happened
+On Thu, 2015-12-03 at 08:54 +0200, Kalle Valo wrote:
+> 
+> --- a/net/mac80211/offchannel.c
+> +++ b/net/mac80211/offchannel.c
+> @@ -916,6 +916,13 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy,
+> struct wireless_dev *wdev,
+>                         kfree_skb(skb);
+>                         goto out_unlock;
+>                 }
+> +       } else {
+> +               /* Assign a dummy non-zero cookie, it's not sent to
+> +                * userspace in this case but we rely on its value
+> +                * internally in the need_offchan case to distinguish
+> +                * mgmt-tx from remain-on-channel.
+> +                */
+> +               *cookie = 0xffffffff;
+> 
 
-Signed-off-by: Insu Yun <wuninsu@gmail.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+FWIW, this part isn't relevant for the problem and not actually an
+error - this just went into my tree after that was merged into
+wireless-testing :)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 78a8474..a8af72d 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -2053,8 +2053,19 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	/* Allocate skb pointer buffers */
- 	card->mpa_rx.skb_arr = kzalloc((sizeof(void *)) *
- 				       card->mp_agg_pkt_limit, GFP_KERNEL);
-+	if (!card->mpa_rx.skb_arr) {
-+		kfree(card->mp_regs);
-+		return -ENOMEM;
-+	}
-+
- 	card->mpa_rx.len_arr = kzalloc(sizeof(*card->mpa_rx.len_arr) *
- 				       card->mp_agg_pkt_limit, GFP_KERNEL);
-+	if (!card->mpa_rx.len_arr) {
-+		kfree(card->mp_regs);
-+		kfree(card->mpa_rx.skb_arr);
-+		return -ENOMEM;
-+	}
-+
- 	ret = mwifiex_alloc_sdio_mpa_buffers(adapter,
- 					     card->mp_tx_agg_buf_size,
- 					     card->mp_rx_agg_buf_size);
--- 
-1.9.1
-
+johannes
