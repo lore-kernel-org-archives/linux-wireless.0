@@ -1,44 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756077AbbLAKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:00:05 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 37/41] iwlwifi: mvm: rs: fix a warning message
-Date: Tue,  1 Dec 2015 11:59:03 +0200
-Message-Id: <1448963947-24302-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110045_323872_D556B0D1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from plainfield.sei.cmu.edu ([192.58.107.45]:51583 "EHLO
+	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbbLCOSb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2015 09:18:31 -0500
+From: "Adam R. Welle" <arwelle@cert.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v2] mac80211_hwsim: check ATTR_FREQ for wmediumd
+ (netlink) packets
+Date: Thu, 3 Dec 2015 14:18:21 +0000
+Message-ID: <2DE9F46DD36D2A458CD6347950113F253512C7@marathon> (sfid-20151203_151834_503292_445013C0)
+References: <1449008032-6541-1-git-send-email-arwelle@cert.org>
+	 <1449050234.2449.7.camel@sipsolutions.net>
+	 <2DE9F46DD36D2A458CD6347950113F25350A9B@marathon>
+ <1449133834.2181.7.camel@sipsolutions.net>
+In-Reply-To: <1449133834.2181.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
-
-WARN_ON_ONCE() doesn't take a message, it only takes a condition.  I
-have changed this to WARN(1, ...).
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 37c2db1..54789bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1827,7 +1827,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
- 		rate->type = lq_sta->is_vht ? LQ_VHT_MIMO2 : LQ_HT_MIMO2;
- 		rate_mask = lq_sta->active_mimo2_rate;
- 	} else {
--		WARN_ON_ONCE("Bad column mode");
-+		WARN_ONCE(1, "Bad column mode");
- 	}
- 
- 	if (column->mode != RS_LEGACY) {
--- 
-2.5.0
-
+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocnhfc3RhdHVzLmZyZXEgIT0gZGF0YTItPmNo
+YW5uZWwtPmNlbnRlcl9mcmVxICYmDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAoIWRhdGEyLT50bXBfY2hhbiB8fA0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqByeF9zdGF0dXMuZnJlcSAhPSBkYXRhMi0+dG1wX2NoYW4tPmNlbnRl
+cl9mcmVxKSkgew0KDQpQZXJmZWN0LCB0aGFuayB5b3UhDQoNCkFkYW0NCg0K
