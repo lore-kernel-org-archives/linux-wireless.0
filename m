@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:56889 "EHLO bear.ext.ti.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59627 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751770AbbLXQev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 11:34:51 -0500
-Subject: Re: [PATCH v2 1/3] wlcore/wl12xx: spi: add power operation function
-To: Uri Mashiach <uri.mashiach@compulab.co.il>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
- <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
-CC: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <567C1E3B.3020404@ti.com> (sfid-20151224_173456_473293_E7795DF0)
-Date: Thu, 24 Dec 2015 18:32:59 +0200
-MIME-Version: 1.0
-In-Reply-To: <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	id S1759139AbbLCJKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2015 04:10:38 -0500
+Message-ID: <1449133834.2181.7.camel@sipsolutions.net> (sfid-20151203_101056_870257_E749585C)
+Subject: Re: [PATCH v2] mac80211_hwsim: check ATTR_FREQ for wmediumd
+ (netlink) packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Adam R. Welle" <arwelle@cert.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 03 Dec 2015 10:10:34 +0100
+In-Reply-To: <2DE9F46DD36D2A458CD6347950113F25350A9B@marathon>
+References: <1449008032-6541-1-git-send-email-arwelle@cert.org>
+	 <1449050234.2449.7.camel@sipsolutions.net>
+	 <2DE9F46DD36D2A458CD6347950113F25350A9B@marathon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/2015 05:35 PM, Uri Mashiach wrote:
-> The power function uses a consumer regulator access to update the WiFi
-> enable GPIO value.
->
-> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-> ---
-> v1 -> v2: oops fix was removed to a separate fix.
->
->   drivers/net/wireless/ti/wlcore/spi.c | 37 ++++++++++++++++++++++++++++++++++++
->   1 file changed, 37 insertions(+)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
->
+On Wed, 2015-12-02 at 19:30 +0000, Adam R. Welle wrote:
+> > Applied. I added locking and made a change to accept both the off-
+> > channel and non-offchannel since the internal datapath also does
+> > that
+> > and we don't stop other operation for off-channel.
+> 
+> Does your change only throw away packets when tmp_chan is set? I was
+> under the impression that most of the time tmp_chan would be null.
+> 
+Yeah, umm, that expression was wrong. Thanks.
 
-[...]
+It should be
 
-> +
->   static struct wl1271_if_operations spi_ops = {
->   	.read		= wl12xx_spi_raw_read,
->   	.write		= wl12xx_spi_raw_write,
->   	.reset		= wl12xx_spi_reset,
->   	.init		= wl12xx_spi_init,
-> +	.power		= wl12xx_spi_set_power,
->   	.set_block_size = NULL,
->   };
->
-> @@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
->   	 * comes from the board-peripherals file */
->   	spi->bits_per_word = 32;
->
-> +	glue->reg = devm_regulator_get(&spi->dev, "vwlan");
-> +	if (IS_ERR(glue->reg)) {
+                if (rx_status.freq != data2->channel->center_freq &&
+                    (!data2->tmp_chan ||
+                     rx_status.freq != data2->tmp_chan->center_freq)) {
 
-It will be more correct to handle -EPROBE_DEFER here also. Like:
-  		if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
-			return PTR_ERR(glue->reg);
+I'll fix it.
 
-> +		dev_err(glue->dev, "can't get regulator\n");
-> +		return PTR_ERR(glue->reg);
-> +	}
-> +
->   	ret = spi_setup(spi);
->   	if (ret < 0) {
->   		dev_err(glue->dev, "spi_setup failed\n");
->
-
-
--- 
-regards,
--grygorii
+johannes
