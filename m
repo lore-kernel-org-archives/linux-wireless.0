@@ -1,72 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:34172 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965133AbbLHPrj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52327 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbbLCHHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 10:47:39 -0500
-Received: by qgeb1 with SMTP id b1so21864170qge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 07:47:39 -0800 (PST)
+	Thu, 3 Dec 2015 02:07:31 -0500
+Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id B58B91410F8
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2015 07:07:29 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: wlan0: set_features() failed (-1); wanted 0x0000000000004008, left 0x0000000000004808
+Date: Thu, 03 Dec 2015 09:07:25 +0200
+Message-ID: <87bna8f1si.fsf@kamboji.qca.qualcomm.com> (sfid-20151203_080736_612333_D9A94EEE)
 MIME-Version: 1.0
-In-Reply-To: <1449589374.4154.11.camel@sipsolutions.net>
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
- <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com> <1449589374.4154.11.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 8 Dec 2015 21:17:19 +0530
-Message-ID: <CABPxzYJd+9kq8w9zz549F1EEHhWgKhCsDeRUR1MzZ=LbizMJbw@mail.gmail.com> (sfid-20151208_164742_676173_C3C6052B)
-Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
- notification IE in beacon
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2015 at 9:12 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2015-12-08 at 21:08 +0530, Krishna Chaitanya wrote:
->>
->> >  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data
->> > *sdata,
->> >                                  struct sta_info *sta, u8 opmode,
->> > -                                enum ieee80211_band band, bool
->> > nss_only)
->> > +                                enum ieee80211_band band)
->> >  {
->> >         struct ieee80211_local *local = sdata->local;
->> >         struct ieee80211_supported_band *sband = local->hw.wiphy-
->> > >bands[band];
->> >
->> > -       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta,
->> > opmode,
->> > -                                                   band,
->> > nss_only);
->> > +       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta,
->> > opmode, band);
->> >
->> >         if (changed > 0)
->> >                 rate_control_rate_update(local, sband, sta,
->> > changed);
->>
->> Not related to current change.
->>
->> I was looking at this code a while ago and found that
->> rate_control_rate_update
->> doesn't update the rates from rx_nss, rather it updates from HT/VHT
->> capabilities.
->>
->> So how does the NSS update from OP MODE IE work?
->>
->
-> Huh? You just quoted the code that does this?
-MLME is updating the rx_nss.
+Hi,
 
-> If the rate control algorithm doesn't look at sta->sta.rx_nss then
-> that's their bug.
+For few weeks (I think) I have seen these kind of messages:
 
-Yes, it looks like it. Only BW is handled, not the NSS change, and
-without this patch OP MODE IE in beacon updates neither NSS nor BW.
+ath10k_pci 0000:02:00.0 wlan0: set_features() failed (-1); wanted 0x0000000000004008, left 0x0000000000004808
 
-For Action frame OP MODE IE, NSS will be updated.
+iwlwifi 0000:03:00.0 wlan0: set_features() failed (-1); wanted 0x0000000000004000, left 0x0000000000004800
+
+I'm using ath.git master branch which is latest wireless-testing plus
+latest ath patches. Any ideas what's causing these? mac80211 or
+something else?
+
+-- 
+Kalle Valo
