@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36226 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680AbbL1XG1 (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37305 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757631AbbLCID1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2015 18:06:27 -0500
-Received: by mail-pa0-f41.google.com with SMTP id yy13so23256672pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 15:06:26 -0800 (PST)
-Date: Mon, 28 Dec 2015 15:06:35 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Bjorn Andersson <bjorn@kryo.se>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>, fengwei.yin@linaro.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	wcn36xx@lists.infradead.org
-Subject: Re: [PATCH 2/4] wcn36xx: Change indication list lock to spinlock
-Message-ID: <20151228150635.79181f6e@xeon-e3> (sfid-20151229_000645_751746_8E2BD2C5)
-In-Reply-To: <1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com>
-References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
-	<1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com>
+	Thu, 3 Dec 2015 03:03:27 -0500
+Received: by wmww144 with SMTP id w144so10781616wmw.0
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2015 00:03:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <87bna8f1si.fsf@kamboji.qca.qualcomm.com>
+References: <87bna8f1si.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 3 Dec 2015 09:03:25 +0100
+Message-ID: <CALhHN=pXxEvY4wZcaQ8EL9jNgCy-sC97RwiO7PgaNVfKEO1FGw@mail.gmail.com> (sfid-20151203_090413_916734_C3AB3C9F)
+Subject: Re: wlan0: set_features() failed (-1); wanted 0x0000000000004008,
+ left 0x0000000000004808
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 27 Dec 2015 17:34:25 -0800
-Bjorn Andersson <bjorn@kryo.se> wrote:
+On 3 December 2015 at 08:07, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Hi,
+>
+> For few weeks (I think) I have seen these kind of messages:
+>
+> ath10k_pci 0000:02:00.0 wlan0: set_features() failed (-1); wanted 0x0000000000004008, left 0x0000000000004808
+>
+> iwlwifi 0000:03:00.0 wlan0: set_features() failed (-1); wanted 0x0000000000004000, left 0x0000000000004800
+>
+> I'm using ath.git master branch which is latest wireless-testing plus
+> latest ath patches. Any ideas what's causing these? mac80211 or
+> something else?
+>
+Missing:
+net: fix feature changes on devices without ndo_set_features ?
 
-> In preparation for handling incoming messages from IRQ context, change
-> the indication list lock to a spinlock
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-> ---
->  drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 6b5dbe6f0d0a..4307429740a9 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -2165,10 +2165,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
->  		msg_ind->msg_len = len;
->  		memcpy(msg_ind->msg, buf, len);
->  
-> -		mutex_lock(&wcn->hal_ind_mutex);
-> +		spin_lock(&wcn->hal_ind_lock);
+BR
+Janusz
 
-If you are going to handle messages in IRQ context, that better be a spin_lock_irq() or spin_lock_bh().
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
