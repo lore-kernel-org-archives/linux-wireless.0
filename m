@@ -1,120 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36489 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751644AbbLDOOg (ORCPT
+Received: from mail-vk0-f50.google.com ([209.85.213.50]:34793 "EHLO
+	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbbLCSLY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2015 09:14:36 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB4E9al4029059
-	for <linux-wireless@vger.kernel.org>; Fri, 4 Dec 2015 06:14:35 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yk5tpa12f-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2015 06:14:35 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/6] mwifiex: parse adhoc start/join result
-Date: Fri, 4 Dec 2015 06:13:02 -0800
-Message-ID: <1449238387-27396-1-git-send-email-akarwar@marvell.com> (sfid-20151204_151445_037671_B5FACC2C)
+	Thu, 3 Dec 2015 13:11:24 -0500
+Received: by vkbs1 with SMTP id s1so50594292vkb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2015 10:11:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>
+Date: Thu, 3 Dec 2015 10:10:44 -0800
+Message-ID: <CAF7g2REe-gFm9y2SsXz5nSn9ofHevNkr80YNV720W+XB815qsA@mail.gmail.com> (sfid-20151203_191128_985317_FC221722)
+Subject: iw set txpower error
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even if ADHOC start or join attempt is failed, these commands
-are returned with success status by firmware. Actual connection
-result is provided inside command response.
+Hi all,
 
-This patch parses the adhoc connection result and resets
-connection state variables if connection is not successful.
+I’m trying to change txpower with iw. Using AR9580 HW + ath9k driver
+with Kernel 4.1.6.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/fw.h   | 11 +++++++++--
- drivers/net/wireless/marvell/mwifiex/join.c | 20 +++++++++++++-------
- 2 files changed, 22 insertions(+), 9 deletions(-)
+The call fails in mac80211 with the following error: "Failed
+check-sdata-in-driver check, flags: 0x0".
+stack:
+---------------------------------  start stack
+----------------------------------------
+[44387.506210] WARNING: CPU: 2 PID: 19731 at
+net/mac80211/driver-ops.h:12
+ieee80211_bss_info_change_notify+0x1d2/0x1e0 [mac80211]()
+[44387.506211] wlp2s0:  Failed check-sdata-in-driver check, flags: 0x0
+[44387.506212] Modules linked in: ath9k(OE) ath9k_common(OE)
+ath9k_hw(OE) ath(OE) mac80211 cfg80211 rfkill nfsv3 rpcsec_gss_krb5
+nfsv4 dns_resolver nfs fscache xt_CHECKSUM iptable_mangle xt_conntrack
+ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4
+nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype tun br_netfilter nf_nat
+nf_conntrack bridge stp llc dm_thin_pool dm_persistent_data
+dm_bio_prison libcrc32c loop arc4 intel_rapl iosf_mbi
+x86_pkg_temp_thermal coretemp kvm_intel kvm snd_hda_codec_hdmi
+snd_hda_codec_realtek snd_hda_codec_generic crct10dif_pclmul
+snd_soc_rt5640 snd_hda_intel crc32_pclmul snd_soc_rl6231
+snd_hda_controller crc32c_intel snd_soc_core snd_hda_codec
+ghash_clmulni_intel snd_hda_core snd_compress snd_pcm_dmaengine
+snd_hwdep snd_seq iTCO_wdt iTCO_vendor_support snd_seq_device
+[44387.506241]  ir_lirc_codec lirc_dev ir_xmp_decoder
+ir_mce_kbd_decoder ir_sharp_decoder ir_sanyo_decoder ir_sony_decoder
+ir_jvc_decoder ir_nec_decoder ir_rc6_decoder ir_rc5_decoder rc_rc6_mce
+snd_pcm nuvoton_cir tpm_tis dw_dmac i2c_hid regmap_i2c tpm rc_core
+dw_dmac_core snd_timer i2c_designware_platform i2c_i801
+i2c_designware_core snd_soc_sst_acpi snd lpc_ich soundcore shpchp
+mfd_core nfsd auth_rpcgss nfs_acl lockd grace sunrpc i915 i2c_algo_bit
+drm_kms_helper e1000e drm ptp pps_core sdhci_acpi sdhci mmc_core video
+[last unloaded: rfkill]
+[44387.506264] CPU: 2 PID: 19731 Comm: iwconfig Tainted: G        W
+OE   4.1.6-100.fc21.x86_64 #1
+WYLPT10H.86A.0035.2015.0126.1814 01/26/2015
+[44387.506267]  0000000000000000 00000000a8ea5b62 ffff8800942cbb58
+ffffffff817940d5
+[44387.506269]  0000000000000000 ffff8800942cbbb0 ffff8800942cbb98
+ffffffff810a163a
+[44387.506270]  ffff8800942cbc20 ffff8800d49b2840 0000000000000001
+ffff8801c92c86a0
+[44387.506272] Call Trace:
+[44387.506278]  [<ffffffff817940d5>] dump_stack+0x45/0x57
+[44387.506281]  [<ffffffff810a163a>] warn_slowpath_common+0x8a/0xc0
+[44387.506283]  [<ffffffff810a16c5>] warn_slowpath_fmt+0x55/0x70
+[44387.506286]  [<ffffffff8177f3e0>] ? iw_handler_get_private+0x70/0x70
+[44387.506293]  [<ffffffffa095fe32>]
+ieee80211_bss_info_change_notify+0x1d2/0x1e0 [mac80211]
+[44387.506300]  [<ffffffffa0975005>]
+ieee80211_recalc_txpower+0x35/0x40 [mac80211]
+[44387.506309]  [<ffffffffa097d08c>] ieee80211_set_tx_power+0x4c/0x1b0
+[mac80211]
+[44387.506320]  [<ffffffffa075684f>]
+cfg80211_wext_siwtxpower+0x9f/0x1c0 [cfg80211]
+[44387.506334]  [<ffffffff8177e672>] ioctl_standard_call+0x52/0xe0
+[44387.506336]  [<ffffffff8177f3e0>] ? iw_handler_get_private+0x70/0x70
+[44387.506340]  [<ffffffff8177e620>] ? ioctl_standard_iw_point+0x390/0x390
+[44387.506342]  [<ffffffff8177dcae>] wireless_process_ioctl+0x17e/0x1d0
+[44387.506345]  [<ffffffff8177e918>] wext_handle_ioctl+0x78/0xe0
+[44387.506348]  [<ffffffff81693443>] dev_ioctl+0x2c3/0x5d0
+[44387.506353]  [<ffffffff811dd8df>] ? handle_mm_fault+0x117f/0x17f0
+[44387.506356]  [<ffffffff8166045c>] ? sk_prot_alloc+0xdc/0x180
+[44387.506359]  [<ffffffff8165b472>] sock_ioctl+0x132/0x2c0
+[44387.506362]  [<ffffffff81241e9e>] ? __d_instantiate+0x9e/0x100
+[44387.506365]  [<ffffffff8123d398>] do_vfs_ioctl+0x2f8/0x500
+[44387.506369]  [<ffffffff81068cc1>] ? __do_page_fault+0x1c1/0x450
+[44387.506372]  [<ffffffff8123d621>] SyS_ioctl+0x81/0xa0
+[44387.506375]  [<ffffffff81068f7f>] ? do_page_fault+0x2f/0x80
+[44387.506378]  [<ffffffff8179a9ae>] system_call_fastpath+0x12/0x71
+[44387.506380] ---[ end trace de552a3121eef335 ]---
+--------------------------------------- end stack
+-----------------------------------------------------------
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 1e1e81a..89938f6 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -1092,9 +1092,15 @@ struct host_cmd_ds_802_11_ad_hoc_start {
- 	u8 data_rate[HOSTCMD_SUPPORTED_RATES];
- } __packed;
- 
--struct host_cmd_ds_802_11_ad_hoc_result {
-+struct host_cmd_ds_802_11_ad_hoc_start_result {
- 	u8 pad[3];
- 	u8 bssid[ETH_ALEN];
-+	u8 pad2[2];
-+	u8 result;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_ad_hoc_join_result {
-+	u8 result;
- } __packed;
- 
- struct adhoc_bss_desc {
-@@ -2124,7 +2130,8 @@ struct host_cmd_ds_command {
- 		struct host_cmd_ds_802_11_associate_rsp associate_rsp;
- 		struct host_cmd_ds_802_11_deauthenticate deauth;
- 		struct host_cmd_ds_802_11_ad_hoc_start adhoc_start;
--		struct host_cmd_ds_802_11_ad_hoc_result adhoc_result;
-+		struct host_cmd_ds_802_11_ad_hoc_start_result start_result;
-+		struct host_cmd_ds_802_11_ad_hoc_join_result join_result;
- 		struct host_cmd_ds_802_11_ad_hoc_join adhoc_join;
- 		struct host_cmd_ds_802_11d_domain_info domain_info;
- 		struct host_cmd_ds_802_11d_domain_info_rsp domain_info_resp;
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index 3cda1f9..cc09a81 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -1247,20 +1247,26 @@ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- {
- 	int ret = 0;
- 	struct mwifiex_adapter *adapter = priv->adapter;
--	struct host_cmd_ds_802_11_ad_hoc_result *adhoc_result;
-+	struct host_cmd_ds_802_11_ad_hoc_start_result *start_result =
-+				&resp->params.start_result;
-+	struct host_cmd_ds_802_11_ad_hoc_join_result *join_result =
-+				&resp->params.join_result;
- 	struct mwifiex_bssdescriptor *bss_desc;
--	u16 reason_code;
-+	u16 cmd = le16_to_cpu(resp->command);
-+	u8 result;
- 
--	adhoc_result = &resp->params.adhoc_result;
-+	if (cmd == HostCmd_CMD_802_11_AD_HOC_START)
-+		result = start_result->result;
-+	else
-+		result = join_result->result;
- 
- 	bss_desc = priv->attempted_bss_desc;
- 
- 	/* Join result code 0 --> SUCCESS */
--	reason_code = le16_to_cpu(resp->result);
--	if (reason_code) {
-+	if (result) {
- 		mwifiex_dbg(priv->adapter, ERROR, "ADHOC_RESP: failed\n");
- 		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv, reason_code);
-+			mwifiex_reset_connect_state(priv, result);
- 
- 		memset(&priv->curr_bss_params.bss_descriptor,
- 		       0x00, sizeof(struct mwifiex_bssdescriptor));
-@@ -1278,7 +1284,7 @@ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 
- 		/* Update the created network descriptor with the new BSSID */
- 		memcpy(bss_desc->mac_address,
--		       adhoc_result->bssid, ETH_ALEN);
-+		       start_result->bssid, ETH_ALEN);
- 
- 		priv->adhoc_state = ADHOC_STARTED;
- 	} else {
--- 
-1.8.1.4
+The call in driver-ops.h:check_sdata_in_driver() fails:
 
+static inline bool check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+{
+                return !WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
+                                     "%s:  Failed
+check-sdata-in-driver check, flags: 0x%x\n",
+                                     sdata->dev ? sdata->dev->name :
+sdata->name, sdata->flags);
+}
+
+AFAIU, this should not happen.
+ath9k_add_interface is being called before trying to set txpower. I verified it.
+When ath9k_add_interface returns, driver-ops.h:drv_add_interface()
+should set SDATA_IN_DRIVER flag.
+
+Any idea why the sdata->flags would still show up with 0x0 in the
+above function ?
+
+Thank you,
+Kobi
