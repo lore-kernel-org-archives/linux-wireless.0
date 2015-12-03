@@ -1,109 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:33285 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbbLAG0j (ORCPT
+Received: from ec2-54-93-35-231.eu-central-1.compute.amazonaws.com ([54.93.35.231]:49471
+	"EHLO localhost" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759923AbbLCLL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 01:26:39 -0500
-Received: by wmec201 with SMTP id c201so189482572wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2015 22:26:37 -0800 (PST)
+	Thu, 3 Dec 2015 06:11:28 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by localhost (Postfix) with ESMTP id 7F87F10332A
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2015 11:01:50 +0000 (UTC)
+Received: from localhost ([127.0.0.1])
+	by localhost (open-hotspot.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id QLuErfubbUEi for <linux-wireless@vger.kernel.org>;
+	Thu,  3 Dec 2015 11:01:50 +0000 (UTC)
+Received: from [127.0.0.1] (dslb-084-061-032-033.084.061.pools.vodafone-ip.de [84.61.32.33])
+	by localhost (Postfix) with ESMTPA id A93AA103325
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2015 11:01:49 +0000 (UTC)
+To: linux-wireless@vger.kernel.org
+From: Reiner Karlsberg <karlsberg@softart-ge.com>
+Subject: iw ignores channel switch
+Message-ID: <5660210D.4090303@softart-ge.com> (sfid-20151203_121928_609938_D1109D00)
+Date: Thu, 3 Dec 2015 12:01:33 +0100
 MIME-Version: 1.0
-In-Reply-To: <loom.20151201T071931-353@post.gmane.org>
-References: <loom.20151201T071931-353@post.gmane.org>
-Date: Tue, 1 Dec 2015 07:26:37 +0100
-Message-ID: <CALhHN=o4xAhy9oz0Q7sy-Ubji-nBf6pdJ7OSj8xLU0mn86n1qQ@mail.gmail.com> (sfid-20151201_072643_239436_2625388C)
-Subject: Re: ath10k: device has crashed during init - qca6174 chipset
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 December 2015 at 07:20, Bartlomiej Grzeskowiak
-<bartlomiej.grzeskowiak@gmail.com> wrote:
-> Hi,
->
-> I am trying to use ath10k driver from the latest backports-4.4-rc.2-1 with
-> kernel 3.10.65 and qca6174 based wlan module. Could you give me some hints
-> about possible problem.
-> ath10k_core.ko module loaded with skip_otp=y and debug_mask=0xffffffff.
->
-> I get following error message:
-> [ 5301.614749] ath10k_pci 0000:01:00.0: wmi unified ready event not
-> received
-> [ 5301.614749] ath10k_pci 0000:01:00.0: device has crashed during init
-Seems Bartosz already fix this in this patch:
-[PATCH] ath10k: fix QCA61X4 boot up
+I am using openwrt on the following system:
+root@OpenWrt:/tmp# iw --version
+iw version 3.17
+ieee80211 phy0: Atheros AR9340 Rev:2 mem=0xb8100000, irq=47
 
-BR
-Janusz
+I want to switch between managed (station) mode and monitor mode.
 
-> [ 5301.644767] ath10k_pci 0000:01:00.0: device has crashed during init
-> [ 5301.651025] ath10k_pci 0000:01:00.0: failed to wait for target init: -70
-> [ 5301.661134] ath10k_pci 0000:01:00.0: could not init core (-110)
-> [ 5301.667310] ath10k_pci 0000:01:00.0: could not probe fw (-110)
->
-> Some other important debug messages (I can also provide the whole log if
-> needed):
-> ath10k_pci 0000:01:00.0: found fw version WLAN.RM.2.0-00180-QCARMSWPZ-1
-> [...]
-> ath10k_pci 0000:01:00.0: boot get otp board id result 0x00000001 board_id 0
-> chip_id 0
-> ath10k_pci 0000:01:00.0: boot using board name
-> 'bus=pci,vendor=168c,device=003e,subsystem-vendor=0000,subsystem-
-> device=0000'
-> [...]
-> ath10k_pci 0000:01:00.0: Target ready! transmit resources: 2 size:1792
-> [...]
-> ath10k_pci 0000:01:00.0: HTC Service HTT Data connect response: status:
-> 0x0, assigned ep: 0x1
-> [...]
-> ath10k_pci 0000:01:00.0: HTC Service WMI connect response: status: 0x0,
-> assigned ep: 0x2
-> [...]
-> ath10k_pci 0000:01:00.0: wmi event service ready min_tx_power 0x0000003f
-> max_tx_power 0x0000003f ht_cap 0x0000085b vht_cap 0x339011b2 sw_ver0
-> 0x01000000 sw_ver1 0x0000008f fw_build 0x200700b4 phy_capab 0x00000003
-> num_rf_chains 0x00000002 eeprom_rd 0x00000000 num_mem_reqs 0x00000000
-> ath10k_pci 0000:01:00.0: firmware WLAN.RM.2.0-00180-QCARMSWPZ-1 booted
-> [...]
-> ath10k_pci 0000:01:00.0: ath10k_htc_notify_tx_completion: ep 2 skb 8cc3b6c0
-> ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
-> ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
-> ath10k_pci 0000:01:00.0: wmi unified ready event not received
-> ath10k_pci 0000:01:00.0: boot hif stop
-> [...]
-> ath10k_pci 0000:01:00.0: boot init ce src ring id 0 entries 16 base_addr
-> 8e053000
-> ath10k_pci 0000:01:00.0: boot ce dest ring id 1 entries 512 base_addr
-> 8e054000
-> ath10k_pci 0000:01:00.0: boot ce dest ring id 2 entries 128 base_addr
-> 8e056000
-> ath10k_pci 0000:01:00.0: boot init ce src ring id 3 entries 32 base_addr
-> 8e057000
-> ath10k_pci 0000:01:00.0: boot init ce src ring id 4 entries 4096 base_addr
-> 8e060000
-> ath10k_pci 0000:01:00.0: boot ce dest ring id 5 entries 512 base_addr
-> 8e058000
-> ath10k_pci 0000:01:00.0: boot init ce src ring id 7 entries 2 base_addr
-> 8e05a000
-> ath10k_pci 0000:01:00.0: boot ce dest ring id 7 entries 2 base_addr
-> 8e05b000
-> ath10k_pci 0000:01:00.0: boot waiting target to initialise
-> ath10k_pci 0000:01:00.0: boot target indicator 0
-> ath10k_pci 0000:01:00.0: boot target indicator 1
-> ath10k_pci 0000:01:00.0: device has crashed during init
-> ath10k_pci 0000:01:00.0: failed to wait for target init: -70
-> ath10k_pci 0000:01:00.0: could not init core (-110)
-> ath10k_pci 0000:01:00.0: boot hif power down
-> ath10k_pci 0000:01:00.0: could not probe fw (-110)
-> ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
-> ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
->
-> Thank you
-> Bartek
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I have the follwoing scenarion:
+
+root@OpenWrt:/tmp# iw dev
+phy#1
+         Interface wlan1
+                 ifindex 5
+                 wdev 0x100000001
+                 addr 00:90:a9:ab:f8:ed
+                 type managed
+phy#0
+         Interface wlan0
+                 ifindex 21                         #steadily increasing, not re-used ?
+                 wdev 0x10
+                 addr 00:90:a9:ab:f8:eb
+                 type managed
+root@OpenWrt:/tmp# ifconfig wlan0 up
+root@OpenWrt:/tmp# iw dev wlan0 connect SSID
+root@OpenWrt:/tmp# udhcpc -i wlan0 --quit
+udhcpc (v1.23.2) started
+Sending discover...
+Sending select for 192.168.20.144...
+Lease of 192.168.20.144 obtained, lease time 28800
+udhcpc: ifconfig wlan0 192.168.20.144 netmask 255.255.255.0 broadcast 192.168.20.255
+udhcpc: setting default routers: 192.168.20.1
+root@OpenWrt:/tmp# wget http://somewhere.com/something.html
+Connecting to somewhere.com (xx.xx.xx.xx:80)
+wget: server returned error: HTTP/1.1 500 Internal Server Error
+root@OpenWrt:/tmp# iw phy phy0 interface add wmon0 type monitor
+root@OpenWrt:/tmp# iw dev
+phy#1
+         Interface wlan1
+                 ifindex 5
+                 wdev 0x100000001
+                 addr 00:90:a9:ab:f8:ed
+                 type managed
+phy#0
+         Interface wmon0
+                 ifindex 22
+                 wdev 0x11
+                 addr 00:90:a9:ab:f8:eb
+                 type monitor
+         Interface wlan0
+                 ifindex 21
+                 wdev 0x10
+                 addr 00:90:a9:ab:f8:eb
+                 ssid SSID
+                 type managed
+                 channel 7 (2442 MHz), width: 40 MHz, center1: 2452 MHz
+root@OpenWrt:/tmp# ifconfig wmon0 up
+root@OpenWrt:/tmp# iw dev
+phy#1
+         Interface wlan1
+                 ifindex 5
+                 wdev 0x100000001
+                 addr 00:90:a9:ab:f8:ed
+                 type managed
+phy#0
+         Interface wmon0
+                 ifindex 22
+                 wdev 0x11
+                 addr 00:90:a9:ab:f8:eb
+                 type monitor
+         Interface wlan0
+                 ifindex 21
+                 wdev 0x10
+                 addr 00:90:a9:ab:f8:eb
+                 ssid SSID
+                 type managed
+                 channel 7 (2442 MHz), width: 40 MHz, center1: 2452 MHz
+root@OpenWrt:/tmp# iw dev wlan0 del
+root@OpenWrt:/tmp# iw dev
+phy#1
+         Interface wlan1
+                 ifindex 5
+                 wdev 0x100000001
+                 addr 00:90:a9:ab:f8:ed
+                 type managed
+phy#0
+         Interface wmon0
+                 ifindex 22
+                 wdev 0x11
+                 addr 00:90:a9:ab:f8:eb
+                 type monitor
+                 channel 7 (2442 MHz), width: 20 MHz (no HT), center1: 2442 MHz
+root@OpenWrt:/tmp# iw dev wmon0 set channel 1
+root@OpenWrt:/tmp# iw dev
+phy#1
+         Interface wlan1
+                 ifindex 5
+                 wdev 0x100000001
+                 addr 00:90:a9:ab:f8:ed
+                 type managed
+phy#0
+         Interface wmon0
+                 ifindex 22
+                 wdev 0x11
+                 addr 00:90:a9:ab:f8:eb
+                 type monitor
+                 channel 7 (2442 MHz), width: 20 MHz (no HT), center1: 2442 MHz
+
+As to be seen, the modification of the channel does not generate an error, but is simply ignored.
+What did I do wrong ?
+
+
+Second question: The "ifindex" is always increasing, during several tests,
+when unsuccessfully trying similar scenarios (different sequence of ifconfig ... up/down, iw dev ... del etc.)
+Will this "ifindex" "overflow" some time,
+even in case of repeated "iw phy phy0 interface add wmon0 type monitor" "iw dev wmon0 del" ?
+I would have expected some kind of "reuse".
+
+Regards
+-- 
+Reiner Karlsberg
+
+
+-----
+No virus found in this message.
+Checked by AVG - www.avg.com
+Version: 2014.0.4842 / Virus Database: 4447/10982 - Release Date: 11/11/15
+Internal Virus Database is out of date.
+
