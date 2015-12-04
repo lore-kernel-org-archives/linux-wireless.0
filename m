@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36280 "EHLO
-	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbbLUTXN convert rfc822-to-8bit (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:27154 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbbLDNSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 14:23:13 -0500
+	Fri, 4 Dec 2015 08:18:05 -0500
+Date: Fri, 4 Dec 2015 16:17:46 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] hostap: fix an error code in prism2_config()
+Message-ID: <20151204131746.GE12792@mwanda> (sfid-20151204_141811_556833_CB6578D6)
 MIME-Version: 1.0
-In-Reply-To: <1448948470-31111-1-git-send-email-motobud@gmail.com>
-References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
-Date: Tue, 22 Dec 2015 00:53:12 +0530
-Message-ID: <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com> (sfid-20151221_202316_933825_BAEC461C)
-Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Brent Taylor <motobud@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath6kl@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brent,
+The current code returns success if prism2_init_local_data() fails, but
+we want to return an error code.  Also we can remove the bogus
+ret initializer because it is wrong and never used.
 
-On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
-> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7, ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
->
-> Signed-off-by: Brent Taylor <motobud@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-> index 6ae0734..4f2b124d 100644
-> --- a/drivers/net/wireless/ath/ath6kl/init.c
-> +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
->                 return ret;
->
->         *fw_len = fw_entry->size;
-> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-> +   if (&ar->fw == fw)
-> +               *fw = vmalloc(fw_entry->size);
-> +   else
-> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL);
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-          Why vmalloc and kmalloc both are required? can't use either
-vmalloc or kmalloc?
->
->         if (*fw == NULL)
->                 ret = -ENOMEM;
-> +       else
-> +               memcpy(*fw, fw_entry->data, fw_entry->size);
->
->         release_firmware(fw_entry);
->
-> --
-> 2.6.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--Souptick
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_cs.c b/drivers/net/wireless/intersil/hostap/hostap_cs.c
+index 50033aa..74f63b7 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_cs.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_cs.c
+@@ -473,7 +473,7 @@ static int prism2_config(struct pcmcia_device *link)
+ 	struct net_device *dev;
+ 	struct hostap_interface *iface;
+ 	local_info_t *local;
+-	int ret = 1;
++	int ret;
+ 	struct hostap_cs_priv *hw_priv;
+ 	unsigned long flags;
+ 
+@@ -502,8 +502,10 @@ static int prism2_config(struct pcmcia_device *link)
+ 	/* Need to allocate net_device before requesting IRQ handler */
+ 	dev = prism2_init_local_data(&prism2_pccard_funcs, 0,
+ 				     &link->dev);
+-	if (dev == NULL)
++	if (!dev) {
++		ret = -ENOMEM;
+ 		goto failed;
++	}
+ 	link->priv = dev;
+ 
+ 	iface = netdev_priv(dev);
