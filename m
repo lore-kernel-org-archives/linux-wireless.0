@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54312 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbbLPOhb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 09:37:31 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] ssb: pick SoC invariants code from MIPS BCM47xx arch
-References: <1449700611-6952-1-git-send-email-zajec5@gmail.com>
-Date: Wed, 16 Dec 2015 16:37:22 +0200
-In-Reply-To: <1449700611-6952-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 9 Dec 2015
- 23:36:51 +0100")
-Message-ID: <871tamfoil.fsf@kamboji.qca.qualcomm.com> (sfid-20151216_153734_224409_ED146316)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail.ispras.ru ([83.149.199.45]:43086 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754923AbbLDWEx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Dec 2015 17:04:53 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] staging: wilc1000: fix double mutex_unlock on failure path in wilc_wlan_cleanup()
+Date: Sat,  5 Dec 2015 01:04:34 +0300
+Message-Id: <1449266674-6642-1-git-send-email-khoroshilov@ispras.ru> (sfid-20151204_230552_909745_6007C419)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
+it calls release_bus() and continues execution. But it leads to double
+release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
 
-> There is code in ssb fetching "invariants" that is basically a set of
-> board specific data. Every host requires its own implementation of
-> reading function. In ssb we have support for PCI, PCMCIA & SDIO.
-> For some (historical?) reason code reading "invariants" for SoC was
-> placed in arch code and provided by a callback. This is not needed
-> nowadays, so lets move that into ssb. This way we keep all "invariants"
-> functions in a single module making code cleaner.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+The patch adds return in case of failure.
 
-Manually applied to wireless-drivers-next.git, thanks.
+Found by Linux Driver Verification project (linuxtesting.org).
 
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c02665747705..cd7f52a51173 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1703,12 +1703,14 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 	if (!ret) {
+ 		PRINT_ER("Error while reading reg\n");
+ 		release_bus(RELEASE_ALLOW_SLEEP);
++		return;
+ 	}
+ 	PRINT_ER("Writing ABORT reg\n");
+ 	ret = p->hif_func.hif_write_reg(WILC_GP_REG_0, (reg | ABORT_INT));
+ 	if (!ret) {
+ 		PRINT_ER("Error while writing reg\n");
+ 		release_bus(RELEASE_ALLOW_SLEEP);
++		return;
+ 	}
+ 	release_bus(RELEASE_ALLOW_SLEEP);
+ 	/**
 -- 
-Kalle Valo
+1.9.1
+
