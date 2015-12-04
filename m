@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:34921 "EHLO
-	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754410AbbLPN5d (ORCPT
+Received: from mail-vk0-f52.google.com ([209.85.213.52]:34010 "EHLO
+	mail-vk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754638AbbLDBxj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 08:57:33 -0500
-Received: by mail-qk0-f179.google.com with SMTP id u65so44798231qkh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 05:57:33 -0800 (PST)
-Date: Wed, 16 Dec 2015 08:57:29 -0500
-From: "me@bobcopeland.com >> Bob Copeland" <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-Message-ID: <20151216135729.GB4073@localhost> (sfid-20151216_145736_701734_40645923)
-References: <5670DA9A.4010102@candelatech.com>
- <20151216132113.GA4073@localhost>
- <567166D0.5090000@candelatech.com>
+	Thu, 3 Dec 2015 20:53:39 -0500
+Received: by vkbs1 with SMTP id s1so57225681vkb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2015 17:53:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <567166D0.5090000@candelatech.com>
+In-Reply-To: <CANUX_P3WRatRnY7Mciv_W0-azk86uHsFThXYu=+QgCu8qw=GAg@mail.gmail.com>
+References: <CAF7g2REe-gFm9y2SsXz5nSn9ofHevNkr80YNV720W+XB815qsA@mail.gmail.com>
+ <CANUX_P3WRatRnY7Mciv_W0-azk86uHsFThXYu=+QgCu8qw=GAg@mail.gmail.com>
+From: Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>
+Date: Thu, 3 Dec 2015 17:52:59 -0800
+Message-ID: <CAF7g2RFA8R7W+cAqpURz3ri4njkhmpuPRX7_nL8ZWfj5E3E7sg@mail.gmail.com> (sfid-20151204_025353_529916_2044E128)
+Subject: Re: iw set txpower error
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 05:27:44AM -0800, Ben Greear wrote:
-> >Does this patch cause problems for your userspace implementation?
-> 
-> Yes, because I coded with the assumptions that the radio addr had nothing
-> to do with the vif addr.
+On Thu, Dec 3, 2015 at 11:57 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Thu, Dec 3, 2015 at 8:10 PM, Kobi Cohen-Arazi
+> <kobi.cohenarazi@gmail.com> wrote:
+>> Hi all,
+>>
+>> I’m trying to change txpower with iw. Using AR9580 HW + ath9k driver
+>> with Kernel 4.1.6.
+>>
+>> The call fails in mac80211 with the following error: "Failed
+>> check-sdata-in-driver check, flags: 0x0".
+>> stack:
+>> ---------------------------------  start stack
+>
+> Try that one:
+>
+> https://kernel.googlesource.com/pub/scm/linux/kernel/git/jberg/mac80211/+/5ad11b50fda1306b5317124f97f0a7a4c022b022
 
-I see -- but looking back at wmediumd history (before I had anything to
-do with it) it seems it always had the opposite assumption -- e.g. the
-ATTR_ADDR_TRANSMITTER mac address was compared against addresses in the
-frame for delivery decisions.
+Works perfect. thanks!
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+Kobi
