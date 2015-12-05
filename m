@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48878 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755641AbbLQKE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 05:04:29 -0500
-Message-ID: <1450346667.8247.23.camel@sipsolutions.net> (sfid-20151217_110435_690511_292D81C0)
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org
-Date: Thu, 17 Dec 2015 11:04:27 +0100
-In-Reply-To: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151217_102050_152022_7DD1C619)
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20151217_102050_152022_7DD1C619)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:35545
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752289AbbLEOHH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Dec 2015 09:07:07 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC] mac80211: ignore AP power level when tx power type is "fixed"
+Date: Sat,  5 Dec 2015 15:07:03 +0100
+Message-Id: <1449324423-99589-1-git-send-email-nbd@openwrt.org> (sfid-20151205_150712_098301_E2766078)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-17 at 10:20 +0100, Janusz Dziedzic wrote:
-> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
-> aligned skbs to four-byte boundaries.
-> 
-> Before we have to do memmove() in the driver before
-> pass this to HW and memmove() back in tx completion.
-> This patch allow to save CPU and skip such memmoves.
-> For each skb we called memmove(ieee80211_hdrsize()) twice.
+In some cases a user might want to connect to a far away access point,
+which announces a low tx power limit. Using the AP's power limit can
+make the connection significantly more unstable or even impossible, and
+mac80211 currently provides no way to disable this behavior.
 
-IMHO this is pretty awful from a code complexity POV. You also forgot
-to update fast-xmit maximum header length.
+To fix this, use the currently unused distinction between limited and
+fixed tx power to decide whether a remote AP's power limit should be
+accepted.
 
-Note that we (iwlwifi) also kinda need this, but essentially solve it
-with the DMA engine. Can't ath9k do the same?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/iface.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d6a1a46..f3ee9ab 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -61,7 +61,8 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
+ 		power = min(power, sdata->user_power_level);
+ 
+-	if (sdata->ap_power_level != IEEE80211_UNSET_POWER_LEVEL)
++	if (sdata->ap_power_level != IEEE80211_UNSET_POWER_LEVEL &&
++	    sdata->vif.bss_conf.txpower_type != NL80211_TX_POWER_FIXED)
+ 		power = min(power, sdata->ap_power_level);
+ 
+ 	if (power != sdata->vif.bss_conf.txpower) {
+-- 
+2.2.2
+
