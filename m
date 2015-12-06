@@ -1,80 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37622 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147AbbLXWiF (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:35969 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122AbbLFUSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 17:38:05 -0500
-Received: by mail-wm0-f44.google.com with SMTP id p187so193615372wmp.0
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2015 14:38:05 -0800 (PST)
+	Sun, 6 Dec 2015 15:18:32 -0500
+Subject: Re: [PATCH] rtlwifi: fix gigantic memleak in rtl_usb
+To: Peter Wu <peter@lekensteyn.nl>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5664981C.1040704@lwfinger.net> (sfid-20151206_211933_420891_84F1E11F)
+Date: Sun, 6 Dec 2015 14:18:36 -0600
 MIME-Version: 1.0
-In-Reply-To: <wrfjpoxxxvjq.fsf@redhat.com>
-References: <1450664916-25205-1-git-send-email-dlenski@gmail.com>
- <1450664916-25205-2-git-send-email-dlenski@gmail.com> <56783C98.1080700@lwfinger.net>
- <CAOw_LSF6cPVCxqOS1eQ+iqESZGRdG46048M15r5s0huVJVHwjg@mail.gmail.com> <wrfjpoxxxvjq.fsf@redhat.com>
-From: Daniel Lenski <dlenski@gmail.com>
-Date: Thu, 24 Dec 2015 14:37:24 -0800
-Message-ID: <CAOw_LSHr-gcrOCrGe8+K6=ndQx21O_HzrxLXJDXnZV5EBJeeyQ@mail.gmail.com> (sfid-20151224_233810_074796_95DC7AF0)
-Subject: Re: [PATCH] enable setting MAC address for r8723au
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2015 at 3:18 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Daniel Lenski <dlenski@gmail.com> writes:
->> On Mon, Dec 21, 2015 at 9:53 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> On 12/20/2015 08:28 PM, Dan Lenski wrote:
->>>>
->>>> Signed-off-by: Dan Lenski <dlenski@gmail.com>
->>>
->>>
->>> The commit message should be in this patch rather than in the non-patch
->>> previous mail. If this patch were to be accepted, all that explanation would
->>> be lost!
->>>
->>> Rather than issuing a warning when the MAC is changed after the interface
->>> has been brought up, have you considered changing the value of
->>> rtw_adapter->bup to zero whenever the connection goes down? Would that help
->>> with the confusion in the user-space tools?
->>
->> No. rtw_adapter isn't visible to userspace at all. NetworkManager, for
->> instance, seems to get confused when *any* up interface changes its
->> MAC address.
->>
->> bup should *not* be reset to zero when the device is closed.
->> netdev_open23a() checks or bup==0 and calls rtl8723au_hal_init() to do
->> hw initialization and firmware download if so. This is unnecessary
->> after subsequent re-opening, which is why netdev_close() doesn't set
->> bup=0.
->>
->>> NACK.
->>
->> I'll resubmit with the commit message fixed and the warning removed.
->>
+On 12/06/2015 11:57 AM, Peter Wu wrote:
+> Free skb for received frames with a wrong checksum.
 >
-> In addition, do *not* overwrite the eeprompriv.mac_addr - that struct is
-> a clean copy of the eeprom's data and should not be modified.
+> While using the rtl8192cu driver in monitor mode, somehow 5G of memory
+> was permanently lost (observable via the Available column in `free -m`).
 >
-> Please changed the dev entry and make sure they driver updates from
-> there instead.
-
-I left that part alone (overwriting the eeprompriv.mac_addr) because
-the existing code relies on it containing the correct *current* MAC
-address in numerous places. But, fair enough.
-
-This will require a much more complex patch, because there are
-numerous functions which assume that eeprompriv.mac_addr is the
-current address. (And some of these functions only receive the struct
-rtw_adapter as an argument, rather than the complete netdev.)
-
-> Second, please CC me directly as the driver maintainer.
+> Test scenario:
 >
-> For longer term, please try out rtl8xxxu, hopefully we can
-> rm -rf drivers/staging/rtl8723au soon.
+>      ip link set down wlan1
+>      iw wlan1 set type monitor
+>      ip link set up wlan1
+>      iw wlan1 set channel 11
+>
+> Then stream a video on a smartphone on channel 11. Without this patch
+> the memory usage grows linearly with the number of received packets:
+>
+>      grep MemAvailable /proc/meminfo
+>      ip -s link show dev wlan1
+>
+> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> ---
+> Hi,
+>
+> This issue has existed since the introduction of this driver in v2.6.x,
+> using kmemleak I was about to figure out the source. There is also a
+> _rtl_usb_rx_process_agg that has similarly looking code, but that one is
+> unaffected. The pci code already frees the skb and is unaffected too.
+>
+> Tested with kernel v4.3, this patch is simply rebased on v4.4-rc3 (due
+> to changed paths).
+>
+> Kind regards,
+> Peter
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/usb.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> index 2721cf8..aac1ed3 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> @@ -531,6 +531,8 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+>   			ieee80211_rx(hw, skb);
+>   		else
+>   			dev_kfree_skb_any(skb);
+> +	} else {
+> +		dev_kfree_skb_any(skb);
+>   	}
+>   }
+>
+>
 
-Woah, I didn't know that driver existed. I will take a look.
+Thanks for finding and fixing this memory leak.
 
-Thanks,
-Dan
+The patch is OK, but the commit message and subject are not. I do not like the 
+use of the word "gigantic" in the subject. A better subject would be: "rtlwifi: 
+Fix memory leak for USB device while in monitor mode".
+
+The commit message should say that a memory leak was observed, and found with 
+kmemleak. If you were simply reportimg the bug, then the steps needed to 
+reproduce it would be important, but as you have a fix, those steps are 
+extraneous. You should also include a "Cc: Stable <stable@vger.kernel.org" line. 
+When the patch is picked up for stable kernels, it will be necessary to rebase 
+the patch to compensate for the directory change.
+
+NACK for the moment.
+
+Larry
+
