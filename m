@@ -1,157 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35597 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754447AbbL3KxQ (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45442 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754191AbbLGCLU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 05:53:16 -0500
-Received: by mail-wm0-f52.google.com with SMTP id f206so33865115wmf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 02:53:15 -0800 (PST)
-MIME-Version: 1.0
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Wed, 30 Dec 2015 11:52:55 +0100
-Message-ID: <CACT4Y+b6A+Fb0QpOa+as66U3u28KYK7woD7JCABr3ndiaDHrqw@mail.gmail.com> (sfid-20151230_115405_090396_9E613866)
-Subject: net/nfc: user-controllable kmalloc size in nfc_llcp_send_ui_frame
-To: Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Cc: syzkaller <syzkaller@googlegroups.com>,
-	Kostya Serebryany <kcc@google.com>,
-	Alexander Potapenko <glider@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>,
-	Eric Dumazet <edumazet@google.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Dec 2015 21:11:20 -0500
+Message-ID: <1449454261.2824.62.camel@decadent.org.uk> (sfid-20151207_031123_532941_804DFD0E)
+Subject: Re: [PATCH linux-firmware] mt7601u: Add firmware version 2.6
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linux-firmware@kernel.org,
+	Hua Shao =?UTF-8?Q?=28=E9=82=B5=E5=8D=8E=29?=
+	<hua.shao@mediatek.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 07 Dec 2015 02:11:01 +0000
+In-Reply-To: <20151127222611.3d2a1e98@laptop>
+References: <20151126032815.GC28542@decadent.org.uk>
+	 <20151127222611.3d2a1e98@laptop>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-E77bVWN0ynUjCSExFiEg"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-The following program triggers WARNING In kmalloc:
+--=-E77bVWN0ynUjCSExFiEg
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2015-11-27 at 22:26 +0000, Jakub Kicinski wrote:
+[...]
+> From: Hua Shao (=E9=82=B5=E5=8D=8E) <hua.shao@mediatek.com>
+>=20
+> Add firmware for mt7601u. version 34.
+>=20
+> Signed-off-by: Hua Shao <hua.shao@mediatek.com>
+> ---
+> =C2=A0WHENCE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A010 +++++++++=
++
+> =C2=A0mt7601u.bin | Bin 0 -> 45412 bytes
+> =C2=A02 files changed, 10 insertions(+)
+> =C2=A0create mode 100755 mt7601u.bin
+[...]
 
-------------[ cut here ]------------
-WARNING: CPU: 2 PID: 6754 at mm/page_alloc.c:2989
-__alloc_pages_nodemask+0x771/0x15f0()
-Modules linked in:
-CPU: 2 PID: 6754 Comm: a.out Not tainted 4.4.0-rc7+ #181
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
- 00000000ffffffff ffff88006275f5e0 ffffffff8289d9dd 0000000000000000
- ffff8800621c8000 ffffffff85dbab40 ffff88006275f620 ffffffff812ebbb9
- ffffffff815fc6b1 ffffffff85dbab40 0000000000000bad ffff88006275f8a8
-Call Trace:
- [<     inline     >] __dump_stack lib/dump_stack.c:15
- [<ffffffff8289d9dd>] dump_stack+0x6f/0xa2 lib/dump_stack.c:50
- [<ffffffff812ebbb9>] warn_slowpath_common+0xd9/0x140 kernel/panic.c:460
- [<ffffffff812ebde9>] warn_slowpath_null+0x29/0x30 kernel/panic.c:493
- [<     inline     >] __alloc_pages_slowpath mm/page_alloc.c:2989
- [<ffffffff815fc6b1>] __alloc_pages_nodemask+0x771/0x15f0 mm/page_alloc.c:3235
- [<ffffffff816bd74e>] alloc_pages_current+0xee/0x340 mm/mempolicy.c:2055
- [<     inline     >] alloc_pages include/linux/gfp.h:451
- [<ffffffff815f8866>] alloc_kmem_pages+0x16/0xf0 mm/page_alloc.c:3414
- [<ffffffff8164842f>] kmalloc_order+0x1f/0x80 mm/slab_common.c:1007
- [<ffffffff816484af>] kmalloc_order_trace+0x1f/0x140 mm/slab_common.c:1018
- [<     inline     >] kmalloc_large include/linux/slab.h:390
- [<ffffffff816ccf0e>] __kmalloc+0x2de/0x330 mm/slub.c:3555
- [<     inline     >] kmalloc include/linux/slab.h:463
- [<     inline     >] kzalloc include/linux/slab.h:602
- [<ffffffff85bea75c>] nfc_llcp_send_ui_frame+0xdc/0x3d0
-net/nfc/llcp_commands.c:732
- [<ffffffff85bebbb0>] llcp_sock_sendmsg+0x250/0x310 net/nfc/llcp_sock.c:782
- [<     inline     >] sock_sendmsg_nosec net/socket.c:610
- [<ffffffff84b5cc9a>] sock_sendmsg+0xca/0x110 net/socket.c:620
- [<ffffffff84b5eaea>] ___sys_sendmsg+0x72a/0x840 net/socket.c:1946
- [<ffffffff84b60aae>] __sys_sendmsg+0xce/0x170 net/socket.c:1980
- [<     inline     >] SYSC_sendmsg net/socket.c:1991
- [<ffffffff84b60b7d>] SyS_sendmsg+0x2d/0x50 net/socket.c:1987
- [<ffffffff85c8eb36>] entry_SYSCALL_64_fastpath+0x16/0x7a
-arch/x86/entry/entry_64.S:185
----[ end trace 62962d1ed2b9f41a ]---
+I've applied this; thanks.
 
+Ben.
 
-// autogenerated by syzkaller (http://github.com/google/syzkaller)
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <string.h>
-#include <stdint.h>
+--=20
+Ben Hutchings
+Theory and practice are closer in theory than in practice.
+                                - John Levine, moderator of comp.compilers
+--=-E77bVWN0ynUjCSExFiEg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-long r[68];
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-int main()
-{
-        memset(r, -1, sizeof(r));
-        r[0] = syscall(SYS_mmap, 0x20000000ul, 0x20000ul, 0x3ul,
-0x32ul, 0xfffffffffffffffful, 0x0ul);
-        r[1] = syscall(SYS_socket, 0x27ul, 0x2ul, 0x1ul, 0, 0, 0);
-        *(uint16_t*)0x2000cfa0 = (uint16_t)0x27;
-        *(uint32_t*)0x2000cfa4 = (uint32_t)0x1;
-        *(uint32_t*)0x2000cfa8 = (uint32_t)0x8;
-        *(uint32_t*)0x2000cfac = (uint32_t)0x7;
-        *(uint8_t*)0x2000cfb0 = (uint8_t)0x0;
-        *(uint8_t*)0x2000cfb1 = (uint8_t)0x38;
-        *(uint8_t*)0x2000cfb2 = (uint8_t)0x6;
-        *(uint8_t*)0x2000cfb3 = (uint8_t)0x0;
-        *(uint32_t*)0x2000cfb4 = (uint32_t)0x9;
-        *(uint32_t*)0x2000cfb8 = (uint32_t)0x7;
-        *(uint32_t*)0x2000cfbc = (uint32_t)0x9;
-        *(uint32_t*)0x2000cfc0 = (uint32_t)0xfffffffffffffff7;
-        *(uint32_t*)0x2000cfc4 = (uint32_t)0x8;
-        *(uint32_t*)0x2000cfc8 = (uint32_t)0xcf77;
-        *(uint32_t*)0x2000cfcc = (uint32_t)0x39;
-        *(uint32_t*)0x2000cfd0 = (uint32_t)0x6;
-        *(uint32_t*)0x2000cfd4 = (uint32_t)0x8;
-        *(uint32_t*)0x2000cfd8 = (uint32_t)0x4;
-        *(uint32_t*)0x2000cfdc = (uint32_t)0x4b;
-        *(uint32_t*)0x2000cfe0 = (uint32_t)0x9;
-        *(uint32_t*)0x2000cfe4 = (uint32_t)0x5;
-        *(uint32_t*)0x2000cfe8 = (uint32_t)0x4;
-        *(uint32_t*)0x2000cfec = (uint32_t)0x7;
-        *(uint8_t*)0x2000cff0 = (uint8_t)0xfffffffffffffffd;
-        *(uint64_t*)0x2000cff8 = (uint64_t)0x8;
-        r[27] = syscall(SYS_bind, r[1], 0x2000cfa0ul, 0x60ul, 0, 0, 0);
-        *(uint64_t*)0x20014fc8 = (uint64_t)0x20014000;
-        *(uint32_t*)0x20014fd0 = (uint32_t)0x60;
-        *(uint64_t*)0x20014fd8 = (uint64_t)0x20014000;
-        *(uint64_t*)0x20014fe0 = (uint64_t)0x1;
-        *(uint64_t*)0x20014fe8 = (uint64_t)0x20014000;
-        *(uint64_t*)0x20014ff0 = (uint64_t)0x11;
-        *(uint32_t*)0x20014ff8 = (uint32_t)0x0;
-        *(uint16_t*)0x20014000 = (uint16_t)0x27;
-        *(uint32_t*)0x20014004 = (uint32_t)0x3;
-        *(uint32_t*)0x20014008 = (uint32_t)0x0;
-        *(uint32_t*)0x2001400c = (uint32_t)0x0;
-        *(uint8_t*)0x20014010 = (uint8_t)0x2;
-        *(uint8_t*)0x20014011 = (uint8_t)0x52;
-        *(uint8_t*)0x20014012 = (uint8_t)0x7;
-        *(uint8_t*)0x20014013 = (uint8_t)0x2;
-        *(uint32_t*)0x20014014 = (uint32_t)0x3;
-        *(uint32_t*)0x20014018 = (uint32_t)0x8;
-        *(uint32_t*)0x2001401c = (uint32_t)0x9;
-        *(uint32_t*)0x20014020 = (uint32_t)0xde4;
-        *(uint32_t*)0x20014024 = (uint32_t)0x8;
-        *(uint32_t*)0x20014028 = (uint32_t)0x6;
-        *(uint32_t*)0x2001402c = (uint32_t)0x6850;
-        *(uint32_t*)0x20014030 = (uint32_t)0x24;
-        *(uint32_t*)0x20014034 = (uint32_t)0x0;
-        *(uint32_t*)0x20014038 = (uint32_t)0xffffffffffffffe4;
-        *(uint32_t*)0x2001403c = (uint32_t)0x6;
-        *(uint32_t*)0x20014040 = (uint32_t)0x4e;
-        *(uint32_t*)0x20014044 = (uint32_t)0x6;
-        *(uint32_t*)0x20014048 = (uint32_t)0xf14c;
-        *(uint32_t*)0x2001404c = (uint32_t)0x2;
-        *(uint8_t*)0x20014050 = (uint8_t)0x1;
-        *(uint64_t*)0x20014058 = (uint64_t)0x3e;
-        *(uint64_t*)0x20014000 = (uint64_t)0x20014000;
-        *(uint64_t*)0x20014008 = (uint64_t)0xd2;
-        *(uint64_t*)0x20014000 = (uint64_t)0x11;
-        *(uint32_t*)0x20014008 = (uint32_t)0x4;
-        *(uint32_t*)0x2001400c = (uint32_t)0x9;
-        *(uint8_t*)0x20014010 = (uint8_t)0x0;
-        r[67] = syscall(SYS_sendmsg, r[1], 0x20014fc8ul, 0x80ul, 0, 0, 0);
-        return 0;
-}
+iQIVAwUAVmTqtee/yOyVhhEJAQo9Lg//VPzpXhdGzNQXwmkRXCGnHeJ3FKF4Q9jJ
+y4/9f5otYy2Wc+dcXWz819k/1u/D3PeSUsWHy1buafYhFZC+9AZxDJpGKoEzP0Ci
+E9U+fYwyDJqclGdE0RleUjV+hffAbFJ00ELYPYfqcvF/M1MW4QEmBOQiuVyNbsKp
+gRt7sTkVh9VF87WtoESv8KFY77637j5TD+AJOvE6rDeSzRUqGqUAeP/erb8bcs8B
+Xrgp3JEUppUEYPFSvN+/DFyKsy19/1aQIOG5eqUEGgsj8yABk6mTaTjwGp58i5Og
+AwZkCz+0kd6HoEhPmEIV2dOWA/cDaMXe/EdiCY5TdeejIl7sslH5UCfhTAypn6dK
+PW8Ut1GpfR7AbroOYs+kpuFIcDpOlxVRql6j/IrWkpABYL0BD4viAxTMjDcPs/ll
+APpX4/DGFBPLOnvt4aAqytqctm7++0WLr8upK4DtVO1chSUEDpAspMfWFCITIKUi
+Jga8RsSGNr+0NDaGF8+ClEnJ8R4zwDMbKhHcW/3ZLAFDSH2ljLphh9BNB0M3I8Ff
+lqoMV+misFlkYyRcmPTPFupGg4WpXqniF5KUqOdb80UUxQSbMo37QAgnZux89IS2
+OSwqJv/8Q8BOGJDY2cfSx8ZgCED2zPRaQBnJR//FcfvoZjr321MprKBz0wiUXdZ8
+Id0UOzB49YA=
+=1VZM
+-----END PGP SIGNATURE-----
 
-On commit 8513342170278468bac126640a5d2d12ffbff106 (Dec 28).
+--=-E77bVWN0ynUjCSExFiEg--
