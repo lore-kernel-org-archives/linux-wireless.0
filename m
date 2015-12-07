@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41672 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753749AbbLGSEB (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:36701 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754574AbbLGCOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 13:04:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Fixing full name in patchwork
-References: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
-Date: Mon, 07 Dec 2015 20:03:54 +0200
-In-Reply-To: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Mon, 23 Nov 2015 18:02:02 +0530")
-Message-ID: <87zixmb0fp.fsf@kamboji.qca.qualcomm.com> (sfid-20151207_190426_719086_5650B367)
+	Sun, 6 Dec 2015 21:14:17 -0500
+Subject: Re: [PATCH v2] rtlwifi: fix memory leak for USB device
+To: Peter Wu <peter@lekensteyn.nl>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1449446851-2221-1-git-send-email-peter@lekensteyn.nl>
+Cc: stable@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5664EB7D.7010009@lwfinger.net> (sfid-20151207_031434_253863_61CF75EB)
+Date: Sun, 6 Dec 2015 20:14:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449446851-2221-1-git-send-email-peter@lekensteyn.nl>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sudip,
-
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-
-> We were dereferencing cmd first and checking for NULL later. Lets first
-> check for NULL.
+On 12/06/2015 06:07 PM, Peter Wu wrote:
+> Free skb for received frames with a wrong checksum. This can happen
+> pretty rapidly, exhausting all memory.
 >
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> This fixes a memleak (detected with kmemleak). Originally found while
+> using monitor mode, but it also appears during managed mode (once the
+> link is up).
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> ---
+>   v2: updated commit message based on Larry's feedback
+>   v1: https://lkml.kernel.org/r/1449424677-3140-1-git-send-email-peter@lekensteyn.nl
+>
+> Tested with v4.3, rebased on v4.4-rc3 (changed paths). The bug goes back
+> to its introduction in the v2.6.x kernel.
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/usb.c | 2 ++
+>   1 file changed, 2 insertions(+)
 
-I noticed that your name in git log is not your full name:
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-commit 0a38c8e1b592c16d959da456f425053e323a5153
-Author: sudip <sudipm.mukherjee@gmail.com>
-Date:   Tue Nov 24 13:51:38 2015 +0530
+Thanks,
 
-This is because for some reason in patchwork your fullname is just
-"sudip":
+Larry
 
-https://patchwork.kernel.org/patch/7688171/
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> index 2721cf8..aac1ed3 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> @@ -531,6 +531,8 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+>   			ieee80211_rx(hw, skb);
+>   		else
+>   			dev_kfree_skb_any(skb);
+> +	} else {
+> +		dev_kfree_skb_any(skb);
+>   	}
+>   }
+>
+>
 
-Could you please fix your name in patchwork so that in the future we can
-use your correct full name? The problem is that I don't know exactly how
-to do this but it should be possible because I remember someone else
-having a similar problem and he was able to fix it.
-
--- 
-Kalle Valo
