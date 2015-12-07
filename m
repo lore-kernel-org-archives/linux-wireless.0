@@ -1,94 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755969AbbLAJ7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:18 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/41] iwlwifi: mvm: Enable MPLUT only on supported hw
-Date: Tue,  1 Dec 2015 11:58:33 +0200
-Message-Id: <1448963947-24302-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105926_523979_070DB89F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14691 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754984AbbLGJJO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Dec 2015 04:09:14 -0500
+Date: Mon, 7 Dec 2015 14:38:58 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
+CC: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k: device has crashed during init - qca6174 chipset
+Message-ID: <20151207090853.GA10097@rmanohar-arch.qca.qualcomm.com> (sfid-20151207_100930_490124_B337988C)
+References: <loom.20151201T071931-353@post.gmane.org>
+ <CALhHN=o4xAhy9oz0Q7sy-Ubji-nBf6pdJ7OSj8xLU0mn86n1qQ@mail.gmail.com>
+ <CADaZW1E42rnjaxjnjskW_j83m=moauNBttZ-M=oyWoiXXS2ZiQ@mail.gmail.com>
+ <CA+BoTQ=k9NHd6KHt2qzgjs5g3B6Q58fX=hTRB-BvxcvjejmWog@mail.gmail.com>
+ <CADaZW1Eww2TNimciP5JxVam0y+-V4Ez2VfFXdT=_jh14TgOp0g@mail.gmail.com>
+ <CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
+ <CACKGw+GPjr1fQ_u5yHfsAa=GBJmk7vRfcTUS3nt1N+id7UoPzg@mail.gmail.com>
+ <CADaZW1Fy_7z8sHDjML1G_u8F3jyNrbSvLKRmxnCPw6M2HYc8oA@mail.gmail.com>
+ <CADaZW1F=5NcMomcxKczb92rvxYR=kcwpSo8yu25C7AHQ4UHK3A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CADaZW1F=5NcMomcxKczb92rvxYR=kcwpSo8yu25C7AHQ4UHK3A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+On Tue, Dec 01, 2015 at 11:28:25AM +0100, Bartlomiej Grzeskowiak wrote:
+> I have tested borad-2.bin file with my module, by forcing
+> ar->id.subsystem_vendor = 0x168c;
+> ar->id.subsystem_device = 0x3363; (1,2,3)
+> in ath/ath10k/pci.c file.
+> 
+> All the tests failed with:
+> ath10k_pci 0000:01:00.0: failed to receive initialized event from
+> target: 00000000
+> ath10k_pci 0000:01:00.0: firmware crashed! (uuid
+> 5506e81c-d538-4492-91d7-dc899fed8d8c)
+> 
+> Does it mean, that this module is not supported?
+> I will need to dump firmware from windows driver, when I get it from
+> the vendor ?
+> 
+Can you please apply below changes in your rc2 backports.
 
-When there's a bt-wifi contention that requires arbitration,
-we use a priority-based mechanism to decide which comm wins.
-Over time, use cases become more and more complex, with multiple
-concurrent active links with different traffic types and different QoS
-requirements, on both WiFi and BT sides.
-This, in turn, requires us to elaborate our prioritization mechanism.
-However, our legacy products included hw that does not supports this,
-so selectively enable this on specific hw - as signaled by the firmware.
+https://github.com/kvalo/ath/commit/2727a743e9eeb3d4063d4077afee3fd2a5e198ca
+https://github.com/kvalo/ath/commit/6419fdbb6f90e147690f8833cba59d289d613da5
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 5 +----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 7 +++++++
- 3 files changed, 10 insertions(+), 4 deletions(-)
+or try with latest backports.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 08303db..6aeeceb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -308,6 +308,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
-  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
-  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
-+ * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -334,6 +335,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
-+	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
- 
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index e290ac6..808f234 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -443,11 +443,8 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
- 	if (iwl_mvm_bt_is_plcr_supported(mvm))
- 		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_CORUN_ENABLED);
- 
--	if (IWL_MVM_BT_COEX_MPLUT) {
-+	if (iwl_mvm_is_mplut_supported(mvm))
- 		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_MPLUT_ENABLED);
--		bt_cmd.enabled_modules |=
--			cpu_to_le32(BT_COEX_MPLUT_BOOST_ENABLED);
--	}
- 
- 	bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_HIGH_BAND_RET);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 419afa4..aff71d3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -976,6 +976,13 @@ static inline bool iwl_mvm_is_csum_supported(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_CSUM_SUPPORT);
- }
- 
-+static inline bool iwl_mvm_is_mplut_supported(struct iwl_mvm *mvm)
-+{
-+	return fw_has_capa(&mvm->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT) &&
-+		IWL_MVM_BT_COEX_MPLUT;
-+}
-+
- static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
- {
- 	/* firmware flag isn't defined yet */
--- 
-2.5.0
+https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.gz
 
+-Rajkumar
