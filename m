@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:35751 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889AbbLKXR5 (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36493 "EHLO
+	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296AbbLGTBs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 18:17:57 -0500
-Received: by qkfb125 with SMTP id b125so61930426qkf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 15:17:57 -0800 (PST)
+	Mon, 7 Dec 2015 14:01:48 -0500
+Received: by qkcb135 with SMTP id b135so28410041qkc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2015 11:01:48 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
-References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 11 Dec 2015 15:17:37 -0800
-Message-ID: <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com> (sfid-20151212_001801_158339_DCC9E024)
-Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 7 Dec 2015 16:01:47 -0300
+Message-ID: <CAKCMXx2ZAT8QMgs6g4ryxNQ2jiZ9-JmSiS+fOWCpX0Vz+xLEug@mail.gmail.com> (sfid-20151207_200151_726825_B4FFED6E)
+Subject: brcmsmac: signal lost after connecting to AP
+From: Ivan Castellucci Vidal <ivanc.vidal@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 11, 2015 at 10:59 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> I could bisect *if this issue
-> is not known*, but it may take a while...
+Hi everyone!
 
-So this is interesting..
+This is my first post so if I forget about anything I hope you can
+help me make this useful for everyone.
+Currently I own a Laptop which comes with a Broadcom BCM4313 WLAN
+card. I'm in a far place from the AP but I still have enough signal to
+watch HD videos on YouTube most of the time, but from time to time
+signal fades because of environment factors.
 
-The opensuse 4.2.4 kernel worked, but I tried my own vanilla 4.2.4
-kernel and that didn't work. This lead me to believe this might be a
-config issue. I tried the same config on v4.3, v4.2 and v4.2.4 and all
-fail with the same issue!
+What I've observed is that if I keep pinging the AP it replies unthil
+signal fades, then I reconnect to the network and ping shows replies
+for at least one packet and it can work for a couple more sometimes.
+That makes me think the WLAN card and the AP have enough power to keep
+working between each other despite of the distance but something makes
+the card go in a low-power mode or something because signal
+immediately drops and stop replying.
 
-I just tried a base config from opensuse, then localmodconfig, then
-'make xenconfig' (which I need) and that worked. I can't debug further
-but I think this config might help debug this further:
+Did it happened to anyone else? Is it a known bug or feature (maybe a
+regulatory feature) ?
 
-http://drvbp1.linux-foundation.org/~mcgrof/tmp/config-iwl-fail.txt
+Anyhow, if you need any information just let me know, the AP is a
+TP-LINK router and it works with my phone for even longer distances.
+BTW: I have a decent C programming background and I can help with
+anything you need with the only detail of time being a constraint
+sometimes.
 
-So -- my new config works, but I have no idea what fixed it, a config
-option obviously. Not sure what though.
+Thanks in advance
 
- Luis
+--
+Iván Castellucci Vidal
