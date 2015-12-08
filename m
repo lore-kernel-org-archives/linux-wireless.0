@@ -1,432 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33038 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbbL1Bek (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Dec 2015 20:34:40 -0500
-Received: by mail-pa0-f44.google.com with SMTP id cy9so102565595pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Dec 2015 17:34:40 -0800 (PST)
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>, fengwei.yin@linaro.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	wcn36xx@lists.infradead.org
-Subject: [PATCH 3/4] wcn36xx: Transition driver to SMD client
-Date: Sun, 27 Dec 2015 17:34:26 -0800
-Message-Id: <1451266467-15377-4-git-send-email-bjorn.andersson@sonymobile.com> (sfid-20151228_023545_901012_51574411)
-In-Reply-To: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
-References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964890AbbLHOGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2015 09:06:25 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/9] mac80211: process and save VHT MU-MIMO group frame
+Date: Tue,  8 Dec 2015 16:04:31 +0200
+Message-Id: <1449583479-26658-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150634_958499_1FE3735E)
+In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
-channel, as such it should be a SMD client. This patch makes this
-transition, now that we have the necessary frameworks available.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+The Group ID Management frame is an Action frame of
+category VHT. It is transmitted by the AP to assign
+or change the user position of a STA for one or more
+group IDs.
+Process and save the group membership data. Notify
+underlying driver of changes.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/Kconfig   |   2 +-
- drivers/net/wireless/ath/wcn36xx/dxe.c     |  16 +++--
- drivers/net/wireless/ath/wcn36xx/main.c    | 111 +++++++++++++++++------------
- drivers/net/wireless/ath/wcn36xx/smd.c     |  26 ++++---
- drivers/net/wireless/ath/wcn36xx/smd.h     |   4 ++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  21 ++----
- 6 files changed, 99 insertions(+), 81 deletions(-)
+ include/linux/ieee80211.h  |  7 +++++++
+ include/net/mac80211.h     | 17 +++++++++++++++++
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       | 10 ++++++++++
+ net/mac80211/mlme.c        |  7 +++++++
+ net/mac80211/rx.c          |  5 +++++
+ net/mac80211/util.c        |  3 +++
+ net/mac80211/vht.c         | 25 +++++++++++++++++++++++++
+ 8 files changed, 76 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
-index 591ebaea8265..394fe5b77c90 100644
---- a/drivers/net/wireless/ath/wcn36xx/Kconfig
-+++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
-@@ -1,6 +1,6 @@
- config WCN36XX
- 	tristate "Qualcomm Atheros WCN3660/3680 support"
--	depends on MAC80211 && HAS_DMA
-+	depends on MAC80211 && HAS_DMA && QCOM_SMD
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index f8dfa05b290a..47f3937a7ab9 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -23,6 +23,7 @@
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
- #include <linux/interrupt.h>
-+#include <linux/soc/qcom/smem_state.h>
- #include "wcn36xx.h"
- #include "txrx.h"
- 
-@@ -150,9 +151,12 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
- 		goto out_err;
- 
- 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
--	ret = wcn->ctrl_ops->smsm_change_state(
--		WCN36XX_SMSM_WLAN_TX_ENABLE,
--		WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
-+	ret = qcom_smem_state_update_bits(wcn->tx_enable_state,
-+					  WCN36XX_SMSM_WLAN_TX_ENABLE |
-+					  WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY,
-+					  WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
-+	if (ret)
-+		goto out_err;
- 
- 	return 0;
- 
-@@ -676,9 +680,9 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 	 * notify chip about new frame through SMSM bus.
- 	 */
- 	if (is_low &&  vif_priv->pw_state == WCN36XX_BMPS) {
--		wcn->ctrl_ops->smsm_change_state(
--				  0,
--				  WCN36XX_SMSM_WLAN_TX_ENABLE);
-+		qcom_smem_state_update_bits(wcn->tx_rings_empty_state,
-+					    WCN36XX_SMSM_WLAN_TX_ENABLE,
-+					    WCN36XX_SMSM_WLAN_TX_ENABLE);
- 	} else {
- 		/* indicate End Of Packet and generate interrupt on descriptor
- 		 * done.
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 7c169abdbafe..8659e3f997d2 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -19,6 +19,9 @@
- #include <linux/module.h>
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
-+#include <linux/of_irq.h>
-+#include <linux/soc/qcom/smd.h>
-+#include <linux/soc/qcom/smem_state.h>
- #include "wcn36xx.h"
- 
- unsigned int wcn36xx_dbg_mask;
-@@ -981,48 +984,63 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- }
- 
- static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
--					  struct platform_device *pdev)
-+					  struct device *dev)
- {
--	struct resource *res;
-+	u32 mmio[2];
-+	int ret;
-+
- 	/* Set TX IRQ */
--	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
--					   "wcnss_wlantx_irq");
--	if (!res) {
-+	wcn->tx_irq = irq_of_parse_and_map(dev->of_node, 0);
-+	if (!wcn->tx_irq) {
- 		wcn36xx_err("failed to get tx_irq\n");
- 		return -ENOENT;
- 	}
--	wcn->tx_irq = res->start;
- 
- 	/* Set RX IRQ */
--	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
--					   "wcnss_wlanrx_irq");
--	if (!res) {
-+	wcn->rx_irq = irq_of_parse_and_map(dev->of_node, 1);
-+	if (!wcn->rx_irq) {
- 		wcn36xx_err("failed to get rx_irq\n");
- 		return -ENOENT;
- 	}
--	wcn->rx_irq = res->start;
-+
-+	/* Acquire SMSM tx enable handle */
-+	wcn->tx_enable_state = qcom_smem_state_get(dev, "tx-enable",
-+			&wcn->tx_enable_state_bit);
-+	if (IS_ERR(wcn->tx_enable_state)) {
-+		wcn36xx_err("failed to get tx-enable state\n");
-+		return -ENOENT;
-+	}
-+
-+	/* Acquire SMSM tx rings empty handle */
-+	wcn->tx_rings_empty_state = qcom_smem_state_get(dev, "tx-rings-empty",
-+			&wcn->tx_rings_empty_state_bit);
-+	if (IS_ERR(wcn->tx_rings_empty_state)) {
-+		wcn36xx_err("failed to get tx-rings-empty state\n");
-+		return -ENOENT;
-+	}
- 
- 	/* Map the memory */
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--						 "wcnss_mmio");
--	if (!res) {
--		wcn36xx_err("failed to get mmio\n");
-+	ret = of_property_read_u32_array(dev->of_node, "qcom,wcnss-mmio", mmio, 2);
-+	if (ret) {
-+		wcn36xx_err("failed to get qcom,wcnss-mmio\n");
- 		return -ENOENT;
- 	}
--	wcn->mmio = ioremap(res->start, resource_size(res));
-+
-+	wcn->mmio = ioremap(mmio[0], mmio[1]);
- 	if (!wcn->mmio) {
- 		wcn36xx_err("failed to map io memory\n");
- 		return -ENOMEM;
- 	}
-+
- 	return 0;
- }
- 
--static int wcn36xx_probe(struct platform_device *pdev)
-+static int wcn36xx_probe(struct qcom_smd_device *sdev)
- {
- 	struct ieee80211_hw *hw;
- 	struct wcn36xx *wcn;
- 	int ret;
--	u8 addr[ETH_ALEN];
-+	const u8 *addr;
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe\n");
- 
-@@ -1032,20 +1050,27 @@ static int wcn36xx_probe(struct platform_device *pdev)
- 		ret = -ENOMEM;
- 		goto out_err;
- 	}
--	platform_set_drvdata(pdev, hw);
-+	dev_set_drvdata(&sdev->dev, hw);
- 	wcn = hw->priv;
- 	wcn->hw = hw;
--	wcn->dev = &pdev->dev;
--	wcn->ctrl_ops = pdev->dev.platform_data;
-+	wcn->dev = &sdev->dev;
-+	wcn->smd_channel = sdev->channel;
- 
- 	mutex_init(&wcn->hal_mutex);
- 
--	if (!wcn->ctrl_ops->get_hw_mac(addr)) {
-+	sdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	addr = of_get_property(sdev->dev.of_node, "local-mac-address", &ret);
-+	if (addr && ret != ETH_ALEN) {
-+		wcn36xx_err("invalid local-mac-address\n");
-+		ret = -EINVAL;
-+		goto out_err;
-+	} else if (addr) {
- 		wcn36xx_info("mac address: %pM\n", addr);
- 		SET_IEEE80211_PERM_ADDR(wcn->hw, addr);
- 	}
- 
--	ret = wcn36xx_platform_get_resources(wcn, pdev);
-+	ret = wcn36xx_platform_get_resources(wcn, &sdev->dev);
- 	if (ret)
- 		goto out_wq;
- 
-@@ -1063,9 +1088,10 @@ out_wq:
- out_err:
- 	return ret;
- }
--static int wcn36xx_remove(struct platform_device *pdev)
-+
-+static void wcn36xx_remove(struct qcom_smd_device *sdev)
- {
--	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
-+	struct ieee80211_hw *hw = dev_get_drvdata(&sdev->dev);
- 	struct wcn36xx *wcn = hw->priv;
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform remove\n");
- 
-@@ -1073,41 +1099,34 @@ static int wcn36xx_remove(struct platform_device *pdev)
- 	mutex_destroy(&wcn->hal_mutex);
- 
- 	ieee80211_unregister_hw(hw);
-+
-+	qcom_smem_state_put(wcn->tx_enable_state);
-+	qcom_smem_state_put(wcn->tx_rings_empty_state);
-+
- 	iounmap(wcn->mmio);
- 	ieee80211_free_hw(hw);
--
--	return 0;
- }
--static const struct platform_device_id wcn36xx_platform_id_table[] = {
--	{
--		.name = "wcn36xx",
--		.driver_data = 0
--	},
-+
-+static const struct of_device_id wcn36xx_of_match[] = {
-+	{ .compatible = "qcom,wcn3620-wlan" },
-+	{ .compatible = "qcom,wcn3660-wlan" },
-+	{ .compatible = "qcom,wcn3680-wlan" },
- 	{}
- };
--MODULE_DEVICE_TABLE(platform, wcn36xx_platform_id_table);
-+MODULE_DEVICE_TABLE(of, wcn36xx_of_match);
- 
--static struct platform_driver wcn36xx_driver = {
-+static struct qcom_smd_driver wcn36xx_driver = {
- 	.probe      = wcn36xx_probe,
- 	.remove     = wcn36xx_remove,
-+	.callback = wcn36xx_smd_rsp_process,
- 	.driver         = {
- 		.name   = "wcn36xx",
-+		.of_match_table = wcn36xx_of_match,
-+		.owner  = THIS_MODULE,
- 	},
--	.id_table    = wcn36xx_platform_id_table,
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 452c0b0..d9ddb89 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -843,6 +843,8 @@ enum ieee80211_vht_opmode_bits {
  };
  
--static int __init wcn36xx_init(void)
--{
--	platform_driver_register(&wcn36xx_driver);
--	return 0;
--}
--module_init(wcn36xx_init);
--
--static void __exit wcn36xx_exit(void)
--{
--	platform_driver_unregister(&wcn36xx_driver);
--}
--module_exit(wcn36xx_exit);
-+module_qcom_smd_driver(wcn36xx_driver);
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
++#define WLAN_MEMBERSHIP_LEN 8
++#define WLAN_USER_POSITION_LEN 16
  
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 4307429740a9..2bf42787a4af 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -19,6 +19,7 @@
- #include <linux/etherdevice.h>
- #include <linux/firmware.h>
- #include <linux/bitops.h>
-+#include <linux/soc/qcom/smd.h>
- #include "smd.h"
- 
- struct wcn36xx_cfg_val {
-@@ -253,7 +254,7 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
- 
- 	init_completion(&wcn->hal_rsp_compl);
- 	start = jiffies;
--	ret = wcn->ctrl_ops->tx(wcn->hal_buf, len);
-+	ret = qcom_smd_send(wcn->smd_channel, wcn->hal_buf, len);
- 	if (ret) {
- 		wcn36xx_err("HAL TX failed\n");
- 		goto out;
-@@ -2100,9 +2101,13 @@ out:
- 	mutex_unlock(&wcn->hal_mutex);
- 	return ret;
- }
--static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
-+
-+int wcn36xx_smd_rsp_process(struct qcom_smd_device *sdev,
-+			    const void *buf, size_t len)
- {
--	struct wcn36xx_hal_msg_header *msg_header = buf;
-+	const struct wcn36xx_hal_msg_header *msg_header = buf;
-+	struct ieee80211_hw *hw = dev_get_drvdata(&sdev->dev);
-+	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_hal_ind_msg *msg_ind;
- 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
- 
-@@ -2151,7 +2156,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
- 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
- 	case WCN36XX_HAL_MISSED_BEACON_IND:
- 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
--		msg_ind = kmalloc(sizeof(*msg_ind) + len, GFP_KERNEL);
-+		msg_ind = kmalloc(sizeof(*msg_ind) + len, GFP_ATOMIC);
- 		if (!msg_ind) {
- 			/*
- 			 * FIXME: Do something smarter then just
-@@ -2175,6 +2180,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
- 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
- 			      msg_header->msg_type);
- 	}
-+
-+	return 0;
- }
- static void wcn36xx_ind_smd_work(struct work_struct *work)
- {
-@@ -2232,22 +2239,13 @@ int wcn36xx_smd_open(struct wcn36xx *wcn)
- 	INIT_LIST_HEAD(&wcn->hal_ind_queue);
- 	spin_lock_init(&wcn->hal_ind_lock);
- 
--	ret = wcn->ctrl_ops->open(wcn, wcn36xx_smd_rsp_process);
--	if (ret) {
--		wcn36xx_err("failed to open control channel\n");
--		goto free_wq;
--	}
--
--	return ret;
-+	return 0;
- 
--free_wq:
--	destroy_workqueue(wcn->hal_ind_wq);
- out:
- 	return ret;
- }
- 
- void wcn36xx_smd_close(struct wcn36xx *wcn)
- {
--	wcn->ctrl_ops->close();
- 	destroy_workqueue(wcn->hal_ind_wq);
- }
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 21cc4ac7b5ca..4d96d56d266f 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -60,6 +60,7 @@ struct wcn36xx_hal_ind_msg {
- };
- 
- struct wcn36xx;
-+struct qcom_smd_device;
- 
- int wcn36xx_smd_open(struct wcn36xx *wcn);
- void wcn36xx_smd_close(struct wcn36xx *wcn);
-@@ -136,4 +137,7 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
- int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
- 
- int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-+
-+int wcn36xx_smd_rsp_process(struct qcom_smd_device *sdev,
-+			    const void *buf, size_t len);
- #endif	/* _SMD_H_ */
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 7997cc1312ee..4be81f66e167 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -103,19 +103,6 @@ struct nv_data {
- 	u8	table;
- };
- 
--/* Interface for platform control path
-- *
-- * @open: hook must be called when wcn36xx wants to open control channel.
-- * @tx: sends a buffer.
-- */
--struct wcn36xx_platform_ctrl_ops {
--	int (*open)(void *drv_priv, void *rsp_cb);
--	void (*close)(void);
--	int (*tx)(char *buf, size_t len);
--	int (*get_hw_mac)(u8 *addr);
--	int (*smsm_change_state)(u32 clear_mask, u32 set_mask);
--};
--
  /**
-  * struct wcn36xx_vif - holds VIF related fields
-  *
-@@ -204,7 +191,13 @@ struct wcn36xx {
- 	int			rx_irq;
- 	void __iomem		*mmio;
+  * struct ieee80211_tpc_report_ie
+@@ -991,6 +993,11 @@ struct ieee80211_mgmt {
+ 				} __packed vht_opmode_notif;
+ 				struct {
+ 					u8 action_code;
++					u8 membership[WLAN_MEMBERSHIP_LEN];
++					u8 position[WLAN_USER_POSITION_LEN];
++				} __packed vht_group_notif;
++				struct {
++					u8 action_code;
+ 					u8 dialog_token;
+ 					u8 tpc_elem_id;
+ 					u8 tpc_elem_length;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7c30faf..8da483b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -298,6 +298,7 @@ struct ieee80211_vif_chanctx_switch {
+  *	note that this is only called when it changes after the channel
+  *	context had been assigned.
+  * @BSS_CHANGED_OCB: OCB join status changed
++ * @BSS_CHANGED_MU_GROUPS: VHT MU-MIMO group id or user position changed
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -323,6 +324,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BEACON_INFO		= 1<<20,
+ 	BSS_CHANGED_BANDWIDTH		= 1<<21,
+ 	BSS_CHANGED_OCB                 = 1<<22,
++	BSS_CHANGED_MU_GROUPS		= 1<<23,
  
--	struct wcn36xx_platform_ctrl_ops *ctrl_ops;
-+	struct qcom_smd_channel *smd_channel;
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -436,6 +438,19 @@ struct ieee80211_event {
+ };
+ 
+ /**
++ * struct ieee80211_mu_group_data - STA's VHT MU-MIMO group data
++ *
++ * This structure describes the group id data of VHT MU-MIMO
++ *
++ * @membership: 64 bits array - a bit is set if station is member of the group
++ * @position: 2 bits per group id indicating the position in the group
++ */
++struct ieee80211_mu_group_data {
++	u8 membership[WLAN_MEMBERSHIP_LEN];
++	u8 position[WLAN_USER_POSITION_LEN];
++};
 +
-+	struct qcom_smem_state  *tx_enable_state;
-+	unsigned		tx_enable_state_bit;
-+	struct qcom_smem_state	*tx_rings_empty_state;
-+	unsigned		tx_rings_empty_state_bit;
++/**
+  * struct ieee80211_bss_conf - holds the BSS's changing parameters
+  *
+  * This structure keeps information about a BSS (and an association
+@@ -477,6 +492,7 @@ struct ieee80211_event {
+  * @enable_beacon: whether beaconing should be enabled or not
+  * @chandef: Channel definition for this BSS -- the hardware might be
+  *	configured a higher bandwidth than this BSS uses, for example.
++ * @mu_group: VHT MU-MIMO group membership data
+  * @ht_operation_mode: HT operation mode like in &struct ieee80211_ht_operation.
+  *	This field is only valid when the channel is a wide HT/VHT channel.
+  *	Note that with TDLS this can be the case (channel is HT, protection must
+@@ -535,6 +551,7 @@ struct ieee80211_bss_conf {
+ 	s32 cqm_rssi_thold;
+ 	u32 cqm_rssi_hyst;
+ 	struct cfg80211_chan_def chandef;
++	struct ieee80211_mu_group_data mu_group;
+ 	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
+ 	int arp_addr_cnt;
+ 	bool qos;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c30b684..582ea86 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1714,6 +1714,8 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cap_rx_bw(struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
++				 struct ieee80211_mgmt *mgmt);
+ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+                                   struct sta_info *sta, u8 opmode,
+                                   enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c9e325d..33ae3c8 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1271,6 +1271,16 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 				}
+ 			}
+ 			mutex_unlock(&local->sta_mtx);
++		} else if (ieee80211_is_action(mgmt->frame_control) &&
++			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
++			switch (mgmt->u.action.u.vht_group_notif.action_code) {
++			case WLAN_VHT_ACTION_GROUPID_MGMT:
++				ieee80211_process_mu_groups(sdata, mgmt);
++				break;
++			default:
++				WARN_ON(1);
++				break;
++			}
+ 		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
+ 			struct ieee80211_hdr *hdr = (void *)mgmt;
+ 			/*
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 123b26d..1e6b337 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2074,6 +2074,13 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	memset(&ifmgd->ht_capa_mask, 0, sizeof(ifmgd->ht_capa_mask));
+ 	memset(&ifmgd->vht_capa, 0, sizeof(ifmgd->vht_capa));
+ 	memset(&ifmgd->vht_capa_mask, 0, sizeof(ifmgd->vht_capa_mask));
 +
- 	/*
- 	 * smd_buf must be protected with smd_mutex to garantee
- 	 * that all messages are sent one after another
++	/* reset MU-MIMO ownership and group data */
++	memset(sdata->vif.bss_conf.mu_group.membership, 0,
++	       sizeof(sdata->vif.bss_conf.mu_group.membership));
++	memset(sdata->vif.bss_conf.mu_group.position, 0,
++	       sizeof(sdata->vif.bss_conf.mu_group.position));
++	changed |= BSS_CHANGED_MU_GROUPS;
+ 	sdata->flags &= ~IEEE80211_SDATA_MU_MIMO_OWNER;
+ 
+ 	sdata->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 1f82753..c4198d48 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2739,6 +2739,11 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 						    false);
+ 			goto handled;
+ 		}
++		case WLAN_VHT_ACTION_GROUPID_MGMT: {
++			if (len < IEEE80211_MIN_ACTION_SIZE + 25)
++				goto invalid;
++			goto queue;
++		}
+ 		default:
+ 			break;
+ 		}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 08af2b3..4d6130b 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1905,6 +1905,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			  BSS_CHANGED_IDLE |
+ 			  BSS_CHANGED_TXPOWER;
+ 
++		if (sdata->flags & IEEE80211_SDATA_MU_MIMO_OWNER)
++			changed |= BSS_CHANGED_MU_GROUPS;
++
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			changed |= BSS_CHANGED_ASSOC |
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index ff1c798..92c9843 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -1,6 +1,9 @@
+ /*
+  * VHT handling
+  *
++ * Portions of this file
++ * Copyright(c) 2015 Intel Deutschland GmbH
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -428,6 +431,28 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	return changed;
+ }
+ 
++void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
++				 struct ieee80211_mgmt *mgmt)
++{
++	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
++
++	if (!(sdata->flags & IEEE80211_SDATA_MU_MIMO_OWNER))
++		return;
++
++	if (!memcmp(mgmt->u.action.u.vht_group_notif.position,
++		    bss_conf->mu_group.position, WLAN_USER_POSITION_LEN) &&
++	    !memcmp(mgmt->u.action.u.vht_group_notif.membership,
++		    bss_conf->mu_group.membership, WLAN_MEMBERSHIP_LEN))
++		return;
++
++	memcpy(mgmt->u.action.u.vht_group_notif.membership,
++	       bss_conf->mu_group.membership, WLAN_MEMBERSHIP_LEN);
++	memcpy(mgmt->u.action.u.vht_group_notif.position,
++	       bss_conf->mu_group.position, WLAN_USER_POSITION_LEN);
++
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_MU_GROUPS);
++}
++
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only)
 -- 
 2.5.0
 
