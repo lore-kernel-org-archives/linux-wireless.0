@@ -1,97 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752027AbbLUUwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:40 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 41/45] iwlwifi: mvm: Change number of associated stations when station becomes associated
-Date: Mon, 21 Dec 2015 22:50:42 +0200
-Message-Id: <1450731046-2796-41-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220100_175275_101E2F07)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mail-vk0-f50.google.com ([209.85.213.50]:33748 "EHLO
+	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965077AbbLHPjP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2015 10:39:15 -0500
+Received: by vkca188 with SMTP id a188so16506792vkc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 07:39:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com> <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 8 Dec 2015 21:08:55 +0530
+Message-ID: <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com> (sfid-20151208_163919_565040_F09BEA4A)
+Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
+ notification IE in beacon
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+On Tue, Dec 8, 2015 at 7:34 PM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+>
+> From: Eyal Shapira <eyal@wizery.com>
+>
+> An AP can send an operating channel width change in a beacon
+> opmode notification IE as long as there's a change in the nss as
+> well (See 802.11ac-2013 section 10.41).
+> So don't limit updating to nss only from an opmode notification IE.
+>
+> Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  net/mac80211/cfg.c         |  3 +--
+>  net/mac80211/ieee80211_i.h |  4 ++--
+>  net/mac80211/mlme.c        |  2 +-
+>  net/mac80211/rx.c          |  3 +--
+>  net/mac80211/vht.c         | 10 +++-------
+>  5 files changed, 8 insertions(+), 14 deletions(-)
+>
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index b9e2c2f..a90d875 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1198,8 +1198,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+>                  * rc isn't initialized here yet, so ignore it
+>                  */
+>                 __ieee80211_vht_handle_opmode(sdata, sta,
+> -                                             params->opmode_notif,
+> -                                             band, false);
+> +                                             params->opmode_notif, band);
+>         }
+>
+>         if (ieee80211_vif_is_mesh(&sdata->vif))
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 582ea86..747402d 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -1718,10 +1718,10 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
+>                                  struct ieee80211_mgmt *mgmt);
+>  u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+>                                    struct sta_info *sta, u8 opmode,
+> -                                  enum ieee80211_band band, bool nss_only);
+> +                                 enum ieee80211_band band);
+>  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+>                                  struct sta_info *sta, u8 opmode,
+> -                                enum ieee80211_band band, bool nss_only);
+> +                                enum ieee80211_band band);
+>  void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
+>                                       struct ieee80211_sta_vht_cap *vht_cap);
+>  void ieee80211_get_vht_mask_from_cap(__le16 vht_cap,
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 1e6b337..62c8e4f 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -3584,7 +3584,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>
+>         if (sta && elems.opmode_notif)
+>                 ieee80211_vht_handle_opmode(sdata, sta, *elems.opmode_notif,
+> -                                           rx_status->band, true);
+> +                                           rx_status->band);
+>         mutex_unlock(&local->sta_mtx);
+>
+>         changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 901c72b..fe675d7 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -2738,8 +2738,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>                         opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
+>
+>                         ieee80211_vht_handle_opmode(rx->sdata, rx->sta,
+> -                                                   opmode, status->band,
+> -                                                   false);
+> +                                                   opmode, status->band);
+>                         goto handled;
+>                 }
+>                 case WLAN_VHT_ACTION_GROUPID_MGMT: {
+> diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+> index d2f2ff6..a02525a 100644
+> --- a/net/mac80211/vht.c
+> +++ b/net/mac80211/vht.c
+> @@ -399,7 +399,7 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+>
+>  u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+>                                   struct sta_info *sta, u8 opmode,
+> -                                 enum ieee80211_band band, bool nss_only)
+> +                                 enum ieee80211_band band)
+>  {
+>         struct ieee80211_local *local = sdata->local;
+>         struct ieee80211_supported_band *sband;
+> @@ -422,9 +422,6 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+>                 changed |= IEEE80211_RC_NSS_CHANGED;
+>         }
+>
+> -       if (nss_only)
+> -               return changed;
+> -
+>         switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+>         case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+>                 sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_20;
+> @@ -473,13 +470,12 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
+>
+>  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+>                                  struct sta_info *sta, u8 opmode,
+> -                                enum ieee80211_band band, bool nss_only)
+> +                                enum ieee80211_band band)
+>  {
+>         struct ieee80211_local *local = sdata->local;
+>         struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+>
+> -       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
+> -                                                   band, nss_only);
+> +       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode, band);
+>
+>         if (changed > 0)
+>                 rate_control_rate_update(local, sband, sta, changed);
 
-Currently, the number of associated stations gets updated when adding
-a new station or removing it. This is incorrect as it's possible that
-a station was inserted before it was associated
-Fix this by increasing/decreasing ap_assoc_sta_count whenever
-a station transitions in/out the associated state.
+Not related to current change.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 14 ++++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  5 -----
- 2 files changed, 8 insertions(+), 11 deletions(-)
+I was looking at this code a while ago and found that rate_control_rate_update
+doesn't update the rates from rx_nss, rather it updates from HT/VHT
+capabilities.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 53415dc..296b9c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2248,7 +2248,6 @@ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
- 				       struct ieee80211_sta *sta)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 
- 	/*
-@@ -2264,11 +2263,6 @@ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
- 		rcu_assign_pointer(mvm->fw_id_to_mac_id[mvm_sta->sta_id],
- 				   ERR_PTR(-ENOENT));
- 
--	if (mvm_sta->vif->type == NL80211_IFTYPE_AP) {
--		mvmvif->ap_assoc_sta_count--;
--		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
--	}
--
- 	mutex_unlock(&mvm->mutex);
- }
- 
-@@ -2380,6 +2374,10 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTH &&
- 		   new_state == IEEE80211_STA_ASSOC) {
-+		if (vif->type == NL80211_IFTYPE_AP) {
-+			mvmvif->ap_assoc_sta_count++;
-+			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
-+		}
- 		ret = iwl_mvm_update_sta(mvm, vif, sta);
- 		if (ret == 0)
- 			iwl_mvm_rs_rate_init(mvm, sta,
-@@ -2406,6 +2404,10 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTH) {
-+		if (vif->type == NL80211_IFTYPE_AP) {
-+			mvmvif->ap_assoc_sta_count--;
-+			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
-+		}
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTH &&
- 		   new_state == IEEE80211_STA_NONE) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 2c9675b..b556e33 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -278,11 +278,6 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 	if (sta_id == IWL_MVM_STATION_COUNT)
- 		return -ENOSPC;
- 
--	if (vif->type == NL80211_IFTYPE_AP) {
--		mvmvif->ap_assoc_sta_count++;
--		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
--	}
--
- 	spin_lock_init(&mvm_sta->lock);
- 
- 	mvm_sta->sta_id = sta_id;
--- 
-2.5.0
-
+So how does the NSS update from OP MODE IE work?
+(BW part is handled in minstrel from sta->bandwidth)
