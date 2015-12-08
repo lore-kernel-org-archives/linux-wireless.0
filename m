@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59911 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753569AbbLGKG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 05:06:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] mac80211: handle HW ROC expired properly
-Date: Mon,  7 Dec 2015 11:06:53 +0100
-Message-Id: <1449482813-24143-1-git-send-email-johannes@sipsolutions.net> (sfid-20151207_110700_764571_BD5B8B17)
+Received: from smtp.codeaurora.org ([198.145.29.96]:37804 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964951AbbLHPDZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2015 10:03:25 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	nbd@openwrt.org
+Subject: Re: [PATCH v2 01/13] ath9k: add debug messages to aggr/chanctx funcs
+References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Tue, 08 Dec 2015 17:03:16 +0200
+In-Reply-To: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Fri, 27 Nov 2015 09:37:06 +0100")
+Message-ID: <874mft9e4r.fsf@kamboji.qca.qualcomm.com> (sfid-20151208_160331_029053_BD1A9427)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-In case of HW ROC, when the driver reports that the ROC expired,
-it is not sufficient to purge the ROCs based on the remaining
-time, as it possible that the device finished the ROC session
-before the actual requested duration.
+> Add/extend debug messages when chanctx used.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-To handle such cases, in case of ROC expired notification from
-the driver, complete all the ROCs which are marked with hw_begun,
-regardless of the remaining duration.
+Manually applied these patches to ath.git:
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/offchannel.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+05a85a6c42b5 ath9k: remove ath9k_mod_tsf64_tu
+02edab5b5f82 ath9k: MCC, print time elapsed between events
+a64d876ef7dc ath9k: MCC, add NOA also in case of an AP
+b10b7fb31a21 ath9k: P2P_CLIENT, get/set NOA correctly
+3edbf0ba0494 ath9k: MCC enable Opportunistic Power Save
+c1b7bea038f0 ath9k: setup correct skb priority for nullfunc
+631c45f41957 ath9k: use u32 when calculate tsf
+b77b59ae8acd ath9k: P2P_CLIENT, send frames after 1ms AP/GO will aprear
+60337ed86306 ath9k: queue null frames in case of MCC
+2f985539b98b ath9k: print real timer value
+58bb9ca84c20 ath9k: add debug messages to aggr/chanctx funcs
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 6719b27aad66..8b2f4eaac2ba 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -224,7 +224,11 @@ static unsigned long ieee80211_end_finished_rocs(struct ieee80211_local *local,
- 			    msecs_to_jiffies(roc->duration) -
- 			    now;
- 
--		if (roc->abort || remaining <= 0)
-+		/* In case of HW ROC, it is possible that the HW finished the
-+		 * ROC session before the actual requested time. In such a case
-+		 * end the ROC session (disregarding the remaining time).
-+		 */
-+		if (roc->abort || roc->hw_begun || remaining <= 0)
- 			ieee80211_roc_notify_destroy(roc);
- 		else
- 			remaining_dur_min = min(remaining_dur_min, remaining);
+These patches are still pending:
+
+[v2,09/13] ath9k: request NOA update when chanctx active
+[v2,11/13] ath9k: MCC add sta_ap_ratio module param
+
 -- 
-2.6.2
-
+Kalle Valo
