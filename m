@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59046 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753200AbbL2QrT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 11:47:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next-2015-12-21
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-Date: Tue, 29 Dec 2015 18:47:11 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Mon, 21 Dec 2015 20:48:59 +0000")
-Message-ID: <87oad9qk1c.fsf@kamboji.qca.qualcomm.com> (sfid-20151229_174722_153795_EC4DFFB3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964890AbbLHOGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2015 09:06:32 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/9] mac80211: add flag for duplication check
+Date: Tue,  8 Dec 2015 16:04:33 +0200
+Message-Id: <1449583479-26658-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150638_723337_AC6E4D45)
+In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> Hi Kalle,
->
-> here is a pull request for 4.5. I guess there will be one more after
-> that depending on when Linus will open the merge window I guess. The
-> diffstat look awful and I have no clue why. It looks as if I had done
-> the whole code reorganisation... So we have a pretty large pull
-> request here. We are facing big new things: a new device family with
-> lots of work in the data path and such. Details in the tag. Let me
-> know if you have issues. Note that as I said, I needed to merge
-> Johannes's tree to get the new uAPSD helper I added and I merge
-> iwlwifi-fixes.git to avoid conflicts.
->
-> The following changes since commit 1b894521e60c1b91db1e8ba1278660e5c89f1b5f:
->
->   mac80211: handle HW ROC expired properly (2015-12-07 11:06:37 +0100)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-12-21
+Add an option for driver to check for packet duplication
+by itself.
+This is needed for example by the iwlwifi driver which
+parallelizes the RX path and does the duplcation check
+per queue.
 
-Pulled, thanks. Happy New Year! 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 2 +-
+ net/mac80211/rx.c      | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 71be30d..f4cbad4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1063,7 +1063,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_HT_GF			= BIT(13),
+ 	RX_FLAG_AMPDU_DETAILS		= BIT(14),
+ 	RX_FLAG_PN_VALIDATED		= BIT(15),
+-	/* bit 16 free */
++	RX_FLAG_DUP_VALIDATED		= BIT(16),
+ 	RX_FLAG_AMPDU_LAST_KNOWN	= BIT(17),
+ 	RX_FLAG_AMPDU_IS_LAST		= BIT(18),
+ 	RX_FLAG_AMPDU_DELIM_CRC_ERROR	= BIT(19),
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c4198d48..901c72b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1099,6 +1099,9 @@ ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 
++	if (status->flag & RX_FLAG_DUP_VALIDATED)
++		return RX_CONTINUE;
++
+ 	/*
+ 	 * Drop duplicate 802.11 retransmissions
+ 	 * (IEEE 802.11-2012: 9.3.2.10 "Duplicate detection and recovery")
 -- 
-Kalle Valo
+2.5.0
+
