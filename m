@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17912 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702AbbLJMnV (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34902 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932586AbbLHIVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 07:43:21 -0500
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 8 Dec 2015 03:21:15 -0500
+Date: Tue, 8 Dec 2015 13:51:05 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 11/13] brcmfmac: Change error print in debug print
-Date: Thu, 10 Dec 2015 13:43:10 +0100
-Message-ID: <1449751392-32569-12-git-send-email-arend@broadcom.com> (sfid-20151210_134331_131141_40F9CF58)
-In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+Cc: linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Fixing full name in patchwork
+Message-ID: <20151208082104.GA20628@sudip-pc> (sfid-20151208_092137_237015_4F8F4F80)
+References: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <87zixmb0fp.fsf@kamboji.qca.qualcomm.com>
+ <20151208045404.GB23610@sudip-pc>
+ <87r3ixbcji.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87r3ixbcji.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Tue, Dec 08, 2015 at 09:54:41AM +0200, Kalle Valo wrote:
+> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+> 
+> > On Mon, Dec 07, 2015 at 08:03:54PM +0200, Kalle Valo wrote:
+> >> Hi Sudip,
+> >> 
+> >> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+> >> 
+<snip>
+> >
+> > I have also noticed the patch. Anyway, I have created a profile in
+> > patchwork and given full name. Hopefully that should solve the problem.
+> 
+> At least now your name in the patchwork link above looks correct:
 
-The pcie suspend and resume routines contain some error prints,
-which should have been debug prints.
+Yes, but I am still surprised why this happened for only this patch.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Change-Id: Ibafe5d38301ee8f5e86889259ddeaea4dcae4cee
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5581
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 4ebc53c..3d2d790 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1875,7 +1875,7 @@ static int brcmf_pcie_pm_enter_D3(struct device *dev)
- 	struct brcmf_pciedev_info *devinfo;
- 	struct brcmf_bus *bus;
- 
--	brcmf_err("Enter\n");
-+	brcmf_dbg(PCIE, "Enter\n");
- 
- 	bus = dev_get_drvdata(dev);
- 	devinfo = bus->bus_priv.pcie->devinfo;
-@@ -1906,7 +1906,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
- 	struct pci_dev *pdev;
- 	int err;
- 
--	brcmf_err("Enter\n");
-+	brcmf_dbg(PCIE, "Enter\n");
- 
- 	bus = dev_get_drvdata(dev);
- 	devinfo = bus->bus_priv.pcie->devinfo;
--- 
-1.9.1
-
+regards
+sudip
