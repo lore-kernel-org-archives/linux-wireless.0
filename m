@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44513 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689AbbLPXUU (ORCPT
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:34999 "EHLO
+	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932665AbbLHP4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 18:20:20 -0500
-Message-ID: <5671F1B2.2010503@candelatech.com> (sfid-20151217_002026_922423_5234C182)
-Date: Wed, 16 Dec 2015 15:20:18 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 8 Dec 2015 10:56:00 -0500
+Received: by vkha189 with SMTP id a189so17030955vkh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 07:55:59 -0800 (PST)
 MIME-Version: 1.0
-To: "Adam R. Welle" <arwelle@cert.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-References: <5670DA9A.4010102@candelatech.com>			 (sfid-20151216_042934_976896_DCE1A2B3) <1450257464.3159.1.camel@sipsolutions.net>		 <56716386.4070107@candelatech.com>	 <1450272308.8247.11.camel@sipsolutions.net>	 <567168AF.4060804@candelatech.com> <1450273362.8247.15.camel@sipsolutions.net> <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon> <5671E23A.1070502@candelatech.com> <2DE9F46DD36D2A458CD6347950113F2535CA6D@marathon>
-In-Reply-To: <2DE9F46DD36D2A458CD6347950113F2535CA6D@marathon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1449590039.4154.12.camel@sipsolutions.net>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com>
+ <1449589374.4154.11.camel@sipsolutions.net> <CABPxzYJd+9kq8w9zz549F1EEHhWgKhCsDeRUR1MzZ=LbizMJbw@mail.gmail.com>
+ <1449590039.4154.12.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 8 Dec 2015 21:25:40 +0530
+Message-ID: <CABPxzYL7h8ToceTfx8cV5VUtrr13Y1QZiPphWzznh2pitt457w@mail.gmail.com> (sfid-20151208_165604_920337_E2088D2A)
+Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
+ notification IE in beacon
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2015 02:56 PM, Adam R. Welle wrote:
->>> Could somebody provide background information on why the decision was
->>> made to use a second address for the netlink frames instead of the
->>> same address as was used for the non-netlink frames?
+On Tue, Dec 8, 2015 at 9:23 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2015-12-08 at 21:17 +0530, Krishna Chaitanya wrote:
 >>
->> I would be fine with always using the first address instead of the
->> second, in case that helps someone.
+>> > If the rate control algorithm doesn't look at sta->sta.rx_nss then
+>> > that's their bug.
 >>
->> We could also set the address at creation time easily enough.  Then it
->> could still be unique across many machines if you managed it.
+>> Yes, it looks like it. Only BW is handled, not the NSS change, and
+>> without this patch OP MODE IE in beacon updates neither NSS nor BW.
+>>
+>> For Action frame OP MODE IE, NSS will be updated.
+Typo BW will be updated.
 >
-> I actually apply a patch for that. I have added a module parameter which
-> is used as the MAC address for the first radio, and I increment the final
-> octet for each additional radio. This is so that my users do not have
-> to manually reset the MAC address to get a unique one. I apply the address
-> to both addresses mentioned above though I only use the netlink datapath.
->
-> If there is interest in this I can submit it as an RFC patch tomorrow.
+> I don't see how that would happen - they end up in exactly the same
+> code path.
 
-I'd rather see support for specifying an arbitrary MAC upon creation
-with a netlink attribute than a module parameter...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+As nss_only is false, BW will be update in case of action frame.
