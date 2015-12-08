@@ -1,104 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34215 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933011AbbLRTil (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:35670 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933304AbbLHQb5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 14:38:41 -0500
-Received: by mail-pa0-f50.google.com with SMTP id wq6so65010481pac.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 11:38:40 -0800 (PST)
-From: Brian Norris <computersforpeace@gmail.com>
-To: <linux-mtd@lists.infradead.org>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>,
-	Brian Norris <computersforpeace@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v5] mtd: nand: bcm47xx: use the mtd instance embedded in struct nand_chip
-Date: Fri, 18 Dec 2015 11:38:18 -0800
-Message-Id: <1450467498-35553-1-git-send-email-computersforpeace@gmail.com> (sfid-20151218_203844_584459_E8C90D65)
+	Tue, 8 Dec 2015 11:31:57 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/9] mac80211: limit the A-MSDU Tx based on peer's
+ capabilities
+Date: Tue, 8 Dec 2015 16:31:21 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E912959@hasmsx107.ger.corp.intel.com> (sfid-20151208_173205_046336_89B75323)
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1449583479-26658-3-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYJB9M5FtxdjXeB5t-ygqv8OQ9LpVqsMvGTJa_r=nOb4Bw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Boris BREZILLON <boris.brezillon@free-electrons.com>
 
-struct nand_chip now embeds an mtd device. Make use of this mtd instance.
 
-Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
----
-Rebased Boris's patch to l2-mtd.git
+On 12/08/2015 06:03 PM, Krishna Chaitanya wrote:
+> On Tue, Dec 8, 2015 at 7:34 PM, Emmanuel Grumbach
+> <emmanuel.grumbach@intel.com> wrote:
+>> index 7a76ce6..f4a5287 100644
+>> --- a/net/mac80211/ht.c
+>> +++ b/net/mac80211/ht.c
+>> @@ -230,6 +230,11 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+>>         /* set Rx highest rate */
+>>         ht_cap.mcs.rx_highest = ht_cap_ie->mcs.rx_highest;
+>>
+>> +       if (ht_cap.cap & IEEE80211_HT_CAP_MAX_AMSDU)
+>> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_7935;
+>> +       else
+>> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_3839;
+>> +
+>>   apply:
+>>         changed = memcmp(&sta->sta.ht_cap, &ht_cap, sizeof(ht_cap));
+>>
+>> diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+>> index 92c9843..d2f2ff6 100644
+>> --- a/net/mac80211/vht.c
+>> +++ b/net/mac80211/vht.c
+>> @@ -281,6 +281,24 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+>>         }
+>>
+>>         sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+>> +
+>> +       /* If HT IE reported 3839 bytes only, stay with that size. */
+>> +       if (sta->sta.max_amsdu_len == IEEE80211_MAX_MPDU_LEN_HT_3839)
+>> +               return;
+>> +
+>> +       switch (vht_cap->cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK) {
+>> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
+>> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_11454;
+>> +               break;
+>> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
+>> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_7991;
+>> +               break;
+>> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895:
+>> +       default:
+>> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_3895;
+>> +               break;
+>> +       }
+> Ideally speaking shouldn't we use different variables for HT and VHT
+> and depending on
+> rate HT/VHT we should aggregate accordingly? of course that will be
+> tricky as we dont
+> have the rate control info at the time of aggregation. Standard is
+> clear about usage of
+> independent lengths depending on whether its an VHT/HT PPDU.
 
- drivers/mtd/nand/bcm47xxnflash/bcm47xxnflash.h |  1 -
- drivers/mtd/nand/bcm47xxnflash/main.c          | 10 ++++++----
- drivers/mtd/nand/bcm47xxnflash/ops_bcm4706.c   |  2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+Yes - but since it is tricky, I preferred to be on the safe side and
+limit VHT amsdus for the very peculiar AP that would decide to have
+large A-MSDUs in VHT and small ones in HT (?!).
 
-diff --git a/drivers/mtd/nand/bcm47xxnflash/bcm47xxnflash.h b/drivers/mtd/nand/bcm47xxnflash/bcm47xxnflash.h
-index c005a62330b1..8ea75710a854 100644
---- a/drivers/mtd/nand/bcm47xxnflash/bcm47xxnflash.h
-+++ b/drivers/mtd/nand/bcm47xxnflash/bcm47xxnflash.h
-@@ -12,7 +12,6 @@ struct bcm47xxnflash {
- 	struct bcma_drv_cc *cc;
- 
- 	struct nand_chip nand_chip;
--	struct mtd_info mtd;
- 
- 	unsigned curr_command;
- 	int curr_page_addr;
-diff --git a/drivers/mtd/nand/bcm47xxnflash/main.c b/drivers/mtd/nand/bcm47xxnflash/main.c
-index 0b3acc439181..2c9bffb614c5 100644
---- a/drivers/mtd/nand/bcm47xxnflash/main.c
-+++ b/drivers/mtd/nand/bcm47xxnflash/main.c
-@@ -27,6 +27,7 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
- {
- 	struct bcma_nflash *nflash = dev_get_platdata(&pdev->dev);
- 	struct bcm47xxnflash *b47n;
-+	struct mtd_info *mtd;
- 	int err = 0;
- 
- 	b47n = devm_kzalloc(&pdev->dev, sizeof(*b47n), GFP_KERNEL);
-@@ -34,8 +35,9 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	b47n->nand_chip.priv = b47n;
--	b47n->mtd.dev.parent = &pdev->dev;
--	b47n->mtd.priv = &b47n->nand_chip; /* Required */
-+	mtd = nand_to_mtd(&b47n->nand_chip);
-+	mtd->dev.parent = &pdev->dev;
-+	mtd->priv = &b47n->nand_chip; /* Required */
- 	b47n->cc = container_of(nflash, struct bcma_drv_cc, nflash);
- 
- 	if (b47n->cc->core->bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
-@@ -51,7 +53,7 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, b47n);
- 
--	err = mtd_device_parse_register(&b47n->mtd, probes, NULL, NULL, 0);
-+	err = mtd_device_parse_register(mtd, probes, NULL, NULL, 0);
- 	if (err) {
- 		pr_err("Failed to register MTD device: %d\n", err);
- 		return err;
-@@ -64,7 +66,7 @@ static int bcm47xxnflash_remove(struct platform_device *pdev)
- {
- 	struct bcm47xxnflash *nflash = platform_get_drvdata(pdev);
- 
--	nand_release(&nflash->mtd);
-+	nand_release(nand_to_mtd(&nflash->nand_chip));
- 
- 	return 0;
- }
-diff --git a/drivers/mtd/nand/bcm47xxnflash/ops_bcm4706.c b/drivers/mtd/nand/bcm47xxnflash/ops_bcm4706.c
-index e5b2e48658c4..652478035a7d 100644
---- a/drivers/mtd/nand/bcm47xxnflash/ops_bcm4706.c
-+++ b/drivers/mtd/nand/bcm47xxnflash/ops_bcm4706.c
-@@ -421,7 +421,7 @@ int bcm47xxnflash_ops_bcm4706_init(struct bcm47xxnflash *b47n)
- 			(w4 << 24 | w3 << 18 | w2 << 12 | w1 << 6 | w0));
- 
- 	/* Scan NAND */
--	err = nand_scan(&b47n->mtd, 1);
-+	err = nand_scan(nand_to_mtd(&b47n->nand_chip), 1);
- 	if (err) {
- 		pr_err("Could not scan NAND flash: %d\n", err);
- 		goto exit;
--- 
-2.6.0.rc2.230.g3dd15c0
-
+> If we use the same variable to arrive at max_amsdu_len for both VHT
+> and HT, we might
+> end up sending 11454 sized MSDU in a HT rate.
+>
+And since that can't be handled at the time of the A-MSDU building,
+leave that to another entity :)
