@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55843 "EHLO sipsolutions.net"
+Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132AbbLNMWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:22:39 -0500
-Message-ID: <1450095756.3871.15.camel@sipsolutions.net> (sfid-20151214_132246_888400_BF4C9C9B)
-Subject: Re: [PATCH 00/14] mwifiex fixes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	linux-wireless@vger.kernel.org
-Cc: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Date: Mon, 14 Dec 2015 13:22:36 +0100
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com> (sfid-20151214_131706_754762_207FCAEE)
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-	 (sfid-20151214_131706_754762_207FCAEE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S965041AbbLHOGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2015 09:06:39 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 7/9] mac80211: suppress unchanged "limiting TX power" messages
+Date: Tue,  8 Dec 2015 16:04:37 +0200
+Message-Id: <1449583479-26658-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150644_827798_FB165183)
+In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-12-14 at 04:15 -0800, Amitkumar Karwar wrote:
-> These patches include few fixes for mwifiex and add a
-> debugfs file for chip reset.
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-A lot of these "fixes" look like new firmware features to me (e.g.
-interface limits, sms4 cipher, pattern length).
+When the AP is advertising limited TX power, the message can be
+printed over and over again. Suppress it when the power level
+isn't changing.
 
-First of all - is that really appropriate as "fixes", what tree are you
-targeting?
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=106011
 
-And secondly, how are you making sure the user won't have an older
-firmware version where this will presumably cause crashes?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 62c8e4f..31d5881 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1379,21 +1379,26 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	if (has_80211h_pwr &&
+ 	    (!has_cisco_pwr || pwr_level_80211h <= pwr_level_cisco)) {
++		new_ap_level = pwr_level_80211h;
++
++		if (sdata->ap_power_level == new_ap_level)
++			return 0;
++
+ 		sdata_dbg(sdata,
+ 			  "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+ 			  pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
+ 			  sdata->u.mgd.bssid);
+-		new_ap_level = pwr_level_80211h;
+ 	} else {  /* has_cisco_pwr is always true here. */
++		new_ap_level = pwr_level_cisco;
++
++		if (sdata->ap_power_level == new_ap_level)
++			return 0;
++
+ 		sdata_dbg(sdata,
+ 			  "Limiting TX power to %d dBm as advertised by %pM\n",
+ 			  pwr_level_cisco, sdata->u.mgd.bssid);
+-		new_ap_level = pwr_level_cisco;
+ 	}
+ 
+-	if (sdata->ap_power_level == new_ap_level)
+-		return 0;
+-
+ 	sdata->ap_power_level = new_ap_level;
+ 	if (__ieee80211_recalc_txpower(sdata))
+ 		return BSS_CHANGED_TXPOWER;
+-- 
+2.5.0
+
