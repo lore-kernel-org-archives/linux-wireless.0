@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:35110 "EHLO
-	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289AbbLLArS (ORCPT
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:33278 "EHLO
+	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756857AbbLHQDX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 19:47:18 -0500
-Received: by qkfb125 with SMTP id b125so64125403qkf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 16:47:17 -0800 (PST)
+	Tue, 8 Dec 2015 11:03:23 -0500
+Received: by vkca188 with SMTP id a188so17561287vkc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 08:03:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
-	<1448018530.3141.25.camel@sipsolutions.net>
-	<CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
-Date: Fri, 11 Dec 2015 16:47:17 -0800
-Message-ID: <CANEJEGvewNOsVrHSZXbR-rU58NH9D4vouzskK6VHG9LuxAF1Cw@mail.gmail.com> (sfid-20151212_014725_579985_B04F4255)
-Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
-From: Grant Grundler <grundler@google.com>
+In-Reply-To: <1449590307.4154.13.camel@sipsolutions.net>
+References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com>
+ <1449589374.4154.11.camel@sipsolutions.net> <CABPxzYJd+9kq8w9zz549F1EEHhWgKhCsDeRUR1MzZ=LbizMJbw@mail.gmail.com>
+ <1449590039.4154.12.camel@sipsolutions.net> <CABPxzYL7h8ToceTfx8cV5VUtrr13Y1QZiPphWzznh2pitt457w@mail.gmail.com>
+ <1449590307.4154.13.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 8 Dec 2015 21:33:03 +0530
+Message-ID: <CABPxzYJPf2uk0AVFEj_TkfRHnBTfH92191jPhx1SYaqHqkgPNA@mail.gmail.com> (sfid-20151208_170326_555156_11EC79CE)
+Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
+ notification IE in beacon
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending as plain text....gmail...grrrh.]
-
-On Fri, Dec 11, 2015 at 4:46 PM, Grant Grundler <grundler@google.com> wrote:
-> Sorry for the late response...just one point below
+On Tue, Dec 8, 2015 at 9:28 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2015-12-08 at 21:25 +0530, Krishna Chaitanya wrote:
+>> On Tue, Dec 8, 2015 at 9:23 PM, Johannes Berg <johannes@sipsolutions.
+>> net> wrote:
+>> > On Tue, 2015-12-08 at 21:17 +0530, Krishna Chaitanya wrote:
+>> > >
+>> > > > If the rate control algorithm doesn't look at sta->sta.rx_nss
+>> > > > then
+>> > > > that's their bug.
+>> > >
+>> > > Yes, it looks like it. Only BW is handled, not the NSS change,
+>> > > and
+>> > > without this patch OP MODE IE in beacon updates neither NSS nor
+>> > > BW.
+>> > >
+>> > > For Action frame OP MODE IE, NSS will be updated.
+>> Typo BW will be updated.
 >
-> On Fri, Nov 20, 2015 at 3:22 AM, Johannes Berg <johannes@sipsolutions.net>
-> wrote:
+> Ok.
+>
+>> > I don't see how that would happen - they end up in exactly the same
+>> > code path.
 >>
->> > +#define MWL_DRV_NAME     KBUILD_MODNAME
->> > +#define MWL_DRV_VERSION       "10.3.0.14"
->>
->> versions like that are generally fairly useless since you don't update
->> them for every commit ...
+>> As nss_only is false, BW will be update in case of action frame.
 >
+> Well, this patch removes that since the whole concept of nss_only was
+> wrong.
 >
-> When backporting to other kernel trees, it's extremely handy to have a
-> DRV_VERSION.
+> So basically you're just saying that minstrel should be fixed to look
+> at rx_nss (and the relevant change bit, perhaps)...
 >
-> Checking if a particular kernel build has the expected driver version
-> trivial.  "mod_info" dumps the driver version for modules (which this will
-> usually be too).
->
-> And yes, it won't get updated for every commit only because other version
-> control might encapsulate those changes. Not every distro makes their build
-> versioning accessible to outsiders. So it's still helpful even if not
-> perfect.
->
-> Marvell can update this every time they resync with their own internal
-> versions.
->
-> cheers,
-> grant
+Exactly :-).
