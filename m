@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:47575 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753033AbbLFSUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2015 13:20:37 -0500
-From: Peter Wu <peter@lekensteyn.nl>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
+Received: from aserp1040.oracle.com ([141.146.126.69]:25517 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754341AbbLIK0Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2015 05:26:24 -0500
+Date: Wed, 9 Dec 2015 13:26:08 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Golan Ben-Ami <golan.ben.ami@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: fix gigantic memleak in rtl_usb
-Date: Sun,  6 Dec 2015 18:57:57 +0100
-Message-Id: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl> (sfid-20151206_192040_649173_91F41947)
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: mvm: remove an extra tab
+Message-ID: <20151209102608.GF3173@mwanda> (sfid-20151209_112631_985246_0F4FF2B2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free skb for received frames with a wrong checksum.
+Smatch prints a static checker warning here:
 
-While using the rtl8192cu driver in monitor mode, somehow 5G of memory
-was permanently lost (observable via the Available column in `free -m`).
+    drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:386 iwl_dump_prph()
+    warn: curly braces intended?
 
-Test scenario:
+Curly braces are NOT intended, the extra tab was added by mistake in
+commit 1a616dd2f171 ('iwlwifi: dump prph registers in a common place
+for all transports').
 
-    ip link set down wlan1
-    iw wlan1 set type monitor
-    ip link set up wlan1
-    iw wlan1 set channel 11
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Then stream a video on a smartphone on channel 11. Without this patch
-the memory usage grows linearly with the number of received packets:
-
-    grep MemAvailable /proc/meminfo
-    ip -s link show dev wlan1
-
-Signed-off-by: Peter Wu <peter@lekensteyn.nl>
----
-Hi,
-
-This issue has existed since the introduction of this driver in v2.6.x,
-using kmemleak I was about to figure out the source. There is also a
-_rtl_usb_rx_process_agg that has similarly looking code, but that one is
-unaffected. The pci code already frees the skb and is unaffected too.
-
-Tested with kernel v4.3, this patch is simply rebased on v4.4-rc3 (due
-to changed paths).
-
-Kind regards,
-Peter
----
- drivers/net/wireless/realtek/rtlwifi/usb.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 2721cf8..aac1ed3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -531,6 +531,8 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
- 			ieee80211_rx(hw, skb);
- 		else
- 			dev_kfree_skb_any(skb);
-+	} else {
-+		dev_kfree_skb_any(skb);
- 	}
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 9fcabc5..a6985da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -383,7 +383,7 @@ static u32 iwl_dump_prph(struct iwl_trans *trans,
+ 			*val++ = cpu_to_le32(iwl_read_prph_no_grab(trans,
+ 								   reg));
  
--- 
-2.6.3
-
+-			*data = iwl_fw_error_next_data(*data);
++		*data = iwl_fw_error_next_data(*data);
+ 	}
+ 
+ 	iwl_trans_release_nic_access(trans, &flags);
