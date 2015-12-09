@@ -1,487 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752021AbbLUUwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:33 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 37/45] iwlwifi: mvm: add 9000 series RX processing
-Date: Mon, 21 Dec 2015 22:50:38 +0200
-Message-Id: <1450731046-2796-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220059_474792_483FEBAD)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:38738 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754616AbbLIKW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2015 05:22:58 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 12/13] brcmfmac: Move scheduled scan related interface layer structs.
+Date: Wed, 9 Dec 2015 11:22:51 +0100
+Message-ID: <1449656572-16158-13-git-send-email-arend@broadcom.com> (sfid-20151209_112342_668245_B2060FDA)
+In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Convert the convert the new infrastructure added by previous
-patches to actually use the new RX descriptor layout.
+All interface layer related to scheduled scan are moved in
+fwil_types.h
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Change-Id: I2f763ebc5af89f596a5b217562def01fc07d23f2
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5584
+Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/Makefile    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h |   6 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   3 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 372 +++++++++++++++++++++
- 5 files changed, 385 insertions(+), 4 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 81 ----------------------
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 81 ++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-index 2c0d20f..80c2f88 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-@@ -1,6 +1,6 @@
- obj-$(CONFIG_IWLMVM)   += iwlmvm.o
- iwlmvm-y += fw.o mac80211.o nvm.o ops.o phy-ctxt.o mac-ctxt.o
--iwlmvm-y += utils.o rx.o tx.o binding.o quota.o sta.o sf.o
-+iwlmvm-y += utils.o rx.o rxmq.o tx.o binding.o quota.o sta.o sf.o
- iwlmvm-y += scan.o time-event.o rs.o
- iwlmvm-y += power.o coex.o coex_legacy.o
- iwlmvm-y += tt.o offloading.o tdls.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-index 75c79e1..0a8d162 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-@@ -287,11 +287,17 @@ enum iwl_rx_mpdu_status {
- 	IWL_RX_MPDU_STATUS_KEY_ERROR		= BIT(4),
- 	IWL_RX_MPDU_STATUS_ICV_OK		= BIT(5),
- 	IWL_RX_MPDU_STATUS_MIC_OK		= BIT(6),
-+	/* TODO - verify this is the correct value */
-+	IWL_RX_MPDU_RES_STATUS_TTAK_OK		= BIT(7),
- 	IWL_RX_MPDU_STATUS_SEC_MASK		= 0x7 << 8,
- 	IWL_RX_MPDU_STATUS_SEC_NONE		= 0x0 << 8,
- 	IWL_RX_MPDU_STATUS_SEC_WEP		= 0x1 << 8,
- 	IWL_RX_MPDU_STATUS_SEC_CCM		= 0x2 << 8,
- 	IWL_RX_MPDU_STATUS_SEC_TKIP		= 0x3 << 8,
-+	/* TODO - define IWL_RX_MPDU_STATUS_SEC_EXT_ENC - this is a stub */
-+	IWL_RX_MPDU_STATUS_SEC_EXT_ENC		= 0x4 << 8,
-+	/* TODO - define IWL_RX_MPDU_STATUS_SEC_GCM - this is a stub */
-+	IWL_RX_MPDU_STATUS_SEC_GCM		= 0x5 << 8,
- 	IWL_RX_MPDU_STATUS_DECRYPTED		= BIT(11),
- 	IWL_RX_MPDU_STATUS_WEP_MATCH		= BIT(12),
- 	IWL_RX_MPDU_STATUS_EXT_IV_MATCH		= BIT(13),
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index df68973..0088106 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1135,6 +1135,9 @@ bool iwl_mvm_bcast_filter_build_cmd(struct iwl_mvm *mvm,
- void iwl_mvm_rx_rx_phy_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb);
-+void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
-+void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
-+			struct iwl_rx_cmd_buffer *rxb, int queue);
- void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index a5e1c8e..0885b77 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -836,9 +836,9 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 397d41b..c17b6d5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -211,87 +211,6 @@ struct escan_info {
+ };
  
- 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
--		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
-+		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0);
- 	else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD)
--		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
-+		iwl_mvm_rx_phy_cmd_mq(mvm, rxb);
- 	else
- 		iwl_mvm_rx_common(mvm, rxb, pkt);
- }
-@@ -1489,7 +1489,7 @@ static void iwl_mvm_rx_mq_rss(struct iwl_op_mode *op_mode,
- {
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ /**
+- * struct brcmf_pno_param_le - PNO scan configuration parameters
+- *
+- * @version: PNO parameters version.
+- * @scan_freq: scan frequency.
+- * @lost_network_timeout: #sec. to declare discovered network as lost.
+- * @flags: Bit field to control features of PFN such as sort criteria auto
+- *	enable switch and background scan.
+- * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
+- *	criteria.
+- * @bestn: number of best networks in each scan.
+- * @mscan: number of scans recorded.
+- * @repeat: minimum number of scan intervals before scan frequency changes
+- *	in adaptive scan.
+- * @exp: exponent of 2 for maximum scan interval.
+- * @slow_freq: slow scan period.
+- */
+-struct brcmf_pno_param_le {
+-	__le32 version;
+-	__le32 scan_freq;
+-	__le32 lost_network_timeout;
+-	__le16 flags;
+-	__le16 rssi_margin;
+-	u8 bestn;
+-	u8 mscan;
+-	u8 repeat;
+-	u8 exp;
+-	__le32 slow_freq;
+-};
+-
+-/**
+- * struct brcmf_pno_net_param_le - scan parameters per preferred network.
+- *
+- * @ssid: ssid name and its length.
+- * @flags: bit2: hidden.
+- * @infra: BSS vs IBSS.
+- * @auth: Open vs Closed.
+- * @wpa_auth: WPA type.
+- * @wsec: wsec value.
+- */
+-struct brcmf_pno_net_param_le {
+-	struct brcmf_ssid_le ssid;
+-	__le32 flags;
+-	__le32 infra;
+-	__le32 auth;
+-	__le32 wpa_auth;
+-	__le32 wsec;
+-};
+-
+-/**
+- * struct brcmf_pno_net_info_le - information per found network.
+- *
+- * @bssid: BSS network identifier.
+- * @channel: channel number only.
+- * @SSID_len: length of ssid.
+- * @SSID: ssid characters.
+- * @RSSI: receive signal strength (in dBm).
+- * @timestamp: age in seconds.
+- */
+-struct brcmf_pno_net_info_le {
+-	u8 bssid[ETH_ALEN];
+-	u8 channel;
+-	u8 SSID_len;
+-	u8 SSID[32];
+-	__le16	RSSI;
+-	__le16	timestamp;
+-};
+-
+-/**
+- * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
+- *
+- * @version: PNO version identifier.
+- * @status: indicates completion status of PNO scan.
+- * @count: amount of brcmf_pno_net_info_le entries appended.
+- */
+-struct brcmf_pno_scanresults_le {
+-	__le32 version;
+-	__le32 status;
+-	__le32 count;
+-};
+-
+-/**
+  * struct brcmf_cfg80211_vif_event - virtual interface event information.
+  *
+  * @vif_wq: waitqueue awaiting interface event from firmware.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index e56eabc..94d34ad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -670,4 +670,85 @@ struct brcmf_pmk_list_le {
+ 	struct brcmf_pmksa pmk[BRCMF_MAXPMKID];
+ };
  
--	iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
-+	iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
- }
- 
- static const struct iwl_op_mode_ops iwl_mvm_ops_mq = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-new file mode 100644
-index 0000000..c67962e
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -0,0 +1,372 @@
-+/******************************************************************************
++/**
++ * struct brcmf_pno_param_le - PNO scan configuration parameters
 + *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
++ * @version: PNO parameters version.
++ * @scan_freq: scan frequency.
++ * @lost_network_timeout: #sec. to declare discovered network as lost.
++ * @flags: Bit field to control features of PFN such as sort criteria auto
++ *	enable switch and background scan.
++ * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
++ *	criteria.
++ * @bestn: number of best networks in each scan.
++ * @mscan: number of scans recorded.
++ * @repeat: minimum number of scan intervals before scan frequency changes
++ *	in adaptive scan.
++ * @exp: exponent of 2 for maximum scan interval.
++ * @slow_freq: slow scan period.
++ */
++struct brcmf_pno_param_le {
++	__le32 version;
++	__le32 scan_freq;
++	__le32 lost_network_timeout;
++	__le16 flags;
++	__le16 rssi_margin;
++	u8 bestn;
++	u8 mscan;
++	u8 repeat;
++	u8 exp;
++	__le32 slow_freq;
++};
++
++/**
++ * struct brcmf_pno_net_param_le - scan parameters per preferred network.
 + *
-+ * GPL LICENSE SUMMARY
++ * @ssid: ssid name and its length.
++ * @flags: bit2: hidden.
++ * @infra: BSS vs IBSS.
++ * @auth: Open vs Closed.
++ * @wpa_auth: WPA type.
++ * @wsec: wsec value.
++ */
++struct brcmf_pno_net_param_le {
++	struct brcmf_ssid_le ssid;
++	__le32 flags;
++	__le32 infra;
++	__le32 auth;
++	__le32 wpa_auth;
++	__le32 wsec;
++};
++
++/**
++ * struct brcmf_pno_net_info_le - information per found network.
 + *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015        Intel Deutschland GmbH
++ * @bssid: BSS network identifier.
++ * @channel: channel number only.
++ * @SSID_len: length of ssid.
++ * @SSID: ssid characters.
++ * @RSSI: receive signal strength (in dBm).
++ * @timestamp: age in seconds.
++ */
++struct brcmf_pno_net_info_le {
++	u8 bssid[ETH_ALEN];
++	u8 channel;
++	u8 SSID_len;
++	u8 SSID[32];
++	__le16	RSSI;
++	__le16	timestamp;
++};
++
++/**
++ * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015        Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *****************************************************************************/
-+#include <linux/etherdevice.h>
-+#include <linux/skbuff.h>
-+#include "iwl-trans.h"
-+#include "mvm.h"
-+#include "fw-api.h"
-+#include "fw-dbg.h"
++ * @version: PNO version identifier.
++ * @status: indicates completion status of PNO scan.
++ * @count: amount of brcmf_pno_net_info_le entries appended.
++ */
++struct brcmf_pno_scanresults_le {
++	__le32 version;
++	__le32 status;
++	__le32 count;
++};
 +
-+void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
-+{
-+	mvm->ampdu_ref++;
-+
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+	if (mvm->last_phy_info.phy_flags & cpu_to_le16(RX_RES_PHY_FLAGS_AGG)) {
-+		spin_lock(&mvm->drv_stats_lock);
-+		mvm->drv_rx_stats.ampdu_count++;
-+		spin_unlock(&mvm->drv_stats_lock);
-+	}
-+#endif
-+}
-+
-+static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
-+					    struct napi_struct *napi,
-+					    struct sk_buff *skb,
-+					    struct ieee80211_hdr *hdr, u16 len,
-+					    u32 ampdu_status, u8 crypt_len,
-+					    struct iwl_rx_cmd_buffer *rxb)
-+{
-+	unsigned int hdrlen, fraglen;
-+
-+	/* If frame is small enough to fit in skb->head, pull it completely.
-+	 * If not, only pull ieee80211_hdr (including crypto if present, and
-+	 * an additional 8 bytes for SNAP/ethertype, see below) so that
-+	 * splice() or TCP coalesce are more efficient.
-+	 *
-+	 * Since, in addition, ieee80211_data_to_8023() always pull in at
-+	 * least 8 bytes (possibly more for mesh) we can do the same here
-+	 * to save the cost of doing it later. That still doesn't pull in
-+	 * the actual IP header since the typical case has a SNAP header.
-+	 * If the latter changes (there are efforts in the standards group
-+	 * to do so) we should revisit this and ieee80211_data_to_8023().
-+	 */
-+	hdrlen = (len <= skb_tailroom(skb)) ? len :
-+					      sizeof(*hdr) + crypt_len + 8;
-+
-+	memcpy(skb_put(skb, hdrlen), hdr, hdrlen);
-+	fraglen = len - hdrlen;
-+
-+	if (fraglen) {
-+		int offset = (void *)hdr + hdrlen -
-+			     rxb_addr(rxb) + rxb_offset(rxb);
-+
-+		skb_add_rx_frag(skb, 0, rxb_steal_page(rxb), offset,
-+				fraglen, rxb->truesize);
-+	}
-+
-+	ieee80211_rx_napi(mvm->hw, skb, napi);
-+}
-+
-+static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
-+					struct iwl_rx_mpdu_desc *desc,
-+					struct ieee80211_rx_status *rx_status)
-+{
-+	int energy_a, energy_b, energy_c, max_energy;
-+
-+	energy_a = desc->energy_a;
-+	energy_a = energy_a ? -energy_a : S8_MIN;
-+	energy_b = desc->energy_b;
-+	energy_b = energy_b ? -energy_b : S8_MIN;
-+	energy_c = desc->energy_c;
-+	energy_c = energy_c ? -energy_c : S8_MIN;
-+	max_energy = max(energy_a, energy_b);
-+	max_energy = max(max_energy, energy_c);
-+
-+	IWL_DEBUG_STATS(mvm, "energy In A %d B %d C %d , and max %d\n",
-+			energy_a, energy_b, energy_c, max_energy);
-+
-+	rx_status->signal = max_energy;
-+	rx_status->chains = 0; /* TODO: phy info */
-+	rx_status->chain_signal[0] = energy_a;
-+	rx_status->chain_signal[1] = energy_b;
-+	rx_status->chain_signal[2] = energy_c;
-+}
-+
-+static u32 iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
-+			     struct ieee80211_rx_status *stats,
-+			     struct iwl_rx_mpdu_desc *desc, int queue,
-+			     u8 *crypt_len)
-+{
-+	u16 status = le16_to_cpu(desc->status);
-+
-+	if (!ieee80211_has_protected(hdr->frame_control) ||
-+	    (status & IWL_RX_MPDU_STATUS_SEC_MASK) ==
-+	    IWL_RX_MPDU_STATUS_SEC_NONE)
-+		return 0;
-+
-+	/* TODO: handle packets encrypted with unknown alg */
-+
-+	switch (status & IWL_RX_MPDU_STATUS_SEC_MASK) {
-+	case IWL_RX_MPDU_STATUS_SEC_CCM:
-+	case IWL_RX_MPDU_STATUS_SEC_GCM:
-+		/* alg is CCM: check MIC only */
-+		if (!(status & IWL_RX_MPDU_STATUS_MIC_OK))
-+			return -1;
-+
-+		stats->flag |= RX_FLAG_DECRYPTED;
-+		*crypt_len = IEEE80211_CCMP_HDR_LEN;
-+		return 0;
-+	case IWL_RX_MPDU_STATUS_SEC_TKIP:
-+		/* Don't drop the frame and decrypt it in SW */
-+		if (!(status & IWL_RX_MPDU_RES_STATUS_TTAK_OK))
-+			return 0;
-+
-+		*crypt_len = IEEE80211_TKIP_IV_LEN;
-+		/* fall through if TTAK OK */
-+	case IWL_RX_MPDU_STATUS_SEC_WEP:
-+		if (!(status & IWL_RX_MPDU_STATUS_ICV_OK))
-+			return -1;
-+
-+		stats->flag |= RX_FLAG_DECRYPTED;
-+		if ((status & IWL_RX_MPDU_STATUS_SEC_MASK) ==
-+				IWL_RX_MPDU_STATUS_SEC_WEP)
-+			*crypt_len = IEEE80211_WEP_IV_LEN;
-+		return 0;
-+	case IWL_RX_MPDU_STATUS_SEC_EXT_ENC:
-+		if (!(status & IWL_RX_MPDU_STATUS_MIC_OK))
-+			return -1;
-+		stats->flag |= RX_FLAG_DECRYPTED;
-+		return 0;
-+	default:
-+		IWL_ERR(mvm, "Unhandled alg: 0x%x\n", status);
-+	}
-+
-+	return 0;
-+}
-+
-+static void iwl_mvm_rx_csum(struct ieee80211_sta *sta,
-+			    struct sk_buff *skb,
-+			    struct iwl_rx_mpdu_desc *desc)
-+{
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
-+
-+	if (mvmvif->features & NETIF_F_RXCSUM &&
-+	    desc->l3l4_flags & cpu_to_le16(IWL_RX_L3L4_IP_HDR_CSUM_OK) &&
-+	    desc->l3l4_flags & cpu_to_le16(IWL_RX_L3L4_TCP_UDP_CSUM_OK))
-+		skb->ip_summed = CHECKSUM_UNNECESSARY;
-+}
-+
-+void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
-+			struct iwl_rx_cmd_buffer *rxb, int queue)
-+{
-+	struct ieee80211_rx_status *rx_status;
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
-+	struct ieee80211_hdr *hdr = (void *)(desc + 1);
-+	u32 len = le16_to_cpu(desc->mpdu_len);
-+	u32 rate_n_flags = le32_to_cpu(desc->rate_n_flags);
-+	struct ieee80211_sta *sta = NULL;
-+	struct sk_buff *skb;
-+	u32 ampdu_status;
-+	u8 crypt_len = 0;
-+
-+	/* Dont use dev_alloc_skb(), we'll have enough headroom once
-+	 * ieee80211_hdr pulled.
-+	 */
-+	skb = alloc_skb(128, GFP_ATOMIC);
-+	if (!skb) {
-+		IWL_ERR(mvm, "alloc_skb failed\n");
-+		return;
-+	}
-+
-+	rx_status = IEEE80211_SKB_RXCB(skb);
-+
-+	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, desc, queue, &crypt_len)) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	/*
-+	 * Keep packets with CRC errors (and with overrun) for monitor mode
-+	 * (otherwise the firmware discards them) but mark them as bad.
-+	 */
-+	if (!(desc->status & cpu_to_le16(IWL_RX_MPDU_STATUS_CRC_OK)) ||
-+	    !(desc->status & cpu_to_le16(IWL_RX_MPDU_STATUS_OVERRUN_OK))) {
-+		IWL_DEBUG_RX(mvm, "Bad CRC or FIFO: 0x%08X.\n",
-+			     le16_to_cpu(desc->status));
-+		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	}
-+
-+	rx_status->mactime = le64_to_cpu(desc->tsf_on_air_rise);
-+	rx_status->device_timestamp = le32_to_cpu(desc->gp2_on_air_rise);
-+	rx_status->band = desc->channel > 14 ? IEEE80211_BAND_5GHZ :
-+					       IEEE80211_BAND_2GHZ;
-+	rx_status->freq = ieee80211_channel_to_frequency(desc->channel,
-+							 rx_status->band);
-+	iwl_mvm_get_signal_strength(mvm, desc, rx_status);
-+
-+	rcu_read_lock();
-+
-+	if (le16_to_cpu(desc->status) & IWL_RX_MPDU_STATUS_SRC_STA_FOUND) {
-+		u8 id = desc->sta_id_flags & IWL_RX_MPDU_SIF_STA_ID_MASK;
-+
-+		if (!WARN_ON_ONCE(id >= IWL_MVM_STATION_COUNT)) {
-+			sta = rcu_dereference(mvm->fw_id_to_mac_id[id]);
-+			if (IS_ERR(sta))
-+				sta = NULL;
-+		}
-+	} else if (!is_multicast_ether_addr(hdr->addr2)) {
-+		/*
-+		 * This is fine since we prevent two stations with the same
-+		 * address from being added.
-+		 */
-+		sta = ieee80211_find_sta_by_ifaddr(mvm->hw, hdr->addr2, NULL);
-+	}
-+
-+	if (sta) {
-+		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+
-+		/*
-+		 * We have tx blocked stations (with CS bit). If we heard
-+		 * frames from a blocked station on a new channel we can
-+		 * TX to it again.
-+		 */
-+		if (unlikely(mvm->csa_tx_block_bcn_timeout))
-+			iwl_mvm_sta_modify_disable_tx_ap(mvm, sta, false);
-+
-+		rs_update_last_rssi(mvm, &mvmsta->lq_sta, rx_status);
-+
-+		if (iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_RSSI) &&
-+		    ieee80211_is_beacon(hdr->frame_control)) {
-+			struct iwl_fw_dbg_trigger_tlv *trig;
-+			struct iwl_fw_dbg_trigger_low_rssi *rssi_trig;
-+			bool trig_check;
-+			s32 rssi;
-+
-+			trig = iwl_fw_dbg_get_trigger(mvm->fw,
-+						      FW_DBG_TRIGGER_RSSI);
-+			rssi_trig = (void *)trig->data;
-+			rssi = le32_to_cpu(rssi_trig->rssi);
-+
-+			trig_check =
-+				iwl_fw_dbg_trigger_check_stop(mvm, mvmsta->vif,
-+							      trig);
-+			if (trig_check && rx_status->signal < rssi)
-+				iwl_mvm_fw_dbg_collect_trig(mvm, trig, NULL);
-+		}
-+
-+		/* TODO: multi queue TCM */
-+
-+		if (ieee80211_is_data(hdr->frame_control))
-+			iwl_mvm_rx_csum(sta, skb, desc);
-+	}
-+
-+	rcu_read_unlock();
-+
-+	/*
-+	 * TODO: PHY info.
-+	 * Verify we don't have the information in the MPDU descriptor and
-+	 * that it is not needed.
-+	 * Make sure for monitor mode that we are on default queue, update
-+	 * ampdu_ref and the rest of phy info then
-+	 */
-+
-+	/* Set up the HT phy flags */
-+	switch (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) {
-+	case RATE_MCS_CHAN_WIDTH_20:
-+		break;
-+	case RATE_MCS_CHAN_WIDTH_40:
-+		rx_status->flag |= RX_FLAG_40MHZ;
-+		break;
-+	case RATE_MCS_CHAN_WIDTH_80:
-+		rx_status->vht_flag |= RX_VHT_FLAG_80MHZ;
-+		break;
-+	case RATE_MCS_CHAN_WIDTH_160:
-+		rx_status->vht_flag |= RX_VHT_FLAG_160MHZ;
-+		break;
-+	}
-+	if (rate_n_flags & RATE_MCS_SGI_MSK)
-+		rx_status->flag |= RX_FLAG_SHORT_GI;
-+	if (rate_n_flags & RATE_HT_MCS_GF_MSK)
-+		rx_status->flag |= RX_FLAG_HT_GF;
-+	if (rate_n_flags & RATE_MCS_LDPC_MSK)
-+		rx_status->flag |= RX_FLAG_LDPC;
-+	if (rate_n_flags & RATE_MCS_HT_MSK) {
-+		u8 stbc = (rate_n_flags & RATE_MCS_HT_STBC_MSK) >>
-+				RATE_MCS_STBC_POS;
-+		rx_status->flag |= RX_FLAG_HT;
-+		rx_status->rate_idx = rate_n_flags & RATE_HT_MCS_INDEX_MSK;
-+		rx_status->flag |= stbc << RX_FLAG_STBC_SHIFT;
-+	} else if (rate_n_flags & RATE_MCS_VHT_MSK) {
-+		u8 stbc = (rate_n_flags & RATE_MCS_VHT_STBC_MSK) >>
-+				RATE_MCS_STBC_POS;
-+		rx_status->vht_nss =
-+			((rate_n_flags & RATE_VHT_MCS_NSS_MSK) >>
-+						RATE_VHT_MCS_NSS_POS) + 1;
-+		rx_status->rate_idx = rate_n_flags & RATE_VHT_MCS_RATE_CODE_MSK;
-+		rx_status->flag |= RX_FLAG_VHT;
-+		rx_status->flag |= stbc << RX_FLAG_STBC_SHIFT;
-+		if (rate_n_flags & RATE_MCS_BF_MSK)
-+			rx_status->vht_flag |= RX_VHT_FLAG_BF;
-+	} else {
-+		rx_status->rate_idx =
-+			iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
-+							    rx_status->band);
-+	}
-+
-+	/* TODO: PHY info - update ampdu queue statistics (for debugfs) */
-+	/* TODO: PHY info - gscan */
-+
-+	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, ampdu_status,
-+					crypt_len, rxb);
-+}
+ #endif /* FWIL_TYPES_H_ */
 -- 
-2.5.0
+1.9.1
 
