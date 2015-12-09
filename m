@@ -1,108 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35320 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbbLMIEp (ORCPT
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:37274 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbbLINo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2015 03:04:45 -0500
-From: Saurabh Sengar <saurabh.truth@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Saurabh Sengar <saurabh.truth@gmail.com>
-Subject: [RESEND PATCH] NFC: added the sysfs entry for nfcsim workqueue delay
-Date: Sun, 13 Dec 2015 13:34:35 +0530
-Message-Id: <1449993875-3872-1-git-send-email-saurabh.truth@gmail.com> (sfid-20151213_090556_014217_F7B246A4)
+	Wed, 9 Dec 2015 08:44:28 -0500
+Date: Wed, 9 Dec 2015 13:44:11 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: linux-gpio@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Michael Welling <mwelling@ieee.org>,
+	Markus Pargmann <mpa@pengutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mark Brown <broonie@kernel.org>,
+	Amit Kucheria <amit.kucheria@linaro.org>, arm@kernel.org,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Sonic Zhang <sonic.zhang@analog.com>,
+	Greg Ungerer <gerg@uclinux.org>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	Anatolij Gustschin <agust@denx.de>,
+	linux-wireless@vger.kernel.org, linux-input@vger.kernel.org,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
+Message-ID: <20151209134410.GH8644@n2100.arm.linux.org.uk> (sfid-20151209_144432_802187_99EEFDCD)
+References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-added the sysfs entry for nfcsim workqueue delay, as tx_delay
+On Wed, Dec 09, 2015 at 02:08:35PM +0100, Linus Walleij wrote:
+> Because we want to have a proper userspace ABI for GPIO chips,
+> which involves using a character device that the user opens
+> and closes. While the character device is open, the underlying
+> kernel objects must not go away.
 
-Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
----
-In case this TODO is not expected to be done, please let me know.
-I wonder after my repeated attempts since last 50 days, I am not able to get a single response.
-Resending this patch in hope to get some response this time.
+Okay, so you stop the gpio_chip struct from going away.  What
+about the code which is called via gpio_chip - say, if userspace
+keep shte chardev open, and someone rmmod's the driver providing
+the GPIO driver.
 
- drivers/nfc/nfcsim.c | 38 +++++++++++++++++++++++++++++++++++---
- 1 file changed, 35 insertions(+), 3 deletions(-)
+I'm not sure that splitting up objects in this way really solves
+anything at all.  Yes, it divorses the driver's private data from
+the subsystem data, but is that really an advantage?
 
-diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
-index 26ac9e5..e77be35 100644
---- a/drivers/nfc/nfcsim.c
-+++ b/drivers/nfc/nfcsim.c
-@@ -32,6 +32,8 @@
- #define NFCSIM_POLL_TARGET	2
- #define NFCSIM_POLL_DUAL	(NFCSIM_POLL_INITIATOR | NFCSIM_POLL_TARGET)
- 
-+#define TX_DEFAULT_DELAY	5
-+
- struct nfcsim {
- 	struct nfc_dev *nfc_dev;
- 
-@@ -62,12 +64,41 @@ static struct nfcsim *dev1;
- 
- static struct workqueue_struct *wq;
- 
-+
-+static int tx_delay = TX_DEFAULT_DELAY;
-+
-+static ssize_t show_tx_delay(struct device *dev,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	int n;
-+
-+	n = scnprintf(buf, PAGE_SIZE, "%d\n", tx_delay);
-+	return n;
-+}
-+
-+static ssize_t store_tx_delay(struct device *dev,
-+					struct device_attribute *attr,
-+					const char *buf, size_t count)
-+{
-+	if (kstrtouint(buf, 0, &tx_delay) < 0)
-+		return -EINVAL;
-+
-+	if (tx_delay < 0)
-+		return -EINVAL;
-+
-+	return count;
-+}
-+
-+static DEVICE_ATTR(tx_delay, 0644, show_tx_delay, store_tx_delay);
-+
- static void nfcsim_cleanup_dev(struct nfcsim *dev, u8 shutdown)
- {
- 	DEV_DBG(dev, "shutdown=%d\n", shutdown);
- 
- 	mutex_lock(&dev->lock);
- 
-+	device_remove_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
- 	dev->polling_mode = NFCSIM_POLL_NONE;
- 	dev->shutting_down = shutdown;
- 	dev->cb = NULL;
-@@ -320,10 +351,8 @@ static int nfcsim_tx(struct nfc_dev *nfc_dev, struct nfc_target *target,
- 	 * If packet transmission occurs immediately between them, we have a
- 	 * non-stop flow of several tens of thousands SYMM packets per second
- 	 * and a burning cpu.
--	 *
--	 * TODO: Add support for a sysfs entry to control this delay.
- 	 */
--	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(5));
-+	queue_delayed_work(wq, &peer->recv_work, msecs_to_jiffies(tx_delay));
- 
- 	mutex_unlock(&peer->lock);
- 
-@@ -461,6 +490,9 @@ static struct nfcsim *nfcsim_init_dev(void)
- 	if (rc)
- 		goto free_nfc_dev;
- 
-+	rc = device_create_file(&dev->nfc_dev->dev, &dev_attr_tx_delay);
-+	if (rc)
-+		pr_err("error creating sysfs entry\n");
- 	return dev;
- 
- free_nfc_dev:
+Network drivers have a similar issue, and the way this problem is
+solved there is that alloc_netdev() is always used to allocate the
+subsystem data structure and any driver private data structure as
+one allocation, and the lifetime of both objects remains under the
+control of the subsystem.
+
+The allocated memory is only freed when the last user goes away,
+and net has protection to prevent an unregistered driver from
+being called (via locks on every path into the layer.)
+
+Things get a little more complex with gpio, because there's the
+issue that some methods are spinlocked while others can take
+semaphores, but it should be possible to come up with a solution
+to that - maybe an atomic_t which is incremented whenever we're
+in some operation provided it's >= 0 (otherwise it fails), and
+decremented when the operation completes.  We can then control
+in the unregistration path further GPIO accesses, and also
+prevent new accesses occuring by setting the atomic_t to -1.
+This shouldn't require any additional locking in any path.  It
+does mean that the unregistration path needs careful thought to
+ensure that when we set it to -1, we wait for it to be dropped
+by the appropriate amount.
+
 -- 
-1.9.1
-
+RMK's Patch system: http://www.arm.linux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
