@@ -1,72 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:36823 "EHLO
-	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933188AbbLXHxC (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32733 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754321AbbLIKXB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:02 -0500
-Received: by mail-pf0-f180.google.com with SMTP id 65so20558485pff.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:02 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/21] staging: wilc1000: rename ssidLen in wilc_set_join_req
-Date: Thu, 24 Dec 2015 16:52:23 +0900
-Message-Id: <1450943559-20937-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085331_130326_A8FE7033)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 9 Dec 2015 05:23:01 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 13/13] brcmfmac: add arp offload ip address table configuration support
+Date: Wed, 9 Dec 2015 11:22:52 +0100
+Message-ID: <1449656572-16158-14-git-send-email-arend@broadcom.com> (sfid-20151209_112356_451299_CED5B8C3)
+In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames ssidLen to ssid_len to avoid camelcase.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Obtain ipv4 address through inetaddr notification for ARP offload host
+ip table configuration.
+
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Change-Id: I7e7d215c5267517f8c0cbbf13fe70ac443a34af8
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5420
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 +++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+ 2 files changed, 110 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a146d4f..4730b60 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3366,7 +3366,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 3a39192..2631f6f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
++#include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+ #include <brcmu_utils.h>
+@@ -620,6 +621,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_cfg80211_down(ndev);
+ 
++	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
++
+ 	brcmf_net_setcarrier(ifp, false);
+ 
+ 	return 0;
+@@ -940,6 +943,98 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+ 	return available ? bsscfgidx : -ENOMEM;
  }
  
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
--		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
-+		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
- 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
- 		      u8 u8channel, void *pJoinParams)
-@@ -3403,9 +3403,9 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
++#ifdef CONFIG_INET
++#define ARPOL_MAX_ENTRIES	8
++static int brcmf_inetaddr_changed(struct notifier_block *nb,
++				  unsigned long action, void *data)
++{
++	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
++					      inetaddr_notifier);
++	struct in_ifaddr *ifa = data;
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct brcmf_if *ifp;
++	int idx, i, ret;
++	u32 val;
++	u32 addr_table[ARPOL_MAX_ENTRIES] = {0};
++
++	/* Find out if the notification is meant for us */
++	for (idx = 0; idx < BRCMF_MAX_IFS; idx++) {
++		ifp = drvr->iflist[idx];
++		if (ifp && ifp->ndev == ndev)
++			break;
++		if (idx == BRCMF_MAX_IFS - 1)
++			return NOTIFY_DONE;
++	}
++
++	/* check if arp offload is supported */
++	ret = brcmf_fil_iovar_int_get(ifp, "arpoe", &val);
++	if (ret)
++		return NOTIFY_OK;
++
++	/* old version only support primary index */
++	ret = brcmf_fil_iovar_int_get(ifp, "arp_version", &val);
++	if (ret)
++		val = 1;
++	if (val == 1)
++		ifp = drvr->iflist[0];
++
++	/* retrieve the table from firmware */
++	ret = brcmf_fil_iovar_data_get(ifp, "arp_hostip", addr_table,
++				       sizeof(addr_table));
++	if (ret) {
++		brcmf_err("fail to get arp ip table err:%d\n", ret);
++		return NOTIFY_OK;
++	}
++
++	for (i = 0; i < ARPOL_MAX_ENTRIES; i++)
++		if (ifa->ifa_address == addr_table[i])
++			break;
++
++	switch (action) {
++	case NETDEV_UP:
++		if (i == ARPOL_MAX_ENTRIES) {
++			brcmf_dbg(TRACE, "add %pI4 to arp table\n",
++				  &ifa->ifa_address);
++			/* set it directly */
++			ret = brcmf_fil_iovar_int_set(ifp, "arp_hostip",
++						      ifa->ifa_address);
++			if (ret)
++				brcmf_err("add arp ip err %d\n", ret);
++		}
++		break;
++	case NETDEV_DOWN:
++		if (i < ARPOL_MAX_ENTRIES) {
++			addr_table[i] = 0;
++			brcmf_dbg(TRACE, "remove %pI4 from arp table\n",
++				  &ifa->ifa_address);
++			/* clear the table in firmware */
++			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear",
++						       NULL, 0);
++			if (ret) {
++				brcmf_err("fail to clear arp ip table err:%d\n",
++					  ret);
++				return NOTIFY_OK;
++			}
++			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
++				if (addr_table[i] != 0) {
++					brcmf_fil_iovar_int_set(ifp,
++								"arp_hostip",
++								addr_table[i]);
++					if (ret)
++						brcmf_err("add arp ip err %d\n",
++							  ret);
++				}
++			}
++		}
++		break;
++	default:
++		break;
++	}
++
++	return NOTIFY_OK;
++}
++#endif
++
+ int brcmf_attach(struct device *dev)
+ {
+ 	struct brcmf_pub *drvr = NULL;
+@@ -1068,6 +1163,15 @@ int brcmf_bus_start(struct device *dev)
+ 		if (p2p_ifp)
+ 			ret = brcmf_net_p2p_attach(p2p_ifp);
  	}
++
++	if (ret)
++		goto fail;
++
++#ifdef CONFIG_INET
++	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
++	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ fail:
+ 	if (ret < 0) {
+ 		brcmf_err("failed: %d\n", ret);
+@@ -1133,6 +1237,10 @@ void brcmf_detach(struct device *dev)
+ 	if (drvr == NULL)
+ 		return;
  
- 	if (ssid) {
--		msg.body.con_info.ssid_len = ssidLen;
--		msg.body.con_info.ssid = kmalloc(ssidLen, GFP_KERNEL);
--		memcpy(msg.body.con_info.ssid, ssid, ssidLen);
-+		msg.body.con_info.ssid_len = ssid_len;
-+		msg.body.con_info.ssid = kmalloc(ssid_len, GFP_KERNEL);
-+		memcpy(msg.body.con_info.ssid, ssid, ssid_len);
- 	}
++#ifdef CONFIG_INET
++	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ 	/* stop firmware event handling */
+ 	brcmf_fweh_detach(drvr);
+ 	if (drvr->config)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 77d8239..6018af7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -141,6 +141,8 @@ struct brcmf_pub {
+ #ifdef DEBUG
+ 	struct dentry *dbgfs_dir;
+ #endif
++
++	struct notifier_block inetaddr_notifier;
+ };
  
- 	if (pu8IEs) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 5d6f807..4c4674b 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -327,7 +327,7 @@ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
- int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
- int wilc_wait_msg_queue_idle(void);
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
--		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
-+		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
- 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
- 		      u8 u8channel, void *pJoinParams);
+ /* forward declarations */
 -- 
-2.6.4
+1.9.1
 
