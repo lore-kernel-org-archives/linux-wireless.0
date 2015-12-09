@@ -1,135 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964890AbbLHOGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:06:37 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 6/9] mac80211: handle width changes from opmode notification IE in beacon
-Date: Tue,  8 Dec 2015 16:04:36 +0200
-Message-Id: <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150647_243872_F86F2F70)
-In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:35837 "EHLO
+	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbbLINoA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2015 08:44:00 -0500
+Received: by lfdl133 with SMTP id l133so34346573lfd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2015 05:43:58 -0800 (PST)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: linux-gpio@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Michael Welling <mwelling@ieee.org>,
+	Markus Pargmann <mpa@pengutronix.de>, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 153/182] bcma: gpio: use gpiochip data pointer
+Date: Wed,  9 Dec 2015 14:43:53 +0100
+Message-Id: <1449668633-5547-1-git-send-email-linus.walleij@linaro.org> (sfid-20151209_144405_773671_FD818325)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+This makes the driver use the data pointer added to the gpio_chip
+to store a pointer to the state container instead of relying on
+container_of().
 
-An AP can send an operating channel width change in a beacon
-opmode notification IE as long as there's a change in the nss as
-well (See 802.11ac-2013 section 10.41).
-So don't limit updating to nss only from an opmode notification IE.
-
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Rafał Miłecki <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- net/mac80211/cfg.c         |  3 +--
- net/mac80211/ieee80211_i.h |  4 ++--
- net/mac80211/mlme.c        |  2 +-
- net/mac80211/rx.c          |  3 +--
- net/mac80211/vht.c         | 10 +++-------
- 5 files changed, 8 insertions(+), 14 deletions(-)
+BCMA maintainers: please ACK this so I can take it through the
+GPIO tree.
+---
+ drivers/bcma/driver_gpio.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b9e2c2f..a90d875 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1198,8 +1198,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		 * rc isn't initialized here yet, so ignore it
- 		 */
- 		__ieee80211_vht_handle_opmode(sdata, sta,
--					      params->opmode_notif,
--					      band, false);
-+					      params->opmode_notif, band);
- 	}
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 949754427ce2..98067f757fb0 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -17,14 +17,9 @@
  
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 582ea86..747402d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1718,10 +1718,10 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
- 				 struct ieee80211_mgmt *mgmt);
- u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-                                   struct sta_info *sta, u8 opmode,
--                                  enum ieee80211_band band, bool nss_only);
-+				  enum ieee80211_band band);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only);
-+				 enum ieee80211_band band);
- void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
- 				      struct ieee80211_sta_vht_cap *vht_cap);
- void ieee80211_get_vht_mask_from_cap(__le16 vht_cap,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1e6b337..62c8e4f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3584,7 +3584,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ #define BCMA_GPIO_MAX_PINS	32
  
- 	if (sta && elems.opmode_notif)
- 		ieee80211_vht_handle_opmode(sdata, sta, *elems.opmode_notif,
--					    rx_status->band, true);
-+					    rx_status->band);
- 	mutex_unlock(&local->sta_mtx);
- 
- 	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 901c72b..fe675d7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2738,8 +2738,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
- 
- 			ieee80211_vht_handle_opmode(rx->sdata, rx->sta,
--						    opmode, status->band,
--						    false);
-+						    opmode, status->band);
- 			goto handled;
- 		}
- 		case WLAN_VHT_ACTION_GROUPID_MGMT: {
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index d2f2ff6..a02525a 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -399,7 +399,7 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 
- u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				  struct sta_info *sta, u8 opmode,
--				  enum ieee80211_band band, bool nss_only)
-+				  enum ieee80211_band band)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -422,9 +422,6 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_NSS_CHANGED;
- 	}
- 
--	if (nss_only)
--		return changed;
+-static inline struct bcma_drv_cc *bcma_gpio_get_cc(struct gpio_chip *chip)
+-{
+-	return container_of(chip, struct bcma_drv_cc, gpio);
+-}
 -
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
- 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_20;
-@@ -473,13 +470,12 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
- 
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+				 enum ieee80211_band band)
+ static int bcma_gpio_get_value(struct gpio_chip *chip, unsigned gpio)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
  
--	u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
--						    band, nss_only);
-+	u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode, band);
+ 	return !!bcma_chipco_gpio_in(cc, 1 << gpio);
+ }
+@@ -32,14 +27,14 @@ static int bcma_gpio_get_value(struct gpio_chip *chip, unsigned gpio)
+ static void bcma_gpio_set_value(struct gpio_chip *chip, unsigned gpio,
+ 				int value)
+ {
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
  
- 	if (changed > 0)
- 		rate_control_rate_update(local, sband, sta, changed);
+ 	bcma_chipco_gpio_out(cc, 1 << gpio, value ? 1 << gpio : 0);
+ }
+ 
+ static int bcma_gpio_direction_input(struct gpio_chip *chip, unsigned gpio)
+ {
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
+ 
+ 	bcma_chipco_gpio_outen(cc, 1 << gpio, 0);
+ 	return 0;
+@@ -48,7 +43,7 @@ static int bcma_gpio_direction_input(struct gpio_chip *chip, unsigned gpio)
+ static int bcma_gpio_direction_output(struct gpio_chip *chip, unsigned gpio,
+ 				      int value)
+ {
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
+ 
+ 	bcma_chipco_gpio_outen(cc, 1 << gpio, 1 << gpio);
+ 	bcma_chipco_gpio_out(cc, 1 << gpio, value ? 1 << gpio : 0);
+@@ -57,7 +52,7 @@ static int bcma_gpio_direction_output(struct gpio_chip *chip, unsigned gpio,
+ 
+ static int bcma_gpio_request(struct gpio_chip *chip, unsigned gpio)
+ {
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
+ 
+ 	bcma_chipco_gpio_control(cc, 1 << gpio, 0);
+ 	/* clear pulldown */
+@@ -70,7 +65,7 @@ static int bcma_gpio_request(struct gpio_chip *chip, unsigned gpio)
+ 
+ static void bcma_gpio_free(struct gpio_chip *chip, unsigned gpio)
+ {
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++	struct bcma_drv_cc *cc = gpiochip_get_data(chip);
+ 
+ 	/* clear pullup */
+ 	bcma_chipco_gpio_pullup(cc, 1 << gpio, 0);
+@@ -81,7 +76,7 @@ static void bcma_gpio_free(struct gpio_chip *chip, unsigned gpio)
+ static void bcma_gpio_irq_unmask(struct irq_data *d)
+ {
+ 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(gc);
++	struct bcma_drv_cc *cc = gpiochip_get_data(gc);
+ 	int gpio = irqd_to_hwirq(d);
+ 	u32 val = bcma_chipco_gpio_in(cc, BIT(gpio));
+ 
+@@ -92,7 +87,7 @@ static void bcma_gpio_irq_unmask(struct irq_data *d)
+ static void bcma_gpio_irq_mask(struct irq_data *d)
+ {
+ 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+-	struct bcma_drv_cc *cc = bcma_gpio_get_cc(gc);
++	struct bcma_drv_cc *cc = gpiochip_get_data(gc);
+ 	int gpio = irqd_to_hwirq(d);
+ 
+ 	bcma_chipco_gpio_intmask(cc, BIT(gpio), 0);
+@@ -216,7 +211,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ 	else
+ 		chip->base		= -1;
+ 
+-	err = gpiochip_add(chip);
++	err = gpiochip_add_data(chip, cc);
+ 	if (err)
+ 		return err;
+ 
 -- 
-2.5.0
+2.4.3
 
