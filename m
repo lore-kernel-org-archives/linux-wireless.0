@@ -1,68 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37052 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752149AbbLTRuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 12:50:40 -0500
-Date: Sun, 20 Dec 2015 18:50:36 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Saurabh Sengar <saurabh.truth@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH] NFC: added the sysfs entry for nfcsim workqueue
- delay
-Message-ID: <20151220175036.GA3938@zurbaran.home> (sfid-20151220_185100_123390_015DADC8)
-References: <1449993875-3872-1-git-send-email-saurabh.truth@gmail.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58341 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbbLIKWz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2015 05:22:55 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/13] brcmfmac: Remove some redundant cfg80211 data.
+Date: Wed, 9 Dec 2015 11:22:42 +0100
+Message-ID: <1449656572-16158-4-git-send-email-arend@broadcom.com> (sfid-20151209_112310_608180_D5E3523F)
+In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449993875-3872-1-git-send-email-saurabh.truth@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Saurabh,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-On Sun, Dec 13, 2015 at 01:34:35PM +0530, Saurabh Sengar wrote:
-> added the sysfs entry for nfcsim workqueue delay, as tx_delay
-> 
-> Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
-> ---
-> In case this TODO is not expected to be done, please let me know.
-> I wonder after my repeated attempts since last 50 days, I am not able to get a single response.
-Apologies for the delay.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Change-Id: I99fb70fc03ea5c498f0fb12281b4c64d8e39e258
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5447
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c |  1 -
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 10 ----------
+ 2 files changed, 11 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b7b60f52..5432c46 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5203,7 +5203,6 @@ static void brcmf_init_conf(struct brcmf_cfg80211_conf *conf)
+ 	conf->rts_threshold = (u32)-1;
+ 	conf->retry_short = (u32)-1;
+ 	conf->retry_long = (u32)-1;
+-	conf->tx_power = -1;
+ }
+ 
+ static void brcmf_register_event_handlers(struct brcmf_cfg80211_info *cfg)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index e77f137..ec8d1f8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -95,14 +95,6 @@ struct brcmf_cfg80211_conf {
+ 	u32 rts_threshold;
+ 	u32 retry_short;
+ 	u32 retry_long;
+-	s32 tx_power;
+-	struct ieee80211_channel channel;
+-};
+-
+-/* basic structure of information element */
+-struct brcmf_cfg80211_ie {
+-	u16 offset;
+-	u8 buf[WL_TLV_INFO_MAX];
+ };
+ 
+ /* security information with currently associated ap */
+@@ -333,7 +325,6 @@ struct brcmf_cfg80211_vif_event {
+  * @usr_sync: mainly for dongle up/down synchronization.
+  * @bss_list: bss_list holding scanned ap information.
+  * @bss_info: bss information for cfg80211 layer.
+- * @ie: information element object for internal purpose.
+  * @conn_info: association info.
+  * @pmk_list: wpa2 pmk list.
+  * @scan_status: scan activity on the dongle.
+@@ -367,7 +358,6 @@ struct brcmf_cfg80211_info {
+ 	struct cfg80211_scan_request *scan_request;
+ 	struct mutex usr_sync;
+ 	struct wl_cfg80211_bss_info *bss_info;
+-	struct brcmf_cfg80211_ie ie;
+ 	struct brcmf_cfg80211_connect_info conn_info;
+ 	struct brcmf_cfg80211_pmk_list *pmk_list;
+ 	unsigned long scan_status;
+-- 
+1.9.1
 
-> Resending this patch in hope to get some response this time.
-> 
->  drivers/nfc/nfcsim.c | 38 +++++++++++++++++++++++++++++++++++---
->  1 file changed, 35 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
-> index 26ac9e5..e77be35 100644
-> --- a/drivers/nfc/nfcsim.c
-> +++ b/drivers/nfc/nfcsim.c
-> @@ -32,6 +32,8 @@
->  #define NFCSIM_POLL_TARGET	2
->  #define NFCSIM_POLL_DUAL	(NFCSIM_POLL_INITIATOR | NFCSIM_POLL_TARGET)
->  
-> +#define TX_DEFAULT_DELAY	5
-> +
->  struct nfcsim {
->  	struct nfc_dev *nfc_dev;
->  
-> @@ -62,12 +64,41 @@ static struct nfcsim *dev1;
->  
->  static struct workqueue_struct *wq;
->  
-> +
-> +static int tx_delay = TX_DEFAULT_DELAY;
-2 things:
-
-- This actually defines an rx delay as it delays the start of the
-  receiving workqueue, so the name should be tx_*. I'm being picky here,
-  because with this special driver an Rx delay is implicitely a Tx
-  one.
-- I'd prefer this to be tunable by device, so it should be defined as an
-  additional field in the nfcsim structure (rx_delay ?) and set by default
-  to RX_DEFAULT_DELAY from nfcsim_init_dev.
-
-Cheers,
-Samuel.
