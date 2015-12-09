@@ -1,92 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27518 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752941AbbL3OpZ (ORCPT
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:35684 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752697AbbLIRNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 09:45:25 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBUEigAR028536
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:25 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 203nme3wjc-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:25 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/3] mwifiex: fix IBSS data path issue.
-Date: Wed, 30 Dec 2015 06:43:08 -0800
-Message-ID: <1451486589-15010-2-git-send-email-akarwar@marvell.com> (sfid-20151230_154535_493169_DAD5B7BD)
-In-Reply-To: <1451486589-15010-1-git-send-email-akarwar@marvell.com>
-References: <1451486589-15010-1-git-send-email-akarwar@marvell.com>
+	Wed, 9 Dec 2015 12:13:20 -0500
+Received: by qgec40 with SMTP id c40so88942161qge.2
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2015 09:13:19 -0800 (PST)
+Date: Wed, 9 Dec 2015 12:13:14 -0500 (EST)
+From: Nicolas Pitre <nicolas.pitre@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] iwlegacy: mark il_adjust_beacon_interval as noinline
+In-Reply-To: <36263581.L8412YxJjp@wuerfel>
+Message-ID: <alpine.LFD.2.20.1512091209130.26920@knanqh.ubzr> (sfid-20151209_181339_380758_48F5166B)
+References: <36263581.L8412YxJjp@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+On Wed, 9 Dec 2015, Arnd Bergmann wrote:
 
-The port_open flag is not applicable for IBSS mode. IBSS data
-path was broken when port_open flag was introduced.
-This patch fixes the problem by correcting the checks.
+> With the new optimized do_div() code, some versions of gcc
+> produce obviously incorrect code that leads to a link error
+> in iwlegacy/common.o:
+> 
+> drivers/built-in.o: In function `il_send_rxon_timing':
+> :(.text+0xa6b4d4): undefined reference to `____ilog2_NaN'
+> :(.text+0xa6b4f0): undefined reference to `__aeabi_uldivmod'
+> 
+> In a few thousand randconfig builds, I have seen this problem
+> a couple of times in this file, but never anywhere else in the
+> kernel, so we can try to work around this in the only file
+> that shows the behavior, by marking the il_adjust_beacon_interval
+> function as noinline, which convinces gcc to use the unoptimized
+> do_div() all the time.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Fixes: 5c8946330abfa4c ("mwifiex: enable traffic only when port is open")
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 10 ++++++----
- drivers/net/wireless/marvell/mwifiex/wmm.c       |  6 ++++--
- 2 files changed, 10 insertions(+), 6 deletions(-)
+Acked-by: Nicolas Pitre <nico@linaro.org>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index ff3ee9d..23bae87 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -607,11 +607,13 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_PS_AWAKE:
- 		mwifiex_dbg(adapter, EVENT, "info: EVENT: AWAKE\n");
--		if (!adapter->pps_uapsd_mode && priv->port_open &&
-+		if (!adapter->pps_uapsd_mode &&
-+		    (priv->port_open ||
-+		     (priv->bss_mode == NL80211_IFTYPE_ADHOC)) &&
- 		    priv->media_connected && adapter->sleep_period.period) {
--				adapter->pps_uapsd_mode = true;
--				mwifiex_dbg(adapter, EVENT,
--					    "event: PPS/UAPSD mode activated\n");
-+			adapter->pps_uapsd_mode = true;
-+			mwifiex_dbg(adapter, EVENT,
-+				    "event: PPS/UAPSD mode activated\n");
- 		}
- 		adapter->tx_lock_flag = false;
- 		if (adapter->pps_uapsd_mode && adapter->gen_null_pkt) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
-index acccd67..499e5a7 100644
---- a/drivers/net/wireless/marvell/mwifiex/wmm.c
-+++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
-@@ -475,7 +475,8 @@ mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter)
- 		priv = adapter->priv[i];
- 		if (!priv)
- 			continue;
--		if (!priv->port_open)
-+		if (!priv->port_open &&
-+		    (priv->bss_mode != NL80211_IFTYPE_ADHOC))
- 			continue;
- 		if (adapter->if_ops.is_port_ready &&
- 		    !adapter->if_ops.is_port_ready(priv))
-@@ -1099,7 +1100,8 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 
- 			priv_tmp = adapter->bss_prio_tbl[j].bss_prio_cur->priv;
- 
--			if (!priv_tmp->port_open ||
-+			if (((priv_tmp->bss_mode != NL80211_IFTYPE_ADHOC) &&
-+			     !priv_tmp->port_open) ||
- 			    (atomic_read(&priv_tmp->wmm.tx_pkts_queued) == 0))
- 				continue;
- 
--- 
-1.8.1.4
-
+> 
+> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+> index 887114582583..6308bb217454 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/common.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
+> @@ -3602,7 +3602,7 @@ il_is_ht40_tx_allowed(struct il_priv *il, struct ieee80211_sta_ht_cap *ht_cap)
+>  }
+>  EXPORT_SYMBOL(il_is_ht40_tx_allowed);
+>  
+> -static u16
+> +static u16 noinline
+>  il_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
+>  {
+>  	u16 new_val;
+> 
+> 
