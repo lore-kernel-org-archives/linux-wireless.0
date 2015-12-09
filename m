@@ -1,108 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:32809 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751998AbbLZPFQ (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34093 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbbLIOqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Dec 2015 10:05:16 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH] net/rfkill: Create "airplane mode" LED trigger
-Date: Sat, 26 Dec 2015 10:05:03 -0500
-Message-Id: <1451142303-1872-2-git-send-email-jprvita@endlessm.com> (sfid-20151226_160639_136600_2B5A8332)
-In-Reply-To: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
-References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
+	Wed, 9 Dec 2015 09:46:02 -0500
+Received: by oies6 with SMTP id s6so27880541oie.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2015 06:46:01 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20151209134410.GH8644@n2100.arm.linux.org.uk>
+References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
+	<20151209134410.GH8644@n2100.arm.linux.org.uk>
+Date: Wed, 9 Dec 2015 15:46:00 +0100
+Message-ID: <CACRpkdZcz73vtgZsCKZCJ=G3nq-yCPiO8hws4ro5HVWd8AVRCw@mail.gmail.com> (sfid-20151209_154608_394876_ABB42E3B)
+Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johan Hovold <johan@kernel.org>
+Cc: "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Michael Welling <mwelling@ieee.org>,
+	Markus Pargmann <mpa@pengutronix.de>,
+	Mark Brown <broonie@kernel.org>,
+	Amit Kucheria <amit.kucheria@linaro.org>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Sonic Zhang <sonic.zhang@analog.com>,
+	Greg Ungerer <gerg@uclinux.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Anatolij Gustschin <agust@denx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Input <linux-input@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee.jones@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For platform drivers to be able to correctly drive the "Airplane Mode"
-indicative LED there needs to be a RFKill LED trigger tied to the global
-state of RFKILL_TYPE_ALL (instead of to a specific RFKill) and that
-works in an inverted manner of regular RFKill LED triggers, that is, the
-LED is ON when the state is blocked, and OFF otherwise.
+On Wed, Dec 9, 2015 at 2:44 PM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
 
-This commit implements such a trigger, which will be used by the
-asus-wireless x86 platform driver.
+Thanks Russell, I think you speed up the design and shorten the
+development time by providing these ideas, so it is much, much
+appreciated.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- net/rfkill/core.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+> On Wed, Dec 09, 2015 at 02:08:35PM +0100, Linus Walleij wrote:
+>> Because we want to have a proper userspace ABI for GPIO chips,
+>> which involves using a character device that the user opens
+>> and closes. While the character device is open, the underlying
+>> kernel objects must not go away.
+>
+> Okay, so you stop the gpio_chip struct from going away.
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index b41e9ea..3effc29 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -124,6 +124,26 @@ static bool rfkill_epo_lock_active;
- 
- 
- #ifdef CONFIG_RFKILL_LEDS
-+static void airplane_mode_led_trigger_activate(struct led_classdev *led);
-+
-+static struct led_trigger airplane_mode_led_trigger = {
-+	.name     = "rfkill-airplane-mode",
-+	.activate = airplane_mode_led_trigger_activate,
-+};
-+
-+static void airplane_mode_led_trigger_event(void)
-+{
-+	if (rfkill_global_states[RFKILL_TYPE_ALL].cur & RFKILL_BLOCK_ANY)
-+		led_trigger_event(&airplane_mode_led_trigger, LED_FULL);
-+	else
-+		led_trigger_event(&airplane_mode_led_trigger, LED_OFF);
-+}
-+
-+static void airplane_mode_led_trigger_activate(struct led_classdev *led)
-+{
-+	airplane_mode_led_trigger_event();
-+}
-+
- static void rfkill_led_trigger_event(struct rfkill *rfkill)
- {
- 	struct led_trigger *trigger;
-@@ -175,6 +195,10 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
- 	led_trigger_unregister(&rfkill->led_trigger);
- }
- #else
-+static void airplane_mode_led_trigger_event(void)
-+{
-+}
-+
- static void rfkill_led_trigger_event(struct rfkill *rfkill)
- {
- }
-@@ -346,6 +370,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
- 
- 		for (i = 0; i < NUM_RFKILL_TYPES; i++)
- 			rfkill_global_states[i].cur = blocked;
-+		airplane_mode_led_trigger_event();
- 	} else {
- 		rfkill_global_states[type].cur = blocked;
- 	}
-@@ -1177,6 +1202,7 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
- 			enum rfkill_type i;
- 			for (i = 0; i < NUM_RFKILL_TYPES; i++)
- 				rfkill_global_states[i].cur = ev.soft;
-+			airplane_mode_led_trigger_event();
- 		} else {
- 			rfkill_global_states[ev.type].cur = ev.soft;
- 		}
-@@ -1293,6 +1319,10 @@ static int __init rfkill_init(void)
- 	}
- #endif
- 
-+#ifdef CONFIG_RFKILL_LEDS
-+	led_trigger_register(&airplane_mode_led_trigger);
-+#endif
-+
-  out:
- 	return error;
- }
--- 
-2.5.0
+Actually I was going to create a new struct gpio_device, but yes.
 
+> What
+> about the code which is called via gpio_chip - say, if userspace
+> keeps the chardev open, and someone rmmod's the driver providing
+> the GPIO driver.
+
+The idea was that when what is today gpiochip_remove() is called by the
+gpiochip driver, the static data pointer to the vtable with all
+callbacks is set to NULL (in some safe way), and the code avoids
+calling these, so the device goes numb.
+
+I think you give me the right solution to this "safe way" below,
+thanks!
+
+> I'm not sure that splitting up objects in this way really solves
+> anything at all.  Yes, it divorses the driver's private data from
+> the subsystem data, but is that really an advantage?
+
+I like the design pattern you describe below, and
+I have no strong opinion on it. If there is a precedent in the kernel
+to do it with a separate alloc_foo() function I can do that.
+
+(Would like Greg's and/or Johan's opinion on this though.)
+
+> Network drivers have a similar issue, and the way this problem is
+> solved there is that alloc_netdev() is always used to allocate the
+> subsystem data structure and any driver private data structure as
+> one allocation, and the lifetime of both objects remains under the
+> control of the subsystem.
+>
+> The allocated memory is only freed when the last user goes away,
+> and net has protection to prevent an unregistered driver from
+> being called (via locks on every path into the layer.)
+
+That's a viable way to solve this.
+
+The refactoring would be bigger in size and different. The current
+patch set would still be needed though, as the drivers will
+still not be able to use the container_of() design pattern with this
+design either, as the gpiolib core handles allocation of its
+own struct and then some more.
+
+With what I had in mind it would be something like:
+
+struct foo_gpio {
+      struct gpio_device *gd;
+};
+
+const struct gpio_ops foo_ops = {
+     .set = ...
+     .get = ...
+};
+
+foo = devm_kzalloc(dev, ...);
+foo->gd = gpio_add_device(&foo_ops, ...);
+...
+gpio_remove_device(foo->gd);
+
+
+But with the alloc_gpiodev() pattern we get this:
+
+struct foo_gpio {
+....
+};
+
+static void setup(struct gpio_device *gd)
+{
+   gd->set = ...;
+   gd->get = ...;
+}
+
+foo = gpio_alloc_device(sizeof(foo), name, setup);
+struct gpio_device *gd = gpio_add_device(foo);
+...
+gpio_remove_device(gd);
+
+The setup call is clever to use also with GPIO because we
+can use that to setup mmio-gpio drivers and easier refactor
+those drivers that assign members to gpio_chip dynamically.
+
+Also I think this case would involve getting rid of all static
+vtables and only use that setup call to assign function
+pointers akin to what we have for gpio_chip. Lots of work,
+but I like it.
+
+We can do allocation in early boot these days even if
+the gpiochip is added with an early initcall right?
+
+> Things get a little more complex with gpio, because there's the
+> issue that some methods are spinlocked while others can take
+> semaphores, but it should be possible to come up with a solution
+> to that - maybe an atomic_t which is incremented whenever we're
+> in some operation provided it's >= 0 (otherwise it fails), and
+> decremented when the operation completes.  We can then control
+> in the unregistration path further GPIO accesses, and also
+> prevent new accesses occuring by setting the atomic_t to -1.
+> This shouldn't require any additional locking in any path.  It
+> does mean that the unregistration path needs careful thought to
+> ensure that when we set it to -1, we wait for it to be dropped
+> by the appropriate amount.
+
+Yeah we will both in spinlocks/hotpath and
+semaphores/mutexes/slowpath in these ops for sure :/
+
+The atomic hack should work: I understand that you mean
+we read it and set it to -1 and if it was 2 wait for it to
+become -3, then conclude unregistration with callbacks
+numbed.
+
+Then there is a particular case that occurs with USB or similar
+pluggable buses, where there is a glitch or powercycle on the
+bus, and the same device goes away and comes back in
+a few milliseconds, and that means it should reattach to the
+character device that is already open.
+
+Making that work is however non-trivial :(
+
+Yours,
+Linus Walleij
