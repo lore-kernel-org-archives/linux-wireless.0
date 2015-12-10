@@ -1,373 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16157 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751183AbbLaO0h (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:50076 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754689AbbLJMnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 09:26:37 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBVEPCOQ013010
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 06:26:37 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 20327phmm5-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 06:26:37 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode support
-Date: Thu, 31 Dec 2015 06:24:13 -0800
-Message-ID: <1451571855-29449-2-git-send-email-akarwar@marvell.com> (sfid-20151231_152709_227709_9A6C60F8)
-In-Reply-To: <1451571855-29449-1-git-send-email-akarwar@marvell.com>
-References: <1451571855-29449-1-git-send-email-akarwar@marvell.com>
+	Thu, 10 Dec 2015 07:43:21 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 01/13] brcmfmac: Simplify scan timing configuration
+Date: Thu, 10 Dec 2015 13:43:00 +0100
+Message-ID: <1449751392-32569-2-git-send-email-arend@broadcom.com> (sfid-20151210_134337_072378_2845C4F7)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Newer pcie chipsets (8997 onwards) support MSIx. This
-patch enables it.
+No need to pass timing configuration in local functions as they are
+static anyway.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 187 +++++++++++++++++++++++-----
- drivers/net/wireless/marvell/mwifiex/pcie.h |  15 +++
- 2 files changed, 174 insertions(+), 28 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 31 +++++++++-------------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  4 ---
+ 2 files changed, 12 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 165fe4f..57750f5 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2082,20 +2082,28 @@ mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- /*
-  * This function reads the interrupt status from card.
-  */
--static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
-+static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
-+				     int msg_id)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 771c581..4aebb2a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -91,6 +91,10 @@
+ #define BRCMF_SCAN_JOIN_PASSIVE_DWELL_TIME_MS	400
+ #define BRCMF_SCAN_JOIN_PROBE_INTERVAL_MS	20
+ 
++#define BRCMF_SCAN_CHANNEL_TIME		40
++#define BRCMF_SCAN_UNASSOC_TIME		40
++#define BRCMF_SCAN_PASSIVE_TIME		120
++
+ #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
+ 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
+ 
+@@ -5357,37 +5361,27 @@ roam_setup_done:
+ }
+ 
+ static s32
+-brcmf_dongle_scantime(struct brcmf_if *ifp, s32 scan_assoc_time,
+-		      s32 scan_unassoc_time, s32 scan_passive_time)
++brcmf_dongle_scantime(struct brcmf_if *ifp)
  {
- 	u32 pcie_ireg;
- 	unsigned long flags;
-+	struct pcie_service_card *card = adapter->card;
+ 	s32 err = 0;
  
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
- 		return;
- 
--	if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS, &pcie_ireg)) {
--		mwifiex_dbg(adapter, ERROR, "Read register failed\n");
--		return;
--	}
-+	if (card->msix_enable && msg_id >= 0) {
-+		pcie_ireg = BIT(msg_id);
-+	} else {
-+		if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
-+				     &pcie_ireg)) {
-+			mwifiex_dbg(adapter, ERROR, "Read register failed\n");
-+			return;
-+		}
-+
-+		if ((pcie_ireg == 0xFFFFFFFF) || !pcie_ireg)
-+			return;
- 
--	if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
- 
- 		mwifiex_pcie_disable_host_int(adapter);
- 
-@@ -2106,20 +2114,23 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- 				    "Write register failed\n");
- 			return;
- 		}
--		spin_lock_irqsave(&adapter->int_lock, flags);
--		adapter->int_status |= pcie_ireg;
--		spin_unlock_irqrestore(&adapter->int_lock, flags);
--
--		if (!adapter->pps_uapsd_mode &&
--		    adapter->ps_state == PS_STATE_SLEEP &&
--		    mwifiex_pcie_ok_to_access_hw(adapter)) {
--				/* Potentially for PCIe we could get other
--				 * interrupts like shared. Don't change power
--				 * state until cookie is set */
--				adapter->ps_state = PS_STATE_AWAKE;
--				adapter->pm_wakeup_fw_try = false;
--				del_timer(&adapter->wakeup_timer);
--		}
-+	}
-+
-+	spin_lock_irqsave(&adapter->int_lock, flags);
-+	adapter->int_status |= pcie_ireg;
-+	spin_unlock_irqrestore(&adapter->int_lock, flags);
-+	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
-+
-+	if (!adapter->pps_uapsd_mode &&
-+	    adapter->ps_state == PS_STATE_SLEEP &&
-+	    mwifiex_pcie_ok_to_access_hw(adapter)) {
-+		/* Potentially for PCIe we could get other
-+		 * interrupts like shared. Don't change power
-+		 * state until cookie is set
-+		 */
-+		adapter->ps_state = PS_STATE_AWAKE;
-+		adapter->pm_wakeup_fw_try = false;
-+		del_timer(&adapter->wakeup_timer);
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_CHANNEL_TIME,
+-				    scan_assoc_time);
++				    BRCMF_SCAN_CHANNEL_TIME);
+ 	if (err) {
+-		if (err == -EOPNOTSUPP)
+-			brcmf_dbg(INFO, "Scan assoc time is not supported\n");
+-		else
+-			brcmf_err("Scan assoc time error (%d)\n", err);
++		brcmf_err("Scan assoc time error (%d)\n", err);
+ 		goto dongle_scantime_out;
  	}
- }
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_UNASSOC_TIME,
+-				    scan_unassoc_time);
++				    BRCMF_SCAN_UNASSOC_TIME);
+ 	if (err) {
+-		if (err == -EOPNOTSUPP)
+-			brcmf_dbg(INFO, "Scan unassoc time is not supported\n");
+-		else
+-			brcmf_err("Scan unassoc time error (%d)\n", err);
++		brcmf_err("Scan unassoc time error (%d)\n", err);
+ 		goto dongle_scantime_out;
+ 	}
  
-@@ -2131,7 +2142,8 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
-  */
- static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- {
--	struct pci_dev *pdev = (struct pci_dev *)context;
-+	struct mwifiex_msix_context *ctx = context;
-+	struct pci_dev *pdev = ctx->dev;
- 	struct pcie_service_card *card;
- 	struct mwifiex_adapter *adapter;
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_PASSIVE_TIME,
+-				    scan_passive_time);
++				    BRCMF_SCAN_PASSIVE_TIME);
+ 	if (err) {
+-		if (err == -EOPNOTSUPP)
+-			brcmf_dbg(INFO, "Scan passive time is not supported\n");
+-		else
+-			brcmf_err("Scan passive time error (%d)\n", err);
++		brcmf_err("Scan passive time error (%d)\n", err);
+ 		goto dongle_scantime_out;
+ 	}
  
-@@ -2151,7 +2163,11 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 	if (adapter->surprise_removed)
- 		goto exit;
+@@ -6089,8 +6083,7 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+ 	/* make sure RF is ready for work */
+ 	brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 0);
  
--	mwifiex_interrupt_status(adapter);
-+	if (card->msix_enable)
-+		mwifiex_interrupt_status(adapter, ctx->msg_id);
-+	else
-+		mwifiex_interrupt_status(adapter, -1);
-+
- 	mwifiex_queue_main_work(adapter);
+-	brcmf_dongle_scantime(ifp, WL_SCAN_CHANNEL_TIME,
+-			      WL_SCAN_UNASSOC_TIME, WL_SCAN_PASSIVE_TIME);
++	brcmf_dongle_scantime(ifp);
  
- exit:
-@@ -2171,7 +2187,7 @@ exit:
-  * In case of Rx packets received, the packets are uploaded from card to
-  * host and processed accordingly.
-  */
--static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
-+static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- {
- 	int ret;
- 	u32 pcie_ireg;
-@@ -2251,6 +2267,69 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 	return 0;
- }
+ 	power_mode = cfg->pwr_save ? PM_FAST : PM_OFF;
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, power_mode);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index d492163..cf7a93d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -29,10 +29,6 @@
+ #define WL_ROAM_TRIGGER_LEVEL		-75
+ #define WL_ROAM_DELTA			20
  
-+static int mwifiex_process_msix_int(struct mwifiex_adapter *adapter)
-+{
-+	int ret;
-+	u32 pcie_ireg;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->int_lock, flags);
-+	/* Clear out unused interrupts */
-+	pcie_ireg = adapter->int_status;
-+	adapter->int_status = 0;
-+	spin_unlock_irqrestore(&adapter->int_lock, flags);
-+
-+	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: TX DNLD Done\n");
-+		ret = mwifiex_pcie_send_data_complete(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: Rx DATA\n");
-+		ret = mwifiex_pcie_process_recv_data(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: Rx EVENT\n");
-+		ret = mwifiex_pcie_process_event_ready(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (pcie_ireg & HOST_INTR_CMD_DONE) {
-+		if (adapter->cmd_sent) {
-+			mwifiex_dbg(adapter, INTR,
-+				    "info: CMD sent Interrupt\n");
-+			adapter->cmd_sent = false;
-+		}
-+		/* Handle command response */
-+		ret = mwifiex_pcie_process_cmd_complete(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	mwifiex_dbg(adapter, INTR,
-+		    "info: cmd_sent=%d data_sent=%d\n",
-+		    adapter->cmd_sent, adapter->data_sent);
-+
-+	return 0;
-+}
-+
-+static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	if (card->msix_enable)
-+		return mwifiex_process_msix_int(adapter);
-+	else
-+		return mwifiex_process_pcie_int(adapter);
-+}
-+
- /*
-  * This function downloads data from driver to card.
-  *
-@@ -2602,10 +2681,43 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
+-#define WL_SCAN_CHANNEL_TIME		40
+-#define WL_SCAN_UNASSOC_TIME		40
+-#define WL_SCAN_PASSIVE_TIME		120
+-
+ #define WL_ESCAN_BUF_SIZE		(1024 * 64)
+ #define WL_ESCAN_TIMER_INTERVAL_MS	10000 /* E-Scan timeout */
  
- static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
- {
--	int ret;
-+	int ret, i, j;
- 	struct pcie_service_card *card = adapter->card;
- 	struct pci_dev *pdev = card->dev;
- 
-+	if (card->pcie.reg->msix_support) {
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			card->msix_entries[i].entry = i;
-+		ret = pci_enable_msix_exact(pdev, card->msix_entries,
-+					    MWIFIEX_NUM_MSIX_VECTORS);
-+		if (!ret) {
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
-+				card->msix_ctx[i].dev = pdev;
-+				card->msix_ctx[i].msg_id = i;
-+
-+				ret = request_irq(card->msix_entries[i].vector,
-+						  mwifiex_pcie_interrupt, 0,
-+						  "MWIFIEX_PCIE_MSIX",
-+						  &card->msix_ctx[i]);
-+				if (ret)
-+					break;
-+			}
-+
-+			if (ret) {
-+				mwifiex_dbg(adapter, INFO, "request_irq fail: %d\n",
-+					    ret);
-+				for (j = 0; j < i; j++)
-+					free_irq(card->msix_entries[j].vector,
-+						 &card->msix_ctx[i]);
-+				pci_disable_msix(pdev);
-+			} else {
-+				mwifiex_dbg(adapter, MSG, "MSIx enabled!");
-+				card->msix_enable = 1;
-+				return 0;
-+			}
-+		}
-+	}
-+
- 	if (pci_enable_msi(pdev) != 0)
- 		pci_disable_msi(pdev);
- 	else
-@@ -2613,8 +2725,10 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
- 
- 	mwifiex_dbg(adapter, INFO, "msi_enable = %d\n", card->msi_enable);
- 
-+	card->share_irq_ctx.dev = pdev;
-+	card->share_irq_ctx.msg_id = -1;
- 	ret = request_irq(pdev->irq, mwifiex_pcie_interrupt, IRQF_SHARED,
--			  "MRVL_PCIE", pdev);
-+			  "MRVL_PCIE", &card->share_irq_ctx);
- 	if (ret) {
- 		pr_err("request_irq failed: ret=%d\n", ret);
- 		adapter->card = NULL;
-@@ -2660,11 +2774,28 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg;
-+	struct pci_dev *pdev = card->dev;
-+	int i;
- 
- 	if (card) {
--		mwifiex_dbg(adapter, INFO,
--			    "%s(): calling free_irq()\n", __func__);
--		free_irq(card->dev->irq, card->dev);
-+		if (card->msix_enable) {
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+				synchronize_irq(card->msix_entries[i].vector);
-+
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+				free_irq(card->msix_entries[i].vector,
-+					 &card->msix_ctx[i]);
-+
-+			card->msix_enable = 0;
-+			pci_disable_msix(pdev);
-+	       } else {
-+			mwifiex_dbg(adapter, INFO,
-+				    "%s(): calling free_irq()\n", __func__);
-+		       free_irq(card->dev->irq, &card->share_irq_ctx);
-+
-+			if (card->msi_enable)
-+				pci_disable_msi(pdev);
-+	       }
- 
- 		reg = card->pcie.reg;
- 		if (reg->sleep_cookie)
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 6fc2873..41b7f5e 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -135,6 +135,7 @@ struct mwifiex_pcie_card_reg {
- 	u16 fw_dump_ctrl;
- 	u16 fw_dump_start;
- 	u16 fw_dump_end;
-+	u8 msix_support;
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
-@@ -166,6 +167,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
- 	.ring_tx_start_ptr = 0,
- 	.pfu_enabled = 0,
- 	.sleep_cookie = 1,
-+	.msix_support = 0,
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
-@@ -200,6 +202,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
- 	.fw_dump_ctrl = 0xcf4,
- 	.fw_dump_start = 0xcf8,
- 	.fw_dump_end = 0xcff,
-+	.msix_support = 0,
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
-@@ -231,6 +234,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
- 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
- 	.pfu_enabled = 1,
- 	.sleep_cookie = 0,
-+	.msix_support = 1,
- };
- 
- struct mwifiex_pcie_device {
-@@ -290,6 +294,13 @@ struct mwifiex_pfu_buf_desc {
- 	u32 reserved;
- } __packed;
- 
-+#define MWIFIEX_NUM_MSIX_VECTORS   4
-+
-+struct mwifiex_msix_context {
-+	struct pci_dev *dev;
-+	u16 msg_id;
-+};
-+
- struct pcie_service_card {
- 	struct pci_dev *dev;
- 	struct mwifiex_adapter *adapter;
-@@ -327,6 +338,10 @@ struct pcie_service_card {
- 	void __iomem *pci_mmap;
- 	void __iomem *pci_mmap1;
- 	int msi_enable;
-+	int msix_enable;
-+	struct msix_entry msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
-+	struct mwifiex_msix_context msix_ctx[MWIFIEX_NUM_MSIX_VECTORS];
-+	struct mwifiex_msix_context share_irq_ctx;
- };
- 
- static inline int
 -- 
-1.8.1.4
+1.9.1
 
