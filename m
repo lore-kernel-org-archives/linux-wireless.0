@@ -1,44 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f67.google.com ([209.85.192.67]:35959 "EHLO
-	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754418AbbLAAJJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45468 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbbLJOjI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 19:09:09 -0500
-Received: by qgcc31 with SMTP id c31so15227889qgc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2015 16:09:09 -0800 (PST)
-From: "Mario J. Rugiero" <mrugiero@gmail.com>
-To: devel@driverdev.osuosl.org
-Cc: mrugiero@gmail.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com
-Subject: [PATCH 1/1] staging: cleanup: Fix incompatible type comparison in wilc1000/host_interface.c
-Date: Mon, 30 Nov 2015 21:09:04 -0300
-Message-Id: <1448928544-3534-1-git-send-email-mrugiero@gmail.com> (sfid-20151201_010914_426611_27E8F8C9)
+	Thu, 10 Dec 2015 09:39:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+Date: Thu, 10 Dec 2015 16:39:01 +0200
+In-Reply-To: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com> (David
+	Lin's message of "Thu, 12 Nov 2015 03:51:03 +0000")
+Message-ID: <87mvti74hm.fsf@kamboji.qca.qualcomm.com> (sfid-20151210_153917_280005_1308DE3B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces an "if (ptr > 0)" comparison that seems to be a
-confusing way to check for null by a simpler "if (ptr)" check.
+David Lin <dlin@marvell.com> writes:
 
-Signed-off-by: Mario J. Rugiero <mrugiero@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> This patch provides the mwlwifi driver for Marvell 8863, 8864 and 8897
+> chipsets.
+> This driver was developed as part of the openwrt.org project to support
+> Linksys WRT1900AC and is maintained on https://github.com/kaloz/mwlwifi.
+>
+> The mwlwifi driver differs from existing mwifiex driver:
+> o mwlwifi is a "softmac driver" using the kernel? mac802.11 subsystem
+> to provide full AP/Wireless Bridge functionality (routers).
+> o mwifiex is a "fullmac driver" which provides a comprehensive set of
+> client functions (laptops/embedded devices)
+> o only mwlwifi supports Marvell AP chip 886X series
+>
+> NOTE: Users with Marvell 88W8897 chipsets currently should enable
+> (CONFIG=Y or M) either CONFIG_MWIFIEX or CONFIG_MWLWIFI, NOT BOTH.
+>
+> mwlwifi driver leveraged code from existing MWL8K driver in the
+> following areas:
+> - 802.11n setting for mac80211
+> - Functions needed to hook up to mac80211
+> - Interactions with mac80211 to establish BA streams
+> - Partial firmware APIs, some data fields
+> - Method to pass Rx packets to mac80211 except 11ac rates
+>
+> In addition, mwlwifi driver supports:
+> - future scalability and future development (refactored source code)
+> - Marvell 802.11ac chipsets, including combo BT devices
+> - 802.11ac related settings and functions
+> - concurrent AP+STA functionalities with single firmware per chip
+> - firmware APIs for the supported chipset
+> - communicating new mac80211 settings to firmware
+> - Different TX/RX datapath where applicable
+> - A-MSDU and A-MPDU
+> - mac80211-based MESH (work in progress)
+> - Refined the code to establish BA streams
+>
+> NOTE: MWLWIFI will be organized under new vendor specific folder/marvell,
+> as per request of the gate keeper and community.
+>
+> Signed-off-by: David Lin <dlin@marvell.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d5b7725..0c87f6c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2270,7 +2270,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
- 
--	if (pstrSetBeaconParam->tail > 0)
-+	if (pstrSetBeaconParam->tail)
- 		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
- 	pu8CurrByte += pstrSetBeaconParam->tail_len;
- 
+This seems to use base64 encoding, how did you submit this? 'git
+send-email' tool is strongly preferred.
+
+Content-Transfer-Encoding: base64
+
+I applied this to pending branch and saw few easy conflicts with Kconfig
+files and Makefiles, I guess you submitted this patch before I added the
+vendor directories. Let's see what kbuild finds but I already saw two
+warnings:
+
+drivers/net/wireless/marvell/mwlwifi/main.c:160:20: warning: incorrect type in argument 1 (different address spaces)
+drivers/net/wireless/marvell/mwlwifi/main.c:160:20:    expected void const *ptr
+drivers/net/wireless/marvell/mwlwifi/main.c:160:20:    got void [noderef] <asn:2>*[assigned] addr
+drivers/net/wireless/marvell/mwlwifi/main.c:171:20: warning: incorrect type in argument 1 (different address spaces)
+drivers/net/wireless/marvell/mwlwifi/main.c:171:20:    expected void const *ptr
+drivers/net/wireless/marvell/mwlwifi/main.c:171:20:    got void [noderef] <asn:2>*[assigned] addr
+
 -- 
-2.6.2
-
+Kalle Valo
