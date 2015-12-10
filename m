@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:33925 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868AbbL2Ur7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33539 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbbLJLj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 15:47:59 -0500
-Received: by mail-lf0-f42.google.com with SMTP id y184so217450336lfc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 12:47:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1450100394-17414-4-git-send-email-arend@broadcom.com>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com> <1450100394-17414-4-git-send-email-arend@broadcom.com>
-From: Mathy Vanhoef <vanhoefm@gmail.com>
-Date: Tue, 29 Dec 2015 21:47:38 +0100
-Message-ID: <CAFXAJYwoQRVi_10L5475g1NU5+Abfvv==R6U4P2_rdb=yCPOcw@mail.gmail.com> (sfid-20151229_214807_615033_60682026)
-Subject: Re: [PATCH 3/7] brcmfmac: Add support for scheduled scan mac randomization
+	Thu, 10 Dec 2015 06:39:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
+Cc: Arend van Spriel <aspriel@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
 	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH 01/13] brcmfmac: Simplify scan timing configuration.
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+	<1449656572-16158-2-git-send-email-arend@broadcom.com>
+	<87zixj93gg.fsf@kamboji.qca.qualcomm.com> <566952EA.4070107@gmail.com>
+	<56695680.9020207@broadcom.com>
+Date: Thu, 10 Dec 2015 13:39:19 +0200
+In-Reply-To: <56695680.9020207@broadcom.com> (Arend van Spriel's message of
+	"Thu, 10 Dec 2015 11:40:00 +0100")
+Message-ID: <87bn9y8rdk.fsf@kamboji.qca.qualcomm.com> (sfid-20151210_123929_753734_7D04D2F2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
+Arend van Spriel <arend@broadcom.com> writes:
+
+> On 12/10/2015 11:24 AM, Arend van Spriel wrote:
+>> On 09-12-15 14:06, Kalle Valo wrote:
+>>> Arend van Spriel <arend@broadcom.com> writes:
+>>>
+>>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>>>> Change-Id: Ie179527eb29f2ed8b7869dac24591e2513775393
+>>>> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5445
+>>>> Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>>
+>>> Forgot to clean the tags? :)
+>>
+>> *sigh* Obviously. Should not try to multitask when preparing patch series.
 >
-> Scheduled scan be requested to use mac randomization. This patch
-> checks the flags and enables the randomization if desired.
+> Do you want me to resend after cleaning it up?
 
-The driver also needs to advertise support for this using the
-NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR flag, if the firmware
-supports it. This can be done in brcmf_setup_wiphy. Otherwise
-tools like wpa_supplicant won't use randomization.
+Yeah, that would be the best.
 
-Kr,
-Mathy
+-- 
+Kalle Valo
