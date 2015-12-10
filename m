@@ -1,102 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:60223 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750918AbbLAGUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 01:20:46 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1a3eIq-00057l-8x
-	for linux-wireless@vger.kernel.org; Tue, 01 Dec 2015 07:20:40 +0100
-Received: from 77-56-0-32.dclient.hispeed.ch ([77.56.0.32])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 07:20:40 +0100
-Received: from bartlomiej.grzeskowiak by 77-56-0-32.dclient.hispeed.ch with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 07:20:40 +0100
-To: linux-wireless@vger.kernel.org
-From: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
-Subject: ath10k: device has crashed during init - qca6174 chipset
-Date: Tue, 1 Dec 2015 06:20:20 +0000 (UTC)
-Message-ID: <loom.20151201T071931-353@post.gmane.org> (sfid-20151201_072049_439836_7BB73FF3)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:56239 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044AbbLJJlb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 04:41:31 -0500
+Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
+	by smtp-out06.msg.oleane.net with ESMTP id tBA9fThB001128
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 10:41:29 +0100
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp04.msg.oleane.net (MTA) with ESMTP id tBA9LJvr010200
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 10:21:19 +0100
+Subject: Mac80211 driver crash in monitor mode
+Date: Thu, 10 Dec 2015 10:21:19 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5B2F9@sbs2003.acksys.local> (sfid-20151210_104136_918063_D0BC614D)
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
+	Hi, 
 
-I am trying to use ath10k driver from the latest backports-4.4-rc.2-1 with 
-kernel 3.10.65 and qca6174 based wlan module. Could you give me some hints 
-about possible problem.
-ath10k_core.ko module loaded with skip_otp=y and debug_mask=0xffffffff.
+I'm using mac80211/ATH9K driver in monitor mode to inject some packets.
 
-I get following error message:
-[ 5301.614749] ath10k_pci 0000:01:00.0: wmi unified ready event not 
-received
-[ 5301.614749] ath10k_pci 0000:01:00.0: device has crashed during init
-[ 5301.644767] ath10k_pci 0000:01:00.0: device has crashed during init
-[ 5301.651025] ath10k_pci 0000:01:00.0: failed to wait for target init: -70
-[ 5301.661134] ath10k_pci 0000:01:00.0: could not init core (-110)
-[ 5301.667310] ath10k_pci 0000:01:00.0: could not probe fw (-110)
+With the latest driver version my packet injector software generated a
+kernel panic.
 
-Some other important debug messages (I can also provide the whole log if 
-needed):
-ath10k_pci 0000:01:00.0: found fw version WLAN.RM.2.0-00180-QCARMSWPZ-1
-[...]
-ath10k_pci 0000:01:00.0: boot get otp board id result 0x00000001 board_id 0 
-chip_id 0
-ath10k_pci 0000:01:00.0: boot using board name 
-'bus=pci,vendor=168c,device=003e,subsystem-vendor=0000,subsystem-
-device=0000'
-[...]
-ath10k_pci 0000:01:00.0: Target ready! transmit resources: 2 size:1792
-[...]
-ath10k_pci 0000:01:00.0: HTC Service HTT Data connect response: status: 
-0x0, assigned ep: 0x1
-[...]
-ath10k_pci 0000:01:00.0: HTC Service WMI connect response: status: 0x0, 
-assigned ep: 0x2
-[...]
-ath10k_pci 0000:01:00.0: wmi event service ready min_tx_power 0x0000003f 
-max_tx_power 0x0000003f ht_cap 0x0000085b vht_cap 0x339011b2 sw_ver0 
-0x01000000 sw_ver1 0x0000008f fw_build 0x200700b4 phy_capab 0x00000003 
-num_rf_chains 0x00000002 eeprom_rd 0x00000000 num_mem_reqs 0x00000000
-ath10k_pci 0000:01:00.0: firmware WLAN.RM.2.0-00180-QCARMSWPZ-1 booted
-[...]
-ath10k_pci 0000:01:00.0: ath10k_htc_notify_tx_completion: ep 2 skb 8cc3b6c0
-ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
-ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
-ath10k_pci 0000:01:00.0: wmi unified ready event not received
-ath10k_pci 0000:01:00.0: boot hif stop
-[...]
-ath10k_pci 0000:01:00.0: boot init ce src ring id 0 entries 16 base_addr 
-8e053000
-ath10k_pci 0000:01:00.0: boot ce dest ring id 1 entries 512 base_addr 
-8e054000
-ath10k_pci 0000:01:00.0: boot ce dest ring id 2 entries 128 base_addr 
-8e056000
-ath10k_pci 0000:01:00.0: boot init ce src ring id 3 entries 32 base_addr 
-8e057000
-ath10k_pci 0000:01:00.0: boot init ce src ring id 4 entries 4096 base_addr 
-8e060000
-ath10k_pci 0000:01:00.0: boot ce dest ring id 5 entries 512 base_addr 
-8e058000
-ath10k_pci 0000:01:00.0: boot init ce src ring id 7 entries 2 base_addr 
-8e05a000
-ath10k_pci 0000:01:00.0: boot ce dest ring id 7 entries 2 base_addr 
-8e05b000
-ath10k_pci 0000:01:00.0: boot waiting target to initialise
-ath10k_pci 0000:01:00.0: boot target indicator 0
-ath10k_pci 0000:01:00.0: boot target indicator 1
-ath10k_pci 0000:01:00.0: device has crashed during init
-ath10k_pci 0000:01:00.0: failed to wait for target init: -70
-ath10k_pci 0000:01:00.0: could not init core (-110)
-ath10k_pci 0000:01:00.0: boot hif power down
-ath10k_pci 0000:01:00.0: could not probe fw (-110)
-ath10k_pci 0000:01:00.0: pci ps timer refcount 0 awake 1
-ath10k_pci 0000:01:00.0: pci ps sleep reg refcount 0 awake 1
+The reason of this crash is:
+In mac80211/tx.c, function __ieee80211_tx:
 
-Thank you
-Bartek
+	case NL80211_IFTYPE_MONITOR:
+		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
+			vif = &sdata->vif;
+			break;
+		}
+		sdata = rcu_dereference(local->monitor_sdata);
+		if (sdata) {
+			vif = &sdata->vif;
+			info->hw_queue =
+	
+vif->hw_queue[skb_get_queue_mapping(skb)];
+		} else if (ieee80211_hw_check(&local->hw,
+QUEUE_CONTROL)) {
+			ieee80211_purge_tx_queue(&local->hw, skbs);
+			return true;
+		} else
+			vif = NULL;
+		break; 
 
+If I don't enable the MONITOR_FLAG_ACTIVE I'm going to the line vif =
+null, this function will continue and will call ieee80211_tx_frags and
+this function will call ieee80211_drv_tx.
+
+In ieee80211_drv_tx function:
+ 
+	if (pubsta) {
+		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+
+		txq = pubsta->txq[tid];
+	} else if (vif) {
+		txq = vif->txq;
+	} 
+
+In my case pubsta == null so I'm going to else statement. The line
+vif->txq generate kernel pannic because the VIF pointer have been
+initialized to null in __ieee80211_tx function.
+
+Do you have any suggestion to fix this crash?
+
+Cedric Voncken.
