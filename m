@@ -1,61 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:26495 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527AbbLNNj6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50872 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbbLJJpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 08:39:58 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 5/7] brcmfmac: Fix warn trace on module unload while in ibss mode
-Date: Mon, 14 Dec 2015 14:39:52 +0100
-Message-ID: <1450100394-17414-6-git-send-email-arend@broadcom.com> (sfid-20151214_144023_162910_90884220)
-In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+	Thu, 10 Dec 2015 04:45:13 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: reduce indentation by moving powersave check within function
+Date: Thu, 10 Dec 2015 15:14:27 +0530
+Message-ID: <1449740667-25901-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20151210_104522_063902_CD406645)
+In-Reply-To: <1449740667-25901-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1449740667-25901-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+For devices that does not support PCI power save, force wake up
+API is used. So move powersave check inside force wakeup to reduce
+one level indentation.
 
-When the driver is being unloaded a situation can occur where the
-wirelesss core (cfg80211) wants to remove the ibss, but the state
-of brcmfmac has already been set to down. When an error is
-returned in that situation then that will result in a stack
-trace on removal of the wiphy object. This is avoided by
-returning 0 when device is down on a leave_ibss call.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 34 +++++++++++++++-------------------
+ 1 file changed, 15 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 5964763..6632e46 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1448,8 +1448,13 @@ brcmf_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *ndev)
- 	struct brcmf_if *ifp = netdev_priv(ndev);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 473a141..c6aaad2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -487,6 +487,9 @@ static int ath10k_pci_force_wake(struct ath10k *ar)
+ 	unsigned long flags;
+ 	int ret = 0;
  
- 	brcmf_dbg(TRACE, "Enter\n");
--	if (!check_vif_up(ifp->vif))
--		return -EIO;
-+	if (!check_vif_up(ifp->vif)) {
-+		/* When driver is being unloaded, it can end up here. If an
-+		 * error is returned then later on a debug trace in the wireless
-+		 * core module will be printed. To avoid this 0 is returned.
-+		 */
-+		return 0;
-+	}
++	if (ar_pci->pci_ps)
++		return ret;
++
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
  
- 	brcmf_link_down(ifp->vif, WLAN_REASON_DEAUTH_LEAVING);
+ 	if (!ar_pci->ps_awake) {
+@@ -2480,12 +2483,10 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 	u32 val;
+ 	int ret = 0;
  
+-	if (ar_pci->pci_ps == 0) {
+-		ret = ath10k_pci_force_wake(ar);
+-		if (ret) {
+-			ath10k_err(ar, "failed to wake up target: %d\n", ret);
+-			return ret;
+-		}
++	ret = ath10k_pci_force_wake(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to wake up target: %d\n", ret);
++		return ret;
+ 	}
+ 
+ 	/* Suspend/Resume resets the PCI configuration space, so we have to
+@@ -2592,13 +2593,10 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+-	if (ar_pci->pci_ps == 0) {
+-		ret = ath10k_pci_force_wake(ar);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to wake device up on irq: %d\n",
+-				    ret);
+-			return IRQ_NONE;
+-		}
++	ret = ath10k_pci_force_wake(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wake device up on irq: %d\n", ret);
++		return IRQ_NONE;
+ 	}
+ 
+ 	if (ar_pci->num_msi_intrs == 0) {
+@@ -3071,12 +3069,10 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_sleep;
+ 	}
+ 
+-	if (ar_pci->pci_ps == 0) {
+-		ret = ath10k_pci_force_wake(ar);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to wake up device : %d\n", ret);
+-			goto err_free_pipes;
+-		}
++	ret = ath10k_pci_force_wake(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wake up device : %d\n", ret);
++		goto err_free_pipes;
+ 	}
+ 
+ 	ath10k_pci_ce_deinit(ar);
 -- 
-1.9.1
+2.6.3
 
