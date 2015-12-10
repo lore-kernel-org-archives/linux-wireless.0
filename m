@@ -1,132 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11829 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbbLUFTM (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:50093 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432AbbLJMnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:19:12 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 41/46] staging: wilc1000: change join_req_drv type and it's name
-Date: Mon, 21 Dec 2015 14:18:45 +0900
-Message-ID: <1450675130-17866-42-git-send-email-glen.lee@atmel.com> (sfid-20151221_063103_838979_3B377BE0)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Thu, 10 Dec 2015 07:43:20 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 04/13] brcmfmac: Cleanup pmksa cache handling code
+Date: Thu, 10 Dec 2015 13:43:03 +0100
+Message-ID: <1449751392-32569-5-git-send-email-arend@broadcom.com> (sfid-20151210_140057_947905_80674058)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To use wilc_get_vif_idx instead of the last get_id_from_handler, join_req_drv
-needs to be changed it's type with wilc_vif and name as well.
-As a result, get_id_from_handler is not used anymore, so remove it.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 33 +++++++++----------------------
- 1 file changed, 9 insertions(+), 24 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 131 +++++++++------------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   9 +-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  24 ++++
+ .../broadcom/brcm80211/include/brcmu_wifi.h        |  23 ----
+ 4 files changed, 82 insertions(+), 105 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index be88237..e9a206c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -259,7 +259,7 @@ static u8 mode_11i;
- static u8 auth_type;
- static u32 join_req_size;
- static u32 info_element_size;
--static struct host_if_drv *join_req_drv;
-+static struct wilc_vif *join_req_vif;
- #define REAL_JOIN_REQ 0
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79
-@@ -294,21 +294,6 @@ static int remove_handler_in_list(struct host_if_drv *handler)
- 	return -EINVAL;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5432c46..564e533 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3223,26 +3223,22 @@ exit:
  }
  
--static int get_id_from_handler(struct host_if_drv *handler)
--{
--	int i;
--
--	if (!handler)
--		return 0;
--
--	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
--		if (wfidrv_list[i] == handler)
--			return i;
+ static __used s32
+-brcmf_update_pmklist(struct net_device *ndev,
+-		     struct brcmf_cfg80211_pmk_list *pmk_list, s32 err)
++brcmf_update_pmklist(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp)
+ {
+-	int i, j;
+-	u32 pmkid_len;
++	struct brcmf_pmk_list_le *pmk_list;
++	int i;
++	u32 npmk;
++	s32 err;
+ 
+-	pmkid_len = le32_to_cpu(pmk_list->pmkids.npmkid);
++	pmk_list = &cfg->pmk_list;
++	npmk = le32_to_cpu(pmk_list->npmk);
+ 
+-	brcmf_dbg(CONN, "No of elements %d\n", pmkid_len);
+-	for (i = 0; i < pmkid_len; i++) {
+-		brcmf_dbg(CONN, "PMKID[%d]: %pM =\n", i,
+-			  &pmk_list->pmkids.pmkid[i].BSSID);
+-		for (j = 0; j < WLAN_PMKID_LEN; j++)
+-			brcmf_dbg(CONN, "%02x\n",
+-				  pmk_list->pmkids.pmkid[i].PMKID[j]);
 -	}
--
--	return 0;
--}
--
- /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
-  * special purpose in wilc device, so we add 1 to the index to starts from 1.
-  * As a result, the returned index will be 1 to NUM_CONCURRENT_IFC.
-@@ -1235,7 +1220,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
++	brcmf_dbg(CONN, "No of elements %d\n", npmk);
++	for (i = 0; i < npmk; i++)
++		brcmf_dbg(CONN, "PMK[%d]: %pM\n", i, &pmk_list->pmk[i].bssid);
  
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		memcpy(join_req, pu8CurrByte, join_req_size);
--		join_req_drv = hif_drv;
-+		join_req_vif = vif;
- 	}
+-	if (!err)
+-		brcmf_fil_iovar_data_set(netdev_priv(ndev), "pmkid_info",
+-					 (char *)pmk_list, sizeof(*pmk_list));
++	err = brcmf_fil_iovar_data_set(ifp, "pmkid_info", pmk_list,
++				       sizeof(*pmk_list));
  
- 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
-@@ -1349,7 +1334,7 @@ static s32 Handle_FlushConnect(struct wilc_vif *vif)
+ 	return err;
+ }
+@@ -3253,34 +3249,37 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct pmkid_list *pmkids = &cfg->pmk_list->pmkids;
+-	s32 err = 0;
+-	u32 pmkid_len, i;
++	struct brcmf_pmksa *pmk = &cfg->pmk_list.pmk[0];
++	s32 err;
++	u32 npmk, i;
  
- 	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, strWIDList,
- 				      u32WidsCount,
--				      get_id_from_handler(join_req_drv));
-+				      wilc_get_vif_idx(join_req_vif));
- 	if (result) {
- 		PRINT_ER("failed to send config packet\n");
- 		result = -EINVAL;
-@@ -1426,12 +1411,12 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
  
- 	eth_zero_addr(wilc_connected_ssid);
- 
--	if (join_req && join_req_drv == hif_drv) {
-+	if (join_req && join_req_vif == vif) {
- 		kfree(join_req);
- 		join_req = NULL;
- 	}
- 
--	if (info_element && join_req_drv == hif_drv) {
-+	if (info_element && join_req_vif == vif) {
- 		kfree(info_element);
- 		info_element = NULL;
- 	}
-@@ -1724,12 +1709,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 			kfree(hif_drv->usr_conn_req.ies);
- 			hif_drv->usr_conn_req.ies = NULL;
- 
--			if (join_req && join_req_drv == hif_drv) {
-+			if (join_req && join_req_vif == vif) {
- 				kfree(join_req);
- 				join_req = NULL;
- 			}
- 
--			if (info_element && join_req_drv == hif_drv) {
-+			if (info_element && join_req_vif == vif) {
- 				kfree(info_element);
- 				info_element = NULL;
- 			}
-@@ -2101,12 +2086,12 @@ static void Handle_Disconnect(struct wilc_vif *vif)
- 		kfree(hif_drv->usr_conn_req.ies);
- 		hif_drv->usr_conn_req.ies = NULL;
- 
--		if (join_req && join_req_drv == hif_drv) {
-+		if (join_req && join_req_vif == vif) {
- 			kfree(join_req);
- 			join_req = NULL;
+-	pmkid_len = le32_to_cpu(pmkids->npmkid);
+-	for (i = 0; i < pmkid_len; i++)
+-		if (!memcmp(pmksa->bssid, pmkids->pmkid[i].BSSID, ETH_ALEN))
++	npmk = le32_to_cpu(cfg->pmk_list.npmk);
++	for (i = 0; i < npmk; i++)
++		if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
+ 			break;
+-	if (i < WL_NUM_PMKIDS_MAX) {
+-		memcpy(pmkids->pmkid[i].BSSID, pmksa->bssid, ETH_ALEN);
+-		memcpy(pmkids->pmkid[i].PMKID, pmksa->pmkid, WLAN_PMKID_LEN);
+-		if (i == pmkid_len) {
+-			pmkid_len++;
+-			pmkids->npmkid = cpu_to_le32(pmkid_len);
++	if (i < BRCMF_MAXPMKID) {
++		memcpy(pmk[i].bssid, pmksa->bssid, ETH_ALEN);
++		memcpy(pmk[i].pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
++		if (i == npmk) {
++			npmk++;
++			cfg->pmk_list.npmk = cpu_to_le32(npmk);
  		}
+-	} else
+-		err = -EINVAL;
++	} else {
++		brcmf_err("Too many PMKSA entries cached %d\n", npmk);
++		return -EINVAL;
++	}
  
--		if (info_element && join_req_drv == hif_drv) {
-+		if (info_element && join_req_vif == vif) {
- 			kfree(info_element);
- 			info_element = NULL;
+-	brcmf_dbg(CONN, "set_pmksa,IW_PMKSA_ADD - PMKID: %pM =\n",
+-		  pmkids->pmkid[pmkid_len].BSSID);
+-	for (i = 0; i < WLAN_PMKID_LEN; i++)
+-		brcmf_dbg(CONN, "%02x\n", pmkids->pmkid[pmkid_len].PMKID[i]);
++	brcmf_dbg(CONN, "set_pmksa - PMK bssid: %pM =\n", pmk[npmk].bssid);
++	for (i = 0; i < WLAN_PMKID_LEN; i += 4)
++		brcmf_dbg(CONN, "%02x %02x %02x %02x\n", pmk[npmk].pmkid[i],
++			  pmk[npmk].pmkid[i + 1], pmk[npmk].pmkid[i + 2],
++			  pmk[npmk].pmkid[i + 3]);
+ 
+-	err = brcmf_update_pmklist(ndev, cfg->pmk_list, err);
++	err = brcmf_update_pmklist(cfg, ifp);
+ 
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+@@ -3288,50 +3287,39 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ static s32
+ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+-		      struct cfg80211_pmksa *pmksa)
++			 struct cfg80211_pmksa *pmksa)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct pmkid_list pmkid;
+-	s32 err = 0;
+-	u32 pmkid_len, i;
++	struct brcmf_pmksa *pmk = &cfg->pmk_list.pmk[0];
++	s32 err;
++	u32 npmk, i;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	memcpy(&pmkid.pmkid[0].BSSID, pmksa->bssid, ETH_ALEN);
+-	memcpy(&pmkid.pmkid[0].PMKID, pmksa->pmkid, WLAN_PMKID_LEN);
++	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
+ 
+-	brcmf_dbg(CONN, "del_pmksa,IW_PMKSA_REMOVE - PMKID: %pM =\n",
+-		  &pmkid.pmkid[0].BSSID);
+-	for (i = 0; i < WLAN_PMKID_LEN; i++)
+-		brcmf_dbg(CONN, "%02x\n", pmkid.pmkid[0].PMKID[i]);
+-
+-	pmkid_len = le32_to_cpu(cfg->pmk_list->pmkids.npmkid);
+-	for (i = 0; i < pmkid_len; i++)
+-		if (!memcmp
+-		    (pmksa->bssid, &cfg->pmk_list->pmkids.pmkid[i].BSSID,
+-		     ETH_ALEN))
++	npmk = le32_to_cpu(cfg->pmk_list.npmk);
++	for (i = 0; i < npmk; i++)
++		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
+ 			break;
+ 
+-	if ((pmkid_len > 0)
+-	    && (i < pmkid_len)) {
+-		memset(&cfg->pmk_list->pmkids.pmkid[i], 0,
+-		       sizeof(struct pmkid));
+-		for (; i < (pmkid_len - 1); i++) {
+-			memcpy(&cfg->pmk_list->pmkids.pmkid[i].BSSID,
+-			       &cfg->pmk_list->pmkids.pmkid[i + 1].BSSID,
+-			       ETH_ALEN);
+-			memcpy(&cfg->pmk_list->pmkids.pmkid[i].PMKID,
+-			       &cfg->pmk_list->pmkids.pmkid[i + 1].PMKID,
++	if ((npmk > 0) && (i < npmk)) {
++		for (; i < (npmk - 1); i++) {
++			memcpy(&pmk[i].bssid, &pmk[i + 1].bssid, ETH_ALEN);
++			memcpy(&pmk[i].pmkid, &pmk[i + 1].pmkid,
+ 			       WLAN_PMKID_LEN);
  		}
+-		cfg->pmk_list->pmkids.npmkid = cpu_to_le32(pmkid_len - 1);
+-	} else
+-		err = -EINVAL;
++		memset(&pmk[i], 0, sizeof(*pmk));
++		cfg->pmk_list.npmk = cpu_to_le32(npmk - 1);
++	} else {
++		brcmf_err("Cache entry not found\n");
++		return -EINVAL;
++	}
+ 
+-	err = brcmf_update_pmklist(ndev, cfg->pmk_list, err);
++	err = brcmf_update_pmklist(cfg, ifp);
+ 
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+@@ -3343,14 +3331,14 @@ brcmf_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *ndev)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	s32 err = 0;
++	s32 err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	memset(cfg->pmk_list, 0, sizeof(*cfg->pmk_list));
+-	err = brcmf_update_pmklist(ndev, cfg->pmk_list, err);
++	memset(&cfg->pmk_list, 0, sizeof(cfg->pmk_list));
++	err = brcmf_update_pmklist(cfg, ifp);
+ 
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+@@ -5249,8 +5237,6 @@ static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_info *cfg)
+ 	cfg->escan_ioctl_buf = NULL;
+ 	kfree(cfg->extra_buf);
+ 	cfg->extra_buf = NULL;
+-	kfree(cfg->pmk_list);
+-	cfg->pmk_list = NULL;
+ }
+ 
+ static s32 brcmf_init_priv_mem(struct brcmf_cfg80211_info *cfg)
+@@ -5264,9 +5250,6 @@ static s32 brcmf_init_priv_mem(struct brcmf_cfg80211_info *cfg)
+ 	cfg->extra_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
+ 	if (!cfg->extra_buf)
+ 		goto init_priv_mem_out;
+-	cfg->pmk_list = kzalloc(sizeof(*cfg->pmk_list), GFP_KERNEL);
+-	if (!cfg->pmk_list)
+-		goto init_priv_mem_out;
+ 
+ 	return 0;
+ 
+@@ -5971,7 +5954,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 
+ 	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
+ 	wiphy->max_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
+-	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
++	wiphy->max_num_pmkids = BRCMF_MAXPMKID;
+ 
+ 	err = brcmf_setup_ifmodes(wiphy, ifp);
+ 	if (err)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index ec8d1f8..397d41b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -21,7 +21,6 @@
+ #include <brcmu_d11.h>
+ 
+ #define WL_NUM_SCAN_MAX			10
+-#define WL_NUM_PMKIDS_MAX		MAXPMKID
+ #define WL_TLV_INFO_MAX			1024
+ #define WL_BSS_INFO_MAX			2048
+ #define WL_ASSOC_INFO_MAX		512	/* assoc related fil max buf */
+@@ -196,12 +195,6 @@ struct brcmf_cfg80211_assoc_ielen_le {
+ 	__le32 resp_len;
+ };
+ 
+-/* wpa2 pmk list */
+-struct brcmf_cfg80211_pmk_list {
+-	struct pmkid_list pmkids;
+-	struct pmkid foo[MAXPMKID - 1];
+-};
+-
+ /* dongle escan state */
+ enum wl_escan_state {
+ 	WL_ESCAN_STATE_IDLE,
+@@ -359,7 +352,7 @@ struct brcmf_cfg80211_info {
+ 	struct mutex usr_sync;
+ 	struct wl_cfg80211_bss_info *bss_info;
+ 	struct brcmf_cfg80211_connect_info conn_info;
+-	struct brcmf_cfg80211_pmk_list *pmk_list;
++	struct brcmf_pmk_list_le pmk_list;
+ 	unsigned long scan_status;
+ 	struct brcmf_pub *pub;
+ 	u32 channel;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 18483e7..e56eabc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -126,6 +126,8 @@
+ #define BRCMF_TXBF_SU_BFR_CAP		BIT(0)
+ #define BRCMF_TXBF_MU_BFR_CAP		BIT(1)
+ 
++#define	BRCMF_MAXPMKID			16	/* max # PMKID cache entries */
++
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+ 	BRCMF_JOIN_PREF_RSSI = 1,
+@@ -646,4 +648,26 @@ struct brcmf_wowl_wakeind_le {
+ 	__le32 ucode_wakeind;
+ };
+ 
++/**
++ * struct brcmf_pmksa - PMK Security Association
++ *
++ * @bssid: The AP's BSSID.
++ * @pmkid: he PMK material itself.
++ */
++struct brcmf_pmksa {
++	u8 bssid[ETH_ALEN];
++	u8 pmkid[WLAN_PMKID_LEN];
++};
++
++/**
++ * struct brcmf_pmk_list_le - List of pmksa's.
++ *
++ * @npmk: Number of pmksa's.
++ * @pmk: PMK SA information.
++ */
++struct brcmf_pmk_list_le {
++	__le32 npmk;
++	struct brcmf_pmksa pmk[BRCMF_MAXPMKID];
++};
++
+ #endif /* FWIL_TYPES_H_ */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
+index 76b5d3a..3f68dd5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
+@@ -237,9 +237,6 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
+ #define WPA2_AUTH_RESERVED4	0x0400
+ #define WPA2_AUTH_RESERVED5	0x0800
+ 
+-/* pmkid */
+-#define	MAXPMKID		16
+-
+ #define DOT11_DEFAULT_RTS_LEN		2347
+ #define DOT11_DEFAULT_FRAG_LEN		2346
+ 
+@@ -251,24 +248,4 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
+ #define HT_CAP_RX_STBC_NO		0x0
+ #define HT_CAP_RX_STBC_ONE_STREAM	0x1
+ 
+-struct pmkid {
+-	u8 BSSID[ETH_ALEN];
+-	u8 PMKID[WLAN_PMKID_LEN];
+-};
+-
+-struct pmkid_list {
+-	__le32 npmkid;
+-	struct pmkid pmkid[1];
+-};
+-
+-struct pmkid_cand {
+-	u8 BSSID[ETH_ALEN];
+-	u8 preauth;
+-};
+-
+-struct pmkid_cand_list {
+-	u32 npmkid_cand;
+-	struct pmkid_cand pmkid_cand[1];
+-};
+-
+ #endif				/* _BRCMU_WIFI_H_ */
 -- 
 1.9.1
 
