@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:60675 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933089AbbLWG2p convert rfc822-to-8bit (ORCPT
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:32850 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbbLJIgV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 01:28:45 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Joe Perches <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 44/45] iwlwifi: fix printf specifier
-Date: Wed, 23 Dec 2015 06:28:40 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E94D2D2@hasmsx107.ger.corp.intel.com> (sfid-20151223_072850_034412_9F564D5D)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
- <1450731046-2796-44-git-send-email-emmanuel.grumbach@intel.com>
- <1450843714.3537.8.camel@perches.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 10 Dec 2015 03:36:21 -0500
+From: Andrzej Hajda <a.hajda@samsung.com>
+To: linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM)
+Cc: Andrzej Hajda <a.hajda@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2] NFC: fdp: fix handling return value of fdp_nci_create_conn
+Date: Thu, 10 Dec 2015 09:35:03 +0100
+Message-id: <1449736503-6615-1-git-send-email-a.hajda@samsung.com> (sfid-20151210_093702_141986_2854598F)
+In-reply-to: <1449733982-29120-1-git-send-email-a.hajda@samsung.com>
+References: <1449733982-29120-1-git-send-email-a.hajda@samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The function can return negative values, so its result should
+be assigned to signed variable.
 
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-On 12/23/2015 06:08 AM, Joe Perches wrote:
-> On Mon, 2015-12-21 at 22:50 +0200, Emmanuel Grumbach wrote:
->> Smatch warned about a bad specifier being used. Fix that.
-> I see nothing here other than a signed/unsigned
-> issue that shouldn't need fixing.  The conversion
-> from hex to decimal may not be useful.
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
-Yes so maybe I could just use the 0x%x specifier since
-printk-formats.txt seems to say that 0x%x is good for s32 as well. Seems
-that the "02" makes it "unsigned only".
-Printing those values in hexadecimal is annoying anyway since we usually
-express Tx power in decimal.
-Thanks for pointing that out!
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+v2: fixed typo in goto instruction
 
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> ---
->>  drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
->> index b395854..c15f5be 100644
->> --- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
->> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
->> @@ -454,11 +454,11 @@ static void iwl_eeprom_enhanced_txpower(struct device *dev,
->>  				 TXP_CHECK_AND_PRINT(COMMON_TYPE),
->>  				 txp->flags);
->>  		IWL_DEBUG_EEPROM(dev,
->> -				 "\t\t chain_A: 0x%02x chain_B: 0X%02x chain_C: 0X%02x\n",
->> +				 "\t\t chain_A: %d chain_B: %d chain_C: %d\n",
->>  				 txp->chain_a_max, txp->chain_b_max,
->>  				 txp->chain_c_max);
->>  		IWL_DEBUG_EEPROM(dev,
->> -				 "\t\t MIMO2: 0x%02x MIMO3: 0x%02x High 20_on_40: 0x%02x Low 20_on_40: 0x%02x\n",
->> +				 "\t\t MIMO2: %d MIMO3: %d High 20_on_40: 0x%02x Low 20_on_40: 0x%02x\n",
->>  				 txp->mimo2_max, txp->mimo3_max,
->>  				 ((txp->delta_20_in_40 & 0xf0) >> 4),
->>  				 (txp->delta_20_in_40 & 0x0f));
->
+ drivers/nfc/fdp/fdp.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
+index ccb07a1..4dfd1ef 100644
+--- a/drivers/nfc/fdp/fdp.c
++++ b/drivers/nfc/fdp/fdp.c
+@@ -368,11 +368,10 @@ static int fdp_nci_patch_otp(struct nci_dev *ndev)
+ 		goto out;
+ 
+ 	/* Patch data connection creation */
+-	conn_id = fdp_nci_create_conn(ndev);
+-	if (conn_id < 0) {
+-		r = conn_id;
++	r = fdp_nci_create_conn(ndev);
++	if (r < 0)
+ 		goto out;
+-	}
++	conn_id = r;
+ 
+ 	/* Send the patch over the data connection */
+ 	r = fdp_nci_send_patch(ndev, conn_id, NCI_PATCH_TYPE_OTP);
+@@ -439,11 +438,10 @@ static int fdp_nci_patch_ram(struct nci_dev *ndev)
+ 		goto out;
+ 
+ 	/* Patch data connection creation */
+-	conn_id = fdp_nci_create_conn(ndev);
+-	if (conn_id < 0) {
+-		r = conn_id;
++	r = fdp_nci_create_conn(ndev);
++	if (r < 0)
+ 		goto out;
+-	}
++	conn_id = r;
+ 
+ 	/* Send the patch over the data connection */
+ 	r = fdp_nci_send_patch(ndev, conn_id, NCI_PATCH_TYPE_RAM);
+-- 
+1.9.1
 
