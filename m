@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:33281 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755565AbbLAJnT (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51675 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439AbbLJKkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:43:19 -0500
-Received: by ykdv3 with SMTP id v3so612492ykd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2015 01:43:18 -0800 (PST)
+	Thu, 10 Dec 2015 05:40:02 -0500
+Message-ID: <56695680.9020207@broadcom.com> (sfid-20151210_114006_458956_562D6866)
+Date: Thu, 10 Dec 2015 11:40:00 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
-References: <loom.20151201T071931-353@post.gmane.org>
-	<CALhHN=o4xAhy9oz0Q7sy-Ubji-nBf6pdJ7OSj8xLU0mn86n1qQ@mail.gmail.com>
-	<CADaZW1E42rnjaxjnjskW_j83m=moauNBttZ-M=oyWoiXXS2ZiQ@mail.gmail.com>
-	<CA+BoTQ=k9NHd6KHt2qzgjs5g3B6Q58fX=hTRB-BvxcvjejmWog@mail.gmail.com>
-	<CADaZW1Eww2TNimciP5JxVam0y+-V4Ez2VfFXdT=_jh14TgOp0g@mail.gmail.com>
-	<CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
-Date: Tue, 1 Dec 2015 10:43:18 +0100
-Message-ID: <CACKGw+GPjr1fQ_u5yHfsAa=GBJmk7vRfcTUS3nt1N+id7UoPzg@mail.gmail.com> (sfid-20151201_104330_137966_13B8E4FC)
-Subject: Re: ath10k: device has crashed during init - qca6174 chipset
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <aspriel@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 01/13] brcmfmac: Simplify scan timing configuration.
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com> <1449656572-16158-2-git-send-email-arend@broadcom.com> <87zixj93gg.fsf@kamboji.qca.qualcomm.com> <566952EA.4070107@gmail.com>
+In-Reply-To: <566952EA.4070107@gmail.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 December 2015 at 09:42, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 1 December 2015 at 09:38, Bartlomiej Grzeskowiak
-> <bartlomiej.grzeskowiak@gmail.com> wrote:
->> Hi,
+On 12/10/2015 11:24 AM, Arend van Spriel wrote:
+> On 09-12-15 14:06, Kalle Valo wrote:
+>> Arend van Spriel <arend@broadcom.com> writes:
 >>
->> I have already tried with backports 4.2.6 and different combinations
->> of firmware.bin / board.bin. With differnt results, but none of them
->> works. I will redo the tests and summarize them.
+>>> From: Hante Meuleman <meuleman@broadcom.com>
+>>>
 >>
->> Loading with irq_mode=1 gives me following result:
->> [55416.824364] ath10k_pci 0000:01:00.0: limiting irq mode to: 1
->> [55416.830102] ath10k_pci 0000:01:00.0: pci irq legacy interrupts 0
->> irq_mode 1 reset_mode 0
->> [55417.212048] ath10k_pci 0000:01:00.0: could not fetch firmware file
->> 'ath10k/QCA6174/hw3.0/firmware-5.bin': -2
->> [55424.394422] ath10k_pci 0000:01:00.0: wmi unified ready event not received
->> [55424.436023] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
->> e082ac60-7c2d-4d14-9c49-fd5b0591c95c)
->> [55424.445008] ath10k_pci 0000:01:00.0: qca6174 hw3.2 (0x05030000,
+>> Please, no empty commit logs. For a patch like this it takes like 30
+>> seconds to write a short log describing why and how you are simplifying
+>> the code. Next year I'm thinking of start rejecting patches without a
+>> commit log.
 >
-> Oh, wait.
+> Time to consider new year resolutions, heh ;-) Anyway, it is noted and
+> will see if I can gatekeep this better.
 >
-> You have hw3.2? I haven't noticed that earlier.
+>> This is a minor nitpick but it's not that common to the commit title
+>> with a period.
 >
-> If memory serves right it needs a different board.bin (compared to
-> e.g. hw3.0). I'm not sure if it's available in Kalle's repository.
-> Wrong board.bin can cause firmware to hang or crash during init.
+> Have to agree to the nitpicking part :-p Can keep it in mind though.
+>
+>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Change-Id: Ie179527eb29f2ed8b7869dac24591e2513775393
+>>> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5445
+>>> Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>
+>> Forgot to clean the tags? :)
+>
+> *sigh* Obviously. Should not try to multitask when preparing patch series.
 
-Could you give a try to the board-2.bin file, which is sort of a
-container for the board bins, ath10k shall support.. and say if it
-solves your card problem?
+Do you want me to resend after cleaning it up?
 
-*) https://github.com/kvalo/ath10k-firmware/blob/master/QCA6174/hw3.0/board-2.bin
+Gr. AvS
 
--- 
-Bartosz
+> Gr. AvS
+>
+
