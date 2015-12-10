@@ -1,79 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35512 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754223AbbLQJUw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 04:20:52 -0500
-Received: by mail-wm0-f42.google.com with SMTP id l126so11973576wml.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 01:20:51 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@openwrt.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC/RFT 2/2] ath9k: request aligned skb
-Date: Thu, 17 Dec 2015 10:20:29 +0100
-Message-Id: <1450344029-5296-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151217_102102_728501_229CA2C1)
-In-Reply-To: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52619 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750748AbbLJJ4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 04:56:43 -0500
+Message-ID: <1449741398.5376.0.camel@sipsolutions.net> (sfid-20151210_105649_159978_AB1BF4FD)
+Subject: Re: Mac80211 driver crash in monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 10 Dec 2015 10:56:38 +0100
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901C5B2F9@sbs2003.acksys.local> (sfid-20151210_104136_918063_D0BC614D)
+References: <773DB8A82AB6A046AE0195C68612A31901C5B2F9@sbs2003.acksys.local>
+	 (sfid-20151210_104136_918063_D0BC614D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set NEEDS_ALIGNED4_SKB hw flag.
-This allow driver to save CPU and remove two memmove
-from tx path.
+On Thu, 2015-12-10 at 10:21 +0100, Cedric VONCKEN wrote:
+> 
+> In ieee80211_drv_tx function:
+>  
+> 	if (pubsta) {
+> 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+> 
+> 		txq = pubsta->txq[tid];
+> 	} else if (vif) {
+> 		txq = vif->txq;
+> 	} 
+> 
+> In my case pubsta == null so I'm going to else statement. The line
+> vif->txq generate kernel pannic because the VIF pointer have been
+> initialized to null in __ieee80211_tx function.
+> 
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath9k/init.c |  1 +
- drivers/net/wireless/ath/ath9k/xmit.c | 15 ++++++++++-----
- 2 files changed, 11 insertions(+), 5 deletions(-)
+Clearly you must be missing something, since the code is "else if
+(vif)"
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 6abace6..d578a00 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -831,6 +831,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, RX_INCLUDES_FCS);
- 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
-+	ieee80211_hw_set(hw, NEEDS_ALIGNED4_SKBS);
- 
- 	if (ath9k_ps_enable)
- 		ieee80211_hw_set(hw, SUPPORTS_PS);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 82fc76f..c3bd1b1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2267,11 +2267,15 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	padpos = ieee80211_hdrlen(hdr->frame_control);
- 	padsize = padpos & 3;
- 	if (padsize && skb->len > padpos) {
--		if (skb_headroom(skb) < padsize)
--			return -ENOMEM;
-+		if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS)) {
-+			frmlen -= padsize;
-+		} else {
-+			if (skb_headroom(skb) < padsize)
-+				return -ENOMEM;
- 
--		skb_push(skb, padsize);
--		memmove(skb->data, skb->data + padsize, padpos);
-+			skb_push(skb, padsize);
-+			memmove(skb->data, skb->data + padsize, padpos);
-+		}
- 	}
- 
- 	setup_frame_info(hw, sta, skb, frmlen);
-@@ -2494,7 +2498,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 
- 	padpos = ieee80211_hdrlen(hdr->frame_control);
- 	padsize = padpos & 3;
--	if (padsize && skb->len>padpos+padsize) {
-+	if (padsize && skb->len > padpos + padsize &&
-+	    !ieee80211_hw_check(sc->hw, NEEDS_ALIGNED4_SKBS)) {
- 		/*
- 		 * Remove MAC header padding before giving the frame back to
- 		 * mac80211.
--- 
-1.9.1
-
+johannes
