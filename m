@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:30488 "EHLO
-	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965012AbbLWKjF (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23209 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074AbbLJMnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 05:39:05 -0500
-From: Andrzej Hajda <a.hajda@samsung.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] NFC: nci: fix handling return value of nci_hci_create_pipe
-Date: Wed, 23 Dec 2015 11:37:20 +0100
-Message-id: <1450867041-729-3-git-send-email-a.hajda@samsung.com> (sfid-20151223_113957_730888_EF62AAC1)
-In-reply-to: <1450867041-729-1-git-send-email-a.hajda@samsung.com>
-References: <1450867041-729-1-git-send-email-a.hajda@samsung.com>
+	Thu, 10 Dec 2015 07:43:21 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 06/13] brcmfmac: Add support for PCIE 4350 revision 5 device
+Date: Thu, 10 Dec 2015 13:43:05 +0100
+Message-ID: <1449751392-32569-7-git-send-email-arend@broadcom.com> (sfid-20151210_134332_138982_089A0933)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function return NCI_HCI_INVALID_PIPE in case of error.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
-
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
-
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Change-Id: I72b519ec6a7ff0d36f076df06d042f0c5894142c
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5513
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/nfc/nci/hci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/nfc/nci/hci.c b/net/nfc/nci/hci.c
-index 2aedac1..a0ab26d 100644
---- a/net/nfc/nci/hci.c
-+++ b/net/nfc/nci/hci.c
-@@ -676,7 +676,7 @@ int nci_hci_connect_gate(struct nci_dev *ndev,
- 	break;
- 	default:
- 		pipe = nci_hci_create_pipe(ndev, dest_host, dest_gate, &r);
--		if (pipe < 0)
-+		if (pipe == NCI_HCI_INVALID_PIPE)
- 			return r;
- 		pipe_created = true;
- 		break;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index b5a4247..4ebc53c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -46,6 +46,7 @@ enum brcmf_pcie_state {
+ 
+ BRCMF_FW_NVRAM_DEF(43602, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4350, "brcmfmac4350-pcie.bin", "brcmfmac4350-pcie.txt");
++BRCMF_FW_NVRAM_DEF(4350C, "brcmfmac4350c2-pcie.bin", "brcmfmac4350c2-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-pcie.bin", "brcmfmac4356-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(43570, "brcmfmac43570-pcie.bin", "brcmfmac43570-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
+@@ -56,7 +57,8 @@ BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
+ 
+ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFFFF, 4350),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
 -- 
 1.9.1
 
