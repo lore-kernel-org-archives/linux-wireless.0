@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52338 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241AbbLNLsE convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:34711 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbbLJKYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 06:48:04 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Grant Grundler <grundler@google.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Lin <dlin@marvell.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
-	<1448018530.3141.25.camel@sipsolutions.net>
-	<CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
-Date: Mon, 14 Dec 2015 13:47:57 +0200
-In-Reply-To: <CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
-	(Grant Grundler's message of "Fri, 11 Dec 2015 16:46:28 -0800")
-Message-ID: <8737v545g2.fsf@kamboji.qca.qualcomm.com> (sfid-20151214_124812_567072_11D94443)
+	Thu, 10 Dec 2015 05:24:44 -0500
+Received: by mail-wm0-f44.google.com with SMTP id v187so25556504wmv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 02:24:44 -0800 (PST)
+Subject: Re: [PATCH 01/13] brcmfmac: Simplify scan timing configuration.
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend van Spriel <arend@broadcom.com>
+References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+ <1449656572-16158-2-git-send-email-arend@broadcom.com>
+ <87zixj93gg.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+From: Arend van Spriel <aspriel@gmail.com>
+Message-ID: <566952EA.4070107@gmail.com> (sfid-20151210_112449_613239_320571D8)
+Date: Thu, 10 Dec 2015 11:24:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87zixj93gg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grant Grundler <grundler@google.com> writes:
+On 09-12-15 14:06, Kalle Valo wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
+> 
+>> From: Hante Meuleman <meuleman@broadcom.com>
+>>
+> 
+> Please, no empty commit logs. For a patch like this it takes like 30
+> seconds to write a short log describing why and how you are simplifying
+> the code. Next year I'm thinking of start rejecting patches without a
+> commit log.
 
-> Sorry for the late response...just one point below
->
-> On Fri, Nov 20, 2015 at 3:22 AM, Johannes Berg <johannes@sipsolutions.net>
-> wrote:
->
->     > +#define MWL_DRV_NAME     KBUILD_MODNAME
->     > +#define MWL_DRV_VERSION       "10.3.0.14"
->
->     versions like that are generally fairly useless since you don't update
->     them for every commit ...
->
->
-> When backporting to other kernel trees, it's extremely handy to have a
-> DRV_VERSION.
->
-> Checking if a particular kernel build has the expected driver version trivial.
->  "mod_info" dumps the driver version for modules (which this will usually be
-> too).
->
-> And yes, it won't get updated for every commit only because other version
-> control might encapsulate those changes. Not every distro makes their build
-> versioning accessible to outsiders. So it's still helpful even if not perfect.
->
-> Marvell can update this every time they resync with their own internal
-> versions.
+Time to consider new year resolutions, heh ;-) Anyway, it is noted and
+will see if I can gatekeep this better.
 
-But the problem is that you cannot really trust this driver version
-string. I found a perfect example from another Marvell driver:
+> This is a minor nitpick but it's not that common to the commit title
+> with a period.
 
-5e6e3a92b9a4c drivers/net/wireless/mwifiex/main.c (Bing Zhao 2011-03-21 18:00:50 -0700   25) #define VERSION   "1.0"
+Have to agree to the nitpicking part :-p Can keep it in mind though.
 
-So nobody has updated that version string since the initial commit from
-2011 and that driver has had over 900 non-merge commits after that.
-Because of bad cases like this I think having a driver specific versions
-in in-tree drivers are just noise and unnecessary extra work. When
-porting a driver to another tree git commit ids, release tag names or
-git-describe output are much better ways to identify the driver version.
+>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>> Change-Id: Ie179527eb29f2ed8b7869dac24591e2513775393
+>> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5445
+>> Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> 
+> Forgot to clean the tags? :)
 
--- 
-Kalle Valo
+*sigh* Obviously. Should not try to multitask when preparing patch series.
+
+Gr. AvS
+
