@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:62122 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920AbbLAKAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:00:08 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Derek Basehore <dbasehore@chromium.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 38/41] iwlwifi: mvm: report wakeup for wowlan
-Date: Tue,  1 Dec 2015 11:59:04 +0200
-Message-Id: <1448963947-24302-38-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110014_192010_36979301)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:36198 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbbLKBHp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 20:07:45 -0500
+Received: by lfed137 with SMTP id d137so17985795lfe.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 17:07:44 -0800 (PST)
+From: Anatoly Stepanov <drivengroove@gmail.com>
+To: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com
+Cc: linux-wireless@vger.kernel.org,
+	Anatoly Stepanov <drivengroove@gmail.com>
+Subject: [PATCH 00/01] staging: wilc1000: fix sparse issue
+Date: Thu, 10 Dec 2015 05:17:28 +0300
+Message-Id: <1449713849-32245-1-git-send-email-drivengroove@gmail.com> (sfid-20151211_020748_790644_A4CF61BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Derek Basehore <dbasehore@chromium.org>
+Greetings!
 
-When the wifi wakes up the system, we need to report it via calling
-pm_wakeup_event for lucid sleep. This is so userspace knowns that the
-wifi woke up the system via the /sys/power/wakeup_type sysfs interface.
+This patch fixes sparse static analyzer issue in wilc1000 driver.
 
-Signed-off-by: Derek Basehore <dbasehore@chromium.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 ++
- 1 file changed, 2 insertions(+)
+Anatoly Stepanov (1):
+  staging: wilc1000: add missing address space specifier
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 478cf82..9e51843 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1236,6 +1236,8 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
- 		goto report;
- 	}
- 
-+	pm_wakeup_event(mvm->dev, 0);
-+
- 	if (reasons & IWL_WOWLAN_WAKEUP_BY_MAGIC_PACKET)
- 		wakeup.magic_pkt = true;
- 
+ drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 -- 
-2.5.0
+2.1.0
 
