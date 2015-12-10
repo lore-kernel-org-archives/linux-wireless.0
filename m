@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35793 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070AbbLVAtp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42476 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752043AbbLJOEF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 19:49:45 -0500
-Received: by mail-pa0-f43.google.com with SMTP id jx14so79603385pad.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:44 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/13] staging: wilc1000: fix return type of wilc_get_mac_address
-Date: Tue, 22 Dec 2015 09:49:06 +0900
-Message-Id: <1450745349-16811-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014947_828998_8A71CDF0)
-In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 10 Dec 2015 09:04:05 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+Date: Thu, 10 Dec 2015 16:03:56 +0200
+In-Reply-To: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com> (David
+	Lin's message of "Thu, 12 Nov 2015 03:51:03 +0000")
+Message-ID: <87zixi7643.fsf@kamboji.qca.qualcomm.com> (sfid-20151210_150409_953910_66D6D5AD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_get_mac_address from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+David Lin <dlin@marvell.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> This patch provides the mwlwifi driver for Marvell 8863, 8864 and 8897
+> chipsets.
+> This driver was developed as part of the openwrt.org project to support
+> Linksys WRT1900AC and is maintained on https://github.com/kaloz/mwlwifi.
+>
+> The mwlwifi driver differs from existing mwifiex driver:
+> o mwlwifi is a "softmac driver" using the kernel? mac802.11 subsystem
+> to provide full AP/Wireless Bridge functionality (routers).
+> o mwifiex is a "fullmac driver" which provides a comprehensive set of
+> client functions (laptops/embedded devices)
+> o only mwlwifi supports Marvell AP chip 886X series
+>
+> NOTE: Users with Marvell 88W8897 chipsets currently should enable
+> (CONFIG=Y or M) either CONFIG_MWIFIEX or CONFIG_MWLWIFI, NOT BOTH.
+>
+> mwlwifi driver leveraged code from existing MWL8K driver in the
+> following areas:
+> - 802.11n setting for mac80211
+> - Functions needed to hook up to mac80211
+> - Interactions with mac80211 to establish BA streams
+> - Partial firmware APIs, some data fields
+> - Method to pass Rx packets to mac80211 except 11ac rates
+>
+> In addition, mwlwifi driver supports:
+> - future scalability and future development (refactored source code)
+> - Marvell 802.11ac chipsets, including combo BT devices
+> - 802.11ac related settings and functions
+> - concurrent AP+STA functionalities with single firmware per chip
+> - firmware APIs for the supported chipset
+> - communicating new mac80211 settings to firmware
+> - Different TX/RX datapath where applicable
+> - A-MSDU and A-MPDU
+> - mac80211-based MESH (work in progress)
+> - Refined the code to establish BA streams
+>
+> NOTE: MWLWIFI will be organized under new vendor specific folder/marvell,
+> as per request of the gate keeper and community.
+>
+> Signed-off-by: David Lin <dlin@marvell.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 485318f..affd1e6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3325,9 +3325,9 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
- 	return result;
- }
- 
--s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress)
-+int wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 675a4e1..6be4b14 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -323,7 +323,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
- 		    u8 cipher_mode);
- int wilc_set_pmkid_info(struct wilc_vif *vif,
- 			struct host_if_pmkid_attr *pmkid);
--s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
-+int wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
- s32 wilc_set_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
- int wilc_wait_msg_queue_idle(void);
- s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+I don't see any changelog, please always provide one. Makes review a lot
+easier.
+
+Also I hope you are not adding new features anymore. It's better to
+freeze the driver and focus on getting the driver accepted. Once that is
+done you can submit new features as separate patches. Otherwise we go
+back to square one after every review.
+
 -- 
-2.6.4
-
+Kalle Valo
