@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:56979 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755478AbbLQKMk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 05:12:40 -0500
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-Cc: johannes@sipsolutions.net
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56728A91.7010503@openwrt.org> (sfid-20151217_111245_867124_9E0B2F98)
-Date: Thu, 17 Dec 2015 11:12:33 +0100
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17912 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753527AbbLJMnV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 07:43:21 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 07/13] brcmfmac: no interface combination check for single interface
+Date: Thu, 10 Dec 2015 13:43:06 +0100
+Message-ID: <1449751392-32569-8-git-send-email-arend@broadcom.com> (sfid-20151210_134326_385285_64E0C2A5)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-12-17 10:20, Janusz Dziedzic wrote:
-> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
-> aligned skbs to four-byte boundaries.
-> 
-> Before we have to do memmove() in the driver before
-> pass this to HW and memmove() back in tx completion.
-> This patch allow to save CPU and skip such memmoves.
-> For each skb we called memmove(ieee80211_hdrsize()) twice.
-> 
-> Currently this was tested with ath9k, both hw/sw crypt for
-> tkip/ccmp.
-> For sure more tests required.
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  include/net/mac80211.h |  4 ++++
->  net/mac80211/debugfs.c |  1 +
->  net/mac80211/tkip.c    | 15 ++++++++++++---
->  net/mac80211/tx.c      | 21 +++++++++++++++++++--
->  net/mac80211/wep.c     |  6 ++++++
->  net/mac80211/wpa.c     | 35 +++++++++++++++++++++++++++--------
->  6 files changed, 69 insertions(+), 13 deletions(-)
-> 
-> diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-> index 0ae2077..26b2663 100644
-> --- a/net/mac80211/tkip.c
-> +++ b/net/mac80211/tkip.c
-> @@ -204,9 +204,18 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
->  	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
->  	struct tkip_ctx *ctx = &key->u.tkip.tx;
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> -	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
-> -	u32 iv32 = get_unaligned_le32(&data[4]);
-> -	u16 iv16 = data[2] | (data[0] << 8);
-> +	unsigned int hdrlen;
-> +	const u8 *data;
-> +	u32 iv32;
-> +	u16 iv16;
-> +
-> +	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-> +	if (ieee80211_hw_check(&key->local->hw, NEEDS_ALIGNED4_SKBS))
-> +		hdrlen += hdrlen & 3;
-I think this check is duplicated way too often, maybe you should
-implement a wrapper for ieee80211_hdrlen and convert all relevant call
-sites. Makes it easier to spot places where this was forgotten.
+The interface combinations are intended for use-case in which the driver
+handles multiple interface concurrently. This means that the combinations
+do not need to be checked when there is only a single interface active.
 
-- Felix
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 8557566..3ac5cf7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -396,15 +396,23 @@ static int brcmf_vif_change_validate(struct brcmf_cfg80211_info *cfg,
+ {
+ 	int iftype_num[NUM_NL80211_IFTYPES];
+ 	struct brcmf_cfg80211_vif *pos;
++	bool check_combos = false;
++	int ret = 0;
+ 
+ 	memset(&iftype_num[0], 0, sizeof(iftype_num));
+ 	list_for_each_entry(pos, &cfg->vif_list, list)
+-		if (pos == vif)
++		if (pos == vif) {
+ 			iftype_num[new_type]++;
+-		else
++		} else {
++			/* concurrent interfaces so need check combinations */
++			check_combos = true;
+ 			iftype_num[pos->wdev.iftype]++;
++		}
+ 
+-	return cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
++	if (check_combos)
++		ret = cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
++
++	return ret;
+ }
+ 
+ static int brcmf_vif_add_validate(struct brcmf_cfg80211_info *cfg,
+-- 
+1.9.1
+
