@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32559 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbbLKJmo (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17912 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbbLJMnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 04:42:44 -0500
-Message-ID: <566A9A91.2090700@broadcom.com> (sfid-20151211_104248_695445_70091068)
-Date: Fri, 11 Dec 2015 10:42:41 +0100
+	Thu, 10 Dec 2015 07:43:21 -0500
 From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
 To: Kalle Valo <kvalo@codeaurora.org>
 CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>
-Subject: Re: [PATCH V2 13/13] brcmfmac: add arp offload ip address table configuration
- support
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>	<1449751392-32569-14-git-send-email-arend@broadcom.com>	<566A9392.6090103@broadcom.com> <87a8ph5o56.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a8ph5o56.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 11/13] brcmfmac: Change error print in debug print
+Date: Thu, 10 Dec 2015 13:43:10 +0100
+Message-ID: <1449751392-32569-12-git-send-email-arend@broadcom.com> (sfid-20151210_134331_131141_40F9CF58)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/11/2015 10:29 AM, Kalle Valo wrote:
-> Arend van Spriel <arend@broadcom.com> writes:
->
->> On 12/10/2015 01:43 PM, Arend van Spriel wrote:
->>> From: Franky Lin <frankyl@broadcom.com>
->>>
->>> Obtain ipv4 address through inetaddr notification for ARP offload host
->>> ip table configuration.
->>
->> Turns out this patch has a sparse warning, ie. would not work on
->> big-endian system. We have a fix for that. Should I mark this patch as
->> dropped in patchwork?
->
-> Yeah, that's the best way. For example you could use state "Changes
-> Requested" and then it automatically gets dropped from my queue.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-will do that.
+The pcie suspend and resume routines contain some error prints,
+which should have been debug prints.
 
-Thanks,
-Arend
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Change-Id: Ibafe5d38301ee8f5e86889259ddeaea4dcae4cee
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5581
+Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 4ebc53c..3d2d790 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1875,7 +1875,7 @@ static int brcmf_pcie_pm_enter_D3(struct device *dev)
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_bus *bus;
+ 
+-	brcmf_err("Enter\n");
++	brcmf_dbg(PCIE, "Enter\n");
+ 
+ 	bus = dev_get_drvdata(dev);
+ 	devinfo = bus->bus_priv.pcie->devinfo;
+@@ -1906,7 +1906,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
+ 	struct pci_dev *pdev;
+ 	int err;
+ 
+-	brcmf_err("Enter\n");
++	brcmf_dbg(PCIE, "Enter\n");
+ 
+ 	bus = dev_get_drvdata(dev);
+ 	devinfo = bus->bus_priv.pcie->devinfo;
+-- 
+1.9.1
 
