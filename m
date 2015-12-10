@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:35580 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbbLaVuU (ORCPT
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:30285 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436AbbLJHzV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 16:50:20 -0500
-Received: by mail-wm0-f43.google.com with SMTP id f206so72218288wmf.0
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 13:50:20 -0800 (PST)
-Subject: Re: [PATCH 3/7] brcmfmac: Add support for scheduled scan mac
- randomization
-To: Mathy Vanhoef <vanhoefm@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
- <1450100394-17414-4-git-send-email-arend@broadcom.com>
- <CAFXAJYwoQRVi_10L5475g1NU5+Abfvv==R6U4P2_rdb=yCPOcw@mail.gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <5685A31F.5020408@gmail.com> (sfid-20151231_225024_089837_BC1DE502)
-Date: Thu, 31 Dec 2015 22:50:23 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAFXAJYwoQRVi_10L5475g1NU5+Abfvv==R6U4P2_rdb=yCPOcw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Thu, 10 Dec 2015 02:55:21 -0500
+From: Andrzej Hajda <a.hajda@samsung.com>
+To: linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM)
+Cc: Andrzej Hajda <a.hajda@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] NFC: fdp: fix handling return value of
+ nci_conn_max_data_pkt_payload_size
+Date: Thu, 10 Dec 2015 08:54:04 +0100
+Message-id: <1449734044-29181-1-git-send-email-a.hajda@samsung.com> (sfid-20151210_085548_846299_89DA95C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The function can return negative values, so its result should
+be assigned to signed variable.
 
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-On 29-12-15 21:47, Mathy Vanhoef wrote:
-> On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> From: Hante Meuleman <meuleman@broadcom.com>
->>
->> Scheduled scan be requested to use mac randomization. This patch
->> checks the flags and enables the randomization if desired.
-> 
-> The driver also needs to advertise support for this using the
-> NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR flag, if the firmware
-> supports it. This can be done in brcmf_setup_wiphy. Otherwise
-> tools like wpa_supplicant won't use randomization.
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
-Indeed. Hante found that out later on and we have a follow-up patch for
-that.
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+ drivers/nfc/fdp/fdp.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Kalle,
+diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
+index 440fac3..37a7134 100644
+--- a/drivers/nfc/fdp/fdp.c
++++ b/drivers/nfc/fdp/fdp.c
+@@ -192,7 +192,7 @@ static int fdp_nci_send_patch(struct nci_dev *ndev, u8 conn_id, u8 type)
+ 	struct sk_buff *skb;
+ 	unsigned long len;
+ 	u8 max_size, payload_size;
+-	int rc = 0;
++	int rc;
+ 
+ 	if ((type == NCI_PATCH_TYPE_OTP && !info->otp_patch) ||
+ 	    (type == NCI_PATCH_TYPE_RAM && !info->ram_patch))
+@@ -203,11 +203,13 @@ static int fdp_nci_send_patch(struct nci_dev *ndev, u8 conn_id, u8 type)
+ 	else
+ 		fw = info->ram_patch;
+ 
+-	max_size = nci_conn_max_data_pkt_payload_size(ndev, conn_id);
+-	if (max_size <= 0)
++	rc = nci_conn_max_data_pkt_payload_size(ndev, conn_id);
++	if (rc <= 0)
+ 		return -EINVAL;
++	max_size = rc;
+ 
+ 	len = fw->size;
++	rc = 0;
+ 
+ 	fdp_nci_set_data_pkt_counter(ndev, fdp_nci_send_patch_cb,
+ 				     DIV_ROUND_UP(fw->size, max_size));
+-- 
+1.9.1
 
-How do you want to treat this? Should I squash the patches into one and
-resubmit or can I just submit follow-up patch.
-
-Regards,
-Arend
-
-> Kr,
-> Mathy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
