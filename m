@@ -1,108 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34599 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932352AbbLTNZw (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:10683 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754720AbbLJMnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 08:25:52 -0500
-Received: by mail-pa0-f44.google.com with SMTP id wq6so85376720pac.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 05:25:52 -0800 (PST)
-From: Fengwei Yin <fengwei.yin@linaro.org>
-To: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org, lking@qti.qualcomm.com
-Subject: [PATCH v3 1/2] wcn36xx: handle rx skb allocation failure to avoid system crash
-Date: Sun, 20 Dec 2015 21:20:40 +0800
-Message-Id: <1450617641-29531-2-git-send-email-fengwei.yin@linaro.org> (sfid-20151220_142555_767778_74F992FC)
-In-Reply-To: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
-References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
+	Thu, 10 Dec 2015 07:43:22 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 12/13] brcmfmac: Move scheduled scan related interface layer structs
+Date: Thu, 10 Dec 2015 13:43:11 +0100
+Message-ID: <1449751392-32569-13-git-send-email-arend@broadcom.com> (sfid-20151210_134341_249214_14DA4A20)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lawrence reported that git clone could make system crash on a
-Qualcomm ARM soc based device (DragonBoard, 1G memory without
-swap) running 64bit Debian.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-It's turned out the crash is related with rx skb allocation
-failure. git could consume more than 600MB anonymous memory.
-And system is in extremely memory shortage case.
+All interface layer related to scheduled scan are moved in
+fwil_types.h
 
-But driver didn't handle the rx allocation failure case. This patch
-doesn't submit skb to upper layer if rx skb allocation fails.
-Instead, it reuse the old skb for rx DMA again. It's more like
-drop the packets if system is in memory shortage case.
-
-With this change, git clone is OOMed instead of system crash.
-
-Reported-by: King, Lawrence <lking@qti.qualcomm.com>
-Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 43 +++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 21 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 81 ----------------------
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 81 ++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index f8dfa05..473381f 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -474,36 +474,37 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
- 	struct wcn36xx_dxe_desc *dxe = ctl->desc;
- 	dma_addr_t  dma_addr;
- 	struct sk_buff *skb;
-+	int ret = 0, int_mask;
-+	u32 value;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 397d41b..c17b6d5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -211,87 +211,6 @@ struct escan_info {
+ };
+ 
+ /**
+- * struct brcmf_pno_param_le - PNO scan configuration parameters
+- *
+- * @version: PNO parameters version.
+- * @scan_freq: scan frequency.
+- * @lost_network_timeout: #sec. to declare discovered network as lost.
+- * @flags: Bit field to control features of PFN such as sort criteria auto
+- *	enable switch and background scan.
+- * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
+- *	criteria.
+- * @bestn: number of best networks in each scan.
+- * @mscan: number of scans recorded.
+- * @repeat: minimum number of scan intervals before scan frequency changes
+- *	in adaptive scan.
+- * @exp: exponent of 2 for maximum scan interval.
+- * @slow_freq: slow scan period.
+- */
+-struct brcmf_pno_param_le {
+-	__le32 version;
+-	__le32 scan_freq;
+-	__le32 lost_network_timeout;
+-	__le16 flags;
+-	__le16 rssi_margin;
+-	u8 bestn;
+-	u8 mscan;
+-	u8 repeat;
+-	u8 exp;
+-	__le32 slow_freq;
+-};
+-
+-/**
+- * struct brcmf_pno_net_param_le - scan parameters per preferred network.
+- *
+- * @ssid: ssid name and its length.
+- * @flags: bit2: hidden.
+- * @infra: BSS vs IBSS.
+- * @auth: Open vs Closed.
+- * @wpa_auth: WPA type.
+- * @wsec: wsec value.
+- */
+-struct brcmf_pno_net_param_le {
+-	struct brcmf_ssid_le ssid;
+-	__le32 flags;
+-	__le32 infra;
+-	__le32 auth;
+-	__le32 wpa_auth;
+-	__le32 wsec;
+-};
+-
+-/**
+- * struct brcmf_pno_net_info_le - information per found network.
+- *
+- * @bssid: BSS network identifier.
+- * @channel: channel number only.
+- * @SSID_len: length of ssid.
+- * @SSID: ssid characters.
+- * @RSSI: receive signal strength (in dBm).
+- * @timestamp: age in seconds.
+- */
+-struct brcmf_pno_net_info_le {
+-	u8 bssid[ETH_ALEN];
+-	u8 channel;
+-	u8 SSID_len;
+-	u8 SSID[32];
+-	__le16	RSSI;
+-	__le16	timestamp;
+-};
+-
+-/**
+- * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
+- *
+- * @version: PNO version identifier.
+- * @status: indicates completion status of PNO scan.
+- * @count: amount of brcmf_pno_net_info_le entries appended.
+- */
+-struct brcmf_pno_scanresults_le {
+-	__le32 version;
+-	__le32 status;
+-	__le32 count;
+-};
+-
+-/**
+  * struct brcmf_cfg80211_vif_event - virtual interface event information.
+  *
+  * @vif_wq: waitqueue awaiting interface event from firmware.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index e56eabc..94d34ad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -670,4 +670,85 @@ struct brcmf_pmk_list_le {
+ 	struct brcmf_pmksa pmk[BRCMF_MAXPMKID];
+ };
+ 
++/**
++ * struct brcmf_pno_param_le - PNO scan configuration parameters
++ *
++ * @version: PNO parameters version.
++ * @scan_freq: scan frequency.
++ * @lost_network_timeout: #sec. to declare discovered network as lost.
++ * @flags: Bit field to control features of PFN such as sort criteria auto
++ *	enable switch and background scan.
++ * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
++ *	criteria.
++ * @bestn: number of best networks in each scan.
++ * @mscan: number of scans recorded.
++ * @repeat: minimum number of scan intervals before scan frequency changes
++ *	in adaptive scan.
++ * @exp: exponent of 2 for maximum scan interval.
++ * @slow_freq: slow scan period.
++ */
++struct brcmf_pno_param_le {
++	__le32 version;
++	__le32 scan_freq;
++	__le32 lost_network_timeout;
++	__le16 flags;
++	__le16 rssi_margin;
++	u8 bestn;
++	u8 mscan;
++	u8 repeat;
++	u8 exp;
++	__le32 slow_freq;
++};
 +
-+	if (ch->ch_type == WCN36XX_DXE_CH_RX_L) {
-+		value = WCN36XX_DXE_CTRL_RX_L;
-+		int_mask = WCN36XX_DXE_INT_CH1_MASK;
-+	} else {
-+		value = WCN36XX_DXE_CTRL_RX_H;
-+		int_mask = WCN36XX_DXE_INT_CH3_MASK;
-+	}
- 
- 	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
- 		skb = ctl->skb;
- 		dma_addr = dxe->dst_addr_l;
--		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
--
--		switch (ch->ch_type) {
--		case WCN36XX_DXE_CH_RX_L:
--			dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
--			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
--						   WCN36XX_DXE_INT_CH1_MASK);
--			break;
--		case WCN36XX_DXE_CH_RX_H:
--			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
--			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
--						   WCN36XX_DXE_INT_CH3_MASK);
--			break;
--		default:
--			wcn36xx_warn("Unknown channel\n");
--		}
--
--		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
--				 DMA_FROM_DEVICE);
--		wcn36xx_rx_skb(wcn, skb);
-+		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
-+		if (0 == ret) {
-+			/* new skb allocation ok. Use the new one and queue
-+			 * the old one to network system.
-+			 */
-+			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
-+					DMA_FROM_DEVICE);
-+			wcn36xx_rx_skb(wcn, skb);
-+		} /* else keep old skb not submitted and use it for rx DMA */
++/**
++ * struct brcmf_pno_net_param_le - scan parameters per preferred network.
++ *
++ * @ssid: ssid name and its length.
++ * @flags: bit2: hidden.
++ * @infra: BSS vs IBSS.
++ * @auth: Open vs Closed.
++ * @wpa_auth: WPA type.
++ * @wsec: wsec value.
++ */
++struct brcmf_pno_net_param_le {
++	struct brcmf_ssid_le ssid;
++	__le32 flags;
++	__le32 infra;
++	__le32 auth;
++	__le32 wpa_auth;
++	__le32 wsec;
++};
 +
-+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
-+		dxe->ctrl = value;
- 		ctl = ctl->next;
- 		dxe = ctl->desc;
- 	}
- 
- 	ch->head_blk_ctl = ctl;
--
- 	return 0;
- }
- 
++/**
++ * struct brcmf_pno_net_info_le - information per found network.
++ *
++ * @bssid: BSS network identifier.
++ * @channel: channel number only.
++ * @SSID_len: length of ssid.
++ * @SSID: ssid characters.
++ * @RSSI: receive signal strength (in dBm).
++ * @timestamp: age in seconds.
++ */
++struct brcmf_pno_net_info_le {
++	u8 bssid[ETH_ALEN];
++	u8 channel;
++	u8 SSID_len;
++	u8 SSID[32];
++	__le16	RSSI;
++	__le16	timestamp;
++};
++
++/**
++ * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
++ *
++ * @version: PNO version identifier.
++ * @status: indicates completion status of PNO scan.
++ * @count: amount of brcmf_pno_net_info_le entries appended.
++ */
++struct brcmf_pno_scanresults_le {
++	__le32 version;
++	__le32 status;
++	__le32 count;
++};
++
+ #endif /* FWIL_TYPES_H_ */
 -- 
-2.1.4
+1.9.1
 
