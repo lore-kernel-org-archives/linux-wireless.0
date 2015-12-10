@@ -1,91 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:35969 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754122AbbLFUSc (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:11020 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432AbbLJMno (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2015 15:18:32 -0500
-Subject: Re: [PATCH] rtlwifi: fix gigantic memleak in rtl_usb
-To: Peter Wu <peter@lekensteyn.nl>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5664981C.1040704@lwfinger.net> (sfid-20151206_211933_420891_84F1E11F)
-Date: Sun, 6 Dec 2015 14:18:36 -0600
+	Thu, 10 Dec 2015 07:43:44 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 02/13] brcmfmac: Use local storage for ssid iovar
+Date: Thu, 10 Dec 2015 13:43:01 +0100
+Message-ID: <1449751392-32569-3-git-send-email-arend@broadcom.com> (sfid-20151210_140058_412284_AE7F0496)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2015 11:57 AM, Peter Wu wrote:
-> Free skb for received frames with a wrong checksum.
->
-> While using the rtl8192cu driver in monitor mode, somehow 5G of memory
-> was permanently lost (observable via the Available column in `free -m`).
->
-> Test scenario:
->
->      ip link set down wlan1
->      iw wlan1 set type monitor
->      ip link set up wlan1
->      iw wlan1 set channel 11
->
-> Then stream a video on a smartphone on channel 11. Without this patch
-> the memory usage grows linearly with the number of received packets:
->
->      grep MemAvailable /proc/meminfo
->      ip -s link show dev wlan1
->
-> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> ---
-> Hi,
->
-> This issue has existed since the introduction of this driver in v2.6.x,
-> using kmemleak I was about to figure out the source. There is also a
-> _rtl_usb_rx_process_agg that has similarly looking code, but that one is
-> unaffected. The pci code already frees the skb and is unaffected too.
->
-> Tested with kernel v4.3, this patch is simply rebased on v4.4-rc3 (due
-> to changed paths).
->
-> Kind regards,
-> Peter
-> ---
->   drivers/net/wireless/realtek/rtlwifi/usb.c | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> index 2721cf8..aac1ed3 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> @@ -531,6 +531,8 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
->   			ieee80211_rx(hw, skb);
->   		else
->   			dev_kfree_skb_any(skb);
-> +	} else {
-> +		dev_kfree_skb_any(skb);
->   	}
->   }
->
->
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Thanks for finding and fixing this memory leak.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 18 +++++++++---------
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.h    |  7 -------
+ 2 files changed, 9 insertions(+), 16 deletions(-)
 
-The patch is OK, but the commit message and subject are not. I do not like the 
-use of the word "gigantic" in the subject. A better subject would be: "rtlwifi: 
-Fix memory leak for USB device while in monitor mode".
-
-The commit message should say that a memory leak was observed, and found with 
-kmemleak. If you were simply reportimg the bug, then the steps needed to 
-reproduce it would be important, but as you have a fix, those steps are 
-extraneous. You should also include a "Cc: Stable <stable@vger.kernel.org" line. 
-When the patch is picked up for stable kernels, it will be necessary to rebase 
-the patch to compensate for the directory change.
-
-NACK for the moment.
-
-Larry
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 4aebb2a..b7b60f52 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1031,11 +1031,11 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+ 	struct brcmf_if *ifp = vif->ifp;
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct cfg80211_ssid *ssids;
+-	struct brcmf_cfg80211_scan_req *sr = &cfg->scan_req_int;
+ 	u32 passive_scan;
+ 	bool escan_req;
+ 	bool spec_scan;
+ 	s32 err;
++	struct brcmf_ssid_le ssid_le;
+ 	u32 SSID_len;
+ 
+ 	brcmf_dbg(SCAN, "START ESCAN\n");
+@@ -1088,13 +1088,13 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+ 	} else {
+ 		brcmf_dbg(SCAN, "ssid \"%s\", ssid_len (%d)\n",
+ 			  ssids->ssid, ssids->ssid_len);
+-		memset(&sr->ssid_le, 0, sizeof(sr->ssid_le));
+-		SSID_len = min_t(u8, sizeof(sr->ssid_le.SSID), ssids->ssid_len);
+-		sr->ssid_le.SSID_len = cpu_to_le32(0);
++		memset(&ssid_le, 0, sizeof(ssid_le));
++		SSID_len = min_t(u8, sizeof(ssid_le.SSID), ssids->ssid_len);
++		ssid_le.SSID_len = cpu_to_le32(0);
+ 		spec_scan = false;
+ 		if (SSID_len) {
+-			memcpy(sr->ssid_le.SSID, ssids->ssid, SSID_len);
+-			sr->ssid_le.SSID_len = cpu_to_le32(SSID_len);
++			memcpy(ssid_le.SSID, ssids->ssid, SSID_len);
++			ssid_le.SSID_len = cpu_to_le32(SSID_len);
+ 			spec_scan = true;
+ 		} else
+ 			brcmf_dbg(SCAN, "Broadcast scan\n");
+@@ -1107,12 +1107,12 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+ 			goto scan_out;
+ 		}
+ 		brcmf_scan_config_mpc(ifp, 0);
+-		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN,
+-					     &sr->ssid_le, sizeof(sr->ssid_le));
++		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN, &ssid_le,
++					     sizeof(ssid_le));
+ 		if (err) {
+ 			if (err == -EBUSY)
+ 				brcmf_dbg(INFO, "BUSY: scan for \"%s\" canceled\n",
+-					  sr->ssid_le.SSID);
++					  ssid_le.SSID);
+ 			else
+ 				brcmf_err("WLC_SCAN error (%d)\n", err);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index cf7a93d..e77f137 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -99,11 +99,6 @@ struct brcmf_cfg80211_conf {
+ 	struct ieee80211_channel channel;
+ };
+ 
+-/* basic structure of scan request */
+-struct brcmf_cfg80211_scan_req {
+-	struct brcmf_ssid_le ssid_le;
+-};
+-
+ /* basic structure of information element */
+ struct brcmf_cfg80211_ie {
+ 	u16 offset;
+@@ -337,7 +332,6 @@ struct brcmf_cfg80211_vif_event {
+  * @scan_request: cfg80211 scan request object.
+  * @usr_sync: mainly for dongle up/down synchronization.
+  * @bss_list: bss_list holding scanned ap information.
+- * @scan_req_int: internal scan request object.
+  * @bss_info: bss information for cfg80211 layer.
+  * @ie: information element object for internal purpose.
+  * @conn_info: association info.
+@@ -372,7 +366,6 @@ struct brcmf_cfg80211_info {
+ 	struct brcmf_btcoex_info *btcoex;
+ 	struct cfg80211_scan_request *scan_request;
+ 	struct mutex usr_sync;
+-	struct brcmf_cfg80211_scan_req scan_req_int;
+ 	struct wl_cfg80211_bss_info *bss_info;
+ 	struct brcmf_cfg80211_ie ie;
+ 	struct brcmf_cfg80211_connect_info conn_info;
+-- 
+1.9.1
 
