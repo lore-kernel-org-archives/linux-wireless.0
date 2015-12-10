@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:25014 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751382AbbLUL5k convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 06:57:40 -0500
-From: Shikha SINGH <shikha.singh@st.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-	Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
-	Manoj KUMAR <manoj.kumar@st.com>,
-	Sylvain FIDELIS <sylvain.fidelis@st.com>,
-	Patrick SOHN <patrick.sohn@st.com>,
-	MMS_MMY_Applications_SW <MMS_MMY_Applications_SW@list.st.com>
-Date: Mon, 21 Dec 2015 19:57:23 +0800
-Subject: RE: [[linux-nfc] PATCH v5 2/3] driver: nfc: Add ST95HF NFC
- Transceiver support
-Message-ID: <39576D76C6222946921EC3820C1BEC0C06FEFED225@EAPEX1MAIL1.st.com> (sfid-20151221_125743_887464_8A055FEC)
-References: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
- <1448019621-14259-3-git-send-email-shikha.singh@st.com>
- <20151220175053.GA4772@zurbaran.home>
-In-Reply-To: <20151220175053.GA4772@zurbaran.home>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:33064 "EHLO
+	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754445AbbLJHy1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 02:54:27 -0500
+From: Andrzej Hajda <a.hajda@samsung.com>
+To: linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM)
+Cc: Andrzej Hajda <a.hajda@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] NFC: fdp: fix handling return value of fdp_nci_create_conn
+Date: Thu, 10 Dec 2015 08:53:02 +0100
+Message-id: <1449733982-29120-1-git-send-email-a.hajda@samsung.com> (sfid-20151210_085723_063088_3BB0EB55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Samuel,
-	Please see my answer below.
-	
->This looks a lot better than the initial version.
->I only have one question:
->
->On Fri, Nov 20, 2015 at 06:40:20AM -0500, Shikha Singh wrote:
->> +/*
->> + * st95hf_send_recv_cmd() is for sending commands to ST95HF
->> + * that are described in the cmd_array[]. It can optionally
->> + * receive the response if the cmd request is of type
->> + * SYNC. For that to happen caller must pass true to recv_res.
->> + * For ASYNC request, recv_res is ignored and the
->> + * function will never try to receive the response on behalf
->> + * of the caller.
->> + */
->> +static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
->> +				enum st95hf_cmd_list cmd,
->> +				int no_modif,
->> +				struct param_list *list_array,
->> +				bool recv_res)
->> +{
->> +	unsigned char spi_cmd_buffer[MAX_CMD_LEN];
->> +	int i, ret;
->> +	struct device *dev = &st95context->spicontext.spidev->dev;
->How do you know this driver is still valid at that point ?
->It seems to be a potential corner case against the driver's remove function, but
->it seems to be a race nevertheless.
+The function can return negative values, so its result should
+be assigned to signed variable.
 
-st95hf_send_recv_cmd() is a static function that can be called only when a NFC digital request is submitted to our driver.
-So in summary, it can be called either from an implemented NFC digital ops (such as st95hf_switch_rf()) or from the driver's threaded ISR.
-Now if we see the remove function of the driver i.e. st95hf_remove(), it waits for all the outstanding NFC digital request to finish via nfc_digital_unregister_device(stcontext->ddev).
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-It also waits for any outstanding threaded ISR to finish using the semaphore mechanism:
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
-        /* if last in_send_cmd's ISR is pending, wait for it to finish */
-        result = down_killable(&stcontext->exchange_lock);
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+ drivers/nfc/fdp/fdp.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-The spi device object is removed after st95hf_remove() finishes, but then we can't have any call to st95hf_send_recv_cmd() after st95hf_remove finishes !
-Till st95hf_remove() finishes, there is no issue in calling spi functions/data structures (such as spi device) either in "parallel" from a different thread or called from st95hf_remove() itself.
-So I don't think there is race condition.
-
-Please let me know if you think there could still be a race condition here and also tell me the corresponding use-case (sequence of calls that could lead to such a race).
-
-Thanks and BR,
-Shikha
+diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
+index ccb07a1..440fac3 100644
+--- a/drivers/nfc/fdp/fdp.c
++++ b/drivers/nfc/fdp/fdp.c
+@@ -368,11 +368,10 @@ static int fdp_nci_patch_otp(struct nci_dev *ndev)
+ 		goto out;
+ 
+ 	/* Patch data connection creation */
+-	conn_id = fdp_nci_create_conn(ndev);
+-	if (conn_id < 0) {
+-		r = conn_id;
++	r = fdp_nci_create_conn(ndev);
++	if (r < 0)
+ 		goto out;
+-	}
++	conn_id = r;
+ 
+ 	/* Send the patch over the data connection */
+ 	r = fdp_nci_send_patch(ndev, conn_id, NCI_PATCH_TYPE_OTP);
+@@ -439,11 +438,10 @@ static int fdp_nci_patch_ram(struct nci_dev *ndev)
+ 		goto out;
+ 
+ 	/* Patch data connection creation */
+-	conn_id = fdp_nci_create_conn(ndev);
+-	if (conn_id < 0) {
+-		r = conn_id;
+-		goto out;
+-	}
++	r = fdp_nci_create_conn(ndev);
++	if (r < 0)
++		got out;
++	conn_id = r;
+ 
+ 	/* Send the patch over the data connection */
+ 	r = fdp_nci_send_patch(ndev, conn_id, NCI_PATCH_TYPE_RAM);
+-- 
+1.9.1
 
