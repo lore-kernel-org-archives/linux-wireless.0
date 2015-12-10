@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34195 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbbLLNWv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46649 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbbLJO6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2015 08:22:51 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 1/2] wil6210: fix kernel OOPS when stopping interface during Rx traffic
-Date: Sat, 12 Dec 2015 15:22:44 +0200
-Message-Id: <1449926565-888-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20151212_142258_778812_F08BD743)
-In-Reply-To: <1449926565-888-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1449926565-888-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 10 Dec 2015 09:58:06 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	<1448018530.3141.25.camel@sipsolutions.net>
+	<097ef0472294430d98940ad601a4aade@SC-EXCH02.marvell.com>
+	<1448530804.2167.4.camel@sipsolutions.net>
+	<9d111cc7d61047b5890b7c5d53d71bbd@SC-EXCH02.marvell.com>
+Date: Thu, 10 Dec 2015 16:57:59 +0200
+In-Reply-To: <9d111cc7d61047b5890b7c5d53d71bbd@SC-EXCH02.marvell.com> (David
+	Lin's message of "Fri, 27 Nov 2015 02:00:00 +0000")
+Message-ID: <87d1ue73m0.fsf@kamboji.qca.qualcomm.com> (sfid-20151210_155811_507972_5AF4A3D1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+David Lin <dlin@marvell.com> writes:
 
-When network interface is stopping, some resources may
-be already released by the network stack, and Rx frames
-cause kernel OOPS (observed one is in netfilter code)
+> On November 26, 2015 5:40 PM, Johannes Berg wrote:
+>> On Thu, 2015-11-26 at 08:27 +0000, David Lin wrote:
+>> 
+>> > > > +#ifdef CONFIG_SUPPORT_MFG
+>> > >
+>> > > This Kconfig variable doesn't exist.
+>> > >
+>> >
+>> > The compile variable is used privately by Marvell and our customers in
+>> > production line.
+>> 
+>> Yeah, still. Make it a proper Kconfig variable, defaulting to off and hidden
+>> under something, or remove it. It's extremely misleading to have something
+>> called CONFIG_* when it's not a Kconfig variable.
+>> 
+>
+> I will change this compile variable from "CONFIG_SUPPORT_MFG" to
+> "SUPPORT_MFG".
 
-Proper solution is to drop packets pending in reorder buffer.
+Then it's still dead code which won't ever get compiled in upstream.
+Please follow what Johannes suggested.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/rx_reorder.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-index e3d1be8..32031e7 100644
---- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
-+++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-@@ -261,9 +261,19 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
- void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
- 			   struct wil_tid_ampdu_rx *r)
- {
-+	int i;
-+
- 	if (!r)
- 		return;
--	wil_release_reorder_frames(wil, r, r->head_seq_num + r->buf_size);
-+
-+	/* Do not pass remaining frames to the network stack - it may be
-+	 * not expecting to get any more Rx. Rx from here may lead to
-+	 * kernel OOPS since some per-socket accounting info was already
-+	 * released.
-+	 */
-+	for (i = 0; i < r->buf_size; i++)
-+		kfree_skb(r->reorder_buf[i]);
-+
- 	kfree(r->reorder_buf);
- 	kfree(r->reorder_time);
- 	kfree(r);
 -- 
-1.8.5.2
-
+Kalle Valo
