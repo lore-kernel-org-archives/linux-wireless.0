@@ -1,76 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50300 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965604AbbLPVUX (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:11020 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbbLJMnp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 16:20:23 -0500
-Message-ID: <5671D56F.8030903@codeaurora.org> (sfid-20151216_222026_868781_FCBCDCEA)
-Date: Wed, 16 Dec 2015 13:19:43 -0800
-From: Peter Oh <poh@codeaurora.org>
+	Thu, 10 Dec 2015 07:43:45 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 10/13] brcmfmac: add 43242 device id for LG dongle
+Date: Thu, 10 Dec 2015 13:43:09 +0100
+Message-ID: <1449751392-32569-11-git-send-email-arend@broadcom.com> (sfid-20151210_140058_181057_29C9B394)
+In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>, Peter Oh <poh@qca.qualcomm.com>,
-	ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum configurable
-References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com> <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org> <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org> <5671CF63.9040308@openwrt.org>
-In-Reply-To: <5671CF63.9040308@openwrt.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Got a hint on IRC that a 43242 dongle for LG smart TV's works with
+brcmfmac:
 
-On 12/16/2015 12:53 PM, Felix Fietkau wrote:
-> On 2015-12-16 21:46, Peter Oh wrote:
->> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
->>> On 2015-12-16 21:29, Peter Oh wrote:
->>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
->>>>> On 2015-12-16 19:20, Peter Oh wrote:
->>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
->>>>>> capability of checksum offload when frame formats are not
->>>>>> suitable for it such as Mesh frame.
->>>>>> Hence add a module parameter, hw_csum, to make checksum offload
->>>>>> configurable during module registration time.
->>>>>>
->>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
->>>>> How about instead of inventing yet another crappy module parameter, you
->>>>> call skb_checksum_help() in the driver in cases where the hardware is
->>>>> unable to offload the checksum calculation.
->>>>>
->>>>> That way the user has to worry about less driver specific hackery ;)
->>>> That will be good option for hardware not supporting HW checksum, but I
->>>> mind that using the function will add more workload per every packet on
->>>> critical data path when HW supports checksum resulting in throughput down.
->>> I didn't mean calling it for every single frame in the data path.
->>> What I'm suggesting is calling it selectively only for mesh frames, or
->>> any other frames that the hardware cannot offload, and leaving the rest
->>> for the hardware to process.
->>>
->>> There should be no performance difference between disabling checksum
->>> offload and calling skb_checksum_help from the driver.
->> To call it selectively for Mesh frame or interface, we need to add it on
->> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
->> care the interface type in data path.
-> No need to change mac80211 - it only touches the headers, and
-> skb_checksum_help does not care about that. The skb has enough
-> information for it to find the right range to calculate the checksum and
-> the place to store it.
-If mentioned to use the function to mesh frame only without touching 
-mac80211, then how do you suggest it to apply it only to mesh frame 
-without interfere other data frames?
-Can you share your example?
->
->> In that case it will also introduce throughput degrade to HW that
->> supports HW checksum for Mesh.
-> This doesn't make any sense to me. Are you saying that there's no way
-> for the driver to detect the cases where the hardware cannot do checksum
-> offloading?
-I'm saying the case that HW supports checksum except for specific frame 
-such as Mesh and to make driver support both case dynamically at code 
-level, it requires extra codes which need to check if the frame is Mesh 
-or not. Since this approach requires extra workload especially in data 
-path, it will degrade driver's performance.
->   How is the user supposed to know when to change that module
-> parameter? Trial and error?
->
-> - Felix
+> Hello - I recently got a LG AN-WF500 wireless dongle for LG's SmartTVs.
+> From the information I gathered it uses a Broadcom chipset BCM43242.
+> The device should have been supported by brcmfmac kernel driver if it used
+> USB IDs 0a5c:bd1f.
+> My device however identifies itself as "ID 043e:3101 LG Electronics USA, Inc.".
+> I then tried adding the USB ID to the driver with
+> "echo "043e 3101" > /sys/bus/usb/drivers/brcmfmac/new_id" and it just works.
+> The kernel provides the following information.
+> [15958.851291] usb 3-1.1.3: new high-speed USB device number 53 using ehci-pci
+> [15958.946723] usb 3-1.1.3: New USB device found, idVendor=043e, idProduct=3101
+> [15958.946728] usb 3-1.1.3: New USB device strings: Mfr=1, Product=4, SerialNumber=3
+> [15958.946731] usb 3-1.1.3: Product: Composite Wireless Adapter
+> [15958.946733] usb 3-1.1.3: Manufacturer: Broadcom
+> [15958.946735] usb 3-1.1.3: SerialNumber: 28458
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 1 +
+ drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 23eaf0f..66c26a9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1452,6 +1452,7 @@ static struct usb_device_id brcmf_usb_devid_table[] = {
+ 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
++	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
+ 	/* special entry for device with firmware loaded and running */
+ 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
+ 	{ /* end: all zeroes */ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 4092d27..699f2c2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -21,6 +21,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ 
+ #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
++#define BRCM_USB_VENDOR_ID_LG		0x043e
+ #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
+ 
+ /* Chipcommon Core Chip IDs */
+@@ -57,6 +58,7 @@
+ #define BRCM_USB_43143_DEVICE_ID	0xbd1e
+ #define BRCM_USB_43236_DEVICE_ID	0xbd17
+ #define BRCM_USB_43242_DEVICE_ID	0xbd1f
++#define BRCM_USB_43242_LG_DEVICE_ID	0x3101
+ #define BRCM_USB_43569_DEVICE_ID	0xbd27
+ #define BRCM_USB_BCMFW_DEVICE_ID	0x0bdc
+ 
+-- 
+1.9.1
 
