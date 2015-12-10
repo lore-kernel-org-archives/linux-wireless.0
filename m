@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50037 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52558 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491AbbLUX03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 18:26:29 -0500
-Date: Tue, 22 Dec 2015 00:26:19 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Shikha SINGH <shikha.singh@st.com>
-Cc: Manoj KUMAR <manoj.kumar@st.com>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-	Sylvain FIDELIS <sylvain.fidelis@st.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Patrick SOHN <patrick.sohn@st.com>,
-	MMS_MMY_Applications_SW <MMS_MMY_Applications_SW@list.st.com>
-Subject: Re: [linux-nfc] [ PATCH v5 2/3] driver: nfc: Add ST95HF NFC
- Transceiver support
-Message-ID: <20151221232619.GB15902@zurbaran.home> (sfid-20151222_002633_367683_E544EB9C)
-References: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
- <1448019621-14259-3-git-send-email-shikha.singh@st.com>
- <20151220175053.GA4772@zurbaran.home>
- <39576D76C6222946921EC3820C1BEC0C06FEFED225@EAPEX1MAIL1.st.com>
- <20151221224535.GA15902@zurbaran.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151221224535.GA15902@zurbaran.home>
+	id S1752324AbbLJJmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2015 04:42:20 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] rfkill: copy the name into the rfkill struct
+Date: Thu, 10 Dec 2015 10:42:12 +0100
+Message-Id: <1449740532-4292-1-git-send-email-johannes@sipsolutions.net> (sfid-20151210_104224_388217_0123EA52)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 11:45:35PM +0100, Samuel Ortiz wrote:
-> Hi Shikha,
-> 
-> On Mon, Dec 21, 2015 at 07:57:23PM +0800, Shikha SINGH wrote:
-> > Hello Samuel,
-> > 	Please see my answer below.
-> > 	
-> > >This looks a lot better than the initial version.
-> > >I only have one question:
-> > >
-> > >On Fri, Nov 20, 2015 at 06:40:20AM -0500, Shikha Singh wrote:
-> > >> +/*
-> > >> + * st95hf_send_recv_cmd() is for sending commands to ST95HF
-> > >> + * that are described in the cmd_array[]. It can optionally
-> > >> + * receive the response if the cmd request is of type
-> > >> + * SYNC. For that to happen caller must pass true to recv_res.
-> > >> + * For ASYNC request, recv_res is ignored and the
-> > >> + * function will never try to receive the response on behalf
-> > >> + * of the caller.
-> > >> + */
-> > >> +static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
-> > >> +				enum st95hf_cmd_list cmd,
-> > >> +				int no_modif,
-> > >> +				struct param_list *list_array,
-> > >> +				bool recv_res)
-> > >> +{
-> > >> +	unsigned char spi_cmd_buffer[MAX_CMD_LEN];
-> > >> +	int i, ret;
-> > >> +	struct device *dev = &st95context->spicontext.spidev->dev;
-> > >How do you know this driver is still valid at that point ?
-> > >It seems to be a potential corner case against the driver's remove function, but
-> > >it seems to be a race nevertheless.
-> > 
-> > st95hf_send_recv_cmd() is a static function that can be called only when a NFC digital request is submitted to our driver.
-> > So in summary, it can be called either from an implemented NFC digital ops (such as st95hf_switch_rf()) or from the driver's threaded ISR.
-> > Now if we see the remove function of the driver i.e. st95hf_remove(), it waits for all the outstanding NFC digital request to finish via nfc_digital_unregister_device(stcontext->ddev).
-> >
-> Yes, that was my main concern but I forgot
-> nfc_digital_unregister_device() waits for its command workqueue to be
-> emptied before returning. So we're safe.
-> 
-> All 3 patches applied to nfc-next, thanks.
-Just a side note: I removed the 2 calls you had in your driver to BUG()
-and replaced them with WARN() calls.
-BUG() is really meant for unrecoverable system errors as it crashes the
-machine. I don't think an NFC driver should call it.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Cheers,
-Samuel.
+Some users of rfkill, like NFC and cfg80211, use a dynamic name when
+allocating rfkill, in those cases dev_name(). Therefore, the pointer
+passed to rfkill_alloc() might not be valid forever, I specifically
+found the case that the rfkill name was quite obviously an invalid
+pointer (or at least garbage) when the wiphy had been renamed.
+
+Fix this by making a copy of the rfkill name in rfkill_alloc().
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/rfkill/core.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index b41e9ea2ffff..f53bf3b6558b 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -49,7 +49,6 @@
+ struct rfkill {
+ 	spinlock_t		lock;
+ 
+-	const char		*name;
+ 	enum rfkill_type	type;
+ 
+ 	unsigned long		state;
+@@ -73,6 +72,7 @@ struct rfkill {
+ 	struct delayed_work	poll_work;
+ 	struct work_struct	uevent_work;
+ 	struct work_struct	sync_work;
++	char			name[];
+ };
+ #define to_rfkill(d)	container_of(d, struct rfkill, dev)
+ 
+@@ -876,14 +876,14 @@ struct rfkill * __must_check rfkill_alloc(const char *name,
+ 	if (WARN_ON(type == RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES))
+ 		return NULL;
+ 
+-	rfkill = kzalloc(sizeof(*rfkill), GFP_KERNEL);
++	rfkill = kzalloc(sizeof(*rfkill) + strlen(name) + 1, GFP_KERNEL);
+ 	if (!rfkill)
+ 		return NULL;
+ 
+ 	spin_lock_init(&rfkill->lock);
+ 	INIT_LIST_HEAD(&rfkill->node);
+ 	rfkill->type = type;
+-	rfkill->name = name;
++	strcpy(rfkill->name, name);
+ 	rfkill->ops = ops;
+ 	rfkill->data = ops_data;
+ 
+-- 
+2.6.2
+
