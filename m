@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37461 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756702AbbLHO5D (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:35751 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889AbbLKXR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:57:03 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Steve deRosier <derosier@gmail.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: Re: [PATCH] ath6kl: Don't print error message when recv is canceled
-References: <1447887088-19018-1-git-send-email-steve.derosier@lairdtech.com>
-Date: Tue, 08 Dec 2015 16:56:56 +0200
-In-Reply-To: <1447887088-19018-1-git-send-email-steve.derosier@lairdtech.com>
-	(Steve deRosier's message of "Wed, 18 Nov 2015 14:51:28 -0800")
-Message-ID: <87k2op9efb.fsf@kamboji.qca.qualcomm.com> (sfid-20151208_155725_213913_294D3305)
+	Fri, 11 Dec 2015 18:17:57 -0500
+Received: by qkfb125 with SMTP id b125so61930426qkf.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 15:17:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
+References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 11 Dec 2015 15:17:37 -0800
+Message-ID: <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com> (sfid-20151212_001801_158339_DCC9E024)
+Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Steve deRosier <derosier@gmail.com> writes:
+On Fri, Dec 11, 2015 at 10:59 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> I could bisect *if this issue
+> is not known*, but it may take a while...
 
-> An error message ath6kl_htc_rxmsg_pending_handler isn't appropate for when
-> the error is ECANCELED. This could be the result of a perfectly appropriate
-> RX cancel due to shutdown or suspend. This allows the right cleanup to
-> continue, but without an alarming error message in this particular case.
->
-> Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+So this is interesting..
 
-Applied, thanks.
+The opensuse 4.2.4 kernel worked, but I tried my own vanilla 4.2.4
+kernel and that didn't work. This lead me to believe this might be a
+config issue. I tried the same config on v4.3, v4.2 and v4.2.4 and all
+fail with the same issue!
 
--- 
-Kalle Valo
+I just tried a base config from opensuse, then localmodconfig, then
+'make xenconfig' (which I need) and that worked. I can't debug further
+but I think this config might help debug this further:
+
+http://drvbp1.linux-foundation.org/~mcgrof/tmp/config-iwl-fail.txt
+
+So -- my new config works, but I have no idea what fixed it, a config
+option obviously. Not sure what though.
+
+ Luis
