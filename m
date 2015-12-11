@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plainfield.sei.cmu.edu ([192.58.107.45]:41752 "EHLO
-	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbbLPW5D (ORCPT
+Received: from exchange.luceor.com ([178.33.245.144]:33950 "EHLO
+	exchange.luceor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbLKJJg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 17:57:03 -0500
-From: "Adam R. Welle" <arwelle@cert.org>
-To: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: RE: question on "mac80211_hwsim: support any address in userspace"
-Date: Wed, 16 Dec 2015 22:56:55 +0000
-Message-ID: <2DE9F46DD36D2A458CD6347950113F2535CA6D@marathon> (sfid-20151216_235707_939386_590387D6)
-References: <5670DA9A.4010102@candelatech.com>
-			 (sfid-20151216_042934_976896_DCE1A2B3)
- <1450257464.3159.1.camel@sipsolutions.net>
-		 <56716386.4070107@candelatech.com>
-	 <1450272308.8247.11.camel@sipsolutions.net>
-	 <567168AF.4060804@candelatech.com>
- <1450273362.8247.15.camel@sipsolutions.net>
- <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
- <5671E23A.1070502@candelatech.com>
-In-Reply-To: <5671E23A.1070502@candelatech.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 11 Dec 2015 04:09:36 -0500
+From: Simon Malthieu <simon.malthieu@luceor.com>
+Subject: ath10k and mac80211 number of chains meaning
+To: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Message-ID: <566A9186.6020807@luceor.com> (sfid-20151211_100956_362408_F5365C1F)
+Date: Fri, 11 Dec 2015 10:04:06 +0100
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+IENvdWxkIHNvbWVib2R5IHByb3ZpZGUgYmFja2dyb3VuZCBpbmZvcm1hdGlvbiBvbiB3aHkg
-dGhlIGRlY2lzaW9uIHdhcw0KPiA+IG1hZGUgdG8gdXNlIGEgc2Vjb25kIGFkZHJlc3MgZm9yIHRo
-ZSBuZXRsaW5rIGZyYW1lcyBpbnN0ZWFkIG9mIHRoZQ0KPiA+IHNhbWUgYWRkcmVzcyBhcyB3YXMg
-dXNlZCBmb3IgdGhlIG5vbi1uZXRsaW5rIGZyYW1lcz8NCj4gDQo+IEkgd291bGQgYmUgZmluZSB3
-aXRoIGFsd2F5cyB1c2luZyB0aGUgZmlyc3QgYWRkcmVzcyBpbnN0ZWFkIG9mIHRoZQ0KPiBzZWNv
-bmQsIGluIGNhc2UgdGhhdCBoZWxwcyBzb21lb25lLg0KPiANCj4gV2UgY291bGQgYWxzbyBzZXQg
-dGhlIGFkZHJlc3MgYXQgY3JlYXRpb24gdGltZSBlYXNpbHkgZW5vdWdoLiAgVGhlbiBpdA0KPiBj
-b3VsZCBzdGlsbCBiZSB1bmlxdWUgYWNyb3NzIG1hbnkgbWFjaGluZXMgaWYgeW91IG1hbmFnZWQg
-aXQuDQoNCkkgYWN0dWFsbHkgYXBwbHkgYSBwYXRjaCBmb3IgdGhhdC4gSSBoYXZlIGFkZGVkIGEg
-bW9kdWxlIHBhcmFtZXRlciB3aGljaA0KaXMgdXNlZCBhcyB0aGUgTUFDIGFkZHJlc3MgZm9yIHRo
-ZSBmaXJzdCByYWRpbywgYW5kIEkgaW5jcmVtZW50IHRoZSBmaW5hbA0Kb2N0ZXQgZm9yIGVhY2gg
-YWRkaXRpb25hbCByYWRpby4gVGhpcyBpcyBzbyB0aGF0IG15IHVzZXJzIGRvIG5vdCBoYXZlDQp0
-byBtYW51YWxseSByZXNldCB0aGUgTUFDIGFkZHJlc3MgdG8gZ2V0IGEgdW5pcXVlIG9uZS4gSSBh
-cHBseSB0aGUgYWRkcmVzcw0KdG8gYm90aCBhZGRyZXNzZXMgbWVudGlvbmVkIGFib3ZlIHRob3Vn
-aCBJIG9ubHkgdXNlIHRoZSBuZXRsaW5rIGRhdGFwYXRoLg0KDQpJZiB0aGVyZSBpcyBpbnRlcmVz
-dCBpbiB0aGlzIEkgY2FuIHN1Ym1pdCBpdCBhcyBhbiBSRkMgcGF0Y2ggdG9tb3Jyb3cuDQoNCkFk
-YW0NCg0KDQotLQ0KQWRhbSBXZWxsZSA8YXJ3ZWxsZUBjZXJ0Lm9yZz4NCg0KDQoNCg0K
+Hi,
+
+I would like to know the exact meaning of "chains" member of struct 
+sta_info. mac80211 sta_info.h states :
+
+"@chains: chains ever used for RX from this station"
+
+In ath9k, it is incremented when testing each value of the chain_signal 
+array (code here is ath9k common.c) :
+
+if (rssi != ATH9K_RSSI_BAD) {
+             rxs->chains |= BIT(j);
+             rxs->chain_signal[j] = ah->noise + rssi;
+         }
+
+I did this in ath10k (htt-rx.c l.874) on the model of a patch published 
+on the mailing list :
+
+static void ath10k_htt_rx_h_signal(struct ath10k *ar,
+                    struct ieee80211_rx_status *status,
+                    struct htt_rx_desc *rxd)
+{
+     u8 signal_per_chain;
+     int i;
+     for (i = 0; i< IEEE80211_MAX_CHAINS; i++)
+     {
+         signal_per_chain = rxd->ppdu_start.rssi_chains[i].pri20_mhz;
+         if (signal_per_chain != ATH10K_RSSI_BAD) // = 0x80
+         {
+             status->chains |= BIT(i);
+             status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + 
+signal_per_chain;
+         }
+     }
+     /* FIXME: Get real NF */
+     status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
+              rxd->ppdu_start.rssi_comb;
+     status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
+}
+
+But when I configure the number of antennas (iw phy0 set antennas - iw 
+3.15) lower than the maximum of antennas, chains doesn't change, i.e. 
+there is still a correct value in chain_signal of the disabled antennas 
+(the value is not updated though).
+
+I don't understand how a signal value can be received from a STA if the 
+antennas configuration doesn't allow it.
+
+If it is not a bug, should i check rx_chain_mask in the driver to verify 
+the antennas configuration instead of chains ?
+
+Thanks for your help
+
+Simon
