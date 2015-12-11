@@ -1,154 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-54-93-35-231.eu-central-1.compute.amazonaws.com ([54.93.35.231]:49471
-	"EHLO localhost" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759923AbbLCLL2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 06:11:28 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by localhost (Postfix) with ESMTP id 7F87F10332A
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2015 11:01:50 +0000 (UTC)
-Received: from localhost ([127.0.0.1])
-	by localhost (open-hotspot.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id QLuErfubbUEi for <linux-wireless@vger.kernel.org>;
-	Thu,  3 Dec 2015 11:01:50 +0000 (UTC)
-Received: from [127.0.0.1] (dslb-084-061-032-033.084.061.pools.vodafone-ip.de [84.61.32.33])
-	by localhost (Postfix) with ESMTPA id A93AA103325
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2015 11:01:49 +0000 (UTC)
-To: linux-wireless@vger.kernel.org
-From: Reiner Karlsberg <karlsberg@softart-ge.com>
-Subject: iw ignores channel switch
-Message-ID: <5660210D.4090303@softart-ge.com> (sfid-20151203_121928_609938_D1109D00)
-Date: Thu, 3 Dec 2015 12:01:33 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:34122 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751624AbbLKQpX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 11:45:23 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>, j@w1.fi,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] regulatory: fix world regdomain
+Date: Fri, 11 Dec 2015 17:45:19 +0100
+Message-Id: <1449852319-27189-1-git-send-email-johannes@sipsolutions.net> (sfid-20151211_174526_698895_CB90B65E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am using openwrt on the following system:
-root@OpenWrt:/tmp# iw --version
-iw version 3.17
-ieee80211 phy0: Atheros AR9340 Rev:2 mem=0xb8100000, irq=47
+From: Johannes Berg <johannes.berg@intel.com>
 
-I want to switch between managed (station) mode and monitor mode.
+Back in 2012, in commit 6d87df6f9657 ("regdb: allow 40 MHz on world
+roaming channels 12/13") I evidently broke the world regulatory data
+to the point where it was always discarded by the kernel because the
+40 MHz bandwidth doesn't fit into the rule range.
 
-So I have the follwoing scenarion:
+Around the same time, I updated the in-kernel regulatory domain with
+the same mistake, but unlike the userspace data, the in-kernel data
+isn't actually checked for validity.
 
-root@OpenWrt:/tmp# iw dev
-phy#1
-         Interface wlan1
-                 ifindex 5
-                 wdev 0x100000001
-                 addr 00:90:a9:ab:f8:ed
-                 type managed
-phy#0
-         Interface wlan0
-                 ifindex 21                         #steadily increasing, not re-used ?
-                 wdev 0x10
-                 addr 00:90:a9:ab:f8:eb
-                 type managed
-root@OpenWrt:/tmp# ifconfig wlan0 up
-root@OpenWrt:/tmp# iw dev wlan0 connect SSID
-root@OpenWrt:/tmp# udhcpc -i wlan0 --quit
-udhcpc (v1.23.2) started
-Sending discover...
-Sending select for 192.168.20.144...
-Lease of 192.168.20.144 obtained, lease time 28800
-udhcpc: ifconfig wlan0 192.168.20.144 netmask 255.255.255.0 broadcast 192.168.20.255
-udhcpc: setting default routers: 192.168.20.1
-root@OpenWrt:/tmp# wget http://somewhere.com/something.html
-Connecting to somewhere.com (xx.xx.xx.xx:80)
-wget: server returned error: HTTP/1.1 500 Internal Server Error
-root@OpenWrt:/tmp# iw phy phy0 interface add wmon0 type monitor
-root@OpenWrt:/tmp# iw dev
-phy#1
-         Interface wlan1
-                 ifindex 5
-                 wdev 0x100000001
-                 addr 00:90:a9:ab:f8:ed
-                 type managed
-phy#0
-         Interface wmon0
-                 ifindex 22
-                 wdev 0x11
-                 addr 00:90:a9:ab:f8:eb
-                 type monitor
-         Interface wlan0
-                 ifindex 21
-                 wdev 0x10
-                 addr 00:90:a9:ab:f8:eb
-                 ssid SSID
-                 type managed
-                 channel 7 (2442 MHz), width: 40 MHz, center1: 2452 MHz
-root@OpenWrt:/tmp# ifconfig wmon0 up
-root@OpenWrt:/tmp# iw dev
-phy#1
-         Interface wlan1
-                 ifindex 5
-                 wdev 0x100000001
-                 addr 00:90:a9:ab:f8:ed
-                 type managed
-phy#0
-         Interface wmon0
-                 ifindex 22
-                 wdev 0x11
-                 addr 00:90:a9:ab:f8:eb
-                 type monitor
-         Interface wlan0
-                 ifindex 21
-                 wdev 0x10
-                 addr 00:90:a9:ab:f8:eb
-                 ssid SSID
-                 type managed
-                 channel 7 (2442 MHz), width: 40 MHz, center1: 2452 MHz
-root@OpenWrt:/tmp# iw dev wlan0 del
-root@OpenWrt:/tmp# iw dev
-phy#1
-         Interface wlan1
-                 ifindex 5
-                 wdev 0x100000001
-                 addr 00:90:a9:ab:f8:ed
-                 type managed
-phy#0
-         Interface wmon0
-                 ifindex 22
-                 wdev 0x11
-                 addr 00:90:a9:ab:f8:eb
-                 type monitor
-                 channel 7 (2442 MHz), width: 20 MHz (no HT), center1: 2442 MHz
-root@OpenWrt:/tmp# iw dev wmon0 set channel 1
-root@OpenWrt:/tmp# iw dev
-phy#1
-         Interface wlan1
-                 ifindex 5
-                 wdev 0x100000001
-                 addr 00:90:a9:ab:f8:ed
-                 type managed
-phy#0
-         Interface wmon0
-                 ifindex 22
-                 wdev 0x11
-                 addr 00:90:a9:ab:f8:eb
-                 type monitor
-                 channel 7 (2442 MHz), width: 20 MHz (no HT), center1: 2442 MHz
+The end result was that the (inconsequentially invalid) data in the
+kernel was always used because the userspace data was rejected.
 
-As to be seen, the modification of the channel does not generate an error, but is simply ignored.
-What did I do wrong ?
+Fix this by changing the rule to 20 MHz and adding the AUTO-BW flag.
+It seems that Janusz had made a similar change in commit 5cfc8073ce35
+("wireless-regdb: set AUTO bandwidth for world regulatory"), but it
+was reverted for unknown reasons a little less than half a year later
+(commit cfa3734b11b2).
 
+The kernel uses very similar invalid rules, but it never checks them
+for validity and just uses them, so HT40- ends up getting enabled on
+these channels. Thus, when the kernel requests the world regdomain
+from userspace, gets the invalid data and rejects it, it falls back
+to using the built-in data which is very similar and not validated.
 
-Second question: The "ifindex" is always increasing, during several tests,
-when unsuccessfully trying similar scenarios (different sequence of ifconfig ... up/down, iw dev ... del etc.)
-Will this "ifindex" "overflow" some time,
-even in case of repeated "iw phy phy0 interface add wmon0 type monitor" "iw dev wmon0 del" ?
-I would have expected some kind of "reuse".
+I've tested this now, and the ruleset is now accepted by the kernel
+and results in the correct data.
 
-Regards
+This also means that Jouni's 160 MHz fixes were inconsequentialy and
+only the corresponding kernel changes could have been used.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index a6eb033db25d..13cc7ada23d9 100644
+--- a/db.txt
++++ b/db.txt
+@@ -2,7 +2,7 @@
+ country 00:
+ 	(2402 - 2472 @ 40), (20)
+ 	# Channel 12 - 13.
+-	(2457 - 2482 @ 40), (20), NO-IR
++	(2457 - 2482 @ 20), (20), NO-IR, AUTO-BW
+ 	# Channel 14. Only JP enables this and for 802.11b only
+ 	(2474 - 2494 @ 20), (20), NO-IR, NO-OFDM
+ 	# Channel 36 - 48
 -- 
-Reiner Karlsberg
-
-
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 2014.0.4842 / Virus Database: 4447/10982 - Release Date: 11/11/15
-Internal Virus Database is out of date.
+2.6.2
 
