@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34068 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33503 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751624AbbLKQh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 11:37:28 -0500
+	id S1752763AbbLKO0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 09:26:35 -0500
+Message-ID: <1449843990.2324.11.camel@sipsolutions.net> (sfid-20151211_152654_723985_07574D4A)
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] regulatory: fix world regulatory domain data
-Date: Fri, 11 Dec 2015 17:37:24 +0100
-Message-Id: <1449851844-26797-1-git-send-email-johannes@sipsolutions.net> (sfid-20151211_173734_090523_E06A49FE)
+To: Dave Young <dyoung@redhat.com>
+Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@davemloft.net
+Date: Fri, 11 Dec 2015 15:26:30 +0100
+In-Reply-To: <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+	 <20151115192547.3fd1b3cc@mir> <1448020533.3141.27.camel@sipsolutions.net>
+	 <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2015-11-23 at 09:37 +0800, Dave Young wrote:
 
-The precise rule definition here isn't really valid, it would
-be rejected if it came from userspace due to the bandwidth it
-specifies being bigger than the rule's width.
+> Seems there're a lot of other wireless messages. Should we refactor 
+> them as well? I still did not get chance to see where is the code.
+> (My wireless driver being used is iwlwifi)
 
-This is fairly much inconsequential since the other rule before
-it does enable the bandwidth, but express that better by using
-the NL80211_RRF_AUTO_BW flag.
+Most are probably from net/mac80211/.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> # dmesg|grep "Limiting TX power"|wc
+>    4128   49600  360052
+> 
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d53ef141055b..ce8b78fc8525 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -222,8 +222,8 @@ static const struct ieee80211_regdomain world_regdom = {
- 		/* IEEE 802.11b/g, channels 1..11 */
- 		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
- 		/* IEEE 802.11b/g, channels 12..13. */
--		REG_RULE(2467-10, 2472+10, 40, 6, 20,
--			NL80211_RRF_NO_IR),
-+		REG_RULE(2467-10, 2472+10, 20, 6, 20,
-+			NL80211_RRF_NO_IR | NL80211_RRF_AUTO_BW),
- 		/* IEEE 802.11 channel 14 - Only JP enables
- 		 * this and for 802.11b only */
- 		REG_RULE(2484-10, 2484+10, 20, 6, 20,
--- 
-2.6.2
+I fixed this one recently, due to a bug it was printed all the time
+instead of just once when taking effect.
 
+johannes
