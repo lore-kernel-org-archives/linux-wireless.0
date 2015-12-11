@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35065 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36262 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753252AbbLOMdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 07:33:10 -0500
-Message-ID: <1450182788.3356.14.camel@sipsolutions.net> (sfid-20151215_133315_100806_76AC9274)
-Subject: Re: [PATCH] nl80211: Potential memory leaks in reg.c
+	id S1752335AbbLKXdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 18:33:05 -0500
+Message-ID: <1449876779.2324.16.camel@sipsolutions.net> (sfid-20151212_003309_055511_8A7F47EF)
+Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Tue, 15 Dec 2015 13:33:08 +0100
-In-Reply-To: <CABAco3CgkoCYdHZV6nBfV+CUpD379XR69EiznXvu42p5UC96gw@mail.gmail.com> (sfid-20151215_131934_996381_B65C896A)
-References: <1450030323-6637-1-git-send-email-ola1olsson@gmail.com>
-	 <1450181385.3356.6.camel@sipsolutions.net>
-	 <CABAco3CgkoCYdHZV6nBfV+CUpD379XR69EiznXvu42p5UC96gw@mail.gmail.com>
-	 (sfid-20151215_131934_996381_B65C896A)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 12 Dec 2015 00:32:59 +0100
+In-Reply-To: <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com> (sfid-20151212_001801_158339_DCC9E024)
+References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
+	 <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com>
+	 (sfid-20151212_001801_158339_DCC9E024)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-12-15 at 13:19 +0100, Ola Olsson wrote:
-> I'm trying to learn how the code works so I'm reading through it line
-> by line. I have seen so many memory leaks in my days so I know where
-> to look ;)
+On Fri, 2015-12-11 at 15:17 -0800, Luis R. Rodriguez wrote:
+> 
+> I just tried a base config from opensuse, then localmodconfig, then
+> 'make xenconfig' (which I need) and that worked. I can't debug
+> further but I think this config might help debug this further:
+> 
+> http://drvbp1.linux-foundation.org/~mcgrof/tmp/config-iwl-fail.txt
+> 
+> So -- my new config works, but I have no idea what fixed it, a config
+> option obviously. Not sure what though.
+> 
 
-Ok :)
-
-> They are indeed obscure since we need an error to actually trigger
-> them but I thought I might as well share the info when I found them.
-
-Of course, the patches are very welcome!
-
-I'm just surprised that none of the tools we (and others) typically run
-found these, and thought perhaps you had a better tool than we do...
-I guess it's called "brain" and we just don't use it right ;-)
+Can you post the good one too?
 
 johannes
