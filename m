@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:32943 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbbL3MQi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:38 -0500
-Received: by mail-pf0-f174.google.com with SMTP id q63so105583962pfb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:38 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 16/20] staging: wilc1000: remove return statement
-Date: Wed, 30 Dec 2015 21:15:40 +0900
-Message-Id: <1451477744-11975-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132246_920707_5359951A)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37689 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752163AbbLKWVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 17:21:22 -0500
+Subject: Re: [PATCH] iwlwifi: mvm: protect RCU dereference in
+ iwl_mvm_get_key_sta_id
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <566A0929.2090706@redhat.com>
+ <1449821632-8106-1-git-send-email-johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, avri.altman@intel.com,
+	emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+From: Laura Abbott <labbott@redhat.com>
+Message-ID: <566B4C5F.4050908@redhat.com> (sfid-20151211_232142_695902_D66C9DF2)
+Date: Fri, 11 Dec 2015 14:21:19 -0800
+MIME-Version: 1.0
+In-Reply-To: <1449821632-8106-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes return statement that is always returned 0.
-wilc_setup_ipaddress can not run to the end due to return statement.
+On 12/11/2015 12:13 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Properly protect the RCU dereference in iwl_mvm_get_key_sta_id() when
+> coming from iwl_mvm_update_tkip_key() which cannot hold the mvm->mutex
+> by moving the call into the RCU critical section.
+> Modify the check to use rcu_dereference_check() to permit this.
+>
+> Fixes: 9513c5e18a0d ("iwlwifi: mvm: Avoid dereferencing sta if it was already flushed")
+> Reported-by: Laura Abbott <labbott@redhat.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 --
- 1 file changed, 2 deletions(-)
+Thanks, it's working for me.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0d41657..90fdbdd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4644,8 +4644,6 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
--	return 0;
--
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
- 		return -EFAULT;
--- 
-2.6.4
+Tested-by: Laura Abbott <labbott@redhat.com>
+
+
 
