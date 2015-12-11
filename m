@@ -1,92 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48199 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751395AbbLKJXL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 04:23:11 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: parse hscfg_gpio info from device tree
-Date: Fri, 11 Dec 2015 09:23:06 +0000
-Message-ID: <f65e448bfd344867afbf6c002cdfc2bf@SC-EXCH04.marvell.com> (sfid-20151211_102319_049011_921E333A)
-References: <1448618297-19803-1-git-send-email-akarwar@marvell.com>
- <87vb855qpe.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vb855qpe.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:59281 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753215AbbLKIOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 03:14:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Laura Abbott <labbott@redhat.com>, netdev@vger.kernel.org,
+	avri.altman@intel.com, emmanuel.grumbach@intel.com,
+	linuxwifi@intel.com, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlwifi: mvm: protect RCU dereference in iwl_mvm_get_key_sta_id
+Date: Fri, 11 Dec 2015 09:13:52 +0100
+Message-Id: <1449821632-8106-1-git-send-email-johannes@sipsolutions.net> (sfid-20151211_091500_621324_D8D59214)
+In-Reply-To: <566A0929.2090706@redhat.com>
+References: <566A0929.2090706@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Friday, December 11, 2015 2:04 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam; Xinming Hu;
-> devicetree@vger.kernel.org
-> Subject: Re: [PATCH] mwifiex: parse hscfg_gpio info from device tree
-> 
-> + devicetree list
-> 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
-> 
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > This patch reads hscfg_gpio from device tree and update internal
-> > variable
-> >
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> >  drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 11 +++++++++++
-> >  1 file changed, 11 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> > b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> > index e486867..d28a53f 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> > @@ -1459,10 +1459,21 @@ int mwifiex_dnld_dt_cfgdata(struct
-> > mwifiex_private *priv,  #ifdef CONFIG_OF
-> >  	struct property *prop;
-> >  	size_t len = strlen(prefix);
-> > +	u32 data;
-> >  	int ret;
-> >
-> >  	/* look for all matching property names */
-> >  	for_each_property_of_node(node, prop) {
-> > +		if (!strncmp(prop->name, "marvell,hscfg_gpio",
-> > +			     strlen("marvell,hscfg_gpio"))) {
-> > +			if (!of_property_read_u32(priv->adapter->dt_node,
-> > +						  prop->name, &data)) {
-> > +				dev_dbg(priv->adapter->dev,
-> > +					"hscfg gpio = 0x%x\n", data);
-> > +				priv->adapter->hs_cfg.gpio = data;
-> > +			}
-> > +		}
-> 
-> I don't see this documented in Documentation/devicetree/bindings. Please
-> create a binding document and review it with the device tree
-> maintainers.
-> 
-> Actually when looking mwifiex close I see that it uses more undocumented
-> device tree interfaces:
-> 
-> marvell_cfgdata
-> marvell,caldata
-> marvell,00_txpwrlimit
-> 
-> I think these all should be properly documented and reviewed. But I'll
-> let the device tree people chime in what's the best way.
-> 
+Properly protect the RCU dereference in iwl_mvm_get_key_sta_id() when
+coming from iwl_mvm_update_tkip_key() which cannot hold the mvm->mutex
+by moving the call into the RCU critical section.
+Modify the check to use rcu_dereference_check() to permit this.
 
-Thanks for the review.
-Sure. We will document existing DT interfaces and create updated version of this patch which includes documentation in bindings.
+Fixes: 9513c5e18a0d ("iwlwifi: mvm: Avoid dereferencing sta if it was already flushed")
+Reported-by: Laura Abbott <labbott@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-Regards,
-Amit
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 354acbde088e..2b976b110207 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1222,8 +1222,8 @@ static u8 iwl_mvm_get_key_sta_id(struct iwl_mvm *mvm,
+ 	    mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
+ 		u8 sta_id = mvmvif->ap_sta_id;
+ 
+-		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
+-						lockdep_is_held(&mvm->mutex));
++		sta = rcu_dereference_check(mvm->fw_id_to_mac_id[sta_id],
++					    lockdep_is_held(&mvm->mutex));
+ 		/*
+ 		 * It is possible that the 'sta' parameter is NULL,
+ 		 * for example when a GTK is removed - the sta_id will then
+@@ -1590,14 +1590,15 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
+ 			     u16 *phase1key)
+ {
+ 	struct iwl_mvm_sta *mvm_sta;
+-	u8 sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
++	u8 sta_id;
+ 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
+ 
+-	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
+-		return;
+-
+ 	rcu_read_lock();
+ 
++	sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
++	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
++		goto unlock;
++
+ 	if (!sta) {
+ 		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
+ 		if (WARN_ON(IS_ERR_OR_NULL(sta))) {
+@@ -1609,6 +1610,8 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
+ 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
+ 	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
+ 			     iv32, phase1key, CMD_ASYNC, keyconf->hw_key_idx);
++
++ unlock:
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+2.6.2
+
