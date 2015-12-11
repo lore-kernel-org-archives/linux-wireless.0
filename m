@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39828 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbbLHXtg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 18:49:36 -0500
-From: Colin King <colin.king@canonical.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] ath9k: fix inconsistent indenting on return statement
-Date: Tue,  8 Dec 2015 23:49:31 +0000
-Message-Id: <1449618571-4087-1-git-send-email-colin.king@canonical.com> (sfid-20151209_004957_993307_50894B3A)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33312 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752880AbbLKNtH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2015 08:49:07 -0500
+Message-ID: <1449841741.2324.2.camel@sipsolutions.net> (sfid-20151211_144932_338094_66BA094A)
+Subject: Re: [linux-next] iwl_mvm_get_key_sta_id() suspicious RCU usage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 11 Dec 2015 14:49:01 +0100
+In-Reply-To: <20151211134418.GA29351@swordfish> (sfid-20151211_144614_821713_0C346E06)
+References: <20151211134418.GA29351@swordfish>
+	 (sfid-20151211_144614_821713_0C346E06)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Fri, 2015-12-11 at 22:44 +0900, Sergey Senozhatsky wrote:
 
-minor change, indenting is one tab out.
+> [ 6385.246300] drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1226
+> suspicious rcu_dereference_protected() usage!
+> 
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Funny, Laura Abbott also reported this bug earlier today :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3e3dac3..f796d90 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2894,7 +2894,7 @@ int ath9k_tx99_send(struct ath_softc *sc, struct sk_buff *skb,
- 		if (skb_headroom(skb) < padsize) {
- 			ath_dbg(common, XMIT,
- 				"tx99 padding failed\n");
--		return -EINVAL;
-+			return -EINVAL;
- 		}
- 
- 		skb_push(skb, padsize);
--- 
-2.6.2
+I've sent out a fix, you can see it here:
+https://patchwork.ozlabs.org/patch/555587/
 
+johannes
