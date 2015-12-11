@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36862 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170AbbL2EZR (ORCPT
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:33393 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbbLKNhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2015 23:25:17 -0500
-Received: by mail-pf0-f175.google.com with SMTP id 65so77151406pff.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 20:25:17 -0800 (PST)
-Date: Mon, 28 Dec 2015 20:25:10 -0800
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>, fengwei.yin@linaro.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	wcn36xx@lists.infradead.org
-Subject: Re: [PATCH 2/4] wcn36xx: Change indication list lock to spinlock
-Message-ID: <20151229042510.GI16437@tuxbot> (sfid-20151229_052544_607177_389E903D)
-References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
- <1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com>
- <20151228150635.79181f6e@xeon-e3>
+	Fri, 11 Dec 2015 08:37:42 -0500
+Received: by qgef78 with SMTP id f78so7129014qge.0
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 05:37:42 -0800 (PST)
+Date: Fri, 11 Dec 2015 08:37:30 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: "fengwei.yin" <fengwei.yin@linaro.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com,
+	lking@qti.qualcomm.com
+Subject: Re: [PATCH] wcn36xx: handle rx skb allocation failure to avoid
+ system crash
+Message-ID: <20151211133730.GA8835@localhost> (sfid-20151211_143748_152898_F1DFE668)
+References: <1449034051-12536-1-git-send-email-fengwei.yin@linaro.org>
+ <566ACC1C.1070304@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151228150635.79181f6e@xeon-e3>
+In-Reply-To: <566ACC1C.1070304@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 28 Dec 15:06 PST 2015, Stephen Hemminger wrote:
-
-> On Sun, 27 Dec 2015 17:34:25 -0800
-> Bjorn Andersson <bjorn@kryo.se> wrote:
+On Fri, Dec 11, 2015 at 09:14:04PM +0800, fengwei.yin wrote:
 > 
-> > In preparation for handling incoming messages from IRQ context, change
-> > the indication list lock to a spinlock
-> > 
-> > Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-> > ---
-> >  drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
-> >  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
-> >  2 files changed, 7 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> > index 6b5dbe6f0d0a..4307429740a9 100644
-> > --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> > +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> > @@ -2165,10 +2165,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
-> >  		msg_ind->msg_len = len;
-> >  		memcpy(msg_ind->msg, buf, len);
-> >  
-> > -		mutex_lock(&wcn->hal_ind_mutex);
-> > +		spin_lock(&wcn->hal_ind_lock);
-> 
-> If you are going to handle messages in IRQ context, that better be a
-> spin_lock_irq() or spin_lock_bh().
+> On 2015/12/2 13:27, Fengwei Yin wrote:
+> >Lawrence reported that git clone could make system crash on a
+> >Qualcomm ARM soc based device (DragonBoard, 1G memory without
+> >swap) running 64bit Debian.
+> >
+> >It's turned out the crash is related with rx skb allocation
+> >failure. git could consume more than 600MB anonymous memory.
+> >And system is in extremely memory shortage case.
+> >
+> >But driver didn't handle the rx allocation failure case. This patch
+> >doesn't submit skb to upper layer if rx skb allocation fails.
+> >Instead, it reuse the old skb for rx DMA again. It's more like
+> >drop the packets if system is in memory shortage case.
+> >
+> >With this change, git clone is OOMed instead of system crash.
+> >
+> >Reported-by: King, Lawrence <lking@qti.qualcomm.com>
+> >Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
 
-This function is executed in IRQ context after the next patch, as such I
-use spin_lock() here and spin_lock_irqsave() in the worker thread
-(wcn36xx_ind_smd_work()).
+Concept makes sense to me, but:
 
-Is this not how the spin_lock API should be used?
+> >  		dma_addr = dxe->dst_addr_l;
+> >-		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+> >+		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+> >+		if (0 == ret) {
 
-Regards,
-Bjorn
+I find this "success handling" to be unclear and traditionally this
+kind of thing is a source of bugs; how about instead:
+
+> >+			/* new skb allocation ok. Use the new one and queue
+> >+			 * the old one to network system.
+> >+			 */
+> >+			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+> >+					DMA_FROM_DEVICE);
+> >+			wcn36xx_rx_skb(wcn, skb);
+> >+		}
+
+           ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+
+           /* skip this frame if we can't alloc a new rx buffer */
+           if (ret)
+                  goto drop;
+
+> >  		switch (ch->ch_type) {
+> >  		case WCN36XX_DXE_CH_RX_L:
+> >@@ -495,9 +504,6 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+> >  			wcn36xx_warn("Unknown channel\n");
+> >  		}
+> >
+> >-		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+> >-				 DMA_FROM_DEVICE);
+> >-		wcn36xx_rx_skb(wcn, skb);
+
+drop:
+
+> >  		ctl = ctl->next;
+> >  		dxe = ctl->desc;
+> >  	}
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
