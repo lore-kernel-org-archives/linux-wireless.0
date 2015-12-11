@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38421 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752405AbbLNMRL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40731 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbbLKLQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:11 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGRwT027094
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:10 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng01h-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:10 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 03/14] mwifiex: advertise SMS4 cipher suite
-Date: Mon, 14 Dec 2015 04:15:04 -0800
-Message-ID: <1450095315-19927-4-git-send-email-akarwar@marvell.com> (sfid-20151214_131717_385817_0725ABDD)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+	Fri, 11 Dec 2015 06:16:17 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: iwlegacy: cleanup end of il_send_add_sta()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20151204131645.GC12792@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20151211111616.B1A60141A6F@smtp.codeaurora.org> (sfid-20151211_121621_651567_178D8D68)
+Date: Fri, 11 Dec 2015 11:16:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhaoyang Liu <liuzy@marvell.com>
 
-This is needed to support WAPI functionality.
+> This code causes a static checker warning because we check for
+> "if (ret == 0)" but we have already had verified that was true.  Clean
+> it up a little.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
- 1 file changed, 1 insertion(+)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ab0ba6a..3349c2a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1539,6 +1539,7 @@ static const u32 mwifiex_cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_WEP104,
- 	WLAN_CIPHER_SUITE_TKIP,
- 	WLAN_CIPHER_SUITE_CCMP,
-+	WLAN_CIPHER_SUITE_SMS4,
- 	WLAN_CIPHER_SUITE_AES_CMAC,
- };
- 
--- 
-1.8.1.4
-
+Kalle Valo
