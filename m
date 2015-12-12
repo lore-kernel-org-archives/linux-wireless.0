@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35913 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbbLJM2R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 07:28:17 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?M=C3=A1rio?= Lopes <mjlopes@inesctec.pt>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Cannot unsubscribe
-References: <20151210123557.3235214h30pff6vx@webmail.inescporto.pt>
-Date: Thu, 10 Dec 2015 14:28:11 +0200
-In-Reply-To: <20151210123557.3235214h30pff6vx@webmail.inescporto.pt>
- (=?utf-8?Q?=22M=C3=A1rio?=
-	Lopes"'s message of "Thu, 10 Dec 2015 12:35:57 +0100")
-Message-ID: <874mfq8p44.fsf@kamboji.qca.qualcomm.com> (sfid-20151210_132820_663089_464CBD20)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42065 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751297AbbLLSA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Dec 2015 13:00:56 -0500
+Message-ID: <1449943252.2259.4.camel@sipsolutions.net> (sfid-20151212_190127_715722_E649F937)
+Subject: Re: [PATCH] ocb: remove unnecessary variable increments
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Date: Sat, 12 Dec 2015 19:00:52 +0100
+In-Reply-To: <1449942620-29997-1-git-send-email-ola1olsson@gmail.com> (sfid-20151212_185034_980536_950AE3D4)
+References: <1449942620-29997-1-git-send-email-ola1olsson@gmail.com>
+	 (sfid-20151212_185034_980536_950AE3D4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mário Lopes <mjlopes@inesctec.pt> writes:
+On Sat, 2015-12-12 at 18:50 +0100, Ola Olsson wrote:
+> The arg[c|v] variables are incremented even if
+> they are not used afterwards. Fix that.
 
-> Our institution DNS as changed due to legal requirments, but old is
-> kept active with redirection to new one. So, when I send a e-mail, it
-> is sent with new DNS. Also I'm receiving e-mails that are sent to
-> older (probably as with this one from mailling list) due to
-> redirection. Basically I'm receiving messages from mailing list and
-> when I do unsubscribe, I receive e-mail like " [...] is not a member
-> of list 'linux-wireless'". I've also contacted
-> linux-wireless-approval@... about this issue as told on that response,
-> but no reply so far. So, how can I unsubscribe?
+Good find, thanks, but I think I'd rather leave the code as is - the
+compiler ought to discard the useless code anyway, but somebody editing
+it later might have it easier if it's already done.
 
-For the unsubcribe mail just change the From address to use your old
-address, that should be easy to. And based on [1] make sure that Sender
-and Reply-To headers also match.
-
-[1] http://vger.kernel.org/majordomo-info.html
-
--- 
-Kalle Valo
+johannes
