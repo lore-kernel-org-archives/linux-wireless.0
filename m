@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54095 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754382AbbLQJlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 04:41:16 -0500
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-Cc: johannes@sipsolutions.net
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <567282C9.501@openwrt.org> (sfid-20151217_104221_847479_2D0F90E4)
-Date: Thu, 17 Dec 2015 10:39:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38603 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752919AbbLLWRY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Dec 2015 17:17:24 -0500
+Received: by wmpp66 with SMTP id p66so16419456wmp.1
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2015 14:17:23 -0800 (PST)
+From: Ola Olsson <ola1olsson@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Subject: [PATCH] nl80211: Fix potential memory leak in nl80211_set_wowlan
+Date: Sat, 12 Dec 2015 23:17:17 +0100
+Message-Id: <1449958637-2766-1-git-send-email-ola1olsson@gmail.com> (sfid-20151212_231733_718653_E3BE5FF2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-12-17 10:20, Janusz Dziedzic wrote:
-> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
-> aligned skbs to four-byte boundaries.
-> 
-> Before we have to do memmove() in the driver before
-> pass this to HW and memmove() back in tx completion.
-> This patch allow to save CPU and skip such memmoves.
-> For each skb we called memmove(ieee80211_hdrsize()) twice.
-> 
-> Currently this was tested with ath9k, both hw/sw crypt for
-> tkip/ccmp.
-> For sure more tests required.
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Nice. By the way, this alignment requirement is not ath9k specific -
-mt76 (currently out-of-tree), mt7601u and rt2x00 can use this as well.
+Compared to cfg80211_rdev_free_wowlan in core.h,
+the error goto label lacks the freeing of nd_config.
+Fix that.
 
-- Felix
+Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+---
+ net/wireless/nl80211.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4b5ff71..75b0d23 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9505,6 +9505,7 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 	if (new_triggers.tcp && new_triggers.tcp->sock)
+ 		sock_release(new_triggers.tcp->sock);
+ 	kfree(new_triggers.tcp);
++	kfree(new_triggers.nd_config);
+ 	return err;
+ }
+ #endif
+-- 
+1.7.9.5
+
