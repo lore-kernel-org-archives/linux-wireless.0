@@ -1,44 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11658 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbbLUFSK (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:32966 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374AbbLLUyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:18:10 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 31/46] staging: wilc1000: remove unneeded extern variable
-Date: Mon, 21 Dec 2015 14:18:35 +0900
-Message-ID: <1450675130-17866-32-git-send-email-glen.lee@atmel.com> (sfid-20151221_063101_517726_1047ADFD)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Sat, 12 Dec 2015 15:54:53 -0500
+Received: by lfap203 with SMTP id p203so30846798lfa.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2015 12:54:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151211200205.GV25635@ted.stsp.name>
+References: <20151203220522.GB11138@jessup.stsp.name>
+	<CANUX_P2qxe+BqLPPWOs5uWiBY5nO4e8C1A7gkkYnvrTG270YFQ@mail.gmail.com>
+	<CANUX_P0P5A6q1yQwrgagO5rVpE=6Zk0Fq2gNA-WVhkc7Ov2NdQ@mail.gmail.com>
+	<CANUX_P19Aq_PKyUscg8jBkH=XJim1aut9kTmNUrVMeRt-upNyw@mail.gmail.com>
+	<20151211200205.GV25635@ted.stsp.name>
+Date: Sat, 12 Dec 2015 22:54:51 +0200
+Message-ID: <CANUX_P0d9iGRaA9Re-o12ecpz9i5p5Z5ir4h=o3VoEy=oL+7xg@mail.gmail.com> (sfid-20151212_215532_239857_A262E096)
+Subject: Re: iwlwifi A-MSDU tx
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stefan Sperling <stsp@openbsd.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnedded extern variable WILC_WFI_devs[] which is not used.
+On Fri, Dec 11, 2015 at 10:02 PM, Stefan Sperling <stsp@openbsd.org> wrote:
+> Hi Emmanuel,
+>
+> Thanks a bunch, this worked out quite well for me.
+> I got what I was aiming for out of this already but I still have some
+> additional questions if you don't mind.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- 1 file changed, 1 deletion(-)
+Happy to hear that.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 68a159f..b9961f0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -227,7 +227,6 @@ struct WILC_WFI_mon_priv {
- 
- int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
- 
--extern struct net_device *WILC_WFI_devs[];
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
- void wilc_rx_complete(struct wilc *wilc);
--- 
-1.9.1
+>
+> Do you know of a good way to generate A-MSDUs?
+> One way I found is to run:
+>   top -d .01
+> on the AP and watching this top over SSH from my associated OpenBSD client.
 
+iperf? :)
+
+You can also load iwlwifi with 11n_disable=2. This will prevent A-MPDU
+if you don't want to have A-MSDU in A-MPDU at that stage.
+
+>
+> It seems only locally generated packets will trigger A-MSDUs.
+> I suppose forwarded frames always fit the interface MTU and don't
+> trigger A-MSDUs. Is there a way to test this with forwarded traffic?
+
+Hmm. Good question. A-MSDUs are created each time we get a large send
+from the network stack. I think that this relies on the socket
+occupancy which means that you are right. I don't think we can test
+this with forwarded traffic for now.
+
+>
+> One issue I discovered is that OpenBSD (with my partly uncommitted 11n
+> patch set) cannot decrypt encrypted A-MSDUs sent by iwlwifi.
+> Frames carrying normal MSDUs have a CCMP header and are decrypted correctly.
+> But frames carrying A-MSDUs have a wep/tkip header (wireshark shows
+> "WEP parameters" instead of CCMP parameters") and decryption fails on
+> OpenBSD in ieee80211_ccmp_decrypt() because the ExtIV bit is not set.
+> It doesn't look like the source of this problem is at OpenBSD's end since
+> CCMP is required for HT. So in case the firmware doesn't produce CCMP for
+> A-MSDUs, this would be a problem in the firmware. Can you confirm this?
+> I also tried running iwlwifi in software crypto mode but the AP would
+> not send A-MSDUs at all in that case.
+
+SW crypto won't work for A-MSDU since it'll refuse LSO which in turn
+disables A-MSDU.
+I don't really touch the wifi header, I just duplicate it if needed,
+so I don't see off the top of my head where the problem could be.
+Thanks for reporting it.
+
+>
+> On the receiving OpenBSD side I'm currently limited to 4k A-MSDU and it
+> turns out the AP won't send more than 2 subframes per A-MSDU in this case.
+
+with default MTU, you won't get more than that.
+
+> To test with more than 2 subframes I applied the following crude patch which
+> makes the AP send more subframes but crashes the firmware after the frame
+> is sent. The driver recovers fine and traffic keeps flowing but that's
+> not pretty. Do you have a better idea? If not, no problem. I mainly did
+> this to confirm that OpenBSD won't crash handling A-MSDU with more than
+> 2 subframes, which it won't.
+
+ouch. No :)  What you should really do is to reduce the MTU to 500 bytes.
+iperf -M will do.
+
+>
+> Thanks again,
+> Stefan
+>
+> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+> index 7ece5c1..b3d562d 100644
+> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
+> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+> @@ -448,7 +448,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+>         struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+>         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>         struct ieee80211_hdr *hdr = (void *)skb->data;
+> -       unsigned int mss = skb_shinfo(skb)->gso_size;
+> +       unsigned int mss = skb_shinfo(skb)->gso_size / 2;
+>         struct sk_buff *tmp, *next;
+>         char cb[sizeof(skb->cb)];
+>         unsigned int num_subframes, tcp_payload_len, subf_len, max_amsdu_len;
+>
+> On Fri, Dec 04, 2015 at 12:30:52PM +0200, Emmanuel Grumbach wrote:
+>> Adding the right mailing list this time.
+>>
+>> On Fri, Dec 4, 2015 at 10:18 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> > On Fri, Dec 4, 2015 at 9:35 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> >> Hi,
+>> >>
+>> >> On Fri, Dec 4, 2015 at 12:05 AM, Stefan Sperling <stsp@openbsd.org> wrote:
+>> >>> Hi Emmanuel,
+>> >>>
+>> >>> As part of implementing 802.11n support in OpenBSD I'm looking for
+>> >>> an AP which sends A-MSDUs. Preferrably under software control rather
+>> >>> than firmware.
+>> >>>
+>> >>> I found your iwlwifi A-MSDU patches at
+>> >>> http://marc.info/?l=linux-wireless&m=144553311122495&w=2
+>> >>> and http://marc.info/?l=linux-wireless&m=144553311822496&w=2
+>> >>>
+>> >>> Would these patches make it possible to run an AP with an 5300 or 7260
+>> >>> card and send A-MSDUs? That would be great as I have the necessary hardware.
+>> >>
+>> >> 7260 will go. Not 5300.
+>> >> Note that this code simulates Tx TCP Csum offload. I did that to write
+>> >> the code while we still don't have the hardware that has this
+>> >> capability. But for testing purposes, it should do the work. The
+>> >> testing teams have reported that AP mode didn't work quite well with
+>> >> this and I haven't taken the time to look into yet, but if you see
+>> >> issues, please report them or even better: fix them :)
+>> >>
+>> >>>
+>> >>> Which Linux tree do these patches apply to? I've tried the following
+>> >>> but had no luck in getting these patches applied without rejects:
+>> >>>
+>> >>> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+>> >>>
+>> >>
+>> >> Right. These patches had a long internal review cycle. They are now
+>> >> merge in our internal tree.
+>> >> You can find them in our internal tree [1] (backport based). I will
+>> >> push them soon in iwlwifi-next.git.
+>> >
+>> > I forgot to mention that you need to change the define of
+>> > IWL_MVM_SW_TX_CSUM_OFFLOAD to 1.
+>> >
+>> >>
+>> >> [1] - https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
+>> >> Please read https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/core_release#how_to_install_the_driver.
+>> >>
+>> >>> Thanks,
+>> >>> Stefan
