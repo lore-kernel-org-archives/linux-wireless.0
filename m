@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58975 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754358AbbLCP2O (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:33111 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbbLMAwk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 10:28:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-12-01
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-Date: Thu, 03 Dec 2015 17:28:07 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Tue, 1 Dec 2015 09:56:05 +0000")
-Message-ID: <87lh9beem0.fsf@kamboji.qca.qualcomm.com> (sfid-20151203_162817_813752_2CD70427)
+	Sat, 12 Dec 2015 19:52:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+Date: Sun, 13 Dec 2015 02:52:39 +0200
+Message-ID: <CAHp75VdOwJbgm1Hr7UmUss2iWnaujVoLVvwpg7D9B=VA8qs-Qw@mail.gmail.com> (sfid-20151213_015300_704460_BDD63804)
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Brent Taylor <motobud@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath6kl@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On Tue, Dec 1, 2015 at 7:41 AM, Brent Taylor <motobud@gmail.com> wrote:
+> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7, ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
+>
 
-> This is a pull request for -next. It is based on your tree after the
-> reorganisation. Details in the tag. Let me know if you have issues.
->
-> Please pull. Thanks.
->
->
-> The following changes since commit 6d808eba602b00f77f26191f45328774ff057cc0:
->
->   mac80211_hwsim: move Kconfig entry for sorting alphabetically (2015-11-18 15:23:36 +0200)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-12-01
+I think I already told someone that this kind of fixes miss the
+symmetric kvfree() calls. Please, fix.
 
-Pulled, thanks.
+
+> Signed-off-by: Brent Taylor <motobud@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index 6ae0734..4f2b124d 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>                 return ret;
+>
+>         *fw_len = fw_entry->size;
+> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+> +   if (&ar->fw == fw)
+> +               *fw = vmalloc(fw_entry->size);
+> +   else
+> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL);
+>
+>         if (*fw == NULL)
+>                 ret = -ENOMEM;
+> +       else
+> +               memcpy(*fw, fw_entry->data, fw_entry->size);
+>
+>         release_firmware(fw_entry);
+>
+> --
+> 2.6.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
 
 -- 
-Kalle Valo
+With Best Regards,
+Andy Shevchenko
