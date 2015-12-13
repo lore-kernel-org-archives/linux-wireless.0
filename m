@@ -1,46 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34457 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbbLVAt3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 19:49:29 -0500
-Received: by mail-pa0-f50.google.com with SMTP id uo6so2843078pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:29 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/13] staging: wilc1000: remove wilc_add_tx_gtk declaration
-Date: Tue, 22 Dec 2015 09:49:01 +0900
-Message-Id: <1450745349-16811-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014932_081483_8225B0C7)
-In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:39368 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751759AbbLMLlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2015 06:41:46 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: Recalc min chandef when station is associated
+Date: Sun, 13 Dec 2015 13:41:43 +0200
+Message-Id: <1450006903-3600-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151213_124220_116415_ED701D45)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch deletes wilc_add_tx_gtk declaration. It is not find
-wilc_add_tx_gtk definition in this driver.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The minimum chandef bandwidth calculation was done only in case
+a new station was inserted (or when an existing station was removed).
+However, it is possible that stations are inserted before they are
+associated, e.g., when FULL_AP_CLIENT_STATE is supported and user
+space adds stations unassociated.
+
+Fix this by calling ieee80211_recalc_min_chandef() whenever
+a station transitions in/out the associated state, and only
+consider station marked as associated.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 --
- 1 file changed, 2 deletions(-)
+ net/mac80211/chan.c     | 2 +-
+ net/mac80211/sta_info.c | 9 +++++----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6a5f3bd..a21ca37 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -321,8 +321,6 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
- 		    u8 index, u32 key_rsc_len, const u8 *key_rsc,
- 		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
- 		    u8 cipher_mode);
--s32 wilc_add_tx_gtk(struct host_if_drv *hWFIDrv, u8 u8KeyLen,
--			u8 *pu8TxGtk, u8 u8KeyIdx);
- s32 wilc_set_pmkid_info(struct wilc_vif *vif,
- 			struct host_if_pmkid_attr *pu8PmkidInfoArray);
- s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 1d1b9b7..2839811 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -231,7 +231,7 @@ ieee80211_get_max_required_bw(struct ieee80211_sub_if_data *sdata)
+ 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
+ 			continue;
+ 
+-		if (!sta->uploaded)
++		if (!sta->uploaded || !test_sta_flag(sta, WLAN_STA_ASSOC))
+ 			continue;
+ 
+ 		max_bw = max(max_bw, ieee80211_get_sta_bw(&sta->sta));
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4402ad5..7e007cf 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -530,7 +530,6 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ 	/* accept BA sessions now */
+ 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 
+-	ieee80211_recalc_min_chandef(sdata);
+ 	ieee80211_sta_debugfs_add(sta);
+ 	rate_control_add_sta_debugfs(sta);
+ 
+@@ -941,7 +940,6 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
+ 
+ 	rate_control_remove_sta_debugfs(sta);
+ 	ieee80211_sta_debugfs_remove(sta);
+-	ieee80211_recalc_min_chandef(sdata);
+ 
+ 	cleanup_single_sta(sta);
+ }
+@@ -1808,14 +1806,17 @@ int sta_info_move_state(struct sta_info *sta,
+ 			clear_bit(WLAN_STA_AUTH, &sta->_flags);
+ 		break;
+ 	case IEEE80211_STA_AUTH:
+-		if (sta->sta_state == IEEE80211_STA_NONE)
++		if (sta->sta_state == IEEE80211_STA_NONE) {
+ 			set_bit(WLAN_STA_AUTH, &sta->_flags);
+-		else if (sta->sta_state == IEEE80211_STA_ASSOC)
++		} else if (sta->sta_state == IEEE80211_STA_ASSOC) {
+ 			clear_bit(WLAN_STA_ASSOC, &sta->_flags);
++			ieee80211_recalc_min_chandef(sta->sdata);
++		}
+ 		break;
+ 	case IEEE80211_STA_ASSOC:
+ 		if (sta->sta_state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
++			ieee80211_recalc_min_chandef(sta->sdata);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
 -- 
-2.6.4
+2.5.0
 
