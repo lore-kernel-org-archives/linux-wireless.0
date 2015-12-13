@@ -1,117 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:46384 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932522AbbLNNj6 (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:34781 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613AbbLMNYn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 08:39:58 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware command
-Date: Mon, 14 Dec 2015 14:39:51 +0100
-Message-ID: <1450100394-17414-5-git-send-email-arend@broadcom.com> (sfid-20151214_144019_571941_7BAB76D2)
-In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+	Sun, 13 Dec 2015 08:24:43 -0500
+Received: by lfcy184 with SMTP id y184so31573393lfc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Dec 2015 05:24:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1449594545-31028-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1449594545-31028-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Sun, 13 Dec 2015 15:24:42 +0200
+Message-ID: <CANUX_P0Bhbb5__Xh2Bzp7gaxWQ3mG8e8XrH_ny2vR3PrTY5Qpg@mail.gmail.com> (sfid-20151213_142506_289690_3C8D3C54)
+Subject: Re: [PATCH 1/2] mac80211: pass block ack session timeout to to driver
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sara Sharon <sara.sharon@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several features in the driver directly map to a firmware feature
-listed in response of the 'cap' firmware command. For those features
-this response will be examined instead of attempting individual
-firmware commands.
+On Tue, Dec 8, 2015 at 7:09 PM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+>
+> Currently mac80211 does not inform the driver of the session
+> block ack timeout when starting a rx aggregation session.
+> Drivers that manage the reorder buffer need to know this
+> parameter.
+> Seeing that there are now too many arguments for the
+> drv_ampdu_action() function, wrap them inside a structure.
+>
+> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51 +++++++++++++---------
- 1 file changed, 30 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index d9d1ca4..08b7200 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
- };
- #undef BRCMF_FEAT_DEF
- 
-+struct brcmf_feat_fwcap {
-+	enum brcmf_feat_id feature;
-+	const char * const fwcap_id;
-+};
-+
-+static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
-+	{ BRCMF_FEAT_MBSS, "mbss" },
-+	{ BRCMF_FEAT_MCHAN, "mchan" },
-+	{ BRCMF_FEAT_P2P, "p2p" },
-+};
-+
- #ifdef DEBUG
- /*
-  * expand quirk list to array of quirk strings.
-@@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
- 	}
- }
- 
--/**
-- * brcmf_feat_iovar_int_set() - determine feature through iovar set.
-- *
-- * @ifp: interface to query.
-- * @id: feature id.
-- * @name: iovar name.
-- */
--static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
--				     enum brcmf_feat_id id, char *name, u32 val)
-+static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
- {
--	int err;
--
--	err = brcmf_fil_iovar_int_set(ifp, name, val);
--	if (err == 0) {
--		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
--		ifp->drvr->feat_flags |= BIT(id);
--	} else {
--		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
--			  brcmf_feat_names[id], err);
-+	char caps[256];
-+	enum brcmf_feat_id id;
-+	int i;
-+
-+	brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
-+	brcmf_dbg(INFO, "[ %s]\n", caps);
-+
-+	for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
-+		if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
-+			id = brcmf_fwcap_map[i].feature;
-+			brcmf_dbg(INFO, "enabling feature: %s\n",
-+				  brcmf_feat_names[id]);
-+			ifp->drvr->feat_flags |= BIT(id);
-+		}
- 	}
- }
- 
-@@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
- 
--	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
-+	brcmf_feat_firmware_capabilities(ifp);
-+
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
- 	if (drvr->bus_if->wowl_supported)
- 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-+	/* MBSS does not work for 43362 */
- 	if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
--		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
--	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
-+		ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
- 
--- 
-1.9.1
-
+Obviously we forgot to update the other drivers. Please drop this
+series. Sara will re-send with the fix for the other drivers.
