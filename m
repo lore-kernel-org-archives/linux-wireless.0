@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:44490 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753480AbbL2QmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 11:42:19 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Oren Givon <oren.givon@intel.com>
-Subject: Re: [PATCH 40/45] iwlwifi: Update PCI IDs for 8000 and 9000 series
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-	<1450731046-2796-40-git-send-email-emmanuel.grumbach@intel.com>
-Date: Tue, 29 Dec 2015 18:06:10 +0200
-In-Reply-To: <1450731046-2796-40-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Mon, 21 Dec 2015 22:50:41 +0200")
-Message-ID: <8760zhxmrx.fsf@purkki.adurom.net> (sfid-20151229_174223_077166_880F6E68)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:34997 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932790AbbLNXlV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 18:41:21 -0500
+Received: by lbpu9 with SMTP id u9so110097026lbp.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 15:41:20 -0800 (PST)
+From: Anatoly Stepanov <drivengroove@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Anatoly Stepanov <drivengroove@gmail.com>
+Subject: [PATCH] staging: rtl8723au: use proper typecast in assignment
+Date: Tue, 15 Dec 2015 02:40:58 +0300
+Message-Id: <1450136458-2386-1-git-send-email-drivengroove@gmail.com> (sfid-20151215_004130_942169_4B617A24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+This resolves the following Sparse warning:
+"incorrect type in assignment (different base types)"
 
-> From: Oren Givon <oren.givon@intel.com>
->
-> A new PCI IDs update to the 8000 and 9000 series.
->
-> type=feature
->
-> Signed-off-by: Oren Givon <oren.givon@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Anatoly Stepanov <drivengroove@gmail.com>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Forgot to clean the internal tags? :) No need to change anything now,
-just keep on eye on these. Or better yet check these automatically.
-
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+index 1662c03c..fdd9cf1 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+@@ -115,7 +115,7 @@ exit:
+ 
+ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+ {
+-	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
++	*((__le32 *)param) = cpu_to_le32(*((u32 *)param));
+ 
+ 	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+ 
 -- 
-Kalle Valo
+1.9.1
+
