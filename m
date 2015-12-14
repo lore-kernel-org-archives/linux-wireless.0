@@ -1,105 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11099 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbbLUFPD (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:39928 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751838AbbLNEA0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:15:03 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 00/46] Rebase and resend
-Date: Mon, 21 Dec 2015 14:18:04 +0900
-Message-ID: <1450675130-17866-1-git-send-email-glen.lee@atmel.com> (sfid-20151221_061508_268033_0D873D78)
+	Sun, 13 Dec 2015 23:00:26 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linuxwifi <linuxwifi@intel.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
+Date: Mon, 14 Dec 2015 04:00:20 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E919DE2@hasmsx107.ger.corp.intel.com> (sfid-20151214_050030_063057_C757F64A)
+References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
+ <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com>
+ <1449876779.2324.16.camel@sipsolutions.net> <566DF964.7050904@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As requested, I rebased all of my pending patches on staging-testing branch
-and resend what is not applied.
 
-Glen Lee (42):
-  staging: wilc1000: remove define COMPLEMENT_BOOT
-  staging: wilc1000: remove wilc memory allocation config
-  staging: wilc1000: rename index to tcp_pending_ack_idx
-  staging: wilc1000: use kernel define byte order macros
-  staging: wilc1000: wilc_wlan.c: remove hif_func of wilc_wlan_dev_t
-  staging: wilc1000: remove io_type of wilc_wlan_dev_t
-  staging: wilc1000: remove unused varialbe tx_buffer_offset
-  staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc
-  staging: wilc1000: sdio/spi: use device print api instead of custom
-    one
-  staging: wilc1000: remove wilc_debug_func of hif_init
-  staging: wilc1000: remove unused functions
-  staging: wilc1000: linux_wlan_sdio.c: fix checkpatch warning line over
-    80
-  staging: wilc1000: linux_wlan_sdio.c: remove braces
-  staging: wilc1000: wilc_sdio_cmd53: return linux error value
-  staging: wilc1000: wilc_sdio_cmd52: return linux error value
-  staging: wilc1000: linux_wlan_spi.c: remove braces for single
-    statement
-  staging: wilc1000: linux_wlan_spi.c: add a blank
-  staging: wilc1000: linux_wlan_spi.c: fix NULL comparison style
-  staging: wilc1000: linux_wlan_spi.c: return linux error value
-  staging: wilc1000: linux_sdio_probe: use return value
-  staging: wilc1000: linux_wlan_sdio.c: move all the codes to
-    wilc_sdio.c
-  staging: wilc1000: remove unused files
-  staging: wilc1000: rename spi function names
-  staging: wilc1000: remove unneeded function
-  staging: wilc1000: linux_wlan_spi.c: move all the codes to wilc_spi.c
-  staging: wilc1000: remove unused files
-  staging: wilc1000: remove unneeded extern variable
-  staging: wilc1000: move perInterface_wlan_t to wilc_vif
-  staging: wilc1000: change vif to pointer to refence real private data
-  staging: wilc1000: remove duplicate netdev
-  staging: wilc1000: pass vif to hostIFthread
-  staging: wilc1000: remove argument hif_drv
-  staging: wilc1000: take vif instead of drv in hostIFthread
-  staging: wilc1000: pass struct wilc
-  staging: wilc1000: use vif index to communicate with wilc device
-  staging: wilc1000: wilc_set_wfi_drv_handler: pass vif index
-  staging: wilc1000: change join_req_drv type and it's name
-  staging: wilc1000: remove used functions
-  staging: wilc1000: remove drv of struct host_if_msg
-  staging: wilc1000: remove wilc of struct host_if_drv
-  staging: wilc1000: set hif_drv before it is used
-  staging: wilc1000: bug fix on memory free
 
-Leo Kim (4):
-  staging: wilc1000: replace explicit NULL comparisons with !
-  staging: wilc1000: fixes potential null dereference 'wid.val'
-  staging: wilc1000: wilc_init(): fixes inconsistent returns
-  staging: wilc1000: wilc_deinit(): fixes inconsistent returns
+On 12/14/2015 01:04 AM, Arend van Spriel wrote:
+> On 12/12/2015 12:32 AM, Johannes Berg wrote:
+>> On Fri, 2015-12-11 at 15:17 -0800, Luis R. Rodriguez wrote:
+>>> I just tried a base config from opensuse, then localmodconfig, then
+>>> 'make xenconfig' (which I need) and that worked. I can't debug
+>>> further but I think this config might help debug this further:
+>>>
+>>> http://drvbp1.linux-foundation.org/~mcgrof/tmp/config-iwl-fail.txt
+>>>
+>>> So -- my new config works, but I have no idea what fixed it, a config
+>>> option obviously. Not sure what though.
+>>>
+>> Can you post the good one too?
+> I had the same issue occasionally when coming out of suspend. Running 
+> 4.1 vanilla kernel with 3160 device. The issue also occurred more often 
+> with particular ucode version. Running iwlwifi-3160-10.ucode now and 
+> have not seen the issue pop up since.
 
- drivers/staging/wilc1000/Kconfig                  |  22 -
- drivers/staging/wilc1000/Makefile                 |  14 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  11 +-
- drivers/staging/wilc1000/host_interface.c         | 803 +++++++++++-----------
- drivers/staging/wilc1000/host_interface.h         | 144 ++--
- drivers/staging/wilc1000/linux_wlan.c             | 342 ++++-----
- drivers/staging/wilc1000/linux_wlan_common.h      |   2 -
- drivers/staging/wilc1000/linux_wlan_sdio.c        | 170 -----
- drivers/staging/wilc1000/linux_wlan_sdio.h        |   8 -
- drivers/staging/wilc1000/linux_wlan_spi.c         | 191 -----
- drivers/staging/wilc1000/linux_wlan_spi.h         |  11 -
- drivers/staging/wilc1000/wilc_sdio.c              | 464 ++++++++-----
- drivers/staging/wilc1000/wilc_spi.c               | 417 +++++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 480 +++++++------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  47 +-
- drivers/staging/wilc1000/wilc_wlan.c              | 571 +++++++--------
- drivers/staging/wilc1000/wilc_wlan.h              |  17 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.c          |  25 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.h          |   4 +-
- 19 files changed, 1771 insertions(+), 1972 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
-
--- 
-1.9.1
+This is really weird. I don't see how that could be firmware related.
+BTW, -10.ucode is fairly old :) we have -16.ucode out there.
+>
+> Gr. AvS
+>
+>
 
