@@ -1,352 +1,953 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37982 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753771AbbLQJUu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13663 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbbLNFnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 04:20:50 -0500
-Received: by mail-wm0-f51.google.com with SMTP id l126so12048203wml.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 01:20:50 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@openwrt.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-Date: Thu, 17 Dec 2015 10:20:28 +0100
-Message-Id: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151217_102102_134283_CFB261F0)
+	Mon, 14 Dec 2015 00:43:39 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/12] staging: wilc1000: take vif instead of drv in hostIFthread
+Date: Mon, 14 Dec 2015 14:46:54 +0900
+Message-ID: <1450072023-13013-4-git-send-email-glen.lee@atmel.com> (sfid-20151214_064357_151515_84B51206)
+In-Reply-To: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
+References: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HW/driver should set NEED_ALIGNED4_SKBS flag in case require
-aligned skbs to four-byte boundaries.
+In the first patch, we sent vif to hostIFthread. we can use vif instead of
+drv in the all functions which handle the commands from cfg operations.
+Change first argument host_if_drv with wilc_vif and use hif_drv of wilc_vif.
+Pass vif to the functions as well.
+In case of timer callback functions, set vif to the data and use vif instead
+of hif_drv.
+Lastly, initialize u32RcvdAssocRespInfoLen since changing hif_drv with vif
+causes one uninitialied build warning.
+Now we have vif that currently being used so we can use interface index of
+wilc_vif to send to wilc device.
 
-Before we have to do memmove() in the driver before
-pass this to HW and memmove() back in tx completion.
-This patch allow to save CPU and skip such memmoves.
-For each skb we called memmove(ieee80211_hdrsize()) twice.
-
-Currently this was tested with ath9k, both hw/sw crypt for
-tkip/ccmp.
-For sure more tests required.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- include/net/mac80211.h |  4 ++++
- net/mac80211/debugfs.c |  1 +
- net/mac80211/tkip.c    | 15 ++++++++++++---
- net/mac80211/tx.c      | 21 +++++++++++++++++++--
- net/mac80211/wep.c     |  6 ++++++
- net/mac80211/wpa.c     | 35 +++++++++++++++++++++++++++--------
- 6 files changed, 69 insertions(+), 13 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 238 +++++++++++++++++-------------
+ 1 file changed, 135 insertions(+), 103 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7c30faf..0ea9b51 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1910,6 +1910,9 @@ struct ieee80211_txq {
-  *	by just its MAC address; this prevents, for example, the same station
-  *	from connecting to two virtual AP interfaces at the same time.
-  *
-+ * @IEEE80211_HW_NEEDS_ALIGNED4_SKBS: Driver need aligned skbs to four-byte.
-+ *	Padding will be added after ieee80211_hdr.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -1946,6 +1949,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
- 	IEEE80211_HW_BEACON_TX_STATUS,
- 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
-+	IEEE80211_HW_NEEDS_ALIGNED4_SKBS,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index abbdff0..fd45830 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -126,6 +126,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
- 	FLAG(NEEDS_UNIQUE_STA_ADDR),
-+	FLAG(NEEDS_ALIGNED4_SKBS),
- 
- 	/* keep last for the build bug below */
- 	(void *)0x1
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 0ae2077..26b2663 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -204,9 +204,18 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
- 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
- 	struct tkip_ctx *ctx = &key->u.tkip.tx;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
--	u32 iv32 = get_unaligned_le32(&data[4]);
--	u16 iv16 = data[2] | (data[0] << 8);
-+	unsigned int hdrlen;
-+	const u8 *data;
-+	u32 iv32;
-+	u16 iv16;
-+
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&key->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
-+
-+	data = (u8 *)hdr + hdrlen;
-+	iv32 = get_unaligned_le32(&data[4]);
-+	iv16 = data[2] | (data[0] << 8);
- 
- 	spin_lock(&key->u.tkip.txlock);
- 	ieee80211_compute_tkip_p1k(key, iv32);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3311ce0..30ee9ad 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -937,6 +937,8 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 		return TX_DROP;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
- 
- 	/* internal error, why isn't DONTFRAG set? */
- 	if (WARN_ON(skb->len + FCS_LEN <= frag_threshold))
-@@ -1796,6 +1798,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 
- 	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
- 
- 	if (skb->len < len_rthdr + hdrlen)
- 		goto fail;
-@@ -2020,6 +2024,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_sub_if_data *ap_sdata;
- 	enum ieee80211_band band;
-+	int padsize = 0;
- 	int ret;
- 
- 	if (IS_ERR(sta))
-@@ -2237,6 +2242,10 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		hdrlen += 2;
- 	}
- 
-+	/* Check if HW require skb to be aligned */
-+	if (ieee80211_hw_check(&sdata->local->hw, NEEDS_ALIGNED4_SKBS))
-+		padsize = hdrlen & 3;
-+
- 	/*
- 	 * Drop unicast frames to unauthorised stations unless they are
- 	 * EAPOL frames from the local station.
-@@ -2323,6 +2332,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	h_pos -= skip_header_bytes;
- 
- 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
-+	head_need += padsize;
- 
- 	/*
- 	 * So we need to modify the skb header and hence need a copy of
-@@ -2361,6 +2371,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	}
- #endif
- 
-+	if (padsize)
-+		skb_push(skb, padsize);
-+
- 	if (ieee80211_is_data_qos(fc)) {
- 		__le16 *qos_control;
- 
-@@ -2374,8 +2387,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	} else
- 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
- 
--	nh_pos += hdrlen;
--	h_pos += hdrlen;
-+	nh_pos += hdrlen + padsize;
-+	h_pos += hdrlen + padsize;
- 
- 	/* Update skb pointers to various headers since this modified frame
- 	 * is going to go through Linux networking code that may potentially
-@@ -2544,6 +2557,10 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 	}
- 
-+	/* Check if aligned skb required */
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		build.hdr_len += build.hdr_len & 3;
-+
- 	/* We store the key here so there's no point in using rcu_dereference()
- 	 * but that's fine because the code that changes the pointers will call
- 	 * this function after doing so. For a single CPU that would be enough,
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index efa3f48..46c7c67 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -102,6 +102,9 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 		return NULL;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
-+
- 	newhdr = skb_push(skb, IEEE80211_WEP_IV_LEN);
- 	memmove(newhdr, newhdr + IEEE80211_WEP_IV_LEN, hdrlen);
- 
-@@ -123,6 +126,9 @@ static void ieee80211_wep_remove_iv(struct ieee80211_local *local,
- 	unsigned int hdrlen;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
-+
- 	memmove(skb->data + IEEE80211_WEP_IV_LEN, skb->data, hdrlen);
- 	skb_pull(skb, IEEE80211_WEP_IV_LEN);
- }
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index d824c38..18110c8 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -43,6 +43,8 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
- 		return TX_CONTINUE;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
- 	if (skb->len < hdrlen)
- 		return TX_DROP;
- 
-@@ -201,6 +203,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	}
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
- 	len = skb->len - hdrlen;
- 
- 	if (info->control.hw_key)
-@@ -307,7 +311,8 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d4bcf39..e8c14cc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -316,11 +316,12 @@ static struct host_if_drv *get_handler_from_id(int id)
+ 	return wfidrv_list[id];
  }
  
- 
--static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
-+static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
-+				unsigned int padsize)
+-static s32 handle_set_channel(struct host_if_drv *hif_drv,
++static s32 handle_set_channel(struct wilc_vif *vif,
+ 			      struct channel_attr *hif_set_ch)
  {
- 	__le16 mask_fc;
- 	int a4_included, mgmt;
-@@ -329,7 +334,8 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
- 	mask_fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
  
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--	len_a = hdrlen - 2;
-+	hdrlen += padsize;
-+	len_a = hdrlen - 2 - padsize;
- 	a4_included = ieee80211_has_a4(hdr->frame_control);
- 
- 	if (ieee80211_is_data_qos(hdr->frame_control))
-@@ -405,6 +411,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen, len, tail;
-+	unsigned int padsize = 0;
- 	u8 *pos;
- 	u8 pn[6];
- 	u64 pn64;
-@@ -425,6 +432,9 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 	}
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		padsize = hdrlen & 3;
-+	hdrlen += padsize;
- 	len = skb->len - hdrlen;
- 
- 	if (info->control.hw_key)
-@@ -463,7 +473,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 		return 0;
- 
- 	pos += IEEE80211_CCMP_HDR_LEN;
--	ccmp_special_blocks(skb, pn, b_0, aad);
-+
-+	ccmp_special_blocks(skb, pn, b_0, aad, padsize);
- 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
- 				  skb_put(skb, mic_len), mic_len);
- 
-@@ -534,7 +545,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 			u8 aad[2 * AES_BLOCK_SIZE];
- 			u8 b_0[AES_BLOCK_SIZE];
- 			/* hardware didn't decrypt/verify MIC */
--			ccmp_special_blocks(skb, pn, b_0, aad);
-+			ccmp_special_blocks(skb, pn, b_0, aad, 0);
- 
- 			if (ieee80211_aes_ccm_decrypt(
- 				    key->u.ccmp.tfm, b_0, aad,
-@@ -556,7 +567,8 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 	return RX_CONTINUE;
+ 	wid.id = (u16)WID_CURRENT_CHANNEL;
+ 	wid.type = WID_CHAR;
+@@ -340,11 +341,12 @@ static s32 handle_set_channel(struct host_if_drv *hif_drv,
+ 	return result;
  }
  
--static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
-+static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad,
-+				unsigned int padsize)
+-static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
++static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
+ 				      struct drv_handler *hif_drv_handler)
  {
- 	__le16 mask_fc;
- 	u8 qos_tid;
-@@ -571,7 +583,8 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- 	/* AAD (extra authenticate-only data) / masked 802.11 header
- 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC]
- 	 */
--	put_unaligned_be16(ieee80211_hdrlen(hdr->frame_control) - 2, &aad[0]);
-+	put_unaligned_be16(ieee80211_hdrlen(hdr->frame_control) - 2 - padsize,
-+			   &aad[0]);
- 	/* Mask FC: zero subtype b4 b5 b6 (if not mgmt)
- 	 * Retry, PwrMgt, MoreData; set Protected
- 	 */
-@@ -633,6 +646,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen, len, tail;
-+	unsigned int padsize = 0;
- 	u8 *pos;
- 	u8 pn[6];
- 	u64 pn64;
-@@ -652,6 +666,9 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_SET_DRV_HANDLER;
+ 	wid.type = WID_INT;
+@@ -365,11 +367,12 @@ static s32 handle_set_wfi_drv_handler(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 handle_set_operation_mode(struct host_if_drv *hif_drv,
++static s32 handle_set_operation_mode(struct wilc_vif *vif,
+ 				     struct op_mode *hif_op_mode)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_SET_OPERATION_MODE;
+ 	wid.type = WID_INT;
+@@ -394,13 +397,12 @@ static s32 host_int_get_ipaddress(struct wilc_vif *vif,
+ 				  struct host_if_drv *hif_drv,
+ 				  u8 *u16ipadd, u8 idx);
+ 
+-static s32 handle_set_ip_address(struct wilc_vif *vif,
+-				 struct host_if_drv *hif_drv, u8 *ip_addr,
+-				 u8 idx)
++static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	char firmware_ip_addr[4] = {0};
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (ip_addr[0] < 192)
+ 		ip_addr[0] = 0;
+@@ -430,11 +432,11 @@ static s32 handle_set_ip_address(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static s32 handle_get_ip_address(struct wilc_vif *vif,
+-				 struct host_if_drv *hif_drv, u8 idx)
++static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_IP_ADDRESS;
+ 	wid.type = WID_STR;
+@@ -465,11 +467,12 @@ static s32 handle_get_ip_address(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
++static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 				  struct set_mac_addr *set_mac_addr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
+ 	if (!mac_buf) {
+@@ -495,11 +498,12 @@ static s32 handle_set_mac_address(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 handle_get_mac_address(struct host_if_drv *hif_drv,
++static s32 handle_get_mac_address(struct wilc_vif *vif,
+ 				  struct get_mac_addr *get_mac_addr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_MAC_ADDR;
+ 	wid.type = WID_STR;
+@@ -518,11 +522,12 @@ static s32 handle_get_mac_address(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static s32 handle_cfg_param(struct host_if_drv *hif_drv,
++static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			    struct cfg_param_attr *cfg_param_attr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid_list[32];
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	u8 wid_cnt = 0;
+ 
+ 	down(&hif_drv->sem_cfg_values);
+@@ -818,10 +823,10 @@ static void Handle_wait_msg_q_empty(void)
+ 	up(&hif_sema_wait_response);
+ }
+ 
+-static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
++static s32 Handle_ScanDone(struct wilc_vif *vif,
+ 			   enum scan_event enuEvent);
+ 
+-static s32 Handle_Scan(struct host_if_drv *hif_drv,
++static s32 Handle_Scan(struct wilc_vif *vif,
+ 		       struct scan_attr *pstrHostIFscanAttr)
+ {
+ 	s32 result = 0;
+@@ -831,6 +836,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ 	u8 *pu8Buffer;
+ 	u8 valuesize = 0;
+ 	u8 *pu8HdnNtwrksWidVal = NULL;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setting SCAN params\n");
+ 	PRINT_D(HOSTINF_DBG, "Scanning: In [%d] state\n", hif_drv->hif_state);
+@@ -936,7 +942,7 @@ static s32 Handle_Scan(struct host_if_drv *hif_drv,
+ ERRORHANDLER:
+ 	if (result) {
+ 		del_timer(&hif_drv->scan_timer);
+-		Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
++		Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
  	}
  
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		padsize = hdrlen & 3;
-+	hdrlen += padsize;
- 	len = skb->len - hdrlen;
+ 	kfree(pstrHostIFscanAttr->ch_freq_list);
+@@ -952,12 +958,13 @@ ERRORHANDLER:
+ 	return result;
+ }
  
- 	if (info->control.hw_key)
-@@ -692,7 +709,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
+-static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
++static s32 Handle_ScanDone(struct wilc_vif *vif,
+ 			   enum scan_event enuEvent)
+ {
+ 	s32 result = 0;
+ 	u8 u8abort_running_scan;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
  
- 	pos += IEEE80211_GCMP_HDR_LEN;
--	gcmp_special_blocks(skb, pn, j_0, aad);
-+	gcmp_special_blocks(skb, pn, j_0, aad, padsize);
- 	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
- 				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+ 	PRINT_D(HOSTINF_DBG, "in Handle_ScanDone()\n");
  
-@@ -760,7 +777,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 			u8 aad[2 * AES_BLOCK_SIZE];
- 			u8 j_0[AES_BLOCK_SIZE];
- 			/* hardware didn't decrypt/verify MIC */
--			gcmp_special_blocks(skb, pn, j_0, aad);
-+			gcmp_special_blocks(skb, pn, j_0, aad, 0);
+@@ -993,7 +1000,7 @@ static s32 Handle_ScanDone(struct host_if_drv *hif_drv,
+ }
  
- 			if (ieee80211_aes_gcm_decrypt(
- 				    key->u.gcmp.tfm, j_0, aad,
-@@ -804,6 +821,8 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
- 		return TX_DROP;
+ u8 wilc_connected_ssid[6] = {0};
+-static s32 Handle_Connect(struct host_if_drv *hif_drv,
++static s32 Handle_Connect(struct wilc_vif *vif,
+ 			  struct connect_attr *pstrHostIFconnectAttr)
+ {
+ 	s32 result = 0;
+@@ -1001,6 +1008,7 @@ static s32 Handle_Connect(struct host_if_drv *hif_drv,
+ 	u32 u32WidsCount = 0, dummyval = 0;
+ 	u8 *pu8CurrByte = NULL;
+ 	struct join_bss_param *ptstrJoinBssParam;
++	struct host_if_drv *hif_drv = vif->hif_drv;
  
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&tx->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
+ 	PRINT_D(GENERIC_DBG, "Handling connect request\n");
  
- 	pos = skb_push(skb, iv_len);
- 	memmove(pos, pos + iv_len, hdrlen);
+@@ -1286,12 +1294,13 @@ ERRORHANDLER:
+ 	return result;
+ }
+ 
+-static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
++static s32 Handle_FlushConnect(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0;
+ 	u8 *pu8CurrByte = NULL;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
+ 	strWIDList[u32WidsCount].type = WID_BIN_DATA;
+@@ -1333,12 +1342,13 @@ static s32 Handle_FlushConnect(struct host_if_drv *hif_drv)
+ 	return result;
+ }
+ 
+-static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
++static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	tstrConnectInfo strConnectInfo;
+ 	struct wid wid;
+ 	u16 u16DummyReasonCode = 0;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("Driver handler is NULL\n");
+@@ -1410,7 +1420,7 @@ static s32 Handle_ConnectTimeout(struct host_if_drv *hif_drv)
+ 	return result;
+ }
+ 
+-static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
++static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 				struct rcvd_net_info *pstrRcvdNetworkInfo)
+ {
+ 	u32 i;
+@@ -1418,6 +1428,7 @@ static s32 Handle_RcvdNtwrkInfo(struct host_if_drv *hif_drv,
+ 	s32 result = 0;
+ 	tstrNetworkInfo *pstrNetworkInfo = NULL;
+ 	void *pJoinParams = NULL;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	bNewNtwrkFound = true;
+ 	PRINT_INFO(HOSTINF_DBG, "Handling received network info\n");
+@@ -1491,13 +1502,12 @@ done:
+ 	return result;
+ }
+ 
+-static s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv,
++static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 				       u8 *pu8AssocRespInfo,
+ 				       u32 u32MaxAssocRespInfoLen,
+ 				       u32 *pu32RcvdAssocRespInfoLen);
+ 
+ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+-				    struct host_if_drv *hif_drv,
+ 				    struct rcvd_async_info *pstrRcvdGnrlAsyncInfo)
+ {
+ 	s32 result = 0;
+@@ -1512,6 +1522,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	tstrConnectInfo strConnectInfo;
+ 	tstrDisconnectNotifInfo strDisconnectNotifInfo;
+ 	s32 s32Err = 0;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("Driver handler is NULL\n");
+@@ -1545,7 +1556,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 		u8MacStatusAdditionalInfo = pstrRcvdGnrlAsyncInfo->buffer[9];
+ 		PRINT_INFO(HOSTINF_DBG, "Recieved MAC status = %d with Reason = %d , Info = %d\n", u8MacStatus, u8MacStatusReasonCode, u8MacStatusAdditionalInfo);
+ 		if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
+-			u32 u32RcvdAssocRespInfoLen;
++			u32 u32RcvdAssocRespInfoLen = 0;
+ 			tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+ 
+ 			PRINT_D(HOSTINF_DBG, "Recieved MAC status = %d with Reason = %d , Code = %d\n", u8MacStatus, u8MacStatusReasonCode, u8MacStatusAdditionalInfo);
+@@ -1555,7 +1566,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			if (u8MacStatus == MAC_CONNECTED) {
+ 				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
+ 
+-				host_int_get_assoc_res_info(hif_drv,
++				host_int_get_assoc_res_info(vif,
+ 							    rcv_assoc_resp,
+ 							    MAX_ASSOC_RESP_FRAME_SIZE,
+ 							    &u32RcvdAssocRespInfoLen);
+@@ -1660,7 +1671,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			if (hif_drv->usr_scan_req.scan_result) {
+ 				PRINT_D(HOSTINF_DBG, "\n\n<< Abort the running OBSS Scan >>\n\n");
+ 				del_timer(&hif_drv->scan_timer);
+-				Handle_ScanDone((void *)hif_drv, SCAN_EVENT_ABORTED);
++				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
+ 			}
+ 
+ 			strDisconnectNotifInfo.u16reason = 0;
+@@ -1708,7 +1719,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 
+ 			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.scan_result)
+-				Handle_ScanDone(hif_drv, SCAN_EVENT_ABORTED);
++				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
+ 		}
+ 	}
+ 
+@@ -1718,7 +1729,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static int Handle_Key(struct host_if_drv *hif_drv,
++static int Handle_Key(struct wilc_vif *vif,
+ 		      struct key_attr *pstrHostIFkeyAttr)
+ {
+ 	s32 result = 0;
+@@ -1728,6 +1739,7 @@ static int Handle_Key(struct host_if_drv *hif_drv,
+ 	u8 *pu8keybuf;
+ 	s8 s8idxarray[1];
+ 	s8 ret = 0;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	switch (pstrHostIFkeyAttr->type) {
+ 	case WEP:
+@@ -1991,10 +2003,10 @@ _WPAPtk_end_case_:
+ 	return result;
+ }
+ 
+-static void Handle_Disconnect(struct wilc_vif *vif,
+-			      struct host_if_drv *hif_drv)
++static void Handle_Disconnect(struct wilc_vif *vif)
+ {
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	s32 result = 0;
+ 	u16 u16DummyReasonCode = 0;
+@@ -2086,10 +2098,11 @@ void wilc_resolve_disconnect_aberration(struct wilc_vif *vif)
+ 	}
+ }
+ 
+-static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
++static s32 Handle_GetChnl(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_CURRENT_CHANNEL;
+ 	wid.type = WID_CHAR;
+@@ -2111,7 +2124,7 @@ static s32 Handle_GetChnl(struct host_if_drv *hif_drv)
+ 	return result;
+ }
+ 
+-static void Handle_GetRssi(struct host_if_drv *hif_drv)
++static void Handle_GetRssi(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2123,20 +2136,21 @@ static void Handle_GetRssi(struct host_if_drv *hif_drv)
+ 
+ 	PRINT_D(HOSTINF_DBG, "Getting RSSI value\n");
+ 
+-	result = wilc_send_config_pkt(hif_drv->wilc, GET_CFG, &wid, 1,
+-				 get_id_from_handler(hif_drv));
++	result = wilc_send_config_pkt(vif->hif_drv->wilc, GET_CFG, &wid, 1,
++				 get_id_from_handler(vif->hif_drv));
+ 	if (result) {
+ 		PRINT_ER("Failed to get RSSI value\n");
+ 		result = -EFAULT;
+ 	}
+ 
+-	up(&hif_drv->sem_get_rssi);
++	up(&vif->hif_drv->sem_get_rssi);
+ }
+ 
+-static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
++static void Handle_GetLinkspeed(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	link_speed = 0;
+ 
+@@ -2157,10 +2171,12 @@ static void Handle_GetLinkspeed(struct host_if_drv *hif_drv)
+ 	up(&hif_drv->sem_get_link_speed);
+ }
+ 
+-static s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pstrStatistics)
++static s32 Handle_GetStatistics(struct wilc_vif *vif,
++				struct rf_info *pstrStatistics)
+ {
+ 	struct wid strWIDList[5];
+ 	u32 u32WidsCount = 0, result = 0;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	strWIDList[u32WidsCount].id = WID_LINKSPEED;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+@@ -2203,12 +2219,13 @@ static s32 Handle_GetStatistics(struct host_if_drv *hif_drv, struct rf_info *pst
+ 	return 0;
+ }
+ 
+-static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
++static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 				   struct sta_inactive_t *strHostIfStaInactiveT)
+ {
+ 	s32 result = 0;
+ 	u8 *stamac;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_SET_STA_MAC_INACTIVE_TIME;
+ 	wid.type = WID_STR;
+@@ -2248,12 +2265,13 @@ static s32 Handle_Get_InActiveTime(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static void Handle_AddBeacon(struct host_if_drv *hif_drv,
++static void Handle_AddBeacon(struct wilc_vif *vif,
+ 			     struct beacon_attr *pstrSetBeaconParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Adding BEACON\n");
+ 
+@@ -2303,11 +2321,12 @@ ERRORHANDLER:
+ 	kfree(pstrSetBeaconParam->tail);
+ }
+ 
+-static void Handle_DelBeacon(struct host_if_drv *hif_drv)
++static void Handle_DelBeacon(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_DEL_BEACON;
+ 	wid.type = WID_CHAR;
+@@ -2375,12 +2394,13 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	return pu8CurrByte - pu8Buffer;
+ }
+ 
+-static void Handle_AddStation(struct host_if_drv *hif_drv,
++static void Handle_AddStation(struct wilc_vif *vif,
+ 			      struct add_sta_param *pstrStationParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling add station\n");
+ 	wid.id = (u16)WID_ADD_STA;
+@@ -2404,7 +2424,7 @@ ERRORHANDLER:
+ 	kfree(wid.val);
+ }
+ 
+-static void Handle_DelAllSta(struct host_if_drv *hif_drv,
++static void Handle_DelAllSta(struct wilc_vif *vif,
+ 			     struct del_all_sta *pstrDelAllStaParam)
+ {
+ 	s32 result = 0;
+@@ -2412,6 +2432,7 @@ static void Handle_DelAllSta(struct host_if_drv *hif_drv,
+ 	u8 *pu8CurrByte;
+ 	u8 i;
+ 	u8 au8Zero_Buff[6] = {0};
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_DEL_ALL_STA;
+ 	wid.type = WID_STR;
+@@ -2447,12 +2468,13 @@ ERRORHANDLER:
+ 	up(&hif_sema_wait_response);
+ }
+ 
+-static void Handle_DelStation(struct host_if_drv *hif_drv,
++static void Handle_DelStation(struct wilc_vif *vif,
+ 			      struct del_sta *pstrDelStaParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_REMOVE_STA;
+ 	wid.type = WID_BIN;
+@@ -2477,12 +2499,13 @@ ERRORHANDLER:
+ 	kfree(wid.val);
+ }
+ 
+-static void Handle_EditStation(struct host_if_drv *hif_drv,
++static void Handle_EditStation(struct wilc_vif *vif,
+ 			       struct add_sta_param *pstrStationParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_EDIT_STA;
+ 	wid.type = WID_BIN;
+@@ -2506,12 +2529,13 @@ ERRORHANDLER:
+ 	kfree(wid.val);
+ }
+ 
+-static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
++static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 			       struct remain_ch *pstrHostIfRemainOnChan)
+ {
+ 	s32 result = 0;
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv->remain_on_ch_pending) {
+ 		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
+@@ -2565,7 +2589,7 @@ static int Handle_RemainOnChan(struct host_if_drv *hif_drv,
+ ERRORHANDLER:
+ 	{
+ 		P2P_LISTEN_STATE = 1;
+-		hif_drv->remain_on_ch_timer.data = (unsigned long)hif_drv;
++		hif_drv->remain_on_ch_timer.data = (unsigned long)vif;
+ 		mod_timer(&hif_drv->remain_on_ch_timer,
+ 			  jiffies +
+ 			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
+@@ -2580,12 +2604,13 @@ ERRORHANDLER:
+ 	return result;
+ }
+ 
+-static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
++static int Handle_RegisterFrame(struct wilc_vif *vif,
+ 				struct reg_frame *pstrHostIfRegisterFrame)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling frame register : %d FrameType: %d\n",
+ 		pstrHostIfRegisterFrame->reg,
+@@ -2615,12 +2640,13 @@ static int Handle_RegisterFrame(struct host_if_drv *hif_drv,
+ 	return result;
+ }
+ 
+-static u32 Handle_ListenStateExpired(struct host_if_drv *hif_drv,
++static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+ 				     struct remain_ch *pstrHostIfRemainOnChan)
+ {
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid wid;
+ 	s32 result = 0;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "CANCEL REMAIN ON CHAN\n");
+ 
+@@ -2664,26 +2690,27 @@ static void ListenTimerCB(unsigned long arg)
+ {
+ 	s32 result = 0;
+ 	struct host_if_msg msg;
+-	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
++	struct wilc_vif *vif = (struct wilc_vif *)arg;
+ 
+-	del_timer(&hif_drv->remain_on_ch_timer);
++	del_timer(&vif->hif_drv->remain_on_ch_timer);
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+-	msg.drv = hif_drv;
+-	msg.body.remain_on_ch.id = hif_drv->remain_on_ch.id;
++	msg.vif = vif;
++	msg.body.remain_on_ch.id = vif->hif_drv->remain_on_ch.id;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		PRINT_ER("wilc_mq_send fail\n");
+ }
+ 
+-static void Handle_PowerManagement(struct host_if_drv *hif_drv,
++static void Handle_PowerManagement(struct wilc_vif *vif,
+ 				   struct power_mgmt_param *strPowerMgmtParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	s8 s8PowerMode;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_POWER_MANAGEMENT;
+ 
+@@ -2703,12 +2730,13 @@ static void Handle_PowerManagement(struct host_if_drv *hif_drv,
+ 		PRINT_ER("Failed to send power management config packet\n");
+ }
+ 
+-static void Handle_SetMulticastFilter(struct host_if_drv *hif_drv,
++static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 				      struct set_multicast *strHostIfSetMulti)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setup Multicast Filter\n");
+ 
+@@ -2743,12 +2771,13 @@ ERRORHANDLER:
+ 	kfree(wid.val);
+ }
+ 
+-static s32 Handle_DelAllRxBASessions(struct host_if_drv *hif_drv,
++static s32 Handle_DelAllRxBASessions(struct wilc_vif *vif,
+ 				     struct ba_session_info *strHostIfBASessionInfo)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	char *ptr = NULL;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_D(GENERIC_DBG, "Delete Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\n",
+ 		strHostIfBASessionInfo->bssid[0],
+@@ -2822,40 +2851,40 @@ static int hostIFthread(void *pvArg)
+ 			break;
+ 
+ 		case HOST_IF_MSG_SCAN:
+-			Handle_Scan(msg.drv, &msg.body.scan_info);
++			Handle_Scan(msg.vif, &msg.body.scan_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CONNECT:
+-			Handle_Connect(msg.drv, &msg.body.con_info);
++			Handle_Connect(msg.vif, &msg.body.con_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_FLUSH_CONNECT:
+-			Handle_FlushConnect(msg.drv);
++			Handle_FlushConnect(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_NTWRK_INFO:
+-			Handle_RcvdNtwrkInfo(msg.drv, &msg.body.net_info);
++			Handle_RcvdNtwrkInfo(msg.vif, &msg.body.net_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
+-			Handle_RcvdGnrlAsyncInfo(vif, msg.drv,
++			Handle_RcvdGnrlAsyncInfo(vif,
+ 						 &msg.body.async_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_KEY:
+-			Handle_Key(msg.drv, &msg.body.key_info);
++			Handle_Key(msg.vif, &msg.body.key_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CFG_PARAMS:
+-			handle_cfg_param(msg.drv, &msg.body.cfg_info);
++			handle_cfg_param(msg.vif, &msg.body.cfg_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_CHANNEL:
+-			handle_set_channel(msg.drv, &msg.body.channel_info);
++			handle_set_channel(msg.vif, &msg.body.channel_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DISCONNECT:
+-			Handle_Disconnect(vif, msg.drv);
++			Handle_Disconnect(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_SCAN_COMPLETE:
+@@ -2865,124 +2894,126 @@ static int hostIFthread(void *pvArg)
+ 			if (!wilc_wlan_get_num_conn_ifcs(wilc))
+ 				wilc_chip_sleep_manually(wilc);
+ 
+-			Handle_ScanDone(msg.drv, SCAN_EVENT_DONE);
++			Handle_ScanDone(msg.vif, SCAN_EVENT_DONE);
+ 
+ 			if (hif_drv->remain_on_ch_pending)
+-				Handle_RemainOnChan(msg.drv, &msg.body.remain_on_ch);
++				Handle_RemainOnChan(msg.vif,
++						    &msg.body.remain_on_ch);
+ 
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_RSSI:
+-			Handle_GetRssi(msg.drv);
++			Handle_GetRssi(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_LINKSPEED:
+-			Handle_GetLinkspeed(msg.drv);
++			Handle_GetLinkspeed(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_STATISTICS:
+-			Handle_GetStatistics(msg.drv, (struct rf_info *)msg.body.data);
++			Handle_GetStatistics(msg.vif,
++					     (struct rf_info *)msg.body.data);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_CHNL:
+-			Handle_GetChnl(msg.drv);
++			Handle_GetChnl(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_ADD_BEACON:
+-			Handle_AddBeacon(msg.drv, &msg.body.beacon_info);
++			Handle_AddBeacon(msg.vif, &msg.body.beacon_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_BEACON:
+-			Handle_DelBeacon(msg.drv);
++			Handle_DelBeacon(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_ADD_STATION:
+-			Handle_AddStation(msg.drv, &msg.body.add_sta_info);
++			Handle_AddStation(msg.vif, &msg.body.add_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_STATION:
+-			Handle_DelStation(msg.drv, &msg.body.del_sta_info);
++			Handle_DelStation(msg.vif, &msg.body.del_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_EDIT_STATION:
+-			Handle_EditStation(msg.drv, &msg.body.edit_sta_info);
++			Handle_EditStation(msg.vif, &msg.body.edit_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_INACTIVETIME:
+-			Handle_Get_InActiveTime(msg.drv, &msg.body.mac_info);
++			Handle_Get_InActiveTime(msg.vif, &msg.body.mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SCAN_TIMER_FIRED:
+ 			PRINT_D(HOSTINF_DBG, "Scan Timeout\n");
+ 
+-			Handle_ScanDone(msg.drv, SCAN_EVENT_ABORTED);
++			Handle_ScanDone(msg.vif, SCAN_EVENT_ABORTED);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CONNECT_TIMER_FIRED:
+ 			PRINT_D(HOSTINF_DBG, "Connect Timeout\n");
+-			Handle_ConnectTimeout(msg.drv);
++			Handle_ConnectTimeout(msg.vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_POWER_MGMT:
+-			Handle_PowerManagement(msg.drv, &msg.body.pwr_mgmt_info);
++			Handle_PowerManagement(msg.vif,
++					       &msg.body.pwr_mgmt_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+-			handle_set_wfi_drv_handler(msg.drv, &msg.body.drv);
++			handle_set_wfi_drv_handler(msg.vif, &msg.body.drv);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_OPERATION_MODE:
+-			handle_set_operation_mode(msg.drv, &msg.body.mode);
++			handle_set_operation_mode(msg.vif, &msg.body.mode);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_IPADDRESS:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
+-			handle_set_ip_address(vif, msg.drv,
++			handle_set_ip_address(vif,
+ 					      msg.body.ip_info.ip_addr,
+ 					      msg.body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_IPADDRESS:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_IPADDRESS\n");
+-			handle_get_ip_address(vif, msg.drv,
+-					      msg.body.ip_info.idx);
++			handle_get_ip_address(vif, msg.body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MAC_ADDRESS:
+-			handle_set_mac_address(msg.drv,
++			handle_set_mac_address(msg.vif,
+ 					       &msg.body.set_mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_MAC_ADDRESS:
+-			handle_get_mac_address(msg.drv,
++			handle_get_mac_address(msg.vif,
+ 					       &msg.body.get_mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REMAIN_ON_CHAN:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_REMAIN_ON_CHAN\n");
+-			Handle_RemainOnChan(msg.drv, &msg.body.remain_on_ch);
++			Handle_RemainOnChan(msg.vif, &msg.body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REGISTER_FRAME:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_REGISTER_FRAME\n");
+-			Handle_RegisterFrame(msg.drv, &msg.body.reg_frame);
++			Handle_RegisterFrame(msg.vif, &msg.body.reg_frame);
+ 			break;
+ 
+ 		case HOST_IF_MSG_LISTEN_TIMER_FIRED:
+-			Handle_ListenStateExpired(msg.drv, &msg.body.remain_on_ch);
++			Handle_ListenStateExpired(msg.vif, &msg.body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MULTICAST_FILTER:
+ 			PRINT_D(HOSTINF_DBG, "HOST_IF_MSG_SET_MULTICAST_FILTER\n");
+-			Handle_SetMulticastFilter(msg.drv, &msg.body.multicast_info);
++			Handle_SetMulticastFilter(msg.vif, &msg.body.multicast_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_ALL_RX_BA_SESSIONS:
+-			Handle_DelAllRxBASessions(msg.drv, &msg.body.session_info);
++			Handle_DelAllRxBASessions(msg.vif, &msg.body.session_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_ALL_STA:
+-			Handle_DelAllSta(msg.drv, &msg.body.del_all_sta_info);
++			Handle_DelAllSta(msg.vif, &msg.body.del_all_sta_info);
+ 			break;
+ 
+ 		default:
+@@ -2998,11 +3029,11 @@ static int hostIFthread(void *pvArg)
+ 
+ static void TimerCB_Scan(unsigned long arg)
+ {
+-	void *pvArg = (void *)arg;
++	struct wilc_vif *vif = (struct wilc_vif *)arg;
+ 	struct host_if_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+-	msg.drv = pvArg;
++	msg.vif = vif;
+ 	msg.id = HOST_IF_MSG_SCAN_TIMER_FIRED;
+ 
+ 	wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+@@ -3010,11 +3041,11 @@ static void TimerCB_Scan(unsigned long arg)
+ 
+ static void TimerCB_Connect(unsigned long arg)
+ {
+-	void *pvArg = (void *)arg;
++	struct wilc_vif *vif = (struct wilc_vif *)arg;
+ 	struct host_if_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+-	msg.drv = pvArg;
++	msg.vif = vif;
+ 	msg.id = HOST_IF_MSG_CONNECT_TIMER_FIRED;
+ 
+ 	wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+@@ -3447,7 +3478,7 @@ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+ 		return -EFAULT;
+ 	}
+ 
+-	hif_drv->connect_timer.data = (unsigned long)hif_drv;
++	hif_drv->connect_timer.data = (unsigned long)vif;
+ 	mod_timer(&hif_drv->connect_timer,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_CONNECT_TIMEOUT));
+ 
+@@ -3507,13 +3538,14 @@ s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
+ 	return result;
+ }
+ 
+-static s32 host_int_get_assoc_res_info(struct host_if_drv *hif_drv,
++static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 				       u8 *pu8AssocRespInfo,
+ 				       u32 u32MaxAssocRespInfoLen,
+ 				       u32 *pu32RcvdAssocRespInfoLen)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("Driver is null\n");
+@@ -3751,7 +3783,7 @@ s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
+ 	}
+ 
+ 	PRINT_D(HOSTINF_DBG, ">> Starting the SCAN timer\n");
+-	hif_drv->scan_timer.data = (unsigned long)hif_drv;
++	hif_drv->scan_timer.data = (unsigned long)vif;
+ 	mod_timer(&hif_drv->scan_timer,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_SCAN_TIMEOUT));
+ 
+@@ -3783,21 +3815,21 @@ s32 wilc_hif_set_cfg(struct wilc_vif *vif,
+ 
+ static void GetPeriodicRSSI(unsigned long arg)
+ {
+-	struct host_if_drv *hif_drv = (struct host_if_drv *)arg;
++	struct wilc_vif *vif = (struct wilc_vif *)arg;
+ 
+-	if (!hif_drv)	{
++	if (!vif->hif_drv) {
+ 		PRINT_ER("Driver handler is NULL\n");
+ 		return;
+ 	}
+ 
+-	if (hif_drv->hif_state == HOST_IF_CONNECTED) {
++	if (vif->hif_drv->hif_state == HOST_IF_CONNECTED) {
+ 		s32 result = 0;
+ 		struct host_if_msg msg;
+ 
+ 		memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+ 		msg.id = HOST_IF_MSG_GET_RSSI;
+-		msg.drv = hif_drv;
++		msg.vif = vif;
+ 
+ 		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 		if (result) {
+@@ -3805,7 +3837,7 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 			return;
+ 		}
+ 	}
+-	periodic_rssi.data = (unsigned long)hif_drv;
++	periodic_rssi.data = (unsigned long)vif;
+ 	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
+ 
+@@ -3874,7 +3906,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 			goto _fail_mq_;
+ 		}
+ 		setup_timer(&periodic_rssi, GetPeriodicRSSI,
+-			    (unsigned long)hif_drv);
++			    (unsigned long)vif);
+ 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
 -- 
 1.9.1
 
