@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60337 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbbLUVSB (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:33890 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932857AbbLNWfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 16:18:01 -0500
-Date: Mon, 21 Dec 2015 13:17:45 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH RESEND 03/46] staging: wilc1000: rename index to
- tcp_pending_ack_idx
-Message-ID: <20151221211745.GA13495@kroah.com> (sfid-20151221_221805_903360_6178C702)
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
- <1450675130-17866-4-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450675130-17866-4-git-send-email-glen.lee@atmel.com>
+	Mon, 14 Dec 2015 17:35:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 7/8] rtlwifi: rtl8192ce: Fix handling of module parameters
+Date: Mon, 14 Dec 2015 16:34:37 -0600
+Message-Id: <1450132478-2386-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233522_806902_AA13EADC)
+In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 02:18:07PM +0900, Glen Lee wrote:
-> This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
-> this name could be confused index of txq_entry_t. It is index of tcp pending
-> ack.
-> 
-> It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
+The module parameter for software encryption was never transferred to
+the location used by the driver.
 
-You didn't describe this correctly :(
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-It should be:
-	It fixes 8e55639d066f ("staging: wilc1000: rename
-	tcp_PendingAck_index of struct txq_entry_t")
-
-I'll edit it by hand this time :(
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+index de6cb6c..4780bdc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+@@ -139,6 +139,8 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
++	rtlpriv->cfg->mod_params->sw_crypto =
++		rtlpriv->cfg->mod_params->sw_crypto;
+ 	if (!rtlpriv->psc.inactiveps)
+ 		pr_info("rtl8192ce: Power Save off (module option)\n");
+ 	if (!rtlpriv->psc.fwctrl_lps)
+-- 
+2.1.4
 
