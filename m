@@ -1,113 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35567 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462AbbLPNfp (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:33867 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932355AbbLNMpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 08:35:45 -0500
-Message-ID: <567168AF.4060804@candelatech.com> (sfid-20151216_143551_763140_E1A02603)
-Date: Wed, 16 Dec 2015 05:35:43 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 14 Dec 2015 07:45:49 -0500
+Date: Mon, 14 Dec 2015 13:46:26 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johan Hovold <johan@kernel.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Michael Welling <mwelling@ieee.org>,
+	Markus Pargmann <mpa@pengutronix.de>,
+	Mark Brown <broonie@kernel.org>,
+	Amit Kucheria <amit.kucheria@linaro.org>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Sonic Zhang <sonic.zhang@analog.com>,
+	Greg Ungerer <gerg@uclinux.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Anatolij Gustschin <agust@denx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Input <linux-input@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
+Message-ID: <20151214124626.GG23327@localhost> (sfid-20151214_134555_019605_5FDFEE5F)
+References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
+ <20151209134410.GH8644@n2100.arm.linux.org.uk>
+ <CACRpkdZcz73vtgZsCKZCJ=G3nq-yCPiO8hws4ro5HVWd8AVRCw@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-References: <5670DA9A.4010102@candelatech.com>		 (sfid-20151216_042934_976896_DCE1A2B3) <1450257464.3159.1.camel@sipsolutions.net>	 <56716386.4070107@candelatech.com> <1450272308.8247.11.camel@sipsolutions.net>
-In-Reply-To: <1450272308.8247.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACRpkdZcz73vtgZsCKZCJ=G3nq-yCPiO8hws4ro5HVWd8AVRCw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2015 05:25 AM, Johannes Berg wrote:
-> On Wed, 2015-12-16 at 05:13 -0800, Ben Greear wrote:
->> On 12/16/2015 01:17 AM, Johannes Berg wrote:
->>> On Tue, 2015-12-15 at 19:29 -0800, Ben Greear wrote:
->>>> This patch below was added to the kernel around 2/24/2015
->>>>
->>>> I am curious mostly about the first change:  I thought the
->>>> transmitter-addr relates to the radio device, not the vdev (sta,
->>>> ap,
->>>> etc).
->>>
->>> It doesn't, even on real hardware.
->>
->> No, I mean that the HWSIM_ATTR_ADDR_TRANSMITTER should relate to the
->> radio, and not the vdev, see the mac80211_hwsim.h:
->>
->>    * @HWSIM_ATTR_ADDR_TRANSMITTER: MAC address of the radio device that
->>    *	the frame was broadcasted from
->
-> I think that just means the documentation is misleading. Clearly, the
-> TA (hdr->addr2) is intended and implemented. "radio device" is a bit of
-> a misleading term when you have virtual interfaces.
+On Wed, Dec 09, 2015 at 03:46:00PM +0100, Linus Walleij wrote:
+> On Wed, Dec 9, 2015 at 2:44 PM, Russell King - ARM Linux
+> <linux@arm.linux.org.uk> wrote:
 
-Well, the old code used it as a key, and the old documentation used
-it as a key, so it is a bit of a regression to change the behaviour
-now.
+> > On Wed, Dec 09, 2015 at 02:08:35PM +0100, Linus Walleij wrote:
+> >> Because we want to have a proper userspace ABI for GPIO chips,
+> >> which involves using a character device that the user opens
+> >> and closes. While the character device is open, the underlying
+> >> kernel objects must not go away.
+> >
+> > Okay, so you stop the gpio_chip struct from going away.
+> 
+> Actually I was going to create a new struct gpio_device, but yes.
+> 
+> > What
+> > about the code which is called via gpio_chip - say, if userspace
+> > keeps the chardev open, and someone rmmod's the driver providing
+> > the GPIO driver.
+> 
+> The idea was that when what is today gpiochip_remove() is called by the
+> gpiochip driver, the static data pointer to the vtable with all
+> callbacks is set to NULL (in some safe way), and the code avoids
+> calling these, so the device goes numb.
+> 
+> I think you give me the right solution to this "safe way" below,
+> thanks!
+> 
+> > I'm not sure that splitting up objects in this way really solves
+> > anything at all.  Yes, it divorses the driver's private data from
+> > the subsystem data, but is that really an advantage?
+> 
+> I like the design pattern you describe below, and
+> I have no strong opinion on it. If there is a precedent in the kernel
+> to do it with a separate alloc_foo() function I can do that.
+> 
+> (Would like Greg's and/or Johan's opinion on this though.)
 
->> Since we are asking user-space to provide HWSIM_ATTR_ADDR_TRANSMITTER,
->> then we can use that to find the radio device.  Then, normal mac80211
->> logic can handle finding the vdevs (just as it does for ath9k).
->
-> Oh.
->
-> So you're basically arguing that we should treat it as a cookie, and on
-> outgoing frames give the hardware address, and on incoming frames use
-> it only to look up the struct mac80211_hwsim_data.
+I'd prefer separating allocation and registration rather than using a
+setup callback.
 
-yes.
+> > Things get a little more complex with gpio, because there's the
+> > issue that some methods are spinlocked while others can take
+> > semaphores, but it should be possible to come up with a solution
+> > to that - maybe an atomic_t which is incremented whenever we're
+> > in some operation provided it's >= 0 (otherwise it fails), and
+> > decremented when the operation completes.  We can then control
+> > in the unregistration path further GPIO accesses, and also
+> > prevent new accesses occuring by setting the atomic_t to -1.
+> > This shouldn't require any additional locking in any path.  It
+> > does mean that the unregistration path needs careful thought to
+> > ensure that when we set it to -1, we wait for it to be dropped
+> > by the appropriate amount.
+> 
+> Yeah we will both in spinlocks/hotpath and
+> semaphores/mutexes/slowpath in these ops for sure :/
+> 
+> The atomic hack should work: I understand that you mean
+> we read it and set it to -1 and if it was 2 wait for it to
+> become -3, then conclude unregistration with callbacks
+> numbed.
 
->
->> And in this case, there is no reason to have more than one address
->> associated with the hwsim radio device.  We could add a pretty simple
->> hash to keep the lookup near constant time instead of linear search
->> as the current behaviour is...
->
-> Yeah, ok, that would be (have been) doable I guess. We'd still have the
-> real TA in the frame itself (hdr->addr2).
->
->> I think that wmediumd should keep it's own mapping of what radio
->> a vdev is on and use the proper hwsim radio addr for the
->> HWSIM_ATTR_ADDR_TRANSMITTER attribute.
->
-> That's somewhat difficult for it, since it could only populate that
-> mapping on actual TX frames.
+Ok, but let's take a step back. So you have all this in place and a
+consumer calls gpiod_get_value() that returns an errno because the device
+is gone. Note that this wasn't even possible before e20538b82f1f ("gpio:
+Propagate errors from chip->get()") that went into *v4.3*, and I assume
+most drivers would need to be updated to even handle that that gpio
+call, and all future calls, are now suddenly failing.
 
-It can also be managed by an outside entity to set up mappings
-as needed.  And, it could be made smarter to listen to wifi
-netlink events or whatever.
+So this ties into the generic problem of inter-device dependencies. Does
+it even make sense to keep the consumer around, now that its gpio
+resources have gone away?  
 
-And anyway, unless you are doing all passive scans, you should always
-get at least some packet transmitted (beacon or probe request), right?
+If your current concern is a new gpio chardev interface, perhaps solving
+only that use case in the way that Dimitry suggested elsewhere in this
+thread is what you should be doing.
 
->
-> I think this is pretty much a done deal by now though since I don't
-> really want to break wmediumd.
+> Then there is a particular case that occurs with USB or similar
+> pluggable buses, where there is a glitch or powercycle on the
+> bus, and the same device goes away and comes back in
+> a few milliseconds, and that means it should reattach to the
+> character device that is already open.
 
-It was not the only user-space to use the API :)
+No, that does not follow. A USB device being disconnected and
+reconnected is considered to be a new device. All state is gone, and the
+dangling character device will be unusable.
 
->
-> If we wanted to go this route I think we should be more explicit and
-> simply use the HWSIM_ATTR_RADIO_ID attribute. We could support that
-> easily - just see if the RADIO_ID is present and look up the
-> transmitter (or receiver btw) radio based on the RADIO_ID if present -
-> that gives a clean path forward too since wmediumd can be taught to
-> specify both knowing the kernel will prefer the radio ID if present.
+> Making that work is however non-trivial :(
 
-Well, that would be fine too.  The nice thing about the address,though,
-is that you can query it as part of /sys/class/ieee..... and other already-implemented
-interfaces.  Finding the radio-id would require new API in this case, which
-is a bit of work.
+Fortunately, you don't need to worry about that.
 
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Johan
