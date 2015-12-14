@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35160 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbbLaIUj (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:38414 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932315AbbLNNPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 03:20:39 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 14 Dec 2015 08:15:45 -0500
+Received: by igbxm8 with SMTP id xm8so83014137igb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 05:15:44 -0800 (PST)
+Date: Mon, 14 Dec 2015 07:13:47 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>, j@w1.fi,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [wireless-regdb] [PATCH] regulatory: fix world regdomain
+Message-ID: <20151214131347.GA146390@ubuntu-hedt> (sfid-20151214_141548_888983_CFDEB733)
+References: <1449852319-27189-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Subject: Re: wlcore/wl18xx: fw logger over sdio
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1450787406-22152-1-git-send-email-guym@ti.com>
-To: Guy Mishol <guym@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Shahar Patury <shaharp@ti.com>,
-	Guy Mishol <guym@ti.com>
-Message-Id: <20151231082038.E8BA160217@smtp.codeaurora.org> (sfid-20151231_092042_170331_C6326B69)
-Date: Thu, 31 Dec 2015 08:20:38 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449852319-27189-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> From: Shahar Patury <shaharp@ti.com>
+On Fri, Dec 11, 2015 at 05:45:19PM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Enable the FW Logger to work over the SDIO interface in addition to over UART
-> interface. In the new design we use fw internal memory instead of packet ram
-> that was used in older (wl12xx) design. This change reduces the impact on TP
-> and stability.
+> Back in 2012, in commit 6d87df6f9657 ("regdb: allow 40 MHz on world
+> roaming channels 12/13") I evidently broke the world regulatory data
+> to the point where it was always discarded by the kernel because the
+> 40 MHz bandwidth doesn't fit into the rule range.
 > 
-> A new event was added to notify fw logger is ready for reading. Dynamic
-> configuration to debugfs was added as well.
+> Around the same time, I updated the in-kernel regulatory domain with
+> the same mistake, but unlike the userspace data, the in-kernel data
+> isn't actually checked for validity.
 > 
-> Signed-off-by: Shahar Patury <shaharp@ti.com>
-> Signed-off-by: Guy Mishol <guym@ti.com>
+> The end result was that the (inconsequentially invalid) data in the
+> kernel was always used because the userspace data was rejected.
+> 
+> Fix this by changing the rule to 20 MHz and adding the AUTO-BW flag.
+> It seems that Janusz had made a similar change in commit 5cfc8073ce35
+> ("wireless-regdb: set AUTO bandwidth for world regulatory"), but it
+> was reverted for unknown reasons a little less than half a year later
+> (commit cfa3734b11b2).
+> 
+> The kernel uses very similar invalid rules, but it never checks them
+> for validity and just uses them, so HT40- ends up getting enabled on
+> these channels. Thus, when the kernel requests the world regdomain
+> from userspace, gets the invalid data and rejects it, it falls back
+> to using the built-in data which is very similar and not validated.
+> 
+> I've tested this now, and the ruleset is now accepted by the kernel
+> and results in the correct data.
+> 
+> This also means that Jouni's 160 MHz fixes were inconsequentialy and
+> only the corresponding kernel changes could have been used.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, applied to wireless-drivers-next.git.
-
-Kalle Valo
+Applied, thanks.
