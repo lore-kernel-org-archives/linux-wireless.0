@@ -1,151 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:33748 "EHLO
-	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965077AbbLHPjP (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19953 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752858AbbLNMRX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 10:39:15 -0500
-Received: by vkca188 with SMTP id a188so16506792vkc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 07:39:14 -0800 (PST)
+	Mon, 14 Dec 2015 07:17:23 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGb8j027452
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:22 -0800
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng024-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:22 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 09/14] mwifiex: add debugfs file for testing reset of card
+Date: Mon, 14 Dec 2015 04:15:10 -0800
+Message-ID: <1450095315-19927-10-git-send-email-akarwar@marvell.com> (sfid-20151214_131728_282285_41F182C0)
+In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com> <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 8 Dec 2015 21:08:55 +0530
-Message-ID: <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com> (sfid-20151208_163919_565040_F09BEA4A)
-Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
- notification IE in beacon
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2015 at 7:34 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
->
-> From: Eyal Shapira <eyal@wizery.com>
->
-> An AP can send an operating channel width change in a beacon
-> opmode notification IE as long as there's a change in the nss as
-> well (See 802.11ac-2013 section 10.41).
-> So don't limit updating to nss only from an opmode notification IE.
->
-> Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  net/mac80211/cfg.c         |  3 +--
->  net/mac80211/ieee80211_i.h |  4 ++--
->  net/mac80211/mlme.c        |  2 +-
->  net/mac80211/rx.c          |  3 +--
->  net/mac80211/vht.c         | 10 +++-------
->  5 files changed, 8 insertions(+), 14 deletions(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index b9e2c2f..a90d875 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1198,8 +1198,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
->                  * rc isn't initialized here yet, so ignore it
->                  */
->                 __ieee80211_vht_handle_opmode(sdata, sta,
-> -                                             params->opmode_notif,
-> -                                             band, false);
-> +                                             params->opmode_notif, band);
->         }
->
->         if (ieee80211_vif_is_mesh(&sdata->vif))
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 582ea86..747402d 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -1718,10 +1718,10 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
->                                  struct ieee80211_mgmt *mgmt);
->  u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->                                    struct sta_info *sta, u8 opmode,
-> -                                  enum ieee80211_band band, bool nss_only);
-> +                                 enum ieee80211_band band);
->  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->                                  struct sta_info *sta, u8 opmode,
-> -                                enum ieee80211_band band, bool nss_only);
-> +                                enum ieee80211_band band);
->  void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
->                                       struct ieee80211_sta_vht_cap *vht_cap);
->  void ieee80211_get_vht_mask_from_cap(__le16 vht_cap,
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 1e6b337..62c8e4f 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3584,7 +3584,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->
->         if (sta && elems.opmode_notif)
->                 ieee80211_vht_handle_opmode(sdata, sta, *elems.opmode_notif,
-> -                                           rx_status->band, true);
-> +                                           rx_status->band);
->         mutex_unlock(&local->sta_mtx);
->
->         changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 901c72b..fe675d7 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2738,8 +2738,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
->                         opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
->
->                         ieee80211_vht_handle_opmode(rx->sdata, rx->sta,
-> -                                                   opmode, status->band,
-> -                                                   false);
-> +                                                   opmode, status->band);
->                         goto handled;
->                 }
->                 case WLAN_VHT_ACTION_GROUPID_MGMT: {
-> diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-> index d2f2ff6..a02525a 100644
-> --- a/net/mac80211/vht.c
-> +++ b/net/mac80211/vht.c
-> @@ -399,7 +399,7 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
->
->  u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->                                   struct sta_info *sta, u8 opmode,
-> -                                 enum ieee80211_band band, bool nss_only)
-> +                                 enum ieee80211_band band)
->  {
->         struct ieee80211_local *local = sdata->local;
->         struct ieee80211_supported_band *sband;
-> @@ -422,9 +422,6 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->                 changed |= IEEE80211_RC_NSS_CHANGED;
->         }
->
-> -       if (nss_only)
-> -               return changed;
-> -
->         switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
->         case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
->                 sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_20;
-> @@ -473,13 +470,12 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
->
->  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->                                  struct sta_info *sta, u8 opmode,
-> -                                enum ieee80211_band band, bool nss_only)
-> +                                enum ieee80211_band band)
->  {
->         struct ieee80211_local *local = sdata->local;
->         struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
->
-> -       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
-> -                                                   band, nss_only);
-> +       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode, band);
->
->         if (changed > 0)
->                 rate_control_rate_update(local, sband, sta, changed);
+This provides an option for user to power cycle the card.
+It will be used to change the firmware without actually
+rebooting the system.
 
-Not related to current change.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 30 ++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-I was looking at this code a while ago and found that rate_control_rate_update
-doesn't update the rates from rx_nss, rather it updates from HT/VHT
-capabilities.
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index 9824d8d..5e55629 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -906,6 +906,34 @@ mwifiex_timeshare_coex_write(struct file *file, const char __user *ubuf,
+ 		return count;
+ }
+ 
++static ssize_t
++mwifiex_reset_write(struct file *file,
++		    const char __user *ubuf, size_t count, loff_t *ppos)
++{
++	struct mwifiex_private *priv = file->private_data;
++	struct mwifiex_adapter *adapter = priv->adapter;
++	char cmd;
++	bool result;
++
++	if (copy_from_user(&cmd, ubuf, sizeof(cmd)))
++		return -EFAULT;
++
++	if (strtobool(&cmd, &result))
++		return -EINVAL;
++
++	if (!result)
++		return -EINVAL;
++
++	if (adapter->if_ops.card_reset) {
++		dev_info(adapter->dev, "Resetting per request\n");
++		adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
++		mwifiex_cancel_all_pending_cmd(adapter);
++		adapter->if_ops.card_reset(adapter);
++	}
++
++	return count;
++}
++
+ #define MWIFIEX_DFS_ADD_FILE(name) do {                                 \
+ 	if (!debugfs_create_file(#name, 0644, priv->dfs_dev_dir,        \
+ 			priv, &mwifiex_dfs_##name##_fops))              \
+@@ -943,6 +971,7 @@ MWIFIEX_DFS_FILE_OPS(hscfg);
+ MWIFIEX_DFS_FILE_OPS(histogram);
+ MWIFIEX_DFS_FILE_OPS(debug_mask);
+ MWIFIEX_DFS_FILE_OPS(timeshare_coex);
++MWIFIEX_DFS_FILE_WRITE_OPS(reset);
+ 
+ /*
+  * This function creates the debug FS directory structure and the files.
+@@ -970,6 +999,7 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
+ 	MWIFIEX_DFS_ADD_FILE(histogram);
+ 	MWIFIEX_DFS_ADD_FILE(debug_mask);
+ 	MWIFIEX_DFS_ADD_FILE(timeshare_coex);
++	MWIFIEX_DFS_ADD_FILE(reset);
+ }
+ 
+ /*
+-- 
+1.8.1.4
 
-So how does the NSS update from OP MODE IE work?
-(BW part is handled in minstrel from sta->bandwidth)
