@@ -1,86 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756022AbbLAJ7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:30 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/41] iwlwifi: mvm: remove redundant d0i3 flag from the config struct
-Date: Tue,  1 Dec 2015 11:58:41 +0200
-Message-Id: <1448963947-24302-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110307_999408_DEB3C129)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24791 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752284AbbLNMRC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 07:17:02 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECFEvY012215
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:01 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1yswkxr03v-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:01 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 00/14] mwifiex fixes
+Date: Mon, 14 Dec 2015 04:15:01 -0800
+Message-ID: <1450095315-19927-1-git-send-email-akarwar@marvell.com> (sfid-20151214_131706_754762_207FCAEE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+These patches include few fixes for mwifiex and add a
+debugfs file for chip reset.
 
-The d0i3 flag in the device configuration structure is redundant,
-because the same information can be determined by checking the
-firmware capability flag.
+Amitkumar Karwar (6):
+  mwifiex: suppress "Rx of mgmt packet failed" message
+  mwifiex: remove redundant timestamp assignment
+  mwifiex: add debugfs file for testing reset of card
+  mwifiex: fix AMPDU not setup on TDLS link problem
+  mwifiex: update region_code_index array
+  mwifiex: use world for unidentified region code
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c   | 1 -
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 --
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    | 9 ++++-----
- 3 files changed, 4 insertions(+), 8 deletions(-)
+Shengzhen Li (2):
+  mwifiex: change ap and station interface limits
+  mwifiex: multiple bss support
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index 9bcc0bf..dd22b78 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -154,7 +154,6 @@ static const struct iwl_tt_params iwl8000_tt_params = {
- 	.base_params = &iwl8000_base_params,				\
- 	.led_mode = IWL_LED_RF_STATE,					\
- 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_8000,		\
--	.d0i3 = true,							\
- 	.features = NETIF_F_RXCSUM,					\
- 	.non_shared_ant = ANT_A,					\
- 	.dccm_offset = IWL8260_DCCM_OFFSET,				\
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 9109708..652cdfe 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -295,7 +295,6 @@ struct iwl_pwr_tx_backoff {
-  * @high_temp: Is this NIC is designated to be in high temperature.
-  * @host_interrupt_operation_mode: device needs host interrupt operation
-  *	mode set
-- * @d0i3: device uses d0i3 instead of d3
-  * @nvm_hw_section_num: the ID of the HW NVM section
-  * @features: hw features, any combination of feature_whitelist
-  * @pwr_tx_backoffs: translation table between power limits and backoffs
-@@ -342,7 +341,6 @@ struct iwl_cfg {
- 	const bool internal_wimax_coex;
- 	const bool host_interrupt_operation_mode;
- 	bool high_temp;
--	bool d0i3;
- 	u8   nvm_hw_section_num;
- 	bool lp_xtal_workaround;
- 	const struct iwl_pwr_tx_backoff *pwr_tx_backoffs;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 347d953..897d06f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -916,11 +916,10 @@ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
- 
- static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
- {
--	return mvm->trans->cfg->d0i3 &&
--	       mvm->trans->d0i3_mode != IWL_D0I3_MODE_OFF &&
--	       !iwlwifi_mod_params.d0i3_disable &&
--	       fw_has_capa(&mvm->fw->ucode_capa,
--			   IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
-+	return mvm->trans->d0i3_mode != IWL_D0I3_MODE_OFF &&
-+		!iwlwifi_mod_params.d0i3_disable &&
-+		fw_has_capa(&mvm->fw->ucode_capa,
-+			    IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
- }
- 
- static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
+Xinming Hu (3):
+  mwifiex: fix bug for wildcard-prefix wowlan pattern
+  mwifiex: increase supported wowlan pattern length
+  mwifiex: abort cac in del_station() handler
+
+Zhaoyang Liu (1):
+  mwifiex: advertise SMS4 cipher suite
+
+chunfan chen (2):
+  mwifiex: fix wake on disconnect feature
+  mwifiex: fix WPA connection problem
+
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c    |  2 -
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   | 10 +++
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 44 +++++++++----
+ drivers/net/wireless/marvell/mwifiex/cfp.c         |  2 +-
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  4 +-
+ drivers/net/wireless/marvell/mwifiex/debugfs.c     | 30 +++++++++
+ drivers/net/wireless/marvell/mwifiex/decl.h        |  6 +-
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  2 +-
+ drivers/net/wireless/marvell/mwifiex/main.h        | 44 ++++++++++---
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 75 +++++++++++++++-------
+ drivers/net/wireless/marvell/mwifiex/sta_rx.c      |  2 +-
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c    |  3 +-
+ 12 files changed, 168 insertions(+), 56 deletions(-)
+
 -- 
-2.5.0
+1.8.1.4
 
