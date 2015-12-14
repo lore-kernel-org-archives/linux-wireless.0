@@ -1,63 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964890AbbLHOGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:06:32 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/9] mac80211: add flag for duplication check
-Date: Tue,  8 Dec 2015 16:04:33 +0200
-Message-Id: <1449583479-26658-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150638_723337_AC6E4D45)
-In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20065 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932276AbbLNLU2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 06:20:28 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: allow Mesh Point to install peer security key
+References: <1449165055-27782-1-git-send-email-poh@qca.qualcomm.com>
+Date: Mon, 14 Dec 2015 13:20:16 +0200
+In-Reply-To: <1449165055-27782-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Thu, 3 Dec 2015 09:50:55 -0800")
+Message-ID: <877fkh46q7.fsf@kamboji.qca.qualcomm.com> (sfid-20151214_122038_673379_50AA9E62)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-Add an option for driver to check for packet duplication
-by itself.
-This is needed for example by the iwlwifi driver which
-parallelizes the RX path and does the duplcation check
-per queue.
+> Mesh Point requires peer security key install when running
+> in secured mode since it's a type of peer links, otherwise peer
+> link will be removed due to key install failure.
+>
+> MFP feature set is required to run Mesh in secured mode and
+> QCA988X firmware, 10.2.4.70.14-2 and above, is the only one
+> supporting secured Mesh at this moment.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/mac80211.h | 2 +-
- net/mac80211/rx.c      | 3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Applied, thanks.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 71be30d..f4cbad4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1063,7 +1063,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_HT_GF			= BIT(13),
- 	RX_FLAG_AMPDU_DETAILS		= BIT(14),
- 	RX_FLAG_PN_VALIDATED		= BIT(15),
--	/* bit 16 free */
-+	RX_FLAG_DUP_VALIDATED		= BIT(16),
- 	RX_FLAG_AMPDU_LAST_KNOWN	= BIT(17),
- 	RX_FLAG_AMPDU_IS_LAST		= BIT(18),
- 	RX_FLAG_AMPDU_DELIM_CRC_ERROR	= BIT(19),
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c4198d48..901c72b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1099,6 +1099,9 @@ ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 
-+	if (status->flag & RX_FLAG_DUP_VALIDATED)
-+		return RX_CONTINUE;
-+
- 	/*
- 	 * Drop duplicate 802.11 retransmissions
- 	 * (IEEE 802.11-2012: 9.3.2.10 "Duplicate detection and recovery")
 -- 
-2.5.0
-
+Kalle Valo
