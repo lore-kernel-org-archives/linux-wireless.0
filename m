@@ -1,98 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:32823 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754824AbbLQTyH (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:35643 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932845AbbLNWe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 14:54:07 -0500
-Received: by mail-lb0-f176.google.com with SMTP id kw15so51896012lbb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 11:54:06 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: use module_init for the main part of bus initialization
-Date: Thu, 17 Dec 2015 20:53:54 +0100
-Message-Id: <1450382034-3976-1-git-send-email-zajec5@gmail.com> (sfid-20151217_205413_978002_56E6C03E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Dec 2015 17:34:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 4/8] rtlwifi: rtl8188ee: Fix module parameter initialization
+Date: Mon, 14 Dec 2015 16:34:34 -0600
+Message-Id: <1450132478-2386-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233517_666634_23CA9218)
+In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far we were using fs_initcall. It was (and still is) needed because
-struct bus_type has to be registered early. However main bus
-initialization has to happen later as it requires SPROM which depends on
-NVRAM which depends on mtd.
-Solve it by using fs_initcall only for bus_register call and module_init
-for the rest. It affects bcma only when built-in obviously.
+In this driver, parameters disable_watchdog and sw_crypto are never
+copied into the locations used in the main code. While modifying the
+parameter handling, the copying of parameter msi_support is moved to
+be with the rest.
 
-This was tested with BCM4706 and BCM5357C0 (BCM47XX), BCM4708A0
-(ARCH_BCM_5301X) and BCM43225 (PCIe card with bcma as module).
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
 ---
-This change was already suggested in RFC patch early this year:
-https://patchwork.kernel.org/patch/5802611/
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Noone objected / got any better idea, so I'm sending a final version.
-
-V1 (from RFC):
-* Use int bcma_bus_registered to avoid #ifdef MODULE and make code simpler.
-* Document reason for this behavior better.
----
- drivers/bcma/main.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 59d8d0d..c466f75 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -668,11 +668,36 @@ static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- 			      core->id.rev, core->id.class);
- }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index 1134412..47e32cb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -88,8 +88,6 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	u8 tid;
  
--static int __init bcma_modinit(void)
-+static unsigned int bcma_bus_registered;
-+
-+/*
-+ * If built-in, bus has to be registered early, before any driver calls
-+ * bcma_driver_register.
-+ * Otherwise registering driver would trigger BUG in driver_register.
-+ */
-+static int __init bcma_init_bus_register(void)
- {
- 	int err;
- 
-+	if (bcma_bus_registered)
-+		return 0;
-+
- 	err = bus_register(&bcma_bus_type);
-+	if (!err)
-+		bcma_bus_registered = 1;
-+
-+	return err;
-+}
-+#ifndef MODULE
-+fs_initcall(bcma_init_bus_register);
-+#endif
-+
-+/* Main initialization has to be done with SPI/mtd/NAND/SPROM available */
-+static int __init bcma_modinit(void)
-+{
-+	int err;
-+
-+	err = bcma_init_bus_register();
- 	if (err)
- 		return err;
- 
-@@ -691,7 +716,7 @@ static int __init bcma_modinit(void)
- 
- 	return err;
- }
--fs_initcall(bcma_modinit);
-+module_init(bcma_modinit);
- 
- static void __exit bcma_modexit(void)
- {
+ 	rtl8188ee_bt_reg_init(hw);
+-	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
+-
+ 	rtlpriv->dm.dm_initialgain_enable = 1;
+ 	rtlpriv->dm.dm_flag = 0;
+ 	rtlpriv->dm.disable_framebursting = 0;
+@@ -138,6 +136,11 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
++	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
++	rtlpriv->cfg->mod_params->sw_crypto =
++		rtlpriv->cfg->mod_params->sw_crypto;
++	rtlpriv->cfg->mod_params->disable_watchdog =
++		rtlpriv->cfg->mod_params->disable_watchdog;
+ 	if (rtlpriv->cfg->mod_params->disable_watchdog)
+ 		pr_info("watchdog disabled\n");
+ 	if (!rtlpriv->psc.inactiveps)
 -- 
-1.8.4.5
+2.1.4
 
