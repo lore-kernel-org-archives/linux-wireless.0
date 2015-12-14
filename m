@@ -1,142 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:47813 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932184AbbLXPgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 10:36:12 -0500
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Subject: [PATCH v2 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
-Date: Thu, 24 Dec 2015 17:35:35 +0200
-Message-Id: <1450971335-15961-4-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151224_163619_273789_062482EC)
-In-Reply-To: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
-References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+Received: from mail.us.es ([193.147.175.20]:51641 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751145AbbLNUMj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 15:12:39 -0500
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+	by mail.us.es (Postfix) with ESMTP id DACABDA86B
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 21:12:34 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id C8949DA80D
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 21:12:34 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id 6D5C0DA808
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 21:12:32 +0100 (CET)
+Date: Mon, 14 Dec 2015 21:12:31 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: [ANNOUNCE] Another round of NetDev 1.1 updates
+Message-ID: <20151214201231.GA9173@salvia> (sfid-20151214_211248_943410_D561FA7E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Device tree modifications:
-- Pinmux for SPI0 and WiFi GPIOs.
-- SPI0 node with wlcore as a child node.
+Hi!
 
-Cc: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-Acked-by: Igor Grinberg <grinberg@complab.co.il>
----
-v1 -> v2: replace interrupts and interrupt-parent with interrupts-extended.
+We would like to share with you another round of incremental updates
+on accepted sessions in netdev 1.1, the community-driven Linux
+networking conference held back-to-back with netconf in Sevilla,
+Spain, February 10-12, 2016.
 
- arch/arm/boot/dts/am335x-cm-t335.dts | 57 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 56 insertions(+), 1 deletion(-)
+= Keynote =
 
-diff --git a/arch/arm/boot/dts/am335x-cm-t335.dts b/arch/arm/boot/dts/am335x-cm-t335.dts
-index 42e9b66..31f8371 100644
---- a/arch/arm/boot/dts/am335x-cm-t335.dts
-+++ b/arch/arm/boot/dts/am335x-cm-t335.dts
-@@ -11,6 +11,7 @@
- /dts-v1/;
- 
- #include "am33xx.dtsi"
-+#include <dt-bindings/interrupt-controller/irq.h>
- 
- / {
- 	model = "CompuLab CM-T335";
-@@ -40,6 +41,15 @@
- 		regulator-max-microvolt = <3300000>;
- 	};
- 
-+	/* Regulator for WiFi */
-+	vwlan_fixed: fixedregulator@2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vwlan_fixed";
-+		gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>; /* gpio0_20 */
-+		enable-active-high;
-+		regulator-boot-off;
-+	};
-+
- 	backlight {
- 		compatible = "pwm-backlight";
- 		pwms = <&ecap0 0 50000 0>;
-@@ -50,7 +60,10 @@
- 
- &am33xx_pinmux {
- 	pinctrl-names = "default";
--	pinctrl-0 = <&bluetooth_pins>;
-+	pinctrl-0 = <
-+		  &bluetooth_pins
-+		  &wifi_pins
-+	>;
- 
- 	i2c0_pins: pinmux_i2c0_pins {
- 		pinctrl-single,pins = <
-@@ -223,6 +236,21 @@
- 		>;
- 	};
- 
-+	spi0_pins: pinmux_spi0_pins {
-+		pinctrl-single,pins = <
-+			/* spi0_sclk.spi0_sclk */
-+			AM33XX_IOPAD(0x950, PIN_INPUT | MUX_MODE0)
-+			/* spi0_d0.spi0_d0 */
-+			AM33XX_IOPAD(0x954, PIN_OUTPUT_PULLUP | MUX_MODE0)
-+			/* spi0_d1.spi0_d1 */
-+			AM33XX_IOPAD(0x958, PIN_INPUT | MUX_MODE0)
-+			/* spi0_cs0.spi0_cs0 */
-+			AM33XX_IOPAD(0x95C, PIN_OUTPUT | MUX_MODE0)
-+			/* spi0_cs1.spi0_cs1 */
-+			AM33XX_IOPAD(0x960, PIN_OUTPUT | MUX_MODE0)
-+		>;
-+	};
-+
- 	/* wl1271 bluetooth */
- 	bluetooth_pins: pinmux_bluetooth_pins {
- 		pinctrl-single,pins = <
-@@ -230,6 +258,16 @@
- 			AM33XX_IOPAD(0x9b0, PIN_OUTPUT_PULLUP | MUX_MODE7)
- 		>;
- 	};
-+
-+	/* wl1271 WiFi */
-+	wifi_pins: pinmux_wifi_pins {
-+		pinctrl-single,pins = <
-+			/* EMU1.gpio3_8 - WiFi IRQ */
-+			AM33XX_IOPAD(0x9e8, PIN_INPUT_PULLUP | MUX_MODE7)
-+			/* XDMA_EVENT_INTR1.gpio0_20 - WiFi enable */
-+			AM33XX_IOPAD(0x9b4, PIN_OUTPUT | MUX_MODE7)
-+		>;
-+	};
- };
- 
- &uart0 {
-@@ -394,3 +432,20 @@ status = "okay";
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&mmc1_pins>;
- };
-+
-+&spi0 {
-+	status = "okay";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&spi0_pins>;
-+	ti,pindir-d0-out-d1-in = <1>;
-+	/* WLS1271 WiFi */
-+	wlcore: wlcore@1 {
-+		compatible = "ti,wl1271";
-+		reg = <1>;
-+		spi-max-frequency = <48000000>;
-+		clock-xtal;
-+		ref-clock-frequency = <38400000>;
-+		interrupts-extended = <&gpio3 8 IRQ_TYPE_LEVEL_HIGH>;
-+		vwlan-supply = <&vwlan_fixed>;
-+	};
-+};
--- 
-2.5.0
+* "Hardware Checksumming: Less is More" (David S. Miller)
 
+= BoF =
+
+* "Unlocking SR-IOV in Linux" (John Fastabend)
+
+= Talks =
+
+* "Measuring wifi performance across all Google Fiber customers"
+  (Avery Pennarun)
+
+* "Load balancing with nftables" (Laura Garcia)
+
+= Tutorials =
+
+* "Running Cellular Network Infrastructure on Linux" (Harald Welte)
+
+Remember session proposal submission is open until Dec 20th.
+
+Registration is open at: https://www.netdevconf.org/1.1/registration.html
+
+             _________________________
+            / If you miss netdev 1.1, \
+            \ you'll regret!          /
+             -------------------------
+                \   ^__^
+                 \  (oo)\_______
+                    (__)\       )\/\
+                        ||----w |
+                        ||     ||
+
+For more info, visit:
+* netdev 1.1: https://www.netdevconf.org/1.1/
+* netconf 2016: http://vger.kernel.org/netconf2016.html
+
+We would also like to thank those that already confirmed sponsorship:
+Cumulus Networks, Facebook, VmWare, Google, Mellanox, Mojatatu
+Networks, OISF/Suricata and Zen Load Balancer. Thank you.
