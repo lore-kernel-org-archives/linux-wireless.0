@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751563AbbLUUvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:02 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/45] iwlwifi: mvm: rs: fix a potential out of bounds access
-Date: Mon, 21 Dec 2015 22:50:06 +0200
-Message-Id: <1450731046-2796-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215109_621244_AA68CAC4)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63912 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752779AbbLNMRN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 07:17:13 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGb8g027452
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:13 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng01n-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:13 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 01/14] mwifiex: change ap and station interface limits
+Date: Mon, 14 Dec 2015 04:15:02 -0800
+Message-ID: <1450095315-19927-2-git-send-email-akarwar@marvell.com> (sfid-20151214_131753_849827_1F9D8FFB)
+In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Shengzhen Li <szli@marvell.com>
 
-Klocwork pointed these out. There is a theoretical possibility
-that rate->index might be set to IWL_RATE_INVALID (15).
-This could trigger an out of bounds access on ht_vht_rates or
-legacy_rates arrays. Fix it by adding some checks.
+ap/station interface limit has been changed to allow
+creating maximum 3 interfaces.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index feb775a..31b082e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -552,9 +552,10 @@ static char *rs_pretty_rate(const struct rs_rate *rate)
- 	};
- 	const char *rate_str;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 65dd85d..47d8afd 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -26,12 +26,10 @@ module_param(reg_alpha2, charp, 0);
  
--	if (is_type_legacy(rate->type))
-+	if (is_type_legacy(rate->type) && (rate->index <= IWL_RATE_54M_INDEX))
- 		rate_str = legacy_rates[rate->index];
--	else if (is_type_ht(rate->type) || is_type_vht(rate->type))
-+	else if ((is_type_ht(rate->type) || is_type_vht(rate->type)) &&
-+		 (rate->index <= IWL_RATE_MCS_9_INDEX))
- 		rate_str = ht_vht_rates[rate->index];
- 	else
- 		rate_str = "BAD_RATE";
+ static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
+ 	{
+-		.max = 2, .types = BIT(NL80211_IFTYPE_STATION) |
++		.max = 3, .types = BIT(NL80211_IFTYPE_STATION) |
+ 				   BIT(NL80211_IFTYPE_P2P_GO) |
+-				   BIT(NL80211_IFTYPE_P2P_CLIENT),
+-	},
+-	{
+-		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
++				   BIT(NL80211_IFTYPE_P2P_CLIENT) |
++				   BIT(NL80211_IFTYPE_AP),
+ 	},
+ };
+ 
 -- 
-2.5.0
+1.8.1.4
 
