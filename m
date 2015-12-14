@@ -1,61 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:36484 "EHLO trubo.inescn.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751655AbbLJLlz convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:46384 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932515AbbLNNj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 06:41:55 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by trubo.inescn.pt (8.13.8/8.14.3/10) with ESMTP id tBABa47L029686
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 11:36:04 GMT
-Received: from trubo.inescn.pt ([127.0.0.1])
-	by localhost (trubo.inescn.pt [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id Do8G7WMGaELI for <linux-wireless@vger.kernel.org>;
-	Thu, 10 Dec 2015 11:36:00 +0000 (WET)
-Received: from grover.inescn.pt (grover.inescn.pt [194.117.24.20])
-	by trubo.inescn.pt (8.13.8/8.14.4/6) with ESMTP id tBABZvSS029663
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 11:35:57 GMT
-Received: from grover.inescn.pt (localhost.localdomain [127.0.0.1])
-	by grover.inescn.pt (8.13.8/8.13.8/9) with ESMTP id tBABZv3p019230
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 11:35:57 GMT
-Received: (from apache@localhost)
-	by grover.inescn.pt (8.13.8/8.13.8/Submit) id tBABZvUk019226
-	for linux-wireless@vger.kernel.org; Thu, 10 Dec 2015 11:35:57 GMT
-Message-ID: <20151210123557.3235214h30pff6vx@webmail.inescporto.pt> (sfid-20151210_124202_446215_AC51F59B)
-Date: Thu, 10 Dec 2015 12:35:57 +0100
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inesctec.pt>
-To: linux-wireless@vger.kernel.org
-Subject: Cannot unsubscribe
+	Mon, 14 Dec 2015 08:39:57 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: add arp offload ip address table configuration support
+Date: Mon, 14 Dec 2015 14:39:48 +0100
+Message-ID: <1450100394-17414-2-git-send-email-arend@broadcom.com> (sfid-20151214_144003_957422_B5C92333)
+In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all.
+From: Franky Lin <frankyl@broadcom.com>
 
-Our institution DNS as changed due to legal requirments, but old is  
-kept active with redirection to new one.
-So, when I send a e-mail, it is sent with new DNS. Also I'm receiving  
-e-mails that are sent to older (probably as with this one from  
-mailling list) due to redirection.
-Basically I'm receiving messages from mailing list and when I do  
-unsubscribe, I receive e-mail like " [...] is not a member of list  
-'linux-wireless'".
-I've also contacted linux-wireless-approval@... about this issue as  
-told on that response, but no reply so far.
-So, how can I unsubscribe?
+Obtain ipv4 address through inetaddr notification for ARP offload host
+ip table configuration.
 
-Thanks.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 +++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+ 2 files changed, 110 insertions(+)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 3a39192..4c8f7bf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
++#include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+ #include <brcmu_utils.h>
+@@ -620,6 +621,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_cfg80211_down(ndev);
+ 
++	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
++
+ 	brcmf_net_setcarrier(ifp, false);
+ 
+ 	return 0;
+@@ -940,6 +943,98 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+ 	return available ? bsscfgidx : -ENOMEM;
+ }
+ 
++#ifdef CONFIG_INET
++#define ARPOL_MAX_ENTRIES	8
++static int brcmf_inetaddr_changed(struct notifier_block *nb,
++				  unsigned long action, void *data)
++{
++	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
++					      inetaddr_notifier);
++	struct in_ifaddr *ifa = data;
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct brcmf_if *ifp;
++	int idx, i, ret;
++	u32 val;
++	__be32 addr_table[ARPOL_MAX_ENTRIES] = {0};
++
++	/* Find out if the notification is meant for us */
++	for (idx = 0; idx < BRCMF_MAX_IFS; idx++) {
++		ifp = drvr->iflist[idx];
++		if (ifp && ifp->ndev == ndev)
++			break;
++		if (idx == BRCMF_MAX_IFS - 1)
++			return NOTIFY_DONE;
++	}
++
++	/* check if arp offload is supported */
++	ret = brcmf_fil_iovar_int_get(ifp, "arpoe", &val);
++	if (ret)
++		return NOTIFY_OK;
++
++	/* old version only support primary index */
++	ret = brcmf_fil_iovar_int_get(ifp, "arp_version", &val);
++	if (ret)
++		val = 1;
++	if (val == 1)
++		ifp = drvr->iflist[0];
++
++	/* retrieve the table from firmware */
++	ret = brcmf_fil_iovar_data_get(ifp, "arp_hostip", addr_table,
++				       sizeof(addr_table));
++	if (ret) {
++		brcmf_err("fail to get arp ip table err:%d\n", ret);
++		return NOTIFY_OK;
++	}
++
++	for (i = 0; i < ARPOL_MAX_ENTRIES; i++)
++		if (ifa->ifa_address == addr_table[i])
++			break;
++
++	switch (action) {
++	case NETDEV_UP:
++		if (i == ARPOL_MAX_ENTRIES) {
++			brcmf_dbg(TRACE, "add %pI4 to arp table\n",
++				  &ifa->ifa_address);
++			/* set it directly */
++			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip",
++				&ifa->ifa_address, sizeof(ifa->ifa_address));
++			if (ret)
++				brcmf_err("add arp ip err %d\n", ret);
++		}
++		break;
++	case NETDEV_DOWN:
++		if (i < ARPOL_MAX_ENTRIES) {
++			addr_table[i] = 0;
++			brcmf_dbg(TRACE, "remove %pI4 from arp table\n",
++				  &ifa->ifa_address);
++			/* clear the table in firmware */
++			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear",
++						       NULL, 0);
++			if (ret) {
++				brcmf_err("fail to clear arp ip table err:%d\n",
++					  ret);
++				return NOTIFY_OK;
++			}
++			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
++				if (addr_table[i] != 0) {
++					brcmf_fil_iovar_data_set(ifp,
++						"arp_hostip", &addr_table[i],
++						sizeof(addr_table[i]));
++					if (ret)
++						brcmf_err("add arp ip err %d\n",
++							  ret);
++				}
++			}
++		}
++		break;
++	default:
++		break;
++	}
++
++	return NOTIFY_OK;
++}
++#endif
++
+ int brcmf_attach(struct device *dev)
+ {
+ 	struct brcmf_pub *drvr = NULL;
+@@ -1068,6 +1163,15 @@ int brcmf_bus_start(struct device *dev)
+ 		if (p2p_ifp)
+ 			ret = brcmf_net_p2p_attach(p2p_ifp);
+ 	}
++
++	if (ret)
++		goto fail;
++
++#ifdef CONFIG_INET
++	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
++	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ fail:
+ 	if (ret < 0) {
+ 		brcmf_err("failed: %d\n", ret);
+@@ -1133,6 +1237,10 @@ void brcmf_detach(struct device *dev)
+ 	if (drvr == NULL)
+ 		return;
+ 
++#ifdef CONFIG_INET
++	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ 	/* stop firmware event handling */
+ 	brcmf_fweh_detach(drvr);
+ 	if (drvr->config)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 77d8239..6018af7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -141,6 +141,8 @@ struct brcmf_pub {
+ #ifdef DEBUG
+ 	struct dentry *dbgfs_dir;
+ #endif
++
++	struct notifier_block inetaddr_notifier;
+ };
+ 
+ /* forward declarations */
+-- 
+1.9.1
 
-BR,
-Mário Lopes
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
