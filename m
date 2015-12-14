@@ -1,361 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbbLUUv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:27 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:36597 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbbLNMmw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 07:42:52 -0500
+Received: by lfed137 with SMTP id d137so68325422lfe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:42:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P0d9iGRaA9Re-o12ecpz9i5p5Z5ir4h=o3VoEy=oL+7xg@mail.gmail.com>
+References: <20151203220522.GB11138@jessup.stsp.name>
+	<CANUX_P2qxe+BqLPPWOs5uWiBY5nO4e8C1A7gkkYnvrTG270YFQ@mail.gmail.com>
+	<CANUX_P0P5A6q1yQwrgagO5rVpE=6Zk0Fq2gNA-WVhkc7Ov2NdQ@mail.gmail.com>
+	<CANUX_P19Aq_PKyUscg8jBkH=XJim1aut9kTmNUrVMeRt-upNyw@mail.gmail.com>
+	<20151211200205.GV25635@ted.stsp.name>
+	<CANUX_P0d9iGRaA9Re-o12ecpz9i5p5Z5ir4h=o3VoEy=oL+7xg@mail.gmail.com>
+Date: Mon, 14 Dec 2015 14:42:50 +0200
+Message-ID: <CANUX_P1zs7sPR5kGabX1kk2VPWQM=HRp0t3SeLz7U-EFdcZBkw@mail.gmail.com> (sfid-20151214_134300_262448_4F2A3D3E)
+Subject: Re: iwlwifi A-MSDU tx
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stefan Sperling <stsp@openbsd.org>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/45] iwlwifi: replace d0i3_mode and wowlan_d0i3 with more generic variables
-Date: Mon, 21 Dec 2015 22:50:20 +0200
-Message-Id: <1450731046-2796-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215133_953897_36034BF7)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a11403744d7a6280526db0281
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+--001a11403744d7a6280526db0281
+Content-Type: text/plain; charset=UTF-8
 
-The d0i3_mode variable is used to distinguish between transports that
-handle d0i3 entry during suspend by themselves (i.e. the slave
-transports) and those which rely on the op_mode layer to do it.  The
-reason why the former do it by themselves is that they need to
-transition from d0i3 in runtime_suspend into d0i3 in system-wide
-suspend and this transition needs to happen before the op_mode's
-suspend flow is called.
+On Sat, Dec 12, 2015 at 10:54 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Fri, Dec 11, 2015 at 10:02 PM, Stefan Sperling <stsp@openbsd.org> wrote:
+>> Hi Emmanuel,
+>>
+>> Thanks a bunch, this worked out quite well for me.
+>> I got what I was aiming for out of this already but I still have some
+>> additional questions if you don't mind.
+>
+> Happy to hear that.
+>
+>>
+>> Do you know of a good way to generate A-MSDUs?
+>> One way I found is to run:
+>>   top -d .01
+>> on the AP and watching this top over SSH from my associated OpenBSD client.
+>
+> iperf? :)
+>
+> You can also load iwlwifi with 11n_disable=2. This will prevent A-MPDU
+> if you don't want to have A-MSDU in A-MPDU at that stage.
+>
+>>
+>> It seems only locally generated packets will trigger A-MSDUs.
+>> I suppose forwarded frames always fit the interface MTU and don't
+>> trigger A-MSDUs. Is there a way to test this with forwarded traffic?
+>
+> Hmm. Good question. A-MSDUs are created each time we get a large send
+> from the network stack. I think that this relies on the socket
+> occupancy which means that you are right. I don't think we can test
+> this with forwarded traffic for now.
+>
+>>
+>> One issue I discovered is that OpenBSD (with my partly uncommitted 11n
+>> patch set) cannot decrypt encrypted A-MSDUs sent by iwlwifi.
+>> Frames carrying normal MSDUs have a CCMP header and are decrypted correctly.
+>> But frames carrying A-MSDUs have a wep/tkip header (wireshark shows
+>> "WEP parameters" instead of CCMP parameters") and decryption fails on
+>> OpenBSD in ieee80211_ccmp_decrypt() because the ExtIV bit is not set.
+>> It doesn't look like the source of this problem is at OpenBSD's end since
+>> CCMP is required for HT. So in case the firmware doesn't produce CCMP for
+>> A-MSDUs, this would be a problem in the firmware. Can you confirm this?
+>> I also tried running iwlwifi in software crypto mode but the AP would
+>> not send A-MSDUs at all in that case.
+>
+> SW crypto won't work for A-MSDU since it'll refuse LSO which in turn
+> disables A-MSDU.
+> I don't really touch the wifi header, I just duplicate it if needed,
+> so I don't see off the top of my head where the problem could be.
+> Thanks for reporting it.
+>
 
-The wowlan_d0i3 element is also a bit confusing, because it just
-reflects the wowlan->any value for the trans to understand.  This is a
-bit unclear in the code and not generic enough for future use.
+I found the problem. Patch attached.
 
-To make it clearer and to generalize the platform power mode settings,
-introduce two variables to indicate the platform power management
-modes used by the transport.
+>>
+>> On the receiving OpenBSD side I'm currently limited to 4k A-MSDU and it
+>> turns out the AP won't send more than 2 subframes per A-MSDU in this case.
+>
+> with default MTU, you won't get more than that.
+>
+>> To test with more than 2 subframes I applied the following crude patch which
+>> makes the AP send more subframes but crashes the firmware after the frame
+>> is sent. The driver recovers fine and traffic keeps flowing but that's
+>> not pretty. Do you have a better idea? If not, no problem. I mainly did
+>> this to confirm that OpenBSD won't crash handling A-MSDU with more than
+>> 2 subframes, which it won't.
+>
+> ouch. No :)  What you should really do is to reduce the MTU to 500 bytes.
+> iperf -M will do.
+>
+>>
+>> Thanks again,
+>> Stefan
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> index 7ece5c1..b3d562d 100644
+>> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> @@ -448,7 +448,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+>>         struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+>>         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>>         struct ieee80211_hdr *hdr = (void *)skb->data;
+>> -       unsigned int mss = skb_shinfo(skb)->gso_size;
+>> +       unsigned int mss = skb_shinfo(skb)->gso_size / 2;
+>>         struct sk_buff *tmp, *next;
+>>         char cb[sizeof(skb->cb)];
+>>         unsigned int num_subframes, tcp_payload_len, subf_len, max_amsdu_len;
+>>
+>> On Fri, Dec 04, 2015 at 12:30:52PM +0200, Emmanuel Grumbach wrote:
+>>> Adding the right mailing list this time.
+>>>
+>>> On Fri, Dec 4, 2015 at 10:18 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> > On Fri, Dec 4, 2015 at 9:35 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> >> Hi,
+>>> >>
+>>> >> On Fri, Dec 4, 2015 at 12:05 AM, Stefan Sperling <stsp@openbsd.org> wrote:
+>>> >>> Hi Emmanuel,
+>>> >>>
+>>> >>> As part of implementing 802.11n support in OpenBSD I'm looking for
+>>> >>> an AP which sends A-MSDUs. Preferrably under software control rather
+>>> >>> than firmware.
+>>> >>>
+>>> >>> I found your iwlwifi A-MSDU patches at
+>>> >>> http://marc.info/?l=linux-wireless&m=144553311122495&w=2
+>>> >>> and http://marc.info/?l=linux-wireless&m=144553311822496&w=2
+>>> >>>
+>>> >>> Would these patches make it possible to run an AP with an 5300 or 7260
+>>> >>> card and send A-MSDUs? That would be great as I have the necessary hardware.
+>>> >>
+>>> >> 7260 will go. Not 5300.
+>>> >> Note that this code simulates Tx TCP Csum offload. I did that to write
+>>> >> the code while we still don't have the hardware that has this
+>>> >> capability. But for testing purposes, it should do the work. The
+>>> >> testing teams have reported that AP mode didn't work quite well with
+>>> >> this and I haven't taken the time to look into yet, but if you see
+>>> >> issues, please report them or even better: fix them :)
+>>> >>
+>>> >>>
+>>> >>> Which Linux tree do these patches apply to? I've tried the following
+>>> >>> but had no luck in getting these patches applied without rejects:
+>>> >>>
+>>> >>> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>>> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+>>> >>>
+>>> >>
+>>> >> Right. These patches had a long internal review cycle. They are now
+>>> >> merge in our internal tree.
+>>> >> You can find them in our internal tree [1] (backport based). I will
+>>> >> push them soon in iwlwifi-next.git.
+>>> >
+>>> > I forgot to mention that you need to change the define of
+>>> > IWL_MVM_SW_TX_CSUM_OFFLOAD to 1.
+>>> >
+>>> >>
+>>> >> [1] - https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
+>>> >> Please read https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/core_release#how_to_install_the_driver.
+>>> >>
+>>> >>> Thanks,
+>>> >>> Stefan
 
-Additionally, in order not to take too big a step in one patch, treat
-this new variables semantically in the same way as the old d0i3_mode
-element, introducing a iwl_mvm_enter_d0i3_on_suspend() function to
-help with that.
+--001a11403744d7a6280526db0281
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-BUGFIX-iwlwifi-pcie-correctly-handle-the-IV-in-A-MSD.patch"
+Content-Disposition: attachment;
+	filename="0001-BUGFIX-iwlwifi-pcie-correctly-handle-the-IV-in-A-MSD.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ii5yalql0
 
-This commit also adds the foundation for a new concept where the
-firmware configuration state (i.e. D0, D3 or D0i3) is abstracted from
-the platform PM mode we are in (i.e. runtime suspend or system-wide
-suspend).
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h    | 74 +++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 40 ++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 16 +++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 13 ++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  7 +--
- 5 files changed, 111 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index f00c9ad..8caf68b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -669,18 +669,61 @@ enum iwl_trans_state {
- };
- 
- /**
-- * enum iwl_d0i3_mode - d0i3 mode
-+ * DOC: Platform power management
-  *
-- * @IWL_D0I3_MODE_OFF - d0i3 is disabled
-- * @IWL_D0I3_MODE_ON_IDLE - enter d0i3 when device is idle
-- *	(e.g. no active references)
-- * @IWL_D0I3_MODE_ON_SUSPEND - enter d0i3 only on suspend
-- *	(in case of 'any' trigger)
-+ * There are two types of platform power management: system-wide
-+ * (WoWLAN) and runtime.
-+ *
-+ * In system-wide power management the entire platform goes into a low
-+ * power state (e.g. idle or suspend to RAM) at the same time and the
-+ * device is configured as a wakeup source for the entire platform.
-+ * This is usually triggered by userspace activity (e.g. the user
-+ * presses the suspend button or a power management daemon decides to
-+ * put the platform in low power mode).  The device's behavior in this
-+ * mode is dictated by the wake-on-WLAN configuration.
-+ *
-+ * In runtime power management, only the devices which are themselves
-+ * idle enter a low power state.  This is done at runtime, which means
-+ * that the entire system is still running normally.  This mode is
-+ * usually triggered automatically by the device driver and requires
-+ * the ability to enter and exit the low power modes in a very short
-+ * time, so there is not much impact in usability.
-+ *
-+ * The terms used for the device's behavior are as follows:
-+ *
-+ *	- D0: the device is fully powered and the host is awake;
-+ *	- D3: the device is in low power mode and only reacts to
-+ *		specific events (e.g. magic-packet received or scan
-+ *		results found);
-+ *	- D0I3: the device is in low power mode and reacts to any
-+ *		activity (e.g. RX);
-+ *
-+ * These terms reflect the power modes in the firmware and are not to
-+ * be confused with the physical device power state.  The NIC can be
-+ * in D0I3 mode even if, for instance, the PCI device is in D3 state.
-  */
--enum iwl_d0i3_mode {
--	IWL_D0I3_MODE_OFF = 0,
--	IWL_D0I3_MODE_ON_IDLE,
--	IWL_D0I3_MODE_ON_SUSPEND,
-+
-+/**
-+ * enum iwl_plat_pm_mode - platform power management mode
-+ *
-+ * This enumeration describes the device's platform power management
-+ * behavior when in idle mode (i.e. runtime power management) or when
-+ * in system-wide suspend (i.e WoWLAN).
-+ *
-+ * @IWL_PLAT_PM_MODE_DISABLED: power management is disabled for this
-+ *	device.  At runtime, this means that nothing happens and the
-+ *	device always remains in active.  In system-wide suspend mode,
-+ *	it means that the all connections will be closed automatically
-+ *	by mac80211 before the platform is suspended.
-+ * @IWL_PLAT_PM_MODE_D3: the device goes into D3 mode (i.e. WoWLAN).
-+ *	For runtime power management, this mode is not officially
-+ *	supported.
-+ * @IWL_PLAT_PM_MODE_D0I3: the device goes into D0I3 mode.
-+ */
-+enum iwl_plat_pm_mode {
-+	IWL_PLAT_PM_MODE_DISABLED,
-+	IWL_PLAT_PM_MODE_D3,
-+	IWL_PLAT_PM_MODE_D0I3,
- };
- 
- /**
-@@ -720,6 +763,12 @@ enum iwl_d0i3_mode {
-  *	the opmode.
-  * @paging_download_buf: Buffer used for copying all of the pages before
-  *	downloading them to the FW. The buffer is allocated in the opmode
-+ * @system_pm_mode: the system-wide power management mode in use.
-+ *	This mode is set dynamically, depending on the WoWLAN values
-+ *	configured from the userspace at runtime.
-+ * @runtime_pm_mode: the runtime power management mode in use.  This
-+ *	mode is set during the initialization phase and is not
-+ *	supposed to change during runtime.
-  */
- struct iwl_trans {
- 	const struct iwl_trans_ops *ops;
-@@ -770,9 +819,8 @@ struct iwl_trans {
- 	struct iwl_fw_paging *paging_db;
- 	void *paging_download_buf;
- 
--	enum iwl_d0i3_mode d0i3_mode;
--
--	bool wowlan_d0i3;
-+	enum iwl_plat_pm_mode system_pm_mode;
-+	enum iwl_plat_pm_mode runtime_pm_mode;
- 
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 542de74..b1c9992 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1183,19 +1183,20 @@ remove_notif:
- int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct iwl_trans *trans = mvm->trans;
- 	int ret;
- 
- 	/* make sure the d0i3 exit work is not pending */
- 	flush_work(&mvm->d0i3_exit_work);
- 
--	ret = iwl_trans_suspend(mvm->trans);
-+	ret = iwl_trans_suspend(trans);
- 	if (ret)
- 		return ret;
- 
--	mvm->trans->wowlan_d0i3 = wowlan->any;
--	if (mvm->trans->wowlan_d0i3) {
--		/* 'any' trigger means d0i3 usage */
--		if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
-+	if (wowlan->any) {
-+		trans->system_pm_mode = IWL_PLAT_PM_MODE_D0I3;
-+
-+		if (iwl_mvm_enter_d0i3_on_suspend(mvm)) {
- 			ret = iwl_mvm_enter_d0i3_sync(mvm);
- 
- 			if (ret)
-@@ -1206,11 +1207,13 @@ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		__set_bit(D0I3_DEFER_WAKEUP, &mvm->d0i3_suspend_flags);
- 		mutex_unlock(&mvm->d0i3_suspend_mutex);
- 
--		iwl_trans_d3_suspend(mvm->trans, false);
-+		iwl_trans_d3_suspend(trans, false);
- 
- 		return 0;
- 	}
- 
-+	trans->system_pm_mode = IWL_PLAT_PM_MODE_D3;
-+
- 	return __iwl_mvm_suspend(hw, wowlan, false);
- }
- 
-@@ -1973,8 +1976,9 @@ static int iwl_mvm_resume_d0i3(struct iwl_mvm *mvm)
- {
- 	bool exit_now;
- 	enum iwl_d3_status d3_status;
-+	struct iwl_trans *trans = mvm->trans;
- 
--	iwl_trans_d3_resume(mvm->trans, &d3_status, false);
-+	iwl_trans_d3_resume(trans, &d3_status, false);
- 
- 	/*
- 	 * make sure to clear D0I3_DEFER_WAKEUP before
-@@ -1991,9 +1995,9 @@ static int iwl_mvm_resume_d0i3(struct iwl_mvm *mvm)
- 		_iwl_mvm_exit_d0i3(mvm);
- 	}
- 
--	iwl_trans_resume(mvm->trans);
-+	iwl_trans_resume(trans);
- 
--	if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
-+	if (iwl_mvm_enter_d0i3_on_suspend(mvm)) {
- 		int ret = iwl_mvm_exit_d0i3(mvm->hw->priv);
- 
- 		if (ret)
-@@ -2009,12 +2013,16 @@ static int iwl_mvm_resume_d0i3(struct iwl_mvm *mvm)
- int iwl_mvm_resume(struct ieee80211_hw *hw)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	int ret;
- 
--	/* 'any' trigger means d0i3 was used */
--	if (hw->wiphy->wowlan_config->any)
--		return iwl_mvm_resume_d0i3(mvm);
-+	if (mvm->trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3)
-+		ret = iwl_mvm_resume_d0i3(mvm);
- 	else
--		return iwl_mvm_resume_d3(mvm);
-+		ret = iwl_mvm_resume_d3(mvm);
-+
-+	mvm->trans->system_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
-+
-+	return ret;
- }
- 
- void iwl_mvm_set_wakeup(struct ieee80211_hw *hw, bool enabled)
-@@ -2038,6 +2046,8 @@ static int iwl_mvm_d3_test_open(struct inode *inode, struct file *file)
- 	ieee80211_stop_queues(mvm->hw);
- 	synchronize_net();
- 
-+	mvm->trans->system_pm_mode = IWL_PLAT_PM_MODE_D3;
-+
- 	/* start pseudo D3 */
- 	rtnl_lock();
- 	err = __iwl_mvm_suspend(mvm->hw, mvm->hw->wiphy->wowlan_config, true);
-@@ -2092,9 +2102,13 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
- 	int remaining_time = 10;
- 
- 	mvm->d3_test_active = false;
-+
- 	rtnl_lock();
- 	__iwl_mvm_resume(mvm, true);
- 	rtnl_unlock();
-+
-+	mvm->trans->system_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
-+
- 	iwl_abort_notification_waits(&mvm->notif_wait);
- 	ieee80211_restart_hw(mvm->hw);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 7487eb0..3a78a3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1087,15 +1087,13 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
- 
- static void iwl_mvm_resume_complete(struct iwl_mvm *mvm)
- {
--	if (!iwl_mvm_is_d0i3_supported(mvm))
--		return;
--
--	if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND)
--		if (!wait_event_timeout(mvm->d0i3_exit_waitq,
--					!test_bit(IWL_MVM_STATUS_IN_D0I3,
--						  &mvm->status),
--					HZ))
--			WARN_ONCE(1, "D0i3 exit on resume timed out\n");
-+	if (iwl_mvm_is_d0i3_supported(mvm) &&
-+	    iwl_mvm_enter_d0i3_on_suspend(mvm))
-+		WARN_ONCE(!wait_event_timeout(mvm->d0i3_exit_waitq,
-+					      !test_bit(IWL_MVM_STATUS_IN_D0I3,
-+							&mvm->status),
-+					      HZ),
-+			  "D0i3 exit on resume timed out\n");
- }
- 
- static void
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 3f0db29..3fc7199 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -933,6 +933,19 @@ static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
- }
- 
-+static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
-+{
-+	/* For now we only use this mode to differentiate between
-+	 * slave transports, which handle D0i3 entry in suspend by
-+	 * themselves in conjunction with runtime PM D0i3.  So, this
-+	 * function is used to check whether we need to do anything
-+	 * when entering suspend or if the transport layer has already
-+	 * done it.
-+	 */
-+	return (mvm->trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3) &&
-+		(mvm->trans->runtime_pm_mode != IWL_PLAT_PM_MODE_D0I3);
-+}
-+
- static inline bool iwl_mvm_is_lar_supported(struct iwl_mvm *mvm)
- {
- 	bool nvm_lar = mvm->nvm_data->lar_enabled;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 0d92763..05d5a5b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1213,7 +1213,7 @@ static void iwl_trans_pcie_d3_suspend(struct iwl_trans *trans, bool test)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
--	if (trans->wowlan_d0i3) {
-+	if (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3) {
- 		/* Enable persistence mode to avoid reset */
- 		iwl_set_bit(trans, CSR_HW_IF_CONFIG_REG,
- 			    CSR_HW_IF_CONFIG_REG_PERSIST_MODE);
-@@ -1237,7 +1237,7 @@ static void iwl_trans_pcie_d3_suspend(struct iwl_trans *trans, bool test)
- 	iwl_clear_bit(trans, CSR_GP_CNTRL,
- 		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
--	if (!trans->wowlan_d0i3) {
-+	if (trans->system_pm_mode == IWL_PLAT_PM_MODE_D3) {
- 		/*
- 		 * reset TX queues -- some of their registers reset during S3
- 		 * so if we don't reset everything here the D3 image would try
-@@ -1286,7 +1286,7 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- 
- 	iwl_pcie_set_pwr(trans, false);
- 
--	if (trans->wowlan_d0i3) {
-+	if (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3) {
- 		iwl_clear_bit(trans, CSR_GP_CNTRL,
- 			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- 	} else {
-@@ -2677,7 +2677,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	}
- 
- 	trans_pcie->inta_mask = CSR_INI_SET_MASK;
--	trans->d0i3_mode = IWL_D0I3_MODE_ON_SUSPEND;
- 
- 	return trans;
- 
--- 
-2.5.0
-
+RnJvbSA5ZWYwZGI0YTY5Mjk3YmNjMDAxYzhkMjU4ODgwMWJjNDg5ODM0YjU5IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
+aW50ZWwuY29tPgpEYXRlOiBNb24sIDE0IERlYyAyMDE1IDE0OjMxOjU5ICswMjAwClN1YmplY3Q6
+IFtQQVRDSF0gW0JVR0ZJWF0gaXdsd2lmaTogcGNpZTogY29ycmVjdGx5IGhhbmRsZSB0aGUgSVYg
+aW4gQS1NU0RVCiBbU1FVQVNIXQoKVGhlIElWIG5lZWRzIHRvIGJlIGNvcGllZCBiZWZvcmUgaXQg
+aXMgcHVsbGVkIGZyb20gdGhlIHNrYi4KVGhpcyBwcmV2ZW50ZWQgVFNPIHRvIHdvcmsgcHJvcGVy
+bHkgd2l0aCBpdl9sZW4gIT0gMC4KCnR5cGU9YnVnZml4CmJ1Zz1ub3QtdHJhY2tlZApmaXhlcz1J
+OWQwMmJlNWI4MzQ5MTIwZTczZDg5OTdkOTExODJhZWMyZjQyMjkwZgoKQ2hhbmdlLUlkOiBJZWFi
+ODhmZGMxOGNkOTAwNjZmZjU3MWVhMmJkMTFiYTc5ZWE2ZjA0MApTaWduZWQtb2ZmLWJ5OiBFbW1h
+bnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPgotLS0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90eC5jIHwgMTUgKysrKysrKystLS0tLS0tCiAxIGZp
+bGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90eC5jIGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvaXdsd2lmaS9wY2llL3R4LmMKaW5kZXggZmQzNmVlYS4uMTRkNWZmZCAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3R4LmMKKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3R4LmMKQEAgLTE5NzcsMTUgKzE5NzcsMTAgQEAgc3Rh
+dGljIGludCBpd2xfZmlsbF9kYXRhX3Ric19hbXNkdShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywg
+c3RydWN0IHNrX2J1ZmYgKnNrYiwKIAkJCSAgICAgJmRldl9jbWQtPmhkciwgSVdMX0hDTURfU0NS
+QVRDSEJVRl9TSVpFICsgdGIxX2xlbiwKIAkJCSAgICAgTlVMTCwgMCk7CiAKLQkvKgotCSAqIFB1
+bGwgdGhlIGllZWU4MDIxMSBoZWFkZXIgKyBJViB0byBiZSBhYmxlIHRvIHVzZSBUU08gY29yZSwK
+LQkgKiB3ZSB3aWxsIHJlc3RvcmUgaXQgZm9yIHRoZSB0eF9zdGF0dXMgZmxvdy4KLQkgKi8KLQlz
+a2JfcHVsbChza2IsIGhkcl9sZW4gKyBpdl9sZW4pOwogCWlwX2hkcmxlbiA9IHNrYl90cmFuc3Bv
+cnRfaGVhZGVyKHNrYikgLSBza2JfbmV0d29ya19oZWFkZXIoc2tiKTsKIAlzbmFwX2lwX3RjcF9o
+ZHJsZW4gPQogCQlJRUVFODAyMTFfQ0NNUF9IRFJfTEVOICsgaXBfaGRybGVuICsgdGNwX2hkcmxl
+bihza2IpOwotCXRvdGFsX2xlbiA9IHNrYi0+bGVuIC0gc25hcF9pcF90Y3BfaGRybGVuOworCXRv
+dGFsX2xlbiA9IHNrYi0+bGVuIC0gc25hcF9pcF90Y3BfaGRybGVuIC0gaGRyX2xlbiAtIGl2X2xl
+bjsKIAlhbXNkdV9wYWQgPSAwOwogCiAJLyogdG90YWwgYW1vdW50IG9mIGhlYWRlciB3ZSBtYXkg
+bmVlZCBmb3IgdGhpcyBBLU1TRFUgKi8KQEAgLTIwMDAsOSArMTk5NSwxNSBAQCBzdGF0aWMgaW50
+IGl3bF9maWxsX2RhdGFfdGJzX2Ftc2R1KHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLCBzdHJ1Y3Qg
+c2tfYnVmZiAqc2tiLAogCWdldF9wYWdlKGhkcl9wYWdlLT5wYWdlKTsKIAlzdGFydF9oZHIgPSBo
+ZHJfcGFnZS0+cG9zOwogCWluZm8tPmRyaXZlcl9kYXRhW0lXTF9UUkFOU19GSVJTVF9EUklWRVJf
+REFUQV0gPSBoZHJfcGFnZS0+cGFnZTsKLQltZW1jcHkoaGRyX3BhZ2UtPnBvcywgc2tiLT5kYXRh
+LCBpdl9sZW4pOworCW1lbWNweShoZHJfcGFnZS0+cG9zLCBza2ItPmRhdGEgKyBoZHJfbGVuLCBp
+dl9sZW4pOwogCWhkcl9wYWdlLT5wb3MgKz0gaXZfbGVuOwogCisJLyoKKwkgKiBQdWxsIHRoZSBp
+ZWVlODAyMTEgaGVhZGVyICsgSVYgdG8gYmUgYWJsZSB0byB1c2UgVFNPIGNvcmUsCisJICogd2Ug
+d2lsbCByZXN0b3JlIGl0IGZvciB0aGUgdHhfc3RhdHVzIGZsb3cuCisJICovCisJc2tiX3B1bGwo
+c2tiLCBoZHJfbGVuICsgaXZfbGVuKTsKKwogCXRzb19zdGFydChza2IsICZ0c28pOwogCiAJd2hp
+bGUgKHRvdGFsX2xlbikgewotLSAKMi41LjAKCg==
+--001a11403744d7a6280526db0281--
