@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56297 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751530AbbLOH4I (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:33354 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898AbbLNWfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 02:56:08 -0500
-From: David Lin <dlin@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
-Date: Tue, 15 Dec 2015 07:55:53 +0000
-Message-ID: <b57f09276e5c4e99af3c60adbca26bde@SC-EXCH02.marvell.com> (sfid-20151215_085612_422903_22407284)
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
- <87mvti74hm.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87mvti74hm.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 14 Dec 2015 17:35:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 8/8] rtlwifi: rtl8192cu: Add missing parameter setup
+Date: Mon, 14 Dec 2015 16:34:38 -0600
+Message-Id: <1450132478-2386-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233528_883414_816A3D0B)
+In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBLYWxsZSBWYWxvIFttYWlsdG86a3ZhbG9AY29kZWF1cm9yYS5vcmddIHdyb3RlOg0KPiANCj4g
-RGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IFRoaXMgcGF0Y2gg
-cHJvdmlkZXMgdGhlIG13bHdpZmkgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4NjMsIDg4NjQgYW5kIDg4
-OTcNCj4gPiBjaGlwc2V0cy4NCj4gPiBUaGlzIGRyaXZlciB3YXMgZGV2ZWxvcGVkIGFzIHBhcnQg
-b2YgdGhlIG9wZW53cnQub3JnIHByb2plY3QgdG8NCj4gPiBzdXBwb3J0IExpbmtzeXMgV1JUMTkw
-MEFDIGFuZCBpcyBtYWludGFpbmVkIG9uDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9rYWxvei9td2x3
-aWZpLg0KPiA+DQo+ID4gVGhlIG13bHdpZmkgZHJpdmVyIGRpZmZlcnMgZnJvbSBleGlzdGluZyBt
-d2lmaWV4IGRyaXZlcjoNCj4gPiBvIG13bHdpZmkgaXMgYSAic29mdG1hYyBkcml2ZXIiIHVzaW5n
-IHRoZSBrZXJuZWw/7qiDIG1hYzgwMi4xMSBzdWJzeXN0ZW0NCj4gPiB0byBwcm92aWRlIGZ1bGwg
-QVAvV2lyZWxlc3MgQnJpZGdlIGZ1bmN0aW9uYWxpdHkgKHJvdXRlcnMpLg0KPiA+IG8gbXdpZmll
-eCBpcyBhICJmdWxsbWFjIGRyaXZlciIgd2hpY2ggcHJvdmlkZXMgYSBjb21wcmVoZW5zaXZlIHNl
-dCBvZg0KPiA+IGNsaWVudCBmdW5jdGlvbnMgKGxhcHRvcHMvZW1iZWRkZWQgZGV2aWNlcykgbyBv
-bmx5IG13bHdpZmkgc3VwcG9ydHMNCj4gPiBNYXJ2ZWxsIEFQIGNoaXAgODg2WCBzZXJpZXMNCj4g
-Pg0KPiA+IE5PVEU6IFVzZXJzIHdpdGggTWFydmVsbCA4OFc4ODk3IGNoaXBzZXRzIGN1cnJlbnRs
-eSBzaG91bGQgZW5hYmxlDQo+ID4gKENPTkZJRz1ZIG9yIE0pIGVpdGhlciBDT05GSUdfTVdJRklF
-WCBvciBDT05GSUdfTVdMV0lGSSwgTk9UDQo+IEJPVEguDQo+ID4NCj4gPiBtd2x3aWZpIGRyaXZl
-ciBsZXZlcmFnZWQgY29kZSBmcm9tIGV4aXN0aW5nIE1XTDhLIGRyaXZlciBpbiB0aGUNCj4gPiBm
-b2xsb3dpbmcgYXJlYXM6DQo+ID4gLSA4MDIuMTFuIHNldHRpbmcgZm9yIG1hYzgwMjExDQo+ID4g
-LSBGdW5jdGlvbnMgbmVlZGVkIHRvIGhvb2sgdXAgdG8gbWFjODAyMTENCj4gPiAtIEludGVyYWN0
-aW9ucyB3aXRoIG1hYzgwMjExIHRvIGVzdGFibGlzaCBCQSBzdHJlYW1zDQo+ID4gLSBQYXJ0aWFs
-IGZpcm13YXJlIEFQSXMsIHNvbWUgZGF0YSBmaWVsZHMNCj4gPiAtIE1ldGhvZCB0byBwYXNzIFJ4
-IHBhY2tldHMgdG8gbWFjODAyMTEgZXhjZXB0IDExYWMgcmF0ZXMNCj4gPg0KPiA+IEluIGFkZGl0
-aW9uLCBtd2x3aWZpIGRyaXZlciBzdXBwb3J0czoNCj4gPiAtIGZ1dHVyZSBzY2FsYWJpbGl0eSBh
-bmQgZnV0dXJlIGRldmVsb3BtZW50IChyZWZhY3RvcmVkIHNvdXJjZSBjb2RlKQ0KPiA+IC0gTWFy
-dmVsbCA4MDIuMTFhYyBjaGlwc2V0cywgaW5jbHVkaW5nIGNvbWJvIEJUIGRldmljZXMNCj4gPiAt
-IDgwMi4xMWFjIHJlbGF0ZWQgc2V0dGluZ3MgYW5kIGZ1bmN0aW9ucw0KPiA+IC0gY29uY3VycmVu
-dCBBUCtTVEEgZnVuY3Rpb25hbGl0aWVzIHdpdGggc2luZ2xlIGZpcm13YXJlIHBlciBjaGlwDQo+
-ID4gLSBmaXJtd2FyZSBBUElzIGZvciB0aGUgc3VwcG9ydGVkIGNoaXBzZXQNCj4gPiAtIGNvbW11
-bmljYXRpbmcgbmV3IG1hYzgwMjExIHNldHRpbmdzIHRvIGZpcm13YXJlDQo+ID4gLSBEaWZmZXJl
-bnQgVFgvUlggZGF0YXBhdGggd2hlcmUgYXBwbGljYWJsZQ0KPiA+IC0gQS1NU0RVIGFuZCBBLU1Q
-RFUNCj4gPiAtIG1hYzgwMjExLWJhc2VkIE1FU0ggKHdvcmsgaW4gcHJvZ3Jlc3MpDQo+ID4gLSBS
-ZWZpbmVkIHRoZSBjb2RlIHRvIGVzdGFibGlzaCBCQSBzdHJlYW1zDQo+ID4NCj4gPiBOT1RFOiBN
-V0xXSUZJIHdpbGwgYmUgb3JnYW5pemVkIHVuZGVyIG5ldyB2ZW5kb3Igc3BlY2lmaWMNCj4gPiBm
-b2xkZXIvbWFydmVsbCwgYXMgcGVyIHJlcXVlc3Qgb2YgdGhlIGdhdGUga2VlcGVyIGFuZCBjb21t
-dW5pdHkuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBMaW4gPGRsaW5AbWFydmVsbC5j
-b20+DQo+IA0KPiBUaGlzIHNlZW1zIHRvIHVzZSBiYXNlNjQgZW5jb2RpbmcsIGhvdyBkaWQgeW91
-IHN1Ym1pdCB0aGlzPyAnZ2l0IHNlbmQtZW1haWwnDQo+IHRvb2wgaXMgc3Ryb25nbHkgcHJlZmVy
-cmVkLg0KPiANCj4gQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogYmFzZTY0DQo+IA0KPiBJIGFw
-cGxpZWQgdGhpcyB0byBwZW5kaW5nIGJyYW5jaCBhbmQgc2F3IGZldyBlYXN5IGNvbmZsaWN0cyB3
-aXRoIEtjb25maWcgZmlsZXMNCj4gYW5kIE1ha2VmaWxlcywgSSBndWVzcyB5b3Ugc3VibWl0dGVk
-IHRoaXMgcGF0Y2ggYmVmb3JlIEkgYWRkZWQgdGhlIHZlbmRvcg0KPiBkaXJlY3Rvcmllcy4gTGV0
-J3Mgc2VlIHdoYXQga2J1aWxkIGZpbmRzIGJ1dCBJIGFscmVhZHkgc2F3IHR3bw0KPiB3YXJuaW5n
-czoNCj4gDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdsd2lmaS9tYWluLmM6MTYw
-OjIwOiB3YXJuaW5nOiBpbmNvcnJlY3QgdHlwZQ0KPiBpbiBhcmd1bWVudCAxIChkaWZmZXJlbnQg
-YWRkcmVzcyBzcGFjZXMpDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdsd2lmaS9t
-YWluLmM6MTYwOjIwOiAgICBleHBlY3RlZCB2b2lkIGNvbnN0DQo+ICpwdHINCj4gZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbWFydmVsbC9td2x3aWZpL21haW4uYzoxNjA6MjA6ICAgIGdvdCB2b2lkIFtu
-b2RlcmVmXQ0KPiA8YXNuOjI+Klthc3NpZ25lZF0gYWRkcg0KPiBkcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213bHdpZmkvbWFpbi5jOjE3MToyMDogd2FybmluZzogaW5jb3JyZWN0IHR5cGUN
-Cj4gaW4gYXJndW1lbnQgMSAoZGlmZmVyZW50IGFkZHJlc3Mgc3BhY2VzKQ0KPiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9tYXJ2ZWxsL213bHdpZmkvbWFpbi5jOjE3MToyMDogICAgZXhwZWN0ZWQgdm9p
-ZCBjb25zdA0KPiAqcHRyDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdsd2lmaS9t
-YWluLmM6MTcxOjIwOiAgICBnb3Qgdm9pZCBbbm9kZXJlZl0NCj4gPGFzbjoyPipbYXNzaWduZWRd
-IGFkZHINCj4NCg0KSSB3aWxsIGZpeCBpdC4NCg0KPiAtLQ0KPiBLYWxsZSBWYWxvDQo=
+This driver fails to copy the module parameter for software encryption
+to the locations used by the main code.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+index fd4a535..7c6f7f0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+@@ -65,6 +65,8 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->dm.disable_framebursting = false;
+ 	rtlpriv->dm.thermalvalue = 0;
+ 	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
++	rtlpriv->cfg->mod_params->sw_crypto =
++		rtlpriv->cfg->mod_params->sw_crypto;
+ 
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x4000);
+-- 
+2.1.4
+
