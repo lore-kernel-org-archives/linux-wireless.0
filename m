@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63912 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752779AbbLNMRN (ORCPT
+Received: from down.free-electrons.com ([37.187.137.238]:51899 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751057AbbLNRO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:13 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGb8g027452
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:13 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng01n-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:13 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 01/14] mwifiex: change ap and station interface limits
-Date: Mon, 14 Dec 2015 04:15:02 -0800
-Message-ID: <1450095315-19927-2-git-send-email-akarwar@marvell.com> (sfid-20151214_131753_849827_1F9D8FFB)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+	Mon, 14 Dec 2015 12:14:28 -0500
+From: Boris Brezillon <boris.brezillon@free-electrons.com>
+To: David Woodhouse <dwmw2@infradead.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	linux-mtd@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Boris Brezillon <boris.brezillon@free-electrons.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] mtd: nand: bcm47xxnflash: fix bcm47xxnflash_remove()
+Date: Mon, 14 Dec 2015 18:14:10 +0100
+Message-Id: <1450113250-12036-1-git-send-email-boris.brezillon@free-electrons.com> (sfid-20151214_181431_936998_6BD978D9)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+bcm47xxnflash_remove() is supposed to unregister the NAND device previously
+registered in bcm47xxnflash_probe(), but the current implementation just
+test for the always NULL ->mtd platform data field (and does not call the
+right function to unregister it).
 
-ap/station interface limit has been changed to allow
-creating maximum 3 interfaces.
+Kill the useless ->mtd field in struct bcma_nflash, and release the real
+NAND device in bcm47xxnflash_remove().
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
+Fixes: a5401370c520 ("mtd: prepare place for BCMA NAND flash driver(s)")
+Cc: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/mtd/nand/bcm47xxnflash/main.c       | 7 ++++---
+ include/linux/bcma/bcma_driver_chipcommon.h | 4 ----
+ 2 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 65dd85d..47d8afd 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -26,12 +26,10 @@ module_param(reg_alpha2, charp, 0);
+diff --git a/drivers/mtd/nand/bcm47xxnflash/main.c b/drivers/mtd/nand/bcm47xxnflash/main.c
+index 9ba0c0f..4a07e56 100644
+--- a/drivers/mtd/nand/bcm47xxnflash/main.c
++++ b/drivers/mtd/nand/bcm47xxnflash/main.c
+@@ -55,15 +55,16 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
  
- static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
- 	{
--		.max = 2, .types = BIT(NL80211_IFTYPE_STATION) |
-+		.max = 3, .types = BIT(NL80211_IFTYPE_STATION) |
- 				   BIT(NL80211_IFTYPE_P2P_GO) |
--				   BIT(NL80211_IFTYPE_P2P_CLIENT),
--	},
--	{
--		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
-+				   BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				   BIT(NL80211_IFTYPE_AP),
- 	},
++	platform_set_drvdata(pdev, b47n);
++
+ 	return 0;
+ }
+ 
+ static int bcm47xxnflash_remove(struct platform_device *pdev)
+ {
+-	struct bcma_nflash *nflash = dev_get_platdata(&pdev->dev);
++	struct bcm47xxnflash *b47n = platform_get_drvdata(pdev);
+ 
+-	if (nflash->mtd)
+-		mtd_device_unregister(nflash->mtd);
++	nand_release(nand_to_mtd(&b47n->nand_chip));
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index cf03843..3015432 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -592,13 +592,9 @@ struct bcma_sflash {
+ #endif
+ 
+ #ifdef CONFIG_BCMA_NFLASH
+-struct mtd_info;
+-
+ struct bcma_nflash {
+ 	bool present;
+ 	bool boot;		/* This is the flash the SoC boots from */
+-
+-	struct mtd_info *mtd;
  };
+ #endif
  
 -- 
-1.8.1.4
+2.1.4
 
