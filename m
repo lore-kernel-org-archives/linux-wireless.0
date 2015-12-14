@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35458 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932498AbbLHEyM (ORCPT
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:35676 "EHLO
+	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898AbbLNWfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 23:54:12 -0500
-Date: Tue, 8 Dec 2015 10:24:04 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Fixing full name in patchwork
-Message-ID: <20151208045404.GB23610@sudip-pc> (sfid-20151208_055431_728636_EE82EF95)
-References: <1448281922-20382-1-git-send-email-sudipm.mukherjee@gmail.com>
- <87zixmb0fp.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87zixmb0fp.fsf@kamboji.qca.qualcomm.com>
+	Mon, 14 Dec 2015 17:35:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 5/8] rtlwifi: rtl8192de: Fix incorrect module parameter descriptions
+Date: Mon, 14 Dec 2015 16:34:35 -0600
+Message-Id: <1450132478-2386-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233509_181895_806C00FE)
+In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 07, 2015 at 08:03:54PM +0200, Kalle Valo wrote:
-> Hi Sudip,
-> 
-> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-> 
-> > We were dereferencing cmd first and checking for NULL later. Lets first
-> > check for NULL.
-> >
-> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> 
-> I noticed that your name in git log is not your full name:
-> 
-> commit 0a38c8e1b592c16d959da456f425053e323a5153
-> Author: sudip <sudipm.mukherjee@gmail.com>
-> Date:   Tue Nov 24 13:51:38 2015 +0530
-> 
-> This is because for some reason in patchwork your fullname is just
-> "sudip":
-> 
-> https://patchwork.kernel.org/patch/7688171/
-> 
-> Could you please fix your name in patchwork so that in the future we can
-> use your correct full name? The problem is that I don't know exactly how
-> to do this but it should be possible because I remember someone else
-> having a similar problem and he was able to fix it.
+Two of the module parameters are listed with incorrect default values.
 
-Hi Kalle,
-I have also noticed the patch. Anyway, I have created a profile in
-patchwork and given full name. Hopefully that should solve the problem.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index b19d039..c6e09a1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -376,8 +376,8 @@ module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+-MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+-MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
++MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
++MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+ static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+-- 
+2.1.4
 
-regards
-sudip
