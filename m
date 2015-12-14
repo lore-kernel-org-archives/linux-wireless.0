@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38702 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbbL3O7U (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33175 "EHLO
+	mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932459AbbLNWe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 09:59:20 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [01/14] mwifiex: change ap and station interface limits
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1450095315-19927-2-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20151230145919.D060D60343@smtp.codeaurora.org> (sfid-20151230_155924_015588_CC9C3D3B)
-Date: Wed, 30 Dec 2015 14:59:19 +0000 (UTC)
+	Mon, 14 Dec 2015 17:34:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 2/8] rtlwifi: rtl8723ae: Fix initialization of module parameters
+Date: Mon, 14 Dec 2015 16:34:32 -0600
+Message-Id: <1450132478-2386-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233532_526855_DDF285E1)
+In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This driver has some errors in the handling of module parameters. These
+include missing initialization for parameters msi_support and
+disable_watchdog. In addition, neither of these parameters nor sw_crypto
+are transferred into the locations used by the driver. A final fix is
+adding parameter msi to the module named and description macros.
 
-> From: Shengzhen Li <szli@marvell.com>
-> 
-> ap/station interface limit has been changed to allow
-> creating maximum 3 interfaces.
-> 
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Thanks, 14 patches applied to wireless-drivers-next.git:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index 3859b3e..ff49a8c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -150,6 +150,11 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
++	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
++	rtlpriv->cfg->mod_params->sw_crypto =
++		rtlpriv->cfg->mod_params->sw_crypto;
++	rtlpriv->cfg->mod_params->disable_watchdog =
++		rtlpriv->cfg->mod_params->disable_watchdog;
+ 	if (rtlpriv->cfg->mod_params->disable_watchdog)
+ 		pr_info("watchdog disabled\n");
+ 	rtlpriv->psc.reg_fwctrl_lps = 3;
+@@ -267,6 +272,8 @@ static struct rtl_mod_params rtl8723e_mod_params = {
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+ 	.debug = DBG_EMERG,
++	.msi_support = false,
++	.disable_watchdog = false,
+ };
+ 
+ static struct rtl_hal_cfg rtl8723e_hal_cfg = {
+@@ -383,12 +390,14 @@ module_param_named(debug, rtl8723e_mod_params.debug, int, 0444);
+ module_param_named(ips, rtl8723e_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl8723e_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl8723e_mod_params.fwctrl_lps, bool, 0444);
++module_param_named(msi, rtl8723e_mod_params.msi_support, bool, 0444);
+ module_param_named(disable_watchdog, rtl8723e_mod_params.disable_watchdog,
+ 		   bool, 0444);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
++MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
+ 
+-- 
+2.1.4
 
-eb5d912e1564 mwifiex: change ap and station interface limits
-5b13d3e1f926 mwifiex: multiple bss support
-5eab67779974 mwifiex: advertise SMS4 cipher suite
-c8ac6a8ee8e7 mwifiex: fix bug for wildcard-prefix wowlan pattern
-b0922ffa706b mwifiex: increase supported wowlan pattern length
-abffd274a243 mwifiex: abort cac in del_station() handler
-bd642acf3213 mwifiex: suppress "Rx of mgmt packet failed" message
-47f336d7e0df mwifiex: remove redundant timestamp assignment
-76ae3e26ea43 mwifiex: add debugfs file for testing reset of card
-776f742040ca mwifiex: fix AMPDU not setup on TDLS link problem
-7f3f1245ffcd mwifiex: fix wake on disconnect feature
-610d0af8e8d2 mwifiex: update region_code_index array
-19b0a71017aa mwifiex: use world for unidentified region code
-84a38fb3167e mwifiex: fix WPA connection problem
-
-Kalle Valo
