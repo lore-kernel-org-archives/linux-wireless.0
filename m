@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:33319 "EHLO
-	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932725AbbLNWcU (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13854 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752238AbbLNFo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:32:20 -0500
-Received: by qkck189 with SMTP id k189so124576690qkc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 14:32:20 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/8] Fixes for module parameters
-Date: Mon, 14 Dec 2015 16:32:13 -0600
-Message-Id: <1450132333-2331-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233228_649494_846604AF)
+	Mon, 14 Dec 2015 00:44:27 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/12] staging: wilc1000: set hif_drv before it is used
+Date: Mon, 14 Dec 2015 14:47:02 +0900
+Message-ID: <1450072023-13013-12-git-send-email-glen.lee@atmel.com> (sfid-20151214_070059_106486_3211E9A5)
+In-Reply-To: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
+References: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-    devel@driverdev.osuosl.org
+We are using hif_drv of vif, so it needs to be set before it is used.
+Set hif_drv to vif->hifdrv soon after it is allocated.
 
-Several of the rtlwifi-driver family have errors in the handling of
-module parameters. These 8 patches for the -next repo contain fixes.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ++++++
+ drivers/staging/wilc1000/linux_wlan.c     | 1 -
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry Finger (8):
-  rtlwifi: rtl8723be: Fix module parameter initialization
-  rtlwifi: rtl8723ae: Fix initialization of module parameters
-  rtlwifi: rtl8821ae: Fix errors in parameter initialization
-  rtlwifi: rtl8188ee: Fix module parameter initialization
-  rtlwifi: rtl8192de: Fix incorrect module parameter descriptions
-  rtlwifi: rtl8192se: Fix module parameter initialization
-  rtlwifi: rtl8192ce: Fix handling of module parameters
-  rtlwifi: rtl8192cu: Add missing parameter setup
-
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 7 +++++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 6 ++++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 9 +++++++++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 8 +++++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 9 +++++----
- 8 files changed, 36 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f97ea49..0125e3d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3775,6 +3775,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	struct host_if_drv *hif_drv;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
++	int i;
+ 
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+@@ -3791,6 +3792,11 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		goto _fail_;
+ 	}
+ 	*hif_drv_handler = hif_drv;
++	for (i = 0; i < wilc->vif_num; i++)
++		if (dev == wilc->vif[i]->ndev) {
++			wilc->vif[i]->hif_drv = hif_drv;
++			break;
++		}
+ 
+ 	wilc_optaining_ip = false;
+ 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a50e3ff..54fe9d7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1036,7 +1036,6 @@ int wilc_mac_open(struct net_device *ndev)
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+ 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
+-			wl->vif[i]->hif_drv = priv->hWILCWFIDrv;
+ 			break;
+ 		}
+ 	}
 -- 
-2.1.4
+1.9.1
 
