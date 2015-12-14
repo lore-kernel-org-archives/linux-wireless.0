@@ -1,86 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39384 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbbL3PPo (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:4803 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbbLNNj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 10:15:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Uri Mashiach <uri.mashiach@compulab.co.il>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	igor.grinberg@compulab.co.il
-Subject: Re: [PATCH] wlcore/wl12xx: spi: fix NULL pointer dereference (Oops)
-References: <1450965900-23222-1-git-send-email-uri.mashiach@compulab.co.il>
-Date: Wed, 30 Dec 2015 17:15:38 +0200
-In-Reply-To: <1450965900-23222-1-git-send-email-uri.mashiach@compulab.co.il>
-	(Uri Mashiach's message of "Thu, 24 Dec 2015 16:05:00 +0200")
-Message-ID: <878u4cotlx.fsf@kamboji.qca.qualcomm.com> (sfid-20151230_161552_382827_0FF1D22C)
+	Mon, 14 Dec 2015 08:39:58 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/7] brcmfmac: Add get_station support for IBSS
+Date: Mon, 14 Dec 2015 14:39:49 +0100
+Message-ID: <1450100394-17414-3-git-send-email-arend@broadcom.com> (sfid-20151214_144016_571559_FE5886F0)
+In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uri Mashiach <uri.mashiach@compulab.co.il> writes:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> Fix the below Oops when trying to modprobe wlcore_spi.
-> The oops occurs because the wl1271_power_{off,on}()
-> function doesn't check the power() function pointer.
->
-> [   23.401447] Unable to handle kernel NULL pointer dereference at
-> virtual address 00000000
-> [   23.409954] pgd = c0004000
-> [   23.412922] [00000000] *pgd=00000000
-> [   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
-> [   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
-> musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
-> omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
-> c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
-> snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
-> [   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
-> 4.2.0-00002-g951efee-dirty #233
-> [   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
-> [   23.468123] Workqueue: events request_firmware_work_func
-> [   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
-> [   23.479341] PC is at 0x0
-> [   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
-> [   23.488074] pc : [<00000000>]    lr : [<bf2581f0>]    psr: 60000013
-> [   23.488074] sp : de4efe50  ip : 00000002  fp : 00000000
-> [   23.500162] r10: de7cdd00  r9 : dc848800  r8 : bf27af00
-> [   23.505663] r7 : bf27a1a8  r6 : dcbd8a80  r5 : dce0e2e0  r4 :
-> dce0d2e0
-> [   23.512536] r3 : 00000000  r2 : 00000000  r1 : 00000001  r0 :
-> dc848810
-> [   23.519412] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM
-> Segment kernel
-> [   23.527109] Control: 10c5387d  Table: 9cb78019  DAC: 00000015
-> [   23.533160] Process kworker/0:2 (pid: 36, stack limit = 0xde4ee218)
-> [   23.539760] Stack: (0xde4efe50 to 0xde4f0000)
->
-> [...]
->
-> [   23.665030] [<bf2581f0>] (wl12xx_set_power_on [wlcore]) from
-> [<bf25f7ac>] (wlcore_nvs_cb+0x118/0xa4c [wlcore])
-> [   23.675604] [<bf25f7ac>] (wlcore_nvs_cb [wlcore]) from [<c04387ec>]
-> (request_firmware_work_func+0x30/0x58)
-> [   23.685784] [<c04387ec>] (request_firmware_work_func) from
-> [<c0058e2c>] (process_one_work+0x1b4/0x4b4)
-> [   23.695591] [<c0058e2c>] (process_one_work) from [<c0059168>]
-> (worker_thread+0x3c/0x4a4)
-> [   23.704124] [<c0059168>] (worker_thread) from [<c005ee68>]
-> (kthread+0xd4/0xf0)
-> [   23.711747] [<c005ee68>] (kthread) from [<c000f598>]
-> (ret_from_fork+0x14/0x3c)
-> [   23.719357] Code: bad PC value
-> [   23.722760] ---[ end trace 981be8510db9b3a9 ]---
->
-> Prevent oops by validationg power() pointer value before
-> calling the function.
->
-> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-> Cc: stable@vger.kernel.org
-> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+When get_station is requested for IBSS then an error will be
+printed and no information will be returned. This patch adds
+IBSS specific get station information function.
 
-Please always provide a changelog when you resend patches, I lost track
-what I'm supposed to do with this. Should I apply or drop?
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 51 ++++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  1 +
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 17 ++++++++
+ 3 files changed, 69 insertions(+)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 17658b3..6b9339b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2429,6 +2429,54 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
+ }
+ 
+ static s32
++brcmf_cfg80211_get_station_ibss(struct brcmf_if *ifp,
++				struct station_info *sinfo)
++{
++	struct brcmf_scb_val_le scbval;
++	struct brcmf_pktcnt_le pktcnt;
++	s32 err;
++	u32 rate;
++	u32 rssi;
++
++	/* Get the current tx rate */
++	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_RATE, &rate);
++	if (err < 0) {
++		brcmf_err("BRCMF_C_GET_RATE error (%d)\n", err);
++		return err;
++	}
++	sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
++	sinfo->txrate.legacy = rate * 5;
++
++	memset(&scbval, 0, sizeof(scbval));
++	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI, &scbval,
++				     sizeof(scbval));
++	if (err) {
++		brcmf_err("BRCMF_C_GET_RSSI error (%d)\n", err);
++		return err;
++	}
++	rssi = le32_to_cpu(scbval.val);
++	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
++	sinfo->signal = rssi;
++
++	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_GET_PKTCNTS, &pktcnt,
++				     sizeof(pktcnt));
++	if (err) {
++		brcmf_err("BRCMF_C_GET_GET_PKTCNTS error (%d)\n", err);
++		return err;
++	}
++	sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS) |
++			 BIT(NL80211_STA_INFO_RX_DROP_MISC) |
++			 BIT(NL80211_STA_INFO_TX_PACKETS) |
++			 BIT(NL80211_STA_INFO_TX_FAILED);
++	sinfo->rx_packets = le32_to_cpu(pktcnt.rx_good_pkt);
++	sinfo->rx_dropped_misc = le32_to_cpu(pktcnt.rx_bad_pkt);
++	sinfo->tx_packets = le32_to_cpu(pktcnt.tx_good_pkt);
++	sinfo->tx_failed  = le32_to_cpu(pktcnt.tx_bad_pkt);
++
++	return 0;
++}
++
++static s32
+ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 			   const u8 *mac, struct station_info *sinfo)
+ {
+@@ -2445,6 +2493,9 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
++	if (brcmf_is_ibssmode(ifp->vif))
++		return brcmf_cfg80211_get_station_ibss(ifp, sinfo);
++
+ 	memset(&sta_info_le, 0, sizeof(sta_info_le));
+ 	memcpy(&sta_info_le, mac, ETH_ALEN);
+ 	err = brcmf_fil_iovar_data_get(ifp, "tdls_sta_info",
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
+index b20fc0f..6b72df1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
+@@ -70,6 +70,7 @@
+ #define BRCMF_C_SET_WSEC			134
+ #define BRCMF_C_GET_PHY_NOISE			135
+ #define BRCMF_C_GET_BSS_INFO			136
++#define BRCMF_C_GET_GET_PKTCNTS			137
+ #define BRCMF_C_GET_BANDLIST			140
+ #define BRCMF_C_SET_SCB_TIMEOUT			158
+ #define BRCMF_C_GET_ASSOCLIST			159
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 94d34ad..0b1e46d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -751,4 +751,21 @@ struct brcmf_pno_scanresults_le {
+ 	__le32 count;
+ };
+ 
++/**
++ * struct brcmf_pktcnt_le - packet counters.
++ *
++ * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
++ * @rx_bad_pkt: failed rx packets
++ * @tx_good_pkt: packets (MSDUs & MMPDUs) transmitted to this station
++ * @tx_bad_pkt: failed tx packets
++ * @rx_ocast_good_pkt: unicast packets destined for others
++ */
++struct brcmf_pktcnt_le {
++	__le32 rx_good_pkt;
++	__le32 rx_bad_pkt;
++	__le32 tx_good_pkt;
++	__le32 tx_bad_pkt;
++	__le32 rx_ocast_good_pkt;
++};
++
+ #endif /* FWIL_TYPES_H_ */
 -- 
-Kalle Valo
+1.9.1
+
