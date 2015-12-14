@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60694 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbbLZKGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Dec 2015 05:06:07 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniel Lenski <dlenski@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] enable setting MAC address for r8723au
-References: <1450664916-25205-1-git-send-email-dlenski@gmail.com>
-	<1450664916-25205-2-git-send-email-dlenski@gmail.com>
-	<56783C98.1080700@lwfinger.net>
-	<CAOw_LSF6cPVCxqOS1eQ+iqESZGRdG46048M15r5s0huVJVHwjg@mail.gmail.com>
-	<wrfjpoxxxvjq.fsf@redhat.com>
-	<CAOw_LSHr-gcrOCrGe8+K6=ndQx21O_HzrxLXJDXnZV5EBJeeyQ@mail.gmail.com>
-Date: Sat, 26 Dec 2015 05:06:03 -0500
-In-Reply-To: <CAOw_LSHr-gcrOCrGe8+K6=ndQx21O_HzrxLXJDXnZV5EBJeeyQ@mail.gmail.com>
-	(Daniel Lenski's message of "Thu, 24 Dec 2015 14:37:24 -0800")
-Message-ID: <wrfjlh8hwmlw.fsf@redhat.com> (sfid-20151226_110641_580692_37E142A6)
+Received: from smtp.codeaurora.org ([198.145.29.96]:52338 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241AbbLNLsE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2015 06:48:04 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Grant Grundler <grundler@google.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Lin <dlin@marvell.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	<1448018530.3141.25.camel@sipsolutions.net>
+	<CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
+Date: Mon, 14 Dec 2015 13:47:57 +0200
+In-Reply-To: <CANEJEGv7ENTJu4YHz1x2_ve2M6-3Nn8X-0aC2hA3o1mUs3tQ1g@mail.gmail.com>
+	(Grant Grundler's message of "Fri, 11 Dec 2015 16:46:28 -0800")
+Message-ID: <8737v545g2.fsf@kamboji.qca.qualcomm.com> (sfid-20151214_124812_567072_11D94443)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Lenski <dlenski@gmail.com> writes:
-> On Wed, Dec 23, 2015 at 3:18 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->> Daniel Lenski <dlenski@gmail.com> writes:
->> In addition, do *not* overwrite the eeprompriv.mac_addr - that struct is
->> a clean copy of the eeprom's data and should not be modified.
->>
->> Please changed the dev entry and make sure they driver updates from
->> there instead.
->
-> I left that part alone (overwriting the eeprompriv.mac_addr) because
-> the existing code relies on it containing the correct *current* MAC
-> address in numerous places. But, fair enough.
->
-> This will require a much more complex patch, because there are
-> numerous functions which assume that eeprompriv.mac_addr is the
-> current address. (And some of these functions only receive the struct
-> rtw_adapter as an argument, rather than the complete netdev.)
->
->> Second, please CC me directly as the driver maintainer.
->>
->> For longer term, please try out rtl8xxxu, hopefully we can
->> rm -rf drivers/staging/rtl8723au soon.
->
-> Woah, I didn't know that driver existed. I will take a look.
+Grant Grundler <grundler@google.com> writes:
 
-It's pretty new and should be available in 4.4. I'm still working on
-it, so there may be a few rough edges.
+> Sorry for the late response...just one point below
+>
+> On Fri, Nov 20, 2015 at 3:22 AM, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+>
+>     > +#define MWL_DRV_NAME     KBUILD_MODNAME
+>     > +#define MWL_DRV_VERSION       "10.3.0.14"
+>
+>     versions like that are generally fairly useless since you don't update
+>     them for every commit ...
+>
+>
+> When backporting to other kernel trees, it's extremely handy to have a
+> DRV_VERSION.
+>
+> Checking if a particular kernel build has the expected driver version trivial.
+>  "mod_info" dumps the driver version for modules (which this will usually be
+> too).
+>
+> And yes, it won't get updated for every commit only because other version
+> control might encapsulate those changes. Not every distro makes their build
+> versioning accessible to outsiders. So it's still helpful even if not perfect.
+>
+> Marvell can update this every time they resync with their own internal
+> versions.
 
-Cheers,
-Jes
+But the problem is that you cannot really trust this driver version
+string. I found a perfect example from another Marvell driver:
+
+5e6e3a92b9a4c drivers/net/wireless/mwifiex/main.c (Bing Zhao 2011-03-21 18:00:50 -0700   25) #define VERSION   "1.0"
+
+So nobody has updated that version string since the initial commit from
+2011 and that driver has had over 900 non-merge commits after that.
+Because of bad cases like this I think having a driver specific versions
+in in-tree drivers are just noise and unnecessary extra work. When
+porting a driver to another tree git commit ids, release tag names or
+git-describe output are much better ways to identify the driver version.
+
+-- 
+Kalle Valo
