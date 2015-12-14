@@ -1,223 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:38738 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754616AbbLIKW6 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13785 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbbLNFoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:22:58 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 12/13] brcmfmac: Move scheduled scan related interface layer structs.
-Date: Wed, 9 Dec 2015 11:22:51 +0100
-Message-ID: <1449656572-16158-13-git-send-email-arend@broadcom.com> (sfid-20151209_112342_668245_B2060FDA)
-In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+	Mon, 14 Dec 2015 00:44:08 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/12] staging: wilc1000: remove used functions
+Date: Mon, 14 Dec 2015 14:46:59 +0900
+Message-ID: <1450072023-13013-9-git-send-email-glen.lee@atmel.com> (sfid-20151214_064412_550763_9093956B)
+In-Reply-To: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
+References: <1450072023-13013-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This patch remove unused functions add_handler_in_list and
+remove_handler_in_list, and it's related global variable wfidrv_list and codes.
+label fail_timer_2 and it's codes are removed since label is not used anymore.
 
-All interface layer related to scheduled scan are moved in
-fwil_types.h
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Change-Id: I2f763ebc5af89f596a5b217562def01fc07d23f2
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5584
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 81 ----------------------
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 81 ++++++++++++++++++++++
- 2 files changed, 81 insertions(+), 81 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 44 -------------------------------
+ 1 file changed, 44 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 397d41b..c17b6d5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -211,87 +211,6 @@ struct escan_info {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 76e891c..5bf2a47 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -226,7 +226,6 @@ struct join_bss_param {
+ 	u8 start_time[4];
  };
  
- /**
-- * struct brcmf_pno_param_le - PNO scan configuration parameters
-- *
-- * @version: PNO parameters version.
-- * @scan_freq: scan frequency.
-- * @lost_network_timeout: #sec. to declare discovered network as lost.
-- * @flags: Bit field to control features of PFN such as sort criteria auto
-- *	enable switch and background scan.
-- * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
-- *	criteria.
-- * @bestn: number of best networks in each scan.
-- * @mscan: number of scans recorded.
-- * @repeat: minimum number of scan intervals before scan frequency changes
-- *	in adaptive scan.
-- * @exp: exponent of 2 for maximum scan interval.
-- * @slow_freq: slow scan period.
-- */
--struct brcmf_pno_param_le {
--	__le32 version;
--	__le32 scan_freq;
--	__le32 lost_network_timeout;
--	__le16 flags;
--	__le16 rssi_margin;
--	u8 bestn;
--	u8 mscan;
--	u8 repeat;
--	u8 exp;
--	__le32 slow_freq;
--};
--
--/**
-- * struct brcmf_pno_net_param_le - scan parameters per preferred network.
-- *
-- * @ssid: ssid name and its length.
-- * @flags: bit2: hidden.
-- * @infra: BSS vs IBSS.
-- * @auth: Open vs Closed.
-- * @wpa_auth: WPA type.
-- * @wsec: wsec value.
-- */
--struct brcmf_pno_net_param_le {
--	struct brcmf_ssid_le ssid;
--	__le32 flags;
--	__le32 infra;
--	__le32 auth;
--	__le32 wpa_auth;
--	__le32 wsec;
--};
--
--/**
-- * struct brcmf_pno_net_info_le - information per found network.
-- *
-- * @bssid: BSS network identifier.
-- * @channel: channel number only.
-- * @SSID_len: length of ssid.
-- * @SSID: ssid characters.
-- * @RSSI: receive signal strength (in dBm).
-- * @timestamp: age in seconds.
-- */
--struct brcmf_pno_net_info_le {
--	u8 bssid[ETH_ALEN];
--	u8 channel;
--	u8 SSID_len;
--	u8 SSID[32];
--	__le16	RSSI;
--	__le16	timestamp;
--};
--
--/**
-- * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
-- *
-- * @version: PNO version identifier.
-- * @status: indicates completion status of PNO scan.
-- * @count: amount of brcmf_pno_net_info_le entries appended.
-- */
--struct brcmf_pno_scanresults_le {
--	__le32 version;
--	__le32 status;
--	__le32 count;
--};
--
--/**
-  * struct brcmf_cfg80211_vif_event - virtual interface event information.
-  *
-  * @vif_wq: waitqueue awaiting interface event from firmware.
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index e56eabc..94d34ad 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -670,4 +670,85 @@ struct brcmf_pmk_list_le {
- 	struct brcmf_pmksa pmk[BRCMF_MAXPMKID];
- };
+-static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+ struct host_if_drv *terminated_handle;
+ bool wilc_optaining_ip;
+ static u8 P2P_LISTEN_STATE;
+@@ -266,34 +265,6 @@ static struct wilc_vif *join_req_vif;
  
-+/**
-+ * struct brcmf_pno_param_le - PNO scan configuration parameters
-+ *
-+ * @version: PNO parameters version.
-+ * @scan_freq: scan frequency.
-+ * @lost_network_timeout: #sec. to declare discovered network as lost.
-+ * @flags: Bit field to control features of PFN such as sort criteria auto
-+ *	enable switch and background scan.
-+ * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
-+ *	criteria.
-+ * @bestn: number of best networks in each scan.
-+ * @mscan: number of scans recorded.
-+ * @repeat: minimum number of scan intervals before scan frequency changes
-+ *	in adaptive scan.
-+ * @exp: exponent of 2 for maximum scan interval.
-+ * @slow_freq: slow scan period.
-+ */
-+struct brcmf_pno_param_le {
-+	__le32 version;
-+	__le32 scan_freq;
-+	__le32 lost_network_timeout;
-+	__le16 flags;
-+	__le16 rssi_margin;
-+	u8 bestn;
-+	u8 mscan;
-+	u8 repeat;
-+	u8 exp;
-+	__le32 slow_freq;
-+};
-+
-+/**
-+ * struct brcmf_pno_net_param_le - scan parameters per preferred network.
-+ *
-+ * @ssid: ssid name and its length.
-+ * @flags: bit2: hidden.
-+ * @infra: BSS vs IBSS.
-+ * @auth: Open vs Closed.
-+ * @wpa_auth: WPA type.
-+ * @wsec: wsec value.
-+ */
-+struct brcmf_pno_net_param_le {
-+	struct brcmf_ssid_le ssid;
-+	__le32 flags;
-+	__le32 infra;
-+	__le32 auth;
-+	__le32 wpa_auth;
-+	__le32 wsec;
-+};
-+
-+/**
-+ * struct brcmf_pno_net_info_le - information per found network.
-+ *
-+ * @bssid: BSS network identifier.
-+ * @channel: channel number only.
-+ * @SSID_len: length of ssid.
-+ * @SSID: ssid characters.
-+ * @RSSI: receive signal strength (in dBm).
-+ * @timestamp: age in seconds.
-+ */
-+struct brcmf_pno_net_info_le {
-+	u8 bssid[ETH_ALEN];
-+	u8 channel;
-+	u8 SSID_len;
-+	u8 SSID[32];
-+	__le16	RSSI;
-+	__le16	timestamp;
-+};
-+
-+/**
-+ * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
-+ *
-+ * @version: PNO version identifier.
-+ * @status: indicates completion status of PNO scan.
-+ * @count: amount of brcmf_pno_net_info_le entries appended.
-+ */
-+struct brcmf_pno_scanresults_le {
-+	__le32 version;
-+	__le32 status;
-+	__le32 count;
-+};
-+
- #endif /* FWIL_TYPES_H_ */
+ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
+ 
+-static int add_handler_in_list(struct host_if_drv *handler)
+-{
+-	int i;
+-
+-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+-		if (!wfidrv_list[i]) {
+-			wfidrv_list[i] = handler;
+-			return 0;
+-		}
+-	}
+-
+-	return -ENOBUFS;
+-}
+-
+-static int remove_handler_in_list(struct host_if_drv *handler)
+-{
+-	int i;
+-
+-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+-		if (wfidrv_list[i] == handler) {
+-			wfidrv_list[i] = NULL;
+-			return 0;
+-		}
+-	}
+-
+-	return -EINVAL;
+-}
+-
+ /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+  * As a result, the returned index will be 1 to NUM_CONCURRENT_IFC.
+@@ -3845,7 +3816,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ {
+ 	s32 result = 0;
+ 	struct host_if_drv *hif_drv;
+-	int err;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
+ 
+@@ -3865,11 +3835,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	}
+ 	hif_drv->wilc = wilc;
+ 	*hif_drv_handler = hif_drv;
+-	err = add_handler_in_list(hif_drv);
+-	if (err) {
+-		result = -EFAULT;
+-		goto _fail_timer_2;
+-	}
+ 
+ 	wilc_optaining_ip = false;
+ 
+@@ -3939,10 +3904,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	return result;
+ 
+-_fail_timer_2:
+-	del_timer_sync(&hif_drv->connect_timer);
+-	del_timer_sync(&hif_drv->scan_timer);
+-	kthread_stop(hif_thread_handler);
+ _fail_mq_:
+ 	wilc_mq_destroy(&hif_msg_q);
+ _fail_:
+@@ -3954,7 +3915,6 @@ s32 wilc_deinit(struct wilc_vif *vif)
+ 	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int ret;
+ 
+ 	if (!hif_drv)	{
+ 		PRINT_ER("hif_drv = NULL\n");
+@@ -4009,10 +3969,6 @@ s32 wilc_deinit(struct wilc_vif *vif)
+ 		wilc_mq_destroy(&hif_msg_q);
+ 	}
+ 
+-	ret = remove_handler_in_list(hif_drv);
+-	if (ret)
+-		result = -ENOENT;
+-
+ 	kfree(hif_drv);
+ 
+ 	clients_count--;
 -- 
 1.9.1
 
