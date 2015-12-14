@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:35822 "EHLO
-	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754519AbbL3MPy (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:26495 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932527AbbLNNj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:15:54 -0500
-Received: by mail-pf0-f171.google.com with SMTP id 78so141432878pfw.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:15:54 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/20] staging: wilc1000: rename u16FrameType in wilc_frame_register
-Date: Wed, 30 Dec 2015 21:15:26 +0900
-Message-Id: <1451477744-11975-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131617_167924_0FE668FF)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 14 Dec 2015 08:39:58 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: Fix warn trace on module unload while in ibss mode
+Date: Mon, 14 Dec 2015 14:39:52 +0100
+Message-ID: <1450100394-17414-6-git-send-email-arend@broadcom.com> (sfid-20151214_144023_162910_90884220)
+In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u16FrameType to frame_type to avoid camelcase.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+When the driver is being unloaded a situation can occur where the
+wirelesss core (cfg80211) wants to remove the ibss, but the state
+of brcmfmac has already been set to down. When an error is
+returned in that situation then that will result in a stack
+trace on removal of the wiphy object. This is avoided by
+returning 0 when device is down on a leave_ibss call.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d9e4e11..c3e59d8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4123,7 +4123,7 @@ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID)
- 	return result;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5964763..6632e46 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1448,8 +1448,13 @@ brcmf_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *ndev)
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
  
--int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg)
-+int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool bReg)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4137,7 +4137,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	brcmf_dbg(TRACE, "Enter\n");
+-	if (!check_vif_up(ifp->vif))
+-		return -EIO;
++	if (!check_vif_up(ifp->vif)) {
++		/* When driver is being unloaded, it can end up here. If an
++		 * error is returned then later on a debug trace in the wireless
++		 * core module will be printed. To avoid this 0 is returned.
++		 */
++		return 0;
++	}
  
- 	msg.id = HOST_IF_MSG_REGISTER_FRAME;
--	switch (u16FrameType) {
-+	switch (frame_type) {
- 	case ACTION:
- 		PRINT_D(HOSTINF_DBG, "ACTION\n");
- 		msg.body.reg_frame.reg_id = ACTION_FRM_IDX;
-@@ -4152,7 +4152,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg)
- 		PRINT_D(HOSTINF_DBG, "Not valid frame type\n");
- 		break;
- 	}
--	msg.body.reg_frame.frame_type = u16FrameType;
-+	msg.body.reg_frame.frame_type = frame_type;
- 	msg.body.reg_frame.reg = bReg;
- 	msg.vif = vif;
+ 	brcmf_link_down(ifp->vif, WLAN_REASON_DEAUTH_LEAVING);
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 5ecc978..efb657b 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -362,7 +362,7 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
- 			   wilc_remain_on_chan_ready RemainOnChanReady,
- 			   void *pvUserArg);
- s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
--int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
-+int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool bReg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
- int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
 -- 
-2.6.4
+1.9.1
 
