@@ -1,68 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:32835 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933209AbbLXHxU (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6919 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752871AbbLNMR2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:20 -0500
-Received: by mail-pa0-f53.google.com with SMTP id cy9so63015675pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:19 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/21] staging: wilc1000: rename tenuAuth_type in wilc_set_join_req
-Date: Thu, 24 Dec 2015 16:52:29 +0900
-Message-Id: <1450943559-20937-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085346_796817_4BE5A31B)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 14 Dec 2015 07:17:28 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGeuk027459
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:27 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng02c-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:27 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 12/14] mwifiex: update region_code_index array
+Date: Mon, 14 Dec 2015 04:15:13 -0800
+Message-ID: <1450095315-19927-13-git-send-email-akarwar@marvell.com> (sfid-20151214_131736_646445_91FC6CF3)
+In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames tenuAuth_type to auth_type to avoid camelcase.
+This array contains list of supported region codes.
+It is changed to make it aligned with region code
+to country mapping table in driver.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfp.c  | 2 +-
+ drivers/net/wireless/marvell/mwifiex/main.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 64189fa..d3c595e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3368,7 +3368,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- 		      size_t ssid_len, const u8 *ies, size_t ies_len,
- 		      wilc_connect_result connect_result, void *user_arg,
--		      u8 security, enum AUTHTYPE tenuAuth_type,
-+		      u8 security, enum AUTHTYPE auth_type,
- 		      u8 u8channel, void *pJoinParams)
- {
- 	int result = 0;
-@@ -3390,7 +3390,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- 	msg.id = HOST_IF_MSG_CONNECT;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
+index beb564f..09fae27 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfp.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+@@ -67,7 +67,7 @@ static u8 supported_rates_bg[BG_SUPPORTED_RATES] = { 0x02, 0x04, 0x0b, 0x0c,
+ 					0x60, 0x6c, 0 };
  
- 	msg.body.con_info.security = security;
--	msg.body.con_info.auth_type = tenuAuth_type;
-+	msg.body.con_info.auth_type = auth_type;
- 	msg.body.con_info.ch = u8channel;
- 	msg.body.con_info.result = connect_result;
- 	msg.body.con_info.arg = user_arg;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index bb08e7f..3d5fea7 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -329,7 +329,7 @@ int wilc_wait_msg_queue_idle(void);
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- 		      size_t ssid_len, const u8 *ies, size_t ies_len,
- 		      wilc_connect_result connect_result, void *user_arg,
--		      u8 security, enum AUTHTYPE tenuAuth_type,
-+		      u8 security, enum AUTHTYPE auth_type,
- 		      u8 u8channel, void *pJoinParams);
- int wilc_flush_join_req(struct wilc_vif *vif);
- s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
+ u16 region_code_index[MWIFIEX_MAX_REGION_CODE] = { 0x00, 0x10, 0x20, 0x30,
+-						0x32, 0x40, 0x41, 0xff };
++						0x31, 0x32, 0x40, 0x41, 0x50 };
+ 
+ static u8 supported_rates_n[N_SUPPORTED_RATES] = { 0x02, 0x04, 0 };
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 10e614e..0fa1d8e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -84,7 +84,7 @@ enum {
+ 
+ #define MWIFIEX_KEY_BUFFER_SIZE			16
+ #define MWIFIEX_DEFAULT_LISTEN_INTERVAL 10
+-#define MWIFIEX_MAX_REGION_CODE         8
++#define MWIFIEX_MAX_REGION_CODE         9
+ 
+ #define DEFAULT_BCN_AVG_FACTOR          8
+ #define DEFAULT_DATA_AVG_FACTOR         8
 -- 
-2.6.4
+1.8.1.4
 
