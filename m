@@ -1,42 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:38603 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752919AbbLLWRY (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:46384 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932522AbbLNNj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2015 17:17:24 -0500
-Received: by wmpp66 with SMTP id p66so16419456wmp.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2015 14:17:23 -0800 (PST)
-From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] nl80211: Fix potential memory leak in nl80211_set_wowlan
-Date: Sat, 12 Dec 2015 23:17:17 +0100
-Message-Id: <1449958637-2766-1-git-send-email-ola1olsson@gmail.com> (sfid-20151212_231733_718653_E3BE5FF2)
+	Mon, 14 Dec 2015 08:39:58 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware command
+Date: Mon, 14 Dec 2015 14:39:51 +0100
+Message-ID: <1450100394-17414-5-git-send-email-arend@broadcom.com> (sfid-20151214_144019_571941_7BAB76D2)
+In-Reply-To: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compared to cfg80211_rdev_free_wowlan in core.h,
-the error goto label lacks the freeing of nd_config.
-Fix that.
+Several features in the driver directly map to a firmware feature
+listed in response of the 'cap' firmware command. For those features
+this response will be examined instead of attempting individual
+firmware commands.
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/nl80211.c |    1 +
- 1 file changed, 1 insertion(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51 +++++++++++++---------
+ 1 file changed, 30 insertions(+), 21 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4b5ff71..75b0d23 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9505,6 +9505,7 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 	if (new_triggers.tcp && new_triggers.tcp->sock)
- 		sock_release(new_triggers.tcp->sock);
- 	kfree(new_triggers.tcp);
-+	kfree(new_triggers.nd_config);
- 	return err;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index d9d1ca4..08b7200 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
+ };
+ #undef BRCMF_FEAT_DEF
+ 
++struct brcmf_feat_fwcap {
++	enum brcmf_feat_id feature;
++	const char * const fwcap_id;
++};
++
++static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
++	{ BRCMF_FEAT_MBSS, "mbss" },
++	{ BRCMF_FEAT_MCHAN, "mchan" },
++	{ BRCMF_FEAT_P2P, "p2p" },
++};
++
+ #ifdef DEBUG
+ /*
+  * expand quirk list to array of quirk strings.
+@@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
+ 	}
  }
- #endif
+ 
+-/**
+- * brcmf_feat_iovar_int_set() - determine feature through iovar set.
+- *
+- * @ifp: interface to query.
+- * @id: feature id.
+- * @name: iovar name.
+- */
+-static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
+-				     enum brcmf_feat_id id, char *name, u32 val)
++static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ {
+-	int err;
+-
+-	err = brcmf_fil_iovar_int_set(ifp, name, val);
+-	if (err == 0) {
+-		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
+-		ifp->drvr->feat_flags |= BIT(id);
+-	} else {
+-		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+-			  brcmf_feat_names[id], err);
++	char caps[256];
++	enum brcmf_feat_id id;
++	int i;
++
++	brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
++	brcmf_dbg(INFO, "[ %s]\n", caps);
++
++	for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
++		if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
++			id = brcmf_fwcap_map[i].feature;
++			brcmf_dbg(INFO, "enabling feature: %s\n",
++				  brcmf_feat_names[id]);
++			ifp->drvr->feat_flags |= BIT(id);
++		}
+ 	}
+ }
+ 
+@@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+ 
+-	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
++	brcmf_feat_firmware_capabilities(ifp);
++
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+ 	if (drvr->bus_if->wowl_supported)
+ 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
++	/* MBSS does not work for 43362 */
+ 	if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+-		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
+-	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
++		ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
+ 
 -- 
-1.7.9.5
+1.9.1
 
