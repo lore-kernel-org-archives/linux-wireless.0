@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42208 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:21100 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753502AbbL2SeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 13:34:14 -0500
-Date: Tue, 29 Dec 2015 12:34:09 -0600
-From: Rob Herring <robh@kernel.org>
-To: Uri Mashiach <uri.mashiach@compulab.co.il>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Tony Lindgren <tony@atomide.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	id S1753895AbbLOPxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2015 10:53:10 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Anatoly Stepanov <drivengroove@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] wlcore/wl12xx: spi: add device tree support
-Message-ID: <20151229183409.GA12260@rob-hp-laptop> (sfid-20151229_193420_004251_0B7F0412)
-References: <1451304139-10899-1-git-send-email-uri.mashiach@compulab.co.il>
- <1451304139-10899-3-git-send-email-uri.mashiach@compulab.co.il>
+Subject: Re: [PATCH] staging: rtl8723au: use proper typecast in assignment
+References: <1450136458-2386-1-git-send-email-drivengroove@gmail.com>
+Date: Tue, 15 Dec 2015 10:53:09 -0500
+In-Reply-To: <1450136458-2386-1-git-send-email-drivengroove@gmail.com>
+	(Anatoly Stepanov's message of "Tue, 15 Dec 2015 02:40:58 +0300")
+Message-ID: <wrfjio3zemje.fsf@redhat.com> (sfid-20151215_165316_357883_BC48E20F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1451304139-10899-3-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 28, 2015 at 02:02:18PM +0200, Uri Mashiach wrote:
-> Add DT support for the wl1271 SPI WiFi.
-> 
-> Add documentation file for the wl1271 SPI WiFi.
-> 
-> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+Anatoly Stepanov <drivengroove@gmail.com> writes:
+> This resolves the following Sparse warning:
+> "incorrect type in assignment (different base types)"
+>
+> Signed-off-by: Anatoly Stepanov <drivengroove@gmail.com>
 > ---
-> v1 -> v2: update interrupt documentation.
->           replace interrupts and interrupt-parent with interrupts-extended.
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> index 1662c03c..fdd9cf1 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> @@ -115,7 +115,7 @@ exit:
+>  
+>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+>  {
+> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+> +	*((__le32 *)param) = cpu_to_le32(*((u32 *)param));
+>  
+>  	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
 
-Why? interrupts-extended is really just for cases with 2 interrupt 
-parents.
+*Cough*
 
-> 	  IRQ parameters retrieved from spi_device instead of DT.
-> 	  remove redundant #ifdef CONFIG_OF
-> v2 -> v3: Add MODULE_DEVICE_TABLE.
->           Remove #ifdef CONFIG_OF.
-> 	  Make the Kconfig symbol to depend on OF.
-> 	  Replace irqd_get_trigger_type() with irq_get_trigger_type().
-> 
->  .../bindings/net/wireless/ti,wlcore,spi.txt        | 34 ++++++++++++++++
+Writing a 32 bit value to a pointer to a u8 is ugly in the first
+place. Rather than just wrapping it in yet another ugly typecast, please
+fix this properly.
 
-In any case:
-
-Acked-by: Rob Herring <robh@kernel.org>
-
->  drivers/net/wireless/ti/wlcore/Kconfig             |  2 +-
->  drivers/net/wireless/ti/wlcore/spi.c               | 47 ++++++++++++++++++++--
->  3 files changed, 78 insertions(+), 5 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+Jes
