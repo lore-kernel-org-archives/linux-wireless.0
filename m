@@ -1,28 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41154 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754670AbbL3PdW (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33708 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbbLOBNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 10:33:22 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 14 Dec 2015 20:13:54 -0500
+Received: by pabur14 with SMTP id ur14so113378491pab.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 17:13:54 -0800 (PST)
+Subject: Re: [PATCH v2] wcn36xx: handle rx skb allocation failure to avoid
+ system crash
+To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+References: <1450087610-32477-1-git-send-email-fengwei.yin@linaro.org>
+ <20151215002013.GS4000@usrtlx11787.corpusers.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+	"me@bobcopeland.com" <me@bobcopeland.com>,
+	"k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+	"lking@qti.qualcomm.com" <lking@qti.qualcomm.com>
+From: "fengwei.yin" <fengwei.yin@linaro.org>
+Message-ID: <566F694F.1060507@linaro.org> (sfid-20151215_021401_300474_DA882454)
+Date: Tue, 15 Dec 2015 09:13:51 +0800
 MIME-Version: 1.0
-Subject: Re: rsi: consolidate kmalloc/memset 0 calls to kzalloc
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1450543166-27531-1-git-send-email-hofrat@osadl.org>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Message-Id: <20151230153322.2F7B06026F@smtp.codeaurora.org> (sfid-20151230_163343_199065_E9D00DB8)
-Date: Wed, 30 Dec 2015 15:33:22 +0000 (UTC)
+In-Reply-To: <20151215002013.GS4000@usrtlx11787.corpusers.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Bjorn,
 
-> This is an API consolidation only. The use of kmalloc + memset to 0
-> is equivalent to kzalloc.
-> 
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+On 2015/12/15 8:20, Bjorn Andersson wrote:
+> On Mon 14 Dec 02:06 PST 2015, Fengwei Yin wrote:
+>
+>> Lawrence reported that git clone could make system crash on a
+>> Qualcomm ARM soc based device (DragonBoard, 1G memory without
+>> swap) running 64bit Debian.
+>>
+>> It's turned out the crash is related with rx skb allocation
+>> failure. git could consume more than 600MB anonymous memory.
+>> And system is in extremely memory shortage case.
+>>
+>> But driver didn't handle the rx allocation failure case. This patch
+>> doesn't submit skb to upper layer if rx skb allocation fails.
+>> Instead, it reuse the old skb for rx DMA again. It's more like
+>> drop the packets if system is in memory shortage case.
+>>
+>> With this change, git clone is OOMed instead of system crash.
+>>
+>> Reported-by: King, Lawrence <lking@qti.qualcomm.com>
+>> Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
+>> ---
+>> Changes from v1:
+>>   * Move switch block out of while loop.
+>>   * Remove the warning of unknown channel because we didn't deal with it.
+>>
+>>   drivers/net/wireless/ath/wcn36xx/dxe.c | 50 ++++++++++++++++++++--------------
+>>   1 file changed, 30 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> index f8dfa05..6b61874 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+>> @@ -467,6 +467,18 @@ out_err:
+>>
+>>   }
+>>
+>> +#define	GET_CH_CTRL_VALUE(x)			\
+>> +	({ u32 __v = WCN36XX_DXE_CTRL_RX_H;	\
+>> +	   if ((x) == WCN36XX_DXE_CH_RX_L)	\
+>> +		__v = WCN36XX_DXE_CTRL_RX_L;	\
+>> +	   __v; })
+>> +
+>> +#define	GET_CH_INT_MASK(x)			\
+>> +	({ u32 __v = WCN36XX_DXE_INT_CH3_MASK;	\
+>> +	   if ((x) == WCN36XX_DXE_CH_RX_L)	\
+>> +		__v = WCN36XX_DXE_INT_CH1_MASK;	\
+>> +	   __v; })
+>> +
+>>   static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+>>   				     struct wcn36xx_dxe_ch *ch)
+>>   {
+>> @@ -474,36 +486,34 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+>>   	struct wcn36xx_dxe_desc *dxe = ctl->desc;
+>>   	dma_addr_t  dma_addr;
+>>   	struct sk_buff *skb;
+>> +	int ret = 0, int_mask;
+>> +	u32 value;
+>> +
+>> +	value = GET_CH_CTRL_VALUE(ch->ch_type);
+>> +	int_mask = GET_CH_INT_MASK(ch->ch_type);
+>>
+>>   	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+>>   		skb = ctl->skb;
+>>   		dma_addr = dxe->dst_addr_l;
+>> -		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+>
+> I believe a better way to implement this is to check the return value
+> here and simply break the loop upon error.
+No. We can't break the loop because:
+1. The following items in the list could have DMA done and we have to deal
+    with them (At least initialize their dxe->ctrl again).
 
-Thanks, applied to wireless-drivers-next.git.
+2. It's possible system page reclaim get free pages and coming skb allocation
+    could success.
 
-Kalle Valo
+>
+>> -
+>> -		switch (ch->ch_type) {
+>> -		case WCN36XX_DXE_CH_RX_L:
+>> -			dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
+>> -			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+>> -						   WCN36XX_DXE_INT_CH1_MASK);
+>> -			break;
+>> -		case WCN36XX_DXE_CH_RX_H:
+>> -			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
+>> -			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+>> -						   WCN36XX_DXE_INT_CH3_MASK);
+>> -			break;
+>> -		default:
+>> -			wcn36xx_warn("Unknown channel\n");
+>> -		}
+>> -
+>> -		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+>> -				 DMA_FROM_DEVICE);
+>> -		wcn36xx_rx_skb(wcn, skb);
+>> +		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
+>> +		if (0 == ret) {
+>
+> With this you say that if allocation of a new skb fails we just mark the
+> old one as free again and move the list forward. Not unlikely this will
+> run through all packets in the list and give them back to the hardware.
+Not whole list. The loop just deal with the packets have DMA done. I don't
+think it will cross the whole list.
+
+>
+> Most likely both cases will just result in us dropping a series of
+> packets, but I believe we should leave the buffers occupied rather then
+> running this loop cycling buffers back to the hardware.
+>
+My understanding is that the DMA never stop. WCN36XX_DXE_CH_NEXT_DESC_ADDR_RX_L
+is only initialized once. And then just update the each description's dest
+address.
+
+If DMA is not stopped, we always need DMA buffer ready. So we can't submit
+the rx skb if the new rx skb allocation fails.
+
+But if we could stop DMA and restart the whole cycle again, we can submit
+the rx skb to upper layer and restart the whole cycle once new rx skb is
+available.
+
+>> +			/* new skb allocation ok. Use the new one and queue
+>> +			 * the old one to network system.
+>> +			 */
+>> +			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+>> +					DMA_FROM_DEVICE);
+>> +			wcn36xx_rx_skb(wcn, skb);
+>> +		} /* else keep rx skb not submitted and use for rx DMA again */
+>> +
+>> +		dxe->ctrl = value;
+>>   		ctl = ctl->next;
+>>   		dxe = ctl->desc;
+>>   	}
+>>
+>>   	ch->head_blk_ctl = ctl;
+>>
+>> +	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
+>> +
+>
+> I suspect this part kicks the hardware, to start filling new dxes after
+> updating our list. So it does make sense to only do that once, after
+> looping through all the descriptors. But please do so in a separate
+> patch, so we can bisect it if it turns out to cause issues.
+>
+OK. Thanks a lot for reviewing.
+
+Regards
+Yin, Fengwei
+
+>>   	return 0;
+>>   }
+>
+> Regards,
+> Bjorn
+>
