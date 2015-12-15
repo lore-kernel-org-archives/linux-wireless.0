@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45251 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750861AbbLOFrs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 00:47:48 -0500
-From: David Lin <dlin@marvell.com>
-To: Kan Yan <kyan@chromium.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
-Date: Tue, 15 Dec 2015 05:47:44 +0000
-Message-ID: <a9df396f54ed4a879ff918baf4b47c63@SC-EXCH02.marvell.com> (sfid-20151215_064752_000865_AAB43AB5)
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
- <loom.20151214T222202-611@post.gmane.org>
-In-Reply-To: <loom.20151214T222202-611@post.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:35948 "EHLO
+	mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504AbbLOMTe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2015 07:19:34 -0500
+Received: by mail-qk0-f182.google.com with SMTP id t125so9011344qkh.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 04:19:34 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1450181385.3356.6.camel@sipsolutions.net>
+References: <1450030323-6637-1-git-send-email-ola1olsson@gmail.com>
+	<1450181385.3356.6.camel@sipsolutions.net>
+Date: Tue, 15 Dec 2015 13:19:33 +0100
+Message-ID: <CABAco3CgkoCYdHZV6nBfV+CUpD379XR69EiznXvu42p5UC96gw@mail.gmail.com> (sfid-20151215_131945_518214_5DAF935E)
+Subject: Re: [PATCH] nl80211: Potential memory leaks in reg.c
+From: Ola Olsson <ola1olsson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Kan Yan writes:
-> 
-> David Lin <dlin@...> writes:
-> 
-> > +static inline struct sk_buff *mwl_tx_do_amsdu(struct mwl_priv *priv,
-> > +					      int desc_num,
-> > ...
-> > +		amsdu_pkts = (struct sk_buff_head *)
-> > +			kmalloc(sizeof(*amsdu_pkts), GFP_KERNEL);
-> > +		if (!amsdu_pkts) {
-> 
-> Should GFP_ATOMIC be used here instead of GFP_KERNEL? This function could
-> be called in interrupt context.
-> 
+I'm trying to learn how the code works so I'm reading through it line
+by line. I have seen so many memory leaks in my days so I know where
+to look ;)
+They are indeed obscure since we need an error to actually trigger
+them but I thought I might as well share the info when I found them.
 
-Thanks. I will fix it.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+On Tue, Dec 15, 2015 at 1:09 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2015-12-13 at 19:12 +0100, Ola Olsson wrote:
+>> The first leak occurs when entering the default case
+>> in the switch for the initiator in set_regdom.
+>> The second leaks a platform_device struct if the
+>> platform registration in regulatory_init succeeds but
+>> the sub sequent regulatory hint fails due to no memory.
+>
+> Applied, thanks. How are you finding these?? They seems so obscure :)
+>
+> johannes
