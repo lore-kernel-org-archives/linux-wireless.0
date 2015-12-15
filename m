@@ -1,198 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32733 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754321AbbLIKXB (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:35590 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932286AbbLOUz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:23:01 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 13/13] brcmfmac: add arp offload ip address table configuration support
-Date: Wed, 9 Dec 2015 11:22:52 +0100
-Message-ID: <1449656572-16158-14-git-send-email-arend@broadcom.com> (sfid-20151209_112356_451299_CED5B8C3)
-In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+	Tue, 15 Dec 2015 15:55:58 -0500
+Received: by mail-wm0-f51.google.com with SMTP id l126so11609642wml.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 12:55:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151215.154851.2132284113916223057.davem@davemloft.net>
+References: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com>
+ <20151215.153626.1500179484827859040.davem@davemloft.net> <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
+ <20151215.154851.2132284113916223057.davem@davemloft.net>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Tue, 15 Dec 2015 21:55:37 +0100
+Message-ID: <CACT4Y+a804iMbkA+kWdYfOPYGQz61ZCRVqKOdDBYtSM=FQ2cYQ@mail.gmail.com> (sfid-20151215_215635_600761_E1E6E360)
+Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
+To: David Miller <davem@davemloft.net>
+Cc: syzkaller <syzkaller@googlegroups.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Kostya Serebryany <kcc@google.com>,
+	Alexander Potapenko <glider@google.com>,
+	Sasha Levin <sasha.levin@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Tue, Dec 15, 2015 at 9:48 PM, David Miller <davem@davemloft.net> wrote:
+> From: Dmitry Vyukov <dvyukov@google.com>
+> Date: Tue, 15 Dec 2015 21:45:16 +0100
+>
+>> On Tue, Dec 15, 2015 at 9:36 PM, David Miller <davem@davemloft.net> wrote:
+>>> From: Dmitry Vyukov <dvyukov@google.com>
+>>> Date: Tue, 15 Dec 2015 21:00:20 +0100
+>>>
+>>>> The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
+>>>> sockaddr_len passed in, so they copy stack garbage from stack into the
+>>>> socket and then return it in getsockname.
+>>>> This can defeat ASLR, leak crypto keys, etc.
+>>>
+>>> That's actually the first thing these functions do.
+>>>
+>>> They completely clear out the on-stack llcp_addr, then they copy only
+>>> as much as the user gave them, being careful not to use more than
+>>> sizeof(llcp_addr).
+>>>
+>>>         memset(&llcp_addr, 0, sizeof(llcp_addr));
+>>>         len = min_t(unsigned int, sizeof(llcp_addr), alen);
+>>>         memcpy(&llcp_addr, addr, len);
+>>>
+>>> I don't see what the problem is, you'll need to be more specific.
+>>
+>> You are right. Sorry.
+>>
+>> There still seems to be a minor leak here:
+>>
+>>   if (!addr || addr->sa_family != AF_NFC)
+>>       return -EINVAL;
+>>
+>> addr->sa_family can be uninit.
+>
+> That shouldn't matter at all, that can't cause socket state corruption.
+>
+> I want to ask you if you are actually seeing kernel stack in that hexdump
+> you are posting?  If so, how do you actually account for it?  Nothing you
+> have shown so far make that clear.
 
-Obtain ipv4 address through inetaddr notification for ARP offload host
-ip table configuration.
-
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Change-Id: I7e7d215c5267517f8c0cbbf13fe70ac443a34af8
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5420
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 +++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
- 2 files changed, 110 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3a39192..2631f6f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -17,6 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <linux/module.h>
-+#include <linux/inetdevice.h>
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
- #include <brcmu_utils.h>
-@@ -620,6 +621,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
- 
- 	brcmf_cfg80211_down(ndev);
- 
-+	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
-+
- 	brcmf_net_setcarrier(ifp, false);
- 
- 	return 0;
-@@ -940,6 +943,98 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
- 	return available ? bsscfgidx : -ENOMEM;
- }
- 
-+#ifdef CONFIG_INET
-+#define ARPOL_MAX_ENTRIES	8
-+static int brcmf_inetaddr_changed(struct notifier_block *nb,
-+				  unsigned long action, void *data)
-+{
-+	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
-+					      inetaddr_notifier);
-+	struct in_ifaddr *ifa = data;
-+	struct net_device *ndev = ifa->ifa_dev->dev;
-+	struct brcmf_if *ifp;
-+	int idx, i, ret;
-+	u32 val;
-+	u32 addr_table[ARPOL_MAX_ENTRIES] = {0};
-+
-+	/* Find out if the notification is meant for us */
-+	for (idx = 0; idx < BRCMF_MAX_IFS; idx++) {
-+		ifp = drvr->iflist[idx];
-+		if (ifp && ifp->ndev == ndev)
-+			break;
-+		if (idx == BRCMF_MAX_IFS - 1)
-+			return NOTIFY_DONE;
-+	}
-+
-+	/* check if arp offload is supported */
-+	ret = brcmf_fil_iovar_int_get(ifp, "arpoe", &val);
-+	if (ret)
-+		return NOTIFY_OK;
-+
-+	/* old version only support primary index */
-+	ret = brcmf_fil_iovar_int_get(ifp, "arp_version", &val);
-+	if (ret)
-+		val = 1;
-+	if (val == 1)
-+		ifp = drvr->iflist[0];
-+
-+	/* retrieve the table from firmware */
-+	ret = brcmf_fil_iovar_data_get(ifp, "arp_hostip", addr_table,
-+				       sizeof(addr_table));
-+	if (ret) {
-+		brcmf_err("fail to get arp ip table err:%d\n", ret);
-+		return NOTIFY_OK;
-+	}
-+
-+	for (i = 0; i < ARPOL_MAX_ENTRIES; i++)
-+		if (ifa->ifa_address == addr_table[i])
-+			break;
-+
-+	switch (action) {
-+	case NETDEV_UP:
-+		if (i == ARPOL_MAX_ENTRIES) {
-+			brcmf_dbg(TRACE, "add %pI4 to arp table\n",
-+				  &ifa->ifa_address);
-+			/* set it directly */
-+			ret = brcmf_fil_iovar_int_set(ifp, "arp_hostip",
-+						      ifa->ifa_address);
-+			if (ret)
-+				brcmf_err("add arp ip err %d\n", ret);
-+		}
-+		break;
-+	case NETDEV_DOWN:
-+		if (i < ARPOL_MAX_ENTRIES) {
-+			addr_table[i] = 0;
-+			brcmf_dbg(TRACE, "remove %pI4 from arp table\n",
-+				  &ifa->ifa_address);
-+			/* clear the table in firmware */
-+			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear",
-+						       NULL, 0);
-+			if (ret) {
-+				brcmf_err("fail to clear arp ip table err:%d\n",
-+					  ret);
-+				return NOTIFY_OK;
-+			}
-+			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
-+				if (addr_table[i] != 0) {
-+					brcmf_fil_iovar_int_set(ifp,
-+								"arp_hostip",
-+								addr_table[i]);
-+					if (ret)
-+						brcmf_err("add arp ip err %d\n",
-+							  ret);
-+				}
-+			}
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+#endif
-+
- int brcmf_attach(struct device *dev)
- {
- 	struct brcmf_pub *drvr = NULL;
-@@ -1068,6 +1163,15 @@ int brcmf_bus_start(struct device *dev)
- 		if (p2p_ifp)
- 			ret = brcmf_net_p2p_attach(p2p_ifp);
- 	}
-+
-+	if (ret)
-+		goto fail;
-+
-+#ifdef CONFIG_INET
-+	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
-+	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
-+#endif
-+
- fail:
- 	if (ret < 0) {
- 		brcmf_err("failed: %d\n", ret);
-@@ -1133,6 +1237,10 @@ void brcmf_detach(struct device *dev)
- 	if (drvr == NULL)
- 		return;
- 
-+#ifdef CONFIG_INET
-+	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
-+#endif
-+
- 	/* stop firmware event handling */
- 	brcmf_fweh_detach(drvr);
- 	if (drvr->config)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 77d8239..6018af7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -141,6 +141,8 @@ struct brcmf_pub {
- #ifdef DEBUG
- 	struct dentry *dbgfs_dir;
- #endif
-+
-+	struct notifier_block inetaddr_notifier;
- };
- 
- /* forward declarations */
--- 
-1.9.1
-
+I've seen a kernel address at least in pptp_bind, it was a return pc
+in SyS_socket call that was executed just before bind.
+Exact contents of the leaked info depend on kernel config, compiler
+and a previous executed syscall (there are thousands of them if we
+count ioctls and friends). So it is almost impossible to prove that a
+PC cannot be leaked.
