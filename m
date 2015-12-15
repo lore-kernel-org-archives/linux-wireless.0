@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30620 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933377AbbLPMYP (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:51098 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754180AbbLOUsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 07:24:15 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBGCKBeJ025961
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:24:14 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yu76x83kh-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:24:14 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Shengzhen Li <szli@marvell.com>
-Subject: [PATCH 2/4] mwifiex: fix PCIe register information for 8997 chipset
-Date: Wed, 16 Dec 2015 04:21:43 -0800
-Message-ID: <1450268505-2682-2-git-send-email-akarwar@marvell.com> (sfid-20151216_132419_006528_036B23AA)
-In-Reply-To: <1450268505-2682-1-git-send-email-akarwar@marvell.com>
-References: <1450268505-2682-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 15 Dec 2015 15:48:53 -0500
+Date: Tue, 15 Dec 2015 15:48:51 -0500 (EST)
+Message-Id: <20151215.154851.2132284113916223057.davem@davemloft.net> (sfid-20151215_214916_331628_B179C2E6)
+To: dvyukov@google.com
+Cc: syzkaller@googlegroups.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, edumazet@google.com, kcc@google.com,
+	glider@google.com, sasha.levin@oracle.com
+Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
+References: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com>
+	<20151215.153626.1500179484827859040.davem@davemloft.net>
+	<CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch corrects some information in mwifiex_pcie_card_reg()
-structure for 8997 chipset
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Tue, 15 Dec 2015 21:45:16 +0100
 
-Fixes: 6d85ef00d9dfe ("mwifiex: add support for 8997 chipset")
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> On Tue, Dec 15, 2015 at 9:36 PM, David Miller <davem@davemloft.net> wrote:
+>> From: Dmitry Vyukov <dvyukov@google.com>
+>> Date: Tue, 15 Dec 2015 21:00:20 +0100
+>>
+>>> The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
+>>> sockaddr_len passed in, so they copy stack garbage from stack into the
+>>> socket and then return it in getsockname.
+>>> This can defeat ASLR, leak crypto keys, etc.
+>>
+>> That's actually the first thing these functions do.
+>>
+>> They completely clear out the on-stack llcp_addr, then they copy only
+>> as much as the user gave them, being careful not to use more than
+>> sizeof(llcp_addr).
+>>
+>>         memset(&llcp_addr, 0, sizeof(llcp_addr));
+>>         len = min_t(unsigned int, sizeof(llcp_addr), alen);
+>>         memcpy(&llcp_addr, addr, len);
+>>
+>> I don't see what the problem is, you'll need to be more specific.
+> 
+> You are right. Sorry.
+> 
+> There still seems to be a minor leak here:
+> 
+>   if (!addr || addr->sa_family != AF_NFC)
+>       return -EINVAL;
+> 
+> addr->sa_family can be uninit.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 48e549c..7db46ee 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -210,17 +210,17 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
- 	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
- 	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
- 	.tx_rdptr = 0xC1A4,
--	.tx_wrptr = 0xC1A8,
--	.rx_rdptr = 0xC1A8,
-+	.tx_wrptr = 0xC174,
-+	.rx_rdptr = 0xC174,
- 	.rx_wrptr = 0xC1A4,
- 	.evt_rdptr = PCIE_SCRATCH_10_REG,
- 	.evt_wrptr = PCIE_SCRATCH_11_REG,
- 	.drv_rdy = PCIE_SCRATCH_12_REG,
- 	.tx_start_ptr = 16,
- 	.tx_mask = 0x0FFF0000,
--	.tx_wrap_mask = 0x01FF0000,
-+	.tx_wrap_mask = 0x1FFF0000,
- 	.rx_mask = 0x00000FFF,
--	.rx_wrap_mask = 0x000001FF,
-+	.rx_wrap_mask = 0x00001FFF,
- 	.tx_rollover_ind = BIT(28),
- 	.rx_rollover_ind = BIT(12),
- 	.evt_rollover_ind = MWIFIEX_BD_FLAG_EVT_ROLLOVER_IND,
--- 
-1.8.1.4
+That shouldn't matter at all, that can't cause socket state corruption.
 
+I want to ask you if you are actually seeing kernel stack in that hexdump
+you are posting?  If so, how do you actually account for it?  Nothing you
+have shown so far make that clear.
