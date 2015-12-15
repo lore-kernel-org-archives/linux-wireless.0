@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:50896 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932091AbbLRSB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 13:01:28 -0500
-Subject: Re: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <1439504505-20314-1-git-send-email-hauke@hauke-m.de>
- <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <567449F4.9010400@hauke-m.de> (sfid-20151218_190132_651997_7DFDB486)
-Date: Fri, 18 Dec 2015 19:01:24 +0100
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:36050 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933696AbbLOUph (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2015 15:45:37 -0500
+Received: by mail-wm0-f53.google.com with SMTP id n186so182583070wmn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 12:45:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151215.153626.1500179484827859040.davem@davemloft.net>
+References: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com>
+ <20151215.153626.1500179484827859040.davem@davemloft.net>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Tue, 15 Dec 2015 21:45:16 +0100
+Message-ID: <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com> (sfid-20151215_214540_992172_BFD33C4B)
+Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
+To: syzkaller <syzkaller@googlegroups.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Kostya Serebryany <kcc@google.com>,
+	Alexander Potapenko <glider@google.com>,
+	Sasha Levin <sasha.levin@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/2015 07:27 AM, Rafał Miłecki wrote:
-> I'm afraid it wasn't tested on BCM47XX (MIPS) :(
+On Tue, Dec 15, 2015 at 9:36 PM, David Miller <davem@davemloft.net> wrote:
+> From: Dmitry Vyukov <dvyukov@google.com>
+> Date: Tue, 15 Dec 2015 21:00:20 +0100
+>
+>> The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
+>> sockaddr_len passed in, so they copy stack garbage from stack into the
+>> socket and then return it in getsockname.
+>> This can defeat ASLR, leak crypto keys, etc.
+>
+> That's actually the first thing these functions do.
+>
+> They completely clear out the on-stack llcp_addr, then they copy only
+> as much as the user gave them, being careful not to use more than
+> sizeof(llcp_addr).
+>
+>         memset(&llcp_addr, 0, sizeof(llcp_addr));
+>         len = min_t(unsigned int, sizeof(llcp_addr), alen);
+>         memcpy(&llcp_addr, addr, len);
+>
+> I don't see what the problem is, you'll need to be more specific.
 
-Yes, you are probably right.
+You are right. Sorry.
 
-> On 14 August 2015 at 00:21, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> @@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
->>         chip->set               = bcma_gpio_set_value;
->>         chip->direction_input   = bcma_gpio_direction_input;
->>         chip->direction_output  = bcma_gpio_direction_output;
->> -#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
->> -       chip->to_irq            = bcma_gpio_to_irq;
->> -#endif
->> +       chip->owner             = THIS_MODULE;
->> +       chip->dev               = bcma_bus_get_host_dev(bus);
-> 
-> This assigns &bus->host_pdev->dev which is NULL.
+There still seems to be a minor leak here:
 
-hmm, how do we fix this, as long as bcma does not have a device on mips
-this is a problem. Should we create a new device for mips?
+  if (!addr || addr->sa_family != AF_NFC)
+      return -EINVAL;
 
->> @@ -248,13 +216,13 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
->>         else
->>                 chip->base              = -1;
->>
->> -       err = bcma_gpio_irq_domain_init(cc);
->> +       err = gpiochip_add(chip);
->>         if (err)
->>                 return err;
->>
->> -       err = gpiochip_add(chip);
->> +       err = bcma_gpio_irq_init(cc);
-> 
-> This results in:
-> [    0.157054] missing gpiochip .dev parent pointer
-> (coming from gpiochip_irqchip_add) and
-> [    0.157287] bcma: bus0: Error registering GPIO driver: -22
-
-
+addr->sa_family can be uninit.
