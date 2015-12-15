@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34159 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753426AbbLCUVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 15:21:33 -0500
-Message-ID: <1449174081.31265.3.camel@sipsolutions.net> (sfid-20151203_212138_334045_9AA12B0C)
-Subject: Re: Can we increase IEEE80211_MAX_QUEUES
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 03 Dec 2015 21:21:21 +0100
-In-Reply-To: <5660A31E.3010507@candelatech.com> (sfid-20151203_211637_306021_AF98F120)
-References: <5660A31E.3010507@candelatech.com>
-	 (sfid-20151203_211637_306021_AF98F120)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:51238 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933674AbbLOU67 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2015 15:58:59 -0500
+Date: Tue, 15 Dec 2015 15:58:56 -0500 (EST)
+Message-Id: <20151215.155856.467616191891653108.davem@davemloft.net> (sfid-20151215_215923_246167_0202C729)
+To: dvyukov@google.com
+Cc: syzkaller@googlegroups.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, edumazet@google.com, kcc@google.com,
+	glider@google.com, sasha.levin@oracle.com
+Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CACT4Y+a804iMbkA+kWdYfOPYGQz61ZCRVqKOdDBYtSM=FQ2cYQ@mail.gmail.com>
+References: <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
+	<20151215.154851.2132284113916223057.davem@davemloft.net>
+	<CACT4Y+a804iMbkA+kWdYfOPYGQz61ZCRVqKOdDBYtSM=FQ2cYQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-03 at 12:16 -0800, Ben Greear wrote:
-> ath10k wants to use vdev-id as a queue-id, and I want to support up
-> to
-> 64 vdevs.  In the 4.2 kernel, this is causing splats when using lots
-> of
-> vdevs because then queue is out of range.
-> 
-> Can we just increase IEEE80211_MAX_QUEUES to 64?
-> 
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Tue, 15 Dec 2015 21:55:37 +0100
 
-I think not, that would likely cause a lot of data structures to grow
-too much. We'd have to do more dynamic things in that case, I suppose.
+> I've seen a kernel address at least in pptp_bind,
 
-Does the original premise even make sense though? A single queue for
-each vdev seems a bit strange.
+We're not talking about pptp_bind.
 
-johannes
+We're talking about llcp_{,raw}_sock_bind().
+
+If your hex dump doesn't show it, don't report anything unless you are
+absolutely sure via code inspection that there could be a leak.  And
+in that case make it perfectly clear exactly how that can happen.
+
+I am generally unimpressed with your reports half of the time,
+and just a small amount of extra effort would extraordinarily
+improve the quality of the things your post.
+
+Thanks.
+
+> So it is almost impossible to prove that a PC cannot be leaked.
+
+You can't show that anything is actually being leaked in this specific
+case, period.
