@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:34167 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbbLKBHx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 20:07:53 -0500
-Received: by lbbcs9 with SMTP id cs9so61607253lbb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 17:07:52 -0800 (PST)
-From: Anatoly Stepanov <drivengroove@gmail.com>
-To: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com
-Cc: linux-wireless@vger.kernel.org,
-	Anatoly Stepanov <drivengroove@gmail.com>
-Subject: [PATCH 01/01] staging: wilc1000: add missing address space specifier
-Date: Thu, 10 Dec 2015 05:17:29 +0300
-Message-Id: <1449713849-32245-2-git-send-email-drivengroove@gmail.com> (sfid-20151211_020756_218341_9B7985A2)
-In-Reply-To: <1449713849-32245-1-git-send-email-drivengroove@gmail.com>
-References: <1449713849-32245-1-git-send-email-drivengroove@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56154 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555AbbLPOvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 09:51:41 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: drivengroove@gmail.com
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: change parameter type in rtl8723a_set_rssi_cmd declaration
+References: <1450211664-1699-1-git-send-email-drivengroove@gmail.com>
+Date: Wed, 16 Dec 2015 09:51:40 -0500
+In-Reply-To: <1450211664-1699-1-git-send-email-drivengroove@gmail.com>
+	(drivengroove@gmail.com's message of "Tue, 15 Dec 2015 23:34:24
+	+0300")
+Message-ID: <wrfjr3imbg5f.fsf@redhat.com> (sfid-20151216_155144_373154_9D4DCDC4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the following sparse warnings:
-1. warning: incorrect type in argument 2 (different address spaces)
-2. warning: incorrect type in initializer (incompatible argument 2 (different address spaces))
+drivengroove@gmail.com writes:
+> From: Anatoly Stepanov <drivengroove@gmail.com>
+>
+> Previosly the function had the following prototype:
+> int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+>
+> My suggestion here is to modify the prototype this way:
+> int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+>
+> We can do this based on the following considerations:
+> 1. rtl8723a_set_rssi_cmd is used only with 32-bit "param" values
+> 2. There's no point in using "__u8 *param" until we pass param length
+>
+> Signed-off-by: Anatoly Stepanov <drivengroove@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/hal/odm.c              | 2 +-
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 6 +++---
+>  drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
+>  3 files changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
+> index 6b9dbef..6fed13e 100644
+> --- a/drivers/staging/rtl8723au/hal/odm.c
+> +++ b/drivers/staging/rtl8723au/hal/odm.c
+> @@ -1274,7 +1274,7 @@ static void odm_RSSIMonitorCheck(struct dm_odm_t *pDM_Odm)
+>  
+>  	for (i = 0; i < sta_cnt; i++) {
+>  		if (PWDB_rssi[i] != (0))
+> -			rtl8723a_set_rssi_cmd(Adapter, (u8 *)&PWDB_rssi[i]);
+> +			rtl8723a_set_rssi_cmd(Adapter, &PWDB_rssi[i]);
+>  	}
+>  
+>  	pdmpriv->EntryMaxUndecoratedSmoothedPWDB = MaxDB;
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> index 1662c03c..e899d05 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> @@ -113,11 +113,11 @@ exit:
+>  	return ret;
+>  }
+>  
+> -int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+> +int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+>  {
+> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+> +	__le32 cmd = cpu_to_le32(*param);
+>  
+> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (void *)&cmd);
+>  
+>  	return _SUCCESS;
+>  }
 
-Signed-off-by: Anatoly Stepanov <drivengroove@gmail.com>
----
- drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is a step in the right direction, but lets get it right the first
+time. There really is little reason for passing this by reference when
+it should suffice passing by value.
 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index ae11186..877659f 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -87,7 +87,7 @@ static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, s
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
--static ssize_t wilc_debug_region_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
-+static ssize_t wilc_debug_region_write(struct file *filp, const char __user *buf, size_t count, loff_t *ppos)
- {
- 	char buffer[128] = {};
- 	int flag;
--- 
-2.1.0
-
+Cheers,
+Jes
