@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53610 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750732AbbLTXIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 18:08:39 -0500
-Date: Mon, 21 Dec 2015 00:08:36 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Saurabh Sengar <saurabh.truth@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: added the rx delay parameter for nfcsim workqueue
-Message-ID: <20151220230836.GA6306@zurbaran.home> (sfid-20151221_000942_671924_ED42834B)
-References: <1450637970-4990-1-git-send-email-saurabh.truth@gmail.com>
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:34921 "EHLO
+	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754410AbbLPN5d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 08:57:33 -0500
+Received: by mail-qk0-f179.google.com with SMTP id u65so44798231qkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 05:57:33 -0800 (PST)
+Date: Wed, 16 Dec 2015 08:57:29 -0500
+From: "me@bobcopeland.com >> Bob Copeland" <me@bobcopeland.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+Message-ID: <20151216135729.GB4073@localhost> (sfid-20151216_145736_701734_40645923)
+References: <5670DA9A.4010102@candelatech.com>
+ <20151216132113.GA4073@localhost>
+ <567166D0.5090000@candelatech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450637970-4990-1-git-send-email-saurabh.truth@gmail.com>
+In-Reply-To: <567166D0.5090000@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Saurabh,
-
-On Mon, Dec 21, 2015 at 12:29:30AM +0530, Saurabh Sengar wrote:
-> added the rx delay parameter as a device tunable parameter.
+On Wed, Dec 16, 2015 at 05:27:44AM -0800, Ben Greear wrote:
+> >Does this patch cause problems for your userspace implementation?
 > 
-> Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
-> ---
-> This is a follow up patch after the review comments by Samuel Ortiz
-> on the initial patch.
-> Below is the link to original patch which implemented this parameter
-> as sysfs entry:
-> https://lkml.org/lkml/2015/12/20/118
->  drivers/nfc/nfcsim.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-Applied to nfc-next, thanks.
+> Yes, because I coded with the assumptions that the radio addr had nothing
+> to do with the vif addr.
 
-Cheers,
-Samuel.
+I see -- but looking back at wmediumd history (before I had anything to
+do with it) it seems it always had the opposite assumption -- e.g. the
+ATTR_ADDR_TRANSMITTER mac address was compared against addresses in the
+frame for delivery decisions.
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
