@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34982 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752162AbbLKNpB (ORCPT
+Received: from shetland.sei.cmu.edu ([192.58.107.44]:47678 "EHLO
+	shetland.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbbLPX4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 08:45:01 -0500
-Received: by pfd5 with SMTP id 5so4939255pfd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 05:45:00 -0800 (PST)
-Subject: Re: [PATCH] wcn36xx: handle rx skb allocation failure to avoid system
- crash
-To: Bob Copeland <me@bobcopeland.com>
-References: <1449034051-12536-1-git-send-email-fengwei.yin@linaro.org>
- <566ACC1C.1070304@linaro.org> <20151211133730.GA8835@localhost>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com,
-	lking@qti.qualcomm.com
-From: "fengwei.yin" <fengwei.yin@linaro.org>
-Message-ID: <566AD356.50404@linaro.org> (sfid-20151211_144506_511305_25C3CF8A)
-Date: Fri, 11 Dec 2015 21:44:54 +0800
+	Wed, 16 Dec 2015 18:56:52 -0500
+From: "Adam R. Welle" <arwelle@cert.org>
+To: Ben Greear <greearb@candelatech.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: RE: question on "mac80211_hwsim: support any address in userspace"
+Date: Wed, 16 Dec 2015 23:56:43 +0000
+Message-ID: <2DE9F46DD36D2A458CD6347950113F2535D1AA@marathon> (sfid-20151217_005657_597974_94580CAB)
+References: <5670DA9A.4010102@candelatech.com>
+			 (sfid-20151216_042934_976896_DCE1A2B3)
+ <1450257464.3159.1.camel@sipsolutions.net>
+		 <56716386.4070107@candelatech.com>
+	 <1450272308.8247.11.camel@sipsolutions.net>
+	 <567168AF.4060804@candelatech.com>
+ <1450273362.8247.15.camel@sipsolutions.net>
+ <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
+ <5671E23A.1070502@candelatech.com>
+ <2DE9F46DD36D2A458CD6347950113F2535CA6D@marathon>
+ <5671F1B2.2010503@candelatech.com>
+In-Reply-To: <5671F1B2.2010503@candelatech.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20151211133730.GA8835@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 2015/12/11 21:37, Bob Copeland wrote:
-> On Fri, Dec 11, 2015 at 09:14:04PM +0800, fengwei.yin wrote:
->>
->> On 2015/12/2 13:27, Fengwei Yin wrote:
->>> Lawrence reported that git clone could make system crash on a
->>> Qualcomm ARM soc based device (DragonBoard, 1G memory without
->>> swap) running 64bit Debian.
->>>
->>> It's turned out the crash is related with rx skb allocation
->>> failure. git could consume more than 600MB anonymous memory.
->>> And system is in extremely memory shortage case.
->>>
->>> But driver didn't handle the rx allocation failure case. This patch
->>> doesn't submit skb to upper layer if rx skb allocation fails.
->>> Instead, it reuse the old skb for rx DMA again. It's more like
->>> drop the packets if system is in memory shortage case.
->>>
->>> With this change, git clone is OOMed instead of system crash.
->>>
->>> Reported-by: King, Lawrence <lking@qti.qualcomm.com>
->>> Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
->
-> Concept makes sense to me, but:
-Thanks for looking at it.
-
->
->>>   		dma_addr = dxe->dst_addr_l;
->>> -		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
->>> +		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
->>> +		if (0 == ret) {
->
-> I find this "success handling" to be unclear and traditionally this
-> kind of thing is a source of bugs; how about instead:
->
->>> +			/* new skb allocation ok. Use the new one and queue
->>> +			 * the old one to network system.
->>> +			 */
->>> +			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
->>> +					DMA_FROM_DEVICE);
->>> +			wcn36xx_rx_skb(wcn, skb);
->>> +		}
->
->             ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
->
->             /* skip this frame if we can't alloc a new rx buffer */
->             if (ret)
->                    goto drop;
-This can't work because we need to initialize the DMA for the old skb again.
-Which is done in following
-	switch (ch->ch_type) {
-block.
-
-Regards
-Yin, Fengwei
-
->
->>>   		switch (ch->ch_type) {
->>>   		case WCN36XX_DXE_CH_RX_L:
->>> @@ -495,9 +504,6 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
->>>   			wcn36xx_warn("Unknown channel\n");
->>>   		}
->>>
->>> -		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
->>> -				 DMA_FROM_DEVICE);
->>> -		wcn36xx_rx_skb(wcn, skb);
->
-> drop:
->
->>>   		ctl = ctl->next;
->>>   		dxe = ctl->desc;
->>>   	}
->
+PiA+PiBXZSBjb3VsZCBhbHNvIHNldCB0aGUgYWRkcmVzcyBhdCBjcmVhdGlvbiB0aW1lIGVhc2ls
+eSBlbm91Z2guICBUaGVuDQo+ID4+IGl0IGNvdWxkIHN0aWxsIGJlIHVuaXF1ZSBhY3Jvc3MgbWFu
+eSBtYWNoaW5lcyBpZiB5b3UgbWFuYWdlZCBpdC4NCj4gPg0KPiA+IEkgYWN0dWFsbHkgYXBwbHkg
+YSBwYXRjaCBmb3IgdGhhdC4gSSBoYXZlIGFkZGVkIGEgbW9kdWxlIHBhcmFtZXRlcg0KPiA+IHdo
+aWNoIGlzIHVzZWQgYXMgdGhlIE1BQyBhZGRyZXNzIGZvciB0aGUgZmlyc3QgcmFkaW8sIGFuZCBJ
+IGluY3JlbWVudA0KPiA+IHRoZSBmaW5hbCBvY3RldCBmb3IgZWFjaCBhZGRpdGlvbmFsIHJhZGlv
+LiBUaGlzIGlzIHNvIHRoYXQgbXkgdXNlcnMgZG8NCj4gPiBub3QgaGF2ZSB0byBtYW51YWxseSBy
+ZXNldCB0aGUgTUFDIGFkZHJlc3MgdG8gZ2V0IGEgdW5pcXVlIG9uZS4gSQ0KPiA+IGFwcGx5IHRo
+ZSBhZGRyZXNzIHRvIGJvdGggYWRkcmVzc2VzIG1lbnRpb25lZCBhYm92ZSB0aG91Z2ggSSBvbmx5
+IHVzZQ0KPiA+IHRoZSBuZXRsaW5rIGRhdGFwYXRoLg0KPiA+DQo+ID4gSWYgdGhlcmUgaXMgaW50
+ZXJlc3QgaW4gdGhpcyBJIGNhbiBzdWJtaXQgaXQgYXMgYW4gUkZDIHBhdGNoIHRvbW9ycm93Lg0K
+PiANCj4gSSdkIHJhdGhlciBzZWUgc3VwcG9ydCBmb3Igc3BlY2lmeWluZyBhbiBhcmJpdHJhcnkg
+TUFDIHVwb24gY3JlYXRpb24NCj4gd2l0aCBhIG5ldGxpbmsgYXR0cmlidXRlIHRoYW4gYSBtb2R1
+bGUgcGFyYW1ldGVyLi4uDQoNCkkgY2FuIHNlZSB0aGUgdXNlZnVsbmVzcyBpbiB5b3VyIHN1Z2dl
+c3Rpb24gYXMgeW91IHdvdWxkIGJlIGFibGUgdG8gc3BlY2lmeSBub24tc2VxdWVudGlhbCBhZGRy
+ZXNzZXMgdG8gdGhlIHJhZGlvcy4gSSBoYWRuJ3QgdGhvdWdodCBvZiB0aGF0IHNpbmNlIEkgbG9h
+ZCB0aGUgbW9kdWxlIHdpdGggb25lIHJhZGlvIGFuZCBkbyBub3QgdXNlIHRoZSBuZXRsaW5rIEFQ
+SSB0byBhZGQgb3IgcmVtb3ZlIHJhZGlvcy4NCgkNCkFkYW0NCg0KLS0NCg==
