@@ -1,58 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plainfield.sei.cmu.edu ([192.58.107.45]:45363 "EHLO
-	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756244AbbLAWOB (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35567 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754462AbbLPNfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 17:14:01 -0500
-From: arwelle@cert.org
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211_hwsim: check ATTR_FREQ for wmediumd (netlink) packets
-Date: Tue,  1 Dec 2015 17:13:52 -0500
-Message-Id: <1449008032-6541-1-git-send-email-arwelle@cert.org> (sfid-20151201_231405_693894_A70D1EA3)
+	Wed, 16 Dec 2015 08:35:45 -0500
+Message-ID: <567168AF.4060804@candelatech.com> (sfid-20151216_143551_763140_E1A02603)
+Date: Wed, 16 Dec 2015 05:35:43 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+References: <5670DA9A.4010102@candelatech.com>		 (sfid-20151216_042934_976896_DCE1A2B3) <1450257464.3159.1.camel@sipsolutions.net>	 <56716386.4070107@candelatech.com> <1450272308.8247.11.camel@sipsolutions.net>
+In-Reply-To: <1450272308.8247.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adam Welle <arwelle@cert.org>
+On 12/16/2015 05:25 AM, Johannes Berg wrote:
+> On Wed, 2015-12-16 at 05:13 -0800, Ben Greear wrote:
+>> On 12/16/2015 01:17 AM, Johannes Berg wrote:
+>>> On Tue, 2015-12-15 at 19:29 -0800, Ben Greear wrote:
+>>>> This patch below was added to the kernel around 2/24/2015
+>>>>
+>>>> I am curious mostly about the first change:  I thought the
+>>>> transmitter-addr relates to the radio device, not the vdev (sta,
+>>>> ap,
+>>>> etc).
+>>>
+>>> It doesn't, even on real hardware.
+>>
+>> No, I mean that the HWSIM_ATTR_ADDR_TRANSMITTER should relate to the
+>> radio, and not the vdev, see the mac80211_hwsim.h:
+>>
+>>    * @HWSIM_ATTR_ADDR_TRANSMITTER: MAC address of the radio device that
+>>    *	the frame was broadcasted from
+>
+> I think that just means the documentation is misleading. Clearly, the
+> TA (hdr->addr2) is intended and implemented. "radio device" is a bit of
+> a misleading term when you have virtual interfaces.
 
-If a packet is received from netlink with the frequency value set it is
-checked against the current radio's frequency and discarded if different.
-The frequency is also checked against data2->tmp_chan if non-zero to support
-the off-channel/scan case.
+Well, the old code used it as a key, and the old documentation used
+it as a key, so it is a bit of a regression to change the behaviour
+now.
 
-Signed-off-by: Adam Welle <arwelle@cert.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+>> Since we are asking user-space to provide HWSIM_ATTR_ADDR_TRANSMITTER,
+>> then we can use that to find the radio device.  Then, normal mac80211
+>> logic can handle finding the vdevs (just as it does for ath9k).
+>
+> Oh.
+>
+> So you're basically arguing that we should treat it as a cookie, and on
+> outgoing frames give the hardware address, and on incoming frames use
+> it only to look up the struct mac80211_hwsim_data.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 194264c..94c30cb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2876,10 +2876,19 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
--	/* TODO: Check ATTR_FREQ if it exists, and maybe throw away off-channel
--	 * packets?
--	 */
--	rx_status.freq = data2->channel->center_freq;
-+	/* Check ATTR_FREQ if it exists, and throw away off-channel packets */
-+	if (info->attrs[HWSIM_ATTR_FREQ]) {
-+		rx_status.freq = nla_get_u32(info->attrs[HWSIM_ATTR_FREQ]);
-+		if (data2->tmp_chan) {
-+			if (rx_status.freq != data2->tmp_chan->center_freq)
-+				goto out;
-+		}
-+		if (rx_status.freq != data2->channel->center_freq)
-+			goto out;
-+	} else {
-+			rx_status.freq = data2->channel->center_freq;
-+	}
-+
- 	rx_status.band = data2->channel->band;
- 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
- 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+yes.
+
+>
+>> And in this case, there is no reason to have more than one address
+>> associated with the hwsim radio device.  We could add a pretty simple
+>> hash to keep the lookup near constant time instead of linear search
+>> as the current behaviour is...
+>
+> Yeah, ok, that would be (have been) doable I guess. We'd still have the
+> real TA in the frame itself (hdr->addr2).
+>
+>> I think that wmediumd should keep it's own mapping of what radio
+>> a vdev is on and use the proper hwsim radio addr for the
+>> HWSIM_ATTR_ADDR_TRANSMITTER attribute.
+>
+> That's somewhat difficult for it, since it could only populate that
+> mapping on actual TX frames.
+
+It can also be managed by an outside entity to set up mappings
+as needed.  And, it could be made smarter to listen to wifi
+netlink events or whatever.
+
+And anyway, unless you are doing all passive scans, you should always
+get at least some packet transmitted (beacon or probe request), right?
+
+>
+> I think this is pretty much a done deal by now though since I don't
+> really want to break wmediumd.
+
+It was not the only user-space to use the API :)
+
+>
+> If we wanted to go this route I think we should be more explicit and
+> simply use the HWSIM_ATTR_RADIO_ID attribute. We could support that
+> easily - just see if the RADIO_ID is present and look up the
+> transmitter (or receiver btw) radio based on the RADIO_ID if present -
+> that gives a clean path forward too since wmediumd can be taught to
+> specify both knowing the kernel will prefer the radio ID if present.
+
+Well, that would be fine too.  The nice thing about the address,though,
+is that you can query it as part of /sys/class/ieee..... and other already-implemented
+interfaces.  Finding the radio-id would require new API in this case, which
+is a bit of work.
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
+
 -- 
-2.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
