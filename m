@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60274 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894AbbLKJ3s (ORCPT
+Received: from plainfield.sei.cmu.edu ([192.58.107.45]:40864 "EHLO
+	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523AbbLPS5p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 04:29:48 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>
-Subject: Re: [PATCH V2 13/13] brcmfmac: add arp offload ip address table configuration support
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-	<1449751392-32569-14-git-send-email-arend@broadcom.com>
-	<566A9392.6090103@broadcom.com>
-Date: Fri, 11 Dec 2015 11:29:41 +0200
-In-Reply-To: <566A9392.6090103@broadcom.com> (Arend van Spriel's message of
-	"Fri, 11 Dec 2015 10:12:50 +0100")
-Message-ID: <87a8ph5o56.fsf@kamboji.qca.qualcomm.com> (sfid-20151211_102953_422431_ABAD5089)
+	Wed, 16 Dec 2015 13:57:45 -0500
+From: "Adam R. Welle" <arwelle@cert.org>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: question on "mac80211_hwsim: support any address in userspace"
+Date: Wed, 16 Dec 2015 18:57:30 +0000
+Message-ID: <2DE9F46DD36D2A458CD6347950113F2535C4C2@marathon> (sfid-20151216_195749_413142_CE8BDA62)
+References: <5670DA9A.4010102@candelatech.com>
+ <1450257464.3159.1.camel@sipsolutions.net>
+ <56716386.4070107@candelatech.com>
+ <1450272308.8247.11.camel@sipsolutions.net>
+ <567168AF.4060804@candelatech.com>
+ <1450273362.8247.15.camel@sipsolutions.net>
+ <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
+ <20151216174602.GG4073@localhost>
+In-Reply-To: <20151216174602.GG4073@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+> > I should note that I am passing these frames between virtual machines
+> > so the use of unique addresses (instead of hard-coded 0x42 addresses)
+> > as a key simplifies things when determining which radio transmitted a
+> > given frame and which radio needs to receive the frame. My app has
+> > always relied on the MAC address assigned by the user as a unique key
+> > across virtual machines.
+> 
+> Sounds interesting - is this app open source?
 
-> On 12/10/2015 01:43 PM, Arend van Spriel wrote:
->> From: Franky Lin <frankyl@broadcom.com>
->>
->> Obtain ipv4 address through inetaddr notification for ARP offload host
->> ip table configuration.
->
-> Turns out this patch has a sparse warning, ie. would not work on
-> big-endian system. We have a fix for that. Should I mark this patch as
-> dropped in patchwork?
+We intend for it to be but I am not sure how long it will take to make that
+happen. I told Johannes a few months ago that I was using mac80211_hwsim and
+a wmediumd-inspired app to train wireless pen-testing skills. I am using
+VMWare as the hypervisor and everything has been working pretty well.
+	
+Adam
 
-Yeah, that's the best way. For example you could use state "Changes
-Requested" and then it automatically gets dropped from my queue.
-
--- 
-Kalle Valo
+--
