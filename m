@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:33175 "EHLO
-	mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932459AbbLNWe4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54312 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbbLPOhb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:34:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 2/8] rtlwifi: rtl8723ae: Fix initialization of module parameters
-Date: Mon, 14 Dec 2015 16:34:32 -0600
-Message-Id: <1450132478-2386-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233532_526855_DDF285E1)
-In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 16 Dec 2015 09:37:31 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] ssb: pick SoC invariants code from MIPS BCM47xx arch
+References: <1449700611-6952-1-git-send-email-zajec5@gmail.com>
+Date: Wed, 16 Dec 2015 16:37:22 +0200
+In-Reply-To: <1449700611-6952-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 9 Dec 2015
+ 23:36:51 +0100")
+Message-ID: <871tamfoil.fsf@kamboji.qca.qualcomm.com> (sfid-20151216_153734_224409_ED146316)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver has some errors in the handling of module parameters. These
-include missing initialization for parameters msi_support and
-disable_watchdog. In addition, neither of these parameters nor sw_crypto
-are transferred into the locations used by the driver. A final fix is
-adding parameter msi to the module named and description macros.
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+> There is code in ssb fetching "invariants" that is basically a set of
+> board specific data. Every host requires its own implementation of
+> reading function. In ssb we have support for PCI, PCMCIA & SDIO.
+> For some (historical?) reason code reading "invariants" for SoC was
+> placed in arch code and provided by a callback. This is not needed
+> nowadays, so lets move that into ssb. This way we keep all "invariants"
+> functions in a single module making code cleaner.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 3859b3e..ff49a8c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -150,6 +150,11 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
-+	rtlpriv->cfg->mod_params->sw_crypto =
-+		rtlpriv->cfg->mod_params->sw_crypto;
-+	rtlpriv->cfg->mod_params->disable_watchdog =
-+		rtlpriv->cfg->mod_params->disable_watchdog;
- 	if (rtlpriv->cfg->mod_params->disable_watchdog)
- 		pr_info("watchdog disabled\n");
- 	rtlpriv->psc.reg_fwctrl_lps = 3;
-@@ -267,6 +272,8 @@ static struct rtl_mod_params rtl8723e_mod_params = {
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
- 	.debug = DBG_EMERG,
-+	.msi_support = false,
-+	.disable_watchdog = false,
- };
- 
- static struct rtl_hal_cfg rtl8723e_hal_cfg = {
-@@ -383,12 +390,14 @@ module_param_named(debug, rtl8723e_mod_params.debug, int, 0444);
- module_param_named(ips, rtl8723e_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl8723e_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8723e_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(msi, rtl8723e_mod_params.msi_support, bool, 0444);
- module_param_named(disable_watchdog, rtl8723e_mod_params.disable_watchdog,
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
- 
+Manually applied to wireless-drivers-next.git, thanks.
+
 -- 
-2.1.4
-
+Kalle Valo
