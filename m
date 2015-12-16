@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp08.msg.oleane.net ([62.161.4.8]:52419 "EHLO
-	smtp08.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756AbbL2NBp convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50300 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965604AbbLPVUX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 08:01:45 -0500
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp08.msg.oleane.net (MTA) with ESMTP id tBTD1gHC007575
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 14:01:43 +0100
-Subject: Mac80211 : Wpa rekeying issue
-Date: Tue, 29 Dec 2015 14:01:41 +0100
+	Wed, 16 Dec 2015 16:20:23 -0500
+Message-ID: <5671D56F.8030903@codeaurora.org> (sfid-20151216_222026_868781_FCBCDCEA)
+Date: Wed, 16 Dec 2015 13:19:43 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local> (sfid-20151229_140149_286125_6434F590)
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+To: Felix Fietkau <nbd@openwrt.org>, Peter Oh <poh@qca.qualcomm.com>,
+	ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum configurable
+References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com> <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org> <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org> <5671CF63.9040308@openwrt.org>
+In-Reply-To: <5671CF63.9040308@openwrt.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
 
-My test plateform is:
-2 equipements
-Both equipment used compat version 2015-07-21 from openwrt.
-Both equipment used security WPA2
+On 12/16/2015 12:53 PM, Felix Fietkau wrote:
+> On 2015-12-16 21:46, Peter Oh wrote:
+>> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
+>>> On 2015-12-16 21:29, Peter Oh wrote:
+>>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
+>>>>> On 2015-12-16 19:20, Peter Oh wrote:
+>>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
+>>>>>> capability of checksum offload when frame formats are not
+>>>>>> suitable for it such as Mesh frame.
+>>>>>> Hence add a module parameter, hw_csum, to make checksum offload
+>>>>>> configurable during module registration time.
+>>>>>>
+>>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>>>>> How about instead of inventing yet another crappy module parameter, you
+>>>>> call skb_checksum_help() in the driver in cases where the hardware is
+>>>>> unable to offload the checksum calculation.
+>>>>>
+>>>>> That way the user has to worry about less driver specific hackery ;)
+>>>> That will be good option for hardware not supporting HW checksum, but I
+>>>> mind that using the function will add more workload per every packet on
+>>>> critical data path when HW supports checksum resulting in throughput down.
+>>> I didn't mean calling it for every single frame in the data path.
+>>> What I'm suggesting is calling it selectively only for mesh frames, or
+>>> any other frames that the hardware cannot offload, and leaving the rest
+>>> for the hardware to process.
+>>>
+>>> There should be no performance difference between disabling checksum
+>>> offload and calling skb_checksum_help from the driver.
+>> To call it selectively for Mesh frame or interface, we need to add it on
+>> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
+>> care the interface type in data path.
+> No need to change mac80211 - it only touches the headers, and
+> skb_checksum_help does not care about that. The skb has enough
+> information for it to find the right range to calculate the checksum and
+> the place to store it.
+If mentioned to use the function to mesh frame only without touching 
+mac80211, then how do you suggest it to apply it only to mesh frame 
+without interfere other data frames?
+Can you share your example?
+>
+>> In that case it will also introduce throughput degrade to HW that
+>> supports HW checksum for Mesh.
+> This doesn't make any sense to me. Are you saying that there's no way
+> for the driver to detect the cases where the hardware cannot do checksum
+> offloading?
+I'm saying the case that HW supports checksum except for specific frame 
+such as Mesh and to make driver support both case dynamically at code 
+level, it requires extra codes which need to check if the frame is Mesh 
+or not. Since this approach requires extra workload especially in data 
+path, it will degrade driver's performance.
+>   How is the user supposed to know when to change that module
+> parameter? Trial and error?
+>
+> - Felix
 
-The equipment #1 is an AP.
-	The Group rekey interval is set to 3601s 
-	The Pair rekey interval set to 50s (I reduced this value to show
-the issue often)
-	The Master rekey interval is set to 86400 s.
-
-The equipment #2 is a sta+wds
-
-I used a 5GHz channel to have a free channel (without other AP)
-I connected a computer on each equipment.
-
-To reproduce the issue:
-	I ran iperf udp@50Mbps from computer connected to the AP to the
-computer connected to the sta. After several WPA2 rekeying, iperf server
-side didn't received any frame.
-
-I investigated in the driver. All packets are dropped in sta side,
-because the function ieee80211_crypto_ccmp_decrypt return
-Rx_DROP_UNUSABLE. This function return this code because the test
-if(memcmp(pn,key->u.ccmp.rx_pn[queue],IEEE8021_CCMP_PN_LEN) <=0) return
-true.
-
-Have you any idea to fix this issue?
-
-Thanks for your help.
-
-Cedric.
