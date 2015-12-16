@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:47187 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933900AbbLWKJw (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8727 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933377AbbLPMXw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 05:09:52 -0500
-Subject: Re: [PATCH 1/3] wlcore/wl12xx: spi: fix NULL pointer dereference
- (Oops)
-To: Uri Mashiach <uri.mashiach@compulab.co.il>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
- <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
-CC: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <567A7287.3010205@ti.com> (sfid-20151223_110959_798127_0111E0DB)
-Date: Wed, 23 Dec 2015 12:08:07 +0200
+	Wed, 16 Dec 2015 07:23:52 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBGCN12P029745
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:23:50 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1yu7wpr02h-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:23:50 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/4] mwifiex: fix potential integer truncation
+Date: Wed, 16 Dec 2015 04:21:42 -0800
+Message-ID: <1450268505-2682-1-git-send-email-akarwar@marvell.com> (sfid-20151216_132355_308062_4E09EC1C)
 MIME-Version: 1.0
-In-Reply-To: <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/2015 10:35 AM, Uri Mashiach wrote:
-> The power function uses a consumer regulator access to update the WiFi
-> enable GPIO value.
-> 
-> Fix the below Oops when trying to modprobe wlcore_spi.
-> The oops occurs because the wl1271_power_{off,on}()
-> function doesn't check the power() function pointer.
-> 
-> [   23.401447] Unable to handle kernel NULL pointer dereference at
-> virtual address 00000000
-> [   23.409954] pgd = c0004000
-> [   23.412922] [00000000] *pgd=00000000
-> [   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
-> [   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
-> musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
-> omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
-> c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
-> snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
-> [   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
-> 4.2.0-00002-g951efee-dirty #233
-> [   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
-> [   23.468123] Workqueue: events request_firmware_work_func
-> [   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
-> [   23.479341] PC is at 0x0
-> [   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
+From: chunfan chen <jeffc@marvell.com>
 
-Why can't you just add proper check in wl1271_power_on/wl1271_power_off() instead?
+At some places, ie length is truncated from u16 to u8 while
+storing it to driver's internal variable. This patch fixes
+the problem.
 
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.h      | 6 +++---
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 0fa1d8e..2f7f478 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -564,14 +564,14 @@ struct mwifiex_private {
+ 	struct mwifiex_wep_key wep_key[NUM_WEP_KEYS];
+ 	u16 wep_key_curr_index;
+ 	u8 wpa_ie[256];
+-	u8 wpa_ie_len;
++	u16 wpa_ie_len;
+ 	u8 wpa_is_gtk_set;
+ 	struct host_cmd_ds_802_11_key_material aes_key;
+ 	struct host_cmd_ds_802_11_key_material_v2 aes_key_v2;
+ 	u8 wapi_ie[256];
+-	u8 wapi_ie_len;
++	u16 wapi_ie_len;
+ 	u8 *wps_ie;
+-	u8 wps_ie_len;
++	u16 wps_ie_len;
+ 	u8 wmm_required;
+ 	u8 wmm_enabled;
+ 	u8 wmm_qosinfo;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 439e73f..6a4fc5d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -759,7 +759,7 @@ static int mwifiex_set_wpa_ie_helper(struct mwifiex_private *priv,
+ 			return -1;
+ 		}
+ 		memcpy(priv->wpa_ie, ie_data_ptr, ie_len);
+-		priv->wpa_ie_len = (u8) ie_len;
++		priv->wpa_ie_len = ie_len;
+ 		mwifiex_dbg(priv->adapter, CMD,
+ 			    "cmd: Set Wpa_ie_len=%d IE=%#x\n",
+ 			    priv->wpa_ie_len, priv->wpa_ie[0]);
 -- 
-regards,
--grygorii
+1.8.1.4
+
