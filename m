@@ -1,90 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:33292 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbbLUW4a (ORCPT
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:34234 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753770AbbLPNZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 17:56:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
-References: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 22 Dec 2015 09:56:10 +1100
-Message-ID: <CAGRGNgU+CA-jLAX=_qV27tfbyQ2cyjYo2NZOq3_7fFLc-VsCew@mail.gmail.com> (sfid-20151221_235648_537253_2F4F43B8)
-Subject: Re: [PATCH] wlcore: consolidate kmalloc + memset 0 into kzalloc
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Dec 2015 08:25:09 -0500
+From: Jiading Gai <jiading.gai.github@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Jiading Gai <jiading.gai.github@gmail.com>
+Subject: [PATCH] staging: rtl8723au: hal: rtl8723a_hal_init: fixed 4 spelling errors.
+Date: Wed, 16 Dec 2015 08:24:58 -0500
+Message-Id: <1450272298-5095-1-git-send-email-jiading.gai.github@gmail.com> (sfid-20151216_142541_812407_F6DF369C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Fixed four spelling errors.
 
-On Tue, Dec 22, 2015 at 3:47 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
-> This is an API consolidation only. The use of kmalloc + memset to 0
-> is equivalent to kzalloc.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> ---
->
-> Found by coccinelle script (relaxed version of
-> scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
->
-> Patch was compile tested with: x86_64_defconfig +
-> CONFIG_WL12XX=m (implies CONFIG_WLCORE=m)
->
-> Patch is against linux-next (localversion-next is -next-20151221)
->
->  drivers/net/wireless/ti/wlcore/main.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index ec7f6af..dfc49bf 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -838,7 +838,7 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->
->         wl1271_info("Reading FW panic log");
->
-> -       block = kmalloc(wl->fw_mem_block_size, GFP_KERNEL);
-> +       block = kzalloc(wl->fw_mem_block_size, GFP_KERNEL);
->         if (!block)
->                 return;
->
-> @@ -885,7 +885,6 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->                         goto out;
->                 }
-> -               memset(block, 0, wl->fw_mem_block_size);
+Signed-off-by: Jiading Gai <jiading.gai.github@gmail.com>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I don't think you can't remove this line. It appears that the loop
-this is part of resets block to be all zero, reads a chunk of data in,
-then operates on it. I'm guessing that the code after the following
-line expects that there isn't any data left over from previous runs
-through the loop.
-
->                 ret = wlcore_read_hwaddr(wl, addr, block,
->                                         wl->fw_mem_block_size, false);
->
-> --
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+index ecf54ee..e3dc889 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+@@ -1044,7 +1044,7 @@ void rtl8723a_InitAntenna_Selection(struct rtw_adapter *padapter)
+ 	u8 val;
+ 
+ 	val = rtl8723au_read8(padapter, REG_LEDCFG2);
+-	/*  Let 8051 take control antenna settting */
++	/*  Let 8051 take control antenna setting */
+ 	val |= BIT(7);		/*  DPDT_SEL_EN, 0x4C[23] */
+ 	rtl8723au_write8(padapter, REG_LEDCFG2, val);
+ }
+@@ -1054,7 +1054,7 @@ void rtl8723a_CheckAntenna_Selection(struct rtw_adapter *padapter)
+ 	u8 val;
+ 
+ 	val = rtl8723au_read8(padapter, REG_LEDCFG2);
+-	/*  Let 8051 take control antenna settting */
++	/*  Let 8051 take control antenna setting */
+ 	if (!(val & BIT(7))) {
+ 		val |= BIT(7);	/*  DPDT_SEL_EN, 0x4C[23] */
+ 		rtl8723au_write8(padapter, REG_LEDCFG2, val);
+@@ -1066,7 +1066,7 @@ void rtl8723a_DeinitAntenna_Selection(struct rtw_adapter *padapter)
+ 	u8 val;
+ 
+ 	val = rtl8723au_read8(padapter, REG_LEDCFG2);
+-	/*  Let 8051 take control antenna settting */
++	/*  Let 8051 take control antenna setting */
+ 	val &= ~BIT(7);		/*  DPDT_SEL_EN, clear 0x4C[23] */
+ 	rtl8723au_write8(padapter, REG_LEDCFG2, val);
+ }
+@@ -1297,7 +1297,7 @@ static void _ResetDigitalProcedure1_92C(struct rtw_adapter *padapter,
+ 		/*  If we want to SS mode, we can not reset 8051. */
+ 		if ((val8 & BIT(1)) && padapter->bFWReady) {
+ 			/* IF fw in RAM code, do reset */
+-			/*  2010/08/25 MH Accordign to RD alfred's
++			/*  2010/08/25 MH According to RD alfred's
+ 			    suggestion, we need to disable other */
+ 			/*  HRCV INT to influence 8051 reset. */
+ 			rtl8723au_write8(padapter, REG_FWIMR, 0x20);
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
