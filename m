@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48342 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756268AbbLAWFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 17:05:42 -0500
-Message-ID: <1449007539.2977.11.camel@sipsolutions.net> (sfid-20151201_230545_767575_B7213B65)
-Subject: Re: MAC address randomization support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anatol Pomozov <anatol.pomozov@gmail.com>,
-	"Greenman, Gregory" <gregory.greenman@intel.com>,
-	linux-wireless@vger.kernel.org,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Tue, 01 Dec 2015 23:05:39 +0100
-In-Reply-To: <CAOMFOmV-TdX2h2patazVuffZmy=MAqHfnLso90kQn5+d=ODU9w@mail.gmail.com> (sfid-20151201_225959_079001_7630D8E2)
-References: <CAOMFOmV-TdX2h2patazVuffZmy=MAqHfnLso90kQn5+d=ODU9w@mail.gmail.com>
-	 (sfid-20151201_225959_079001_7630D8E2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:32949 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846AbbLPHwk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 02:52:40 -0500
+Received: by mail-lb0-f169.google.com with SMTP id kw15so20493597lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 23:52:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1450082912.3871.2.camel@sipsolutions.net>
+References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
+	<CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com>
+	<1449876779.2324.16.camel@sipsolutions.net>
+	<566DF964.7050904@broadcom.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E919DE2@hasmsx107.ger.corp.intel.com>
+	<1450082912.3871.2.camel@sipsolutions.net>
+Date: Wed, 16 Dec 2015 09:52:39 +0200
+Message-ID: <CANUX_P2gtr+MgE8f67v5uj7nDmYF5ub7OxA_WpZYm4kBUAASTQ@mail.gmail.com> (sfid-20151216_085247_031248_87A63D01)
+Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Anatol,
+On Mon, Dec 14, 2015 at 10:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2015-12-14 at 04:00 +0000, Grumbach, Emmanuel wrote:
+>>
+>> This is really weird. I don't see how that could be firmware related.
+>> BTW, -10.ucode is fairly old :) we have -16.ucode out there.
+>
+> I guess the question is how we get into this situation to start with?
+>
+> About the only thing I can imagine is that we fail somehow during
+> initialization (without printing any other message) and higher layers
+> like wpa_supplicant/network-manager/... simply try to bring up the
+> device over and over again?
+>
 
-> This feature is supported in Android and a few products use it
-> already for Preferred Network Offload scan. There is a HAL method
-> that allows to set MAC OUI [1] that makes 3 first octets predefined
-> and the rest of MAC address is randomized. Kernel passes this OUI
-> value to firmware where the randomization is implemented.
-> 
-> I checked current upstream kernel and did not find any API for
-> enabling/dealing with MAC address randomization. If a firmware devs
-> want to add the feature easily then there should be some standard API
-> for enabling/configuring MAC randomization.
-
-Well, we are treating it on a per-feature basis. The upstream kernel
-does, in fact, and I believe we also submitted it into ChromeOS,
-support randomized MAC addresses for scan and scheduled scan.
-
-> In fact there is one mention of the feature in upstream source tree -
-> macaddr_* fields in "struct iwl_tof_range_req_cmd" of iwlwifi driver.
-> It allows to enable/disable randomization for 11MC measurement.
-
-If you're talking about fine timing measurement, however, we haven't
-yet submitted that API for that upstream. I sent you a draft of that
-API and it does in fact contain MAC address randomization support from
-the start :)
-
-> The MAC randomization could be used by other drivers for many
-> use-cases and I think it worth making it a part of standard cfg80211
-> API. Is it something maintainers are interested in? Does anybody work
-> on it already?
-
-Yes and yes, obviously, but I think what I said at the beginning - that
-it's per feature rather than global - is just not what you were looking
-for or had expected?
-
-I still think it makes sense btw, scan for example can be randomized in
-software in certain cases, scheduled scan might not be able to, etc.
-
-johannes
-
+I can reproduce this now when I unload / load iwlwifi until I kill the
+supplicant.
+Seems like the wpa_s is indeed toggling the device.
+I don't have time to play with that right now.
