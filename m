@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:7013 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750881AbbLUHYI convert rfc822-to-8bit (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:33107 "EHLO
+	mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934279AbbLPRc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 02:24:08 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi-2015-12-21
-Date: Mon, 21 Dec 2015 07:24:03 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9477A9@hasmsx107.ger.corp.intel.com> (sfid-20151221_082412_572643_C215F54C)
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 16 Dec 2015 12:32:28 -0500
+Received: by mail-qk0-f182.google.com with SMTP id k189so75407788qkc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 09:32:28 -0800 (PST)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id 35sm2973093qkv.23.2015.12.16.09.32.26
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Dec 2015 09:32:27 -0800 (PST)
+Received: from bob by hash with local (Exim 4.84)
+	(envelope-from <me@bobcopeland.com>)
+	id 1a9Fw7-0004Rw-RR
+	for linux-wireless@vger.kernel.org; Wed, 16 Dec 2015 12:32:23 -0500
+Date: Wed, 16 Dec 2015 12:32:23 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Subject: [ANNOUNCE] New location for wireless-testing tree
+Message-ID: <20151216173223.GF4073@localhost> (sfid-20151216_183231_038204_D69A4DE1)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+As reported previously[1], John Linville will be moving on from maintenance
+of the wireless-testing[2] tree at the end of the year.  A huge thank you to
+John for doing all this work for so many years!
 
-We seem to have problem with iwlwifi-7265D-10.ucode which can be replaced by iwlwifi-7265-10.ucode without affecting anyone.
-As a bonus, the size on disk is a bit reduced.
+We now have a shared wireless directory on kernel.org where we (currently
+myself and Kalle as backup) will continue to maintain this tree going
+forward.  The new tree can be found at:
 
-The following changes since commit bbe4917c054eb0a73e250c6363341e3bf6725839:
+git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-testing.git
 
-  WHENCE: use https://linuxtv.org for LinuxTV URLs (2015-12-07 02:17:20 +0000)
+Note: unlike John's tree, we are going to try rebasing this tree on every
+build (like linux-next) instead of merging the downstream trees, in order
+to avoid certain merge problems when those trees are rebased.
 
-are available in the git repository at:
+This means that if you are working directly off of wireless-testing, use
+'git pull --rebase' to sync, instead of just 'git pull'.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2015-12-21
+We'll see how this goes and reassess after a couple of cycles.
 
-for you to fetch changes up to bf8e868d1ea52c514eb450d89ff5457cd04ec27d:
+Please let me know of any issues.
 
-  iwlwifi: replace 7265D-10.ucode by 7265-10.ucode (2015-12-21 09:09:18 +0200)
+[1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/145291
 
-----------------------------------------------------------------
-fix https://bugzilla.kernel.org/show_bug.cgi?id=109531
-by replacing iwlwifi-7265D-10.ucode by
-iwlwifi-7265-10.ucode
+[2] wireless-testing is an integration testing tree, consisting of:
 
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: replace 7265D-10.ucode by 7265-10.ucode
+ * Linus's latest -rc
+ * patches in mac80211 and wireless-drivers (for the upcoming release)
+ * patches in mac80211-next and wireless-drivers-next (for the next release)
 
- iwlwifi-7265D-10.ucode | Bin 740436 -> 21 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)  mode change 100644 => 120000 iwlwifi-7265D-10.ucode
+It is not pulled into any upstream tree, but it should be a pretty good
+indication of what is baking in Linux wireless for the next release, without
+having unrelated changes from all the other subsystems as in linux-next.
 
+-- 
+Bob Copeland %% http://bobcopeland.com/
