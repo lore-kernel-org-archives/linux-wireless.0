@@ -1,76 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f193.google.com ([209.85.213.193]:35815 "EHLO
-	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753890AbbLVJFV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2015 04:05:21 -0500
+Received: from arrakis.dune.hu ([78.24.191.176]:39026 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752124AbbLPS1n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 13:27:43 -0500
+Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum
+ configurable
+To: Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <5671AD10.70004@openwrt.org> (sfid-20151216_192746_585349_FDE7A89E)
+Date: Wed, 16 Dec 2015 19:27:28 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com>
-References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
-	<CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
-	<CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com>
-Date: Tue, 22 Dec 2015 14:35:20 +0530
-Message-ID: <CAFqt6zZfmue6XVVno2Ho8UfEwz1Z3YxFzbcZ9ZMOn5Fe_zJLmQ@mail.gmail.com> (sfid-20151222_100621_300078_180C2035)
-Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Brent Taylor <motobud@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath6kl@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brent,
+On 2015-12-16 19:20, Peter Oh wrote:
+> Some hardwares such as QCA988X and QCA99X0 doesn't have
+> capability of checksum offload when frame formats are not
+> suitable for it such as Mesh frame.
+> Hence add a module parameter, hw_csum, to make checksum offload
+> configurable during module registration time.
+> 
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+How about instead of inventing yet another crappy module parameter, you
+call skb_checksum_help() in the driver in cases where the hardware is
+unable to offload the checksum calculation.
 
-On Tue, Dec 22, 2015 at 3:23 AM, Brent Taylor <motobud@gmail.com> wrote:
-> On Mon, Dec 21, 2015 at 1:23 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
->> Hi Brent,
->>
->> On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
->>> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7, ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
->>>
->>> Signed-off-by: Brent Taylor <motobud@gmail.com>
->>> ---
->>>  drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
->>>  1 file changed, 6 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
->>> index 6ae0734..4f2b124d 100644
->>> --- a/drivers/net/wireless/ath/ath6kl/init.c
->>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
->>> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
->>>                 return ret;
->>>
->>>         *fw_len = fw_entry->size;
->>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
->>> +   if (&ar->fw == fw)
->>> +               *fw = vmalloc(fw_entry->size);
->>> +   else
->>> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL)
->>
->>           Why vmalloc and kmalloc both are required? can't use either
->> vmalloc or kmalloc?
->
-> My original problem was that kmemdup (which uses kmalloc) could not
-> allocate enough memory
+That way the user has to worry about less driver specific hackery ;)
 
-If kmemdump ( which uses kmalloc) could not allocate memory then
-using kmalloc again can lead to same problem.
-I guess it will be correct to use
-            *fw = vmalloc(fw_entry->size);
-Correct me if i am wrong.
-
-> to hold the firmware that is placed into "ar->fw".  In the function
-> ath6kl_core_cleanup (in core.c),
-> the "ar->fw" pointer is the only one that uses vfree which was changed in commit
-> 8437754c83351d6213c1a47ff029c1126d6042a7.
->
-> I was trying to change as little as possible and I wasn't sure if
-> there was a reason that any of the
-> other firmware items needed to be allocated with kmalloc or if they
-> could be changed to use vmalloc.
-
--Souptick
+- Felix
