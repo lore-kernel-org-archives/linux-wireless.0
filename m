@@ -1,68 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:23230 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbbLBNc7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36008 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932335AbbLPOLi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 08:32:59 -0500
-Message-ID: <565EF307.90002@broadcom.com> (sfid-20151202_143304_117052_53D8F3D9)
-Date: Wed, 2 Dec 2015 14:32:55 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 16 Dec 2015 09:11:38 -0500
+Message-ID: <56717119.1040701@candelatech.com> (sfid-20151216_151214_688171_FC730E75)
+Date: Wed, 16 Dec 2015 06:11:37 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 08/11] brcmfmac: Make 5G join preference configurable.
-References: <1448447567-12189-1-git-send-email-arend@broadcom.com> <1448447567-12189-9-git-send-email-arend@broadcom.com> <87si3nkb2l.fsf@kamboji.qca.qualcomm.com> <565D5B77.7050501@broadcom.com> <87d1uqijnz.fsf@kamboji.qca.qualcomm.com> <20151201110827.GA4362@w1.fi>
-In-Reply-To: <20151201110827.GA4362@w1.fi>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+References: <5670DA9A.4010102@candelatech.com>			 (sfid-20151216_042934_976896_DCE1A2B3) <1450257464.3159.1.camel@sipsolutions.net>		 <56716386.4070107@candelatech.com>	 <1450272308.8247.11.camel@sipsolutions.net>	 <567168AF.4060804@candelatech.com> <1450273362.8247.15.camel@sipsolutions.net>
+In-Reply-To: <1450273362.8247.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2015 12:08 PM, Jouni Malinen wrote:
-> On Tue, Dec 01, 2015 at 11:48:32AM +0200, Kalle Valo wrote:
->> Arend van Spriel <arend@broadcom.com> writes:
->>> It solves a problem for us, but admittedly it is not something that is
->>> very usable by user-space apps. So I guess what you are suggesting
->>> here is to come up with a nl80211 api for this. On the mailing list
->>> (or hostap list) the topic pops up from time to time so there are
->>> people who would like to have such a knob to play with. Still would
->>> like to keep the module parameter although its use may change when
->>> nl80211 api is added.
+On 12/16/2015 05:42 AM, Johannes Berg wrote:
+> On Wed, 2015-12-16 at 05:35 -0800, Ben Greear wrote:
+>
+>> Well, the old code used it as a key, and the old documentation used
+>> it as a key, so it is a bit of a regression to change the behaviour
+>> now.
+>
+> But it's still used as a key, no? Just the value changed. If you treat
+> it as a key then you'd just have it for a frame incoming and outgoing?
+>
+>>> I think this is pretty much a done deal by now though since I don't
+>>> really want to break wmediumd.
 >>
->> I don't know what is the best approach, that's why I would like to hear
->> opinions from others. Personally I don't like the idea of adding 802.11
->> level configuration options to module parameters, but on the other hand
->> I don't have any strong opinions about this.
+>> It was not the only user-space to use the API :)
 >
-> I would like to see this as a new attribute to NL80211_CMD_CONNECT to
-> provide parameters for offloaded (driver and/or firmware) BSS selection
-> and roaming. If there is a driver that uses roaming offload with
-> NL80211_CMD_ASSOCIATE, the same attribute could be used there (but I'm
-> not sure how exact such offloading would work in practice since I'd
-> expect both authentication and (re)association to be offloaded).
+> So you're saying you have code that broke? How did it break though, I
+> don't really see it yet. Can you explain?
 
-Sounds reasonable. Just would like to explore the use-case a bit more. 
-Looking at tools like NetworkManager and android network list, the user 
-is always presented with just SSID listed once. For NetworkManager 
-details can be configured for a connection and the bss selection 
-parameters could be one of those. What level of detail would be needed 
-there. Not saying we can not have more detail in the nl80211 API.
+My code expected that the key was the MAC of the radio, not the
+MAC of a vif.  It set up mappings accordingly in the user-space
+program.
 
->> I guess we have two different designs, one where the roaming logic is in
->> firmware and other where wpasupplicant is responsible for this. (And I
->> assume that brcfmac belongs to the former group.) Ideally it would be
->> nice that we would have a same configuration knob for both but I don't
->> know if that's really feasible.
+And, if I change a vif's mac address, the previous 'key' is no longer
+valid with the new patch.  If I have multiple vifs on one radio
+and want to send a broadcast pkt to that radio, then at best the
+patched API is lame because you would have to specify the address
+of one of the vifs on the radio, but it is not really destined for
+just that vif.
+
+A fair bit of code was written, and not just by me, against the
+API that assumed the MAC of the radio was a unique key.  The
+code can be changed of course, but if Bob's change does not
+really offer any advantage, then I think the patch should
+be reverted.
+
+If wmediumd needs more info, then I think adding a new netlink
+message or attribute is the way to go..that way it should be fully
+backwards compatible.
+
+
+>> Well, that would be fine too.  The nice thing about the
+>> address,though, is that you can query it as part of
+>> /sys/class/ieee..... and other already-implemented
+>> interfaces.  Finding the radio-id would require new API in this case,
+>> which is a bit of work.
 >
-> Both of these would work as long as wpa_supplicant has means for
-> providing such configuration to the driver in a generic manner. That
-> NL80211_CMD_CONNECT extension with a new optional attribute would be
-> such a generic design.
+> Well, it was always rather awkward since it was the *second* address :)
 
-So does the driver need to advertise support for bss selection 
-parameters or can it simply ignore the parameters. Assuming the latter 
-for now.
+Yes, it was always weird, but predictably so.
 
-Regards,
-Arend
+>
+> You can query the ID/index already through the netlink API, or even
+> from sysfs since the virtual device name is essentially
+> 	sprintf(name, "hwsim%d", idx)
+
+Good lord, please don't even suggest parsing the name.  You can easily
+rename a phy device.  I do it all the time to keep a phyname associated
+with a real radio through module reloads.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
