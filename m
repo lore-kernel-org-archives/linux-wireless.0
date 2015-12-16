@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35223 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbbL2TEC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 14:04:02 -0500
-Received: by mail-pa0-f53.google.com with SMTP id do7so843972pab.2
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 11:04:01 -0800 (PST)
-Date: Tue, 29 Dec 2015 11:03:57 -0800
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Rob Herring <robh@kernel.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>, devicetree@vger.kernel.org,
-	fengwei.yin@linaro.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
-Message-ID: <20151229190357.GJ16437@tuxbot> (sfid-20151229_200424_619428_9BDF7BC7)
-References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
- <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
- <20151229183440.GC12450@rob-hp-laptop>
+Received: from mail.sig21.net ([80.244.240.74]:46775 "EHLO mail.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751906AbbLPWBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 17:01:49 -0500
+Date: Wed, 16 Dec 2015 22:24:25 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+	Tuomas =?iso-8859-1?Q?R=E4s=E4nen?= <tuomasjjrasanen@tjjr.fi>,
+	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
+	Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: About adding support for MT76x2U to Linux kernel
+Message-ID: <20151216212425.GA25906@sig21.net> (sfid-20151216_230152_577506_1E44FD65)
+References: <20150814081526.GC20192@hackpad.Elisa>
+ <20150814143229.61440072@north>
+ <5671B310.2080200@openwrt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151229183440.GC12450@rob-hp-laptop>
+In-Reply-To: <5671B310.2080200@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 29 Dec 10:34 PST 2015, Rob Herring wrote:
+Hi,
 
-> On Sun, Dec 27, 2015 at 05:34:27PM -0800, Bjorn Andersson wrote:
-> > Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
-> > Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-> > ---
-> >  .../bindings/net/wireless/qcom,wcn36xx-wifi.txt    | 76 ++++++++++++++++++++++
-> >  1 file changed, 76 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
-> > new file mode 100644
-> > index 000000000000..7b314b9f30af
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
-> > @@ -0,0 +1,76 @@
-> > +Qualcomm WCN36xx WiFi Binding
-> > +
-> > +This binding describes the Qualcomm WCN36xx WiFi hardware. The hardware block
-> > +is part of the Qualcomm WCNSS core, a WiFi/BT/FM combo chip, found in a variety
-> > +of Qualcomm platforms.
+On Wed, Dec 16, 2015 at 07:53:04PM +0100, Felix Fietkau wrote:
+> Once I'm done with mt7603 bringup (monitor mode rx already works), I
+> plan on submitting mt76 upstream, and then we can see about adding
+> support for 76x2u, or even merging the hardware support for mt7601u.
 > 
-> Are BT/FM functions completely separate? If so, separate bindings are 
-> okay. If not, then we need to describe the full chip.
-> 
+> You can check out my work in the mt7603 branch here:
+> https://github.com/openwrt/mt76/tree/mt7603
 
-It's three different hardware blocks (WiFi, BT and FM-radio) with shared
-RF-hardware and an ARM core for control logic.
+let me chime in to say that I'm interested to work on
+support for mt7610u (TP-LINK Archer T2U/T2UH).
+https://wikidevi.com/wiki/TP-LINK_Archer_T2U
 
-There seems to be some control commands going towards the BT part that
-controls coexistence properties of the RF-hardware, but other than that
-I see it as logically separate blocks.
+I'm facing the same question as Tuomas about using
+mt76 or mt7601u as the base?
 
 
-So I think it's fine to model this as separate pieces in DT.
-
-Regards,
-Bjorn
+Johannes
