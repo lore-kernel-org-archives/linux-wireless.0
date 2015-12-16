@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35618 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751802AbbLaIaU (ORCPT
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:35160 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932927AbbLPJOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 03:30:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Geliang Tang <geliangtang@163.com>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/9] ipw2x00: sdhci-pci: use to_pci_dev()
-References: <baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
-	<baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
-	<896b7d080610c5417a2f09a3bf9d0e20636fcc52.1451211133.git.geliangtang@163.com>
-Date: Thu, 31 Dec 2015 10:30:12 +0200
-In-Reply-To: <896b7d080610c5417a2f09a3bf9d0e20636fcc52.1451211133.git.geliangtang@163.com>
-	(Geliang Tang's message of "Sun, 27 Dec 2015 18:46:01 +0800")
-Message-ID: <87r3i3nhpn.fsf@kamboji.qca.qualcomm.com> (sfid-20151231_093025_140172_32D5D30A)
+	Wed, 16 Dec 2015 04:14:17 -0500
+Received: by mail-qk0-f171.google.com with SMTP id u65so35123387qkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 01:14:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450182788.3356.14.camel@sipsolutions.net>
+References: <1450030323-6637-1-git-send-email-ola1olsson@gmail.com>
+	<1450181385.3356.6.camel@sipsolutions.net>
+	<CABAco3CgkoCYdHZV6nBfV+CUpD379XR69EiznXvu42p5UC96gw@mail.gmail.com>
+	<1450182788.3356.14.camel@sipsolutions.net>
+Date: Wed, 16 Dec 2015 10:14:16 +0100
+Message-ID: <CABAco3CT3B1bvcXYRxtO2g3ipxw9aJR0YEJWPZhpfkog73t1rQ@mail.gmail.com> (sfid-20151216_101423_510028_33C5CCAB)
+Subject: Re: [PATCH] nl80211: Potential memory leaks in reg.c
+From: Ola Olsson <ola1olsson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geliang Tang <geliangtang@163.com> writes:
+> I'm just surprised that none of the tools we (and others) typically run
+> found these, and thought perhaps you had a better tool than we do...
+> I guess it's called "brain" and we just don't use it right ;-)
 
-> Use to_pci_dev() instead of open-coding it.
->
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
-
-The title is wrong, it should be just "ipw2x00: use to_pci_dev()".
-
-And please state clearly to what tree you are planning to submit these.
-I only saw this patch 5, not rest of the patches, so I have no clue
-what's going to happen with this patchset. Please resend.
-
--- 
-Kalle Valo
+Hahaha, I doubt that is the case. :)
