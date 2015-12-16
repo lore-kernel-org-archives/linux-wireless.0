@@ -1,149 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:48852 "EHLO bear.ext.ti.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:56750 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932150AbbLBNT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 08:19:56 -0500
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id tB2DJtVU011967
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Dec 2015 07:19:55 -0600
-Received: from DLEE70.ent.ti.com (dlemailx.itg.ti.com [157.170.170.113])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id tB2DJt7Q001005
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Dec 2015 07:19:55 -0600
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Shahar Patury <shaharp@ti.com>
-Subject: [PATCH V2] wlcore/wl18xx: fw logger over sdio
-Date: Wed, 2 Dec 2015 15:05:43 +0200
-Message-ID: <1449061543-25089-1-git-send-email-guym@ti.com> (sfid-20151202_141959_178240_DF10C258)
+	id S1750993AbbLPX7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 18:59:43 -0500
+Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum
+ configurable
+To: Peter Oh <poh@codeaurora.org>, Peter Oh <poh@qca.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
+ <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org>
+ <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org>
+ <5671CF63.9040308@openwrt.org> <5671D56F.8030903@codeaurora.org>
+ <5671DDA1.5030709@openwrt.org> <5671F8B7.2060801@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <5671FADD.6010009@openwrt.org> (sfid-20151217_005946_401431_E78AB370)
+Date: Thu, 17 Dec 2015 00:59:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5671F8B7.2060801@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar Patury <shaharp@ti.com>
+On 2015-12-17 00:50, Peter Oh wrote:
+> 
+> On 12/16/2015 01:54 PM, Felix Fietkau wrote:
+>> On 2015-12-16 22:19, Peter Oh wrote:
+>>> On 12/16/2015 12:53 PM, Felix Fietkau wrote:
+>>>> On 2015-12-16 21:46, Peter Oh wrote:
+>>>>> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
+>>>>>> On 2015-12-16 21:29, Peter Oh wrote:
+>>>>>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
+>>>>>>>> On 2015-12-16 19:20, Peter Oh wrote:
+>>>>>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
+>>>>>>>>> capability of checksum offload when frame formats are not
+>>>>>>>>> suitable for it such as Mesh frame.
+>>>>>>>>> Hence add a module parameter, hw_csum, to make checksum offload
+>>>>>>>>> configurable during module registration time.
+>>>>>>>>>
+>>>>>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>>>>>>>> How about instead of inventing yet another crappy module parameter, you
+>>>>>>>> call skb_checksum_help() in the driver in cases where the hardware is
+>>>>>>>> unable to offload the checksum calculation.
+>>>>>>>>
+>>>>>>>> That way the user has to worry about less driver specific hackery ;)
+>>>>>>> That will be good option for hardware not supporting HW checksum, but I
+>>>>>>> mind that using the function will add more workload per every packet on
+>>>>>>> critical data path when HW supports checksum resulting in throughput down.
+>>>>>> I didn't mean calling it for every single frame in the data path.
+>>>>>> What I'm suggesting is calling it selectively only for mesh frames, or
+>>>>>> any other frames that the hardware cannot offload, and leaving the rest
+>>>>>> for the hardware to process.
+>>>>>>
+>>>>>> There should be no performance difference between disabling checksum
+>>>>>> offload and calling skb_checksum_help from the driver.
+>>>>> To call it selectively for Mesh frame or interface, we need to add it on
+>>>>> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
+>>>>> care the interface type in data path.
+>>>> No need to change mac80211 - it only touches the headers, and
+>>>> skb_checksum_help does not care about that. The skb has enough
+>>>> information for it to find the right range to calculate the checksum and
+>>>> the place to store it.
+>>> If mentioned to use the function to mesh frame only without touching
+>>> mac80211, then how do you suggest it to apply it only to mesh frame
+>>> without interfere other data frames?
+>>> Can you share your example?
+>> It's trivial - in ath10k_tx you do this:
+>>
+>> if (vif->type == NL80211_IFTYPE_MESH_POINT &&
+>>      skb->ip_summed == CHECKSUM_PARTIAL)
+>> 	skb_checksum_help(skb);
+> Thank you Felix for the quick response.
+> I agree on your user experience opinion,
+> but what do you think when ath10k has a new chip supporting HW checksum 
+> for Mesh?
+Then you simply update the checks. What's the big deal?
 
-enable the FW Logger to work over the SDIO interface instead of only
-over UART.
-in new design we will use fw internal memory instead of packet ram
-that was used in older (and wl12xx) design.
-this change will reduce the impact on tp and stability.
-adding new event to notify fw logger is ready to be read.
-adding dynamic configuration to debugfs.
-
-Signed-off-by: Shahar Patury <shaharp@ti.com>
----
-V2: Resubmitted again due to conflicts resolved
-
- drivers/net/wireless/ti/wl18xx/event.c   |    2 +
- drivers/net/wireless/ti/wl18xx/main.c    |    3 +-
- drivers/net/wireless/ti/wlcore/debugfs.c |   60 ++++++++++++++++++++++++++++++
- 3 files changed, 64 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 09c7e09..719907a 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -205,6 +205,8 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
- 						 mbox->sc_ssid,
- 						 mbox->sc_pwd_len,
- 						 mbox->sc_pwd);
-+	if (vector & FW_LOGGER_INDICATION)
-+		wlcore_event_fw_logger(wl);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 50cce42..87d87de 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1029,7 +1029,8 @@ static int wl18xx_boot(struct wl1271 *wl)
- 		DFS_CHANNELS_CONFIG_COMPLETE_EVENT |
- 		SMART_CONFIG_SYNC_EVENT_ID |
- 		SMART_CONFIG_DECODE_EVENT_ID |
--		TIME_SYNC_EVENT_ID;
-+		TIME_SYNC_EVENT_ID |
-+		FW_LOGGER_INDICATION;
- 
- 	wl->ap_event_mask = MAX_TX_FAILURE_EVENT_ID;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index eb43f94..8367f9e 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -1234,6 +1234,65 @@ static const struct file_operations dev_mem_ops = {
- 	.llseek = dev_mem_seek,
- };
- 
-+static ssize_t fw_logger_read(struct file *file, char __user *user_buf,
-+			      size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(user_buf, count,
-+					ppos, "%d\n",
-+					wl->conf.fwlog.output);
-+}
-+
-+static ssize_t fw_logger_write(struct file *file,
-+			       const char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 0, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value in fw_logger");
-+		return -EINVAL;
-+	}
-+
-+	if ((value > 2) || (value == 0)) {
-+		wl1271_warning("fw_logger value must be 1-UART 2-SDIO");
-+		return -ERANGE;
-+	}
-+
-+	if (wl->conf.fwlog.output == 0) {
-+		wl1271_warning("iligal opperation - fw logger disabled by default, please change mode via wlconf");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0) {
-+		count = ret;
-+		goto out;
-+	}
-+
-+	wl->conf.fwlog.output = value;
-+
-+	ret = wl12xx_cmd_config_fwlog(wl);
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations fw_logger_ops = {
-+	.open = simple_open,
-+	.read = fw_logger_read,
-+	.write = fw_logger_write,
-+	.llseek = default_llseek,
-+};
-+
- static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 				    struct dentry *rootdir)
- {
-@@ -1260,6 +1319,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(irq_timeout, rootdir);
- 	DEBUGFS_ADD(fw_stats_raw, rootdir);
- 	DEBUGFS_ADD(sleep_auth, rootdir);
-+	DEBUGFS_ADD(fw_logger, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.0.4
-
+- Felix
