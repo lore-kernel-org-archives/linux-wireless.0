@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:30285 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436AbbLJHzV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 02:55:21 -0500
-From: Andrzej Hajda <a.hajda@samsung.com>
-To: linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM)
-Cc: Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] NFC: fdp: fix handling return value of
- nci_conn_max_data_pkt_payload_size
-Date: Thu, 10 Dec 2015 08:54:04 +0100
-Message-id: <1449734044-29181-1-git-send-email-a.hajda@samsung.com> (sfid-20151210_085548_846299_89DA95C8)
+Received: from s3.sipsolutions.net ([5.9.151.49]:41386 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934103AbbLPJRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 04:17:49 -0500
+Message-ID: <1450257464.3159.1.camel@sipsolutions.net> (sfid-20151216_101757_699487_0BE51FD3)
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"me@bobcopeland.com >> Bob Copeland" <me@bobcopeland.com>
+Date: Wed, 16 Dec 2015 10:17:44 +0100
+In-Reply-To: <5670DA9A.4010102@candelatech.com> (sfid-20151216_042934_976896_DCE1A2B3)
+References: <5670DA9A.4010102@candelatech.com>
+	 (sfid-20151216_042934_976896_DCE1A2B3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function can return negative values, so its result should
-be assigned to signed variable.
+On Tue, 2015-12-15 at 19:29 -0800, Ben Greear wrote:
+> This patch below was added to the kernel around 2/24/2015
+> 
+> I am curious mostly about the first change:  I thought the
+> transmitter-addr relates to the radio device, not the vdev (sta, ap,
+> etc).
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
+It doesn't, even on real hardware.
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
+> But, wouldn't using data from the header break that assumption?
+> 
+> 
+> Is there any actual advantage to having more than one address per
+> hwsim radio?  It seems it complicates things for no particular
+> reason as far as I can tell?
+> 
 
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
----
- drivers/nfc/fdp/fdp.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+??
+You can do this with any regular hardware that supports multiple
+virtual interfaces - each one of them gets its own address.
 
-diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-index 440fac3..37a7134 100644
---- a/drivers/nfc/fdp/fdp.c
-+++ b/drivers/nfc/fdp/fdp.c
-@@ -192,7 +192,7 @@ static int fdp_nci_send_patch(struct nci_dev *ndev, u8 conn_id, u8 type)
- 	struct sk_buff *skb;
- 	unsigned long len;
- 	u8 max_size, payload_size;
--	int rc = 0;
-+	int rc;
- 
- 	if ((type == NCI_PATCH_TYPE_OTP && !info->otp_patch) ||
- 	    (type == NCI_PATCH_TYPE_RAM && !info->ram_patch))
-@@ -203,11 +203,13 @@ static int fdp_nci_send_patch(struct nci_dev *ndev, u8 conn_id, u8 type)
- 	else
- 		fw = info->ram_patch;
- 
--	max_size = nci_conn_max_data_pkt_payload_size(ndev, conn_id);
--	if (max_size <= 0)
-+	rc = nci_conn_max_data_pkt_payload_size(ndev, conn_id);
-+	if (rc <= 0)
- 		return -EINVAL;
-+	max_size = rc;
- 
- 	len = fw->size;
-+	rc = 0;
- 
- 	fdp_nci_set_data_pkt_counter(ndev, fdp_nci_send_patch_cb,
- 				     DIV_ROUND_UP(fw->size, max_size));
--- 
-1.9.1
+I think you might be confused by how ath*k implements the address
+matching - as I understand it there it's a common address (which may or
+may not match the programmed hardware address) along with a mask.
+That's not true in general though.
 
+The hwsim commit here just makes wmediumd able to behave properly when
+the user changed the vif interface address.
+
+johannes
