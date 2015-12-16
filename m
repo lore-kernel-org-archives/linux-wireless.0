@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19953 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752858AbbLNMRX (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5928 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932613AbbLPPvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:23 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECGb8j027452
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:22 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1yswmng024-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:22 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 09/14] mwifiex: add debugfs file for testing reset of card
-Date: Mon, 14 Dec 2015 04:15:10 -0800
-Message-ID: <1450095315-19927-10-git-send-email-akarwar@marvell.com> (sfid-20151214_131728_282285_41F182C0)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Dec 2015 10:51:53 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v1 1/2] wil6210: fix kernel OOPS when stopping interface during Rx traffic
+Date: Wed, 16 Dec 2015 17:51:45 +0200
+Message-Id: <1450281106-29416-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20151216_165156_746931_88616989)
+In-Reply-To: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This provides an option for user to power cycle the card.
-It will be used to change the firmware without actually
-rebooting the system.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+When network interface is stopping, some resources may
+be already released by the network stack, and Rx frames
+cause kernel OOPS (observed one is in netfilter code)
+
+Proper solution is to drop packets pending in reorder buffer.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 30 ++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index 9824d8d..5e55629 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -906,6 +906,34 @@ mwifiex_timeshare_coex_write(struct file *file, const char __user *ubuf,
- 		return count;
- }
- 
-+static ssize_t
-+mwifiex_reset_write(struct file *file,
-+		    const char __user *ubuf, size_t count, loff_t *ppos)
-+{
-+	struct mwifiex_private *priv = file->private_data;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	char cmd;
-+	bool result;
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index e3d1be8..32031e7 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -261,9 +261,19 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 			   struct wil_tid_ampdu_rx *r)
+ {
++	int i;
 +
-+	if (copy_from_user(&cmd, ubuf, sizeof(cmd)))
-+		return -EFAULT;
+ 	if (!r)
+ 		return;
+-	wil_release_reorder_frames(wil, r, r->head_seq_num + r->buf_size);
 +
-+	if (strtobool(&cmd, &result))
-+		return -EINVAL;
++	/* Do not pass remaining frames to the network stack - it may be
++	 * not expecting to get any more Rx. Rx from here may lead to
++	 * kernel OOPS since some per-socket accounting info was already
++	 * released.
++	 */
++	for (i = 0; i < r->buf_size; i++)
++		kfree_skb(r->reorder_buf[i]);
 +
-+	if (!result)
-+		return -EINVAL;
-+
-+	if (adapter->if_ops.card_reset) {
-+		dev_info(adapter->dev, "Resetting per request\n");
-+		adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
-+		mwifiex_cancel_all_pending_cmd(adapter);
-+		adapter->if_ops.card_reset(adapter);
-+	}
-+
-+	return count;
-+}
-+
- #define MWIFIEX_DFS_ADD_FILE(name) do {                                 \
- 	if (!debugfs_create_file(#name, 0644, priv->dfs_dev_dir,        \
- 			priv, &mwifiex_dfs_##name##_fops))              \
-@@ -943,6 +971,7 @@ MWIFIEX_DFS_FILE_OPS(hscfg);
- MWIFIEX_DFS_FILE_OPS(histogram);
- MWIFIEX_DFS_FILE_OPS(debug_mask);
- MWIFIEX_DFS_FILE_OPS(timeshare_coex);
-+MWIFIEX_DFS_FILE_WRITE_OPS(reset);
- 
- /*
-  * This function creates the debug FS directory structure and the files.
-@@ -970,6 +999,7 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
- 	MWIFIEX_DFS_ADD_FILE(histogram);
- 	MWIFIEX_DFS_ADD_FILE(debug_mask);
- 	MWIFIEX_DFS_ADD_FILE(timeshare_coex);
-+	MWIFIEX_DFS_ADD_FILE(reset);
- }
- 
- /*
+ 	kfree(r->reorder_buf);
+ 	kfree(r->reorder_time);
+ 	kfree(r);
 -- 
-1.8.1.4
+1.8.5.2
 
