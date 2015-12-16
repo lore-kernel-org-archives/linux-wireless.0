@@ -1,425 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11629 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbbLUFR6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5928 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932613AbbLPPv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:17:58 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 29/46] staging: wilc1000: linux_wlan_spi.c: move all the codes to wilc_spi.c
-Date: Mon, 21 Dec 2015 14:18:33 +0900
-Message-ID: <1450675130-17866-30-git-send-email-glen.lee@atmel.com> (sfid-20151221_063105_624803_18566269)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Dec 2015 10:51:56 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v1 2/2] wil6210: support for platform specific crash recovery
+Date: Wed, 16 Dec 2015 17:51:46 +0200
+Message-Id: <1450281106-29416-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20151216_165159_633866_04A81198)
+In-Reply-To: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves all the codes in linux_wlan_spi.c to wilc_spi.c to make
-one spi module. Make wilc_spi_tx, wilc_spi_rx and wilc_spi_tx_rx static
-functions. Remove function declaration in linux_wlan_spi.h, which is unnedded
-now. No modification has been made inside the codes.
-linux_wlan_spi.[ch] will be remove in the next patch.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Added a simple interface for platform to perform crash
+recovery.
+When firmware crashes, wil driver can notify the platform
+which can trigger a crash recovery process. During
+the process the platform can request a ram dump
+from the wil driver as well as control when firmware
+recovery will start. This interface allows the platform
+to implement a more advanced crash recovery, for
+example to reset dependent subsystems in proper order, or
+to provide its own notifications during the recovery process.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan_spi.c | 165 ---------------------------
- drivers/staging/wilc1000/linux_wlan_spi.h |   4 -
- drivers/staging/wilc1000/wilc_spi.c       | 180 +++++++++++++++++++++++++++++-
- 3 files changed, 178 insertions(+), 171 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c      |  8 +++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c       | 30 ++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  1 +
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  3 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.c   |  3 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.h   | 38 +++++++++++++++++++++--
+ 6 files changed, 73 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 06935cf..c4315f5 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -14,168 +14,3 @@
- #include "wilc_wfi_netdevice.h"
- #include "linux_wlan_common.h"
- #include "wilc_wlan_if.h"
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 50c136e..4f2ffa5 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -394,9 +394,13 @@ static irqreturn_t wil6210_irq_misc_thread(int irq, void *cookie)
+ 		wil_fw_core_dump(wil);
+ 		wil_notify_fw_error(wil);
+ 		isr &= ~ISR_MISC_FW_ERROR;
+-		wil_fw_error_recovery(wil);
++		if (wil->platform_ops.notify_crash) {
++			wil_err(wil, "notify platform driver about FW crash");
++			wil->platform_ops.notify_crash(wil->platform_handle);
++		} else {
++			wil_fw_error_recovery(wil);
++		}
+ 	}
 -
--#define USE_SPI_DMA     0
--
--static const struct wilc1000_ops wilc1000_spi_ops;
--
--static int wilc_bus_probe(struct spi_device *spi)
--{
--	int ret, gpio;
--	struct wilc *wilc;
--
--	gpio = of_get_gpio(spi->dev.of_node, 0);
--	if (gpio < 0)
--		gpio = GPIO_NUM;
--
--	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
--	if (ret)
--		return ret;
--
--	spi_set_drvdata(spi, wilc);
--	wilc->dev = &spi->dev;
--
--	return 0;
--}
--
--static int wilc_bus_remove(struct spi_device *spi)
--{
--	wilc_netdev_cleanup(spi_get_drvdata(spi));
--	return 0;
--}
--
--static const struct of_device_id wilc1000_of_match[] = {
--	{ .compatible = "atmel,wilc_spi", },
--	{}
--};
--MODULE_DEVICE_TABLE(of, wilc1000_of_match);
--
--struct spi_driver wilc1000_spi_driver = {
--	.driver = {
--		.name = MODALIAS,
--		.of_match_table = wilc1000_of_match,
--	},
--	.probe =  wilc_bus_probe,
--	.remove = wilc_bus_remove,
--};
--module_spi_driver(wilc1000_spi_driver);
--MODULE_LICENSE("GPL");
--
--int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--	struct spi_message msg;
--
--	if (len > 0 && b) {
--		struct spi_transfer tr = {
--			.tx_buf = b,
--			.len = len,
--			.delay_usecs = 0,
--		};
--		char *r_buffer = kzalloc(len, GFP_KERNEL);
--
--		if (!r_buffer)
--			return -ENOMEM;
--
--		tr.rx_buf = r_buffer;
--		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--		spi_message_add_tail(&tr, &msg);
--
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--
--		kfree(r_buffer);
--	} else {
--		dev_err(&spi->dev,
--			"can't write data with the following length: %d\n",
--			len);
--		dev_err(&spi->dev,
--			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
--			len);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
--
--int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--
--	if (rlen > 0) {
--		struct spi_message msg;
--		struct spi_transfer tr = {
--			.rx_buf = rb,
--			.len = rlen,
--			.delay_usecs = 0,
--
--		};
--		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
--
--		if (!t_buffer)
--			return -ENOMEM;
--
--		tr.tx_buf = t_buffer;
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--		spi_message_add_tail(&tr, &msg);
--
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--		kfree(t_buffer);
--	} else {
--		dev_err(&spi->dev,
--			"can't read data with the following length: %u\n",
--			rlen);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
--
--int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
--{
--	struct spi_device *spi = to_spi_device(wilc->dev);
--	int ret;
--
--	if (rlen > 0) {
--		struct spi_message msg;
--		struct spi_transfer tr = {
--			.rx_buf = rb,
--			.tx_buf = wb,
--			.len = rlen,
--			.bits_per_word = 8,
--			.delay_usecs = 0,
--
--		};
--
--		memset(&msg, 0, sizeof(msg));
--		spi_message_init(&msg);
--		msg.spi = spi;
--		msg.is_dma_mapped = USE_SPI_DMA;
--
--		spi_message_add_tail(&tr, &msg);
--		ret = spi_sync(spi, &msg);
--		if (ret < 0)
--			dev_err(&spi->dev, "SPI transaction failed\n");
--	} else {
--		dev_err(&spi->dev,
--			"can't read data with the following length: %u\n",
--			rlen);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
-index d41c16a..32e3926 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.h
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.h
-@@ -3,8 +3,4 @@
+ 	if (isr & ISR_MISC_MBOX_EVT) {
+ 		wil_dbg_irq(wil, "MBOX event\n");
+ 		wmi_recv_cmd(wil);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 1a3142c3..e36f2a0 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2014 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -125,11 +125,37 @@ static int wil_if_pcie_disable(struct wil6210_priv *wil)
+ 	return 0;
+ }
  
- #include <linux/spi/spi.h>
- #include "wilc_wfi_netdevice.h"
--
--int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
--int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
--int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 0f730cd..86de50c 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -6,11 +6,22 @@
- /*  */
- /*  */
- /* //////////////////////////////////////////////////////////////////////////// */
--
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/fs.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+#include <linux/cdev.h>
-+#include <linux/uaccess.h>
-+#include <linux/device.h>
-+#include <linux/spi/spi.h>
-+#include <linux/of_gpio.h>
-+
-+#include "linux_wlan_common.h"
- #include <linux/string.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
--#include "linux_wlan_spi.h"
- #include "wilc_wfi_netdevice.h"
- 
- typedef struct {
-@@ -107,6 +118,171 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- #define DATA_PKT_SZ_8K				(8 * 1024)
- #define DATA_PKT_SZ					DATA_PKT_SZ_8K
- 
-+#define USE_SPI_DMA     0
-+
-+static const struct wilc1000_ops wilc1000_spi_ops;
-+
-+static int wilc_bus_probe(struct spi_device *spi)
++static int wil_platform_rop_ramdump(void *wil_handle, void *buf, uint32_t size)
 +{
-+	int ret, gpio;
-+	struct wilc *wilc;
++	struct wil6210_priv *wil = wil_handle;
 +
-+	gpio = of_get_gpio(spi->dev.of_node, 0);
-+	if (gpio < 0)
-+		gpio = GPIO_NUM;
++	if (!wil)
++		return -EINVAL;
 +
-+	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
-+	if (ret)
-+		return ret;
++	return wil_fw_copy_crash_dump(wil, buf, size);
++}
 +
-+	spi_set_drvdata(spi, wilc);
-+	wilc->dev = &spi->dev;
++static int wil_platform_rop_fw_recovery(void *wil_handle)
++{
++	struct wil6210_priv *wil = wil_handle;
++
++	if (!wil)
++		return -EINVAL;
++
++	wil_fw_error_recovery(wil);
 +
 +	return 0;
 +}
 +
-+static int wilc_bus_remove(struct spi_device *spi)
-+{
-+	wilc_netdev_cleanup(spi_get_drvdata(spi));
-+	return 0;
-+}
-+
-+static const struct of_device_id wilc1000_of_match[] = {
-+	{ .compatible = "atmel,wilc_spi", },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, wilc1000_of_match);
-+
-+struct spi_driver wilc1000_spi_driver = {
-+	.driver = {
-+		.name = MODALIAS,
-+		.of_match_table = wilc1000_of_match,
-+	},
-+	.probe =  wilc_bus_probe,
-+	.remove = wilc_bus_remove,
-+};
-+module_spi_driver(wilc1000_spi_driver);
-+MODULE_LICENSE("GPL");
-+
-+static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+	struct spi_message msg;
-+
-+	if (len > 0 && b) {
-+		struct spi_transfer tr = {
-+			.tx_buf = b,
-+			.len = len,
-+			.delay_usecs = 0,
-+		};
-+		char *r_buffer = kzalloc(len, GFP_KERNEL);
-+
-+		if (!r_buffer)
-+			return -ENOMEM;
-+
-+		tr.rx_buf = r_buffer;
-+		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+
-+		kfree(r_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't write data with the following length: %d\n",
-+			len);
-+		dev_err(&spi->dev,
-+			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
-+			len);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.len = rlen,
-+			.delay_usecs = 0,
-+
-+		};
-+		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
-+
-+		if (!t_buffer)
-+			return -ENOMEM;
-+
-+		tr.tx_buf = t_buffer;
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+		kfree(t_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.tx_buf = wb,
-+			.len = rlen,
-+			.bits_per_word = 8,
-+			.delay_usecs = 0,
-+
-+		};
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+
-+		spi_message_add_tail(&tr, &msg);
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
- static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 			    u8 clockless)
+ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  {
+ 	struct wil6210_priv *wil;
+ 	struct device *dev = &pdev->dev;
+ 	int rc;
++	const struct wil_platform_rops rops = {
++		.ramdump = wil_platform_rop_ramdump,
++		.fw_recovery = wil_platform_rop_fw_recovery,
++	};
+ 
+ 	/* check HW */
+ 	dev_info(&pdev->dev, WIL_NAME
+@@ -154,7 +180,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* rollback to if_free */
+ 
+ 	wil->platform_handle =
+-			wil_platform_init(&pdev->dev, &wil->platform_ops);
++		wil_platform_init(&pdev->dev, &wil->platform_ops, &rops, wil);
+ 	if (!wil->platform_handle) {
+ 		rc = -ENODEV;
+ 		wil_err(wil, "wil_platform_init failed\n");
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ade5f3b8..235e205 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -828,6 +828,7 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime);
+ int wil_suspend(struct wil6210_priv *wil, bool is_runtime);
+ int wil_resume(struct wil6210_priv *wil, bool is_runtime);
+ 
++int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size);
+ void wil_fw_core_dump(struct wil6210_priv *wil);
+ 
+ #endif /* __WIL6210_H__ */
+diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+index 7e70934..b57d280 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
++++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+@@ -51,8 +51,7 @@ static int wil_fw_get_crash_dump_bounds(struct wil6210_priv *wil,
+ 	return 0;
+ }
+ 
+-static int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest,
+-				  u32 size)
++int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
+ {
+ 	int i;
+ 	const struct fw_map *map;
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.c b/drivers/net/wireless/ath/wil6210/wil_platform.c
+index 2e831bf..4eed05bd 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.c
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.c
+@@ -33,7 +33,8 @@ void wil_platform_modexit(void)
+  * It returns a handle which is used with the rest of the API
+  *
+  */
+-void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops)
++void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops,
++			const struct wil_platform_rops *rops, void *wil_handle)
+ {
+ 	void *handle = ops; /* to return some non-NULL for 'void' impl. */
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
+index d7fa19b..9a949d9 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.h
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
++ * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -20,16 +20,48 @@
+ struct device;
+ 
+ /**
+- * struct wil_platform_ops - wil platform module callbacks
++ * struct wil_platform_ops - wil platform module calls from this
++ * driver to platform driver
+  */
+ struct wil_platform_ops {
+ 	int (*bus_request)(void *handle, uint32_t kbps /* KBytes/Sec */);
+ 	int (*suspend)(void *handle);
+ 	int (*resume)(void *handle);
+ 	void (*uninit)(void *handle);
++	int (*notify_crash)(void *handle);
+ };
+ 
+-void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops);
++/**
++ * struct wil_platform_rops - wil platform module callbacks from
++ * platform driver to this driver
++ * @ramdump: store a ramdump from the wil firmware. The platform
++ *	driver may add additional data to the ramdump to
++ *	generate the final crash dump.
++ * @fw_recovery: start a firmware recovery process. Called as
++ *      part of a crash recovery process which may include other
++ *      related platform subsystems.
++ */
++struct wil_platform_rops {
++	int (*ramdump)(void *wil_handle, void *buf, uint32_t size);
++	int (*fw_recovery)(void *wil_handle);
++};
++
++/**
++ * wil_platform_init - initialize the platform driver
++ *
++ * @dev - pointer to the wil6210 device
++ * @ops - structure with platform driver operations. Platform
++ *	driver will fill this structure with function pointers.
++ * @rops - structure with callbacks from platform driver to
++ *	this driver. The platform driver copies the structure to
++ *	its own storage. Can be NULL if this driver does not
++ *	support crash recovery.
++ * @wil_handle - context for this driver that will be passed
++ *      when platform driver invokes one of the callbacks in
++ *      rops. May be NULL if rops is NULL.
++ */
++void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops,
++			const struct wil_platform_rops *rops, void *wil_handle);
+ 
+ int __init wil_platform_modinit(void);
+ void wil_platform_modexit(void);
 -- 
-1.9.1
+1.8.5.2
 
