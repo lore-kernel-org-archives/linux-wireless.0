@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:46144 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbbLHPZx convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2132 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922AbbLPM4J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 10:25:53 -0500
-Subject: ATH10K VLAN firmware issue
-Date: Tue, 8 Dec 2015 15:29:24 +0100
+	Wed, 16 Dec 2015 07:56:09 -0500
+From: "Haim, Maya" <merez@qti.qualcomm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	qca_merez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	wil6210 <wil6210@qca.qualcomm.com>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [patch] wil6210: fix a warning message condition
+Date: Wed, 16 Dec 2015 12:55:58 +0000
+Message-ID: <230d7346e47845fca26b7124ba898e20@euamsexm01a.eu.qualcomm.com> (sfid-20151216_135615_463671_16913717)
+References: <20151216111000.GC21018@mwanda>
+In-Reply-To: <20151216111000.GC21018@mwanda>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local> (sfid-20151208_162600_253197_91A25921)
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <ath10k@lists.infradead.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	I'm testing to transmit frame with 802.1q tag (VLAN).
+Acked-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-	My client is set in STA + WDS and the netdev is bridged with
-eth0.
-	I have a computer with vlan configuration set connected to the
-STA eth0.
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
+Sent: Wednesday, December 16, 2015 1:10 PM
+To: qca_merez
+Cc: Kalle Valo; linux-wireless@vger.kernel.org; wil6210; kernel-janitors@vger.kernel.org
+Subject: [patch] wil6210: fix a warning message condition
 
-	If I try to transmit frames with 802.1q tag, the frames are not
-sent.
-	I checked with wireless sniffer, and I don't see the frame with
-VLAN tag (the frames without VLAN tag are sent).
+"iter" is -1 at the end of the loop and not zero.  It means we don't print a warning message.
 
-	I tested with firmware 10.2.4.70.14-2 from kale github,
-10.1.467-ct-com-full-015 from candelatech and 10.2.4.70-2 from openwrt,
-and in all cases I have the same issue.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-	Thanks for your help.
-
-	
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 48687f1..4544e8c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -985,7 +985,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 	}
+ 	mutex_lock(&wil->mutex);
+ 
+-	if (!iter)
++	if (iter < 0)
+ 		wil_err(wil, "timeout waiting for idle FW/HW\n");
+ 
+ 	wil_reset(wil, false);
