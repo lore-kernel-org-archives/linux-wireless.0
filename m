@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756020AbbLAJ7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:33 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Moshe Harel <moshe.harel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/41] iwlwifi: mvm: add bt rrc and ttc to debugfs
-Date: Tue,  1 Dec 2015 11:58:43 +0200
-Message-Id: <1448963947-24302-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105947_056817_682BD9E7)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:35466 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933906AbbLPN1q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 08:27:46 -0500
+Message-ID: <567166D0.5090000@candelatech.com> (sfid-20151216_142755_032476_E0024BE0)
+Date: Wed, 16 Dec 2015 05:27:44 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "me@bobcopeland.com >> Bob Copeland" <me@bobcopeland.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+References: <5670DA9A.4010102@candelatech.com> <20151216132113.GA4073@localhost>
+In-Reply-To: <20151216132113.GA4073@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Moshe Harel <moshe.harel@intel.com>
+On 12/16/2015 05:21 AM, me@bobcopeland.com >> Bob Copeland wrote:
+> On Tue, Dec 15, 2015 at 07:29:30PM -0800, Ben Greear wrote:
+>> This patch below was added to the kernel around 2/24/2015
+>>
+>> I am curious mostly about the first change:  I thought the transmitter-addr
+>> relates to the radio device, not the vdev (sta, ap, etc).
+>>
+>> But, wouldn't using data from the header break that assumption?
+>
+> I'm not sure this assumption is correct.  I have a hard time
+> seeing the value in basing the transmitter addr attribute on some
+> hardware address that may not even be used.
 
-As part of the bt_notif file add fields that are currently
-not represented
+Imagine you have 20 virtual radios, and you want to send a beacon (or
+other broadcast) to just one radio.
 
-Signed-off-by: Moshe Harel <moshe.harel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+You can use the radio transmitter-addr to let the kernel know which
+virtual radio receives the packet.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 2322c99..82a61f6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -512,6 +512,10 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 		pos += scnprintf(buf+pos, bufsz-pos,
- 				 "antenna isolation = %d CORUN LUT index = %d\n",
- 				 mvm->last_ant_isol, mvm->last_corun_lut);
-+		pos += scnprintf(buf + pos, bufsz - pos, "bt_rrc = %d\n",
-+				 notif->rrc_enabled);
-+		pos += scnprintf(buf + pos, bufsz - pos, "bt_ttc = %d\n",
-+				 notif->ttc_enabled);
- 	} else {
- 		struct iwl_bt_coex_profile_notif *notif =
- 			&mvm->last_bt_notif;
-@@ -530,6 +534,10 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 		pos += scnprintf(buf+pos, bufsz-pos,
- 				 "antenna isolation = %d CORUN LUT index = %d\n",
- 				 mvm->last_ant_isol, mvm->last_corun_lut);
-+		pos += scnprintf(buf + pos, bufsz - pos, "bt_rrc = %d\n",
-+				 (notif->ttc_rrc_status >> 4) & 0xF);
-+		pos += scnprintf(buf + pos, bufsz - pos, "bt_ttc = %d\n",
-+				 notif->ttc_rrc_status & 0xF);
- 	}
- 
- 	pos += scnprintf(buf + pos, bufsz - pos, "sync_sco = %d\n",
+>
+>> Is there any actual advantage to having more than one address per
+>> hwsim radio?  It seems it complicates things for no particular
+>> reason as far as I can tell?
+>
+> As a practical matter: the radios already have two "hardware"
+> addresses, and as reported in the commit log, only one of them
+> worked with the netlink interface, and it wasn't even the default
+> address.
+>
+> I suppose there's no real benefit to multi-vif on hwsim vs multiple
+> phys, other than testing multi-vif support in the stack, but why not?
+> I think this patch actually simplifies things.
+
+As long as you do a mapping in wmediumd, there should be no problem
+at all with multiple vifs on a radio.  The HWSIM_ATTR_ADDR_TRANSMITTER
+is just a key to let us know which radio we are talking about.  It
+never needs to be 'on the air'.
+
+>
+> Does this patch cause problems for your userspace implementation?
+
+Yes, because I coded with the assumptions that the radio addr had nothing
+to do with the vif addr.
+
+Thanks,
+Ben
+
+>
+
+
 -- 
-2.5.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
