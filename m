@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33688 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbbL3MQp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:45 -0500
-Received: by mail-pa0-f45.google.com with SMTP id cy9so138012266pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:45 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 18/20] staging: wilc1000: remove argument hif_drv in host_int_get_ipaddress
-Date: Wed, 30 Dec 2015 21:15:42 +0900
-Message-Id: <1451477744-11975-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132248_173647_2E437C72)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:33099 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932562AbbLPNqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 08:46:11 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: clear local->sched_scan_req properly on reconfig
+Date: Wed, 16 Dec 2015 15:45:45 +0200
+Message-Id: <1450273545-16081-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151216_144618_337528_EFA7C9F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes hif_drv argument of host_int_get_ipaddress.
-There is no need to pass hif_drv in this function because hif_drv is a
-member of vif. It is removed struct host_if_drv and use hif_drv of vif.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+On reconfig, in case of sched_scan_req->n_scan_plans > 1,
+local->sched_scan_req was never cleared, although
+cfg80211_sched_scan_stopped_rtnl() was called, resulting
+in local->sched_scan_req holding a stale and preventing
+further scheduled scan requests.
+
+Clear it explicitly in this case.
+
+Fixes: 42a7e82c6792 ("mac80211: Do not restart scheduled scan if multiple scan plans are set")
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ net/mac80211/util.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a203647..72115ae 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -362,16 +362,13 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
- 	return result;
- }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0186178..884033e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2046,8 +2046,11 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		 */
+ 		if (sched_scan_req->n_scan_plans > 1 ||
+ 		    __ieee80211_request_sched_scan_start(sched_scan_sdata,
+-							 sched_scan_req))
++							 sched_scan_req)) {
++			RCU_INIT_POINTER(local->sched_scan_sdata, NULL);
++			RCU_INIT_POINTER(local->sched_scan_req, NULL);
+ 			sched_scan_stopped = true;
++		}
+ 	mutex_unlock(&local->mtx);
  
--static int host_int_get_ipaddress(struct wilc_vif *vif,
--				  struct host_if_drv *hif_drv,
--				  u8 *u16ipadd, u8 idx);
-+static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
- 
- static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- {
- 	s32 result = 0;
- 	struct wid wid;
- 	char firmware_ip_addr[4] = {0};
--	struct host_if_drv *hif_drv = vif->hif_drv;
- 
- 	if (ip_addr[0] < 192)
- 		ip_addr[0] = 0;
-@@ -389,7 +386,7 @@ static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
- 				 wilc_get_vif_idx(vif));
- 
--	host_int_get_ipaddress(vif, hif_drv, firmware_ip_addr, idx);
-+	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
- 
- 	if (result) {
- 		PRINT_ER("Failed to set IP address\n");
-@@ -4664,12 +4661,11 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 	return result;
- }
- 
--static int host_int_get_ipaddress(struct wilc_vif *vif,
--				  struct host_if_drv *hif_drv,
--				  u8 *u16ipadd, u8 idx)
-+static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-+	struct host_if_drv *hif_drv = vif->hif_drv;
- 
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
+ 	if (sched_scan_stopped)
 -- 
-2.6.4
+2.5.0
 
