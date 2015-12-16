@@ -1,31 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46850 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873AbbLCU62 (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:35222 "EHLO
+	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753290AbbLPO7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 15:58:28 -0500
-Date: Thu, 03 Dec 2015 15:58:27 -0500 (EST)
-Message-Id: <20151203.155827.1641415776155585766.davem@davemloft.net> (sfid-20151203_215836_027017_3530117A)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-12-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1449092530.2449.12.camel@sipsolutions.net>
-References: <1449049610.2449.3.camel@sipsolutions.net>
-	<20151202.154349.931361692047925552.davem@davemloft.net>
-	<1449092530.2449.12.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 16 Dec 2015 09:59:38 -0500
+Received: by mail-qk0-f179.google.com with SMTP id u65so47912003qkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 06:59:37 -0800 (PST)
+Date: Wed, 16 Dec 2015 09:59:33 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+Message-ID: <20151216145933.GE4073@localhost> (sfid-20151216_155941_713823_1E2E78EB)
+References: <5670DA9A.4010102@candelatech.com>
+ <1450257464.3159.1.camel@sipsolutions.net>
+ <56716386.4070107@candelatech.com>
+ <1450272308.8247.11.camel@sipsolutions.net>
+ <567168AF.4060804@candelatech.com>
+ <1450273362.8247.15.camel@sipsolutions.net>
+ <56717119.1040701@candelatech.com>
+ <1450275340.8247.18.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1450275340.8247.18.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 02 Dec 2015 22:42:10 +0100
-
+On Wed, Dec 16, 2015 at 03:15:40PM +0100, Johannes Berg wrote:
+> On Wed, 2015-12-16 at 06:11 -0800, Ben Greear wrote:
 > 
->> Please add them and send a new pull request, I'll just skip over your
->> existing one.
+> > My code expected that the key was the MAC of the radio, not the
+> > MAC of a vif.  It set up mappings accordingly in the user-space
+> > program.
 > 
-> Ok, here we go, below a new pull request.
+> I guess you were trying to be much smarter than wmediumd :)
+> 
+> Bob, any thoughts?
 
-Pulled, thanks!
+So, now that I understand the argument, I see the value in having
+an unchanging key for each phy.  I'm also pretty sure that it was by
+accident that it used to work that way.  If we were designing the ABI
+from scratch, radio id would probably be better than a mac address for
+that purpose.
+
+Anyway, in the interest of not breaking userspace, I'm not opposed to
+reverting that patch, and perhaps adding some documentation on top to make
+it clear that the addr attributes have nothing to do with any mac addresses
+actually in use.
+
+For wmediumd users that would mean going back to the way it was previously,
+in which only the 42:xx mac addresses will work, until I can work out another
+way to do it.  I think that would break the test_wmediumd.py in hostapd
+test suite in the meantime though.
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
