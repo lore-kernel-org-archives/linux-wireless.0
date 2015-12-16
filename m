@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33803 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253AbbL3MPv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:15:51 -0500
-Received: by mail-pf0-f177.google.com with SMTP id e65so88853474pfe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:15:51 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/20] staging: wilc1000: fix return type of wilc_frame_register
-Date: Wed, 30 Dec 2015 21:15:25 +0900
-Message-Id: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131616_503273_6D21D100)
+Received: from arrakis.dune.hu ([78.24.191.176]:43855 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754886AbbLPUyB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 15:54:01 -0500
+Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum
+ configurable
+To: Peter Oh <poh@codeaurora.org>, Peter Oh <poh@qca.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
+ <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org>
+ <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <5671CF63.9040308@openwrt.org> (sfid-20151216_215406_379540_247BD596)
+Date: Wed, 16 Dec 2015 21:53:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <5671CDBD.5060006@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_frame_register from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+On 2015-12-16 21:46, Peter Oh wrote:
+> 
+> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
+>> On 2015-12-16 21:29, Peter Oh wrote:
+>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
+>>>> On 2015-12-16 19:20, Peter Oh wrote:
+>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
+>>>>> capability of checksum offload when frame formats are not
+>>>>> suitable for it such as Mesh frame.
+>>>>> Hence add a module parameter, hw_csum, to make checksum offload
+>>>>> configurable during module registration time.
+>>>>>
+>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>>>> How about instead of inventing yet another crappy module parameter, you
+>>>> call skb_checksum_help() in the driver in cases where the hardware is
+>>>> unable to offload the checksum calculation.
+>>>>
+>>>> That way the user has to worry about less driver specific hackery ;)
+>>> That will be good option for hardware not supporting HW checksum, but I
+>>> mind that using the function will add more workload per every packet on
+>>> critical data path when HW supports checksum resulting in throughput down.
+>> I didn't mean calling it for every single frame in the data path.
+>> What I'm suggesting is calling it selectively only for mesh frames, or
+>> any other frames that the hardware cannot offload, and leaving the rest
+>> for the hardware to process.
+>>
+>> There should be no performance difference between disabling checksum
+>> offload and calling skb_checksum_help from the driver.
+> To call it selectively for Mesh frame or interface, we need to add it on 
+> mac80211 layer such as ieee80211_build_hdr() since driver layer does not 
+> care the interface type in data path.
+No need to change mac80211 - it only touches the headers, and
+skb_checksum_help does not care about that. The skb has enough
+information for it to find the right range to calculate the checksum and
+the place to store it.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> In that case it will also introduce throughput degrade to HW that 
+> supports HW checksum for Mesh.
+This doesn't make any sense to me. Are you saying that there's no way
+for the driver to detect the cases where the hardware cannot do checksum
+offloading? How is the user supposed to know when to change that module
+parameter? Trial and error?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5113d3d..d9e4e11 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4123,9 +4123,9 @@ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID)
- 	return result;
- }
- 
--s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg)
-+int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index b8b235d..5ecc978 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -362,7 +362,7 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
- 			   wilc_remain_on_chan_ready RemainOnChanReady,
- 			   void *pvUserArg);
- s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
--s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
-+int wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
- int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
--- 
-2.6.4
-
+- Felix
