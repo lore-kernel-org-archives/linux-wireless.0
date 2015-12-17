@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47964 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbbLRNNI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 08:13:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH v1 0/2] wil6210 patches
-References: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Fri, 18 Dec 2015 15:13:02 +0200
-In-Reply-To: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Wed, 16 Dec 2015 17:51:44 +0200")
-Message-ID: <87r3ijaoip.fsf@kamboji.qca.qualcomm.com> (sfid-20151218_141313_127046_4836C478)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:50674 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755741AbbLQMnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 07:43:14 -0500
+Message-ID: <1450356187.8247.30.camel@sipsolutions.net> (sfid-20151217_134318_655418_05B66F4A)
+Subject: Re: [PATCH] Print warnings for missing cfg80211_ops implementations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>, Ola Olsson <ola1olsson@gmail.com>
+Cc: "ola. olsson" <ola.olsson@sonymobile.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 17 Dec 2015 13:43:07 +0100
+In-Reply-To: <1450350106.3430.5.camel@perches.com>
+References: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
+	 <1450314972.5661.2.camel@perches.com>
+	 <CABAco3BSaB9R6-nZQsmOnfXXy2ra-un0jjeBkyq4inzCybD5dw@mail.gmail.com>
+	 <1450329559.5661.5.camel@perches.com>
+	 <CABAco3DCSqzrCZWYXyibV0U1vuTk1En0k505J67vT6eEP2SfEw@mail.gmail.com>
+	 (sfid-20151217_083413_469909_7FF85E76) <1450339048.8247.19.camel@sipsolutions.net>
+	 <1450350106.3430.5.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+On Thu, 2015-12-17 at 03:01 -0800, Joe Perches wrote:
 
-> Chanes in V1:
-> - Fixed patches author and sign-off.
->
-> Those patches fix wil6210 issue and add support for platform specific
-> recovery after FW crash
+> Following patterns is good, I just think the
+> pattern could be trivially improved.
 
-These looks better, thanks. I'll deal with these soon.
+It's a question of what makes sense though - nobody implements stop_xyz
+without implementing start_xyz, and even if they do it's pointless.
+It's just that if you have start_xyz most/all of your functional tests
+might work, but we'd really like to have stop_xyz as well.
 
-No need for any changes in this patchset but the second submitted
-version is normally called "v2", not "v1". See more here:
+It's not *worse* to check for the XOR (like you suggest below), but
+it's not really any better either.
 
-http://kernelnewbies.org/FirstKernelPatch#head-5c81b3c517a1d0bbc24f92594cb734e155fcbbcb
+> The test is a runtime check on what would ideally
+> be done at compile time.
 
--- 
-Kalle Valo
+If you have any suggestions how to do that then that'd be great :) I
+don't really see a way of doing that since this depends on the driver
+and the driver might even fill the struct at runtime (like hwsim does
+IIRC)
+
+> Using
+> 	WARN_ON(!a ^ !b)
+> which is logically the same as what I wrote above
+> for clarity is simply a bit more coverage and maybe
+> even a bit run-time faster.
+
+Don't think we have to worry much about the runtime overhead, but
+that's a nice idea. As I said above though, I don't think it really
+makes a difference.
+
+johannes
