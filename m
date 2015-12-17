@@ -1,105 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752027AbbLUUwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:35 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 38/45] iwlwifi: mvm: infrastructure for frame-release message
-Date: Mon, 21 Dec 2015 22:50:39 +0200
-Message-Id: <1450731046-2796-38-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220059_135098_E7B2ACEB)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:33219 "EHLO
+	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbbLQRlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 12:41:32 -0500
+Received: by mail-lf0-f52.google.com with SMTP id p203so57464399lfa.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 09:41:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20151217155633.GC6910@tuxdriver.com>
+References: <20151216173223.GF4073@localhost>
+	<20151217155633.GC6910@tuxdriver.com>
+Date: Thu, 17 Dec 2015 19:41:30 +0200
+Message-ID: <CANUX_P2Q7QrmKD5HXdxHB3NrPr9zdh+G9Ac8QiaxoyCP0DQapg@mail.gmail.com> (sfid-20151217_184136_347894_39152BA4)
+Subject: Re: [ANNOUNCE] New location for wireless-testing tree
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Thu, Dec 17, 2015 at 5:56 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Dec 16, 2015 at 12:32:23PM -0500, Bob Copeland wrote:
+>> As reported previously[1], John Linville will be moving on from maintenance
+>> of the wireless-testing[2] tree at the end of the year.  A huge thank you to
+>> John for doing all this work for so many years!
+>>
+>> We now have a shared wireless directory on kernel.org where we (currently
+>> myself and Kalle as backup) will continue to maintain this tree going
+>> forward.  The new tree can be found at:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-testing.git
+>>
+>> Note: unlike John's tree, we are going to try rebasing this tree on every
+>> build (like linux-next) instead of merging the downstream trees, in order
+>> to avoid certain merge problems when those trees are rebased.
+>>
+>> This means that if you are working directly off of wireless-testing, use
+>> 'git pull --rebase' to sync, instead of just 'git pull'.
+>>
+>> We'll see how this goes and reassess after a couple of cycles.
+>>
+>> Please let me know of any issues.
+>>
+>> [1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/145291
+>>
+>> [2] wireless-testing is an integration testing tree, consisting of:
+>>
+>>  * Linus's latest -rc
+>>  * patches in mac80211 and wireless-drivers (for the upcoming release)
+>>  * patches in mac80211-next and wireless-drivers-next (for the next release)
+>>
+>> It is not pulled into any upstream tree, but it should be a pretty good
+>> indication of what is baking in Linux wireless for the next release, without
+>> having unrelated changes from all the other subsystems as in linux-next.
+>
+> Given this most welcome announcement, I will hereby cease maintenance
+> of the predecessor wireless-testing tree in favor of this new
+> canonical source.
+>
 
-Incoming hardware will send frame release notifications to
-the reorder buffer in order to update with the BA session
-status and up to date NSSN.
-This patch enables the API.
+Somewhat related. I started a while ago to mirror our internal
+development tree to korg. You'll find there the bleeding edge of
+iwlwifi's development: both fixes and new features. It is a backport
+based tree. Pretty much all the patches for mac80211{-next}.git that
+we (Intel) send come from there as well. Note that this is the "raw
+data" (including Change-IDs and server that are inside Intel's
+intranet) which I later edit to send patches upstream. I merge
+mac80211.git and mac80211-next.git to that tree to get mac80211
+patches that come from upstream. In a sense, this tree looks like a
+backport of wireless-testing with content that is not there yet.
+You'll also find there "stable branches" that go through more thorough
+test cycles against their matching firmware version.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 6 ++++++
- 4 files changed, 17 insertions(+), 1 deletion(-)
+I am not sure anyone is interested, but if someone wants, the tree is here:
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-index 0a8d162..fb6d341 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-@@ -316,6 +316,8 @@ enum iwl_rx_mpdu_sta_id_flags {
- 	IWL_RX_MPDU_SIF_FILTER_STATUS_MASK	= 0xc0,
- };
- 
-+#define IWL_RX_REORDER_DATA_INVALID_BAID 0x7f
-+
- enum iwl_rx_mpdu_reorder_data {
- 	IWL_RX_MPDU_REORDER_NSSN_MASK		= 0x00000fff,
- 	IWL_RX_MPDU_REORDER_SN_MASK		= 0x00fff000,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 0088106..86409c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1138,6 +1138,8 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb, int queue);
-+void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm,
-+			      struct iwl_rx_cmd_buffer *rxb, int queue);
- void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 0885b77..2debce3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -822,6 +822,8 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
- 
- 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
- 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
-+	else if (pkt->hdr.cmd == FRAME_RELEASE)
-+		iwl_mvm_rx_frame_release(mvm, rxb, 0);
- 	else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD)
- 		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
- 	else
-@@ -1488,8 +1490,12 @@ static void iwl_mvm_rx_mq_rss(struct iwl_op_mode *op_mode,
- 			      unsigned int queue)
- {
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 
--	iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
-+	if (unlikely(pkt->hdr.cmd == FRAME_RELEASE))
-+		iwl_mvm_rx_frame_release(mvm, rxb, queue);
-+	else
-+		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
- }
- 
- static const struct iwl_op_mode_ops iwl_mvm_ops_mq = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index c67962e..e2a872d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -370,3 +370,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, ampdu_status,
- 					crypt_len, rxb);
- }
-+
-+void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm,
-+			      struct iwl_rx_cmd_buffer *rxb, int queue)
-+{
-+	/* TODO */
-+}
--- 
-2.5.0
+A bit more info on the "stable branches":
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/core_release
 
+Drop me an email if you start to use this tree just to know if people
+are really using it :)
