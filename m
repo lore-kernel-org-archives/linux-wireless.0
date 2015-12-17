@@ -1,63 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51098 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754180AbbLOUsx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 15:48:53 -0500
-Date: Tue, 15 Dec 2015 15:48:51 -0500 (EST)
-Message-Id: <20151215.154851.2132284113916223057.davem@davemloft.net> (sfid-20151215_214916_331628_B179C2E6)
-To: dvyukov@google.com
-Cc: syzkaller@googlegroups.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+Received: from s3.sipsolutions.net ([5.9.151.49]:48445 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750754AbbLQH6l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 02:58:41 -0500
+Message-ID: <1450339114.8247.21.camel@sipsolutions.net> (sfid-20151217_085903_130356_30D3DF03)
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave Young <dyoung@redhat.com>
+Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, edumazet@google.com, kcc@google.com,
-	glider@google.com, sasha.levin@oracle.com
-Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
-References: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com>
-	<20151215.153626.1500179484827859040.davem@davemloft.net>
-	<CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com>
+	linux-kernel@vger.kernel.org, davem@davemloft.net
+Date: Thu, 17 Dec 2015 08:58:34 +0100
+In-Reply-To: <20151217031912.GB3821@dhcp-128-65.nay.redhat.com>
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+	 <20151115192547.3fd1b3cc@mir> <1448020533.3141.27.camel@sipsolutions.net>
+	 <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
+	 <1449843990.2324.11.camel@sipsolutions.net>
+	 <20151217031912.GB3821@dhcp-128-65.nay.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Tue, 15 Dec 2015 21:45:16 +0100
+On Thu, 2015-12-17 at 11:19 +0800, Dave Young wrote:
+> 
+> Cool, has the fix been in mainline or somewhere else?
+> 
 
-> On Tue, Dec 15, 2015 at 9:36 PM, David Miller <davem@davemloft.net> wrote:
->> From: Dmitry Vyukov <dvyukov@google.com>
->> Date: Tue, 15 Dec 2015 21:00:20 +0100
->>
->>> The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
->>> sockaddr_len passed in, so they copy stack garbage from stack into the
->>> socket and then return it in getsockname.
->>> This can defeat ASLR, leak crypto keys, etc.
->>
->> That's actually the first thing these functions do.
->>
->> They completely clear out the on-stack llcp_addr, then they copy only
->> as much as the user gave them, being careful not to use more than
->> sizeof(llcp_addr).
->>
->>         memset(&llcp_addr, 0, sizeof(llcp_addr));
->>         len = min_t(unsigned int, sizeof(llcp_addr), alen);
->>         memcpy(&llcp_addr, addr, len);
->>
->> I don't see what the problem is, you'll need to be more specific.
-> 
-> You are right. Sorry.
-> 
-> There still seems to be a minor leak here:
-> 
->   if (!addr || addr->sa_family != AF_NFC)
->       return -EINVAL;
-> 
-> addr->sa_family can be uninit.
+https://git.kernel.org/cgit/linux/kernel/git/davem/net.git/commit/?id=a87da0cbc42949cefc8282c39ab4cb8c460bd6ea
 
-That shouldn't matter at all, that can't cause socket state corruption.
-
-I want to ask you if you are actually seeing kernel stack in that hexdump
-you are posting?  If so, how do you actually account for it?  Nothing you
-have shown so far make that clear.
+johannes
