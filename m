@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52026 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837AbbLCGyW (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:36309 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbbLQSKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 01:54:22 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: wireless-testing regression: Could not configure driver mode
-Date: Thu, 03 Dec 2015 08:54:16 +0200
-Message-ID: <87fuzkf2ef.fsf@kamboji.qca.qualcomm.com> (sfid-20151203_075426_533282_0EE08AA8)
+	Thu, 17 Dec 2015 13:10:37 -0500
+Date: Thu, 17 Dec 2015 13:10:27 -0500
+From: "David Rivshin (Allworx)" <drivshin.allworx@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2015-12-15
+Message-ID: <20151217131027.5af2a0f5.drivshin.allworx@gmail.com> (sfid-20151217_191045_168310_AFDDBBAD)
+In-Reply-To: <20151217.120448.2070217640292112574.davem@davemloft.net>
+References: <1450182621.3356.12.camel@sipsolutions.net>
+	<20151216.183443.615368179590575650.davem@davemloft.net>
+	<1450356272.8247.31.camel@sipsolutions.net>
+	<20151217.120448.2070217640292112574.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thu, 17 Dec 2015 12:04:48 -0500 (EST)
+David Miller <davem@davemloft.net> wrote:
 
-with latest wireless-testing[1] I noticed that I cannot start AP mode
-anymore with ath10k:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Thu, 17 Dec 2015 13:44:32 +0100
+> 
+> > On Wed, 2015-12-16 at 18:34 -0500, David Miller wrote:
+> >> 
+> >> Something about your text encoding kept this from ending up
+> >> in patchwork for some reason.
+> >> 
+> > 
+> > Hm. I don't see anything special with this, seems to just be plain
+> > text 8bit transfer encoding.
+> > 
+> > Do you want me to watch out for things getting into patchwork in the
+> > future?
+> 
+> Look in the quoted text of mine, see that underline thing after
+> the ">>"?  Where are those coming from?  Those were all over the
+> place in your pull request and tripped up patchwork's parser I
+> guess.
 
-nl80211: Subscribe to mgmt frames with AP handle 0x9e5b410
-nl80211: Register frame type=0xb0 nl_handle=0x9e5b410 match=
-nl80211: Register frame command failed (type=176): ret=-95 (Operation not supported)
-nl80211: Register frame match - hexdump(len=0): [NULL]
-nl80211: Could not configure driver mode
+I was curious and took a look. I suspect what you're seeing are the UTF-8 
+<0xC2 0xA0> sequence, which translates to codepoint 0x00A0 "no-break space"
+(same as in latin1). They seem to have been used in place of regular spaces 
+for the purpose of indenting. The Content-Type charset in Johannes' emails 
+is "UTF-8", so I think that's legal. Although I have no idea how Patchwork 
+reacts to it. 
 
-With help of Johannes we find out that there are odd changes in
-wireless-testing[2]. Reverting the change in cfg.c fixed my regression,
-but I don't know really know what has happened.
-
-Kalle
-
-[1] To be exact I was using ath.git master branch but that's just
-    wireless-testing plus latest ath patches so should affect here.
-
-[2] $ git diff master-2015-11-27..master-2015-11-30 -- net/mac80211
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2d1c4c35186d..b3a708366a5a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3384,8 +3384,6 @@ const struct cfg80211_ops mac80211_config_ops = {
-        .set_bitrate_mask = ieee80211_set_bitrate_mask,
-        .remain_on_channel = ieee80211_remain_on_channel,
-        .cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
--       .mgmt_tx = ieee80211_mgmt_tx,
--       .mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
-        .set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
-        .mgmt_frame_register = ieee80211_mgmt_frame_register,
-        .set_antenna = ieee80211_set_antenna,
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index ce8e1a6c7281..cfd3356e26fd 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -916,6 +916,13 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-                        kfree_skb(skb);
-                        goto out_unlock;
-                }
-+       } else {
-+               /* Assign a dummy non-zero cookie, it's not sent to
-+                * userspace in this case but we rely on its value
-+                * internally in the need_offchan case to distinguish
-+                * mgmt-tx from remain-on-channel.
-+                */
-+               *cookie = 0xffffffff;
-        }
- 
-        if (!need_offchan) {
 
