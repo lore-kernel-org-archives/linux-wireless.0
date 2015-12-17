@@ -1,143 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:33456 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbbLNJSF (ORCPT
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:36711 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964968AbbLQN05 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 04:18:05 -0500
-Received: by obbsd4 with SMTP id sd4so77891616obb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 01:18:04 -0800 (PST)
+	Thu, 17 Dec 2015 08:26:57 -0500
+Received: by mail-qg0-f49.google.com with SMTP id c96so7113431qgd.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 05:26:57 -0800 (PST)
+Date: Thu, 17 Dec 2015 08:26:55 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Adam R. Welle" <arwelle@cert.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: question on "mac80211_hwsim: support any address in userspace"
+Message-ID: <20151217132655.GA969@localhost> (sfid-20151217_142705_081205_EC4F2B9F)
+References: <5670DA9A.4010102@candelatech.com>
+ <1450257464.3159.1.camel@sipsolutions.net>
+ <56716386.4070107@candelatech.com>
+ <1450272308.8247.11.camel@sipsolutions.net>
+ <567168AF.4060804@candelatech.com>
+ <1450273362.8247.15.camel@sipsolutions.net>
+ <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
+ <5671E23A.1070502@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20151209193034.GE27131@dtor-ws>
-References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
-	<20151209193034.GE27131@dtor-ws>
-Date: Mon, 14 Dec 2015 10:18:04 +0100
-Message-ID: <CACRpkdZDFPFOH=9FfYzLeKo5b-oXG4rPjoU4Rpq9Wv1-RvY6uQ@mail.gmail.com> (sfid-20151214_101814_854185_FC1A2A25)
-Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	Johan Hovold <johan@kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Michael Welling <mwelling@ieee.org>,
-	Markus Pargmann <mpa@pengutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mark Brown <broonie@kernel.org>,
-	Amit Kucheria <amit.kucheria@linaro.org>,
-	"arm@kernel.org" <arm@kernel.org>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Sonic Zhang <sonic.zhang@analog.com>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Linux MIPS <linux-mips@linux-mips.org>,
-	Anatolij Gustschin <agust@denx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Input <linux-input@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5671E23A.1070502@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 9, 2015 at 8:30 PM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Wed, Dec 09, 2015 at 02:08:35PM +0100, Linus Walleij wrote:
->> This removes the use of container_of() constructions from *all*
->> GPIO drivers in the kernel. It is done by instead adding an
->> optional void *data pointer to the struct gpio_chip and an
->> accessor function, gpiochip_get_data() to get it from a driver.
->>
->> WHY?
->>
->> Because we want to have a proper userspace ABI for GPIO chips,
->> which involves using a character device that the user opens
->> and closes. While the character device is open, the underlying
->> kernel objects must not go away.
->>
->> Currently the GPIO drivers keep their state in the struct
->> gpio_chip, and that is often allocated by the drivers, very
->> often as a part of a containing per-instance state container
->> struct for the driver:
->>
->> struct foo_state {
->>    struct gpio_chip chip;  <- OMG my state is there
->> };
->>
->> Drivers cannot allocate and manage this state: if a user has the
->> character device open, the objects allocated must stay around
->> even if the driver goes away. Instead drivers need to pass a
->> descriptor to the GPIO core, and then the core should allocate
->> and manage the lifecycle of things related to the device, such
->> as the chardev itself or the struct device related to the GPIO
->> device.
->
-> Yes, but it does not mean that the object that is being maintained by
-> the subsystem and that us attached to character device needs to be
-> gpio_chip itself. You can have something like
->
-> struct gpio_chip_chardev {
->         struct cdev chardev;
->         struct gpio_chip *chip;
->         bool dead;
-> };
+On Wed, Dec 16, 2015 at 02:14:18PM -0800, Ben Greear wrote:
+> On 12/16/2015 09:30 AM, Adam R. Welle wrote:
+> >
+> >>Well, it was always rather awkward since it was the *second* address :)
+> >
+> >Could somebody provide background information on why the decision was
+> >made to use a second address for the netlink frames instead of the same
+> >address as was used for the non-netlink frames?
+> 
+> I would be fine with always using the first address instead of the second,
+> in case that helps someone.
 
-There needs to be a struct device too, amongst other things.
+It doesn't really, that would break old wmediumd.
 
->
-> struct gpio_chip {
->         ...
->         struct gpio_chip_chardev *chardev;
->         ...
-> };
->
-> You alloctae the new structure when you register/export gpio chip in
-> gpio subsystem core and leave all the individual drivers alone.
+> We could also set the address at creation time easily enough.  Then it
+> could still be unique across many machines if you managed it.
 
-The current idea I have is something in the middle. Drivers have to
-change a bit. The important part is that gpiolib handles allocation of
-anything containing states. I'm thinking along the lines of Russell's
-proposal to use netdev_alloc()'s design pattern.
+We already have a way to change mac addresses; adding a new API to change
+the default address seems pointless to me.
 
-The problem is that currently gpio_chip contains a lot of
-stateful variables (like the dynamically allocated array of GPIO descriptors
-etc) and those are used by the gpiolib core, so they have to be moved away
-from gpio_chip.
-
-So what happens if I don't change the design pattern:
-
-int ret = gpiochip_add(&my_chip);
-...
-gpiochip_remove(&my_chip);
-
-At this point we have to cross-reference the pointer to my chip to
-find the chip to remove. This goes for anything that takes the struct
-gpio_chip *
-as parameter, like gpiochip_add_pin_range(), gpiochip_request_own_desc()
-etc etc. So something inside gpiolib must take a gpio_chip * pointer and
-turn that into the actual state container, e.g, a struct gpio_device.
-Since struct gpio_chip needs to be static and stateless, it cannot contain
-a pointer back to its struct gpio_device.
-
-That means basically comparing pointers across a list of gpio_device's
-to find it. And that's ... very kludgy. But if people think it's better to avoid
-changing all drivers I will consider it.
-
-I think it is better if the GPIO drivers get a handle on the
-real gpio_device * to be used when calling these gpiochip_* related
-functions and also in the callbacks, which is a bigger refactoring
-indeed.
-
-Part of this is trying to be elegant and mimic other subsystems and not
-have GPIO be too hopelessly wayward about things.
-
-If I compare to how struct input_dev is done, you appear to also use the
-pattern Russell suggested with input_dev_allocate() akin to
-netdev_alloc(), and the allocated struct holds all the vtable and states etc,
-and I think it is a good pattern, and that GPIO should conform.
-
-This current patch series however, just give us the equivalent of
-input_get_drvdata()/input_set_drvdata() and that seems valuable on its
-own, as it reduces code size and make things more readable.
-
-Yours,
-Linus Walleij
+-- 
+Bob Copeland %% http://bobcopeland.com/
