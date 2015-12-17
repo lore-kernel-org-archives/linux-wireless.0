@@ -1,62 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4822 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752432AbbLNMRM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:12 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECF2nL012166
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:12 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yswkxr046-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:12 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 04/14] mwifiex: fix bug for wildcard-prefix wowlan pattern
-Date: Mon, 14 Dec 2015 04:15:05 -0800
-Message-ID: <1450095315-19927-5-git-send-email-akarwar@marvell.com> (sfid-20151214_131718_898939_C5B98449)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:41008 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751272AbbLQW5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 17:57:37 -0500
+Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum
+ configurable
+To: Peter Oh <poh@qca.qualcomm.com>, Peter Oh <poh@codeaurora.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
+ <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org>
+ <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org>
+ <5671CF63.9040308@openwrt.org> <5671D56F.8030903@codeaurora.org>
+ <5671DDA1.5030709@openwrt.org> <5671F8B7.2060801@codeaurora.org>
+ <5671FADD.6010009@openwrt.org> <567330CE.3080808@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56733DBC.8060400@openwrt.org> (sfid-20151217_235757_875593_FCA1306D)
+Date: Thu, 17 Dec 2015 23:57:00 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <567330CE.3080808@qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 2015-12-17 23:01, Peter Oh wrote:
+> 
+> On 12/16/2015 03:59 PM, Felix Fietkau wrote:
+>> On 2015-12-17 00:50, Peter Oh wrote:
+>>> On 12/16/2015 01:54 PM, Felix Fietkau wrote:
+>>>> On 2015-12-16 22:19, Peter Oh wrote:
+>>>>> On 12/16/2015 12:53 PM, Felix Fietkau wrote:
+>>>>>> On 2015-12-16 21:46, Peter Oh wrote:
+>>>>>>> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
+>>>>>>>> On 2015-12-16 21:29, Peter Oh wrote:
+>>>>>>>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
+>>>>>>>>>> On 2015-12-16 19:20, Peter Oh wrote:
+>>>>>>>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
+>>>>>>>>>>> capability of checksum offload when frame formats are not
+>>>>>>>>>>> suitable for it such as Mesh frame.
+>>>>>>>>>>> Hence add a module parameter, hw_csum, to make checksum offload
+>>>>>>>>>>> configurable during module registration time.
+>>>>>>>>>>>
+>>>>>>>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>>>>>>>>>> How about instead of inventing yet another crappy module parameter, you
+>>>>>>>>>> call skb_checksum_help() in the driver in cases where the hardware is
+>>>>>>>>>> unable to offload the checksum calculation.
+>>>>>>>>>>
+>>>>>>>>>> That way the user has to worry about less driver specific hackery ;)
+>>>>>>>>> That will be good option for hardware not supporting HW checksum, but I
+>>>>>>>>> mind that using the function will add more workload per every packet on
+>>>>>>>>> critical data path when HW supports checksum resulting in throughput down.
+>>>>>>>> I didn't mean calling it for every single frame in the data path.
+>>>>>>>> What I'm suggesting is calling it selectively only for mesh frames, or
+>>>>>>>> any other frames that the hardware cannot offload, and leaving the rest
+>>>>>>>> for the hardware to process.
+>>>>>>>>
+>>>>>>>> There should be no performance difference between disabling checksum
+>>>>>>>> offload and calling skb_checksum_help from the driver.
+>>>>>>> To call it selectively for Mesh frame or interface, we need to add it on
+>>>>>>> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
+>>>>>>> care the interface type in data path.
+>>>>>> No need to change mac80211 - it only touches the headers, and
+>>>>>> skb_checksum_help does not care about that. The skb has enough
+>>>>>> information for it to find the right range to calculate the checksum and
+>>>>>> the place to store it.
+>>>>> If mentioned to use the function to mesh frame only without touching
+>>>>> mac80211, then how do you suggest it to apply it only to mesh frame
+>>>>> without interfere other data frames?
+>>>>> Can you share your example?
+>>>> It's trivial - in ath10k_tx you do this:
+>>>>
+>>>> if (vif->type == NL80211_IFTYPE_MESH_POINT &&
+>>>>       skb->ip_summed == CHECKSUM_PARTIAL)
+>>>> 	skb_checksum_help(skb);
+>>> Thank you Felix for the quick response.
+>>> I agree on your user experience opinion,
+>>> but what do you think when ath10k has a new chip supporting HW checksum
+>>> for Mesh?
+>> Then you simply update the checks. What's the big deal?
+> keep adding condition to such data path is not a good option.
+> I also considered again about user experiences and reached to that this 
+> patch won't disturb user experience since the products will ship with 
+> proper module settings. for instance the parameter will be turned on if 
+> product support it other wise will be turned off as they shipped, so 
+> that users don't need to touch it.
+I think the point you were missing is the one that there is no such
+thing as a proper setting for this module parameter, since it doesn't
+really depend much on the hardware or the product, but on the wifi mode
+that you are using.
 
-Wildcard prefix bytes are ignored while downloading packet
-pattern to firmware. As packet offset is not adjusted
-accordingly firmware end up matching the pattern at wrong
-offset. The packet offset is corrected in this patch.
+> In addition, for enterprise customers, they do care even a very small 
+> performance drop or enhancement especially when they are running BMT 
+> among vendors.
+> So we need to avoid adding extra codes in data path in my opinion.
+The regular data tx path already checks ar->dev_flags to decide whether
+to use raw mode or not. This means that this part of the data structure
+is already cached. The vif type is also cached, since it's accessed in
+the same part of the function.
+Because of that, the impact of adding an extra check even for a hardware
+capability will be so low, that I'm pretty sure you will not be able to
+measure it. And even if it were measurable, it's probably quite easy to
+find a few places to optimize
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+I find the tradeoff you are making very odd: For users that don't know
+about the module parameter (depending on the default value) it either
+just randomly doesn't work in mesh or always runs with degraded
+performance. All this to save adding a check that will be completely
+irrelevant for performance, since it won't result in any extra cache
+stalls (which are the typical bottleneck in the data path).
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 3349c2a..0aab935 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2921,6 +2921,12 @@ mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq,
- 					dont_care_byte = true;
- 			}
- 
-+			/* wildcard bytes record as the offset
-+			 * before the valid byte
-+			 */
-+			if (!valid_byte_cnt && !dont_care_byte)
-+				pat->pkt_offset++;
-+
- 			if (valid_byte_cnt > max_byte_seq)
- 				return false;
- 		}
--- 
-1.8.1.4
-
+- Felix
