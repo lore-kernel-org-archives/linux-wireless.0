@@ -1,66 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14445 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752871AbbLNMRY (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:32823 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824AbbLQTyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:17:24 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBECFMEI012493
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:23 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yswkxr04r-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2015 04:17:23 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 10/14] mwifiex: fix AMPDU not setup on TDLS link problem
-Date: Mon, 14 Dec 2015 04:15:11 -0800
-Message-ID: <1450095315-19927-11-git-send-email-akarwar@marvell.com> (sfid-20151214_131747_874424_DC508AAF)
-In-Reply-To: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+	Thu, 17 Dec 2015 14:54:07 -0500
+Received: by mail-lb0-f176.google.com with SMTP id kw15so51896012lbb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 11:54:06 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: use module_init for the main part of bus initialization
+Date: Thu, 17 Dec 2015 20:53:54 +0100
+Message-Id: <1450382034-3976-1-git-send-email-zajec5@gmail.com> (sfid-20151217_205413_978002_56E6C03E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes AP sends TDLS setup response as AMSDU packet.
-As driver doesn't parse it and update peer station's 11n
-capability in this case, AMPDU doesn't get setup.
+So far we were using fs_initcall. It was (and still is) needed because
+struct bus_type has to be registered early. However main bus
+initialization has to happen later as it requires SPROM which depends on
+NVRAM which depends on mtd.
+Solve it by using fs_initcall only for bus_register call and module_init
+for the rest. It affects bcma only when built-in obviously.
 
-This patch calls mwifiex_process_tdls_action_frame() in
-AMSDU Rx path to fix the problem.
+This was tested with BCM4706 and BCM5357C0 (BCM47XX), BCM4708A0
+(ARCH_BCM_5301X) and BCM43225 (PCIe card with bcma as module).
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+This change was already suggested in RFC patch early this year:
+https://patchwork.kernel.org/patch/5802611/
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index b3970a8..09578c6 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -48,7 +48,17 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
- 					 priv->wdev.iftype, 0, false);
+Noone objected / got any better idea, so I'm sending a final version.
+
+V1 (from RFC):
+* Use int bcma_bus_registered to avoid #ifdef MODULE and make code simpler.
+* Document reason for this behavior better.
+---
+ drivers/bcma/main.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 59d8d0d..c466f75 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -668,11 +668,36 @@ static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 			      core->id.rev, core->id.class);
+ }
  
- 		while (!skb_queue_empty(&list)) {
-+			struct rx_packet_hdr *rx_hdr;
+-static int __init bcma_modinit(void)
++static unsigned int bcma_bus_registered;
 +
- 			rx_skb = __skb_dequeue(&list);
-+			rx_hdr = (struct rx_packet_hdr *)rx_skb->data;
-+			if (ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
-+			    ntohs(rx_hdr->eth803_hdr.h_proto) == ETH_P_TDLS) {
-+				mwifiex_process_tdls_action_frame(priv,
-+								  (u8 *)rx_hdr,
-+								  skb->len);
-+			}
++/*
++ * If built-in, bus has to be registered early, before any driver calls
++ * bcma_driver_register.
++ * Otherwise registering driver would trigger BUG in driver_register.
++ */
++static int __init bcma_init_bus_register(void)
+ {
+ 	int err;
+ 
++	if (bcma_bus_registered)
++		return 0;
 +
- 			ret = mwifiex_recv_packet(priv, rx_skb);
- 			if (ret == -1)
- 				mwifiex_dbg(priv->adapter, ERROR,
+ 	err = bus_register(&bcma_bus_type);
++	if (!err)
++		bcma_bus_registered = 1;
++
++	return err;
++}
++#ifndef MODULE
++fs_initcall(bcma_init_bus_register);
++#endif
++
++/* Main initialization has to be done with SPI/mtd/NAND/SPROM available */
++static int __init bcma_modinit(void)
++{
++	int err;
++
++	err = bcma_init_bus_register();
+ 	if (err)
+ 		return err;
+ 
+@@ -691,7 +716,7 @@ static int __init bcma_modinit(void)
+ 
+ 	return err;
+ }
+-fs_initcall(bcma_modinit);
++module_init(bcma_modinit);
+ 
+ static void __exit bcma_modexit(void)
+ {
 -- 
-1.8.1.4
+1.8.4.5
 
