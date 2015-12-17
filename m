@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34089 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932239AbbLQDRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 22:17:05 -0500
-Date: Thu, 17 Dec 2015 11:16:52 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, davem@davemloft.net,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Stefan Lippers-Hollmann <s.l-h@gmx.de>
-Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
- debug messages
-Message-ID: <20151217031652.GA3821@dhcp-128-65.nay.redhat.com> (sfid-20151217_041729_303236_A9B58F11)
-References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
- <1449844729.2324.15.camel@sipsolutions.net>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:35635 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934667AbbLQHeN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 02:34:13 -0500
+Received: by mail-qg0-f48.google.com with SMTP id v36so857364qgd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 23:34:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449844729.2324.15.camel@sipsolutions.net>
+In-Reply-To: <1450329559.5661.5.camel@perches.com>
+References: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
+	<1450314972.5661.2.camel@perches.com>
+	<CABAco3BSaB9R6-nZQsmOnfXXy2ra-un0jjeBkyq4inzCybD5dw@mail.gmail.com>
+	<1450329559.5661.5.camel@perches.com>
+Date: Thu, 17 Dec 2015 08:34:12 +0100
+Message-ID: <CABAco3DCSqzrCZWYXyibV0U1vuTk1En0k505J67vT6eEP2SfEw@mail.gmail.com> (sfid-20151217_083420_983459_6697D40A)
+Subject: Re: [PATCH] Print warnings for missing cfg80211_ops implementations
+From: Ola Olsson <ola1olsson@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: "ola. olsson" <ola.olsson@sonymobile.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+> but maybe it should be
+>
+>         WARN_ON((ops->add_station && !ops->del_station) ||
+>                 (!opt->add_station && ops->del_station))
+>
+> etc...
 
-Sorry for late feedback, I was busying on other things.
+Ahh, got it! I really like your idea but I assume it's quite rare to
+implement the "stop/del/leave/disconnect" callbacks and at the same
+time forget to implement the "start/add/join/connect". You will
+probably find out pretty quickly if the "start" functions are missing,
+while it might take some time debugging why you lack the "stop"
+functions (reinitialization issues/ resource leaks for example).
 
-On 12/11/15 at 03:38pm, Johannes Berg wrote:
-> On Sun, 2015-11-15 at 15:31 +0800, Dave Young wrote:
-> > cfg80211 module prints a lot of messages like below. Actually
-> > printing once is acceptable but sometimes it will print again and
-> > again, it looks very annoying. It is better to change these detail
-> > messages to debugging only.
-> > 
-> 
-> Despite the objections, I've applied this patch now.
-> 
+With that said, don't take my word for it, I was only following the
+existing pattern and I assume someone else had a good reason in the
+first place.
 
-Thanks a lot.
-
-> I've made one change: keeping the alpha2 (e.g. "US") printed in some of
-> the pr_err() cases in this file.
-> I also got rid of CONFIG_CFG80211_REG_DEBUG in a separate patch.
-> 
-> I somewhat agree with the objections, but if the kernel is with
-> CONFIG_DYNAMIC_DEBUG then it's really simple to get the messages back
-> by enabling them for this file.
-> 
-> Where the messages were used as an indication of something having gone
-> awry at a different level (e.g. mac80211 disconnect) I don't really
-> quite agree - that then perhaps should have a more explicit (and less
-> noisy) message.
-> 
-> I also agree that the regulatory code is quite opaque, and the way it
-> arrives at certain conclusions is not always obvious. These messages
-> don't help all that much though since they don't contain the actual
-> input to the decisions. I think for that, we'd be much better served
-> with some kind of tracepoint or so that records all the information.
-
-I think you guys are expert in this area, I will agree with all of
-above. But I hope we can have some rate limited messages at least
-especially for endless things.
-
-Thanks
-Dave
+Best regards,
+Ola
