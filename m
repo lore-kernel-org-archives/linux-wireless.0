@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46407 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:36973 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753304AbbL3Qf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 11:35:29 -0500
-Date: Wed, 30 Dec 2015 10:35:24 -0600
-From: Rob Herring <robh@kernel.org>
-To: Raja Mani <rmani@qti.qualcomm.com>
-Cc: agross@codeaurora.org, devicetree@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	mmcclint@qca.qualcomm.com
-Subject: Re: [PATCH] dt: bindings: add bindings for ipq4019 wifi block
-Message-ID: <20151230163524.GA26810@rob-hp-laptop> (sfid-20151230_173545_241318_438CC309)
-References: <1450848915-9772-1-git-send-email-rmani@qti.qualcomm.com>
+	id S934664AbbLQDTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2015 22:19:18 -0500
+Date: Thu, 17 Dec 2015 11:19:12 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@davemloft.net
+Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
+ debug messages
+Message-ID: <20151217031912.GB3821@dhcp-128-65.nay.redhat.com> (sfid-20151217_042029_544931_BB6D1379)
+References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
+ <20151115192547.3fd1b3cc@mir>
+ <1448020533.3141.27.camel@sipsolutions.net>
+ <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
+ <1449843990.2324.11.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450848915-9772-1-git-send-email-rmani@qti.qualcomm.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1449843990.2324.11.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2015 at 11:05:15AM +0530, Raja Mani wrote:
-> Add device tree binding documentation details for wifi block present
-> in Qualcomm IPQ4019 SoC into qcom,ath10k.txt.
+Hi,
+
+On 12/11/15 at 03:26pm, Johannes Berg wrote:
+> On Mon, 2015-11-23 at 09:37 +0800, Dave Young wrote:
 > 
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-> ---
->  .../bindings/net/wireless/qcom,ath10k.txt          | 87 ++++++++++++++++++++--
->  1 file changed, 82 insertions(+), 5 deletions(-)
+> > Seems there're a lot of other wireless messages. Should we refactor 
+> > them as well? I still did not get chance to see where is the code.
+> > (My wireless driver being used is iwlwifi)
 > 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index edefc26..ffd0742 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -1,17 +1,42 @@
->  * Qualcomm Atheros ath10k wireless devices
->  
-> -For ath10k devices the calibration data can be provided through Device
-> -Tree. The node is a child node of the PCI controller.
+> Most are probably from net/mac80211/.
+> 
+> > # dmesg|grep "Limiting TX power"|wc
+> >    4128   49600  360052
+> > 
+> 
+> I fixed this one recently, due to a bug it was printed all the time
+> instead of just once when taking effect.
 
-So it is now not a PCI device?
+Cool, has the fix been in mainline or somewhere else?
 
-> -
->  Required properties:
-> --compatible : Should be "qcom,ath10k"
-> +- compatible: Should be one of the following:
-> +	* "qcom,ath10k"
-> +	* "qcom,ipq4019-wifi"
-
-One is a standalone PCI device and one is embedded block in an SOC? 
-These should be more separated as all these new properties would only 
-apply in the latter case.
-
->  
->  Optional properties:
-> +- reg: Address and length of the register set for the device.
-> +- core-id: Core number associated to the device.
-
-This needs a better explanation.
-
-> +- resets: Must contain an entry for each entry in reset-names.
-> +          See ../reset/reseti.txt for details.
-> +- reset-names: Must include the list of following reset names,
-> +	       "wifi_cpu_init"
-> +	       "wifi_radio_srif"
-> +	       "wifi_radio_warm"
-> +	       "wifi_radio_cold"
-> +	       "wifi_core_warm"
-> +	       "wifi_core_cold"
-> +- clocks: List of clock specifiers, must contain an entry for each required
-> +          entry in clock-names.
-> +- clock-names: Should contain the clock names "wifi_wcss_cmd", "wifi_wcss_ref",
-> +               "wifi_wcss_rtc".
-> +- interrupts: List of interrupt lines. Must contain an entry
-> +	      for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the entries for MSI interrupt
-> +		   names ("msi0" to "msi15") and legacy interrupt
-> +		   name ("legacy"),
-> +- qca,msi_addr: MSI interrupt address.
-> +- qca,msi_base: Base value to add before writing MSI data into
-> +		MSI address register.
-
-Why don't the standard MSI properties work?
-
->  - qcom,ath10k-calibration-data : calibration data as an array, the
->  				 length can vary between hw versions
-> +- status: Either "disabled" or "ok".
-> +
-
-No need to document status here.
-
-Rob
+Thanks
+Dave
