@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:36701 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754574AbbLGCOR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2015 21:14:17 -0500
-Subject: Re: [PATCH v2] rtlwifi: fix memory leak for USB device
-To: Peter Wu <peter@lekensteyn.nl>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1449446851-2221-1-git-send-email-peter@lekensteyn.nl>
-Cc: stable@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5664EB7D.7010009@lwfinger.net> (sfid-20151207_031434_253863_61CF75EB)
-Date: Sun, 6 Dec 2015 20:14:21 -0600
+Received: from mail.sig21.net ([80.244.240.74]:41998 "EHLO mail.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932139AbbLQU26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 15:28:58 -0500
+Date: Thu, 17 Dec 2015 21:28:50 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+	Tuomas =?iso-8859-1?Q?R=E4s=E4nen?= <tuomasjjrasanen@tjjr.fi>,
+	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
+	Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: About adding support for MT76x2U to Linux kernel
+Message-ID: <20151217202850.GA13878@sig21.net> (sfid-20151217_212906_460721_C715CB2E)
+References: <20150814081526.GC20192@hackpad.Elisa>
+ <20150814143229.61440072@north>
+ <5671B310.2080200@openwrt.org>
+ <20151216212425.GA25906@sig21.net>
 MIME-Version: 1.0
-In-Reply-To: <1449446851-2221-1-git-send-email-peter@lekensteyn.nl>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151216212425.GA25906@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2015 06:07 PM, Peter Wu wrote:
-> Free skb for received frames with a wrong checksum. This can happen
-> pretty rapidly, exhausting all memory.
->
-> This fixes a memleak (detected with kmemleak). Originally found while
-> using monitor mode, but it also appears during managed mode (once the
-> link is up).
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> ---
->   v2: updated commit message based on Larry's feedback
->   v1: https://lkml.kernel.org/r/1449424677-3140-1-git-send-email-peter@lekensteyn.nl
->
-> Tested with v4.3, rebased on v4.4-rc3 (changed paths). The bug goes back
-> to its introduction in the v2.6.x kernel.
-> ---
->   drivers/net/wireless/realtek/rtlwifi/usb.c | 2 ++
->   1 file changed, 2 insertions(+)
+Hi Felix and Jakub,
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Wed, Dec 16, 2015 at 10:24:25PM +0100, Johannes Stezenbach wrote:
+> On Wed, Dec 16, 2015 at 07:53:04PM +0100, Felix Fietkau wrote:
+> > Once I'm done with mt7603 bringup (monitor mode rx already works), I
+> > plan on submitting mt76 upstream, and then we can see about adding
+> > support for 76x2u, or even merging the hardware support for mt7601u.
+> > 
+> > You can check out my work in the mt7603 branch here:
+> > https://github.com/openwrt/mt76/tree/mt7603
+> 
+> let me chime in to say that I'm interested to work on
+> support for mt7610u (TP-LINK Archer T2U/T2UH).
+> https://wikidevi.com/wiki/TP-LINK_Archer_T2U
+> 
+> I'm facing the same question as Tuomas about using
+> mt76 or mt7601u as the base?
+
+It's not like I didn't get from your earlier mail that
+you'd rather have us wait for mt76 to be upstream, but
+I guess that'll take half a year at least, right?
+Probably it would take me months to get something working
+anyway as I have a lot to learn and I'm doing it in my
+spare time.  I have no problem to rewrite the code multiple
+times as needed when upstream changes.
+But I'd love to get your recommendation how to get started soon,
+and especially if you know if the mt7610u chipset is
+closer to mt7601u or mt76x[23][eu]?
+
 
 Thanks,
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> index 2721cf8..aac1ed3 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> @@ -531,6 +531,8 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
->   			ieee80211_rx(hw, skb);
->   		else
->   			dev_kfree_skb_any(skb);
-> +	} else {
-> +		dev_kfree_skb_any(skb);
->   	}
->   }
->
->
-
+Johannes
