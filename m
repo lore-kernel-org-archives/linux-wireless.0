@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751966AbbLUUwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:24 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/45] iwlwifi: mvm: support description for user triggered fw dbg collection
-Date: Mon, 21 Dec 2015 22:50:33 +0200
-Message-Id: <1450731046-2796-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215231_350473_3CA6A29F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:12626 "EHLO
+	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389AbbLQNsl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2015 08:48:41 -0500
+Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
+ by mailout2.w1.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0NZI00CX69123590@mailout2.w1.samsung.com> for
+ linux-wireless@vger.kernel.org; Thu, 17 Dec 2015 13:48:38 +0000 (GMT)
+From: drivengroove@gmail.com
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Anatoly Stepanov <drivengroove@gmail.com>
+Subject: [PATCH v2 0/1] staging: rtl8723au: change parameter type in
+ rtl8723a_set_rssi_cmd declaration
+Date: Thu, 17 Dec 2015 16:47:35 +0300
+Message-id: <1450360056-12070-1-git-send-email-drivengroove@gmail.com> (sfid-20151217_144844_960685_BC8AC13C)
+In-reply-to: <wrfjr3imbg5f.fsf@redhat.com>
+References: <wrfjr3imbg5f.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben-Ami <golan.ben.ami@intel.com>
+From: Anatoly Stepanov <drivengroove@gmail.com>
 
-Add to the user triggered fw debug collection support for describing
-the reason of the trigger.
-This could be useful for identifying a dump by a unique id, passed as
-a description.
+Hi, Jes!
 
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I updated the patch, according to your idea, now "param" is passed by value.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 2acf9ff..90500e2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1029,7 +1029,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
- 	if (ret)
- 		return ret;
- 
--	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, NULL, 0, NULL);
-+	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
-+			       (count - 1), NULL);
- 
- 	iwl_mvm_unref(mvm, IWL_MVM_REF_PRPH_WRITE);
- 
-@@ -1451,7 +1452,7 @@ MVM_DEBUGFS_WRITE_FILE_OPS(bt_force_ant, 10);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
--MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
-+MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 64);
- MVM_DEBUGFS_WRITE_FILE_OPS(cont_recording, 8);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+
+Anatoly Stepanov (1):
+  staging: rtl8723au: change parameter type in rtl8723a_set_rssi_cmd
+    declaration
+
+ drivers/staging/rtl8723au/hal/odm.c              | 2 +-
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 6 +++---
+ drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
 -- 
-2.5.0
+1.9.1
 
