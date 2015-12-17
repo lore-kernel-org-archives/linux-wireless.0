@@ -1,93 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:35481 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489AbbLKS7h (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:35633 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752450AbbLQIza convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 13:59:37 -0500
-Received: by qkfb125 with SMTP id b125so52417165qkf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 10:59:36 -0800 (PST)
+	Thu, 17 Dec 2015 03:55:30 -0500
+Received: by mail-oi0-f49.google.com with SMTP id l9so10455426oia.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 00:55:30 -0800 (PST)
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 11 Dec 2015 10:59:17 -0800
-Message-ID: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com> (sfid-20151211_195941_590902_53A49FE8)
-Subject: iwlwifi - L1 Enabled - LTR Enabled loop
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20150814143229.61440072@north>
+References: <20150814081526.GC20192@hackpad.Elisa>
+	<20150814143229.61440072@north>
+Date: Thu, 17 Dec 2015 09:55:29 +0100
+Message-ID: <CACRpkdb9D9107JLLUA1PYcasVze9MF+3jKjkXf2zCRWDUFEBYA@mail.gmail.com> (sfid-20151217_095533_769653_7EF043A0)
+Subject: Re: About adding support for MT76x2U to Linux kernel
+From: Linus Walleij <linus.walleij@linaro.org>
+To: =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>
+Cc: =?UTF-8?B?VHVvbWFzIFLDpHPDpG5lbg==?= <tuomasjjrasanen@tjjr.fi>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	tuomasjjrasanen@opinsys.fi
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using 4.4-rc4 and today's wireless-testing (master-2015-12-10), and
-the latest firmware on linux-firmware, my wireless driver runs into a
-non-functional loop rambling about "L1 Enabled - LTR Enabled loop".
-Reverting back to an older kernel works. I could bisect *if this issue
-is not known*, but it may take a while... If you are already
-suspicious of a commit lemme know, and I can try to revert. Otherwise
-if there's a firmware version that is supposed to work I'm happy to
-try that.
+On Fri, Aug 14, 2015 at 2:32 PM, Jakub Kiciński <moorray3@wp.pl> wrote:
 
-Device: Intel dual band wireless AC 7260, REV=0x144
-Firmware version: 16.242414.0 (linux-firmware upstream)
+> CC: Linus W who was hacking on mt7630e recently.
 
-I also tried:
+FWIW I have pushed my git tree here:
+https://github.com/linusw/linux-mt7630e
 
-Firmware version: 17.246894.0 op_mode iwlmvm (latest on
-iwlwifi/linux-firmware.git)
+The driver codedrop from Mediatek turned out to be based on
+kernel v3.10 so there the patches applied cleanly. I then rebased
+that to v3.11 all the way up to v4.3.
 
-I run into the same issue with this version as well though.
+Branches are named:
+mt7630e-<kernelversion>
 
-The log:
+That branch does allow me to see access points so it's not
+totally worthless, but it doesn't associate or connect so
+there is logic missing, and that's where my knowledge of
+wireless fell short. It wasn't about git rebasing and simple
+C code anymore ... I actually had to know what I was
+doing, haha :)
 
-[   18.914370] cfg80211: World regulatory domain updated:
-[   18.915114] cfg80211:  DFS Master region: unset
-[   18.915127] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp), (dfs_cac_time)
-[   18.916599] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(N/A, 2000 mBm), (N/A)
-[   18.917351] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz),
-(N/A, 2000 mBm), (N/A)
-[   18.918082] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
-(N/A, 2000 mBm), (N/A)
-[   18.918805] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz,
-160000 KHz AUTO), (N/A, 2000 mBm), (N/A)
-[   18.919530] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz,
-160000 KHz AUTO), (N/A, 2000 mBm), (0 s)
-[   18.920247] cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz),
-(N/A, 2000 mBm), (0 s)
-[   18.920965] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
-(N/A, 2000 mBm), (N/A)
-[   18.921692] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
-KHz), (N/A, 0 mBm), (N/A)
-[   19.059414] Intel(R) Wireless WiFi driver for Linux
-[   19.060123] Copyright(c) 2003- 2015 Intel Corporation
-[   19.061091] iwlwifi 0000:03:00.0: Direct firmware load for
-iwlwifi-7260-19.ucode failed with error -2
-[   19.061792] iwlwifi 0000:03:00.0: Direct firmware load for
-iwlwifi-7260-18.ucode failed with error -2
-[   19.062414] iwlwifi 0000:03:00.0: Direct firmware load for
-iwlwifi-7260-17.ucode failed with error -2
-[   19.590098] uvcvideo: Found UVC 1.00 device Integrated Camera (04f2:b39a)
-[   19.673094] iwlwifi 0000:03:00.0: loaded firmware version
-16.242414.0 op_mode iwlmvm
-[   22.439870] iwlwifi 0000:03:00.0: Detected Intel(R) Dual Band
-Wireless AC 7260, REV=0x144
-[   22.440809] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[   22.442616] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[   22.645773] ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
-[   22.737314] iwlwifi 0000:03:00.0 wlp3s0: renamed from wlan0
-[   33.288237] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[   33.288489] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[   33.477404] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
+Since then I have not had time to go back and look at it
+again.
 
-[ etc ]
-
-[  100.421430] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[  100.421686] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[  100.604345] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-[  100.604633] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
-
-[ it goes on forever ]
-
-  Luis
+Yours,
+Linus Walleij
