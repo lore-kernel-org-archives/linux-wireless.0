@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0121.hostedemail.com ([216.40.44.121]:46972 "EHLO
+Received: from smtprelay0137.hostedemail.com ([216.40.44.137]:50551 "EHLO
 	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751363AbbLQTLW (ORCPT
+	by vger.kernel.org with ESMTP id S966120AbbLQBQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 14:11:22 -0500
-Message-ID: <1450379478.3430.11.camel@perches.com> (sfid-20151217_201128_152565_D3B67864)
-Subject: Re: pull-request: mac80211 2015-12-15
+	Wed, 16 Dec 2015 20:16:15 -0500
+Message-ID: <1450314972.5661.2.camel@perches.com> (sfid-20151217_021622_618001_1BEBA566)
+Subject: Re: [PATCH] Print warnings for missing cfg80211_ops implementations
 From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Thu, 17 Dec 2015 11:11:18 -0800
-In-Reply-To: <1450356272.8247.31.camel@sipsolutions.net>
-References: <1450182621.3356.12.camel@sipsolutions.net>
-	 <20151216.183443.615368179590575650.davem@davemloft.net>
-	 <1450356272.8247.31.camel@sipsolutions.net>
+To: Ola Olsson <ola1olsson@gmail.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Date: Wed, 16 Dec 2015 17:16:12 -0800
+In-Reply-To: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
+References: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
 Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-17 at 13:44 +0100, Johannes Berg wrote:
-> On Wed, 2015-12-16 at 18:34 -0500, David Miller wrote:
-> >  
-> > Something about your text encoding kept this from ending up
-> > in patchwork for some reason.
-> > 
+On Wed, 2015-12-16 at 22:43 +0100, Ola Olsson wrote:
+> Print a warning whenever an expected callback function
+> lacks implementation.
 > 
-> Hm. I don't see anything special with this, seems to just be plain
-> text
-> 8bit transfer encoding.
+> Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+> ---
+>  net/wireless/core.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> Do you want me to watch out for things getting into patchwork in the
-> future?
-> 
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index b091551..3a9c41b 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -352,6 +352,16 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+>  	WARN_ON(ops->add_station && !ops->del_station);
+>  	WARN_ON(ops->add_mpath && !ops->del_mpath);
+>  	WARN_ON(ops->join_mesh && !ops->leave_mesh);
+> +	WARN_ON(ops->start_p2p_device && !ops->stop_p2p_device);
+> +	WARN_ON(ops->start_ap && !ops->stop_ap);
+> +	WARN_ON(ops->join_ocb && !ops->leave_ocb);
+> +	WARN_ON(ops->suspend && !ops->resume);
+> +	WARN_ON(ops->sched_scan_start && !ops->sched_scan_stop);
+> +	WARN_ON(ops->remain_on_channel && !ops->cancel_remain_on_channel);
+> +	WARN_ON(ops->tdls_channel_switch && !ops->tdls_cancel_channel_switch);
+> +	WARN_ON(ops->add_tx_ts && !ops->del_tx_ts);
+> +	WARN_ON(ops->set_tx_power && !ops->get_tx_power);
+> +	WARN_ON(ops->set_antenna && !ops->get_antenna);
 
-Hey Johannes.
+maybe all of these should be a nand b?
 
-You seem to be using:
-
-X-Mailer: Evolution 3.18.1-1 
-
-which, to be overly technical, _sucks_.
-
-The new composer for Evolution has way too many defects
-to list.
-
-It adds non-breaking spaces (NBSP) characters instead of
-a standard ASCII space in various places.
-
-Every version of Evolution since 3.14 is terrible at
-sending text only messages.
-
-3.12 works
