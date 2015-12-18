@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27184 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853AbbLSK7o (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54584 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312AbbLSAoV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2015 05:59:44 -0500
-Date: Sat, 19 Dec 2015 13:59:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org
-Subject: [patch -next] ath9k: fix ath9k_hw_nvram_check_version()
-Message-ID: <20151219105919.GB3749@mwanda> (sfid-20151219_115951_243040_2CC8641D)
+	Fri, 18 Dec 2015 19:44:21 -0500
+Date: Fri, 18 Dec 2015 14:37:14 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH 3/6] staging: wilc1000: wilc_wlan.c: remove hif_func of
+ wilc_wlan_dev_t
+Message-ID: <20151218223714.GA27454@kroah.com> (sfid-20151219_014424_843405_3FBD0402)
+References: <1448006196-28555-1-git-send-email-glen.lee@atmel.com>
+ <1448006196-28555-3-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448006196-28555-3-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a type bug so it always returns success.
+On Fri, Nov 20, 2015 at 04:56:33PM +0900, Glen Lee wrote:
+> hif_func of wilc_wlan_dev_t is duplicate because we have same struct
+> wilc_hif_func ops of struct wilc which is available in wilc_wlan.c.
+> Rename ops of struct wilc with hif_func and remove hif_func of wilc_wlan_dev_t,
+> and use wilc->hif_func instead of g_wlan.hif_func in all functions.
+> 
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c         |  18 +--
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h |   2 +-
+>  drivers/staging/wilc1000/wilc_wlan.c          | 161 ++++++++++++--------------
+>  3 files changed, 87 insertions(+), 94 deletions(-)
 
-Fixes: 6fa658fd5ab2 ('ath9k: Simplify and fix eeprom endianness swapping')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+This patch didn't apply, so I stopped here in the series, please fix up
+and resend.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index f8c5065..a7afdee 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -206,7 +206,7 @@ bool ath9k_hw_nvram_check_version(struct ath_hw *ah, int version, int minrev)
- 		ath_err(common, "Bad EEPROM VER 0x%04x or REV 0x%04x\n",
- 			ah->eep_ops->get_eeprom_ver(ah),
- 			ah->eep_ops->get_eeprom_rev(ah));
--		return -EINVAL;
-+		return false;
- 	}
- 
- 	return true;
+thanks,
+
+greg k-h
