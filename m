@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:34432 "EHLO
-	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbbL1Nq4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2015 08:46:56 -0500
-Date: Mon, 28 Dec 2015 20:48:52 +0700
-From: Ivan Safonov <insafonov@gmail.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] /drivers/net/wireless/ath/ath9k remove unnecessary ?:
- operator
-Message-ID: <20151228134852.GA10572@alpha.sfu-kras.ru> (sfid-20151228_144718_550537_3C3E62A6)
+Received: from hauke-m.de ([5.39.93.123]:50896 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932091AbbLRSB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Dec 2015 13:01:28 -0500
+Subject: Re: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1439504505-20314-1-git-send-email-hauke@hauke-m.de>
+ <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <567449F4.9010400@hauke-m.de> (sfid-20151218_190132_651997_7DFDB486)
+Date: Fri, 18 Dec 2015 19:01:24 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-((thermometer < 0) ? 0 : (thermometer == X)) and (thermometer == X) are equal for X >= 0.
+On 12/18/2015 07:27 AM, Rafał Miłecki wrote:
+> I'm afraid it wasn't tested on BCM47XX (MIPS) :(
 
-Signed-off-by: Ivan Safonov <insafonov@gmail.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Yes, you are probably right.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 8b4561e..35e57f7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
- 
--	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
-+	therm_on = thermometer == 0;
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	if (pCap->chip_chainmask & BIT(1)) {
--		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
-+		therm_on = thermometer == 1;
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	}
- 	if (pCap->chip_chainmask & BIT(2)) {
--		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
-+		therm_on = thermometer == 2;
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	}
--- 
-2.4.10
+> On 14 August 2015 at 00:21, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> @@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+>>         chip->set               = bcma_gpio_set_value;
+>>         chip->direction_input   = bcma_gpio_direction_input;
+>>         chip->direction_output  = bcma_gpio_direction_output;
+>> -#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
+>> -       chip->to_irq            = bcma_gpio_to_irq;
+>> -#endif
+>> +       chip->owner             = THIS_MODULE;
+>> +       chip->dev               = bcma_bus_get_host_dev(bus);
+> 
+> This assigns &bus->host_pdev->dev which is NULL.
+
+hmm, how do we fix this, as long as bcma does not have a device on mips
+this is a problem. Should we create a new device for mips?
+
+>> @@ -248,13 +216,13 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+>>         else
+>>                 chip->base              = -1;
+>>
+>> -       err = bcma_gpio_irq_domain_init(cc);
+>> +       err = gpiochip_add(chip);
+>>         if (err)
+>>                 return err;
+>>
+>> -       err = gpiochip_add(chip);
+>> +       err = bcma_gpio_irq_init(cc);
+> 
+> This results in:
+> [    0.157054] missing gpiochip .dev parent pointer
+> (coming from gpiochip_irqchip_add) and
+> [    0.157287] bcma: bus0: Error registering GPIO driver: -22
+
 
