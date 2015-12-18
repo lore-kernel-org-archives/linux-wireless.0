@@ -1,98 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920AbbLAJ75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:57 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/41] iwlwifi: Add PCI IDs for the new 3168 series
-Date: Tue,  1 Dec 2015 11:58:58 +0200
-Message-Id: <1448963947-24302-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110002_908238_1EEA3EAB)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:35805 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997AbbLRMSi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Dec 2015 07:18:38 -0500
+Received: by mail-wm0-f44.google.com with SMTP id l126so61807757wml.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 04:18:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1450440458.2849.0.camel@sipsolutions.net>
+References: <1450439850-1587-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1450440458.2849.0.camel@sipsolutions.net>
+Date: Fri, 18 Dec 2015 13:18:36 +0100
+Message-ID: <CALhHN=rQ0Juzjx8xraZK=7tdUVViPzFT-Ksh2uJj78qm4OPWqg@mail.gmail.com> (sfid-20151218_131841_205306_C4227588)
+Subject: Re: [RFC/RFT v2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On 18 December 2015 at 13:07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2015-12-18 at 12:57 +0100, Janusz Dziedzic wrote:
+>> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
+>> aligned skbs to four-byte boundaries.
+>>
+>> Before we have to do memmove() in the driver before
+>> pass this to HW and memmove() back in tx completion.
+>> This patch allow to save CPU and skip such memmoves.
+>> For each skb we call memmove(ieee80211_hdrsize()) twice.
+>>
+>> Currently this was tested with ath9k, both hw/sw crypt for
+>> tkip/ccmp.
+>> For sure more tests required (eg. fast path isn't used for
+>> ath9k STA, wep sw crypt).
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>> ---
+>>  include/net/mac80211.h     |  4 ++++
+>>  net/mac80211/debugfs.c     |  1 +
+>>  net/mac80211/ieee80211_i.h |  1 +
+>>  net/mac80211/sta_info.h    |  4 ++--
+>>  net/mac80211/tkip.c        | 15 ++++++++++++---
+>>  net/mac80211/tx.c          | 38 +++++++++++++++++++++++++++++++++---
+>> --
+>>  net/mac80211/util.c        |  7 ++++++-
+>>  net/mac80211/wep.c         | 11 ++++++-----
+>>  net/mac80211/wep.h         |  1 +
+>>  net/mac80211/wpa.c         | 14 ++++++--------
+>>  10 files changed, 72 insertions(+), 24 deletions(-)
+>>
+> Btw, how can you get away without changing the status path?
+>
+Yes, this is still missed.
 
-Add a new struct for the 3168 series and a few new
-PCI ID entries.
-
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c   | 13 +++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  4 ++++
- 3 files changed, 18 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-index bf88ec3..51fec20 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -274,6 +276,17 @@ const struct iwl_cfg iwl3165_2ac_cfg = {
- 	.dccm_len = IWL7265_DCCM_LEN,
- };
- 
-+const struct iwl_cfg iwl3168_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 3168",
-+	.fw_name_pre = IWL7265D_FW_PRE,
-+	IWL_DEVICE_7000,
-+	.ht_params = &iwl7000_ht_params,
-+	.nvm_ver = IWL3165_NVM_VERSION,
-+	.nvm_calib_ver = IWL3165_TX_POWER_VERSION,
-+	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
-+	.dccm_len = IWL7265_DCCM_LEN,
-+};
-+
- const struct iwl_cfg iwl7265_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 7265",
- 	.fw_name_pre = IWL7265_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index c9bf9ac..a1452a1 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -420,6 +420,7 @@ extern const struct iwl_cfg iwl3160_2ac_cfg;
- extern const struct iwl_cfg iwl3160_2n_cfg;
- extern const struct iwl_cfg iwl3160_n_cfg;
- extern const struct iwl_cfg iwl3165_2ac_cfg;
-+extern const struct iwl_cfg iwl3168_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2n_cfg;
- extern const struct iwl_cfg iwl7265_n_cfg;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 37cf81b..fe30c78 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -377,6 +377,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x3165, 0x8010, iwl3165_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x3165, 0x8110, iwl3165_2ac_cfg)},
- 
-+/* 3168 Series */
-+	{IWL_PCI_DEVICE(0x24FB, 0x2110, iwl3168_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FB, 0x0000, iwl3168_2ac_cfg)},
-+
- /* 7265 Series */
- 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5110, iwl7265_2ac_cfg)},
--- 
-2.5.0
-
+> johannes
