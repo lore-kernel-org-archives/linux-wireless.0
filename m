@@ -1,78 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8727 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933377AbbLPMXw (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54703 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312AbbLSAoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 07:23:52 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBGCN12P029745
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:23:50 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1yu7wpr02h-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 04:23:50 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/4] mwifiex: fix potential integer truncation
-Date: Wed, 16 Dec 2015 04:21:42 -0800
-Message-ID: <1450268505-2682-1-git-send-email-akarwar@marvell.com> (sfid-20151216_132355_308062_4E09EC1C)
+	Fri, 18 Dec 2015 19:44:23 -0500
+Date: Fri, 18 Dec 2015 14:38:42 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH 01/10] staging: wilc1000: sdio/spi: use device print api
+ instead of custom one
+Message-ID: <20151218223842.GA1390@kroah.com> (sfid-20151219_014426_098983_E0E1992B)
+References: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448272088-13973-1-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+On Mon, Nov 23, 2015 at 06:47:59PM +0900, Glen Lee wrote:
+> This patch use device print api instead of driver defined print. Remove
+> varialbe dPrint as well. String "[wilc sdio]" and "[wilc spi]" are also removed
+> from all the print statment if exist because it shows which device the message
+> is related to.
+> 
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
 
-At some places, ie length is truncated from u16 to u8 while
-storing it to driver's internal variable. This patch fixes
-the problem.
-
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/main.h      | 6 +++---
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 0fa1d8e..2f7f478 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -564,14 +564,14 @@ struct mwifiex_private {
- 	struct mwifiex_wep_key wep_key[NUM_WEP_KEYS];
- 	u16 wep_key_curr_index;
- 	u8 wpa_ie[256];
--	u8 wpa_ie_len;
-+	u16 wpa_ie_len;
- 	u8 wpa_is_gtk_set;
- 	struct host_cmd_ds_802_11_key_material aes_key;
- 	struct host_cmd_ds_802_11_key_material_v2 aes_key_v2;
- 	u8 wapi_ie[256];
--	u8 wapi_ie_len;
-+	u16 wapi_ie_len;
- 	u8 *wps_ie;
--	u8 wps_ie_len;
-+	u16 wps_ie_len;
- 	u8 wmm_required;
- 	u8 wmm_enabled;
- 	u8 wmm_qosinfo;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 439e73f..6a4fc5d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -759,7 +759,7 @@ static int mwifiex_set_wpa_ie_helper(struct mwifiex_private *priv,
- 			return -1;
- 		}
- 		memcpy(priv->wpa_ie, ie_data_ptr, ie_len);
--		priv->wpa_ie_len = (u8) ie_len;
-+		priv->wpa_ie_len = ie_len;
- 		mwifiex_dbg(priv->adapter, CMD,
- 			    "cmd: Set Wpa_ie_len=%d IE=%#x\n",
- 			    priv->wpa_ie_len, priv->wpa_ie[0]);
--- 
-1.8.1.4
-
+This series didn't apply :(
