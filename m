@@ -1,100 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37872 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755220AbbK3XCD (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37756 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbbLRJtL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2015 18:02:03 -0500
-From: greearb@candelatech.com
-To: ath6kl@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] ath6kl:  add log messages for firmware failure cases.
-Date: Mon, 30 Nov 2015 15:01:48 -0800
-Message-Id: <1448924508-25672-2-git-send-email-greearb@candelatech.com> (sfid-20151201_000212_526459_24886921)
-In-Reply-To: <1448924508-25672-1-git-send-email-greearb@candelatech.com>
-References: <1448924508-25672-1-git-send-email-greearb@candelatech.com>
+	Fri, 18 Dec 2015 04:49:11 -0500
+Received: by mail-wm0-f41.google.com with SMTP id p187so56779796wmp.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 01:49:11 -0800 (PST)
+From: Pawel Kulakowski <pawel.kulakowski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com,
+	Pawel Kulakowski <pawel.kulakowski@tieto.com>
+Subject: [PATCH] ath9k: Enable support for cloned SKBS
+Date: Fri, 18 Dec 2015 10:48:57 +0100
+Message-Id: <1450432137-30668-1-git-send-email-pawel.kulakowski@tieto.com> (sfid-20151218_104919_792803_63B3031C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Ath9k driver does not modify tx skbs, so SUPPORTS_CLONED_SKBS
+flag can be set. Enabling this flag significant reduce number
+of copy operation during TCP Tx. This is especially noticeable
+on platforms with slower CPU (lower CPU usage brings
+profits in better TCP Tx troughput results).
 
-This gives a user a chance to know why a firmware load
-is failing.
+Tested on MIPS with 560 MHz clock
+Without CLONED_SKBS flag:
+TCP Tx 145 Mb/s (iperf result)
+__copy_user_common consumes 12.9% of CPU (result from perf tool)
+0% CPU Idle
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+With CLONED_SKBS flag:
+TCP Tx 170 Mb/s (iperf result)
+__copy_user_common consumes 1.8% of CPU (result from perf tool)
+12% CPU Idle
+
+Signed-off-by: Pawel Kulakowski <pawel.kulakowski@tieto.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index e3f3a6a..45210d0 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -953,8 +953,10 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 	snprintf(filename, sizeof(filename), "%s/%s", ar->hw.fw.dir, name);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 2e2b92b..ab7a1ac 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -828,6 +828,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, RX_INCLUDES_FCS);
+ 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
++	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
  
- 	ret = request_firmware(&fw, filename, ar->dev);
--	if (ret)
-+	if (ret) {
-+		ath6kl_err("Failed request firmware, rv: %d\n", ret);
- 		return ret;
-+	}
- 
- 	data = fw->data;
- 	len = fw->size;
-@@ -963,11 +965,15 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 	magic_len = strlen(ATH6KL_FIRMWARE_MAGIC) + 1;
- 
- 	if (len < magic_len) {
-+		ath6kl_err("Magic length is invalid, len: %zd  magic_len: %zd\n",
-+			   len, magic_len);
- 		ret = -EINVAL;
- 		goto out;
- 	}
- 
- 	if (memcmp(data, ATH6KL_FIRMWARE_MAGIC, magic_len) != 0) {
-+		ath6kl_err("Magic is invalid, magic_len: %zd\n",
-+			   magic_len);
- 		ret = -EINVAL;
- 		goto out;
- 	}
-@@ -986,7 +992,12 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 		len -= sizeof(*hdr);
- 		data += sizeof(*hdr);
- 
-+		ath6kl_dbg(ATH6KL_DBG_BOOT, "ie-id: %d  len: %zd (0x%zx)\n",
-+			   ie_id, ie_len, ie_len);
-+
- 		if (len < ie_len) {
-+			ath6kl_err("IE len is invalid, len: %zd  ie_len: %zd  ie-id: %d\n",
-+				   len, ie_len, ie_id);
- 			ret = -EINVAL;
- 			goto out;
- 		}
-@@ -1007,6 +1018,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ar->fw_otp = kmemdup(data, ie_len, GFP_KERNEL);
- 
- 			if (ar->fw_otp == NULL) {
-+				ath6kl_err("fw_otp cannot be allocated\n");
- 				ret = -ENOMEM;
- 				goto out;
- 			}
-@@ -1024,6 +1036,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ar->fw = vmalloc(ie_len);
- 
- 			if (ar->fw == NULL) {
-+				ath6kl_err("fw storage cannot be allocated, len: %zd\n", ie_len);
- 				ret = -ENOMEM;
- 				goto out;
- 			}
-@@ -1038,6 +1051,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ar->fw_patch = kmemdup(data, ie_len, GFP_KERNEL);
- 
- 			if (ar->fw_patch == NULL) {
-+				ath6kl_err("fw_patch storage cannot be allocated, len: %zd\n", ie_len);
- 				ret = -ENOMEM;
- 				goto out;
- 			}
+ 	if (ath9k_ps_enable)
+ 		ieee80211_hw_set(hw, SUPPORTS_PS);
 -- 
-2.4.3
+1.9.1
 
