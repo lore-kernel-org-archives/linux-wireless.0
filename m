@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:12626 "EHLO
-	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbbLQNsl (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54903 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932270AbbLSAoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 08:48:41 -0500
-Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
- by mailout2.w1.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0NZI00CX69123590@mailout2.w1.samsung.com> for
- linux-wireless@vger.kernel.org; Thu, 17 Dec 2015 13:48:38 +0000 (GMT)
-From: drivengroove@gmail.com
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Anatoly Stepanov <drivengroove@gmail.com>
-Subject: [PATCH v2 0/1] staging: rtl8723au: change parameter type in
- rtl8723a_set_rssi_cmd declaration
-Date: Thu, 17 Dec 2015 16:47:35 +0300
-Message-id: <1450360056-12070-1-git-send-email-drivengroove@gmail.com> (sfid-20151217_144844_960685_BC8AC13C)
-In-reply-to: <wrfjr3imbg5f.fsf@redhat.com>
-References: <wrfjr3imbg5f.fsf@redhat.com>
+	Fri, 18 Dec 2015 19:44:34 -0500
+Date: Fri, 18 Dec 2015 14:50:10 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH] staging: wilc1000: fix double mutex_unlock on failure
+ path in wilc_wlan_cleanup()
+Message-ID: <20151218225010.GA26812@kroah.com> (sfid-20151219_014455_903442_B5F1F3EF)
+References: <1449266674-6642-1-git-send-email-khoroshilov@ispras.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449266674-6642-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anatoly Stepanov <drivengroove@gmail.com>
+On Sat, Dec 05, 2015 at 01:04:34AM +0300, Alexey Khoroshilov wrote:
+> If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
+> it calls release_bus() and continues execution. But it leads to double
+> release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
+> 
+> The patch adds return in case of failure.
+> 
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan.c | 2 ++
+>  1 file changed, 2 insertions(+)
 
-Hi, Jes!
+No longer applies to my tree, can you rebase it against staging-testing
+and resend?
 
-I updated the patch, according to your idea, now "param" is passed by value.
+thanks,
 
-
-Anatoly Stepanov (1):
-  staging: rtl8723au: change parameter type in rtl8723a_set_rssi_cmd
-    declaration
-
- drivers/staging/rtl8723au/hal/odm.c              | 2 +-
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 6 +++---
- drivers/staging/rtl8723au/include/rtl8723a_cmd.h | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
-
--- 
-1.9.1
-
+greg k-h
