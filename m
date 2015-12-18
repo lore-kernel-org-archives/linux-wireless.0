@@ -1,138 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36992 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932816AbbLWFgG (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:34463 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352AbbLROm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 00:36:06 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <agross@codeaurora.org>, <devicetree@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-	<mmcclint@qca.qualcomm.com>, Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] dt: bindings: add bindings for ipq4019 wifi block
-Date: Wed, 23 Dec 2015 11:05:15 +0530
-Message-ID: <1450848915-9772-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20151223_063638_947928_28063248)
+	Fri, 18 Dec 2015 09:42:29 -0500
+Received: by mail-oi0-f50.google.com with SMTP id o124so60622053oia.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 06:42:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151214124626.GG23327@localhost>
+References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
+	<20151209134410.GH8644@n2100.arm.linux.org.uk>
+	<CACRpkdZcz73vtgZsCKZCJ=G3nq-yCPiO8hws4ro5HVWd8AVRCw@mail.gmail.com>
+	<20151214124626.GG23327@localhost>
+Date: Fri, 18 Dec 2015 15:42:27 +0100
+Message-ID: <CACRpkdZ9vZmMWHemb8_XDwdhMDjMNoE7EyLUSnvVS6R5yU3i_A@mail.gmail.com> (sfid-20151218_154236_438775_578FDBFA)
+Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Johan Hovold <johan@kernel.org>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Michael Welling <mwelling@ieee.org>,
+	Markus Pargmann <mpa@pengutronix.de>,
+	Mark Brown <broonie@kernel.org>,
+	Amit Kucheria <amit.kucheria@linaro.org>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Sonic Zhang <sonic.zhang@analog.com>,
+	Greg Ungerer <gerg@uclinux.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Anatolij Gustschin <agust@denx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Input <linux-input@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation details for wifi block present
-in Qualcomm IPQ4019 SoC into qcom,ath10k.txt.
+On Mon, Dec 14, 2015 at 1:46 PM, Johan Hovold <johan@kernel.org> wrote:
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- .../bindings/net/wireless/qcom,ath10k.txt          | 87 ++++++++++++++++++++--
- 1 file changed, 82 insertions(+), 5 deletions(-)
+> Ok, but let's take a step back. So you have all this in place and a
+> consumer calls gpiod_get_value() that returns an errno because the device
+> is gone. Note that this wasn't even possible before e20538b82f1f ("gpio:
+> Propagate errors from chip->get()") that went into *v4.3*, and I assume
+> most drivers would need to be updated to even handle that that gpio
+> call, and all future calls, are now suddenly failing.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index edefc26..ffd0742 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -1,17 +1,42 @@
- * Qualcomm Atheros ath10k wireless devices
- 
--For ath10k devices the calibration data can be provided through Device
--Tree. The node is a child node of the PCI controller.
--
- Required properties:
---compatible : Should be "qcom,ath10k"
-+- compatible: Should be one of the following:
-+	* "qcom,ath10k"
-+	* "qcom,ipq4019-wifi"
- 
- Optional properties:
-+- reg: Address and length of the register set for the device.
-+- core-id: Core number associated to the device.
-+- resets: Must contain an entry for each entry in reset-names.
-+          See ../reset/reseti.txt for details.
-+- reset-names: Must include the list of following reset names,
-+	       "wifi_cpu_init"
-+	       "wifi_radio_srif"
-+	       "wifi_radio_warm"
-+	       "wifi_radio_cold"
-+	       "wifi_core_warm"
-+	       "wifi_core_cold"
-+- clocks: List of clock specifiers, must contain an entry for each required
-+          entry in clock-names.
-+- clock-names: Should contain the clock names "wifi_wcss_cmd", "wifi_wcss_ref",
-+               "wifi_wcss_rtc".
-+- interrupts: List of interrupt lines. Must contain an entry
-+	      for each entry in the interrupt-names property.
-+- interrupt-names: Must include the entries for MSI interrupt
-+		   names ("msi0" to "msi15") and legacy interrupt
-+		   name ("legacy"),
-+- qca,msi_addr: MSI interrupt address.
-+- qca,msi_base: Base value to add before writing MSI data into
-+		MSI address register.
- - qcom,ath10k-calibration-data : calibration data as an array, the
- 				 length can vary between hw versions
-+- status: Either "disabled" or "ok".
-+
- 
-+Example (to supply the calibration data alone):
- 
--Example:
-+In this example, the node is defined as child node of the PCI controller.
- 
- pci {
- 	pcie@0 {
-@@ -28,3 +53,55 @@ pci {
- 		};
- 	};
- };
-+
-+Example (to supply ipq4019 SoC wifi block details):
-+
-+wifi0: wifi@a000000 {
-+	compatible = "qcom,ipq4019-wifi";
-+	reg = <0xa000000 0x200000>;
-+	core-id = <0x0>;
-+	resets = <&gcc WIFI0_CPU_INIT_RESET>,
-+		 <&gcc WIFI0_RADIO_SRIF_RESET>,
-+		 <&gcc WIFI0_RADIO_WARM_RESET>,
-+		 <&gcc WIFI0_RADIO_COLD_RESET>,
-+		 <&gcc WIFI0_CORE_WARM_RESET>,
-+		 <&gcc WIFI0_CORE_COLD_RESET>;
-+	reset-names = "wifi_cpu_init",
-+		      "wifi_radio_srif",
-+		      "wifi_radio_warm",
-+		      "wifi_radio_cold",
-+		      "wifi_core_warm",
-+		      "wifi_core_cold";
-+	clocks = <&gcc GCC_WCSS2G_CLK>,
-+		 <&gcc GCC_WCSS2G_REF_CLK>,
-+		 <&gcc GCC_WCSS2G_RTC_CLK>;
-+	clock-names = "wifi_wcss_cmd",
-+		      "wifi_wcss_ref",
-+		      "wifi_wcss_rtc";
-+	interrupts = <0 0x20 0x1>,
-+		     <0 0x21 0x1>,
-+		     <0 0x22 0x1>,
-+		     <0 0x23 0x1>,
-+		     <0 0x24 0x1>,
-+		     <0 0x25 0x1>,
-+		     <0 0x26 0x1>,
-+		     <0 0x27 0x1>,
-+		     <0 0x28 0x1>,
-+		     <0 0x29 0x1>,
-+		     <0 0x2a 0x1>,
-+		     <0 0x2b 0x1>,
-+		     <0 0x2c 0x1>,
-+		     <0 0x2d 0x1>,
-+		     <0 0x2e 0x1>,
-+		     <0 0x2f 0x1>,
-+		     <0 0xa8 0x0>;
-+	interrupt-names = "msi0",  "msi1",  "msi2",  "msi3",
-+			  "msi4",  "msi5",  "msi6",  "msi7",
-+			  "msi8",  "msi9",  "msi10", "msi11",
-+			  "msi12", "msi13", "msi14", "msi15",
-+			  "legacy";
-+	status = "ok";
-+	qca,msi_addr = <0x0b006040>;
-+	qca,msi_base = <0x40>;
-+	qcom,ath10k-calibration-data = [ 01 02 03 ... ];
-+};
--- 
-1.8.1.2
+I actually have a revert of that in my fixes queue. So another step back
+and two forward for v4.5 (hopefully): audit all drivers to respect this.
 
+Yours,
+Linus Walleij
