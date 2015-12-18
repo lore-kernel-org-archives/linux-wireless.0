@@ -1,965 +1,425 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53385 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920AbbLAKAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:00:03 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:32910 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794AbbLRL5u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Dec 2015 06:57:50 -0500
+Received: by mail-wm0-f49.google.com with SMTP id p187so61855577wmp.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 03:57:49 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 35/41] iwlwifi: change the Intel Wireless email address
-Date: Tue,  1 Dec 2015 11:59:01 +0200
-Message-Id: <1448963947-24302-35-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_112252_358269_099E2504)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Cc: johannes@sipsolutions.net, nbd@openwrt.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC/RFT v2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
+Date: Fri, 18 Dec 2015 12:57:30 +0100
+Message-Id: <1450439850-1587-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151218_125755_353546_9E01933F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ilw@linux.intel.com is not available anymore.
-linuxwifi@intel.com should be used instead.
+HW/driver should set NEED_ALIGNED4_SKBS flag in case require
+aligned skbs to four-byte boundaries.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Before we have to do memmove() in the driver before
+pass this to HW and memmove() back in tx completion.
+This patch allow to save CPU and skip such memmoves.
+For each skb we call memmove(ieee80211_hdrsize()) twice.
+
+Currently this was tested with ath9k, both hw/sw crypt for
+tkip/ccmp.
+For sure more tests required (eg. fast path isn't used for
+ath9k STA, wep sw crypt).
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/calib.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/calib.h     |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/commands.h  |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/devices.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/led.c       |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/lib.c       |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/power.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/power.h     |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/ucode.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-1000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-2000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-5000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-6000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h    |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-devtrace-data.h |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-devtrace-io.h   |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-devtrace-msg.h  |   2 +-
- .../wireless/intel/iwlwifi/iwl-devtrace-ucode.h    |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c  |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-eeprom-read.c   |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-eeprom-read.h   |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-fw-error-dump.h |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fw.h        |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.h        |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-notif-wait.c    |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-notif-wait.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-scd.h       |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/binding.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h   |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-tof.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/led.c       |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/offloading.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/testmode.h  |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/time-event.c    |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/time-event.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   2 +-
- intc-scripts/publishable-files                     | 203 ---------------------
- 53 files changed, 52 insertions(+), 255 deletions(-)
- delete mode 100644 intc-scripts/publishable-files
+ include/net/mac80211.h     |  4 ++++
+ net/mac80211/debugfs.c     |  1 +
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/sta_info.h    |  4 ++--
+ net/mac80211/tkip.c        | 15 ++++++++++++---
+ net/mac80211/tx.c          | 38 +++++++++++++++++++++++++++++++++-----
+ net/mac80211/util.c        |  7 ++++++-
+ net/mac80211/wep.c         | 11 ++++++-----
+ net/mac80211/wep.h         |  1 +
+ net/mac80211/wpa.c         | 14 ++++++--------
+ 10 files changed, 72 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/calib.c b/drivers/net/wireless/intel/iwlwifi/dvm/calib.c
-index 20e6aa9..9be6362 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/calib.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/calib.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7c30faf..0ea9b51 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1910,6 +1910,9 @@ struct ieee80211_txq {
+  *	by just its MAC address; this prevents, for example, the same station
+  *	from connecting to two virtual AP interfaces at the same time.
   *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/calib.h b/drivers/net/wireless/intel/iwlwifi/dvm/calib.h
-index aeae4e8..099e3ce 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/calib.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/calib.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-index 7a34e4d..2ab2773 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-index 34b41e5..cc13c04 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/led.c b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-index ca4d669..178806f 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-index e18629a..a612fbe 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-@@ -22,7 +22,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/power.c b/drivers/net/wireless/intel/iwlwifi/dvm/power.c
-index 1513dbc..0ad557c 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/power.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
++ * @IEEE80211_HW_NEEDS_ALIGNED4_SKBS: Driver need aligned skbs to four-byte.
++ *	Padding will be added after ieee80211_hdr.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -1946,6 +1949,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+ 	IEEE80211_HW_BEACON_TX_STATUS,
+ 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
++	IEEE80211_HW_NEEDS_ALIGNED4_SKBS,
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/power.h b/drivers/net/wireless/intel/iwlwifi/dvm/power.h
-index 570d3a5..2fd9b43 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/power.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/power.h
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
- #ifndef __iwl_power_setting_h__
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c b/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-index 931a8e4..b662cf3 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-@@ -23,7 +23,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-1000.c b/drivers/net/wireless/intel/iwlwifi/iwl-1000.c
-index 06f6cc0..a90dbab 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-1000.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-2000.c b/drivers/net/wireless/intel/iwlwifi/iwl-2000.c
-index 890b95f..a6da959 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-2000.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-5000.c b/drivers/net/wireless/intel/iwlwifi/iwl-5000.c
-index 724194e..8b5afde 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-5000.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-index 21b2630..0b4ba78 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h
-index 04a483d..ee9347a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-index 71a78ce..bde0233 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-index f62c5448..27914ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-msg.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-msg.h
-index a3b3c24..5dfc929 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-msg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-msg.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-ucode.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-ucode.h
-index 10839fa..e9b8673 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-ucode.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-ucode.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-index a19c458..b395854 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-index 750c8c9..ad2b834 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-index 219ca8a..f2cea1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
-index a6d3bdf..1ed78be 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index d560648..5cc6be9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-index 73bcf29..f08a131 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-index 2e1909f..85d6d6d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-index 2f4e12c..a9bcc78 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-index 6caf2af..8aa1f2b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-index dbe8234..0f9995e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 60b7fce..7b89bfc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 822ba52..92466ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-scd.h b/drivers/net/wireless/intel/iwlwifi/iwl-scd.h
-index f2353eb..99b43da 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-scd.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-scd.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index 7161096..ccd317b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/binding.c b/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
-index a137653..7cb68f6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h
-index 8c4190e..ede6ef8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-index 20521be..228684c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-index f3f3ee0..95ac59d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-index c8f3e25..65a7c8a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-@@ -27,7 +27,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-index 0f1ea80..ad9cc03 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-index 493a8bd..6fca4fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
-index 0c321f6..438665a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-index eed6271..86aa51b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- * Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 853698a..0036d18 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index b8e0591..9fcabc5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-index 32232d69..461acdf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-index e3b3cf4..1e51fbe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-@@ -25,7 +25,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/offloading.c b/drivers/net/wireless/intel/iwlwifi/mvm/offloading.c
-index 68b0169..f83e2bc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/offloading.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/offloading.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sf.c b/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-index b0f59fd..c2def12 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/testmode.h b/drivers/net/wireless/intel/iwlwifi/mvm/testmode.h
-index 79ab6be..cbbc16f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/testmode.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/testmode.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 52692df..87a04c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.h b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.h
-index cbdf8e52a..61d7cd7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.h
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index cadfc04..473975c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -26,7 +26,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 3db82bf..9193f0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -23,7 +23,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/intc-scripts/publishable-files b/intc-scripts/publishable-files
-deleted file mode 100644
-index fbaa303..0000000
---- a/intc-scripts/publishable-files
-+++ /dev/null
-@@ -1,203 +0,0 @@
--.gitignore
--.local-symbols
--.blacklist.map
--Android.mk
--Android-make-iwlwifi.mk
--backport-include/*
--compat/*
--COPYING
--defconfig
--defconfigs/*
--drivers
--drivers/bluetooth/*
--drivers/net
--drivers/net/wireless
--drivers/net/wireless/realtek
--drivers/net/wireless/realtek/Makefile
--drivers/net/wireless/iwlwifi
--drivers/net/wireless/iwlwifi/iwl-7000.c
--drivers/net/wireless/iwlwifi/iwl-8000.c
--drivers/net/wireless/iwlwifi/iwl-9000.c
--drivers/net/wireless/iwlwifi/iwl-7999.c
--drivers/net/wireless/iwlwifi/iwl-agn-hw.h
--drivers/net/wireless/iwlwifi/iwl-config.h
--drivers/net/wireless/iwlwifi/iwl-constants.h
--drivers/net/wireless/iwlwifi/iwl-csr.h
--drivers/net/wireless/iwlwifi/iwl-dbg-cfg.c
--drivers/net/wireless/iwlwifi/iwl-dbg-cfg.h
--drivers/net/wireless/iwlwifi/iwl-debug.c
--drivers/net/wireless/iwlwifi/iwl-debug.h
--drivers/net/wireless/iwlwifi/iwl-devtrace.c
--drivers/net/wireless/iwlwifi/iwl-devtrace.h
--drivers/net/wireless/iwlwifi/iwl-devtrace-data.h
--drivers/net/wireless/iwlwifi/iwl-devtrace-io.h
--drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
--drivers/net/wireless/iwlwifi/iwl-devtrace-msg.h
--drivers/net/wireless/iwlwifi/iwl-devtrace-ucode.h
--drivers/net/wireless/iwlwifi/iwl-dnt-cfg.c
--drivers/net/wireless/iwlwifi/iwl-dnt-cfg.h
--drivers/net/wireless/iwlwifi/iwl-dnt-dev-if.c
--drivers/net/wireless/iwlwifi/iwl-dnt-dev-if.h
--drivers/net/wireless/iwlwifi/iwl-dnt-dispatch.c
--drivers/net/wireless/iwlwifi/iwl-dnt-dispatch.h
--drivers/net/wireless/iwlwifi/iwl-drv.c
--drivers/net/wireless/iwlwifi/iwl-drv.h
--drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
--drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h
--drivers/net/wireless/iwlwifi/iwl-eeprom-read.c
--drivers/net/wireless/iwlwifi/iwl-eeprom-read.h
--drivers/net/wireless/iwlwifi/iwl-fh.h
--drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
--drivers/net/wireless/iwlwifi/iwl-fw-file.h
--drivers/net/wireless/iwlwifi/iwl-fw.h
--drivers/net/wireless/iwlwifi/iwl-io.c
--drivers/net/wireless/iwlwifi/iwl-io.h
--drivers/net/wireless/iwlwifi/iwl-modparams.h
--drivers/net/wireless/iwlwifi/iwl-notif-wait.c
--drivers/net/wireless/iwlwifi/iwl-notif-wait.h
--drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
--drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
--drivers/net/wireless/iwlwifi/iwl-op-mode.h
--drivers/net/wireless/iwlwifi/iwl-phy-db.c
--drivers/net/wireless/iwlwifi/iwl-phy-db.h
--drivers/net/wireless/iwlwifi/iwl-prph.h
--drivers/net/wireless/iwlwifi/iwl-tm-gnl.c
--drivers/net/wireless/iwlwifi/iwl-tm-gnl.h
--drivers/net/wireless/iwlwifi/iwl-tm-infc.h
--drivers/net/wireless/iwlwifi/iwl-trans.c
--drivers/net/wireless/iwlwifi/iwl-trans.h
--drivers/net/wireless/iwlwifi/Kconfig
--drivers/net/wireless/iwlwifi/Kconfig.noupstream
--drivers/net/wireless/iwlwifi/Makefile
--drivers/net/wireless/iwlwifi/iwl-scd.h
--drivers/net/wireless/iwlwifi/mvm
--drivers/net/wireless/iwlwifi/mvm/binding.c
--drivers/net/wireless/iwlwifi/mvm/coex.c
--drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
--drivers/net/wireless/iwlwifi/mvm/constants.h
--drivers/net/wireless/iwlwifi/mvm/d3.c
--drivers/net/wireless/iwlwifi/mvm/debugfs.c
--drivers/net/wireless/iwlwifi/mvm/debugfs.h
--drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
--drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
--drivers/net/wireless/iwlwifi/mvm/fw-api.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-rx.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-tof.h
--drivers/net/wireless/iwlwifi/mvm/fw-api-gscan.h
--drivers/net/wireless/iwlwifi/mvm/fw-dbg.c
--drivers/net/wireless/iwlwifi/mvm/fw-dbg.h
--drivers/net/wireless/iwlwifi/mvm/fw.c
--drivers/net/wireless/iwlwifi/mvm/led.c
--drivers/net/wireless/iwlwifi/mvm/lte-coex.h
--drivers/net/wireless/iwlwifi/mvm/mac80211.c
--drivers/net/wireless/iwlwifi/mvm/tdls.c
--drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
--drivers/net/wireless/iwlwifi/mvm/Makefile
--drivers/net/wireless/iwlwifi/mvm/mvm.h
--drivers/net/wireless/iwlwifi/mvm/nvm.c
--drivers/net/wireless/iwlwifi/mvm/offloading.c
--drivers/net/wireless/iwlwifi/mvm/ops.c
--drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
--drivers/net/wireless/iwlwifi/mvm/power.c
--drivers/net/wireless/iwlwifi/mvm/power_legacy.c
--drivers/net/wireless/iwlwifi/mvm/quota.c
--drivers/net/wireless/iwlwifi/mvm/rs.c
--drivers/net/wireless/iwlwifi/mvm/rs.h
--drivers/net/wireless/iwlwifi/mvm/rx.c
--drivers/net/wireless/iwlwifi/mvm/scan.c
--drivers/net/wireless/iwlwifi/mvm/sf.c
--drivers/net/wireless/iwlwifi/mvm/sta.c
--drivers/net/wireless/iwlwifi/mvm/sta.h
--drivers/net/wireless/iwlwifi/mvm/testmode.h
--drivers/net/wireless/iwlwifi/mvm/testmode.c
--drivers/net/wireless/iwlwifi/mvm/fm-test.c
--drivers/net/wireless/iwlwifi/mvm/fm-ops.c
--drivers/net/wireless/iwlwifi/mvm/time-event.c
--drivers/net/wireless/iwlwifi/mvm/time-event.h
--drivers/net/wireless/iwlwifi/mvm/tt.c
--drivers/net/wireless/iwlwifi/mvm/tx.c
--drivers/net/wireless/iwlwifi/mvm/utils.c
--drivers/net/wireless/iwlwifi/mvm/vendor-cmd.c
--drivers/net/wireless/iwlwifi/mvm/vendor-cmd.h
--drivers/net/wireless/iwlwifi/mvm/tof.c
--drivers/net/wireless/iwlwifi/mvm/tof.h
--drivers/net/wireless/iwlwifi/pcie
--drivers/net/wireless/iwlwifi/pcie/drv.c
--drivers/net/wireless/iwlwifi/pcie/internal.h
--drivers/net/wireless/iwlwifi/pcie/rx.c
--drivers/net/wireless/iwlwifi/pcie/trans.c
--drivers/net/wireless/iwlwifi/pcie/tx.c
--drivers/net/wireless/iwlwifi/sdio
--drivers/net/wireless/iwlwifi/sdio/sdio_io_ext.c
--drivers/net/wireless/iwlwifi/sdio/sdio_io_ext.h
--drivers/net/wireless/iwlwifi/trans_slave
--drivers/net/wireless/iwlwifi/trans_slave/idi_al.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_hals.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_hals.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_host_csr.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_internal.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_io.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_irq_csr.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_rx.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_rx.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_trans.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_tx.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_tx.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_tx_policy.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_tx_policy.h
--drivers/net/wireless/iwlwifi/trans_slave/idi_utils.c
--drivers/net/wireless/iwlwifi/trans_slave/idi_utils.h
--drivers/net/wireless/iwlwifi/trans_slave/mini_rpm.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_al.h
--drivers/net/wireless/iwlwifi/trans_slave/sdio_drv.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_internal.h
--drivers/net/wireless/iwlwifi/trans_slave/sdio_rx.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_trans.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_tx.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_tx.h
--drivers/net/wireless/iwlwifi/trans_slave/sdio_tx_policy.c
--drivers/net/wireless/iwlwifi/trans_slave/sdio_tx_policy.h
--drivers/net/wireless/iwlwifi/trans_slave/shared.c
--drivers/net/wireless/iwlwifi/trans_slave/shared.h
--drivers/net/wireless/iwlwifi/xvt
--drivers/net/wireless/iwlwifi/xvt/nvm.c
--drivers/net/wireless/iwlwifi/xvt/xvt.c
--drivers/net/wireless/iwlwifi/xvt/user-infc.c
--drivers/net/wireless/iwlwifi/xvt/xvt.h
--drivers/net/wireless/iwlwifi/xvt/fw-api.h
--drivers/net/wireless/iwlwifi/xvt/constants.h
--drivers/net/wireless/iwlwifi/xvt/Makefile
--drivers/net/wireless/iwlwifi/xvt/fw.c
--drivers/net/wireless/iwlwifi/xvt/user-infc.h
--drivers/net/wireless/iwlwifi/xvt/utils.c
--drivers/net/wireless/Kconfig
--drivers/net/wireless/mac80211_hwsim.c
--drivers/net/wireless/mac80211_hwsim.h
--drivers/net/wireless/Makefile
--net/*
--.git/*
--include/*
--kconf/*
--Kconfig
--Kconfig.sources
--Kconfig.package.hacks
--MAINTAINERS
--Makefile
--Makefile.build
--Makefile.kernel
--Makefile.real
--scripts/*
--udev/*
--versions
--intc-scripts
--intc-scripts/mv-compat-mod.py
--intc-scripts/ren-compat-deps.py
--intc-scripts/ren-compat-aliases.py
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index abbdff0..fd45830 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -126,6 +126,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+ 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
+ 	FLAG(BEACON_TX_STATUS),
+ 	FLAG(NEEDS_UNIQUE_STA_ADDR),
++	FLAG(NEEDS_ALIGNED4_SKBS),
+ 
+ 	/* keep last for the build bug below */
+ 	(void *)0x1
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c30b684..c5e1b46 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -172,6 +172,7 @@ struct ieee80211_tx_data {
+ 	struct ieee80211_tx_rate rate;
+ 
+ 	unsigned int flags;
++	unsigned int hdrlen;
+ };
+ 
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index d605162..3e1cd70 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -268,8 +268,8 @@ struct ieee80211_fast_tx {
+ 	u8 hdr_len;
+ 	u8 sa_offs, da_offs, pn_offs;
+ 	u8 band;
+-	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
+-	       sizeof(rfc1042_header)];
++	u8 hdr[round_up(30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
++			sizeof(rfc1042_header), 4)];
+ 
+ 	struct rcu_head rcu_head;
+ };
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 0ae2077..26b2663 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -204,9 +204,18 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
+ 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+ 	struct tkip_ctx *ctx = &key->u.tkip.tx;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
+-	u32 iv32 = get_unaligned_le32(&data[4]);
+-	u16 iv16 = data[2] | (data[0] << 8);
++	unsigned int hdrlen;
++	const u8 *data;
++	u32 iv32;
++	u16 iv16;
++
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	if (ieee80211_hw_check(&key->local->hw, NEEDS_ALIGNED4_SKBS))
++		hdrlen += hdrlen & 3;
++
++	data = (u8 *)hdr + hdrlen;
++	iv32 = get_unaligned_le32(&data[4]);
++	iv16 = data[2] | (data[0] << 8);
+ 
+ 	spin_lock(&key->u.tkip.txlock);
+ 	ieee80211_compute_tkip_p1k(key, iv32);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3311ce0..a512c4b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -205,6 +205,20 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 
+ /* tx handlers */
+ static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_hdrlen_add(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_hw *hw = &tx->local->hw;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++
++	tx->hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
++	if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS))
++		tx->hdrlen += tx->hdrlen & 3;
++
++	return TX_CONTINUE;
++}
++
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_local *local = tx->local;
+@@ -915,7 +929,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	int frag_threshold = tx->local->hw.wiphy->frag_threshold;
+-	int hdrlen;
++	int hdrlen = tx->hdrlen;
+ 	int fragnum;
+ 
+ 	/* no matter what happens, tx->skb moves to tx->skbs */
+@@ -936,8 +950,6 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ 	if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
+ 		return TX_DROP;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-
+ 	/* internal error, why isn't DONTFRAG set? */
+ 	if (WARN_ON(skb->len + FCS_LEN <= frag_threshold))
+ 		return TX_DROP;
+@@ -1471,6 +1483,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 			goto txh_done;	\
+ 	} while (0)
+ 
++	CALL_TXH(ieee80211_tx_h_hdrlen_add);
+ 	CALL_TXH(ieee80211_tx_h_dynamic_ps);
+ 	CALL_TXH(ieee80211_tx_h_check_assoc);
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+@@ -1796,6 +1809,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 
+ 	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
++		hdrlen += hdrlen & 3;
+ 
+ 	if (skb->len < len_rthdr + hdrlen)
+ 		goto fail;
+@@ -2020,6 +2035,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_sub_if_data *ap_sdata;
+ 	enum ieee80211_band band;
++	int padsize = 0;
+ 	int ret;
+ 
+ 	if (IS_ERR(sta))
+@@ -2237,6 +2253,10 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 		hdrlen += 2;
+ 	}
+ 
++	/* Check if HW require skb to be aligned */
++	if (ieee80211_hw_check(&sdata->local->hw, NEEDS_ALIGNED4_SKBS))
++		padsize = hdrlen & 3;
++
+ 	/*
+ 	 * Drop unicast frames to unauthorised stations unless they are
+ 	 * EAPOL frames from the local station.
+@@ -2323,6 +2343,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	h_pos -= skip_header_bytes;
+ 
+ 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
++	head_need += padsize;
+ 
+ 	/*
+ 	 * So we need to modify the skb header and hence need a copy of
+@@ -2361,6 +2382,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	}
+ #endif
+ 
++	if (padsize)
++		skb_push(skb, padsize);
++
+ 	if (ieee80211_is_data_qos(fc)) {
+ 		__le16 *qos_control;
+ 
+@@ -2374,8 +2398,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	} else
+ 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
+ 
+-	nh_pos += hdrlen;
+-	h_pos += hdrlen;
++	nh_pos += hdrlen + padsize;
++	h_pos += hdrlen + padsize;
+ 
+ 	/* Update skb pointers to various headers since this modified frame
+ 	 * is going to go through Linux networking code that may potentially
+@@ -2544,6 +2568,10 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 	}
+ 
++	/* Check if aligned skb required */
++	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
++		build.hdr_len += build.hdr_len & 3;
++
+ 	/* We store the key here so there's no point in using rcu_dereference()
+ 	 * but that's fine because the code that changes the pointers will call
+ 	 * this function after doing so. For a single CPU that would be enough,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 08af2b3..4c2c0e2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1225,6 +1225,7 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	unsigned int hdrlen;
+ 	int err;
+ 
+ 	/* 24 + 6 = header + auth_algo + auth_transaction + status_code */
+@@ -1249,8 +1250,12 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
+ 
+ 	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
++		hdrlen = ieee80211_hdrlen(mgmt->frame_control);
++		if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
++			hdrlen += hdrlen & 3;
+ 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+-		err = ieee80211_wep_encrypt(local, skb, key, key_len, key_idx);
++		err = ieee80211_wep_encrypt(local, skb, hdrlen, key,
++					    key_len, key_idx);
+ 		WARN_ON(err);
+ 	}
+ 
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index efa3f48..d14bdb0 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -89,11 +89,11 @@ static void ieee80211_wep_get_iv(struct ieee80211_local *local,
+ 
+ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 				struct sk_buff *skb,
++				unsigned int hdrlen,
+ 				int keylen, int keyidx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	unsigned int hdrlen;
+ 	u8 *newhdr;
+ 
+ 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+@@ -101,7 +101,6 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 	if (WARN_ON(skb_headroom(skb) < IEEE80211_WEP_IV_LEN))
+ 		return NULL;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	newhdr = skb_push(skb, IEEE80211_WEP_IV_LEN);
+ 	memmove(newhdr, newhdr + IEEE80211_WEP_IV_LEN, hdrlen);
+ 
+@@ -160,6 +159,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+  */
+ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 			  struct sk_buff *skb,
++			  unsigned int hdrlen,
+ 			  const u8 *key, int keylen, int keyidx)
+ {
+ 	u8 *iv;
+@@ -169,7 +169,7 @@ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 	if (WARN_ON(skb_tailroom(skb) < IEEE80211_WEP_ICV_LEN))
+ 		return -1;
+ 
+-	iv = ieee80211_wep_add_iv(local, skb, keylen, keyidx);
++	iv = ieee80211_wep_add_iv(local, skb, hdrlen, keylen, keyidx);
+ 	if (!iv)
+ 		return -1;
+ 
+@@ -306,13 +306,14 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	struct ieee80211_key_conf *hw_key = info->control.hw_key;
+ 
+ 	if (!hw_key) {
+-		if (ieee80211_wep_encrypt(tx->local, skb, tx->key->conf.key,
++		if (ieee80211_wep_encrypt(tx->local, skb, tx->hdrlen,
++					  tx->key->conf.key,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+ 	} else if ((hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
+ 		   (hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
+-		if (!ieee80211_wep_add_iv(tx->local, skb,
++		if (!ieee80211_wep_add_iv(tx->local, skb, tx->hdrlen,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+diff --git a/net/mac80211/wep.h b/net/mac80211/wep.h
+index 9615749..ad0a52b 100644
+--- a/net/mac80211/wep.h
++++ b/net/mac80211/wep.h
+@@ -22,6 +22,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+ 				size_t klen, u8 *data, size_t data_len);
+ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 			  struct sk_buff *skb,
++			  unsigned int hdrlen,
+ 			  const u8 *key, int keylen, int keyidx);
+ int ieee80211_wep_decrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+ 			       size_t klen, u8 *data, size_t data_len);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index d824c38..b94e6c4 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -42,7 +42,7 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ 	    skb->len < 24 || !ieee80211_is_data_present(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	if (skb->len < hdrlen)
+ 		return TX_DROP;
+ 
+@@ -186,7 +186,6 @@ mic_fail_no_key:
+ 
+ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	unsigned int hdrlen;
+@@ -200,7 +199,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -424,7 +423,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -463,6 +462,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 		return 0;
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
++
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+ 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+ 				  skb_put(skb, mic_len), mic_len);
+@@ -651,7 +651,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -787,7 +787,6 @@ static ieee80211_tx_result
+ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
+ 			    struct sk_buff *skb)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int hdrlen;
+@@ -803,8 +802,7 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
+ 		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
+ 		return TX_DROP;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-
++	hdrlen = tx->hdrlen;
+ 	pos = skb_push(skb, iv_len);
+ 	memmove(pos, pos + iv_len, hdrlen);
+ 
 -- 
-2.5.0
+1.9.1
 
