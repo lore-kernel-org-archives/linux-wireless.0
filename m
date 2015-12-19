@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:36007 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbbLBHb5 convert rfc822-to-8bit (ORCPT
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:33672 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226AbbLSAhP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 02:31:57 -0500
+	Fri, 18 Dec 2015 19:37:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20151202070026.GA29067@sudip-pc>
-References: <20151108215953.GO18797@mwanda>
-	<563FFEEB.1090307@atmel.com>
-	<56405328.4040004@atmel.com>
-	<20151109081842.GR18797@mwanda>
-	<56405F71.6090404@atmel.com>
-	<CABXAfNJHAWd_ygUbcZXDqwGvaCxM3nA5ibOF4sNwzhA3AP=07g@mail.gmail.com>
-	<56406F0F.1050701@atmel.com>
-	<CABXAfNKhtdRSm1BJK+pk9t4wwnFBXzAP_CKSVhS0p7m_FZG_8Q@mail.gmail.com>
-	<20151109102342.GA3868@sudip-pc>
-	<CABXAfN+Rgkfr=LHO_PrCGgSaWkupZTRvJXk+ccHvBzQTP6miYA@mail.gmail.com>
-	<20151202070026.GA29067@sudip-pc>
-Date: Wed, 2 Dec 2015 13:01:56 +0530
-Message-ID: <CABXAfNKmGZA5iK6j4D3R5RadWnVQMKjmVJHxrkoUKT0Xj=f=hQ@mail.gmail.com> (sfid-20151202_083219_625455_923CB3F9)
-Subject: Re: [PATCH V2] Staging: wilc1000: Fix build break due to undeclared
- *wilc and implicit declaration of init_irq
-From: punit vara <punitvara@gmail.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: glen lee <glen.lee@atmel.com>, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	linux-kernel@vger.kernel.org, tony.cho@atmel.com,
-	leo.kim@atmel.com, Dan Carpenter <dan.carpenter@oracle.com>
+In-Reply-To: <20151219002212.GC7244@malice.jf.intel.com>
+References: <1450193442-7930-1-git-send-email-jprvita@endlessm.com>
+ <1450193442-7930-4-git-send-email-jprvita@endlessm.com> <20151219002212.GC7244@malice.jf.intel.com>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Fri, 18 Dec 2015 19:36:34 -0500
+Message-ID: <CA+A7VXXyWjQOo0TVsRmw-PA8U6e1Jo_bx1HcO8a+CWu=gHcxDw@mail.gmail.com> (sfid-20151219_013720_279166_4E6A98CB)
+Subject: Re: [PATCH 3/4] net/rfkill: Create "airplane mode" LED trigger
+To: Darren Hart <dvhart@infradead.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Corentin Chary <corentin.chary@gmail.com>,
+	platform-driver-x86@vger.kernel.org,
+	acpi4asus-user@lists.sourceforge.net,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 2, 2015 at 12:30 PM, Sudip Mukherjee
-<sudipm.mukherjee@gmail.com> wrote:
-> On Wed, Dec 02, 2015 at 08:39:10AM +0530, punit vara wrote:
->> On Mon, Nov 9, 2015 at 3:53 PM, Sudip Mukherjee
->> <sudipm.mukherjee@gmail.com> wrote:
->> > On Mon, Nov 09, 2015 at 03:43:38PM +0530, punit vara wrote:
->> >> On Mon, Nov 9, 2015 at 3:31 PM, glen lee <glen.lee@atmel.com> wrote:
->> >> >
->> >> >
->> >> > On 2015년 11월 09일 18:05, punit vara wrote:
->> >> >>
->> >> >> On Mon, Nov 9, 2015 at 2:25 PM, glen lee <glen.lee@atmel.com> wrote:
->> >> >>>
->> >> >>> On 2015년 11월 09일 17:18, Dan Carpenter wrote:
->> >> >>>>
->> >> >>>> On Mon, Nov 09, 2015 at 05:02:48PM +0900, glen lee wrote:
->> >> >>>>>
->> >>
->> >> make ./drivers/staging/wilc1000/    this working fine for me
->> >>
->> >> but
->> >>
->> >> make ./drivers/staging/wilc1000/linux_wlan.o is creates error.
->> >
->> > I am also not getting build failure. Can you please post your .config file.
->> >
->> > regards
->> > sudip
->> I have attached .config file . and please tell me should I focus on
->> this patch or not . Because build is still broken.For temporary this
->> patch can be useful to fix the build .Later on as per requirement Glen
->> can change the code .
+On 18 December 2015 at 19:22, Darren Hart <dvhart@infradead.org> wrote:
+> On Tue, Dec 15, 2015 at 10:30:41AM -0500, João Paulo Rechi Vita wrote:
+>> For platform drivers to be able to correctly drive the "Airplane Mode"
+>> indicative LED there needs to be a RFKill LED trigger tied to the global
+>> state of RFKILL_TYPE_ALL (instead of to a specific RFKill) and that
+>> works in an inverted manner of regular RFKill LED triggers, that is, the
+>> LED is ON when the state is blocked, and OFF otherwise.
+>>
+>> This commit implements such a trigger, which will be used by the
+>> asus-wrc x86 platform driver.
 >
-> With your config file also I am not getting any build failure. Can you
-> please tell what are the exact compilation steps you are following?
+> So this will need to go through Johannes and David per get_maintainer.pl before
+> we can use it in platform drivers.
 >
-> Here are my steps after I have copied your config file as .config.
-> 1) make oldconfig && make prepare
-> 2) make bzImage && make modules
->
-> And I dont see any build failure.
-> I think you are not building bzImage and the modules before testing wilc
-> compilation. And that is why it is unable to find SPI or SDIO.
->
-> regards
-> sudip
-Steps I have followed:
-1. I have updated staging tree and checkout to new branch.
-2. make drivers/staging/wilc1000/linux_wlan.o
 
-When I have performed second step it automatically ask me about
-different modules options "yes/no" I have pressed ENTER in every
-option .At last configuration are written to .config. and module start
-building and I have found error at last. I will try to perform 2 step
-you have suggested .
+Yes, I am aware of that. I just wanted to get feedback and validate
+the new platform driver that makes use of this new RFKill LED trigger
+before proposing it, since I expect that will be their first
+questioning.
+
+For those who were not in the original message, this is patch is part
+of a series implementing a new platform driver for the airplane mode
+hotkey and LED present in some Asus laptops, which is a separate ACPI
+device (not part of WMI) with ACPI _HID "ASHS" and named "Wireless
+Radio Control" by Asus.
+
+Thanks for your feedback!
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
