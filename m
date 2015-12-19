@@ -1,28 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plainfield.sei.cmu.edu ([192.58.107.45]:51583 "EHLO
-	plainfield.sei.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbbLCOSb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 09:18:31 -0500
-From: "Adam R. Welle" <arwelle@cert.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2] mac80211_hwsim: check ATTR_FREQ for wmediumd
- (netlink) packets
-Date: Thu, 3 Dec 2015 14:18:21 +0000
-Message-ID: <2DE9F46DD36D2A458CD6347950113F253512C7@marathon> (sfid-20151203_151834_503292_445013C0)
-References: <1449008032-6541-1-git-send-email-arwelle@cert.org>
-	 <1449050234.2449.7.camel@sipsolutions.net>
-	 <2DE9F46DD36D2A458CD6347950113F25350A9B@marathon>
- <1449133834.2181.7.camel@sipsolutions.net>
-In-Reply-To: <1449133834.2181.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from www.osadl.org ([62.245.132.105]:39093 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932651AbbLSRQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Dec 2015 12:16:27 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] rsi: bool tests do not need comparison
+Date: Sat, 19 Dec 2015 17:39:45 +0100
+Message-Id: <1450543185-27565-1-git-send-email-hofrat@osadl.org> (sfid-20151219_181639_575139_67CEB356)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocnhfc3RhdHVzLmZyZXEgIT0gZGF0YTItPmNo
-YW5uZWwtPmNlbnRlcl9mcmVxICYmDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqAoIWRhdGEyLT50bXBfY2hhbiB8fA0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqByeF9zdGF0dXMuZnJlcSAhPSBkYXRhMi0+dG1wX2NoYW4tPmNlbnRl
-cl9mcmVxKSkgew0KDQpQZXJmZWN0LCB0aGFuayB5b3UhDQoNCkFkYW0NCg0K
+This is an API consolidation only. Bool initializations should 
+use true and false thus bool tests don't need an explicit comparison.
+
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+
+Found by coccinelle: scripts/coccinelle/misc/boolinit.cocci
+
+Patch was compile tested with: x86_64_defconfig +
+CONFIG_RSI_91X=m
+
+Patch is against linux-next (localversion-next is -next-20151218)
+
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 8d110fd..90161aa 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1227,7 +1227,7 @@ int rsi_send_block_unblock_frame(struct rsi_common *common, bool block_event)
+ 	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
+ 	mgmt_frame->desc_word[1] = cpu_to_le16(BLOCK_HW_QUEUE);
+ 
+-	if (block_event == true) {
++	if (block_event) {
+ 		rsi_dbg(INFO_ZONE, "blocking the data qs\n");
+ 		mgmt_frame->desc_word[4] = cpu_to_le16(0xf);
+ 	} else {
+-- 
+1.7.10.4
+
