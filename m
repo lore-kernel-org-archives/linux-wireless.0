@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11463 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbbLUFQx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:16:53 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 18/46] staging: wilc1000: linux_wlan_spi.c: fix NULL comparison style
-Date: Mon, 21 Dec 2015 14:18:22 +0900
-Message-ID: <1450675130-17866-19-git-send-email-glen.lee@atmel.com> (sfid-20151221_063059_024812_41A81979)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from www.osadl.org ([62.245.132.105]:39093 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932651AbbLSRQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Dec 2015 12:16:30 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] rsi: consolidate kmalloc/memset 0 calls to kzalloc
+Date: Sat, 19 Dec 2015 17:39:26 +0100
+Message-Id: <1450543166-27531-1-git-send-email-hofrat@osadl.org> (sfid-20151219_181637_744387_B3D5D622)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes checkpatch CHECK:comparison to NULL could be written "b".
+This is an API consolidation only. The use of kmalloc + memset to 0
+is equivalent to kzalloc.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/staging/wilc1000/linux_wlan_spi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 190243a..6111405 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -72,7 +72,7 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
- 	int ret;
- 	struct spi_message msg;
+Found by coccinelle script (relaxed version of
+scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
+
+Patch was compile tested with: x86_64_defconfig +
+CONFIG_RSI_91X=m
+
+Patch is against linux-next (localversion-next is -next-20151218)
+
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 8d110fd..697caab 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1023,7 +1023,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 		return -ENOMEM;
+ 	}
  
--	if (len > 0 && b != NULL) {
-+	if (len > 0 && b) {
- 		struct spi_transfer tr = {
- 			.tx_buf = b,
- 			.len = len,
+-	selected_rates = kmalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
++	selected_rates = kzalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
+ 	if (!selected_rates) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
+ 			__func__);
+@@ -1032,7 +1032,6 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	}
+ 
+ 	memset(skb->data, 0, sizeof(struct rsi_auto_rate));
+-	memset(selected_rates, 0, 2 * RSI_TBL_SZ);
+ 
+ 	auto_rate = (struct rsi_auto_rate *)skb->data;
+ 
 -- 
-1.9.1
+1.7.10.4
 
