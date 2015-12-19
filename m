@@ -1,63 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:57401 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387AbbLUQvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 11:51:42 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] wlcore: consolidate kmalloc + memset 0 into kzalloc
-Date: Mon, 21 Dec 2015 17:47:44 +0100
-Message-Id: <1450716464-20759-1-git-send-email-hofrat@osadl.org> (sfid-20151221_175202_496832_D5E49277)
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:33411 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753880AbbLSLMb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Dec 2015 06:12:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <20151219105919.GB3749@mwanda>
+References: <20151219105919.GB3749@mwanda>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sat, 19 Dec 2015 12:12:09 +0100
+Message-ID: <CAFBinCBqLVBmkx1b5xS-2YiSvD9LY_2yR3SAAR34jiTWeOV9gg@mail.gmail.com> (sfid-20151219_121238_387695_E8DA828E)
+Subject: Re: [patch -next] ath9k: fix ath9k_hw_nvram_check_version()
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an API consolidation only. The use of kmalloc + memset to 0
-is equivalent to kzalloc.
+On Sat, Dec 19, 2015 at 11:59 AM, Dan Carpenter
+<dan.carpenter@oracle.com> wrote:
+> There is a type bug so it always returns success.
+>
+> Fixes: 6fa658fd5ab2 ('ath9k: Simplify and fix eeprom endianness swapping')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
 
-Found by coccinelle script (relaxed version of
-scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
-
-Patch was compile tested with: x86_64_defconfig +
-CONFIG_WL12XX=m (implies CONFIG_WLCORE=m)
-
-Patch is against linux-next (localversion-next is -next-20151221)
-
- drivers/net/wireless/ti/wlcore/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index ec7f6af..dfc49bf 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -838,7 +838,7 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
- 
- 	wl1271_info("Reading FW panic log");
- 
--	block = kmalloc(wl->fw_mem_block_size, GFP_KERNEL);
-+	block = kzalloc(wl->fw_mem_block_size, GFP_KERNEL);
- 	if (!block)
- 		return;
- 
-@@ -885,7 +885,6 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
- 			goto out;
- 		}
- 
--		memset(block, 0, wl->fw_mem_block_size);
- 		ret = wlcore_read_hwaddr(wl, addr, block,
- 					wl->fw_mem_block_size, false);
- 
--- 
-2.1.4
-
+Thank you for finding and fixing this one!
