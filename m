@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36062 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932965AbbLPOQH (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36858 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932352AbbLTNZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 09:16:07 -0500
-Message-ID: <56717226.80000@candelatech.com> (sfid-20151216_151632_166254_73E65C0D)
-Date: Wed, 16 Dec 2015 06:16:06 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "me@bobcopeland.com >> Bob Copeland" <me@bobcopeland.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-References: <5670DA9A.4010102@candelatech.com> <20151216132113.GA4073@localhost> <567166D0.5090000@candelatech.com> <20151216135729.GB4073@localhost>
-In-Reply-To: <20151216135729.GB4073@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sun, 20 Dec 2015 08:25:55 -0500
+Received: by mail-pf0-f177.google.com with SMTP id o64so74234804pfb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 05:25:55 -0800 (PST)
+From: Fengwei Yin <fengwei.yin@linaro.org>
+To: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org, lking@qti.qualcomm.com
+Subject: [PATCH v3 2/2] wcn36xx: split DMA mask register writing.
+Date: Sun, 20 Dec 2015 21:20:41 +0800
+Message-Id: <1450617641-29531-3-git-send-email-fengwei.yin@linaro.org> (sfid-20151220_142558_747323_38AC8546)
+In-Reply-To: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
+References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2015 05:57 AM, me@bobcopeland.com >> Bob Copeland wrote:
-> On Wed, Dec 16, 2015 at 05:27:44AM -0800, Ben Greear wrote:
->>> Does this patch cause problems for your userspace implementation?
->>
->> Yes, because I coded with the assumptions that the radio addr had nothing
->> to do with the vif addr.
->
-> I see -- but looking back at wmediumd history (before I had anything to
-> do with it) it seems it always had the opposite assumption -- e.g. the
-> ATTR_ADDR_TRANSMITTER mac address was compared against addresses in the
-> frame for delivery decisions.
+Per comments from Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+split DMA mask register writing as seperate patch in case we need
+bi-sect in the furture.
 
-Even so, I think it is more important to keep the kernel API stable than
-to work around issues in relatively obscure user-space apps.
+Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-There could of course be more than just my app and wmediumd that uses
-the kernel API....
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 473381f..8643801 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -498,11 +498,11 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 			wcn36xx_rx_skb(wcn, skb);
+ 		} /* else keep old skb not submitted and use it for rx DMA */
+ 
+-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
+ 		dxe->ctrl = value;
+ 		ctl = ctl->next;
+ 		dxe = ctl->desc;
+ 	}
++	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
+ 
+ 	ch->head_blk_ctl = ctl;
+ 	return 0;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.4
 
