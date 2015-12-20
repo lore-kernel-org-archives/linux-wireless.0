@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60717 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:1229 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760195AbbLCMpb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 07:45:31 -0500
-Message-ID: <1449146726.31265.1.camel@sipsolutions.net> (sfid-20151203_134544_509442_ED9668C3)
-Subject: Re: iw ignores channel switch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reiner Karlsberg <karlsberg@softart-ge.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 03 Dec 2015 13:45:26 +0100
-In-Reply-To: <5660210D.4090303@softart-ge.com> (sfid-20151203_121928_609938_D1109D00)
-References: <5660210D.4090303@softart-ge.com>
-	 (sfid-20151203_121928_609938_D1109D00)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S933430AbbLTRvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 12:51:03 -0500
+Date: Sun, 20 Dec 2015 18:50:53 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Shikha Singh <shikha.singh@st.com>
+Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	raunaque.quaiser@st.com, manoj.kumar@st.com,
+	sylvain.fidelis@st.com, patrick.sohn@st.com,
+	MMS_MMY_Applications_SW@list.st.com
+Subject: Re: [[linux-nfc] PATCH v5 2/3] driver: nfc: Add ST95HF NFC
+ Transceiver support
+Message-ID: <20151220175053.GA4772@zurbaran.home> (sfid-20151220_185110_634609_9FE299A2)
+References: <1448019621-14259-1-git-send-email-shikha.singh@st.com>
+ <1448019621-14259-3-git-send-email-shikha.singh@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448019621-14259-3-git-send-email-shikha.singh@st.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-03 at 12:01 +0100, Reiner Karlsberg wrote:
-> 
->          Interface wlan0
->                  ifindex 21                         #steadily
-> increasing, not re-used ?
+Hi Singh,
 
-Correct. You'll eventually roll over after 2^32-1 ... this has nothing
-to do with wifi btw - look at ethernet devices :)
+This looks a lot better than the initial version.
+I only have one question:
 
-[snip irrelevant use of the station interface]
+On Fri, Nov 20, 2015 at 06:40:20AM -0500, Shikha Singh wrote:
+> +/*
+> + * st95hf_send_recv_cmd() is for sending commands to ST95HF
+> + * that are described in the cmd_array[]. It can optionally
+> + * receive the response if the cmd request is of type
+> + * SYNC. For that to happen caller must pass true to recv_res.
+> + * For ASYNC request, recv_res is ignored and the
+> + * function will never try to receive the response on behalf
+> + * of the caller.
+> + */
+> +static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
+> +				enum st95hf_cmd_list cmd,
+> +				int no_modif,
+> +				struct param_list *list_array,
+> +				bool recv_res)
+> +{
+> +	unsigned char spi_cmd_buffer[MAX_CMD_LEN];
+> +	int i, ret;
+> +	struct device *dev = &st95context->spicontext.spidev->dev;
+How do you know this driver is still valid at that point ?
+It seems to be a potential corner case against the driver's remove
+function, but it seems to be a race nevertheless.
 
-> root@OpenWrt:/tmp# iw dev wmon0 set channel 1
-
-Is 'wmon0' still up at that point? It should work then, not sure why it
-wouldn't, but it's certainly not an iw problem but more likely a kernel
-problem. Since openwrt also has a fair number of patches I'd ask you to
-please retest on a regular kernel first, or report the bug to them.
-
-johannes
+Cheers,
+Samuel.
