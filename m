@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9459 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:37052 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756857AbbLATOS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 14:14:18 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ben Ami, Golan" <golan.ben.ami@intel.com>
-Subject: Re: [PATCH 24/41] iwlwifi: mvm: move fw-dbg code to separate file
-Date: Tue, 1 Dec 2015 19:14:10 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E90714D@hasmsx107.ger.corp.intel.com> (sfid-20151201_201422_573083_92D687F1)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
- <1448963947-24302-24-git-send-email-emmanuel.grumbach@intel.com>
- <87r3j6gfws.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752149AbbLTRuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 12:50:40 -0500
+Date: Sun, 20 Dec 2015 18:50:36 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Saurabh Sengar <saurabh.truth@gmail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH] NFC: added the sysfs entry for nfcsim workqueue
+ delay
+Message-ID: <20151220175036.GA3938@zurbaran.home> (sfid-20151220_185100_123390_015DADC8)
+References: <1449993875-3872-1-git-send-email-saurabh.truth@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449993875-3872-1-git-send-email-saurabh.truth@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Saurabh,
+
+On Sun, Dec 13, 2015 at 01:34:35PM +0530, Saurabh Sengar wrote:
+> added the sysfs entry for nfcsim workqueue delay, as tx_delay
+> 
+> Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
+> ---
+> In case this TODO is not expected to be done, please let me know.
+> I wonder after my repeated attempts since last 50 days, I am not able to get a single response.
+Apologies for the delay.
 
 
-On 12/01/2015 08:53 PM, Kalle Valo wrote:
-> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->
->> From: Golan Ben-Ami <golan.ben.ami@intel.com>
->>
->> The fw debug functionality is big enough to warrant
->> a separate file. Move existing related functions to the new file.
->>
->> Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> [...]
->
->>  intc-scripts/publishable-files                     | 203 ++++++
-> Added by accident?
->
-Indeed... Thanks for catching this...
-Will re-spin...
+> Resending this patch in hope to get some response this time.
+> 
+>  drivers/nfc/nfcsim.c | 38 +++++++++++++++++++++++++++++++++++---
+>  1 file changed, 35 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
+> index 26ac9e5..e77be35 100644
+> --- a/drivers/nfc/nfcsim.c
+> +++ b/drivers/nfc/nfcsim.c
+> @@ -32,6 +32,8 @@
+>  #define NFCSIM_POLL_TARGET	2
+>  #define NFCSIM_POLL_DUAL	(NFCSIM_POLL_INITIATOR | NFCSIM_POLL_TARGET)
+>  
+> +#define TX_DEFAULT_DELAY	5
+> +
+>  struct nfcsim {
+>  	struct nfc_dev *nfc_dev;
+>  
+> @@ -62,12 +64,41 @@ static struct nfcsim *dev1;
+>  
+>  static struct workqueue_struct *wq;
+>  
+> +
+> +static int tx_delay = TX_DEFAULT_DELAY;
+2 things:
+
+- This actually defines an rx delay as it delays the start of the
+  receiving workqueue, so the name should be tx_*. I'm being picky here,
+  because with this special driver an Rx delay is implicitely a Tx
+  one.
+- I'd prefer this to be tunable by device, so it should be defined as an
+  additional field in the nfcsim structure (rx_delay ?) and set by default
+  to RX_DEFAULT_DELAY from nfcsim_init_dev.
+
+Cheers,
+Samuel.
