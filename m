@@ -1,79 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23966 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932684AbbLPOXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 09:23:40 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: mvm: protect RCU dereference in iwl_mvm_get_key_sta_id
-Date: Wed, 16 Dec 2015 16:23:37 +0200
-Message-Id: <1450275817-16938-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151216_152344_351915_02C88EB1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E91F275@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E91F275@hasmsx107.ger.corp.intel.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34599 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932352AbbLTNZw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 08:25:52 -0500
+Received: by mail-pa0-f44.google.com with SMTP id wq6so85376720pac.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 05:25:52 -0800 (PST)
+From: Fengwei Yin <fengwei.yin@linaro.org>
+To: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org, lking@qti.qualcomm.com
+Subject: [PATCH v3 1/2] wcn36xx: handle rx skb allocation failure to avoid system crash
+Date: Sun, 20 Dec 2015 21:20:40 +0800
+Message-Id: <1450617641-29531-2-git-send-email-fengwei.yin@linaro.org> (sfid-20151220_142555_767778_74F992FC)
+In-Reply-To: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
+References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Lawrence reported that git clone could make system crash on a
+Qualcomm ARM soc based device (DragonBoard, 1G memory without
+swap) running 64bit Debian.
 
-Properly protect the RCU dereference in iwl_mvm_get_key_sta_id() when
-coming from iwl_mvm_update_tkip_key() which cannot hold the mvm->mutex
-by moving the call into the RCU critical section.
-Modify the check to use rcu_dereference_check() to permit this.
+It's turned out the crash is related with rx skb allocation
+failure. git could consume more than 600MB anonymous memory.
+And system is in extremely memory shortage case.
 
-Fixes: 9513c5e18a0d ("iwlwifi: mvm: Avoid dereferencing sta if it was already flushed")
-Reported-by: Laura Abbott <labbott@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+But driver didn't handle the rx allocation failure case. This patch
+doesn't submit skb to upper layer if rx skb allocation fails.
+Instead, it reuse the old skb for rx DMA again. It's more like
+drop the packets if system is in memory shortage case.
+
+With this change, git clone is OOMed instead of system crash.
+
+Reported-by: King, Lawrence <lking@qti.qualcomm.com>
+Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/sta.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 43 +++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 354acbd..2b976b1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -1222,8 +1222,8 @@ static u8 iwl_mvm_get_key_sta_id(struct iwl_mvm *mvm,
- 	    mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
- 		u8 sta_id = mvmvif->ap_sta_id;
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index f8dfa05..473381f 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -474,36 +474,37 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 	struct wcn36xx_dxe_desc *dxe = ctl->desc;
+ 	dma_addr_t  dma_addr;
+ 	struct sk_buff *skb;
++	int ret = 0, int_mask;
++	u32 value;
++
++	if (ch->ch_type == WCN36XX_DXE_CH_RX_L) {
++		value = WCN36XX_DXE_CTRL_RX_L;
++		int_mask = WCN36XX_DXE_INT_CH1_MASK;
++	} else {
++		value = WCN36XX_DXE_CTRL_RX_H;
++		int_mask = WCN36XX_DXE_INT_CH3_MASK;
++	}
  
--		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
--						lockdep_is_held(&mvm->mutex));
-+		sta = rcu_dereference_check(mvm->fw_id_to_mac_id[sta_id],
-+					    lockdep_is_held(&mvm->mutex));
- 		/*
- 		 * It is possible that the 'sta' parameter is NULL,
- 		 * for example when a GTK is removed - the sta_id will then
-@@ -1590,14 +1590,15 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- 			     u16 *phase1key)
- {
- 	struct iwl_mvm_sta *mvm_sta;
--	u8 sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
-+	u8 sta_id;
- 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
- 
--	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
--		return;
+ 	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+ 		skb = ctl->skb;
+ 		dma_addr = dxe->dst_addr_l;
+-		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
 -
- 	rcu_read_lock();
+-		switch (ch->ch_type) {
+-		case WCN36XX_DXE_CH_RX_L:
+-			dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
+-			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+-						   WCN36XX_DXE_INT_CH1_MASK);
+-			break;
+-		case WCN36XX_DXE_CH_RX_H:
+-			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
+-			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+-						   WCN36XX_DXE_INT_CH3_MASK);
+-			break;
+-		default:
+-			wcn36xx_warn("Unknown channel\n");
+-		}
+-
+-		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
+-				 DMA_FROM_DEVICE);
+-		wcn36xx_rx_skb(wcn, skb);
++		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
++		if (0 == ret) {
++			/* new skb allocation ok. Use the new one and queue
++			 * the old one to network system.
++			 */
++			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
++					DMA_FROM_DEVICE);
++			wcn36xx_rx_skb(wcn, skb);
++		} /* else keep old skb not submitted and use it for rx DMA */
++
++		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
++		dxe->ctrl = value;
+ 		ctl = ctl->next;
+ 		dxe = ctl->desc;
+ 	}
  
-+	sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
-+	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
-+		goto unlock;
-+
- 	if (!sta) {
- 		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
- 		if (WARN_ON(IS_ERR_OR_NULL(sta))) {
-@@ -1609,6 +1610,8 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
- 			     iv32, phase1key, CMD_ASYNC, keyconf->hw_key_idx);
-+
-+ unlock:
- 	rcu_read_unlock();
+ 	ch->head_blk_ctl = ctl;
+-
+ 	return 0;
  }
  
 -- 
-2.5.0
+2.1.4
 
