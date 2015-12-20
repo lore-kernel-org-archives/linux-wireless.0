@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17912 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753527AbbLJMnV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 07:43:21 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 07/13] brcmfmac: no interface combination check for single interface
-Date: Thu, 10 Dec 2015 13:43:06 +0100
-Message-ID: <1449751392-32569-8-git-send-email-arend@broadcom.com> (sfid-20151210_134326_385285_64E0C2A5)
-In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:41167 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754261AbbLTLuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 06:50:04 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: fix PS-Poll handling
+Date: Sun, 20 Dec 2015 13:50:00 +0200
+Message-Id: <1450612200-6726-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151220_125009_721025_A65787C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface combinations are intended for use-case in which the driver
-handles multiple interface concurrently. This means that the combinations
-do not need to be checked when there is only a single interface active.
+My commit below broken PS-Poll handling. In case the driver
+has no frames buffered, driver_release_tids will be 0, but
+calling find_highest_prio_tid() with 0 as a parameter is
+not a good idea:
+fls(0) - 1 = -1.
+This bug caused mac80211 to think that frames were buffered
+in the driver which in turn was confused because mac80211
+was asking to release frames that were not reported to
+exist.
+On iwlwifi, this led to the WARNING below:
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+WARNING: CPU: 0 PID: 11230 at drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1733 iwl_mvm_sta_modify_sleep_tx_count+0x2af/0x320 [iwlmvm]()
+ffffffffc0627c60 ffff8800069b7648 ffffffff81888913 0000000000000000
+0000000000000000 ffff8800069b7688 ffffffff81089d6a ffff8800069b7678
+0000000000000001 ffff88003b35abf0 ffff88000698b128 ffff8800069b76d4
+Call Trace:
+[<ffffffff81888913>] dump_stack+0x4c/0x65
+[<ffffffff81089d6a>] warn_slowpath_common+0x8a/0xc0
+[<ffffffff81089e5a>] warn_slowpath_null+0x1a/0x20
+[<ffffffffc05f36bf>] iwl_mvm_sta_modify_sleep_tx_count+0x2af/0x320 [iwlmvm]
+[<ffffffffc05dae41>] iwl_mvm_mac_release_buffered_frames+0x31/0x40 [iwlmvm]
+[<ffffffffc045d8b6>] ieee80211_sta_ps_deliver_response+0x6e6/0xd80 [mac80211]
+[<ffffffffc0461296>] ieee80211_sta_ps_deliver_poll_response+0x26/0x30 [mac80211]
+[<ffffffffc048f743>] ieee80211_rx_handlers+0xa83/0x2900 [mac80211]
+[<ffffffffc04917ad>] ieee80211_prepare_and_rx_handle+0x1ed/0xa70 [mac80211]
+[<ffffffffc045e3d5>] ? sta_info_get_bss+0x5/0x4a0 [mac80211]
+[<ffffffffc04925b6>] ieee80211_rx_napi+0x586/0xcd0 [mac80211]
+[<ffffffffc05eaa3e>] iwl_mvm_rx_rx_mpdu+0x59e/0xc60 [iwlmvm]
+
+Fixes: 0ead2510f8ce ("mac80211: allow the driver to send EOSP when needed")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ net/mac80211/sta_info.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 8557566..3ac5cf7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -396,15 +396,23 @@ static int brcmf_vif_change_validate(struct brcmf_cfg80211_info *cfg,
- {
- 	int iftype_num[NUM_NL80211_IFTYPES];
- 	struct brcmf_cfg80211_vif *pos;
-+	bool check_combos = false;
-+	int ret = 0;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index b346544..8ea94d3 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1563,7 +1563,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
  
- 	memset(&iftype_num[0], 0, sizeof(iftype_num));
- 	list_for_each_entry(pos, &cfg->vif_list, list)
--		if (pos == vif)
-+		if (pos == vif) {
- 			iftype_num[new_type]++;
--		else
-+		} else {
-+			/* concurrent interfaces so need check combinations */
-+			check_combos = true;
- 			iftype_num[pos->wdev.iftype]++;
-+		}
+ 	more_data = ieee80211_sta_ps_more_data(sta, ignored_acs, reason, driver_release_tids);
  
--	return cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
-+	if (check_combos)
-+		ret = cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
-+
-+	return ret;
- }
+-	if (reason == IEEE80211_FRAME_RELEASE_PSPOLL)
++	if (driver_release_tids && reason == IEEE80211_FRAME_RELEASE_PSPOLL)
+ 		driver_release_tids =
+ 			BIT(find_highest_prio_tid(driver_release_tids));
  
- static int brcmf_vif_add_validate(struct brcmf_cfg80211_info *cfg,
 -- 
-1.9.1
+2.5.0
 
