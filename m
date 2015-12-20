@@ -1,147 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19098 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:21302 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756055AbbLAJ7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/41] iwlwifi: clean up transport debugfs handling
-Date: Tue,  1 Dec 2015 11:58:52 +0200
-Message-Id: <1448963947-24302-26-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110302_509786_DE6A859E)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+	id S1754304AbbLTLwT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 06:52:19 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: fix PS-Poll handling
+Date: Sun, 20 Dec 2015 11:52:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E942E91@hasmsx107.ger.corp.intel.com> (sfid-20151220_125221_839272_148BD137)
+References: <1450612200-6726-1-git-send-email-emmanuel.grumbach@intel.com>
+In-Reply-To: <1450612200-6726-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> 
+> My commit below broken PS-Poll handling. In case the driver
+> has no frames buffered, driver_release_tids will be 0, but
+> calling find_highest_prio_tid() with 0 as a parameter is
+> not a good idea:
+> fls(0) - 1 = -1.
+> This bug caused mac80211 to think that frames were buffered
+> in the driver which in turn was confused because mac80211
+> was asking to release frames that were not reported to
+> exist.
+> On iwlwifi, this led to the WARNING below:
+> 
+> WARNING: CPU: 0 PID: 11230 at
+> drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1733
+> iwl_mvm_sta_modify_sleep_tx_count+0x2af/0x320 [iwlmvm]()
+> ffffffffc0627c60 ffff8800069b7648 ffffffff81888913 0000000000000000
+> 0000000000000000 ffff8800069b7688 ffffffff81089d6a ffff8800069b7678
+> 0000000000000001 ffff88003b35abf0 ffff88000698b128 ffff8800069b76d4
+> Call Trace:
+> [<ffffffff81888913>] dump_stack+0x4c/0x65
+> [<ffffffff81089d6a>] warn_slowpath_common+0x8a/0xc0
+> [<ffffffff81089e5a>] warn_slowpath_null+0x1a/0x20
+> [<ffffffffc05f36bf>] iwl_mvm_sta_modify_sleep_tx_count+0x2af/0x320
+> [iwlmvm]
+> [<ffffffffc05dae41>] iwl_mvm_mac_release_buffered_frames+0x31/0x40
+> [iwlmvm]
+> [<ffffffffc045d8b6>] ieee80211_sta_ps_deliver_response+0x6e6/0xd80
+> [mac80211]
+> [<ffffffffc0461296>] ieee80211_sta_ps_deliver_poll_response+0x26/0x30
+> [mac80211]
+> [<ffffffffc048f743>] ieee80211_rx_handlers+0xa83/0x2900 [mac80211]
+> [<ffffffffc04917ad>] ieee80211_prepare_and_rx_handle+0x1ed/0xa70
+> [mac80211]
+> [<ffffffffc045e3d5>] ? sta_info_get_bss+0x5/0x4a0 [mac80211]
+> [<ffffffffc04925b6>] ieee80211_rx_napi+0x586/0xcd0 [mac80211]
+> [<ffffffffc05eaa3e>] iwl_mvm_rx_rx_mpdu+0x59e/0xc60 [iwlmvm]
+> 
+> Fixes: 0ead2510f8ce ("mac80211: allow the driver to send EOSP when
+> needed")
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  net/mac80211/sta_info.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index b346544..8ea94d3 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -1563,7 +1563,7 @@ ieee80211_sta_ps_deliver_response(struct
+> sta_info *sta,
+> 
+>  	more_data = ieee80211_sta_ps_more_data(sta, ignored_acs,
+> reason, driver_release_tids);
+> 
+> -	if (reason == IEEE80211_FRAME_RELEASE_PSPOLL)
+> +	if (driver_release_tids && reason ==
+> IEEE80211_FRAME_RELEASE_PSPOLL)
+>  		driver_release_tids =
+>  			BIT(find_highest_prio_tid(driver_release_tids));
+> 
 
-Transport code currently calls itself through the transport ops,
-which is quite pointless. Clean up all of this. While at it,
-remove the unnecessary dir argument and the redundant IDI code.
-
-In slave transports, call both the common slave debugfs and the
-transport's own. SDIO has no files, so remove it all there.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  9 ---------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  9 +++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 18 ++++--------------
- 4 files changed, 14 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 607f4f7..3d089ae 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -542,8 +542,6 @@ struct iwl_trans_txq_scd_cfg {
-  * @wait_tx_queue_empty: wait until tx queues are empty. May sleep.
-  * @freeze_txq_timer: prevents the timer of the queue from firing until the
-  *	queue is set to awake. Must be atomic.
-- * @dbgfs_register: add the dbgfs files under this directory. Files will be
-- *	automatically deleted.
-  * @write8: write a u8 to a register at offset ofs from the BAR
-  * @write32: write a u32 to a register at offset ofs from the BAR
-  * @read32: read a u32 register at offset ofs from the BAR
-@@ -599,7 +597,6 @@ struct iwl_trans_ops {
- 	void (*txq_disable)(struct iwl_trans *trans, int queue,
- 			    bool configure_scd);
- 
--	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
- 	int (*wait_tx_queue_empty)(struct iwl_trans *trans, u32 txq_bm);
- 	void (*freeze_txq_timer)(struct iwl_trans *trans, unsigned long txqs,
- 				 bool freeze);
-@@ -1022,12 +1019,6 @@ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
- 	return trans->ops->wait_tx_queue_empty(trans, txqs);
- }
- 
--static inline int iwl_trans_dbgfs_register(struct iwl_trans *trans,
--					   struct dentry *dir)
--{
--	return trans->ops->dbgfs_register(trans, dir);
--}
--
- static inline void iwl_trans_write8(struct iwl_trans *trans, u32 ofs, u8 val)
- {
- 	trans->ops->write8(trans, ofs, val);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 639761f..a52710f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -598,7 +598,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	set_dflt_pwr_limit(iwl_trans, pdev);
- 
- 	/* register transport layer debugfs here */
--	ret = iwl_trans_dbgfs_register(iwl_trans, iwl_trans->dbgfs_dir);
-+	ret = iwl_trans_pcie_dbgfs_register(iwl_trans);
- 	if (ret)
- 		goto out_free_drv;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index bf41543..44dc09d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -569,4 +569,13 @@ static inline void __iwl_trans_pcie_set_bit(struct iwl_trans *trans,
- 
- void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
- 
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
-+#else
-+static inline int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
-+{
-+	return 0;
-+}
-+#endif
-+
- #endif /* __iwl_trans_int_pcie_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 50614e4d..efef487 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2107,13 +2107,11 @@ DEBUGFS_READ_FILE_OPS(rx_queue);
- DEBUGFS_READ_FILE_OPS(tx_queue);
- DEBUGFS_WRITE_FILE_OPS(csr);
- 
--/*
-- * Create the debugfs files and directories
-- *
-- */
--static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
--					 struct dentry *dir)
-+/* Create the debugfs files and directories */
-+int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
- {
-+	struct dentry *dir = trans->dbgfs_dir;
-+
- 	DEBUGFS_ADD_FILE(rx_queue, dir, S_IRUSR);
- 	DEBUGFS_ADD_FILE(tx_queue, dir, S_IRUSR);
- 	DEBUGFS_ADD_FILE(interrupt, dir, S_IWUSR | S_IRUSR);
-@@ -2125,12 +2123,6 @@ err:
- 	IWL_ERR(trans, "failed to create the trans debugfs entry\n");
- 	return -ENOMEM;
- }
--#else
--static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
--					 struct dentry *dir)
--{
--	return 0;
--}
- #endif /*CONFIG_IWLWIFI_DEBUGFS */
- 
- static u32 iwl_trans_pcie_get_cmdlen(struct iwl_tfd *tfd)
-@@ -2473,8 +2465,6 @@ static const struct iwl_trans_ops trans_ops_pcie = {
- 	.txq_disable = iwl_trans_pcie_txq_disable,
- 	.txq_enable = iwl_trans_pcie_txq_enable,
- 
--	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
--
- 	.wait_tx_queue_empty = iwl_trans_pcie_wait_txq_empty,
- 	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
- 
--- 
-2.5.0
-
+Maybe it'd be cleaner to move all this into the else branch a bit lower in the code. Don't know. A matter of taste a guess.
