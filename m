@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:34677 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbbLTVrJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 16:47:09 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-Subject: [PATCH] staging: wilc1000: fix double mutex_unlock on failure path in wilc_wlan_cleanup()
-Date: Mon, 21 Dec 2015 00:46:51 +0300
-Message-Id: <1450648011-1381-1-git-send-email-khoroshilov@ispras.ru> (sfid-20151220_224836_720113_D8A46B70)
-In-Reply-To: <20151218225010.GA26812@kroah.com>
-References: <20151218225010.GA26812@kroah.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33679 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbbLTNZt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2015 08:25:49 -0500
+Received: by mail-pa0-f45.google.com with SMTP id cy9so3381678pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 05:25:49 -0800 (PST)
+From: Fengwei Yin <fengwei.yin@linaro.org>
+To: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
+Cc: fengwei.yin@linaro.org, lking@qti.qualcomm.com
+Subject: [PATCH v3 0/2] wcn36xx: fix crash because rx skb allocation failure
+Date: Sun, 20 Dec 2015 21:20:39 +0800
+Message-Id: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org> (sfid-20151220_142553_521403_B0013885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
-it calls release_bus() and continues execution. But it leads to double
-release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
+The current wcn36xx driver didn't handle rx skb allocation failure case.
+It only could be triggered when system is in extremly memory shortage
+case. King Lawrence <lking@qti.qualcomm.com> hit it by git clone linux
+kernel tree on DragonBoard <1>.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+The fixing is not to submit the old rx skb to network upper layer and 
+reuse it as rx DMA buffer again.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Changes from v2:
+ * Remove the ugly macro introduced in v2 per comment from Julian Calaby.
+ * Seperate the DMA int mask register writing as one patch per comment
+   from Bjorn Andersson.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index a73e99f..4b7c8e9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1459,15 +1459,16 @@ void wilc_wlan_cleanup(struct net_device *dev)
- 	ret = p->hif_func.hif_read_reg(wilc, WILC_GP_REG_0, &reg);
- 	if (!ret) {
- 		PRINT_ER("Error while reading reg\n");
--		release_bus(wilc, RELEASE_ALLOW_SLEEP);
-+		goto _unlock;
- 	}
- 	PRINT_ER("Writing ABORT reg\n");
- 	ret = p->hif_func.hif_write_reg(wilc, WILC_GP_REG_0,
- 					(reg | ABORT_INT));
- 	if (!ret) {
- 		PRINT_ER("Error while writing reg\n");
--		release_bus(wilc, RELEASE_ALLOW_SLEEP);
-+		goto _unlock;
- 	}
-+_unlock:
- 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
- 	p->hif_func.hif_deinit(NULL);
- }
+Changes from v1:
+ * Move switch block out of while loop.
+ * Remove the warning of unknown channel because we didn't deal with it.
+
+Fengwei Yin (2):
+  wcn36xx: handle rx skb allocation failure to avoid system crash
+  wcn36xx: split DMA mask register writing.
+
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 43 +++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 21 deletions(-)
+
 -- 
-1.9.1
+2.1.4
 
