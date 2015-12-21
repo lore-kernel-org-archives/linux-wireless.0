@@ -1,116 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:34793 "EHLO
-	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbbLCSLY convert rfc822-to-8bit (ORCPT
+Received: from mail-yk0-f196.google.com ([209.85.160.196]:35850 "EHLO
+	mail-yk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbbLUUxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 13:11:24 -0500
-Received: by vkbs1 with SMTP id s1so50594292vkb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2015 10:11:23 -0800 (PST)
+	Mon, 21 Dec 2015 15:53:49 -0500
+Received: by mail-yk0-f196.google.com with SMTP id v6so13449623ykc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 12:53:49 -0800 (PST)
+Subject: Re: Panic in rtl8192ee on 4.2 kernel (Ubuntu 15.10)
+To: Rich <rercola@acm.jhu.edu>, linux-wireless@vger.kernel.org
+References: <CAOeNLurbw9SG6Zr1tWNfYiqg-_H0NO=7ypR26+jWJmb4Yi=jaA@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <567866DA.9080006@lwfinger.net> (sfid-20151221_220059_296757_761B0CBA)
+Date: Mon, 21 Dec 2015 14:53:46 -0600
 MIME-Version: 1.0
-From: Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>
-Date: Thu, 3 Dec 2015 10:10:44 -0800
-Message-ID: <CAF7g2REe-gFm9y2SsXz5nSn9ofHevNkr80YNV720W+XB815qsA@mail.gmail.com> (sfid-20151203_191128_985317_FC221722)
-Subject: iw set txpower error
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAOeNLurbw9SG6Zr1tWNfYiqg-_H0NO=7ypR26+jWJmb4Yi=jaA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 12/19/2015 08:29 PM, Rich wrote:
+> Hi all,
+> (Apologies if this is the wrong place, but [1] said I should send my
+> report here.)
+>
+> I've got a Lenovo ThinkPad T440 running Ubuntu 15.10 here, and under
+> load, the rtl8192ee wireless driver will panic after a few minutes.
+>
+> The kernel is the Ubuntu 4.2.0-22-generic amd64 kernel.
+>
+> I went looking for the current equivalent of what was formerly
+> compat-drivers/linux-backports-modules/compat-wireless, and will try
+> the new location for wireless-testing next, but wanted to forward on
+> the panic while doing so.
+>
+> The lspci -v entry for the card:
+> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8192EE
+> PCIe Wireless Network Adapter
+> Subsystem: Realtek Semiconductor Co., Ltd. Device 001b
+> Flags: bus master, fast devsel, latency 0, IRQ 48
+> I/O ports at 3000 [size=256]
+> Memory at f0400000 (64-bit, non-prefetchable) [size=16K]
+> Capabilities: [40] Power Management version 3
+> Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> Capabilities: [70] Express Endpoint, MSI 00
+> Capabilities: [100] Advanced Error Reporting
+> Capabilities: [140] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+> Capabilities: [150] Latency Tolerance Reporting
+> Capabilities: [158] L1 PM Substates
+> Kernel driver in use: rtl8192ee
+>
+> The panic:
+> BUG: unable to handle kernel NULL pointer dereference at           (null)
+> IP: [<ffffffffc058a0cf>] rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+> PGD 0
+> Oops: 0000 [#1] SMP
+> Modules linked in: rfcomm drbg ansi_cprng ctr ccm bnep nls_iso8859_1
+> intel_rapl iosf_mbi x86_pkg_temp_thermal arc4 intel_powerclamp
+> rtl8192ee btcoexist coretemp rtl_pci rtlwifi kvm_intel kvm mac80211
+> btusb cfg80211 uvcvideo snd_hda_codec_hdmi btrtl btbcm btintel
+> crct10dif_pclmul crc32_pclmul videobuf2_vmalloc videobuf2_memops
+> videobuf2_core v4l2_common snd_hda_codec_realtek snd_hda_codec_generic
+> bluetooth snd_hda_intel videodev snd_hda_codec rtsx_pci_ms media
+> aesni_intel snd_hda_core thinkpad_acpi memstick aes_x86_64 lrw
+> gf128mul glue_helper nvram snd_seq_midi snd_hwdep snd_seq_midi_event
+> snd_rawmidi snd_pcm snd_seq ablk_helper snd_seq_device cryptd
+> snd_timer snd input_leds soundcore joydev shpchp mei_me mei serio_raw
+> lpc_ich mac_hid intel_smartconnect efi_pstore parport_pc ppdev lp
+> parport
+> CPU: 2 PID: 0 Comm: swapper/2 Tainted: G        W
+> 4.2.0-21-generic #25-Ubuntu
+> Hardware name: LENOVO 20B6CTO1WW/20B6CTO1WW, BIOS GJET64WW (2.14 ) 11/12/2013
+> task: ffff880119c9b700 ti: ffff880119cb0000 task.ti: ffff880119cb0000
+> RIP: 0010:[<ffffffffc058a0cf>]  [<ffffffffc058a0cf>]
+> rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+> RSP: 0018:ffff88011f283508  EFLAGS: 00010046
+> RAX: ffffffffc058cf60 RBX: 0000000000000000 RCX: 0000000000000007
+> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800d56306a0
+> RBP: ffff88011f283560 R08: ffff88011f283524 R09: 0000160000000000
+> R10: ffffea0001993380 R11: 0000000000000000 R12: ffff8800d56306a0
+> R13: 0000000000000195 R14: ffff880086713100 R15: ffff8800d5631440
+> FS:  0000000000000000(0000) GS:ffff88011f280000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000000 CR3: 0000000002c0c000 CR4: 00000000001406e0
+> Stack:
+>   ffffffffc054afbf ffff8800664cee00 0000000000000000 d32dc04001283560
+>   fdf6cd13473e1849 ffff8800b770cf00 0000000000000000 ffff880086713100
+>   ffff8800d56306a0 ffff880086713100 ffff8800d5631440 ffff88011f283760
+> Call Trace:
+>   <IRQ>
+>   [<ffffffffc054afbf>] ? _rtl_pci_init_one_rxdesc+0x1df/0x240 [rtl_pci]
+>   [<ffffffffc054d3a3>] _rtl_pci_rx_interrupt+0x4f3/0x790 [rtl_pci]
+>   [<ffffffffc054d819>] _rtl_pci_interrupt+0x1d9/0x3b1 [rtl_pci]
+>   [<ffffffff810d4204>] handle_irq_event_percpu+0x74/0x180
+>   [<ffffffff810d4359>] handle_irq_event+0x49/0x70
+>   [<ffffffff810d76d1>] handle_edge_irq+0x81/0x150
+>   [<ffffffff810172b5>] handle_irq+0x25/0x40
+>   [<ffffffff817f2e2f>] do_IRQ+0x4f/0xe0
+>   [<ffffffff817f0dab>] common_interrupt+0x6b/0x6b
+>   [<ffffffff81731dc1>] ? tcp_parse_md5sig_option+0x11/0x70
+>   [<ffffffff8174606c>] tcp_v4_rcv+0x76c/0xa70
+>   [<ffffffff810d42ac>] ? handle_irq_event_percpu+0x11c/0x180
+>   [<ffffffff8171fe14>] ip_local_deliver_finish+0xa4/0x1f0
+>   [<ffffffff817200e5>] ip_local_deliver+0x55/0xc0
+>   [<ffffffff81745899>] ? tcp_v4_early_demux+0x109/0x170
+>   [<ffffffff8171fab1>] ip_rcv_finish+0x81/0x340
+>   [<ffffffff817f0dab>] ? common_interrupt+0x6b/0x6b
+>   [<ffffffff817203f2>] ip_rcv+0x2a2/0x3d0
+>   [<ffffffff817ce6d3>] ? packet_rcv+0x43/0x400
+>   [<ffffffff816e4145>] __netif_receive_skb_core+0x725/0xa00
+>   [<ffffffff8107fadb>] ? irq_exit+0x6b/0xb0
+>   [<ffffffff816e4438>] __netif_receive_skb+0x18/0x60
+>   [<ffffffff816e44b2>] netif_receive_skb_internal+0x32/0xa0
+>   [<ffffffff816e453c>] netif_receive_skb_sk+0x1c/0x60
+>   [<ffffffffc0665f4f>] ieee80211_deliver_skb+0x11f/0x1b0 [mac80211]
+>   [<ffffffffc066817b>] ieee80211_rx_handlers+0xd3b/0x2460 [mac80211]
+>   [<ffffffff810d4364>] ? handle_irq_event+0x54/0x70
+>   [<ffffffff810d76d1>] ? handle_edge_irq+0x81/0x150
+>   [<ffffffffc0669a54>] ieee80211_prepare_and_rx_handle+0x1b4/0xa90 [mac80211]
+>   [<ffffffff8107fadb>] ? irq_exit+0x6b/0xb0
+>   [<ffffffff817f0dab>] ? common_interrupt+0x6b/0x6b
+>   [<ffffffffc066a618>] ieee80211_rx+0x2e8/0x8b0 [mac80211]
+>   [<ffffffffc0642153>] ieee80211_tasklet_handler+0xc3/0xd0 [mac80211]
+>   [<ffffffff8107f1af>] tasklet_action+0xdf/0x100
+>   [<ffffffff8107f846>] __do_softirq+0xf6/0x250
+>   [<ffffffff8107fb13>] irq_exit+0xa3/0xb0
+>   [<ffffffff817f2e38>] do_IRQ+0x58/0xe0
+>   [<ffffffff817f0dab>] common_interrupt+0x6b/0x6b
+>   <EOI>
+>   [<ffffffff810bd473>] ? call_cpuidle+0x33/0x60
+>   [<ffffffff810bd708>] ? cpu_startup_entry+0x268/0x320
+>   [<ffffffff8104d3d3>] start_secondary+0x183/0x1c0
+> Code: 00 84 d2 74 14 84 c9 74 37 80 f9 02 0f 85 79 01 00 00 41 8b 00
+> 89 46 30 c3 80 f9 06 0f 84 6b 01 00 00 80 f9 07 0f 85 60 01 00 00 <8b>
+> 06 25 00 40 00 80 0d 18 20 00 00 89 06 41 8b 00 89 46 04 c3
+> RIP  [<ffffffffc058a0cf>] rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+>   RSP <ffff88011f283508>
+> CR2: 0000000000000000
+>
+> I've got a vmcore from kdump weighing in at about 100 MB if that would
+> be useful to someone.
+>
+> Please let me know if there's anything else of use I can contribute;
+> I'm going to go try poking around in the source after I confirm that
+> wireless-testing doesn't help with this, but thought I'd report it,
+> since I could only find one other report of someone encountering a
+> similar panic [2].
+>
+> Thanks,
+> - Rich Ercolani
+>
+> PS: Please CC me on any replies, as I'm not on linux-wireless.
+>
+> [1] - https://wireless.wiki.kernel.org/en/users/Documentation/Reporting_bugs
+> [2] - https://bugs.launchpad.net/ubuntu/+source/ubuntu-release-upgrader/+bug/1527603
 
-I’m trying to change txpower with iw. Using AR9580 HW + ath9k driver
-with Kernel 4.1.6.
+Unfortunately, no one brought the panic in your [2] reference to my attention, 
+and I do not routinely peruse the bugzillas for Ubuntu. I am not running Ubuntu, 
+and the live version of 15.10 does not contain debugging symbols.
 
-The call fails in mac80211 with the following error: "Failed
-check-sdata-in-driver check, flags: 0x0".
-stack:
----------------------------------  start stack
-----------------------------------------
-[44387.506210] WARNING: CPU: 2 PID: 19731 at
-net/mac80211/driver-ops.h:12
-ieee80211_bss_info_change_notify+0x1d2/0x1e0 [mac80211]()
-[44387.506211] wlp2s0:  Failed check-sdata-in-driver check, flags: 0x0
-[44387.506212] Modules linked in: ath9k(OE) ath9k_common(OE)
-ath9k_hw(OE) ath(OE) mac80211 cfg80211 rfkill nfsv3 rpcsec_gss_krb5
-nfsv4 dns_resolver nfs fscache xt_CHECKSUM iptable_mangle xt_conntrack
-ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4
-nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype tun br_netfilter nf_nat
-nf_conntrack bridge stp llc dm_thin_pool dm_persistent_data
-dm_bio_prison libcrc32c loop arc4 intel_rapl iosf_mbi
-x86_pkg_temp_thermal coretemp kvm_intel kvm snd_hda_codec_hdmi
-snd_hda_codec_realtek snd_hda_codec_generic crct10dif_pclmul
-snd_soc_rt5640 snd_hda_intel crc32_pclmul snd_soc_rl6231
-snd_hda_controller crc32c_intel snd_soc_core snd_hda_codec
-ghash_clmulni_intel snd_hda_core snd_compress snd_pcm_dmaengine
-snd_hwdep snd_seq iTCO_wdt iTCO_vendor_support snd_seq_device
-[44387.506241]  ir_lirc_codec lirc_dev ir_xmp_decoder
-ir_mce_kbd_decoder ir_sharp_decoder ir_sanyo_decoder ir_sony_decoder
-ir_jvc_decoder ir_nec_decoder ir_rc6_decoder ir_rc5_decoder rc_rc6_mce
-snd_pcm nuvoton_cir tpm_tis dw_dmac i2c_hid regmap_i2c tpm rc_core
-dw_dmac_core snd_timer i2c_designware_platform i2c_i801
-i2c_designware_core snd_soc_sst_acpi snd lpc_ich soundcore shpchp
-mfd_core nfsd auth_rpcgss nfs_acl lockd grace sunrpc i915 i2c_algo_bit
-drm_kms_helper e1000e drm ptp pps_core sdhci_acpi sdhci mmc_core video
-[last unloaded: rfkill]
-[44387.506264] CPU: 2 PID: 19731 Comm: iwconfig Tainted: G        W
-OE   4.1.6-100.fc21.x86_64 #1
-WYLPT10H.86A.0035.2015.0126.1814 01/26/2015
-[44387.506267]  0000000000000000 00000000a8ea5b62 ffff8800942cbb58
-ffffffff817940d5
-[44387.506269]  0000000000000000 ffff8800942cbbb0 ffff8800942cbb98
-ffffffff810a163a
-[44387.506270]  ffff8800942cbc20 ffff8800d49b2840 0000000000000001
-ffff8801c92c86a0
-[44387.506272] Call Trace:
-[44387.506278]  [<ffffffff817940d5>] dump_stack+0x45/0x57
-[44387.506281]  [<ffffffff810a163a>] warn_slowpath_common+0x8a/0xc0
-[44387.506283]  [<ffffffff810a16c5>] warn_slowpath_fmt+0x55/0x70
-[44387.506286]  [<ffffffff8177f3e0>] ? iw_handler_get_private+0x70/0x70
-[44387.506293]  [<ffffffffa095fe32>]
-ieee80211_bss_info_change_notify+0x1d2/0x1e0 [mac80211]
-[44387.506300]  [<ffffffffa0975005>]
-ieee80211_recalc_txpower+0x35/0x40 [mac80211]
-[44387.506309]  [<ffffffffa097d08c>] ieee80211_set_tx_power+0x4c/0x1b0
-[mac80211]
-[44387.506320]  [<ffffffffa075684f>]
-cfg80211_wext_siwtxpower+0x9f/0x1c0 [cfg80211]
-[44387.506334]  [<ffffffff8177e672>] ioctl_standard_call+0x52/0xe0
-[44387.506336]  [<ffffffff8177f3e0>] ? iw_handler_get_private+0x70/0x70
-[44387.506340]  [<ffffffff8177e620>] ? ioctl_standard_iw_point+0x390/0x390
-[44387.506342]  [<ffffffff8177dcae>] wireless_process_ioctl+0x17e/0x1d0
-[44387.506345]  [<ffffffff8177e918>] wext_handle_ioctl+0x78/0xe0
-[44387.506348]  [<ffffffff81693443>] dev_ioctl+0x2c3/0x5d0
-[44387.506353]  [<ffffffff811dd8df>] ? handle_mm_fault+0x117f/0x17f0
-[44387.506356]  [<ffffffff8166045c>] ? sk_prot_alloc+0xdc/0x180
-[44387.506359]  [<ffffffff8165b472>] sock_ioctl+0x132/0x2c0
-[44387.506362]  [<ffffffff81241e9e>] ? __d_instantiate+0x9e/0x100
-[44387.506365]  [<ffffffff8123d398>] do_vfs_ioctl+0x2f8/0x500
-[44387.506369]  [<ffffffff81068cc1>] ? __do_page_fault+0x1c1/0x450
-[44387.506372]  [<ffffffff8123d621>] SyS_ioctl+0x81/0xa0
-[44387.506375]  [<ffffffff81068f7f>] ? do_page_fault+0x2f/0x80
-[44387.506378]  [<ffffffff8179a9ae>] system_call_fastpath+0x12/0x71
-[44387.506380] ---[ end trace de552a3121eef335 ]---
---------------------------------------- end stack
------------------------------------------------------------
+When I try to use the addresses reported in your traceback on my kernel, the 
+location is in a place that rtl8192ee should never reach. To be certain that we 
+are comparing the same code, please clone the repo at 
+http://github.com/lwfinger/rtlwifi_new.git. After cloning, change directory to 
+rtlwifi_new, run "make" and "sudo make install". You will need to have the 
+kernel headers installed for the make step to work.
 
-The call in driver-ops.h:check_sdata_in_driver() fails:
+If you get the panic again, please post the new dump. That will let me see if 
+the code is really going to the wrong place, or it that is some kind of 
+artifact. In the meantime, I will test the code here. I think this device is 
+fairly rare, and it is possible that it has not been widely used.
 
-static inline bool check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
-{
-                return !WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
-                                     "%s:  Failed
-check-sdata-in-driver check, flags: 0x%x\n",
-                                     sdata->dev ? sdata->dev->name :
-sdata->name, sdata->flags);
-}
+Larry
 
-AFAIU, this should not happen.
-ath9k_add_interface is being called before trying to set txpower. I verified it.
-When ath9k_add_interface returns, driver-ops.h:drv_add_interface()
-should set SDATA_IN_DRIVER flag.
 
-Any idea why the sdata->flags would still show up with 0x0 in the
-above function ?
 
-Thank you,
-Kobi
+
