@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33670 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbbL3MQm (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:35850 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbbLUSjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:42 -0500
-Received: by mail-pa0-f48.google.com with SMTP id cy9so138011760pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:41 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 17/20] staging: wilc1000: fix return type of host_int_get_ipaddress
-Date: Wed, 30 Dec 2015 21:15:41 +0900
-Message-Id: <1451477744-11975-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132247_448434_E821B6CC)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Dec 2015 13:39:49 -0500
+Received: by mail-lf0-f54.google.com with SMTP id z124so111323630lfa.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 10:39:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJL_dMuDXMQYRpDAk9FOnTeA+4vsQARw8028DRrmKeRNeLQzug@mail.gmail.com>
+References: <CAJL_dMuDXMQYRpDAk9FOnTeA+4vsQARw8028DRrmKeRNeLQzug@mail.gmail.com>
+Date: Mon, 21 Dec 2015 20:39:47 +0200
+Message-ID: <CAJL_dMuszBL9DsbEyy1kMyRSBxQMTz1cQDhA0yCW6660a5EkYA@mail.gmail.com> (sfid-20151221_193952_115274_11B70541)
+Subject: Re: Mediatek wifi
+From: Anca Emanuel <anca.emanuel@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of host_int_get_ipaddress from s32 to
-int. The result variable gets return value from wilc_mq_send that has
-data type of int. It should be changed return type of this function as
-well as data type of result variable.
+Sorry, 's/usb/pci'
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 90fdbdd..a203647 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -362,7 +362,7 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
- 	return result;
- }
- 
--static s32 host_int_get_ipaddress(struct wilc_vif *vif,
-+static int host_int_get_ipaddress(struct wilc_vif *vif,
- 				  struct host_if_drv *hif_drv,
- 				  u8 *u16ipadd, u8 idx);
- 
-@@ -4664,11 +4664,11 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 	return result;
- }
- 
--static s32 host_int_get_ipaddress(struct wilc_vif *vif,
-+static int host_int_get_ipaddress(struct wilc_vif *vif,
- 				  struct host_if_drv *hif_drv,
- 				  u8 *u16ipadd, u8 idx)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 
- 	if (!hif_drv) {
--- 
-2.6.4
-
+On Mon, Dec 21, 2015 at 2:09 PM, Anca Emanuel <anca.emanuel@gmail.com> wrote:
+> Hi Linus Walleij, and everyone interested.
+>
+> http://askubuntu.com/questions/676390/no-wi-fi-on-ubuntu-14-04-lts-asus-notebook-with-mediatek-mt7630e
+>
+> Here is the bug report:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220146
+>
+> https://github.com/neurobin/MT7630E is reported to work for wifi.
+>
+> Maybe it works to add usb ids to
+> https://github.com/torvalds/linux/tree/master/drivers/net/wireless/rt2x00
+> and firmware.
