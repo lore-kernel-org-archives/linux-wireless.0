@@ -1,256 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39803 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750945AbbL3OpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 09:45:24 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBUEjFvG028706
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:23 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 203nme3wj7-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:23 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/3] mwifiex: fix misleading firmware download messages
-Date: Wed, 30 Dec 2015 06:43:07 -0800
-Message-ID: <1451486589-15010-1-git-send-email-akarwar@marvell.com> (sfid-20151230_154531_107700_B85B1293)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751966AbbLUUwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:24 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/45] iwlwifi: mvm: support description for user triggered fw dbg collection
+Date: Mon, 21 Dec 2015 22:50:33 +0200
+Message-Id: <1450731046-2796-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215231_350473_3CA6A29F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-mwifiex_check_fw_status() checks firmware status and also
-check if WLAN is the winner for firmware downloading.
+Add to the user triggered fw debug collection support for describing
+the reason of the trigger.
+This could be useful for identifying a dump by a unique id, passed as
+a description.
 
-Once we detect that other interface is downloading
-the firmware, we call this routine again with max
-poll count to wait until firmware is ready.
-
-This patch splits the routine to avoid checking
-winner status multiple times and ensures that
-correct warning messages are displayed.
-
-Firmware status poll count is also increased to 150.
-
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/fw.h   |  2 +-
- drivers/net/wireless/marvell/mwifiex/init.c | 16 +++++++++---
- drivers/net/wireless/marvell/mwifiex/main.h |  1 +
- drivers/net/wireless/marvell/mwifiex/pcie.c | 40 +++++++++++++++++------------
- drivers/net/wireless/marvell/mwifiex/sdio.c | 33 ++++++++++++++----------
- 5 files changed, 57 insertions(+), 35 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index ced7af2..426e76a 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -96,7 +96,7 @@ enum KEY_TYPE_ID {
- #define WAPI_KEY_LEN			(WLAN_KEY_LEN_SMS4 + PN_LEN + 2)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 2acf9ff..90500e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1029,7 +1029,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
+ 	if (ret)
+ 		return ret;
  
- #define MAX_POLL_TRIES			100
--#define MAX_FIRMWARE_POLL_TRIES			100
-+#define MAX_FIRMWARE_POLL_TRIES			150
+-	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, NULL, 0, NULL);
++	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
++			       (count - 1), NULL);
  
- #define FIRMWARE_READY_SDIO				0xfedc
- #define FIRMWARE_READY_PCIE				0xfedcba00
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 6f7876e..517653b 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -741,8 +741,6 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 	u32 poll_num = 1;
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_PRPH_WRITE);
  
- 	if (adapter->if_ops.check_fw_status) {
--		adapter->winner = 0;
--
- 		/* check if firmware is already running */
- 		ret = adapter->if_ops.check_fw_status(adapter, poll_num);
- 		if (!ret) {
-@@ -750,13 +748,23 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 				    "WLAN FW already running! Skip FW dnld\n");
- 			return 0;
- 		}
-+	}
-+
-+	/* check if we are the winner for downloading FW */
-+	if (adapter->if_ops.check_winner_status) {
-+		adapter->winner = 0;
-+		ret = adapter->if_ops.check_winner_status(adapter);
+@@ -1451,7 +1452,7 @@ MVM_DEBUGFS_WRITE_FILE_OPS(bt_force_ant, 10);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
+-MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
++MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 64);
+ MVM_DEBUGFS_WRITE_FILE_OPS(cont_recording, 8);
  
- 		poll_num = MAX_FIRMWARE_POLL_TRIES;
-+		if (ret) {
-+			mwifiex_dbg(adapter, MSG,
-+				    "WLAN read winner status failed!\n");
-+			return ret;
-+		}
- 
--		/* check if we are the winner for downloading FW */
- 		if (!adapter->winner) {
- 			mwifiex_dbg(adapter, MSG,
--				    "FW already running! Skip FW dnld\n");
-+				    "WLAN is not the winner! Skip FW dnld\n");
- 			goto poll_fw;
- 		}
- 	}
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 2f7f478..c08be79 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -791,6 +791,7 @@ struct mwifiex_if_ops {
- 	int (*init_if) (struct mwifiex_adapter *);
- 	void (*cleanup_if) (struct mwifiex_adapter *);
- 	int (*check_fw_status) (struct mwifiex_adapter *, u32);
-+	int (*check_winner_status)(struct mwifiex_adapter *);
- 	int (*prog_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 	int (*register_dev) (struct mwifiex_adapter *);
- 	void (*unregister_dev) (struct mwifiex_adapter *);
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 9703848..4000357 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2007,14 +2007,12 @@ done:
- 
- /*
-  * This function checks the firmware status in card.
-- *
-- * The winner interface is also determined by this function.
-  */
- static int
- mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
- {
- 	int ret = 0;
--	u32 firmware_stat, winner_status;
-+	u32 firmware_stat;
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 	u32 tries;
-@@ -2054,19 +2052,28 @@ mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
- 		}
- 	}
- 
--	if (ret) {
--		if (mwifiex_read_reg(adapter, reg->fw_status,
--				     &winner_status))
--			ret = -1;
--		else if (!winner_status) {
--			mwifiex_dbg(adapter, INFO,
--				    "PCI-E is the winner\n");
--			adapter->winner = 1;
--		} else {
--			mwifiex_dbg(adapter, ERROR,
--				    "PCI-E is not the winner <%#x,%d>, exit dnld\n",
--				    ret, adapter->winner);
--		}
-+	return ret;
-+}
-+
-+/* This function checks if WLAN is the winner.
-+ */
-+static int
-+mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
-+{
-+	u32 winner = 0;
-+	int ret = 0;
-+	struct pcie_service_card *card = adapter->card;
-+	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
-+
-+	if (mwifiex_read_reg(adapter, reg->fw_status, &winner)) {
-+		ret = -1;
-+	} else if (!winner) {
-+		mwifiex_dbg(adapter, INFO, "PCI-E is the winner\n");
-+		adapter->winner = 1;
-+	} else {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "PCI-E is not the winner <%#x,%d>, exit dnld\n",
-+			    ret, adapter->winner);
- 	}
- 
- 	return ret;
-@@ -2681,6 +2688,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.init_if =			mwifiex_pcie_init,
- 	.cleanup_if =			mwifiex_pcie_cleanup,
- 	.check_fw_status =		mwifiex_check_fw_status,
-+	.check_winner_status =          mwifiex_check_winner_status,
- 	.prog_fw =			mwifiex_prog_fw_w_helper,
- 	.register_dev =			mwifiex_register_dev,
- 	.unregister_dev =		mwifiex_unregister_dev,
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 78a8474..024306a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1039,19 +1039,14 @@ done:
- 
- /*
-  * This function checks the firmware status in card.
-- *
-- * The winner interface is also determined by this function.
-  */
- static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
- 				   u32 poll_num)
- {
--	struct sdio_mmc_card *card = adapter->card;
- 	int ret = 0;
- 	u16 firmware_stat;
- 	u32 tries;
--	u8 winner_status;
- 
--	/* Wait for firmware initialization event */
- 	for (tries = 0; tries < poll_num; tries++) {
- 		ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
- 		if (ret)
-@@ -1065,16 +1060,25 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
- 		}
- 	}
- 
--	if (ret) {
--		if (mwifiex_read_reg
--		    (adapter, card->reg->status_reg_0, &winner_status))
--			winner_status = 0;
-+	return ret;
-+}
-+
-+/* This function checks if WLAN is the winner.
-+ */
-+static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
-+{
-+	int ret = 0;
-+	u8 winner = 0;
-+	struct sdio_mmc_card *card = adapter->card;
-+
-+	if (mwifiex_read_reg(adapter, card->reg->status_reg_0, &winner))
-+		return -1;
-+
-+	if (winner)
-+		adapter->winner = 0;
-+	else
-+		adapter->winner = 1;
- 
--		if (winner_status)
--			adapter->winner = 0;
--		else
--			adapter->winner = 1;
--	}
- 	return ret;
- }
- 
-@@ -2609,6 +2613,7 @@ static struct mwifiex_if_ops sdio_ops = {
- 	.init_if = mwifiex_init_sdio,
- 	.cleanup_if = mwifiex_cleanup_sdio,
- 	.check_fw_status = mwifiex_check_fw_status,
-+	.check_winner_status = mwifiex_check_winner_status,
- 	.prog_fw = mwifiex_prog_fw_w_helper,
- 	.register_dev = mwifiex_register_dev,
- 	.unregister_dev = mwifiex_unregister_dev,
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
 -- 
-1.8.1.4
+2.5.0
 
