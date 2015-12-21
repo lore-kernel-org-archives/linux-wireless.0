@@ -1,51 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:35633 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbbLQIza convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11435 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbbLUFQl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 03:55:30 -0500
-Received: by mail-oi0-f49.google.com with SMTP id l9so10455426oia.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 00:55:30 -0800 (PST)
+	Mon, 21 Dec 2015 00:16:41 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 16/46] staging: wilc1000: linux_wlan_spi.c: remove braces for single statement
+Date: Mon, 21 Dec 2015 14:18:20 +0900
+Message-ID: <1450675130-17866-17-git-send-email-glen.lee@atmel.com> (sfid-20151221_063104_171397_EF25898D)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150814143229.61440072@north>
-References: <20150814081526.GC20192@hackpad.Elisa>
-	<20150814143229.61440072@north>
-Date: Thu, 17 Dec 2015 09:55:29 +0100
-Message-ID: <CACRpkdb9D9107JLLUA1PYcasVze9MF+3jKjkXf2zCRWDUFEBYA@mail.gmail.com> (sfid-20151217_095533_769653_7EF043A0)
-Subject: Re: About adding support for MT76x2U to Linux kernel
-From: Linus Walleij <linus.walleij@linaro.org>
-To: =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>
-Cc: =?UTF-8?B?VHVvbWFzIFLDpHPDpG5lbg==?= <tuomasjjrasanen@tjjr.fi>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	tuomasjjrasanen@opinsys.fi
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2015 at 2:32 PM, Jakub Kiciński <moorray3@wp.pl> wrote:
+This patches fixes checkpatch warning: braces {} are not necessary for single
+statement blocks. Remove some comments also.
 
-> CC: Linus W who was hacking on mt7630e recently.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_spi.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-FWIW I have pushed my git tree here:
-https://github.com/linusw/linux-mt7630e
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 01fa6fa..6fcf7b3 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -15,7 +15,7 @@
+ #include "linux_wlan_common.h"
+ #include "wilc_wlan_if.h"
+ 
+-#define USE_SPI_DMA     0       /* johnny add */
++#define USE_SPI_DMA     0
+ 
+ static const struct wilc1000_ops wilc1000_spi_ops;
+ 
+@@ -87,16 +87,13 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
+ 
+ 		memset(&msg, 0, sizeof(msg));
+ 		spi_message_init(&msg);
+-/* [[johnny add */
+ 		msg.spi = spi;
+ 		msg.is_dma_mapped = USE_SPI_DMA;
+-/* ]] */
+ 		spi_message_add_tail(&tr, &msg);
+ 
+ 		ret = spi_sync(spi, &msg);
+-		if (ret < 0) {
++		if (ret < 0)
+ 			dev_err(&spi->dev, "SPI transaction failed\n");
+-		}
+ 
+ 		kfree(r_buffer);
+ 	} else {
+@@ -137,16 +134,13 @@ int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
+ 
+ 		memset(&msg, 0, sizeof(msg));
+ 		spi_message_init(&msg);
+-/* [[ johnny add */
+ 		msg.spi = spi;
+ 		msg.is_dma_mapped = USE_SPI_DMA;
+-/* ]] */
+ 		spi_message_add_tail(&tr, &msg);
+ 
+ 		ret = spi_sync(spi, &msg);
+-		if (ret < 0) {
++		if (ret < 0)
+ 			dev_err(&spi->dev, "SPI transaction failed\n");
+-		}
+ 		kfree(t_buffer);
+ 	} else {
+ 		dev_err(&spi->dev,
+@@ -183,9 +177,8 @@ int wilc_spi_write_read(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
+ 
+ 		spi_message_add_tail(&tr, &msg);
+ 		ret = spi_sync(spi, &msg);
+-		if (ret < 0) {
++		if (ret < 0)
+ 			dev_err(&spi->dev, "SPI transaction failed\n");
+-		}
+ 	} else {
+ 		dev_err(&spi->dev,
+ 			"can't read data with the following length: %u\n",
+-- 
+1.9.1
 
-The driver codedrop from Mediatek turned out to be based on
-kernel v3.10 so there the patches applied cleanly. I then rebased
-that to v3.11 all the way up to v4.3.
-
-Branches are named:
-mt7630e-<kernelversion>
-
-That branch does allow me to see access points so it's not
-totally worthless, but it doesn't associate or connect so
-there is logic missing, and that's where my knowledge of
-wireless fell short. It wasn't about git rebasing and simple
-C code anymore ... I actually had to know what I was
-doing, haha :)
-
-Since then I have not had time to go back and look at it
-again.
-
-Yours,
-Linus Walleij
