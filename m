@@ -1,126 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:57836 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752005AbbLGN5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 08:57:06 -0500
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Luciano Coelho <luca@coelho.fi>, Eliad Peller <eliad@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	igor.grinberg@compulab.co.il,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Subject: [PATCH] wlcore/wl12xx: spi: fix oops on firmware load
-Date: Mon,  7 Dec 2015 15:56:43 +0200
-Message-Id: <1449496603-24597-1-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151207_145712_852430_31BEA541)
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752070AbbLUUwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 43/45] iwlwifi: remove unused parameter from grab_nic_access
+Date: Mon, 21 Dec 2015 22:50:44 +0200
+Message-Id: <1450731046-2796-43-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220101_144336_83899CFF)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The maximum chunks used by the function is
-(SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE + 1).
-The original commands array had space for
-(SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) commands.
-When the last chunk is used (len > 4 * WSPI_MAX_CHUNK_SIZE), the last
-command is stored outside the bounds of the commands array.
+All the callers used silent = false.
 
-Oops 5 (page fault) is generated during current wl1271 firmware load
-attempt:
-
-root@debian-armhf:~# ifconfig wlan0 up
-[  294.312399] Unable to handle kernel paging request at virtual address
-00203fc4
-[  294.320173] pgd = de528000
-[  294.323028] [00203fc4] *pgd=00000000
-[  294.326916] Internal error: Oops: 5 [#1] SMP ARM
-[  294.331789] Modules linked in: bnep rfcomm bluetooth ipv6 arc4 wl12xx
-wlcore mac80211 musb_dsps cfg80211 musb_hdrc usbcore usb_common
-wlcore_spi omap_rng rng_core musb_am335x omap_wdt cpufreq_dt thermal_sys
-hwmon
-[  294.351838] CPU: 0 PID: 1827 Comm: ifconfig Not tainted
-4.2.0-00002-g3e9ad27-dirty #78
-[  294.360154] Hardware name: Generic AM33XX (Flattened Device Tree)
-[  294.366557] task: dc9d6d40 ti: de550000 task.ti: de550000
-[  294.372236] PC is at __spi_validate+0xa8/0x2ac
-[  294.376902] LR is at __spi_sync+0x78/0x210
-[  294.381200] pc : [<c049c760>]    lr : [<c049ebe0>]    psr: 60000013
-[  294.381200] sp : de551998  ip : de5519d8  fp : 00200000
-[  294.393242] r10: de551c8c  r9 : de5519d8  r8 : de3a9000
-[  294.398730] r7 : de3a9258  r6 : de3a9400  r5 : de551a48  r4 :
-00203fbc
-[  294.405577] r3 : 00000000  r2 : 00000000  r1 : 00000000  r0 :
-de3a9000
-[  294.412420] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM
-Segment user
-[  294.419918] Control: 10c5387d  Table: 9e528019  DAC: 00000015
-[  294.425954] Process ifconfig (pid: 1827, stack limit = 0xde550218)
-[  294.432437] Stack: (0xde551998 to 0xde552000)
-
-...
-
-[  294.883613] [<c049c760>] (__spi_validate) from [<c049ebe0>]
-(__spi_sync+0x78/0x210)
-[  294.891670] [<c049ebe0>] (__spi_sync) from [<bf036598>]
-(wl12xx_spi_raw_write+0xfc/0x148 [wlcore_spi])
-[  294.901661] [<bf036598>] (wl12xx_spi_raw_write [wlcore_spi]) from
-[<bf21c694>] (wlcore_boot_upload_firmware+0x1ec/0x458 [wlcore])
-[  294.914038] [<bf21c694>] (wlcore_boot_upload_firmware [wlcore]) from
-[<bf24532c>] (wl12xx_boot+0xc10/0xfac [wl12xx])
-[  294.925161] [<bf24532c>] (wl12xx_boot [wl12xx]) from [<bf20d5cc>]
-(wl1271_op_add_interface+0x5b0/0x910 [wlcore])
-[  294.936364] [<bf20d5cc>] (wl1271_op_add_interface [wlcore]) from
-[<bf15c4ac>] (ieee80211_do_open+0x44c/0xf7c [mac80211])
-[  294.947963] [<bf15c4ac>] (ieee80211_do_open [mac80211]) from
-[<c0537978>] (__dev_open+0xa8/0x110)
-[  294.957307] [<c0537978>] (__dev_open) from [<c0537bf8>]
-(__dev_change_flags+0x88/0x148)
-[  294.965713] [<c0537bf8>] (__dev_change_flags) from [<c0537cd0>]
-(dev_change_flags+0x18/0x48)
-[  294.974576] [<c0537cd0>] (dev_change_flags) from [<c05a55a0>]
-(devinet_ioctl+0x6b4/0x7d0)
-[  294.983191] [<c05a55a0>] (devinet_ioctl) from [<c0517040>]
-(sock_ioctl+0x1e4/0x2bc)
-[  294.991244] [<c0517040>] (sock_ioctl) from [<c017d378>]
-(do_vfs_ioctl+0x420/0x6b0)
-[  294.999208] [<c017d378>] (do_vfs_ioctl) from [<c017d674>]
-(SyS_ioctl+0x6c/0x7c)
-[  295.006880] [<c017d674>] (SyS_ioctl) from [<c000f4c0>]
-(ret_fast_syscall+0x0/0x54)
-[  295.014835] Code: e1550004 e2444034 0a00007d e5953018 (e5942008)
-[  295.021544] ---[ end trace 66ed188198f4e24e ]---
-
-Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ti/wlcore/spi.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c   |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/dvm/tt.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c     | 14 ++++++-------
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  |  7 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 27 +++++++++++--------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c    |  2 +-
+ 7 files changed, 28 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index f1ac283..720e4e4 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -73,7 +73,10 @@
-  */
- #define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index 94bc66a..f62c2d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -429,7 +429,7 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
+ 		ptr = base + (4 * sizeof(u32)) + (start_idx * 3 * sizeof(u32));
  
--#define WSPI_MAX_NUM_OF_CHUNKS (SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
-+/* Maximum number of SPI write chunks */
-+#define WSPI_MAX_NUM_OF_CHUNKS \
-+	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
-+
+ 	/* Make sure device is powered up for SRAM reads */
+-	if (!iwl_trans_grab_nic_access(priv->trans, false, &reg_flags))
++	if (!iwl_trans_grab_nic_access(priv->trans, &reg_flags))
+ 		return;
  
- struct wl12xx_spi_glue {
- 	struct device *dev;
-@@ -268,9 +271,10 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 					     void *buf, size_t len, bool fixed)
+ 	/* Set starting address; reads will auto-increment */
+@@ -1731,7 +1731,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	ptr = base + EVENT_START_OFFSET + (start_idx * event_size);
+ 
+ 	/* Make sure device is powered up for SRAM reads */
+-	if (!iwl_trans_grab_nic_access(trans, false, &reg_flags))
++	if (!iwl_trans_grab_nic_access(trans, &reg_flags))
+ 		return pos;
+ 
+ 	/* Set starting address; reads will auto-increment */
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tt.c b/drivers/net/wireless/intel/iwlwifi/dvm/tt.c
+index 7decfc5..5b73492 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/tt.c
+@@ -184,7 +184,7 @@ static void iwl_tt_check_exit_ct_kill(unsigned long data)
+ 			priv->thermal_throttle.ct_kill_toggle = true;
+ 		}
+ 		iwl_read32(priv->trans, CSR_UCODE_DRV_GP1);
+-		if (iwl_trans_grab_nic_access(priv->trans, false, &flags))
++		if (iwl_trans_grab_nic_access(priv->trans, &flags))
+ 			iwl_trans_release_nic_access(priv->trans, &flags);
+ 
+ 		/* Reschedule the ct_kill timer to occur in
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+index 07ad5c8..32c8f84 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+@@ -82,7 +82,7 @@ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg)
  {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
--	struct spi_transfer t[2 * (WSPI_MAX_NUM_OF_CHUNKS + 1)];
-+	/* SPI write buffers - 2 for each chunk */
-+	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
- 	struct spi_message m;
--	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
-+	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
- 	u32 *cmd;
- 	u32 chunk_len;
+ 	u32 value = 0x5a5a5a5a;
+ 	unsigned long flags;
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		value = iwl_read32(trans, reg);
+ 		iwl_trans_release_nic_access(trans, &flags);
+ 	}
+@@ -95,7 +95,7 @@ void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
+ {
+ 	unsigned long flags;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write32(trans, reg, value);
+ 		iwl_trans_release_nic_access(trans, &flags);
+ 	}
+@@ -138,7 +138,7 @@ u32 iwl_read_prph(struct iwl_trans *trans, u32 ofs)
+ 	unsigned long flags;
+ 	u32 val = 0x5a5a5a5a;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		val = iwl_read_prph_no_grab(trans, ofs);
+ 		iwl_trans_release_nic_access(trans, &flags);
+ 	}
+@@ -150,7 +150,7 @@ void iwl_write_prph(struct iwl_trans *trans, u32 ofs, u32 val)
+ {
+ 	unsigned long flags;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write_prph_no_grab(trans, ofs, val);
+ 		iwl_trans_release_nic_access(trans, &flags);
+ 	}
+@@ -176,7 +176,7 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
+ {
+ 	unsigned long flags;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write_prph_no_grab(trans, ofs,
+ 				       iwl_read_prph_no_grab(trans, ofs) |
+ 				       mask);
+@@ -190,7 +190,7 @@ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 ofs,
+ {
+ 	unsigned long flags;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write_prph_no_grab(trans, ofs,
+ 				       (iwl_read_prph_no_grab(trans, ofs) &
+ 					mask) | bits);
+@@ -204,7 +204,7 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
+ 	unsigned long flags;
+ 	u32 val;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		val = iwl_read_prph_no_grab(trans, ofs);
+ 		iwl_write_prph_no_grab(trans, ofs, (val & ~mask));
+ 		iwl_trans_release_nic_access(trans, &flags);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 43a4874..290d538 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -652,8 +652,7 @@ struct iwl_trans_ops {
+ 	void (*configure)(struct iwl_trans *trans,
+ 			  const struct iwl_trans_config *trans_cfg);
+ 	void (*set_pmi)(struct iwl_trans *trans, bool state);
+-	bool (*grab_nic_access)(struct iwl_trans *trans, bool silent,
+-				unsigned long *flags);
++	bool (*grab_nic_access)(struct iwl_trans *trans, unsigned long *flags);
+ 	void (*release_nic_access)(struct iwl_trans *trans,
+ 				   unsigned long *flags);
+ 	void (*set_bits_mask)(struct iwl_trans *trans, u32 reg, u32 mask,
+@@ -1170,9 +1169,9 @@ iwl_trans_set_bits_mask(struct iwl_trans *trans, u32 reg, u32 mask, u32 value)
+ 	trans->ops->set_bits_mask(trans, reg, mask, value);
+ }
+ 
+-#define iwl_trans_grab_nic_access(trans, silent, flags)	\
++#define iwl_trans_grab_nic_access(trans, flags)	\
+ 	__cond_lock(nic_access,				\
+-		    likely((trans)->ops->grab_nic_access(trans, silent, flags)))
++		    likely((trans)->ops->grab_nic_access(trans, flags)))
+ 
+ static inline void __releases(nic_access)
+ iwl_trans_release_nic_access(struct iwl_trans *trans, unsigned long *flags)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 29d54ec..f406c76 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -122,7 +122,7 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
+ 	unsigned long flags;
+ 	int i, j;
+ 
+-	if (!iwl_trans_grab_nic_access(mvm->trans, false, &flags))
++	if (!iwl_trans_grab_nic_access(mvm->trans, &flags))
+ 		return;
+ 
+ 	/* Pull RXF data from all RXFs */
+@@ -359,7 +359,7 @@ static u32 iwl_dump_prph(struct iwl_trans *trans,
+ 	unsigned long flags;
+ 	u32 prph_len = 0, i;
+ 
+-	if (!iwl_trans_grab_nic_access(trans, false, &flags))
++	if (!iwl_trans_grab_nic_access(trans, &flags))
+ 		return 0;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr); i++) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index e804190..d44e7af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1505,8 +1505,8 @@ static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
+ 		clear_bit(STATUS_TPOWER_PMI, &trans->status);
+ }
+ 
+-static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent,
+-						unsigned long *flags)
++static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
++					   unsigned long *flags)
+ {
+ 	int ret;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -1547,14 +1547,11 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent,
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
+ 		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+-		if (!silent) {
+-			u32 val = iwl_read32(trans, CSR_GP_CNTRL);
+-			WARN_ONCE(1,
+-				  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
+-				  val);
+-			spin_unlock_irqrestore(&trans_pcie->reg_lock, *flags);
+-			return false;
+-		}
++		WARN_ONCE(1,
++			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
++			  iwl_read32(trans, CSR_GP_CNTRL));
++		spin_unlock_irqrestore(&trans_pcie->reg_lock, *flags);
++		return false;
+ 	}
+ 
+ out:
+@@ -1602,7 +1599,7 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
+ 	int offs, ret = 0;
+ 	u32 *vals = buf;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
+ 		for (offs = 0; offs < dwords; offs++)
+ 			vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
+@@ -1620,7 +1617,7 @@ static int iwl_trans_pcie_write_mem(struct iwl_trans *trans, u32 addr,
+ 	int offs, ret = 0;
+ 	const u32 *vals = buf;
+ 
+-	if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++	if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_WADDR, addr);
+ 		for (offs = 0; offs < dwords; offs++)
+ 			iwl_write32(trans, HBUS_TARG_MEM_WDAT,
+@@ -2246,7 +2243,7 @@ static u32 iwl_trans_pcie_fh_regs_dump(struct iwl_trans *trans,
+ 	__le32 *val;
  	int i;
+ 
+-	if (!iwl_trans_grab_nic_access(trans, false, &flags))
++	if (!iwl_trans_grab_nic_access(trans, &flags))
+ 		return 0;
+ 
+ 	(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FH_REGS);
+@@ -2273,7 +2270,7 @@ iwl_trans_pci_dump_marbh_monitor(struct iwl_trans *trans,
+ 	unsigned long flags;
+ 	u32 i;
+ 
+-	if (!iwl_trans_grab_nic_access(trans, false, &flags))
++	if (!iwl_trans_grab_nic_access(trans, &flags))
+ 		return 0;
+ 
+ 	iwl_write_prph_no_grab(trans, MON_DMARB_RD_CTL_ADDR, 0x1);
+@@ -2658,7 +2655,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 			goto out_pci_disable_msi;
+ 		}
+ 
+-		if (iwl_trans_grab_nic_access(trans, false, &flags)) {
++		if (iwl_trans_grab_nic_access(trans, &flags)) {
+ 			u32 hw_step;
+ 
+ 			hw_step = iwl_read_prph_no_grab(trans, WFPM_CTRL_REG);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index a85ae10..5262028 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -770,7 +770,7 @@ static void iwl_pcie_tx_stop_fh(struct iwl_trans *trans)
+ 
+ 	spin_lock(&trans_pcie->irq_lock);
+ 
+-	if (!iwl_trans_grab_nic_access(trans, false, &flags))
++	if (!iwl_trans_grab_nic_access(trans, &flags))
+ 		goto out;
+ 
+ 	/* Stop each Tx DMA channel */
 -- 
 2.5.0
 
