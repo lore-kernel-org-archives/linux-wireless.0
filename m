@@ -1,37 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54911 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752310AbbLNIsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 03:48:43 -0500
-Message-ID: <1450082912.3871.2.camel@sipsolutions.net> (sfid-20151214_094846_767669_53CDFE24)
-Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linuxwifi <linuxwifi@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 14 Dec 2015 09:48:32 +0100
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E919DE2@hasmsx107.ger.corp.intel.com>
-References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
-	 <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com>
-	 <1449876779.2324.16.camel@sipsolutions.net> <566DF964.7050904@broadcom.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E919DE2@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11579 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFRk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 00:17:40 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 26/46] staging: wilc1000: remove unused files
+Date: Mon, 21 Dec 2015 14:18:30 +0900
+Message-ID: <1450675130-17866-27-git-send-email-glen.lee@atmel.com> (sfid-20151221_063105_101586_C26CDEB1)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-12-14 at 04:00 +0000, Grumbach, Emmanuel wrote:
-> 
-> This is really weird. I don't see how that could be firmware related.
-> BTW, -10.ucode is fairly old :) we have -16.ucode out there.
+This patch removes linux_wlan_sdio.[ch] which is not used anymore.
 
-I guess the question is how we get into this situation to start with?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/Makefile          |  2 +-
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 10 ----------
+ drivers/staging/wilc1000/linux_wlan_sdio.h |  1 -
+ 3 files changed, 1 insertion(+), 12 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
 
-About the only thing I can imagine is that we fail somehow during
-initialization (without printing any other message) and higher layers
-like wpa_supplicant/network-manager/... simply try to bring up the
-device over and over again?
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index 2076743..09f0ddb 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -14,7 +14,7 @@ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			wilc_wlan.o
+ 
+ obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
+-wilc1000-sdio-objs += linux_wlan_sdio.o wilc_sdio.o
++wilc1000-sdio-objs += wilc_sdio.o
+ 
+ obj-$(CONFIG_WILC1000_SPI) += wilc1000-spi.o
+ wilc1000-spi-objs += linux_wlan_spi.o wilc_spi.o
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+deleted file mode 100644
+index 67d99e9..0000000
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ /dev/null
+@@ -1,10 +0,0 @@
+-#include "wilc_wfi_netdevice.h"
+-
+-#include <linux/mmc/sdio_func.h>
+-#include <linux/mmc/card.h>
+-#include <linux/mmc/sdio_ids.h>
+-#include <linux/mmc/sdio.h>
+-#include <linux/mmc/host.h>
+-#include <linux/of_gpio.h>
+-
+-#include "linux_wlan_sdio.h"
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
+deleted file mode 100644
+index abb2312..0000000
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <linux/mmc/sdio_func.h>
+-- 
+1.9.1
 
-johannes
