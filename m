@@ -1,105 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33752 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934AbbLIBFS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 20:05:18 -0500
-Received: by pabur14 with SMTP id ur14so20559886pab.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2015 17:05:18 -0800 (PST)
-From: Brian Norris <computersforpeace@gmail.com>
-To: <linux-mtd@lists.infradead.org>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>,
-	Brian Norris <computersforpeace@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] mtd: bcm47xxnflash: really unregister NAND on device removal
-Date: Tue,  8 Dec 2015 17:04:59 -0800
-Message-Id: <1449623099-21634-1-git-send-email-computersforpeace@gmail.com> (sfid-20151209_020523_182350_9857B3D1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752027AbbLUUwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:31 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/45] iwlwifi: mvm: change iwl_mvm_get_key_sta_id() to return the station
+Date: Mon, 21 Dec 2015 22:50:37 +0200
+Message-Id: <1450731046-2796-36-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220100_507907_9065AFD8)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The field bcma_nflash::mtd is never set to be non-zero anywhere, but we
-test for it in the removal path. So the MTD is never unregistered.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Also, we should use nand_release(), not mtd_device_unregister().
+The code in iwl_mvm_update_tkip_key() is now pretty much duplicated
+with the code in iwl_mvm_get_key_sta_id() doing the station ID lookup
+again after it was already done. Change iwl_mvm_get_key_sta_id() to
+iwl_mvm_get_key_sta(), returning the mvm_sta pointer, to allow that
+duplicate code to be removed.
 
-Finally, we don't need to use the 'platdata' for stashing/retrieving our
-*driver* data -- that's what *_{get,set}_drvdata() are for.
-
-So, kill off bcm_nflash::mtd, and stash the struct bcm47xxnflash in
-drvdata instead. Also move the forward declaration of mtd_info up a bit,
-since struct bcma_sflash should be using it.
-
-Caught while inspecting other changes being made to this driver. Compile
-tested only.
-
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-Cc: "Rafał Miłecki" <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-Might have some small conflict with Boris' NAND/MTD refactoring patch set. I
-can rebase this small one if his gets in proper shape. Just wanted to get this
-out there.
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 53 ++++++++++++----------------
+ 1 file changed, 22 insertions(+), 31 deletions(-)
 
- drivers/mtd/nand/bcm47xxnflash/main.c       | 7 ++++---
- include/linux/bcma/bcma_driver_chipcommon.h | 6 ++----
- 2 files changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/mtd/nand/bcm47xxnflash/main.c b/drivers/mtd/nand/bcm47xxnflash/main.c
-index 9ba0c0f2cd9b..0b3acc439181 100644
---- a/drivers/mtd/nand/bcm47xxnflash/main.c
-+++ b/drivers/mtd/nand/bcm47xxnflash/main.c
-@@ -49,6 +49,8 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
- 		return err;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index bfa4699..2c9675b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1228,17 +1228,14 @@ static int iwl_mvm_set_fw_key_idx(struct iwl_mvm *mvm)
+ 	return max_offs;
+ }
+ 
+-static u8 iwl_mvm_get_key_sta_id(struct iwl_mvm *mvm,
+-				 struct ieee80211_vif *vif,
+-				 struct ieee80211_sta *sta)
++static struct iwl_mvm_sta *iwl_mvm_get_key_sta(struct iwl_mvm *mvm,
++					       struct ieee80211_vif *vif,
++					       struct ieee80211_sta *sta)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 
+-	if (sta) {
+-		struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
+-
+-		return mvm_sta->sta_id;
+-	}
++	if (sta)
++		return iwl_mvm_sta_from_mac80211(sta);
+ 
+ 	/*
+ 	 * The device expects GTKs for station interfaces to be
+@@ -1257,12 +1254,12 @@ static u8 iwl_mvm_get_key_sta_id(struct iwl_mvm *mvm,
+ 		 * be the AP ID, and no station was passed by mac80211.
+ 		 */
+ 		if (IS_ERR_OR_NULL(sta))
+-			return IWL_MVM_STATION_COUNT;
++			return NULL;
+ 
+-		return sta_id;
++		return iwl_mvm_sta_from_mac80211(sta);
  	}
  
-+	platform_set_drvdata(pdev, b47n);
-+
- 	err = mtd_device_parse_register(&b47n->mtd, probes, NULL, NULL, 0);
- 	if (err) {
- 		pr_err("Failed to register MTD device: %d\n", err);
-@@ -60,10 +62,9 @@ static int bcm47xxnflash_probe(struct platform_device *pdev)
- 
- static int bcm47xxnflash_remove(struct platform_device *pdev)
- {
--	struct bcma_nflash *nflash = dev_get_platdata(&pdev->dev);
-+	struct bcm47xxnflash *nflash = platform_get_drvdata(pdev);
- 
--	if (nflash->mtd)
--		mtd_device_unregister(nflash->mtd);
-+	nand_release(&nflash->mtd);
- 
- 	return 0;
+-	return IWL_MVM_STATION_COUNT;
++	return NULL;
  }
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index cf038431a5cc..db51a6ffb7d6 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -579,6 +579,8 @@ struct bcma_pflash {
- };
  
- #ifdef CONFIG_BCMA_SFLASH
-+struct mtd_info;
+ static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
+@@ -1479,6 +1476,7 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ 			u8 key_offset)
+ {
+ 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
++	struct iwl_mvm_sta *mvm_sta;
+ 	u8 sta_id;
+ 	int ret;
+ 	static const u8 __maybe_unused zero_addr[ETH_ALEN] = {0};
+@@ -1486,11 +1484,12 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	/* Get the station id from the mvm local station table */
+-	sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
+-	if (sta_id == IWL_MVM_STATION_COUNT) {
+-		IWL_ERR(mvm, "Failed to find station id\n");
++	mvm_sta = iwl_mvm_get_key_sta(mvm, vif, sta);
++	if (!mvm_sta) {
++		IWL_ERR(mvm, "Failed to find station\n");
+ 		return -EINVAL;
+ 	}
++	sta_id = mvm_sta->sta_id;
+ 
+ 	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
+ 		ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, false);
+@@ -1566,13 +1565,14 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
+ 			   struct ieee80211_key_conf *keyconf)
+ {
+ 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
+-	u8 sta_id;
++	struct iwl_mvm_sta *mvm_sta;
++	u8 sta_id = IWL_MVM_STATION_COUNT;
+ 	int ret, i;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	/* Get the station id from the mvm local station table */
+-	sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
++	/* Get the station from the mvm local station table */
++	mvm_sta = iwl_mvm_get_key_sta(mvm, vif, sta);
+ 
+ 	IWL_DEBUG_WEP(mvm, "mvm remove dynamic key: idx=%d sta=%d\n",
+ 		      keyconf->keyidx, sta_id);
+@@ -1593,11 +1593,13 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
+ 	}
+ 	mvm->fw_key_deleted[keyconf->hw_key_idx] = 0;
+ 
+-	if (sta_id == IWL_MVM_STATION_COUNT) {
++	if (!mvm_sta) {
+ 		IWL_DEBUG_WEP(mvm, "station non-existent, early return.\n");
+ 		return 0;
+ 	}
+ 
++	sta_id = mvm_sta->sta_id;
 +
- struct bcma_sflash {
- 	bool present;
- 	u32 window;
-@@ -592,13 +594,9 @@ struct bcma_sflash {
- #endif
+ 	ret = __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
+ 	if (ret)
+ 		return ret;
+@@ -1617,24 +1619,13 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
+ 			     u16 *phase1key)
+ {
+ 	struct iwl_mvm_sta *mvm_sta;
+-	u8 sta_id;
+ 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
  
- #ifdef CONFIG_BCMA_NFLASH
--struct mtd_info;
+ 	rcu_read_lock();
+ 
+-	sta_id = iwl_mvm_get_key_sta_id(mvm, vif, sta);
+-	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
++	mvm_sta = iwl_mvm_get_key_sta(mvm, vif, sta);
++	if (WARN_ON_ONCE(!mvm_sta))
+ 		goto unlock;
 -
- struct bcma_nflash {
- 	bool present;
- 	bool boot;		/* This is the flash the SoC boots from */
+-	if (!sta) {
+-		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
+-		if (WARN_ON(IS_ERR_OR_NULL(sta))) {
+-			rcu_read_unlock();
+-			return;
+-		}
+-	}
 -
--	struct mtd_info *mtd;
- };
- #endif
+-	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
+ 	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
+ 			     iv32, phase1key, CMD_ASYNC, keyconf->hw_key_idx);
  
 -- 
-2.6.0.rc2.230.g3dd15c0
+2.5.0
 
