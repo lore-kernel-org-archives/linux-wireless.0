@@ -1,67 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f193.google.com ([209.85.160.193]:35409 "EHLO
-	mail-yk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbbLUV7X (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11144 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbbLUFPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 16:59:23 -0500
+	Mon, 21 Dec 2015 00:15:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 02/46] staging: wilc1000: remove wilc memory allocation config
+Date: Mon, 21 Dec 2015 14:18:06 +0900
+Message-ID: <1450675130-17866-3-git-send-email-glen.lee@atmel.com> (sfid-20151221_061520_115821_FAC4C39D)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151217193350.GR20409@wotan.suse.de>
-References: <1449597684-4631-1-git-send-email-zohar@linux.vnet.ibm.com>
- <1449597684-4631-4-git-send-email-zohar@linux.vnet.ibm.com> <20151217193350.GR20409@wotan.suse.de>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Dec 2015 13:58:59 -0800
-Message-ID: <CAB=NE6VdHKXsWmbRHOAkJb9ph_mkLUE_Du5c9n2entUNWY=+rw@mail.gmail.com> (sfid-20151221_225936_980078_886D7AA0)
-Subject: Re: [PATCH v1 3/7] ima: load policy using path
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Cc: linux-security-module <linux-security-module@vger.kernel.org>,
-	Dmitry Kasatkin <d.kasatkin@samsung.com>,
-	linux-ima-devel@lists.sourceforge.net,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Vivek Goyal <vgoyal@redhat.com>, Roberts@suse.de,
-	William C <william.c.roberts@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kees Cook <keescook@chromium.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Kyle McMartin <kyle@kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Hannes Reinecke <hare@suse.de>, Takashi Iwai <tiwai@suse.de>,
-	Rik van Riel <riel@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 11:33 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> Please no, instead of adding yet-another kernel file-loading facility which is
-> likely error prone we should consolidate *all kernel file-loading facilities*
-> into a *common generic shared one*. So please work to make that happen since you
-> need yet-another user for it.m.com
->
-> Since you need yet-naother kernel file-loader please do the work to generalize
-> it, or at least try it.
+This patch remove memory allocation options in Kconfig. It was used a long time
+ago to aquire memory, which we will not use this config anymore.
+Remove it's config, related define and codes as well. We will take
+PREALLOCATE_AT_LOADING_DRIVER as it is default.
 
-As per review in another thread with Mimi we determined they're not
-adding a *new* reader, but using an existing one. The possible issues
-with early read and pivot_root() as well as possible considerations
-for a common user mode helper are still relevant for when we
-generalize a common kernel loader. Mimi has also pointed out a few
-other kernel loaders. It seems we'll try to tackle this after the
-holidays. To help keep track of progress and consolidate notes on this
-I've stuffed details about this on this wiki:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/Kconfig             | 22 --------------------
+ drivers/staging/wilc1000/Makefile            |  6 ------
+ drivers/staging/wilc1000/linux_wlan_common.h |  2 --
+ drivers/staging/wilc1000/wilc_wlan.c         | 30 ----------------------------
+ 4 files changed, 60 deletions(-)
 
-http://kernelnewbies.org/KernelProjects/common-kernel-loader
+diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
+index 2923122..dce9cee 100644
+--- a/drivers/staging/wilc1000/Kconfig
++++ b/drivers/staging/wilc1000/Kconfig
+@@ -31,28 +31,6 @@ config WILC1000_SPI
+ 	  immediately following reset when pin 9 (SDIO_SPI_CFG) is tied to
+ 	  VDDIO. Select this if your platform is using the SPI bus.
+ 
+-choice
+-        prompt "WILC1000 Memory Allocation"
+-        depends on WILC1000
+-        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+-
+-config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+-	bool "Preallocate memory at loading driver"
+-	---help---
+-	  This choice supports static allocation of the memory
+-	  for the receive buffer. The driver will allocate the RX buffer
+-	  during initial time. The driver will also free the buffer
+-	  by calling network device stop.
+-
+-config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+-        bool "Dynamically allocate memory in real time"
+-        ---help---
+-	  This choice supports dynamic allocation of the memory
+-	  for the receive buffer. The driver will allocate the RX buffer
+-	  when it is required.
+-endchoice
+-
+-
+ config WILC1000_HW_OOB_INTR
+ 	bool "WILC1000 out of band interrupt"
+ 	depends on WILC1000_SDIO
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index c55fdd2..cd71be9 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -7,12 +7,6 @@ ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
+ ccflags-y += -I$(src)/ -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 -DWILC_DEBUGFS
+ #ccflags-y += -DTCP_ACK_FILTER
+ 
+-ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
+-								-DWILC_PREALLOC_AT_INSMOD
+-
+-ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
+-
+-
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			wilc_msgqueue.o \
+ 			coreconfigurator.o host_interface.o \
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 72b524a..5d40f05 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -124,9 +124,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
+ #define FN_IN   /* PRINT_D(">>> \n") */
+ #define FN_OUT  /* PRINT_D("<<<\n") */
+ 
+-#ifdef MEMORY_STATIC
+ #define LINUX_RX_SIZE	(96 * 1024)
+-#endif
+ #define LINUX_TX_SIZE	(64 * 1024)
+ 
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a73e99f..10def3f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -12,10 +12,8 @@ typedef struct {
+ 	u32 cfg_frame_offset;
+ 	int cfg_seq_no;
+ 
+-	#ifdef MEMORY_STATIC
+ 	u8 *rx_buffer;
+ 	u32 rx_buffer_offset;
+-	#endif
+ 	u8 *tx_buffer;
+ 	u32 tx_buffer_offset;
+ 
+@@ -1050,9 +1048,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 			if (offset >= size)
+ 				break;
+ 		} while (1);
+-#ifndef MEMORY_STATIC
+-		kfree(buffer);
+-#endif
+ 		kfree(rqe);
+ 
+ 		if (has_packet)
+@@ -1097,9 +1092,7 @@ static void wilc_sleeptimer_isr_ext(struct wilc *wilc, u32 int_stats1)
+ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ {
+ 	wilc_wlan_dev_t *p = &g_wlan;
+-#ifdef MEMORY_STATIC
+ 	u32 offset = p->rx_buffer_offset;
+-#endif
+ 	u8 *buffer = NULL;
+ 	u32 size;
+ 	u32 retries = 0;
+@@ -1118,7 +1111,6 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ 	}
+ 
+ 	if (size > 0) {
+-#ifdef MEMORY_STATIC
+ 		if (LINUX_RX_SIZE - offset < size)
+ 			offset = 0;
+ 
+@@ -1129,13 +1121,6 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ 			goto _end_;
+ 		}
+ 
+-#else
+-		buffer = kmalloc(size, GFP_KERNEL);
+-		if (!buffer) {
+-			usleep_range(100 * 1000, 100 * 1000);
+-			goto _end_;
+-		}
+-#endif
+ 		p->hif_func.hif_clear_int_ext(wilc,
+ 					      DATA_INT_CLR | ENABLE_RX_VMM);
+ 		ret = p->hif_func.hif_block_rx_ext(wilc, 0, buffer, size);
+@@ -1146,10 +1131,8 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ 		}
+ _end_:
+ 		if (ret) {
+-#ifdef MEMORY_STATIC
+ 			offset += size;
+ 			p->rx_buffer_offset = offset;
+-#endif
+ 			rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
+ 			if (rqe) {
+ 				rqe->buffer = buffer;
+@@ -1157,10 +1140,6 @@ _end_:
+ 				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
+ 				wilc_wlan_rxq_add(wilc, rqe);
+ 			}
+-		} else {
+-#ifndef MEMORY_STATIC
+-			kfree(buffer);
+-#endif
+ 		}
+ 	}
+ 	wilc_wlan_handle_rxq(wilc);
+@@ -1442,16 +1421,11 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 		rqe = wilc_wlan_rxq_remove(wilc);
+ 		if (!rqe)
+ 			break;
+-#ifndef MEMORY_STATIC
+-		kfree(rqe->buffer);
+-#endif
+ 		kfree(rqe);
+ 	} while (1);
+ 
+-	#ifdef MEMORY_STATIC
+ 	kfree(p->rx_buffer);
+ 	p->rx_buffer = NULL;
+-	#endif
+ 	kfree(p->tx_buffer);
+ 
+ 	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+@@ -1691,7 +1665,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 		goto _fail_;
+ 	}
+ 
+-#if defined(MEMORY_STATIC)
+ 	if (!g_wlan.rx_buffer)
+ 		g_wlan.rx_buffer = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
+ 	PRINT_D(TX_DBG, "g_wlan.rx_buffer =%p\n", g_wlan.rx_buffer);
+@@ -1700,7 +1673,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 		PRINT_ER("Can't allocate Rx Buffer");
+ 		goto _fail_;
+ 	}
+-#endif
+ 
+ 	if (!init_chip(dev)) {
+ 		ret = -EIO;
+@@ -1714,10 +1686,8 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ _fail_:
+ 
+-  #ifdef MEMORY_STATIC
+ 	kfree(g_wlan.rx_buffer);
+ 	g_wlan.rx_buffer = NULL;
+-  #endif
+ 	kfree(g_wlan.tx_buffer);
+ 	g_wlan.tx_buffer = NULL;
+ 
+-- 
+1.9.1
 
-  Luis
