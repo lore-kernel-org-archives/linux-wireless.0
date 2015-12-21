@@ -1,215 +1,402 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28691 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215AbbLXMTP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11560 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 07:19:15 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC 1/2] nl80211: add extended feature for BSS selection support
-Date: Thu, 24 Dec 2015 13:19:09 +0100
-Message-ID: <1450959550-19655-2-git-send-email-arend@broadcom.com> (sfid-20151224_131919_347872_59D91872)
-In-Reply-To: <1450959550-19655-1-git-send-email-arend@broadcom.com>
-References: <1450959550-19655-1-git-send-email-arend@broadcom.com>
+	Mon, 21 Dec 2015 00:17:33 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 25/46] staging: wilc1000: linux_wlan_sdio.c: move all the codes to wilc_sdio.c
+Date: Mon, 21 Dec 2015 14:18:29 +0900
+Message-ID: <1450675130-17866-26-git-send-email-glen.lee@atmel.com> (sfid-20151221_063059_911257_8D4EFAF1)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introducing a new extended feature that the driver can support which
-indicate the driver/firmware supports configuration of BSS selection
-criteria upon CONNECT command.
+To Combine linux_wlan_sdio.c and wilc_sdio.c as one file, move all the codes
+in linux_wlan_sdio.c to wilc_sdio.c, and make functions static only.
+No Modification has not been made except static, just moved them.
+Function declaration in linux_wlan_sdio.h is needless, so just remove them.
+linux_wlan_sdio.[ch] will be deleted in the next patch.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- include/net/cfg80211.h       | 17 ++++++++++++++++
- include/uapi/linux/nl80211.h | 35 +++++++++++++++++++++++++++++++++
- net/wireless/nl80211.c       | 46 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 98 insertions(+)
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 160 ----------------------------
+ drivers/staging/wilc1000/linux_wlan_sdio.h |   7 --
+ drivers/staging/wilc1000/wilc_sdio.c       | 164 ++++++++++++++++++++++++++++-
+ 3 files changed, 163 insertions(+), 168 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9bcaaf7..4001947 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1854,6 +1854,22 @@ struct cfg80211_ibss_params {
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index 4b9cb55..67d99e9 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -8,163 +8,3 @@
+ #include <linux/of_gpio.h>
  
- /**
-+ * struct cfg80211_bss_selection - Connection parameters for BSS selection.
-+ *
-+ * @present: indicates whether parameters are set.
-+ * @pref_band: preferred band.
-+ * @rssi_adjust: adjustment for RSSI level of the preferred band.
-+ * @ignore_rssi: indicates whether BSS in preferred band is to be selected
-+ *	regardless its RSSI level.
-+ */
-+struct cfg80211_bss_selection {
-+	bool present;
-+	enum nl80211_band pref_band;
-+	u8 rssi_adjust;
-+	bool ignore_rssi;
+ #include "linux_wlan_sdio.h"
+-
+-#define SDIO_MODALIAS "wilc1000_sdio"
+-
+-#define SDIO_VENDOR_ID_WILC 0x0296
+-#define SDIO_DEVICE_ID_WILC 0x5347
+-
+-static const struct sdio_device_id wilc_sdio_ids[] = {
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
+-	{ },
+-};
+-
+-
+-static void wilc_sdio_interrupt(struct sdio_func *func)
+-{
+-	sdio_release_host(func);
+-	wilc_handle_isr(sdio_get_drvdata(func));
+-	sdio_claim_host(func);
+-}
+-
+-int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
+-{
+-	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
+-	int ret;
+-	u8 data;
+-
+-	sdio_claim_host(func);
+-
+-	func->num = cmd->function;
+-	if (cmd->read_write) {  /* write */
+-		if (cmd->raw) {
+-			sdio_writeb(func, cmd->data, cmd->address, &ret);
+-			data = sdio_readb(func, cmd->address, &ret);
+-			cmd->data = data;
+-		} else {
+-			sdio_writeb(func, cmd->data, cmd->address, &ret);
+-		}
+-	} else {        /* read */
+-		data = sdio_readb(func, cmd->address, &ret);
+-		cmd->data = data;
+-	}
+-
+-	sdio_release_host(func);
+-
+-	if (ret)
+-		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
+-	return ret;
+-}
+-
+-
+-int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
+-{
+-	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
+-	int size, ret;
+-
+-	sdio_claim_host(func);
+-
+-	func->num = cmd->function;
+-	func->cur_blksize = cmd->block_size;
+-	if (cmd->block_mode)
+-		size = cmd->count * cmd->block_size;
+-	else
+-		size = cmd->count;
+-
+-	if (cmd->read_write) {  /* write */
+-		ret = sdio_memcpy_toio(func, cmd->address,
+-				       (void *)cmd->buffer, size);
+-	} else {        /* read */
+-		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
+-					 cmd->address,  size);
+-	}
+-
+-	sdio_release_host(func);
+-
+-	if (ret)
+-		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
+-
+-	return ret;
+-}
+-
+-static int linux_sdio_probe(struct sdio_func *func,
+-			    const struct sdio_device_id *id)
+-{
+-	struct wilc *wilc;
+-	int gpio, ret;
+-
+-	gpio = -1;
+-	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
+-		gpio = of_get_gpio(func->dev.of_node, 0);
+-		if (gpio < 0)
+-			gpio = GPIO_NUM;
+-	}
+-
+-	dev_dbg(&func->dev, "Initializing netdev\n");
+-	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
+-			     &wilc_hif_sdio);
+-	if (ret) {
+-		dev_err(&func->dev, "Couldn't initialize netdev\n");
+-		return ret;
+-	}
+-	sdio_set_drvdata(func, wilc);
+-	wilc->dev = &func->dev;
+-
+-	dev_info(&func->dev, "Driver Initializing success\n");
+-	return 0;
+-}
+-
+-static void linux_sdio_remove(struct sdio_func *func)
+-{
+-	wilc_netdev_cleanup(sdio_get_drvdata(func));
+-}
+-
+-static struct sdio_driver wilc1000_sdio_driver = {
+-	.name		= SDIO_MODALIAS,
+-	.id_table	= wilc_sdio_ids,
+-	.probe		= linux_sdio_probe,
+-	.remove		= linux_sdio_remove,
+-};
+-module_driver(wilc1000_sdio_driver,
+-	      sdio_register_driver,
+-	      sdio_unregister_driver);
+-MODULE_LICENSE("GPL");
+-
+-int wilc_sdio_enable_interrupt(struct wilc *dev)
+-{
+-	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
+-	int ret = 0;
+-
+-	sdio_claim_host(func);
+-	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
+-	sdio_release_host(func);
+-
+-	if (ret < 0) {
+-		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
+-		ret = -EIO;
+-	}
+-	return ret;
+-}
+-
+-void wilc_sdio_disable_interrupt(struct wilc *dev)
+-{
+-	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
+-	int ret;
+-
+-	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
+-
+-	sdio_claim_host(func);
+-	ret = sdio_release_irq(func);
+-	if (ret < 0)
+-		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
+-	sdio_release_host(func);
+-
+-	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+-}
+-
+-int wilc_sdio_init(void)
+-{
+-	return 1;
+-}
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
+index 8d276c6..abb2312 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.h
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
+@@ -1,8 +1 @@
+ #include <linux/mmc/sdio_func.h>
+-
+-int wilc_sdio_init(void);
+-int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd);
+-int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd);
+-
+-int wilc_sdio_enable_interrupt(struct wilc *);
+-void wilc_sdio_disable_interrupt(struct wilc *);
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index fa1adcf..e961b50 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -10,8 +10,23 @@
+ #include <linux/string.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+-#include "linux_wlan_sdio.h"
+ #include "wilc_wfi_netdevice.h"
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/card.h>
++#include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/host.h>
++#include <linux/of_gpio.h>
++
++#define SDIO_MODALIAS "wilc1000_sdio"
++
++#define SDIO_VENDOR_ID_WILC 0x0296
++#define SDIO_DEVICE_ID_WILC 0x5347
++
++static const struct sdio_device_id wilc_sdio_ids[] = {
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
++	{ },
 +};
-+
-+/**
-  * struct cfg80211_connect_params - Connection parameters
-  *
-  * This structure provides information needed to complete IEEE 802.11
-@@ -1910,6 +1926,7 @@ struct cfg80211_connect_params {
- 	struct ieee80211_ht_cap ht_capa_mask;
- 	struct ieee80211_vht_cap vht_capa;
- 	struct ieee80211_vht_cap vht_capa_mask;
-+	struct cfg80211_bss_selection bss_select;
- };
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7b5eb..6753468 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1789,6 +1789,9 @@ enum nl80211_commands {
-  *	thus it must not specify the number of iterations, only the interval
-  *	between scans. The scan plans are executed sequentially.
-  *	Each scan plan is a nested attribute of &enum nl80211_sched_scan_plan.
-+ * @NL80211_ATTR_BSS_SELECT: nested attribute used with %NL80211_CMD_CONNECT
-+ *	containing criteria for BSS selection to be done by driver and/or
-+ *	firmware.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2164,6 +2167,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MAX_SCAN_PLAN_ITERATIONS,
- 	NL80211_ATTR_SCHED_SCAN_PLANS,
+ #define WILC_SDIO_BLOCK_SIZE 512
  
-+	NL80211_ATTR_BSS_SELECT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+@@ -28,6 +43,153 @@ static wilc_sdio_t g_sdio;
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4396,12 +4401,15 @@ enum nl80211_feature_flags {
- /**
-  * enum nl80211_ext_feature_index - bit index of extended features.
-  * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
-+ * @NL80211_EXT_FEATURE_BSS_SELECT: This driver supports BSS selection criteria
-+ *	to be given upon %NL80211_CMD_CONNECT.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
- enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_VHT_IBSS,
-+	NL80211_EXT_FEATURE_BSS_SELECT,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-@@ -4651,4 +4659,31 @@ enum nl80211_sched_scan_plan {
- 		__NL80211_SCHED_SCAN_PLAN_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_attr_bss_select - attributes for bss selection.
-+ *
-+ * @__NL80211_ATTR_BSS_SELECT_INVALID: reserved.
-+ * @NL80211_ATTR_BSS_SELECT_BAND_PREF: Required attribute indicating the
-+ *	preferred band. The preference by itself still allows RSSI based
-+ *	selection of BSS and as such is only a tie breaker. Value according
-+ *	%enum nl80211_band.
-+ * @NL80211_ATTR_BSS_SELECT_RSSI_ADJUST: When present the RSSI level for
-+ *	the BSS in the preferred band is adjusted accordingly (u8).
-+ * @NL80211_ATTR_BSS_SELECT_IGNORE_RSSI: flag attribute which can be used to
-+ *	to have the BSS in the preferred band being selected regardless
-+ *	of its RSSI level.
-+ * @NL80211_ATTR_BSS_SELECT_MAX: highest bss select attribute number.
-+ *@__NL80211_ATTR_BSS_SELECT_AFTER_LAST: internal use.
-+ */
-+enum nl80211_attr_bss_select {
-+	__NL80211_ATTR_BSS_SELECT_INVALID,
-+	NL80211_ATTR_BSS_SELECT_BAND_PREF,
-+	NL80211_ATTR_BSS_SELECT_RSSI_ADJUST,
-+	NL80211_ATTR_BSS_SELECT_IGNORE_RSSI,
-+
-+	/* keep last */
-+	__NL80211_ATTR_BSS_SELECT_AFTER_LAST,
-+	NL80211_ATTR_BSS_SELECT_MAX = __NL80211_ATTR_BSS_SELECT_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 72de698..850f27e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -485,6 +485,13 @@ nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
- 	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
- };
- 
-+static const struct nla_policy
-+nl80211_bss_select_policy[NL80211_ATTR_BSS_SELECT_MAX + 1] = {
-+	[NL80211_ATTR_BSS_SELECT_BAND_PREF] = { .type = NLA_U32 },
-+	[NL80211_ATTR_BSS_SELECT_RSSI_ADJUST] = { .type = NLA_U8 },
-+	[NL80211_ATTR_BSS_SELECT_IGNORE_RSSI] = { .type = NLA_FLAG },
-+};
-+
- static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- 				     struct netlink_callback *cb,
- 				     struct cfg80211_registered_device **rdev,
-@@ -5753,6 +5760,33 @@ static int validate_scan_freqs(struct nlattr *freqs)
- 	return n_channels;
- }
- 
-+static int parse_bss_select(struct nlattr *nla,
-+			    struct cfg80211_bss_selection *bss_select)
++static void wilc_sdio_interrupt(struct sdio_func *func)
 +{
-+	struct nlattr *attr[NL80211_ATTR_BSS_SELECT_MAX + 1];
-+	int err;
++	sdio_release_host(func);
++	wilc_handle_isr(sdio_get_drvdata(func));
++	sdio_claim_host(func);
++}
 +
-+	if (!nla)
-+		return 0;
++static int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
++{
++	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
++	int ret;
++	u8 data;
 +
-+	err = nla_parse(attr, NL80211_ATTR_BSS_SELECT_MAX,
-+			nla_data(nla), nla_len(nla), nl80211_bss_select_policy);
-+	if (err)
-+		return err;
++	sdio_claim_host(func);
 +
-+	bss_select->present = true;
-+	if (!attr[NL80211_ATTR_BSS_SELECT_BAND_PREF])
-+		return -EINVAL;
++	func->num = cmd->function;
++	if (cmd->read_write) {  /* write */
++		if (cmd->raw) {
++			sdio_writeb(func, cmd->data, cmd->address, &ret);
++			data = sdio_readb(func, cmd->address, &ret);
++			cmd->data = data;
++		} else {
++			sdio_writeb(func, cmd->data, cmd->address, &ret);
++		}
++	} else {        /* read */
++		data = sdio_readb(func, cmd->address, &ret);
++		cmd->data = data;
++	}
 +
-+	bss_select->pref_band =
-+		nla_get_u32(attr[NL80211_ATTR_BSS_SELECT_BAND_PREF]);
-+	bss_select->rssi_adjust =
-+		nla_get_u8(attr[NL80211_ATTR_BSS_SELECT_RSSI_ADJUST]);
-+	bss_select->ignore_rssi = !!attr[NL80211_ATTR_BSS_SELECT_IGNORE_RSSI];
++	sdio_release_host(func);
 +
++	if (ret)
++		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
++	return ret;
++}
++
++
++static int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
++{
++	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
++	int size, ret;
++
++	sdio_claim_host(func);
++
++	func->num = cmd->function;
++	func->cur_blksize = cmd->block_size;
++	if (cmd->block_mode)
++		size = cmd->count * cmd->block_size;
++	else
++		size = cmd->count;
++
++	if (cmd->read_write) {  /* write */
++		ret = sdio_memcpy_toio(func, cmd->address,
++				       (void *)cmd->buffer, size);
++	} else {        /* read */
++		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
++					 cmd->address,  size);
++	}
++
++	sdio_release_host(func);
++
++	if (ret)
++		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
++
++	return ret;
++}
++
++static int linux_sdio_probe(struct sdio_func *func,
++			    const struct sdio_device_id *id)
++{
++	struct wilc *wilc;
++	int gpio, ret;
++
++	gpio = -1;
++	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
++		gpio = of_get_gpio(func->dev.of_node, 0);
++		if (gpio < 0)
++			gpio = GPIO_NUM;
++	}
++
++	dev_dbg(&func->dev, "Initializing netdev\n");
++	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
++			     &wilc_hif_sdio);
++	if (ret) {
++		dev_err(&func->dev, "Couldn't initialize netdev\n");
++		return ret;
++	}
++	sdio_set_drvdata(func, wilc);
++	wilc->dev = &func->dev;
++
++	dev_info(&func->dev, "Driver Initializing success\n");
 +	return 0;
 +}
 +
- static int nl80211_parse_random_mac(struct nlattr **attrs,
- 				    u8 *mac_addr, u8 *mac_addr_mask)
- {
-@@ -7978,6 +8012,18 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		connect.flags |= ASSOC_REQ_USE_RRM;
- 	}
- 
-+	/* only do bss selection when no BSSID is specified. */
-+	if (!connect.bssid &&
-+	    wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_BSS_SELECT)) {
-+		err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
-+				       &connect.bss_select);
-+		if (err) {
-+			kzfree(connkeys);
-+			return err;
-+		}
-+	}
++static void linux_sdio_remove(struct sdio_func *func)
++{
++	wilc_netdev_cleanup(sdio_get_drvdata(func));
++}
 +
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
- 	wdev_unlock(dev->ieee80211_ptr);
++static struct sdio_driver wilc1000_sdio_driver = {
++	.name		= SDIO_MODALIAS,
++	.id_table	= wilc_sdio_ids,
++	.probe		= linux_sdio_probe,
++	.remove		= linux_sdio_remove,
++};
++module_driver(wilc1000_sdio_driver,
++	      sdio_register_driver,
++	      sdio_unregister_driver);
++MODULE_LICENSE("GPL");
++
++static int wilc_sdio_enable_interrupt(struct wilc *dev)
++{
++	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
++	int ret = 0;
++
++	sdio_claim_host(func);
++	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
++	sdio_release_host(func);
++
++	if (ret < 0) {
++		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
++		ret = -EIO;
++	}
++	return ret;
++}
++
++static void wilc_sdio_disable_interrupt(struct wilc *dev)
++{
++	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
++	int ret;
++
++	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
++
++	sdio_claim_host(func);
++	ret = sdio_release_irq(func);
++	if (ret < 0)
++		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
++	sdio_release_host(func);
++
++	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
++}
++
++static int wilc_sdio_init(void)
++{
++	return 1;
++}
++
+ /********************************************
+  *
+  *      Function 0
 -- 
 1.9.1
 
