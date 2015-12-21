@@ -1,63 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0039.hostedemail.com ([216.40.44.39]:56615 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755841AbbLQLBw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 06:01:52 -0500
-Message-ID: <1450350106.3430.5.camel@perches.com> (sfid-20151217_120155_921482_FB1FD60A)
-Subject: Re: [PATCH] Print warnings for missing cfg80211_ops implementations
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Ola Olsson <ola1olsson@gmail.com>
-Cc: "ola. olsson" <ola.olsson@sonymobile.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 17 Dec 2015 03:01:46 -0800
-In-Reply-To: <1450339048.8247.19.camel@sipsolutions.net>
-References: <1450302215-16156-1-git-send-email-ola1olsson@gmail.com>
-	 <1450314972.5661.2.camel@perches.com>
-	 <CABAco3BSaB9R6-nZQsmOnfXXy2ra-un0jjeBkyq4inzCybD5dw@mail.gmail.com>
-	 <1450329559.5661.5.camel@perches.com>
-	 <CABAco3DCSqzrCZWYXyibV0U1vuTk1En0k505J67vT6eEP2SfEw@mail.gmail.com>
-	 (sfid-20151217_083413_469909_7FF85E76) <1450339048.8247.19.camel@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751843AbbLUUv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:29 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/45] iwlwifi: expose fw usniffer mode to more utilities
+Date: Mon, 21 Dec 2015 22:50:21 +0200
+Message-Id: <1450731046-2796-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215143_944624_6E6618C0)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-17 at 08:57 +0100, Johannes Berg wrote:
-> On Thu, 2015-12-17 at 08:34 +0100, Ola Olsson wrote:
-> > > but maybe it should be
-> > > 
-> > >         WARN_ON((ops->add_station && !ops->del_station) ||
-> > >                 (!opt->add_station && ops->del_station))
-> > > 
-> > > etc...
-> > 
-> > Ahh, got it! I really like your idea but I assume it's quite rare to
-> > implement the "stop/del/leave/disconnect" callbacks and at the same
-> > time forget to implement the "start/add/join/connect". You will
-> > probably find out pretty quickly if the "start" functions are
-> > missing,
-> > while it might take some time debugging why you lack the "stop"
-> > functions (reinitialization issues/ resource leaks for example).
-> > 
-> > With that said, don't take my word for it, I was only following the
-> > existing pattern and I assume someone else had a good reason in the
-> > first place.
-> > 
-> 
-> Pretty much what you said :)
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-Following patterns is good, I just think the
-pattern could be trivially improved.
+Today, in order to configure fw in usniffer mode, the ucode
+must have the corresponding tlv, which is revealed to the driver
+while parsing the ucode.
 
-The test is a runtime check on what would ideally
-be done at compile time.
+Expose the mode of the usniffer to other utilities in the driver
+(other than the ucode parser) by passing back a pointer to the value.
+This can be very useful for allowing configuring the fw dbg data
+using an external configuration file, because this configuration
+depends on the fw usniffer mode.
 
-Using
-	WARN_ON(!a ^ !b)
-which is logically the same as what I wrote above
-for clarity is simply a bit more coverage and maybe
-even a bit run-time faster.
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 16756f0..47a83ab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -594,7 +594,8 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 				const struct firmware *ucode_raw,
+ 				struct iwl_firmware_pieces *pieces,
+-				struct iwl_ucode_capabilities *capa)
++				struct iwl_ucode_capabilities *capa,
++				bool *usniffer_images)
+ {
+ 	struct iwl_tlv_ucode_header *ucode = (void *)ucode_raw->data;
+ 	struct iwl_ucode_tlv *tlv;
+@@ -607,7 +608,6 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 	char buildstr[25];
+ 	u32 build, paging_mem_size;
+ 	int num_of_cpus;
+-	bool usniffer_images = false;
+ 	bool usniffer_req = false;
+ 	bool gscan_capa = false;
+ 
+@@ -980,7 +980,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			break;
+ 			}
+ 		case IWL_UCODE_TLV_SEC_RT_USNIFFER:
+-			usniffer_images = true;
++			*usniffer_images = true;
+ 			iwl_store_ucode_sec(pieces, tlv_data,
+ 					    IWL_UCODE_REGULAR_USNIFFER,
+ 					    tlv_len);
+@@ -1031,7 +1031,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		}
+ 	}
+ 
+-	if (usniffer_req && !usniffer_images) {
++	if (usniffer_req && !*usniffer_images) {
+ 		IWL_ERR(drv,
+ 			"user selected to work with usniffer but usniffer image isn't available in ucode package\n");
+ 		return -EINVAL;
+@@ -1192,6 +1192,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	u32 api_ver;
+ 	int i;
+ 	bool load_module = false;
++	bool usniffer_images = false;
+ 
+ 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
+ 	fw->ucode_capa.standard_phy_calibration_size =
+@@ -1229,7 +1230,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 		err = iwl_parse_v1_v2_firmware(drv, ucode_raw, pieces);
+ 	else
+ 		err = iwl_parse_tlv_firmware(drv, ucode_raw, pieces,
+-					     &fw->ucode_capa);
++					     &fw->ucode_capa, &usniffer_images);
+ 
+ 	if (err)
+ 		goto try_again;
+-- 
+2.5.0
 
