@@ -1,125 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751636AbbLUUvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:14 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/45] iwlwifi: trans: support a callback for ASYNC commands
-Date: Mon, 21 Dec 2015 22:50:13 +0200
-Message-Id: <1450731046-2796-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215128_390724_6BE7FDDF)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11820 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFTG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 00:19:06 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 40/46] staging: wilc1000: wilc_set_wfi_drv_handler: pass vif index
+Date: Mon, 21 Dec 2015 14:18:44 +0900
+Message-ID: <1450675130-17866-41-git-send-email-glen.lee@atmel.com> (sfid-20151221_063059_302137_8EC4DFE1)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows the op_mode to request from the transport to
-call a callback when an ASYNC commands is completed by
-the firmware. The same callback will be called for all the
-commands. Pass the command whose response triggers the
-callback as a parameter to the callback itself.
+Pass index of vif instead of hif_drv. wilc_get_vif_idx is used to get correct
+index of vif.
+In the handler function handle_set_wfi_drv_handler, use vif instead of hif_drv,
+and use hif_drv_handler->handler instead of hif_drv when deinitialize wilc
+device.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h | 11 +++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h   |  7 +++++++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c     |  7 +++----
- 3 files changed, 21 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 14 ++++++--------
+ drivers/staging/wilc1000/host_interface.h         |  3 ++-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 +++++++-----
+ 3 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-index 2a58d68..ffff31c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-@@ -123,6 +123,8 @@ struct iwl_cfg;
-  *	received on the RSS queue(s). The queue parameter indicates which of the
-  *	RSS queues received this frame; it will always be non-zero.
-  *	This method must not sleep.
-+ * @async_cb: called when an ASYNC command with CMD_WANT_ASYNC_CALLBACK set
-+ *	completes. Must be atomic.
-  * @queue_full: notifies that a HW queue is full.
-  *	Must be atomic and called with BH disabled.
-  * @queue_not_full: notifies that a HW queue is not full any more.
-@@ -155,6 +157,8 @@ struct iwl_op_mode_ops {
- 		   struct iwl_rx_cmd_buffer *rxb);
- 	void (*rx_rss)(struct iwl_op_mode *op_mode, struct napi_struct *napi,
- 		       struct iwl_rx_cmd_buffer *rxb, unsigned int queue);
-+	void (*async_cb)(struct iwl_op_mode *op_mode,
-+			 const struct iwl_device_cmd *cmd);
- 	void (*queue_full)(struct iwl_op_mode *op_mode, int queue);
- 	void (*queue_not_full)(struct iwl_op_mode *op_mode, int queue);
- 	bool (*hw_rf_kill)(struct iwl_op_mode *op_mode, bool state);
-@@ -203,6 +207,13 @@ static inline void iwl_op_mode_rx_rss(struct iwl_op_mode *op_mode,
- 	op_mode->ops->rx_rss(op_mode, napi, rxb, queue);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0a9060c9..be88237 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -313,7 +313,7 @@ static int get_id_from_handler(struct host_if_drv *handler)
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+  * As a result, the returned index will be 1 to NUM_CONCURRENT_IFC.
+  */
+-static int wilc_get_vif_idx(struct wilc_vif *vif)
++int wilc_get_vif_idx(struct wilc_vif *vif)
+ {
+ 	return vif->u8IfIdx + 1;
+ }
+@@ -363,17 +363,16 @@ static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	wid.id = (u16)WID_SET_DRV_HANDLER;
+ 	wid.type = WID_INT;
+ 	wid.val = (s8 *)&hif_drv_handler->handler;
+ 	wid.size = sizeof(u32);
+ 
+-	result = wilc_send_config_pkt(hif_drv->wilc, SET_CFG, &wid, 1,
++	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
+ 				      hif_drv_handler->handler);
+ 
+-	if (!hif_drv)
++	if (!hif_drv_handler->handler)
+ 		up(&hif_sema_driver);
+ 
+ 	if (result) {
+@@ -3638,15 +3637,14 @@ int wilc_wait_msg_queue_idle(void)
+ 	return result;
  }
  
-+static inline void iwl_op_mode_async_cb(struct iwl_op_mode *op_mode,
-+					const struct iwl_device_cmd *cmd)
-+{
-+	if (op_mode->ops->async_cb)
-+		op_mode->ops->async_cb(op_mode, cmd);
-+}
-+
- static inline void iwl_op_mode_queue_full(struct iwl_op_mode *op_mode,
- 					  int queue)
+-int wilc_set_wfi_drv_handler(struct wilc_vif *vif, struct host_if_drv *hif_drv)
++int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index)
  {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 0cd69cd..77ae7fa 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -248,6 +248,8 @@ static inline u32 iwl_rx_packet_payload_len(const struct iwl_rx_packet *pkt)
-  * @CMD_MAKE_TRANS_IDLE: The command response should mark the trans as idle.
-  * @CMD_WAKE_UP_TRANS: The command response should wake up the trans
-  *	(i.e. mark it as non-idle).
-+ * @CMD_WANT_ASYNC_CALLBACK: the op_mode's async callback function must be
-+ *	called after this command completes. Valid only with CMD_ASYNC.
-  * @CMD_TB_BITMAP_POS: Position of the first bit for the TB bitmap. We need to
-  *	check that we leave enough room for the TBs bitmap which needs 20 bits.
-  */
-@@ -259,6 +261,7 @@ enum CMD_MODE {
- 	CMD_SEND_IN_IDLE	= BIT(4),
- 	CMD_MAKE_TRANS_IDLE	= BIT(5),
- 	CMD_WAKE_UP_TRANS	= BIT(6),
-+	CMD_WANT_ASYNC_CALLBACK	= BIT(7),
+ 	int result = 0;
+ 	struct host_if_msg msg;
  
- 	CMD_TB_BITMAP_POS	= 11,
- };
-@@ -903,6 +906,10 @@ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
- 		return -EIO;
- 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
+-	msg.body.drv.handler = get_id_from_handler(hif_drv);
+-	msg.drv = hif_drv;
++	msg.body.drv.handler = index;
+ 	msg.vif = vif;
  
-+	if (WARN_ON((cmd->flags & CMD_WANT_ASYNC_CALLBACK) &&
-+		    !(cmd->flags & CMD_ASYNC)))
-+		return -EINVAL;
-+
- 	if (!(cmd->flags & CMD_ASYNC))
- 		lock_map_acquire_read(&trans->sync_cmd_lockdep_map);
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+@@ -4001,7 +3999,7 @@ s32 wilc_deinit(struct wilc_vif *vif)
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 95ba920..fe8241f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1593,10 +1593,6 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- /*
-  * iwl_pcie_hcmd_complete - Pull unused buffers off the queue and reclaim them
-  * @rxb: Rx buffer to reclaim
-- *
-- * If an Rx buffer has an async callback associated with it the callback
-- * will be executed.  The attached skb (if present) will only be freed
-- * if the callback returns 1
-  */
- void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- 			    struct iwl_rx_cmd_buffer *rxb)
-@@ -1640,6 +1636,9 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- 		meta->source->_rx_page_order = trans_pcie->rx_page_order;
- 	}
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
  
-+	if (meta->flags & CMD_WANT_ASYNC_CALLBACK)
-+		iwl_op_mode_async_cb(trans->op_mode, cmd);
-+
- 	iwl_pcie_cmdq_reclaim(trans, txq_id, index);
+-	wilc_set_wfi_drv_handler(vif, NULL);
++	wilc_set_wfi_drv_handler(vif, 0);
+ 	down(&hif_sema_driver);
  
- 	if (!(meta->flags & CMD_ASYNC)) {
+ 	if (hif_drv->usr_scan_req.scan_result) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 9716bc8..8922f29 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -367,13 +367,14 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
+ 			   void *pvUserArg);
+ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
+ s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
+-int wilc_set_wfi_drv_handler(struct wilc_vif *vif, struct host_if_drv *hif_drv);
++int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+ 
+ void wilc_free_join_params(void *pJoinParams);
+ 
+ s32 wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics);
+ void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
++int wilc_get_vif_idx(struct wilc_vif *vif);
+ 
+ extern bool wilc_optaining_ip;
+ extern u8 wilc_connected_ssid[6];
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index da4c4ad..53fb2d4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -628,7 +628,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 
+ 	priv->u32RcvdChCount = 0;
+ 
+-	wilc_set_wfi_drv_handler(vif, priv->hWILCWFIDrv);
++	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
+ 	reset_shadow_found();
+ 
+ 	priv->bCfgScanning = true;
+@@ -709,7 +709,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(priv->dev);
+ 	pstrWFIDrv = (struct host_if_drv *)(priv->hWILCWFIDrv);
+ 
+-	wilc_set_wfi_drv_handler(vif, priv->hWILCWFIDrv);
++	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
+ 
+ 	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
+ 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
+@@ -2142,7 +2142,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 			wilc_initialized = 1;
+ 			vif->iftype = interface_type;
+ 
+-			wilc_set_wfi_drv_handler(vif, wl->vif[0]->hif_drv);
++			wilc_set_wfi_drv_handler(vif,
++						 wilc_get_vif_idx(wl->vif[0]));
+ 			wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
+ 			wilc_set_operation_mode(vif, STATION_MODE);
+ 
+@@ -2217,7 +2218,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 			wilc1000_wlan_init(dev, vif);
+ 			wilc_initialized = 1;
+ 
+-			wilc_set_wfi_drv_handler(vif, wl->vif[0]->hif_drv);
++			wilc_set_wfi_drv_handler(vif,
++						 wilc_get_vif_idx(wl->vif[0]));
+ 			wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
+ 			wilc_set_operation_mode(vif, STATION_MODE);
+ 
+@@ -2320,7 +2322,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		wilc1000_wlan_init(dev, vif);
+ 		wilc_initialized = 1;
+ 
+-		wilc_set_wfi_drv_handler(vif, wl->vif[0]->hif_drv);
++		wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(wl->vif[0]));
+ 		wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
+ 		wilc_set_operation_mode(vif, AP_MODE);
+ 
 -- 
-2.5.0
+1.9.1
 
