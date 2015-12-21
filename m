@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54903 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932270AbbLSAoe (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11883 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbbLUFTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 19:44:34 -0500
-Date: Fri, 18 Dec 2015 14:50:10 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-Subject: Re: [PATCH] staging: wilc1000: fix double mutex_unlock on failure
- path in wilc_wlan_cleanup()
-Message-ID: <20151218225010.GA26812@kroah.com> (sfid-20151219_014455_903442_B5F1F3EF)
-References: <1449266674-6642-1-git-send-email-khoroshilov@ispras.ru>
+	Mon, 21 Dec 2015 00:19:36 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 45/46] staging: wilc1000: set hif_drv before it is used
+Date: Mon, 21 Dec 2015 14:18:49 +0900
+Message-ID: <1450675130-17866-46-git-send-email-glen.lee@atmel.com> (sfid-20151221_061939_740537_BC58CCF9)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449266674-6642-1-git-send-email-khoroshilov@ispras.ru>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 05, 2015 at 01:04:34AM +0300, Alexey Khoroshilov wrote:
-> If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
-> it calls release_bus() and continues execution. But it leads to double
-> release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
-> 
-> The patch adds return in case of failure.
-> 
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 2 ++
->  1 file changed, 2 insertions(+)
+We are using hif_drv of vif, so it needs to be set before it is used.
+Set hif_drv to vif->hifdrv soon after it is allocated.
 
-No longer applies to my tree, can you rebase it against staging-testing
-and resend?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ++++++
+ drivers/staging/wilc1000/linux_wlan.c     | 1 -
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d6b23cd..8c77520 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3782,6 +3782,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	struct host_if_drv *hif_drv;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
++	int i;
+ 
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+@@ -3798,6 +3799,11 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		goto _fail_;
+ 	}
+ 	*hif_drv_handler = hif_drv;
++	for (i = 0; i < wilc->vif_num; i++)
++		if (dev == wilc->vif[i]->ndev) {
++			wilc->vif[i]->hif_drv = hif_drv;
++			break;
++		}
+ 
+ 	wilc_optaining_ip = false;
+ 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a50e3ff..54fe9d7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1036,7 +1036,6 @@ int wilc_mac_open(struct net_device *ndev)
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+ 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
+-			wl->vif[i]->hif_drv = priv->hWILCWFIDrv;
+ 			break;
+ 		}
+ 	}
+-- 
+1.9.1
 
-greg k-h
