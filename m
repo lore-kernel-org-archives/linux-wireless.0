@@ -1,61 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:35684 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752697AbbLIRNU (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33292 "EHLO
+	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbbLUW4a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 12:13:20 -0500
-Received: by qgec40 with SMTP id c40so88942161qge.2
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2015 09:13:19 -0800 (PST)
-Date: Wed, 9 Dec 2015 12:13:14 -0500 (EST)
-From: Nicolas Pitre <nicolas.pitre@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] iwlegacy: mark il_adjust_beacon_interval as noinline
-In-Reply-To: <36263581.L8412YxJjp@wuerfel>
-Message-ID: <alpine.LFD.2.20.1512091209130.26920@knanqh.ubzr> (sfid-20151209_181339_380758_48F5166B)
-References: <36263581.L8412YxJjp@wuerfel>
+	Mon, 21 Dec 2015 17:56:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
+References: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 22 Dec 2015 09:56:10 +1100
+Message-ID: <CAGRGNgU+CA-jLAX=_qV27tfbyQ2cyjYo2NZOq3_7fFLc-VsCew@mail.gmail.com> (sfid-20151221_235648_537253_2F4F43B8)
+Subject: Re: [PATCH] wlcore: consolidate kmalloc + memset 0 into kzalloc
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 9 Dec 2015, Arnd Bergmann wrote:
+Hi,
 
-> With the new optimized do_div() code, some versions of gcc
-> produce obviously incorrect code that leads to a link error
-> in iwlegacy/common.o:
-> 
-> drivers/built-in.o: In function `il_send_rxon_timing':
-> :(.text+0xa6b4d4): undefined reference to `____ilog2_NaN'
-> :(.text+0xa6b4f0): undefined reference to `__aeabi_uldivmod'
-> 
-> In a few thousand randconfig builds, I have seen this problem
-> a couple of times in this file, but never anywhere else in the
-> kernel, so we can try to work around this in the only file
-> that shows the behavior, by marking the il_adjust_beacon_interval
-> function as noinline, which convinces gcc to use the unoptimized
-> do_div() all the time.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Tue, Dec 22, 2015 at 3:47 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
+> This is an API consolidation only. The use of kmalloc + memset to 0
+> is equivalent to kzalloc.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>
+> Found by coccinelle script (relaxed version of
+> scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
+>
+> Patch was compile tested with: x86_64_defconfig +
+> CONFIG_WL12XX=m (implies CONFIG_WLCORE=m)
+>
+> Patch is against linux-next (localversion-next is -next-20151221)
+>
+>  drivers/net/wireless/ti/wlcore/main.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index ec7f6af..dfc49bf 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -838,7 +838,7 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+>
+>         wl1271_info("Reading FW panic log");
+>
+> -       block = kmalloc(wl->fw_mem_block_size, GFP_KERNEL);
+> +       block = kzalloc(wl->fw_mem_block_size, GFP_KERNEL);
+>         if (!block)
+>                 return;
+>
+> @@ -885,7 +885,6 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+>                         goto out;
+>                 }
+> -               memset(block, 0, wl->fw_mem_block_size);
 
-Acked-by: Nicolas Pitre <nico@linaro.org>
+I don't think you can't remove this line. It appears that the loop
+this is part of resets block to be all zero, reads a chunk of data in,
+then operates on it. I'm guessing that the code after the following
+line expects that there isn't any data left over from previous runs
+through the loop.
 
-> 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-> index 887114582583..6308bb217454 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/common.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
-> @@ -3602,7 +3602,7 @@ il_is_ht40_tx_allowed(struct il_priv *il, struct ieee80211_sta_ht_cap *ht_cap)
->  }
->  EXPORT_SYMBOL(il_is_ht40_tx_allowed);
->  
-> -static u16
-> +static u16 noinline
->  il_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
->  {
->  	u16 new_val;
-> 
-> 
+>                 ret = wlcore_read_hwaddr(wl, addr, block,
+>                                         wl->fw_mem_block_size, false);
+>
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
