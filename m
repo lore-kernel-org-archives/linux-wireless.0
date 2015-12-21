@@ -1,123 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:50076 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689AbbLJMnV (ORCPT
+Received: from webmail.lairdtech.com ([63.123.150.69]:61516 "EHLO
+	webmail.lairdtech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbbLUWG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 07:43:21 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 01/13] brcmfmac: Simplify scan timing configuration
-Date: Thu, 10 Dec 2015 13:43:00 +0100
-Message-ID: <1449751392-32569-2-git-send-email-arend@broadcom.com> (sfid-20151210_134337_072378_2845C4F7)
-In-Reply-To: <1449751392-32569-1-git-send-email-arend@broadcom.com>
-References: <1449751392-32569-1-git-send-email-arend@broadcom.com>
+	Mon, 21 Dec 2015 17:06:29 -0500
+From: Dan Kephart <Dan.Kephart@lairdtech.com>
+To: Souptick Joarder <jrdr.linux@gmail.com>,
+	Brent Taylor <motobud@gmail.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+Date: Mon, 21 Dec 2015 22:00:40 +0000
+Message-ID: <F12301F7-EE8E-4B5A-BE28-17A235DBCA7E@lairdtech.com> (sfid-20151221_230651_131339_ADF769FA)
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+ <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+In-Reply-To: <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-No need to pass timing configuration in local functions as they are
-static anyway.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 31 +++++++++-------------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  4 ---
- 2 files changed, 12 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 771c581..4aebb2a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -91,6 +91,10 @@
- #define BRCMF_SCAN_JOIN_PASSIVE_DWELL_TIME_MS	400
- #define BRCMF_SCAN_JOIN_PROBE_INTERVAL_MS	20
- 
-+#define BRCMF_SCAN_CHANNEL_TIME		40
-+#define BRCMF_SCAN_UNASSOC_TIME		40
-+#define BRCMF_SCAN_PASSIVE_TIME		120
-+
- #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
- 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
- 
-@@ -5357,37 +5361,27 @@ roam_setup_done:
- }
- 
- static s32
--brcmf_dongle_scantime(struct brcmf_if *ifp, s32 scan_assoc_time,
--		      s32 scan_unassoc_time, s32 scan_passive_time)
-+brcmf_dongle_scantime(struct brcmf_if *ifp)
- {
- 	s32 err = 0;
- 
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_CHANNEL_TIME,
--				    scan_assoc_time);
-+				    BRCMF_SCAN_CHANNEL_TIME);
- 	if (err) {
--		if (err == -EOPNOTSUPP)
--			brcmf_dbg(INFO, "Scan assoc time is not supported\n");
--		else
--			brcmf_err("Scan assoc time error (%d)\n", err);
-+		brcmf_err("Scan assoc time error (%d)\n", err);
- 		goto dongle_scantime_out;
- 	}
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_UNASSOC_TIME,
--				    scan_unassoc_time);
-+				    BRCMF_SCAN_UNASSOC_TIME);
- 	if (err) {
--		if (err == -EOPNOTSUPP)
--			brcmf_dbg(INFO, "Scan unassoc time is not supported\n");
--		else
--			brcmf_err("Scan unassoc time error (%d)\n", err);
-+		brcmf_err("Scan unassoc time error (%d)\n", err);
- 		goto dongle_scantime_out;
- 	}
- 
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_PASSIVE_TIME,
--				    scan_passive_time);
-+				    BRCMF_SCAN_PASSIVE_TIME);
- 	if (err) {
--		if (err == -EOPNOTSUPP)
--			brcmf_dbg(INFO, "Scan passive time is not supported\n");
--		else
--			brcmf_err("Scan passive time error (%d)\n", err);
-+		brcmf_err("Scan passive time error (%d)\n", err);
- 		goto dongle_scantime_out;
- 	}
- 
-@@ -6089,8 +6083,7 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
- 	/* make sure RF is ready for work */
- 	brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 0);
- 
--	brcmf_dongle_scantime(ifp, WL_SCAN_CHANNEL_TIME,
--			      WL_SCAN_UNASSOC_TIME, WL_SCAN_PASSIVE_TIME);
-+	brcmf_dongle_scantime(ifp);
- 
- 	power_mode = cfg->pwr_save ? PM_FAST : PM_OFF;
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, power_mode);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index d492163..cf7a93d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -29,10 +29,6 @@
- #define WL_ROAM_TRIGGER_LEVEL		-75
- #define WL_ROAM_DELTA			20
- 
--#define WL_SCAN_CHANNEL_TIME		40
--#define WL_SCAN_UNASSOC_TIME		40
--#define WL_SCAN_PASSIVE_TIME		120
--
- #define WL_ESCAN_BUF_SIZE		(1024 * 64)
- #define WL_ESCAN_TIMER_INTERVAL_MS	10000 /* E-Scan timeout */
- 
--- 
-1.9.1
-
+SGkgQnJlbnQgYW5kIFNvdXB0aWNrLA0KDQoNCg0KDQpPbiAxMi8yMS8xNSwgMjoyMyBQTSwgImF0
+aDZrbCBvbiBiZWhhbGYgb2YgU291cHRpY2sgSm9hcmRlciIgPGF0aDZrbC1ib3VuY2VzQGxpc3Rz
+LmluZnJhZGVhZC5vcmcgb24gYmVoYWxmIG9mIGpyZHIubGludXhAZ21haWwuY29tPiB3cm90ZToN
+Cg0KPkhpIEJyZW50LA0KPg0KPk9uIFR1ZSwgRGVjIDEsIDIwMTUgYXQgMTE6MTEgQU0sIEJyZW50
+IFRheWxvciA8bW90b2J1ZEBnbWFpbC5jb20+IHdyb3RlOg0KPj4gU2luY2UgY29tbWl0IDg0Mzc3
+NTRjODMzNTFkNjIxM2MxYTQ3ZmYwMjljMTEyNmQ2MDQyYTcsIGFyLT5mdyBpcyBleHBlY3RlZCB0
+byBiZSBwb2ludGluZyB0byBtZW1vcnkgYWxsb2NhdGVkIGJ5IHZtYWxsb2MuICBJZiB0aGUgYXBp
+MSBtZXRob2QgKHZpYSBhdGg2a2xfZmV0Y2hfZndfYXBpMSkgaXMgdXNlZCB0byBhbGxvY2F0ZSBt
+ZW1vcnkgZm9yIGFyLT5mdywgdGhlbiBrbWVtZHVwIGlzIHVzZWQuICBUaGlzIHBhdGNoIGNoZWNr
+cyBpZiB0aGUgZmlybXdhcmUgYmVpbmcgbG9hZGVkIGlzIHRoZSAnZncnIGltYWdlLCB0aGVuIHVz
+ZSB2bWFsbG9jLCBvdGhlcndpc2UgdXNlIGttYWxsb2MuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTog
+QnJlbnQgVGF5bG9yIDxtb3RvYnVkQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvbmV0
+L3dpcmVsZXNzL2F0aC9hdGg2a2wvaW5pdC5jIHwgNyArKysrKystDQo+PiAgMSBmaWxlIGNoYW5n
+ZWQsIDYgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNmtsL2luaXQuYyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2F0aC9hdGg2a2wvaW5pdC5jDQo+PiBpbmRleCA2YWUwNzM0Li40ZjJiMTI0ZCAxMDA2NDQN
+Cj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg2a2wvaW5pdC5jDQo+PiArKysg
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNmtsL2luaXQuYw0KPj4gQEAgLTY3MywxMCAr
+NjczLDE1IEBAIHN0YXRpYyBpbnQgYXRoNmtsX2dldF9mdyhzdHJ1Y3QgYXRoNmtsICphciwgY29u
+c3QgY2hhciAqZmlsZW5hbWUsDQo+PiAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4+DQo+
+PiAgICAgICAgICpmd19sZW4gPSBmd19lbnRyeS0+c2l6ZTsNCj4+IC0gICAgICAgKmZ3ID0ga21l
+bWR1cChmd19lbnRyeS0+ZGF0YSwgZndfZW50cnktPnNpemUsIEdGUF9LRVJORUwpOw0KPj4gKyAg
+IGlmICgmYXItPmZ3ID09IGZ3KQ0KPj4gKyAgICAgICAgICAgICAgICpmdyA9IHZtYWxsb2MoZndf
+ZW50cnktPnNpemUpOw0KPj4gKyAgIGVsc2UNCj4+ICsgICAgICAgICAgICAgICAqZncgPSBrbWFs
+bG9jKGZ3X2VudHJ5LT5zaXplLCBHRlBfS0VSTkVMKTsNCj4NCj4gICAgICAgICAgV2h5IHZtYWxs
+b2MgYW5kIGttYWxsb2MgYm90aCBhcmUgcmVxdWlyZWQ/IGNhbid0IHVzZSBlaXRoZXINCj52bWFs
+bG9jIG9yIGttYWxsb2M/DQoNCk15IGd1ZXNzIGlzIHRoZSByZWFzb24gdG8gdXNlIGJvdGggdm1h
+bGxvYyBhbmQga21hbGxvYyBpcyB0aGF0IHRoZSBmaXJtd2FyZSBibG9iIGNhbiBiZSBuZWFyIDEy
+OEtCLiAgSSBrbm93IG91ciBhcjYwMDMgZmlybXdhcmVzIGFwcHJvYWNoIHRoYXQuICBTbyB2bWFs
+bG9jIG11c3QgaGF2ZSBiZWVuIGNob3NlbiB0byBhdm9pZCBhbnkgaXNzdWVzIGlmIGl0IHdhcyBn
+cmVhdGVyIHRoYW4gMTI4S0IuICBTbyBrbWFsbG9jIGlzIHVzZWQgZm9yIGFsbCB0aGUgc21hbGwg
+ZmlybXdhcmUgcGllY2VzIChib2FyZCBkYXRhLCBvdHAuYmluLCBldGMpIGJ1dCB2bWFsbG9jIGZv
+ciB0aGUgZmlybXdhcmUgaXRzZWxmLiAgDQoNCkkgcGVyc29uYWxseSBmaXhlZCB0aGlzIGlzc3Vl
+IGZvciBsb2FkaW5nIHRoZSBmaXJtd2FyZSAoYnV0IG5vdCBib2FyZCBkYXRhLCBvcHQuYmluLCBl
+dGMpIGluIHRoZSBhcGkxIGFuZCB0ZXN0bW9kZSBmdW5jdGlvbnMgYnkgaGF2ZSBpdCBjYWxsIGEg
+bmV3IGhlbHBlciBmdW5jdGlvbjoNCg0Kc3RhdGljIGludCBhdGg2a2xfZ2V0X2Z3X3ZtKHN0cnVj
+dCBhdGg2a2wgKmFyLCBjb25zdCBjaGFyICpmaWxlbmFtZSwNCgkJCSB1OCAqKmZ3LCBzaXplX3Qg
+KmZ3X2xlbikNCnsNCgljb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3X2VudHJ5Ow0KCWludCByZXQ7
+DQoNCglyZXQgPSByZXF1ZXN0X2Zpcm13YXJlKCZmd19lbnRyeSwgZmlsZW5hbWUsIGFyLT5kZXYp
+Ow0KCWlmIChyZXQpDQoJcmV0dXJuIHJldDsNCg0KCSpmd19sZW4gPSBmd19lbnRyeS0+c2l6ZTsN
+CgkqZncgPSB2bWFsbG9jKCpmd19sZW4pOw0KDQoJaWYgKCpmdyA9PSBOVUxMKQ0KCXJldCA9IC1F
+Tk9NRU07DQoNCgltZW1jcHkoKmZ3LCBmd19lbnRyeS0+ZGF0YSwgKmZ3X2xlbik7DQoNCglyZWxl
+YXNlX2Zpcm13YXJlKGZ3X2VudHJ5KTsNCg0KCXJldHVybiByZXQ7DQp9DQoNCg0KDQo+Pg0KPj4g
+ICAgICAgICBpZiAoKmZ3ID09IE5VTEwpDQo+PiAgICAgICAgICAgICAgICAgcmV0ID0gLUVOT01F
+TTsNCj4+ICsgICAgICAgZWxzZQ0KPj4gKyAgICAgICAgICAgICAgIG1lbWNweSgqZncsIGZ3X2Vu
+dHJ5LT5kYXRhLCBmd19lbnRyeS0+c2l6ZSk7DQo+Pg0KPj4gICAgICAgICByZWxlYXNlX2Zpcm13
+YXJlKGZ3X2VudHJ5KTsNCj4+DQo+PiAtLQ0KPj4gMi42LjMNCj4+DQo+PiAtLQ0KPj4gVG8gdW5z
+dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
+LXdpcmVsZXNzIiBpbg0KPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
+Lmtlcm5lbC5vcmcNCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5l
+bC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPi1Tb3VwdGljaw0KPg0KPl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+YXRoNmtsIG1haWxpbmcgbGlz
+dA0KPmF0aDZrbEBsaXN0cy5pbmZyYWRlYWQub3JnDQo+aHR0cDovL2xpc3RzLmluZnJhZGVhZC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9hdGg2a2wNCg0KLSBEYW4gS2VwaGFydA0K
