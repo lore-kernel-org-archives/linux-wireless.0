@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34626 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbbL2SQo (ORCPT
+Received: from mga14.intel.com ([192.55.52.115]:7013 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750881AbbLUHYI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 13:16:44 -0500
+	Mon, 21 Dec 2015 02:24:08 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi-2015-12-21
+Date: Mon, 21 Dec 2015 07:24:03 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9477A9@hasmsx107.ger.corp.intel.com> (sfid-20151221_082412_572643_C215F54C)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <87poxy7spb.fsf@kamboji.qca.qualcomm.com>
-References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
-	<CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
-	<CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com>
-	<CAFqt6zZfmue6XVVno2Ho8UfEwz1Z3YxFzbcZ9ZMOn5Fe_zJLmQ@mail.gmail.com>
-	<87poxy7spb.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 29 Dec 2015 23:46:43 +0530
-Message-ID: <CAFqt6zacF-n0pRxU0=pq79rKCt1Y-08taaZxBrFdre4JMH6tbQ@mail.gmail.com> (sfid-20151229_191705_726602_12466510)
-Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Brent Taylor <motobud@gmail.com>
-Cc: netdev@vger.kernel.org, ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brent,
+Hi guys,
 
-On Tue, Dec 22, 2015 at 2:42 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Souptick Joarder <jrdr.linux@gmail.com> writes:
->
->> Hi Brent,
->>
->> On Tue, Dec 22, 2015 at 3:23 AM, Brent Taylor <motobud@gmail.com> wrote:
->>> On Mon, Dec 21, 2015 at 1:23 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
->>>> Hi Brent,
->>>>
->>>> On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
->>>>
->>>>> --- a/drivers/net/wireless/ath/ath6kl/init.c
->>>>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
->>>>> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
->>>>>                 return ret;
->>>>>
->>>>>         *fw_len = fw_entry->size;
->>>>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
->>>>> +   if (&ar->fw == fw)
->>>>> +               *fw = vmalloc(fw_entry->size);
->>>>> +   else
->>>>> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL)
->>>>
->>>>           Why vmalloc and kmalloc both are required? can't use either
->>>> vmalloc or kmalloc?
->>>
->>> My original problem was that kmemdup (which uses kmalloc) could not
->>> allocate enough memory
->>
->> If kmemdump ( which uses kmalloc) could not allocate memory then
->> using kmalloc again can lead to same problem.
->> I guess it will be correct to use
->>             *fw = vmalloc(fw_entry->size);
->> Correct me if i am wrong.
->
-> That sounds best. But remember take into account DMA requirements, IIRC
-> you cannot DMA from vmalloc memory on all platforms.
+We seem to have problem with iwlwifi-7265D-10.ucode which can be replaced by iwlwifi-7265-10.ucode without affecting anyone.
+As a bonus, the size on disk is a bit reduced.
 
-Is it possible to modify the patch as per feedback from Kalle.
+The following changes since commit bbe4917c054eb0a73e250c6363341e3bf6725839:
 
->
-> --
-> Kalle Valo
+  WHENCE: use https://linuxtv.org for LinuxTV URLs (2015-12-07 02:17:20 +0000)
 
--Souptick
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2015-12-21
+
+for you to fetch changes up to bf8e868d1ea52c514eb450d89ff5457cd04ec27d:
+
+  iwlwifi: replace 7265D-10.ucode by 7265-10.ucode (2015-12-21 09:09:18 +0200)
+
+----------------------------------------------------------------
+fix https://bugzilla.kernel.org/show_bug.cgi?id=109531
+by replacing iwlwifi-7265D-10.ucode by
+iwlwifi-7265-10.ucode
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: replace 7265D-10.ucode by 7265-10.ucode
+
+ iwlwifi-7265D-10.ucode | Bin 740436 -> 21 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)  mode change 100644 => 120000 iwlwifi-7265D-10.ucode
+
