@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:35233 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754889AbbL3RFe (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:36280 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbbLUTXN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 12:05:34 -0500
-Received: by mail-lf0-f42.google.com with SMTP id c192so52762554lfe.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 09:05:33 -0800 (PST)
+	Mon, 21 Dec 2015 14:23:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAFqt6zam7maK4wFrKo=yqWxaBkVDJhZGbKAFAdmcZPQonXTcxA@mail.gmail.com>
-References: <1450946006-7498-1-git-send-email-bjorn.andersson@sonymobile.com>
-	<CAFqt6zam7maK4wFrKo=yqWxaBkVDJhZGbKAFAdmcZPQonXTcxA@mail.gmail.com>
-Date: Wed, 30 Dec 2015 09:05:32 -0800
-Message-ID: <CAJAp7Oinz993CQgA81SifcJoeHicD9YNhBv0HHkiav3rD5=M4Q@mail.gmail.com> (sfid-20151230_180537_788756_2F236C0E)
-Subject: Re: [PATCH] mac80211: Make addr const in SET_IEEE80211_PERM_ADDR()
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+Date: Tue, 22 Dec 2015 00:53:12 +0530
+Message-ID: <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com> (sfid-20151221_202316_933825_BAEC461C)
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Brent Taylor <motobud@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ath6kl@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 30, 2015 at 8:47 AM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+Hi Brent,
+
+On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
+> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7, ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
 >
-> HI Bjorn,
+> Signed-off-by: Brent Taylor <motobud@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 >
-> On Thu, Dec 24, 2015 at 2:03 PM, Bjorn Andersson <bjorn@kryo.se> wrote:
-> > Make the addr parameter const in SET_IEEE80211_PERM_ADDR() to save
-> > clients from having to cast away a const qualifier.
-> >
-> > Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-> > ---
-> >  include/net/mac80211.h | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index 7c30faff245f..a6f3c9c4b7c2 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -2167,7 +2167,7 @@ static inline void SET_IEEE80211_DEV(struct ieee80211_hw *hw, struct device *dev
-> >   * @hw: the &struct ieee80211_hw to set the MAC address for
-> >   * @addr: the address to set
-> >   */
-> > -static inline void SET_IEEE80211_PERM_ADDR(struct ieee80211_hw *hw, u8 *addr)
-> > +static inline void SET_IEEE80211_PERM_ADDR(struct ieee80211_hw *hw, const u8 *addr)
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index 6ae0734..4f2b124d 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>                 return ret;
 >
-> I guess without const or with const doesn't make much difference here.
-> Correct me if I am wrong.
+>         *fw_len = fw_entry->size;
+> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+> +   if (&ar->fw == fw)
+> +               *fw = vmalloc(fw_entry->size);
+> +   else
+> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL);
 
-For most cases it doesn't make any difference, but in my driver I
-acquire the mac address as a const u8 *. Therefor I need to cast away
-the const part when calling this API.
-
-There's an existing example of this in
-drivers/net/wireless/st/cw1200/main.c line 601.
-
-
-I think it's safe to assume that this API won't ever modify the passed
-addr buffer, so there would be no future issues of marking the
-parameter const either.
-
+          Why vmalloc and kmalloc both are required? can't use either
+vmalloc or kmalloc?
 >
-> >  {
-> >         memcpy(hw->wiphy->perm_addr, addr, ETH_ALEN);
-> >  }
+>         if (*fw == NULL)
+>                 ret = -ENOMEM;
+> +       else
+> +               memcpy(*fw, fw_entry->data, fw_entry->size);
 >
+>         release_firmware(fw_entry);
+>
+> --
+> 2.6.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Regards,
-Bjorn
+-Souptick
