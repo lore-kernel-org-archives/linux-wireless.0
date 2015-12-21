@@ -1,50 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753760AbbLAJ7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:17 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/41] iwlwifi: dvm: remove stray debug code
-Date: Tue,  1 Dec 2015 11:58:32 +0200
-Message-Id: <1448963947-24302-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105921_992553_9B53F3B1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11164 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbbLUFPX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 00:15:23 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 03/46] staging: wilc1000: rename index to tcp_pending_ack_idx
+Date: Mon, 21 Dec 2015 14:18:07 +0900
+Message-ID: <1450675130-17866-4-git-send-email-glen.lee@atmel.com> (sfid-20151221_061526_592414_D571ABF9)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
+this name could be confused index of txq_entry_t. It is index of tcp pending
+ack.
 
-This code was needed during initial PAN bringup, but now is
-just cruft - remove it.
+It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 12 ++++++------
+ drivers/staging/wilc1000/wilc_wlan.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-index b3ad34e..a9d8b51 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-@@ -1411,13 +1411,7 @@ static void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 10def3f..27a44ee 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -249,7 +249,7 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
+ 		pending_acks_info[pending_base + pending_acks].ack_num = ack;
+ 		pending_acks_info[pending_base + pending_acks].txqe = txqe;
+ 		pending_acks_info[pending_base + pending_acks].session_index = session_index;
+-		txqe->index = pending_base + pending_acks;
++		txqe->tcp_pending_ack_idx = pending_base + pending_acks;
+ 		pending_acks++;
+ 	}
+ 	return 0;
+@@ -421,7 +421,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_s
+ 	tqe->tx_complete_func = NULL;
+ 	tqe->priv = NULL;
+ #ifdef TCP_ACK_FILTER
+-	tqe->index = NOT_TCP_ACK;
++	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+ #endif
+ 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
  
- 	mutex_lock(&priv->mutex);
+@@ -451,7 +451,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
  
--	if (WARN_ON(ctx->vif != vif)) {
--		struct iwl_rxon_context *tmp;
--		IWL_ERR(priv, "ctx->vif = %p, vif = %p\n", ctx->vif, vif);
--		for_each_context(priv, tmp)
--			IWL_ERR(priv, "\tID = %d:\tctx = %p\tctx->vif = %p\n",
--				tmp->ctxid, tmp, tmp->vif);
--	}
-+	WARN_ON(ctx->vif != vif);
- 	ctx->vif = NULL;
- 
- 	iwl_teardown_interface(priv, vif, false);
+ 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
+ #ifdef TCP_ACK_FILTER
+-	tqe->index = NOT_TCP_ACK;
++	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+ 	if (is_tcp_ack_filter_enabled())
+ 		tcp_process(dev, tqe);
+ #endif
+@@ -478,7 +478,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->tx_complete_func = func;
+ 	tqe->priv = priv;
+ #ifdef TCP_ACK_FILTER
+-	tqe->index = NOT_TCP_ACK;
++	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+ #endif
+ 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
+ 	wilc_wlan_txq_add_to_tail(dev, tqe);
+@@ -923,8 +923,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 					tqe->tx_complete_func(tqe->priv,
+ 							      tqe->status);
+ 				#ifdef TCP_ACK_FILTER
+-				if (tqe->index != NOT_TCP_ACK)
+-					pending_acks_info[tqe->index].txqe = NULL;
++				if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK)
++					pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
+ 				#endif
+ 				kfree(tqe);
+ 			} else {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 2ac63a3..27c7bbb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -216,7 +216,7 @@ struct txq_entry_t {
+ 	struct txq_entry_t *next;
+ 	struct txq_entry_t *prev;
+ 	int type;
+-	int index;
++	int tcp_pending_ack_idx;
+ 	u8 *buffer;
+ 	int buffer_size;
+ 	void *priv;
 -- 
-2.5.0
+1.9.1
 
