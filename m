@@ -1,69 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:35192 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934413AbbLPRqH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11614 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 12:46:07 -0500
-Received: by mail-qg0-f46.google.com with SMTP id i91so32923209qgf.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2015 09:46:07 -0800 (PST)
-Date: Wed, 16 Dec 2015 12:46:02 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "Adam R. Welle" <arwelle@cert.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-Message-ID: <20151216174602.GG4073@localhost> (sfid-20151216_184623_649787_A98BA8BD)
-References: <5670DA9A.4010102@candelatech.com>
- <1450257464.3159.1.camel@sipsolutions.net>
- <56716386.4070107@candelatech.com>
- <1450272308.8247.11.camel@sipsolutions.net>
- <567168AF.4060804@candelatech.com>
- <1450273362.8247.15.camel@sipsolutions.net>
- <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
+	Mon, 21 Dec 2015 00:17:51 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 28/46] staging: wilc1000: remove unneeded function
+Date: Mon, 21 Dec 2015 14:18:32 +0900
+Message-ID: <1450675130-17866-29-git-send-email-glen.lee@atmel.com> (sfid-20151221_063107_913175_37FE69CD)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 05:30:20PM +0000, Adam R. Welle wrote:
-> 
-> > Well, it was always rather awkward since it was the *second* address :)
-> 
-> Could somebody provide background information on why the decision was
-> made to use a second address for the netlink frames instead of the same
-> address as was used for the non-netlink frames? 
+wilc_spi_init in linux_wlan_spi.c is unneeded. It just return true. Rename
+_wilc_spi_init in wlan_spi.c to wilc_spi_init.
 
-I can't; I believe it was done that way from the start but I don't really
-know if there was a reason.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_spi.c |  5 -----
+ drivers/staging/wilc1000/linux_wlan_spi.h |  1 -
+ drivers/staging/wilc1000/wilc_spi.c       | 11 ++---------
+ 3 files changed, 2 insertions(+), 15 deletions(-)
 
-> I too have an obscure user-space app which uses this API :)
-> 
-> My app was written to account for both the old and new logic being debated,
-> so I can cope either way with the flip of a switch. I would just like to
-> say that for my purposes the patch worked better as I already intended for
-> my app to track MAC address changes made by a user.
-
-In any case, we'll need to support that.  However the addr attribute is
-interpreted, the actual userspace app should accept any user defined address
-as long as it can map it back to the attribute.  It just may be the case
-going forward that the attribute bears no obvious relationship to the
-addresses used in frames.
-
-> I should note that I am passing these frames between virtual machines so
-> the use of unique addresses (instead of hard-coded 0x42 addresses) as a key
-> simplifies things when determining which radio transmitted a given frame
-> and which radio needs to receive the frame. My app has always relied on the
-> MAC address assigned by the user as a unique key across virtual machines.
-
-Sounds interesting - is this app open source?
-
-> Also, I will point out that I am not using multiple vifs on a radio but if
-> I were, I imagine that I would send a copy of the frame to each vif.
-
-I guess this is what wmediumd would wind up doing too, but it would result in
-duplicate frames at the receivers with multiple vifs.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index e9ad33f..06935cf 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -61,11 +61,6 @@ struct spi_driver wilc1000_spi_driver = {
+ module_spi_driver(wilc1000_spi_driver);
+ MODULE_LICENSE("GPL");
+ 
+-int wilc_spi_init(void)
+-{
+-	return 1;
+-}
+-
+ int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
+index 5ff070b..d41c16a 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.h
++++ b/drivers/staging/wilc1000/linux_wlan_spi.h
+@@ -4,7 +4,6 @@
+ #include <linux/spi/spi.h>
+ #include "wilc_wfi_netdevice.h"
+ 
+-int wilc_spi_init(void);
+ int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
+ int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
+ int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index ce12d29..0f730cd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -676,7 +676,7 @@ static int _wilc_spi_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int _wilc_spi_init(struct wilc *wilc)
++static int wilc_spi_init(struct wilc *wilc)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	u32 reg;
+@@ -695,13 +695,6 @@ static int _wilc_spi_init(struct wilc *wilc)
+ 
+ 	memset(&g_spi, 0, sizeof(wilc_spi_t));
+ 
+-	if (!wilc_spi_init()) {
+-		dev_err(&spi->dev, "Failed io init bus...\n");
+-		return 0;
+-	} else {
+-		return 0;
+-	}
+-
+ 	/**
+ 	 *      configure protocol
+ 	 **/
+@@ -994,7 +987,7 @@ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
+  *
+  ********************************************/
+ const struct wilc_hif_func wilc_hif_spi = {
+-	.hif_init = _wilc_spi_init,
++	.hif_init = wilc_spi_init,
+ 	.hif_deinit = _wilc_spi_deinit,
+ 	.hif_read_reg = wilc_spi_read_reg,
+ 	.hif_write_reg = wilc_spi_write_reg,
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
+
