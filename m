@@ -1,35 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:53975 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751935AbbLVJyY (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11306 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbbLUFQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2015 04:54:24 -0500
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
-	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
-	<linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
-	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc] PATCH v1.0 0/1] ST95HF:Fix build err
-Date: Tue, 22 Dec 2015 04:53:36 -0500
-Message-ID: <1450778017-12124-1-git-send-email-shikha.singh@st.com> (sfid-20151222_105431_197682_10B26EFB)
+	Mon, 21 Dec 2015 00:16:05 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 10/46] staging: wilc1000: remove wilc_debug_func of hif_init
+Date: Mon, 21 Dec 2015 14:18:14 +0900
+Message-ID: <1450675130-17866-11-git-send-email-glen.lee@atmel.com> (sfid-20151221_063100_226927_75C7AA53)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modification in st95hf/core.c to resolve build error.
-Patch contains only delta in core.c to fix build error
-assuming original series of ST95HF driver is already 
-applied on NFC-next master branch. 
+This patch removes wilc_debug_func of hif_init and remove it's related
+functions as well because it is not used anymore.
 
-Shikha Singh (1):
-  driver: nfc: st95hf: Fix of build error
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 2 +-
+ drivers/staging/wilc1000/wilc_spi.c  | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
- drivers/nfc/st95hf/core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index dfa3d3a..efa3379 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -512,7 +512,7 @@ static int sdio_sync(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int sdio_init(struct wilc *wilc, wilc_debug_func debug_func)
++static int sdio_init(struct wilc *wilc)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+ 	sdio_cmd52_t cmd;
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 8060125..478a356 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -734,7 +734,7 @@ static int wilc_spi_sync(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int _wilc_spi_init(struct wilc *wilc, wilc_debug_func func)
++static int _wilc_spi_init(struct wilc *wilc)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	u32 reg;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 0427349..32ecc2d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1587,7 +1587,7 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
+ 
+-	if (!wilc->hif_func->hif_init(wilc, wilc_debug)) {
++	if (!wilc->hif_func->hif_init(wilc)) {
+ 		ret = -EIO;
+ 		goto _fail_;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 3666453..580e1d6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -226,7 +226,7 @@ struct rxq_entry_t {
+  ********************************************/
+ struct wilc;
+ struct wilc_hif_func {
+-	int (*hif_init)(struct wilc *, wilc_debug_func);
++	int (*hif_init)(struct wilc *);
+ 	int (*hif_deinit)(struct wilc *);
+ 	int (*hif_read_reg)(struct wilc *, u32, u32 *);
+ 	int (*hif_write_reg)(struct wilc *, u32, u32);
 -- 
-1.8.2.1
+1.9.1
 
