@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:35555 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbbLNWez (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11243 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751107AbbLUFPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:34:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/8] rtlwifi: rtl8723be: Fix module parameter initialization
-Date: Mon, 14 Dec 2015 16:34:31 -0600
-Message-Id: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233503_119759_B7B4A1DB)
+	Mon, 21 Dec 2015 00:15:47 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 07/46] staging: wilc1000: remove unused varialbe tx_buffer_offset
+Date: Mon, 21 Dec 2015 14:18:11 +0900
+Message-ID: <1450675130-17866-8-git-send-email-glen.lee@atmel.com> (sfid-20151221_061549_474578_1BF4C2D5)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver has a number of errors in the module initialization. These
-include the following:
+This patch removes unused variable tx_buffer_offset of wilc_wlan_dev_t.
 
-Parameter msi_support is stored in two places - one is removed.
-Paramters sw_crypto and disable_watchdog were never stored in the final
-locations, nor were they initialized properly.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index d091f1d..a78eaed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -93,7 +93,6 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 37879cd..502b499 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -13,7 +13,6 @@ typedef struct {
+ 	u8 *rx_buffer;
+ 	u32 rx_buffer_offset;
+ 	u8 *tx_buffer;
+-	u32 tx_buffer_offset;
  
- 	rtl8723be_bt_reg_init(hw);
--	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
- 	rtlpriv->btcoexist.btc_ops = rtl_btc_get_ops_pointer();
+ 	unsigned long txq_spinlock_flags;
  
- 	rtlpriv->dm.dm_initialgain_enable = 1;
-@@ -151,6 +150,10 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
- 	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
-+	rtlpriv->cfg->mod_params->sw_crypto =
-+		 rtlpriv->cfg->mod_params->sw_crypto;
-+	rtlpriv->cfg->mod_params->disable_watchdog =
-+		 rtlpriv->cfg->mod_params->disable_watchdog;
- 	if (rtlpriv->cfg->mod_params->disable_watchdog)
- 		pr_info("watchdog disabled\n");
- 	rtlpriv->psc.reg_fwctrl_lps = 3;
-@@ -267,6 +270,9 @@ static struct rtl_mod_params rtl8723be_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
-+	.msi_support = false,
-+	.disable_watchdog = false,
-+	.debug = DBG_EMERG,
- };
- 
- static struct rtl_hal_cfg rtl8723be_hal_cfg = {
 -- 
-2.1.4
+1.9.1
 
