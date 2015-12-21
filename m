@@ -1,100 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751806AbbLUUvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:23 -0500
+	id S1751998AbbLUUwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:25 -0500
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/45] iwlwifi: avoid d0i3 commands when no/init ucode is loaded
-Date: Mon, 21 Dec 2015 22:50:18 +0200
-Message-Id: <1450731046-2796-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215144_524774_D4BB33FD)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 33/45] iwlwifi: mvm: small update in the firmware API
+Date: Mon, 21 Dec 2015 22:50:34 +0200
+Message-Id: <1450731046-2796-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220101_495443_2FB4473F)
 In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Small change in firmware API, no functional change.
 
-d0i3 commands are not supported in the init image, so take
-a reference to ensure we don't enter d0i3 during init image,
-and additional checks to prevent d0i3 commands when no
-fw image is loaded.
-
-Add a few WARN_ON_ONCE to the d0i3 enter/exit commands
-to ensure we send d0i3 commands only when the normal
-ucode is loaded.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c     | 8 ++++++++
- 3 files changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 7e2a814..9ce7587 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1316,6 +1316,7 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
- 	PRINT_MVM_REF(IWL_MVM_REF_EXIT_WORK);
- 	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_CSA);
- 	PRINT_MVM_REF(IWL_MVM_REF_FW_DBG_COLLECT);
-+	PRINT_MVM_REF(IWL_MVM_REF_INIT_UCODE);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index af7f9dd..75c79e1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -79,6 +79,11 @@
+ #define IWL_RX_INFO_ENERGY_ANT_B_POS 8
+ #define IWL_RX_INFO_ENERGY_ANT_C_POS 16
  
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 612799a..3f0db29 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -294,6 +294,7 @@ enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_EXIT_WORK,
- 	IWL_MVM_REF_PROTECT_CSA,
- 	IWL_MVM_REF_FW_DBG_COLLECT,
-+	IWL_MVM_REF_INIT_UCODE,
- 
- 	/* update debugfs.c when changing this */
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 958984c..31c16a1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -603,9 +603,11 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 			goto out_free;
- 
- 		mutex_lock(&mvm->mutex);
-+		iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
- 		err = iwl_run_init_mvm_ucode(mvm, true);
- 		if (!err || !iwlmvm_mod_params.init_dbg)
- 			iwl_trans_stop_device(trans);
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
- 		mutex_unlock(&mvm->mutex);
- 		/* returns 0 if successful, 1 if success but in rfkill */
- 		if (err < 0 && !iwlmvm_mod_params.init_dbg) {
-@@ -1213,6 +1215,9 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
- 
- 	IWL_DEBUG_RPM(mvm, "MVM entering D0i3\n");
- 
-+	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
-+		return -EINVAL;
++enum iwl_mac_context_info {
++	MAC_CONTEXT_INFO_NONE,
++	MAC_CONTEXT_INFO_GSCAN,
++};
 +
- 	set_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
+ /**
+  * struct iwl_rx_phy_info - phy info
+  * (REPLY_RX_PHY_CMD = 0xc0)
+@@ -97,6 +102,8 @@
+  * @frame_time: frame's time on the air, based on byte count and frame rate
+  *	calculation
+  * @mac_active_msk: what MACs were active when the frame was received
++ * @mac_context_info: additional info on the context in which the frame was
++ *	received as defined in &enum iwl_mac_context_info
+  *
+  * Before each Rx, the device sends this data. It contains PHY information
+  * about the reception of the packet.
+@@ -114,7 +121,8 @@ struct iwl_rx_phy_info {
+ 	__le32 non_cfg_phy[IWL_RX_INFO_PHY_CNT];
+ 	__le32 rate_n_flags;
+ 	__le32 byte_count;
+-	__le16 mac_active_msk;
++	u8 mac_active_msk;
++	u8 mac_context_info;
+ 	__le16 frame_time;
+ } __packed;
  
- 	/*
-@@ -1420,6 +1425,9 @@ int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm)
- 
- 	IWL_DEBUG_RPM(mvm, "MVM exiting D0i3\n");
- 
-+	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
-+		return -EINVAL;
-+
- 	mutex_lock(&mvm->d0i3_suspend_mutex);
- 	if (test_bit(D0I3_DEFER_WAKEUP, &mvm->d0i3_suspend_flags)) {
- 		IWL_DEBUG_RPM(mvm, "Deferring d0i3 exit until resume\n");
 -- 
 2.5.0
 
