@@ -1,68 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:33709 "EHLO
-	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbbLIOBb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 09:01:31 -0500
-Received: by vkca188 with SMTP id a188so47178777vkc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2015 06:01:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20151207090853.GA10097@rmanohar-arch.qca.qualcomm.com>
-References: <loom.20151201T071931-353@post.gmane.org> <CALhHN=o4xAhy9oz0Q7sy-Ubji-nBf6pdJ7OSj8xLU0mn86n1qQ@mail.gmail.com>
- <CADaZW1E42rnjaxjnjskW_j83m=moauNBttZ-M=oyWoiXXS2ZiQ@mail.gmail.com>
- <CA+BoTQ=k9NHd6KHt2qzgjs5g3B6Q58fX=hTRB-BvxcvjejmWog@mail.gmail.com>
- <CADaZW1Eww2TNimciP5JxVam0y+-V4Ez2VfFXdT=_jh14TgOp0g@mail.gmail.com>
- <CA+BoTQk0Y+djSBNMonhkpZ3Aw8aKuxefdgSa9zUa-vgV9HTL4A@mail.gmail.com>
- <CACKGw+GPjr1fQ_u5yHfsAa=GBJmk7vRfcTUS3nt1N+id7UoPzg@mail.gmail.com>
- <CADaZW1Fy_7z8sHDjML1G_u8F3jyNrbSvLKRmxnCPw6M2HYc8oA@mail.gmail.com>
- <CADaZW1F=5NcMomcxKczb92rvxYR=kcwpSo8yu25C7AHQ4UHK3A@mail.gmail.com> <20151207090853.GA10097@rmanohar-arch.qca.qualcomm.com>
-From: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
-Date: Wed, 9 Dec 2015 15:01:01 +0100
-Message-ID: <CADaZW1FJ8e0aLAb5owcn3uAG6dd1qaxHm=o5TOZgTcYmjejpVA@mail.gmail.com> (sfid-20151209_150134_672799_26AC7960)
-Subject: Re: ath10k: device has crashed during init - qca6174 chipset
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: Bartosz Markowski <bartosz.markowski@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752027AbbLUUwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:35 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 38/45] iwlwifi: mvm: infrastructure for frame-release message
+Date: Mon, 21 Dec 2015 22:50:39 +0200
+Message-Id: <1450731046-2796-38-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220059_135098_E7B2ACEB)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rajkumar,
+From: Sara Sharon <sara.sharon@intel.com>
 
-Great. It works now.
-I do not have a fully functional wlan yet, but at least the insmod goes through.
+Incoming hardware will send frame release notifications to
+the reorder buffer in order to update with the BA session
+status and up to date NSSN.
+This patch enables the API.
 
-This issue is solved.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 8 +++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 6 ++++++
+ 4 files changed, 17 insertions(+), 1 deletion(-)
 
-BR
-Bartek
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index 0a8d162..fb6d341 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -316,6 +316,8 @@ enum iwl_rx_mpdu_sta_id_flags {
+ 	IWL_RX_MPDU_SIF_FILTER_STATUS_MASK	= 0xc0,
+ };
+ 
++#define IWL_RX_REORDER_DATA_INVALID_BAID 0x7f
++
+ enum iwl_rx_mpdu_reorder_data {
+ 	IWL_RX_MPDU_REORDER_NSSN_MASK		= 0x00000fff,
+ 	IWL_RX_MPDU_REORDER_SN_MASK		= 0x00fff000,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0088106..86409c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1138,6 +1138,8 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			struct iwl_rx_cmd_buffer *rxb, int queue);
++void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm,
++			      struct iwl_rx_cmd_buffer *rxb, int queue);
+ void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 0885b77..2debce3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -822,6 +822,8 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
+ 
+ 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
+ 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
++	else if (pkt->hdr.cmd == FRAME_RELEASE)
++		iwl_mvm_rx_frame_release(mvm, rxb, 0);
+ 	else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD)
+ 		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
+ 	else
+@@ -1488,8 +1490,12 @@ static void iwl_mvm_rx_mq_rss(struct iwl_op_mode *op_mode,
+ 			      unsigned int queue)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 
+-	iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
++	if (unlikely(pkt->hdr.cmd == FRAME_RELEASE))
++		iwl_mvm_rx_frame_release(mvm, rxb, queue);
++	else
++		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
+ }
+ 
+ static const struct iwl_op_mode_ops iwl_mvm_ops_mq = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index c67962e..e2a872d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -370,3 +370,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, ampdu_status,
+ 					crypt_len, rxb);
+ }
++
++void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm,
++			      struct iwl_rx_cmd_buffer *rxb, int queue)
++{
++	/* TODO */
++}
+-- 
+2.5.0
 
-2015-12-07 10:08 GMT+01:00 Rajkumar Manoharan <rmanohar@qti.qualcomm.com>:
-> On Tue, Dec 01, 2015 at 11:28:25AM +0100, Bartlomiej Grzeskowiak wrote:
->> I have tested borad-2.bin file with my module, by forcing
->> ar->id.subsystem_vendor = 0x168c;
->> ar->id.subsystem_device = 0x3363; (1,2,3)
->> in ath/ath10k/pci.c file.
->>
->> All the tests failed with:
->> ath10k_pci 0000:01:00.0: failed to receive initialized event from
->> target: 00000000
->> ath10k_pci 0000:01:00.0: firmware crashed! (uuid
->> 5506e81c-d538-4492-91d7-dc899fed8d8c)
->>
->> Does it mean, that this module is not supported?
->> I will need to dump firmware from windows driver, when I get it from
->> the vendor ?
->>
-> Can you please apply below changes in your rc2 backports.
->
-> https://github.com/kvalo/ath/commit/2727a743e9eeb3d4063d4077afee3fd2a5e198ca
-> https://github.com/kvalo/ath/commit/6419fdbb6f90e147690f8833cba59d289d613da5
->
-> or try with latest backports.
->
-> https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.gz
->
-> -Rajkumar
