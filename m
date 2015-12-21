@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:35760 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757399AbbLBPNB (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11543 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFR1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 10:13:01 -0500
-Received: by qkao63 with SMTP id o63so17119583qka.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 07:13:00 -0800 (PST)
-Subject: Re: [PATCH 1/1] staging: cleanup: Fix incompatible type comparison in
- wilc1000/host_interface.c
-To: Dan Carpenter <dan.carpenter@oracle.com>
-References: <1448928544-3534-1-git-send-email-mrugiero@gmail.com>
- <20151202132923.GV18797@mwanda>
-Cc: devel@driverdev.osuosl.org, chris.park@atmel.com,
-	austin.shin@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com
-From: "Mario J. Rugiero" <mrugiero@gmail.com>
-Message-ID: <565F0A79.90100@gmail.com> (sfid-20151202_161305_836098_9F7C309D)
-Date: Wed, 2 Dec 2015 12:12:57 -0300
+	Mon, 21 Dec 2015 00:17:27 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 24/46] staging: wilc1000: linux_sdio_probe: use return value
+Date: Mon, 21 Dec 2015 14:18:28 +0900
+Message-ID: <1450675130-17866-25-git-send-email-glen.lee@atmel.com> (sfid-20151221_063107_098893_D9B6E7CD)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151202132923.GV18797@mwanda>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK. Since the maintainers are CC'd, I guess I should wait for a 
-clarification about this?
+Return ret from wilc_netdev_init instead of -1 for proper error handling.
 
-El 02/12/15 a las 10:29, Dan Carpenter escribió:
-> Put v2 in the subject.  Also the subsystem prefix is:
->
-> [PATCH v3] staging: wilc1000: ...
->
-> On Mon, Nov 30, 2015 at 09:09:04PM -0300, Mario J. Rugiero wrote:
->> This patch replaces an "if (ptr > 0)" comparison that seems to be a
->> confusing way to check for null by a simpler "if (ptr)" check.
->>
->> Signed-off-by: Mario J. Rugiero <mrugiero@gmail.com>
->> ---
-> v2: Remove the != NULL because checkpatch complains.
->
->>   drivers/staging/wilc1000/host_interface.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
->> index d5b7725..0c87f6c 100644
->> --- a/drivers/staging/wilc1000/host_interface.c
->> +++ b/drivers/staging/wilc1000/host_interface.c
->> @@ -2270,7 +2270,7 @@ static void Handle_AddBeacon(struct host_if_drv *hif_drv,
->>   	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
->>   	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
->>   
->> -	if (pstrSetBeaconParam->tail > 0)
->> +	if (pstrSetBeaconParam->tail)
-> Probably the intention was to check if "pstrSetBeaconParam->tail_len > 0"
-> but I'm not sure.  The wilc1000 maintainers are very responsive though
-> so maybe they will know for sure.
->
-> regards,
-> dan carpenter
->
->
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_sdio.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+index e25811d..4b9cb55 100644
+--- a/drivers/staging/wilc1000/linux_wlan_sdio.c
++++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+@@ -91,7 +91,7 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 			    const struct sdio_device_id *id)
+ {
+ 	struct wilc *wilc;
+-	int gpio;
++	int gpio, ret;
+ 
+ 	gpio = -1;
+ 	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
+@@ -101,10 +101,11 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 	}
+ 
+ 	dev_dbg(&func->dev, "Initializing netdev\n");
+-	if (wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
+-			     &wilc_hif_sdio)) {
++	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
++			     &wilc_hif_sdio);
++	if (ret) {
+ 		dev_err(&func->dev, "Couldn't initialize netdev\n");
+-		return -1;
++		return ret;
+ 	}
+ 	sdio_set_drvdata(func, wilc);
+ 	wilc->dev = &func->dev;
+-- 
+1.9.1
 
