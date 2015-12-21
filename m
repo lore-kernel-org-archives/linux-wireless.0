@@ -1,65 +1,425 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:34934 "EHLO
-	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933231AbbLXHxb (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11629 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbLUFR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:31 -0500
-Received: by mail-pf0-f180.google.com with SMTP id 78so62820950pfw.2
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:31 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 15/21] staging: wilc1000: fix return type of wilc_disconnect
-Date: Thu, 24 Dec 2015 16:52:33 +0900
-Message-Id: <1450943559-20937-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092250_084013_BCD12DDA)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 21 Dec 2015 00:17:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 29/46] staging: wilc1000: linux_wlan_spi.c: move all the codes to wilc_spi.c
+Date: Mon, 21 Dec 2015 14:18:33 +0900
+Message-ID: <1450675130-17866-30-git-send-email-glen.lee@atmel.com> (sfid-20151221_063105_624803_18566269)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_disconnect from s32 to int.
-The result variable gets return value from wilc_disconnect that has
-return type of int. It should be changed return type of this function as
-well as data type of result variable.
+This patch moves all the codes in linux_wlan_spi.c to wilc_spi.c to make
+one spi module. Make wilc_spi_tx, wilc_spi_rx and wilc_spi_tx_rx static
+functions. Remove function declaration in linux_wlan_spi.h, which is unnedded
+now. No modification has been made inside the codes.
+linux_wlan_spi.[ch] will be remove in the next patch.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 165 ---------------------------
+ drivers/staging/wilc1000/linux_wlan_spi.h |   4 -
+ drivers/staging/wilc1000/wilc_spi.c       | 180 +++++++++++++++++++++++++++++-
+ 3 files changed, 178 insertions(+), 171 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6518942..5ddf78d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3461,9 +3461,9 @@ int wilc_flush_join_req(struct wilc_vif *vif)
- 	return result;
- }
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 06935cf..c4315f5 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -14,168 +14,3 @@
+ #include "wilc_wfi_netdevice.h"
+ #include "linux_wlan_common.h"
+ #include "wilc_wlan_if.h"
+-
+-#define USE_SPI_DMA     0
+-
+-static const struct wilc1000_ops wilc1000_spi_ops;
+-
+-static int wilc_bus_probe(struct spi_device *spi)
+-{
+-	int ret, gpio;
+-	struct wilc *wilc;
+-
+-	gpio = of_get_gpio(spi->dev.of_node, 0);
+-	if (gpio < 0)
+-		gpio = GPIO_NUM;
+-
+-	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
+-	if (ret)
+-		return ret;
+-
+-	spi_set_drvdata(spi, wilc);
+-	wilc->dev = &spi->dev;
+-
+-	return 0;
+-}
+-
+-static int wilc_bus_remove(struct spi_device *spi)
+-{
+-	wilc_netdev_cleanup(spi_get_drvdata(spi));
+-	return 0;
+-}
+-
+-static const struct of_device_id wilc1000_of_match[] = {
+-	{ .compatible = "atmel,wilc_spi", },
+-	{}
+-};
+-MODULE_DEVICE_TABLE(of, wilc1000_of_match);
+-
+-struct spi_driver wilc1000_spi_driver = {
+-	.driver = {
+-		.name = MODALIAS,
+-		.of_match_table = wilc1000_of_match,
+-	},
+-	.probe =  wilc_bus_probe,
+-	.remove = wilc_bus_remove,
+-};
+-module_spi_driver(wilc1000_spi_driver);
+-MODULE_LICENSE("GPL");
+-
+-int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
+-{
+-	struct spi_device *spi = to_spi_device(wilc->dev);
+-	int ret;
+-	struct spi_message msg;
+-
+-	if (len > 0 && b) {
+-		struct spi_transfer tr = {
+-			.tx_buf = b,
+-			.len = len,
+-			.delay_usecs = 0,
+-		};
+-		char *r_buffer = kzalloc(len, GFP_KERNEL);
+-
+-		if (!r_buffer)
+-			return -ENOMEM;
+-
+-		tr.rx_buf = r_buffer;
+-		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
+-
+-		memset(&msg, 0, sizeof(msg));
+-		spi_message_init(&msg);
+-		msg.spi = spi;
+-		msg.is_dma_mapped = USE_SPI_DMA;
+-		spi_message_add_tail(&tr, &msg);
+-
+-		ret = spi_sync(spi, &msg);
+-		if (ret < 0)
+-			dev_err(&spi->dev, "SPI transaction failed\n");
+-
+-		kfree(r_buffer);
+-	} else {
+-		dev_err(&spi->dev,
+-			"can't write data with the following length: %d\n",
+-			len);
+-		dev_err(&spi->dev,
+-			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
+-			len);
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+-int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
+-{
+-	struct spi_device *spi = to_spi_device(wilc->dev);
+-	int ret;
+-
+-	if (rlen > 0) {
+-		struct spi_message msg;
+-		struct spi_transfer tr = {
+-			.rx_buf = rb,
+-			.len = rlen,
+-			.delay_usecs = 0,
+-
+-		};
+-		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
+-
+-		if (!t_buffer)
+-			return -ENOMEM;
+-
+-		tr.tx_buf = t_buffer;
+-
+-		memset(&msg, 0, sizeof(msg));
+-		spi_message_init(&msg);
+-		msg.spi = spi;
+-		msg.is_dma_mapped = USE_SPI_DMA;
+-		spi_message_add_tail(&tr, &msg);
+-
+-		ret = spi_sync(spi, &msg);
+-		if (ret < 0)
+-			dev_err(&spi->dev, "SPI transaction failed\n");
+-		kfree(t_buffer);
+-	} else {
+-		dev_err(&spi->dev,
+-			"can't read data with the following length: %u\n",
+-			rlen);
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+-int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
+-{
+-	struct spi_device *spi = to_spi_device(wilc->dev);
+-	int ret;
+-
+-	if (rlen > 0) {
+-		struct spi_message msg;
+-		struct spi_transfer tr = {
+-			.rx_buf = rb,
+-			.tx_buf = wb,
+-			.len = rlen,
+-			.bits_per_word = 8,
+-			.delay_usecs = 0,
+-
+-		};
+-
+-		memset(&msg, 0, sizeof(msg));
+-		spi_message_init(&msg);
+-		msg.spi = spi;
+-		msg.is_dma_mapped = USE_SPI_DMA;
+-
+-		spi_message_add_tail(&tr, &msg);
+-		ret = spi_sync(spi, &msg);
+-		if (ret < 0)
+-			dev_err(&spi->dev, "SPI transaction failed\n");
+-	} else {
+-		dev_err(&spi->dev,
+-			"can't read data with the following length: %u\n",
+-			rlen);
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.h b/drivers/staging/wilc1000/linux_wlan_spi.h
+index d41c16a..32e3926 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.h
++++ b/drivers/staging/wilc1000/linux_wlan_spi.h
+@@ -3,8 +3,4 @@
  
--s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
-+int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
+ #include <linux/spi/spi.h>
+ #include "wilc_wfi_netdevice.h"
+-
+-int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len);
+-int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen);
+-int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 0f730cd..86de50c 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -6,11 +6,22 @@
+ /*  */
+ /*  */
+ /* //////////////////////////////////////////////////////////////////////////// */
+-
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/cdev.h>
++#include <linux/uaccess.h>
++#include <linux/device.h>
++#include <linux/spi/spi.h>
++#include <linux/of_gpio.h>
++
++#include "linux_wlan_common.h"
+ #include <linux/string.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+-#include "linux_wlan_spi.h"
+ #include "wilc_wfi_netdevice.h"
+ 
+ typedef struct {
+@@ -107,6 +118,171 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
+ #define DATA_PKT_SZ_8K				(8 * 1024)
+ #define DATA_PKT_SZ					DATA_PKT_SZ_8K
+ 
++#define USE_SPI_DMA     0
++
++static const struct wilc1000_ops wilc1000_spi_ops;
++
++static int wilc_bus_probe(struct spi_device *spi)
++{
++	int ret, gpio;
++	struct wilc *wilc;
++
++	gpio = of_get_gpio(spi->dev.of_node, 0);
++	if (gpio < 0)
++		gpio = GPIO_NUM;
++
++	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, GPIO_NUM, &wilc_hif_spi);
++	if (ret)
++		return ret;
++
++	spi_set_drvdata(spi, wilc);
++	wilc->dev = &spi->dev;
++
++	return 0;
++}
++
++static int wilc_bus_remove(struct spi_device *spi)
++{
++	wilc_netdev_cleanup(spi_get_drvdata(spi));
++	return 0;
++}
++
++static const struct of_device_id wilc1000_of_match[] = {
++	{ .compatible = "atmel,wilc_spi", },
++	{}
++};
++MODULE_DEVICE_TABLE(of, wilc1000_of_match);
++
++struct spi_driver wilc1000_spi_driver = {
++	.driver = {
++		.name = MODALIAS,
++		.of_match_table = wilc1000_of_match,
++	},
++	.probe =  wilc_bus_probe,
++	.remove = wilc_bus_remove,
++};
++module_spi_driver(wilc1000_spi_driver);
++MODULE_LICENSE("GPL");
++
++static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
++{
++	struct spi_device *spi = to_spi_device(wilc->dev);
++	int ret;
++	struct spi_message msg;
++
++	if (len > 0 && b) {
++		struct spi_transfer tr = {
++			.tx_buf = b,
++			.len = len,
++			.delay_usecs = 0,
++		};
++		char *r_buffer = kzalloc(len, GFP_KERNEL);
++
++		if (!r_buffer)
++			return -ENOMEM;
++
++		tr.rx_buf = r_buffer;
++		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
++
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi = spi;
++		msg.is_dma_mapped = USE_SPI_DMA;
++		spi_message_add_tail(&tr, &msg);
++
++		ret = spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
++
++		kfree(r_buffer);
++	} else {
++		dev_err(&spi->dev,
++			"can't write data with the following length: %d\n",
++			len);
++		dev_err(&spi->dev,
++			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
++			len);
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
++{
++	struct spi_device *spi = to_spi_device(wilc->dev);
++	int ret;
++
++	if (rlen > 0) {
++		struct spi_message msg;
++		struct spi_transfer tr = {
++			.rx_buf = rb,
++			.len = rlen,
++			.delay_usecs = 0,
++
++		};
++		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
++
++		if (!t_buffer)
++			return -ENOMEM;
++
++		tr.tx_buf = t_buffer;
++
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi = spi;
++		msg.is_dma_mapped = USE_SPI_DMA;
++		spi_message_add_tail(&tr, &msg);
++
++		ret = spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
++		kfree(t_buffer);
++	} else {
++		dev_err(&spi->dev,
++			"can't read data with the following length: %u\n",
++			rlen);
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
++{
++	struct spi_device *spi = to_spi_device(wilc->dev);
++	int ret;
++
++	if (rlen > 0) {
++		struct spi_message msg;
++		struct spi_transfer tr = {
++			.rx_buf = rb,
++			.tx_buf = wb,
++			.len = rlen,
++			.bits_per_word = 8,
++			.delay_usecs = 0,
++
++		};
++
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi = spi;
++		msg.is_dma_mapped = USE_SPI_DMA;
++
++		spi_message_add_tail(&tr, &msg);
++		ret = spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
++	} else {
++		dev_err(&spi->dev,
++			"can't read data with the following length: %u\n",
++			rlen);
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
+ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			    u8 clockless)
  {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 698d1b6..e8c556a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -332,7 +332,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- 		      u8 security, enum AUTHTYPE auth_type,
- 		      u8 channel, void *join_params);
- int wilc_flush_join_req(struct wilc_vif *vif);
--s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
-+int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
- int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
- s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
- s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
 -- 
-2.6.4
+1.9.1
 
