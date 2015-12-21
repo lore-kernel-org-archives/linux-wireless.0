@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:35347 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754540AbbL3MQX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:16:23 -0500
-Received: by mail-pa0-f48.google.com with SMTP id do7so4199257pab.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:22 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/20] staging: wilc1000: rename bIsEnabled in wilc_setup_multicast_filter
-Date: Wed, 30 Dec 2015 21:15:35 +0900
-Message-Id: <1451477744-11975-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131632_487850_4C2063A8)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751569AbbLUUvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:03 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/45] iwlwifi: mvm: advertise NETIF_F_SG
+Date: Mon, 21 Dec 2015 22:50:07 +0200
+Message-Id: <1450731046-2796-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215207_846907_DE176F98)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames bIsEnabled to enabled to avoid camelcase.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+If the transport supports it, advertise NETIF_F_SG to mac80211 to
+be able to use frag SKBs. This will already improve performance by
+allowing software GSO to be used.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8e8e70e..a32e930 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4423,7 +4423,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
- 	return result;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index fc13ad9..09afb6d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -439,6 +439,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
  
--int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
-+int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 				u32 u32count)
- {
- 	int result = 0;
-@@ -4443,7 +4443,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
- 	msg.id = HOST_IF_MSG_SET_MULTICAST_FILTER;
- 	msg.vif = vif;
- 
--	pstrMulticastFilterParam->enabled = bIsEnabled;
-+	pstrMulticastFilterParam->enabled = enabled;
- 	pstrMulticastFilterParam->cnt = u32count;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 52032be..9abdd3f 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -352,7 +352,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
- s32 wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams);
- int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
--int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
-+int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 				u32 u32count);
- s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
- s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
++	if (mvm->trans->max_skb_frags)
++		hw->netdev_features = NETIF_F_HIGHDMA | NETIF_F_SG;
++
+ 	hw->queues = mvm->first_agg_queue;
+ 	hw->offchannel_tx_hw_queue = IWL_MVM_OFFCHANNEL_QUEUE;
+ 	hw->radiotap_mcs_details |= IEEE80211_RADIOTAP_MCS_HAVE_FEC |
 -- 
-2.6.4
+2.5.0
 
