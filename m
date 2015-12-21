@@ -1,87 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33774 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400AbbLITai (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 14:30:38 -0500
-Date: Wed, 9 Dec 2015 11:30:34 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: linux-gpio@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Michael Welling <mwelling@ieee.org>,
-	Markus Pargmann <mpa@pengutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mark Brown <broonie@kernel.org>,
-	Amit Kucheria <amit.kucheria@linaro.org>, arm@kernel.org,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Sonic Zhang <sonic.zhang@analog.com>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-	Anatolij Gustschin <agust@denx.de>,
-	linux-wireless@vger.kernel.org, linux-input@vger.kernel.org,
-	Lee Jones <lee.jones@linaro.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
-Message-ID: <20151209193034.GE27131@dtor-ws> (sfid-20151209_203044_336639_141DA88E)
-References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
+Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794AbbLUUvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:16 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/45] iwlwifi: block the queues when we send ADD_STA for uAPSD
+Date: Mon, 21 Dec 2015 22:50:14 +0200
+Message-Id: <1450731046-2796-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215129_530655_84D76FE5)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 09, 2015 at 02:08:35PM +0100, Linus Walleij wrote:
-> This removes the use of container_of() constructions from *all*
-> GPIO drivers in the kernel. It is done by instead adding an
-> optional void *data pointer to the struct gpio_chip and an
-> accessor function, gpiochip_get_data() to get it from a driver.
-> 
-> WHY?
-> 
-> Because we want to have a proper userspace ABI for GPIO chips,
-> which involves using a character device that the user opens
-> and closes. While the character device is open, the underlying
-> kernel objects must not go away.
-> 
-> Currently the GPIO drivers keep their state in the struct
-> gpio_chip, and that is often allocated by the drivers, very
-> often as a part of a containing per-instance state container
-> struct for the driver:
-> 
-> struct foo_state {
->    struct gpio_chip chip;  <- OMG my state is there
-> };
-> 
-> Drivers cannot allocate and manage this state: if a user has the
-> character device open, the objects allocated must stay around
-> even if the driver goes away. Instead drivers need to pass a
-> descriptor to the GPIO core, and then the core should allocate
-> and manage the lifecycle of things related to the device, such
-> as the chardev itself or the struct device related to the GPIO
-> device.
+We send an ADD_STA to instruct the firmware to release
+frames despite the peer being in PS.
+Since the ADD_STA command and the Tx frame that comes
+immediately afterwards can be reordered by the DMA engine,
+we need to block the Tx queues until the firmware replies
+with the ADD_STA response.
 
-Yes, but it does not mean that the object that is being maintained by
-the subsystem and that us attached to character device needs to be
-gpio_chip itself. You can have something like
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 13 +++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c |  7 ++++++-
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
-struct gpio_chip_chardev {
-	struct cdev chardev;
-	struct gpio_chip *chip;
-	bool dead;
-};
-
-struct gpio_chip {
-	...
-	struct gpio_chip_chardev *chardev;
-	...
-};
-
-You alloctae the new structure when you register/export gpio chip in
-gpio subsystem core and leave all the individual drivers alone.
-
-Thanks.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index b71c85b..4e417fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -839,6 +839,18 @@ static void iwl_mvm_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ 	}
+ }
+ 
++static void iwl_mvm_async_cb(struct iwl_op_mode *op_mode,
++			     const struct iwl_device_cmd *cmd)
++{
++	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
++
++	/*
++	 * For now, we only set the CMD_WANT_ASYNC_CALLBACK for ADD_STA
++	 * commands that need to block the Tx queues.
++	 */
++	iwl_trans_block_txq_ptrs(mvm->trans, false);
++}
++
+ static void iwl_mvm_wake_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+@@ -1414,6 +1426,7 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
+ 
+ #define IWL_MVM_COMMON_OPS					\
+ 	/* these could be differentiated */			\
++	.async_cb = iwl_mvm_async_cb,				\
+ 	.queue_full = iwl_mvm_stop_sw_queue,			\
+ 	.queue_not_full = iwl_mvm_wake_sw_queue,		\
+ 	.hw_rf_kill = iwl_mvm_set_hw_rfkill_state,		\
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index dc3206a..566b659 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1708,7 +1708,12 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
+ 		cmd.sleep_state_flags |= cpu_to_le16(STA_SLEEP_STATE_UAPSD);
+ 	}
+ 
+-	ret = iwl_mvm_send_cmd_pdu(mvm, ADD_STA, CMD_ASYNC, sizeof(cmd), &cmd);
++	/* block the Tx queues until the FW updated the sleep Tx count */
++	iwl_trans_block_txq_ptrs(mvm->trans, true);
++
++	ret = iwl_mvm_send_cmd_pdu(mvm, ADD_STA,
++				   CMD_ASYNC | CMD_WANT_ASYNC_CALLBACK,
++				   sizeof(cmd), &cmd);
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to send ADD_STA command (%d)\n", ret);
+ }
 -- 
-Dmitry
+2.5.0
+
