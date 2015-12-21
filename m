@@ -1,58 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:34711 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbbLJKYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 05:24:44 -0500
-Received: by mail-wm0-f44.google.com with SMTP id v187so25556504wmv.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2015 02:24:44 -0800 (PST)
-Subject: Re: [PATCH 01/13] brcmfmac: Simplify scan timing configuration.
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Arend van Spriel <arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
- <1449656572-16158-2-git-send-email-arend@broadcom.com>
- <87zixj93gg.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <566952EA.4070107@gmail.com> (sfid-20151210_112449_613239_320571D8)
-Date: Thu, 10 Dec 2015 11:24:42 +0100
-MIME-Version: 1.0
-In-Reply-To: <87zixj93gg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423AbbLUUwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:52:22 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/45] iwlwifi: mvm: enable L3 filtering
+Date: Mon, 21 Dec 2015 22:50:32 +0200
+Message-Id: <1450731046-2796-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215229_280529_1FE2EBB8)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09-12-15 14:06, Kalle Valo wrote:
-> Arend van Spriel <arend@broadcom.com> writes:
-> 
->> From: Hante Meuleman <meuleman@broadcom.com>
->>
-> 
-> Please, no empty commit logs. For a patch like this it takes like 30
-> seconds to write a short log describing why and how you are simplifying
-> the code. Next year I'm thinking of start rejecting patches without a
-> commit log.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Time to consider new year resolutions, heh ;-) Anyway, it is noted and
-will see if I can gatekeep this better.
+Firmware will support filtering multicast L3 packets.
+The L3 filtering is configured by the WOWLAN_CONFIG command.
+All flags should be enabled by default.
+Older firmware is not affected as it does not look into
+this field.
 
-> This is a minor nitpick but it's not that common to the commit title
-> with a period.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h | 13 +++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  3 ++-
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-Have to agree to the nitpicking part :-p Can keep it in mind though.
-
->> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
->> Change-Id: Ie179527eb29f2ed8b7869dac24591e2513775393
->> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5445
->> Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> 
-> Forgot to clean the tags? :)
-
-*sigh* Obviously. Should not try to multitask when preparing patch series.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 69fd10a..3e6b6d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -804,6 +804,8 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 
+ 	wowlan_config_cmd->is_11n_connection =
+ 					ap_sta->ht_cap.ht_supported;
++	wowlan_config_cmd->flags = ENABLE_L3_FILTERING |
++		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING;
+ 
+ 	/* Query the last used seqno and set it */
+ 	ret = iwl_mvm_get_last_nonqos_seq(mvm, vif);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+index c36c956..62b9a0a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2015 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -245,6 +246,13 @@ enum iwl_wowlan_wakeup_filters {
+ 	IWL_WOWLAN_WAKEUP_BCN_FILTERING			= BIT(16),
+ }; /* WOWLAN_WAKEUP_FILTER_API_E_VER_4 */
+ 
++enum iwl_wowlan_flags {
++	IS_11W_ASSOC		= BIT(0),
++	ENABLE_L3_FILTERING	= BIT(1),
++	ENABLE_NBNS_FILTERING	= BIT(2),
++	ENABLE_DHCP_FILTERING	= BIT(3),
++};
++
+ struct iwl_wowlan_config_cmd {
+ 	__le32 wakeup_filter;
+ 	__le16 non_qos_seq;
+@@ -252,8 +260,9 @@ struct iwl_wowlan_config_cmd {
+ 	u8 wowlan_ba_teardown_tids;
+ 	u8 is_11n_connection;
+ 	u8 offloading_tid;
+-	u8 reserved[3];
+-} __packed; /* WOWLAN_CONFIG_API_S_VER_3 */
++	u8 flags;
++	u8 reserved[2];
++} __packed; /* WOWLAN_CONFIG_API_S_VER_4 */
+ 
+ /*
+  * WOWLAN_TSC_RSC_PARAMS
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 50b8c01..a5e1c8e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1186,7 +1186,8 @@ static void iwl_mvm_set_wowlan_data(struct iwl_mvm *mvm,
+ 	mvm_ap_sta = iwl_mvm_sta_from_mac80211(ap_sta);
+ 	cmd->is_11n_connection = ap_sta->ht_cap.ht_supported;
+ 	cmd->offloading_tid = iter_data->offloading_tid;
+-
++	cmd->flags = ENABLE_L3_FILTERING | ENABLE_NBNS_FILTERING |
++		ENABLE_DHCP_FILTERING;
+ 	/*
+ 	 * The d0i3 uCode takes care of the nonqos counters,
+ 	 * so configure only the qos seq ones.
+-- 
+2.5.0
 
