@@ -1,136 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:41346 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754822AbbL3NgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 08:36:11 -0500
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Subject: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
-Date: Wed, 30 Dec 2015 15:35:33 +0200
-Message-Id: <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151230_143626_251839_99FA3E3E)
-In-Reply-To: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
-References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751829AbbLUUvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:25 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/45] iwlwifi: mvm: remove the vif parameter of iwl_mvm_configure_bcast_filter()
+Date: Mon, 21 Dec 2015 22:50:19 +0200
+Message-Id: <1450731046-2796-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215146_332927_A9EB8041)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Device tree modifications:
-- Pinmux for SPI0 and WiFi GPIOs.
-- SPI0 node with wlcore as a child node.
+From: Eliad Peller <eliad@wizery.com>
 
-Cc: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+Remove the vif parameter of iwl_mvm_configure_bcast_filter()
+as it's not being used.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v1 -> v2: Replace interrupts and interrupt-parent with interrupts-extended.
-v2 -> v3: Move the pinctrl-0 = <&wifi_pins> to the wlcore node.
-v3 -> v4: replace interrupts-extended with interrupts and interrupt-parent. (revert v2 modification).
-          According to Rob Herring and Documentation/devicetree/bindings/interrupt-controller/interrupts.txt,
-	  interrupts-extended should only be used when a device has multiple interrupt parents.
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
- arch/arm/boot/dts/am335x-cm-t335.dts | 55 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
-
-diff --git a/arch/arm/boot/dts/am335x-cm-t335.dts b/arch/arm/boot/dts/am335x-cm-t335.dts
-index 42e9b66..65f1099 100644
---- a/arch/arm/boot/dts/am335x-cm-t335.dts
-+++ b/arch/arm/boot/dts/am335x-cm-t335.dts
-@@ -11,6 +11,7 @@
- /dts-v1/;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index f428f1c..7487eb0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1734,8 +1734,8 @@ bool iwl_mvm_bcast_filter_build_cmd(struct iwl_mvm *mvm,
  
- #include "am33xx.dtsi"
-+#include <dt-bindings/interrupt-controller/irq.h>
- 
- / {
- 	model = "CompuLab CM-T335";
-@@ -40,6 +41,15 @@
- 		regulator-max-microvolt = <3300000>;
- 	};
- 
-+	/* Regulator for WiFi */
-+	vwlan_fixed: fixedregulator@2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vwlan_fixed";
-+		gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>; /* gpio0_20 */
-+		enable-active-high;
-+		regulator-boot-off;
-+	};
+ 	return true;
+ }
+-static int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm,
+-					  struct ieee80211_vif *vif)
 +
- 	backlight {
- 		compatible = "pwm-backlight";
- 		pwms = <&ecap0 0 50000 0>;
-@@ -223,6 +233,21 @@
- 		>;
- 	};
++static int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_bcast_filter_cmd cmd;
  
-+	spi0_pins: pinmux_spi0_pins {
-+		pinctrl-single,pins = <
-+			/* spi0_sclk.spi0_sclk */
-+			AM33XX_IOPAD(0x950, PIN_INPUT | MUX_MODE0)
-+			/* spi0_d0.spi0_d0 */
-+			AM33XX_IOPAD(0x954, PIN_OUTPUT_PULLUP | MUX_MODE0)
-+			/* spi0_d1.spi0_d1 */
-+			AM33XX_IOPAD(0x958, PIN_INPUT | MUX_MODE0)
-+			/* spi0_cs0.spi0_cs0 */
-+			AM33XX_IOPAD(0x95C, PIN_OUTPUT | MUX_MODE0)
-+			/* spi0_cs1.spi0_cs1 */
-+			AM33XX_IOPAD(0x960, PIN_OUTPUT | MUX_MODE0)
-+		>;
-+	};
-+
- 	/* wl1271 bluetooth */
- 	bluetooth_pins: pinmux_bluetooth_pins {
- 		pinctrl-single,pins = <
-@@ -230,6 +255,16 @@
- 			AM33XX_IOPAD(0x9b0, PIN_OUTPUT_PULLUP | MUX_MODE7)
- 		>;
- 	};
-+
-+	/* wl1271 WiFi */
-+	wifi_pins: pinmux_wifi_pins {
-+		pinctrl-single,pins = <
-+			/* EMU1.gpio3_8 - WiFi IRQ */
-+			AM33XX_IOPAD(0x9e8, PIN_INPUT_PULLUP | MUX_MODE7)
-+			/* XDMA_EVENT_INTR1.gpio0_20 - WiFi enable */
-+			AM33XX_IOPAD(0x9b4, PIN_OUTPUT | MUX_MODE7)
-+		>;
-+	};
- };
+@@ -1749,8 +1749,7 @@ static int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm,
+ 				    sizeof(cmd), &cmd);
+ }
+ #else
+-static inline int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm,
+-						 struct ieee80211_vif *vif)
++static inline int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm)
+ {
+ 	return 0;
+ }
+@@ -1865,7 +1864,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		}
  
- &uart0 {
-@@ -394,3 +429,23 @@ status = "okay";
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&mmc1_pins>;
- };
-+
-+&spi0 {
-+	status = "okay";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&spi0_pins>;
-+	ti,pindir-d0-out-d1-in = <1>;
-+	/* WLS1271 WiFi */
-+	wlcore: wlcore@1 {
-+		compatible = "ti,wl1271";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&wifi_pins>;
-+		reg = <1>;
-+		spi-max-frequency = <48000000>;
-+		clock-xtal;
-+		ref-clock-frequency = <38400000>;
-+		interrupt-parent = <&gpio3>;
-+		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
-+		vwlan-supply = <&vwlan_fixed>;
-+	};
-+};
+ 		iwl_mvm_recalc_multicast(mvm);
+-		iwl_mvm_configure_bcast_filter(mvm, vif);
++		iwl_mvm_configure_bcast_filter(mvm);
+ 
+ 		/* reset rssi values */
+ 		mvmvif->bf_data.ave_beacon_signal = 0;
+@@ -1916,7 +1915,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 
+ 	if (changes & BSS_CHANGED_ARP_FILTER) {
+ 		IWL_DEBUG_MAC80211(mvm, "arp filter changed\n");
+-		iwl_mvm_configure_bcast_filter(mvm, vif);
++		iwl_mvm_configure_bcast_filter(mvm);
+ 	}
+ }
+ 
 -- 
 2.5.0
 
